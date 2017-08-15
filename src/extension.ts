@@ -12,32 +12,13 @@ export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!');
-    const ouputChannel = window.createOutputChannel("phpunit");
+
+    const output = window.createOutputChannel("phpunit");
+    const phpunit = new PHPUnit;
 
     const disposable = workspace.onDidSaveTextDocument((textDocument: TextDocument) => {
-        const command = 'C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit.bat';
-        const fileName = textDocument.fileName ;
-        const args = [
-            fileName,
-            '--log-junit',
-            path.join(__dirname, 'junit.xml')
-        ];
-        const proc = cp.spawn(command, args, {cwd: workspace.rootPath});
-        const stderr = (buffer: Buffer) => { ouputChannel.append(buffer.toString()); };
-        const stdout = (buffer: Buffer) => { ouputChannel.append(buffer.toString()); };
-        proc.stderr.on('data', stderr);
-        proc.stdout.on('data', stdout);
+        phpunit.run(textDocument.fileName, output);
     });
-  
-    // // The command has been defined in the package.json file
-    // // Now provide the implementation of the command with  registerCommand
-    // // The commandId parameter must match the command field in package.json
-    // let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
-    //     // The code you place here will be executed every time your command is executed
-
-    //     // Display a message box to the user
-    //     vscode.window.showInformationMessage('Hello World!');
-    // });
 
     context.subscriptions.push(disposable);
 }
@@ -46,3 +27,23 @@ export function activate(context: ExtensionContext) {
 export function deactivate() {
 }
 
+export class PHPUnit {
+    public run(fileName: string, output: any = null) {
+        const command = 'C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit.bat';
+        const args = [
+            fileName,
+            '--log-junit',
+            path.join(__dirname, 'junit.xml')
+        ];
+        const proc = cp.spawn(command, args, {cwd: workspace.rootPath});
+        const cb = (buffer: Buffer) => {
+            if (output === null) {
+                return;
+            }
+            output.append(buffer.toString()); 
+        }
+        
+        proc.stderr.on('data', cb);
+        proc.stdout.on('data', cb);
+    }
+}
