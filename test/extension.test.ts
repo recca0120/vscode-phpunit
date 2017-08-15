@@ -10,13 +10,29 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as myExtension from '../src/extension';
+import { PHPUnit } from '../src/phpunit';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { existsSync, unlinkSync } from 'fs';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", () => {
 
-    // Defines a Mocha unit test
-    test("Something 1", () => {
-        assert.equal(-1, [1, 2, 3].indexOf(5));
-        assert.equal(-1, [1, 2, 3].indexOf(0));
+    test("PHPUnit Test", async () => {
+        const runner = new PHPUnit({
+            rootPath: __dirname,
+            tmpdir: __dirname,
+        });
+        const xml = await runner.run(
+            join(__dirname, '../../test/fixtures/PHPUnitTest.php')
+        );
+        assert.ok(existsSync(xml));
+        unlinkSync(xml);
     });
+
+    // Defines a Mocha unit test
+    // test("Something 1", () => {
+    //     assert.equal(-1, [1, 2, 3].indexOf(5));
+    //     assert.equal(-1, [1, 2, 3].indexOf(0));
+    // });
 });

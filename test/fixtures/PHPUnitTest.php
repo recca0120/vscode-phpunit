@@ -17,15 +17,15 @@ class PHPUnitTest extends TestCase
 
     public function testFailed()
     { 
-        $this->assertTrue(false);
+        $this->assertTrue(false);  
     }
-
+  
     public function testSkipped()
     {
         $this->markTestSkipped('The MySQLi extension is not available.');
-    }
+    } 
 
-    public function testIncomplete()
+    public function testIncomplete() 
     {
         $this->markTestIncomplete('This test has not been implemented yet.');
     }

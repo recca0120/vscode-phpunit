@@ -4,6 +4,9 @@
 import { ExtensionContext, workspace, TextDocument, window } from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
+import {PHPUnit} from './phpunit';
+import { tmpdir } from 'os';
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -14,7 +17,10 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!');
 
     const output = window.createOutputChannel("phpunit");
-    const phpunit = new PHPUnit;
+    const phpunit = new PHPUnit({
+        rootPath: workspace.rootPath,
+        tmpdir: tmpdir()
+    });
 
     const disposable = workspace.onDidSaveTextDocument((textDocument: TextDocument) => {
         phpunit.run(textDocument.fileName, output);
@@ -27,23 +33,5 @@ export function activate(context: ExtensionContext) {
 export function deactivate() {
 }
 
-export class PHPUnit {
-    public run(fileName: string, output: any = null) {
-        const command = 'C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit.bat';
-        const args = [
-            fileName,
-            '--log-junit',
-            path.join(__dirname, 'junit.xml')
-        ];
-        const proc = cp.spawn(command, args, {cwd: workspace.rootPath});
-        const cb = (buffer: Buffer) => {
-            if (output === null) {
-                return;
-            }
-            output.append(buffer.toString()); 
-        }
-        
-        proc.stderr.on('data', cb);
-        proc.stdout.on('data', cb);
-    }
-}
+
+
