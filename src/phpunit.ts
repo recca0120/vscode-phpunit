@@ -24,7 +24,10 @@ export class PHPUnit {
 
     public run(filePath: string, output: any = null): Promise<any> {
         return new Promise((resolve, reject) => {
-            filePath = filePath.replace(/\.git\.php$/, '.php');
+            if (/\.git\.php$/.test(filePath) === true) {
+                resolve([]);
+            }
+
             const rootPath = this.options.rootPath;
             const xml = join(this.options.tmpdir, `vscode-phpunit-junit-${(new Date()).getTime()}.xml`);
 
@@ -50,14 +53,14 @@ export class PHPUnit {
             
             process.stderr.on('data', cb);
             process.stdout.on('data', cb);
-            process.on('exit', async (code: string) => {
+            process.on('exit', async () => {
                 let messages: any = [];
                 if (existsSync(xml) === true) {
                     messages = await this.parser.parseXML(xml);
                     unlinkSync(xml);
                 }
 
-                return messages;
+                resolve(messages);
             });
         });
     }
