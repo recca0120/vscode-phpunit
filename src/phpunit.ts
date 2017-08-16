@@ -27,6 +27,7 @@ export class PHPUnit {
                 : 'C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit.bat';
             const args = [
                 filePath,
+                '--colors=always',
                 '--log-junit',
                 xml
             ];
@@ -34,7 +35,7 @@ export class PHPUnit {
             const process = spawn(command, args, {cwd: rootPath});
             const cb = (buffer: Buffer) => {
                 if (output !== null) {
-                    output.append(buffer.toString()); 
+                    output.append(this.noAnsi(buffer.toString()));
                 }
             }
             
@@ -53,5 +54,12 @@ export class PHPUnit {
                 resolve(messages);
             });
         });
+    }
+
+    public noAnsi(str: string): string {
+        return str.replace(
+            /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+            ''
+        );
     }
 }
