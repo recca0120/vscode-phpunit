@@ -12,7 +12,7 @@
     ],
     "icon": "images/icon.png",
     "activationEvents": [
-        "onLanguage:markdown"
+        "onLanguage:php"
     ],
     "main": "./out/src/extension",
     "scripts": {
