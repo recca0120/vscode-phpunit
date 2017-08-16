@@ -10,7 +10,7 @@
     "categories": [
         "Other"
     ],
-    "icon": "images/icon.png",
+    "icon": "icon.png",
     "activationEvents": [
         "onLanguage:php"
     ],
@@ -20,6 +20,11 @@
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./node_modules/vscode/bin/test"
+    },
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/recca0120/vscode-phpunit"
     },
     "devDependencies": {
         "@types/mocha": "^2.2.32",
