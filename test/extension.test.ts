@@ -16,6 +16,13 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { existsSync, unlinkSync } from 'fs';
 
+class TestParser extends Parser {
+    public parseXML(xml: string): any {
+        return super.parseXML(join(__dirname, '../../test/fixtures/junit.xml'));
+    }
+}
+
+
 // Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", () => {
 
@@ -171,19 +178,25 @@ suite("Extension Tests", () => {
         });
     });
 
-    // suite("PHPUnit Tests", () => {
-    //     test("PHPUnit Test", async () => {
-    //         const runner = new PHPUnit({
-    //             rootPath: __dirname,
-    //             tmpdir: __dirname,
-    //         });
-    //         const xml = await runner.run(
-    //             join(__dirname, '../../test/fixtures/PHPUnitTest.php')
-    //         );
-    //         assert.ok(existsSync(xml));
-    //         unlinkSync(xml);
-    //     });
-    // });
+    suite("PHPUnit Tests", () => {
+        test("PHPUnit Test", async () => {
+            const runner = new PHPUnit({
+                rootPath: __dirname,
+                tmpdir: __dirname,
+            }, new TestParser());
+            const messages = await runner.run(
+                join(__dirname, '../../test/fixtures/PHPUnitTest.php')
+            );
+            
+            assert.deepEqual(messages[0], {
+                duration: 0.006241,
+                filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+                lineNumber: 12,
+                state: 'passed',
+                title: 'testPassed',
+            });
+        });
+    });
     
 
     // Defines a Mocha unit test
