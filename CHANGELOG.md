@@ -3,6 +3,9 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.0.4
+- detect os
+
 ## 0.0.3
 - dynamic xml
 - trigger file open or file changed

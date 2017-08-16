@@ -1,4 +1,4 @@
-# vscode-phpunit README
+# VSCode-PHPUnit README
 
 PHPUnit AutoRun for VSCode
 
