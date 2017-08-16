@@ -28,20 +28,19 @@ export function activate(context: ExtensionContext) {
     // });
     // context.subscriptions.push(disposable);
 
-    const cb = async function (textDocument: TextDocument) {
+    const exec = async function (textDocument: TextDocument) {
         const messages = await phpunit.run(textDocument.fileName, output);
-        console.log(messages);
 
-        return messages;
+        console.log(messages);
     }
 
-    const disposable2 = workspace.onDidOpenTextDocument(async (textDocument: TextDocument) => {
-        await cb(textDocument);
+    const disposable2 = workspace.onDidOpenTextDocument((textDocument: TextDocument) => {
+        exec(textDocument)
     });
     context.subscriptions.push(disposable2);
 
-    const disposable3 = workspace.onDidSaveTextDocument(async (textDocument: TextDocument) => {
-        await cb(textDocument);
+    const disposable3 = workspace.onDidSaveTextDocument((textDocument: TextDocument) => {
+        exec(textDocument)
     });
     context.subscriptions.push(disposable3);
 }

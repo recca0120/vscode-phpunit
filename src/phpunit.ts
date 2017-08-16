@@ -42,16 +42,13 @@ export class PHPUnit {
             process.stderr.on('data', cb);
             process.stdout.on('data', cb);
             process.on('exit', async (code: string) => {
-                if (existsSync(xml) === false) {
-                    resolve([]);
-
-                    return;
+                let messages: any = [];
+                if (existsSync(xml) === true) {
+                    messages = await this.parser.parseXML(xml);
+                    unlinkSync(xml);
                 }
 
-                this.parser.parseXML(xml).then((messages: any) => {
-                    resolve(messages);
-                    unlinkSync(xml);
-                });
+                return messages;
             });
         });
     }
