@@ -19,7 +19,7 @@ export function activate(context: ExtensionContext) {
     const output = window.createOutputChannel("phpunit");
     const phpunit = new PHPUnit({
         rootPath: workspace.rootPath,
-        tmpdir: tmpdir()
+        tmpdir: tmpdir(),
     });
     
     // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {

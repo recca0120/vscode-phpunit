@@ -13,18 +13,26 @@ export class PHPUnit {
     public constructor(
         private options: Options = {
             rootPath: __dirname,
-            tmpdir: tmpdir()
+            tmpdir: tmpdir(),
         },
         private parser = new Parser
     ) {}
+
+    protected isWindows(): boolean {
+        return (/win32|mswin(?!ce)|mingw|bccwin|cygwin/i).test(process.platform);
+    }
 
     public run(filePath: string, output: any = null): Promise<any> {
         return new Promise((resolve, reject) => {
             const rootPath = this.options.rootPath;
             const xml = join(this.options.tmpdir, `vscode-phpunit-junit-${(new Date()).getTime()}.xml`);
-            const command = existsSync(join(rootPath, 'vendor/bin/phpunit.bat'))
-                ? join(rootPath, 'vendor/bin/phpunit.bat')
-                : 'C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit.bat';
+
+            const extension = this.isWindows() === true ? '.bat' : '';
+            
+            const command = existsSync(join(rootPath, `vendor/bin/phpunit${extension}`))
+                ? join(rootPath, `vendor/bin/phpunit${extension}`)
+                : `C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit${extension}`;
+                
             const args = [
                 filePath,
                 '--colors=always',
