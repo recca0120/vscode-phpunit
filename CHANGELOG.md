@@ -5,6 +5,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 0.0.3
 - dynamic xml
+- trigger file open or file changed
 
 ## 0.0.2
 - fix phpunit path

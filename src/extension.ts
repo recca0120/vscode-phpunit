@@ -22,12 +22,18 @@ export function activate(context: ExtensionContext) {
         tmpdir: tmpdir()
     });
     
-    const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
-        const messages = await phpunit.run(e.document.fileName, output);
+    const disposable = workspace.onDidOpenTextDocument(async (textDocument: TextDocument) => {
+        const messages = await phpunit.run(textDocument.fileName, output);
+        console.log(messages);
+    });
+
+    const disposable1 = workspace.onDidSaveTextDocument(async (textDocument: TextDocument) => {
+        const messages = await phpunit.run(textDocument.fileName, output);
         console.log(messages);
     });
 
     context.subscriptions.push(disposable);
+    context.subscriptions.push(disposable1);
 }
 
 // this method is called when your extension is deactivated
