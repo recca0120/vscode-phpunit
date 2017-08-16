@@ -17,7 +17,7 @@ class PHPUnitTest extends TestCase
 
     public function testFailed()
     { 
-        $this->assertTrue(false);  
+        $this->assertTrue(false);
     }
   
     public function testSkipped()

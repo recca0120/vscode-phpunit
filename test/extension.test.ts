@@ -14,14 +14,18 @@ import { PHPUnit } from '../src/phpunit';
 import { Parser } from '../src/parser';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { existsSync, unlinkSync } from 'fs';
+import { existsSync, unlinkSync, createReadStream, createWriteStream } from 'fs';
 
 class TestParser extends Parser {
-    public parseXML(xml: string): any {
-        return super.parseXML(join(__dirname, '../../test/fixtures/junit.xml'));
+    public async parseXML(xml: string) {
+        const source = join(__dirname, '../../test/fixtures/junit.xml');
+        const target = `${source}.testing`;
+        createReadStream(source).pipe(createWriteStream(target));
+        const messages = await super.parseXML(target);
+
+        return messages;
     }
 }
-
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", () => {
