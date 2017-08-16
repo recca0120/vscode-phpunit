@@ -1,4 +1,9 @@
 # vscode-phpunit README
 
-This is the README for your extension "vscode-phpunit". After writing up a brief description, we recommend including the following sections.
+PHPUnit AutoRun for VSCode
 
+### For more information
+
+* [Github](https://github.com/recca0120/vscode-phpunit)
+
+**Enjoy!**
