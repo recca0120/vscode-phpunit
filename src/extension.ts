@@ -21,9 +21,10 @@ export function activate(context: ExtensionContext) {
         rootPath: workspace.rootPath,
         tmpdir: tmpdir()
     });
-
-    const disposable = workspace.onWillSaveTextDocument((e: TextDocumentWillSaveEvent) => {
-        phpunit.run(e.document.fileName, output);
+    
+    const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
+        const messages = await phpunit.run(e.document.fileName, output);
+        console.log(messages);
     });
 
     context.subscriptions.push(disposable);

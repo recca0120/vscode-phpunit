@@ -1,6 +1,6 @@
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { spawn } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { Parser } from './Parser';
 import { existsSync, unlinkSync } from 'fs';
 
@@ -21,7 +21,7 @@ export class PHPUnit {
     public run(filePath: string, output: any = null): Promise<any> {
         return new Promise((resolve, reject) => {
             const rootPath = this.options.rootPath;
-            const xml = join(this.options.tmpdir, 'vscode-phpunit-junit.xml');
+            const xml = join(this.options.tmpdir, `vscode-phpunit-junit-${(new Date()).getTime()}.xml`);
             const command = existsSync(join(rootPath, 'vendor/bin/phpunit.bat'))
                 ? join(rootPath, 'vendor/bin/phpunit.bat')
                 : 'C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit.bat';
@@ -48,10 +48,10 @@ export class PHPUnit {
                     return;
                 }
 
-                const messages = await this.parser.parseXML(xml);
-                unlinkSync(xml);
-
-                resolve(messages);
+                this.parser.parseXML(xml).then((messages: any) => {
+                    resolve(messages);
+                    unlinkSync(xml);
+                });
             });
         });
     }
