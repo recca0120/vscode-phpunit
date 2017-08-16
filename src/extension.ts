@@ -28,15 +28,20 @@ export function activate(context: ExtensionContext) {
     // });
     // context.subscriptions.push(disposable);
 
-    const disposable2 = workspace.onDidOpenTextDocument(async (textDocument: TextDocument) => {
+    const cb = async function (textDocument: TextDocument) {
         const messages = await phpunit.run(textDocument.fileName, output);
         console.log(messages);
+
+        return messages;
+    }
+
+    const disposable2 = workspace.onDidOpenTextDocument(async (textDocument: TextDocument) => {
+        await cb(textDocument);
     });
     context.subscriptions.push(disposable2);
 
     const disposable3 = workspace.onDidSaveTextDocument(async (textDocument: TextDocument) => {
-        const messages = await phpunit.run(textDocument.fileName, output);
-        console.log(messages);
+        await cb(textDocument);
     });
     context.subscriptions.push(disposable3);
 }
