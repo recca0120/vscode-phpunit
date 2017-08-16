@@ -14,13 +14,14 @@ import { PHPUnit } from '../src/phpunit';
 import { Parser } from '../src/parser';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { existsSync, unlinkSync, createReadStream, createWriteStream } from 'fs';
+import { existsSync, unlinkSync } from 'fs';
+import { copySync } from 'fs-extra';
 
 class TestParser extends Parser {
     public async parseXML(xml: string) {
         const source = join(__dirname, '../../test/fixtures/junit.xml');
-        const target = `${source}.testing`;
-        createReadStream(source).pipe(createWriteStream(target));
+        const target = join(__dirname, 'vscode-phpunit-junit.xml');
+        copySync(source, target);
         const messages = await super.parseXML(target);
 
         return messages;

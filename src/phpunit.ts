@@ -41,6 +41,12 @@ export class PHPUnit {
             process.stderr.on('data', cb);
             process.stdout.on('data', cb);
             process.on('exit', async (code: string) => {
+                if (existsSync(xml) === false) {
+                    resolve([]);
+
+                    return;
+                }
+
                 const messages = await this.parser.parseXML(xml);
                 unlinkSync(xml);
 
