@@ -10,7 +10,7 @@
     "categories": [
         "Other"
     ],
-    "icon": "icon.png",
+    "icon": "images/icon.png",
     "activationEvents": [
         "onLanguage:php"
     ],
