@@ -1,7 +1,7 @@
 'use strict';
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { ExtensionContext, workspace, TextDocument, window } from 'vscode';
+import { ExtensionContext, workspace, TextDocument, window, TextDocumentWillSaveEvent } from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
 import {PHPUnit} from './phpunit';
@@ -22,8 +22,8 @@ export function activate(context: ExtensionContext) {
         tmpdir: tmpdir()
     });
 
-    const disposable = workspace.onDidSaveTextDocument((textDocument: TextDocument) => {
-        phpunit.run(textDocument.fileName, output);
+    const disposable = workspace.onWillSaveTextDocument((e: TextDocumentWillSaveEvent) => {
+        phpunit.run(e.document.fileName, output);
     });
 
     context.subscriptions.push(disposable);
