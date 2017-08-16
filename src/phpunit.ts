@@ -1,6 +1,6 @@
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { ChildProcess, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import { Parser } from './Parser';
 import { existsSync, unlinkSync } from 'fs';
 

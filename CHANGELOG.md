@@ -3,6 +3,9 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.0.3
+- dynamic xml
+
 ## 0.0.2
 - fix phpunit path
 - run unittest on save
