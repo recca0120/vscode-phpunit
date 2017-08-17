@@ -12,8 +12,8 @@ suite('Filesystem Tests', () => {
             )
         } else {
             assert.equal(
-                filesystem.find('code').toLocaleLowerCase(),
-                join(__dirname, '../../.vscode-test/code').toLocaleLowerCase()
+                filesystem.find('ls').toLocaleLowerCase(),
+                '/bin/ls'
             )
         }
     })
