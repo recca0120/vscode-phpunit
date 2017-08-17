@@ -1,25 +1,25 @@
 import * as assert from 'assert'
-import { Finder } from '../src/command'
+import { Filesystem } from '../src/command'
 import { join } from 'path'
 
-suite('Finder Tests', () => {
+suite('Filesystem Tests', () => {
     test('find command', () => {
-        const finder = new Finder()
-        if (finder.isWindows() === true) {
+        const filesystem = new Filesystem()
+        if (filesystem.isWindows() === true) {
             assert.equal(
-                finder.find('code').toLocaleLowerCase(),
+                filesystem.find('code').toLocaleLowerCase(),
                 join(__dirname, '../../.vscode-test/code.exe').toLocaleLowerCase()
             )
         } else {
             assert.equal(
-                finder.find('code').toLocaleLowerCase(),
+                filesystem.find('code').toLocaleLowerCase(),
                 join(__dirname, '../../.vscode-test/code').toLocaleLowerCase()
             )
         }
     })
 
     test('find file', () => {
-        const finder = new Finder()
-        assert.equal(finder.find(__filename), __filename)
+        const filesystem = new Filesystem()
+        assert.equal(filesystem.find(__filename), __filename)
     })
 })
