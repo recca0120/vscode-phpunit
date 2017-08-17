@@ -6,9 +6,21 @@ import { existsSync, unlinkSync } from 'fs'
 import { Filesystem } from './command'
 
 export class PHPUnit {
-    public tmpdir = tmpdir()
+    public tmpPath = tmpdir()
     public rootPath = __dirname
     public constructor(private parser = new Parser(), private files = new Filesystem()) {}
+
+    public setRootPath(rootPath: string): this {
+        this.rootPath = rootPath
+
+        return this
+    }
+
+    public setTmpDPath(tmpPath: string): this {
+        this.tmpPath = tmpPath
+
+        return this
+    }
 
     public run(filePath: string, output: any = null): Promise<any> {
         return new Promise(resolve => {
@@ -17,11 +29,10 @@ export class PHPUnit {
             }
 
             const rootPath = this.rootPath
-            const xml = join(this.tmpdir, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
-            const vendorPath = `${rootPath}/vendor/bin/phpunit`;
-            const command = this.files.exists(vendorPath) === true
-                ? this.files.find(vendorPath)
-                : this.files.find('phpunit')
+            const xml = join(this.tmpPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
+            const vendorPath = `${rootPath}/vendor/bin/phpunit`
+            const command =
+                this.files.exists(vendorPath) === true ? this.files.find(vendorPath) : this.files.find('phpunit')
 
             const args = [filePath, '--colors=always', '--log-junit', xml]
             const process = spawn(command, args, { cwd: rootPath })

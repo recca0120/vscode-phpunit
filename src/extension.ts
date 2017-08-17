@@ -12,7 +12,7 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
     const output = window.createOutputChannel('phpunit')
-    const phpunit = new PHPUnit()
+    const phpunit = new PHPUnit().setRootPath(workspace.rootPath)
 
     // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
     //     const messages = await phpunit.run(e.document.fileName, output);
