@@ -1,17 +1,14 @@
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { spawn } from 'child_process'
-import { Parser } from './Parser'
+import { Parser } from './parser'
 import { existsSync, unlinkSync } from 'fs'
+import { CommandFinder } from './command-finder'
 
 export class PHPUnit {
     public tmpdir = tmpdir()
     public rootPath = __dirname
-    public constructor(private parser = new Parser()) {}
-
-    protected isWindows(): boolean {
-        return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(process.platform)
-    }
+    public constructor(private parser = new Parser(), private finder = new CommandFinder()) {}
 
     public run(filePath: string, output: any = null): Promise<any> {
         return new Promise(resolve => {
@@ -22,11 +19,12 @@ export class PHPUnit {
             const rootPath = this.rootPath
             const xml = join(this.tmpdir, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
 
-            const extension = this.isWindows() === true ? '.bat' : ''
-
-            const command = existsSync(join(rootPath, `vendor/bin/phpunit${extension}`))
-                ? join(rootPath, `vendor/bin/phpunit${extension}`)
-                : `C:\\ProgramData\\ComposerSetup\\vendor\\bin\\phpunit${extension}`
+            let command
+            try {
+                command = this.finder.find('vendor/bin/phpunit')
+            } catch (error) {
+                command = this.finder.find('phpunit')
+            }
 
             const args = [filePath, '--colors=always', '--log-junit', xml]
 
