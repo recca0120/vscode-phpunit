@@ -1,10 +1,10 @@
 import * as assert from 'assert'
-import { CommandFinder } from '../src/command-finder'
+import { Finder } from '../src/command'
 import { join } from 'path'
 
 suite('Finder Tests', () => {
     test('find command', () => {
-        const finder = new CommandFinder()
+        const finder = new Finder()
         if (finder.isWindows() === true) {
             assert.equal(
                 finder.find('code').toLocaleLowerCase(),
@@ -19,7 +19,7 @@ suite('Finder Tests', () => {
     })
 
     test('find file', () => {
-        const finder = new CommandFinder()
+        const finder = new Finder()
         assert.equal(finder.find(__filename), __filename)
     })
 })

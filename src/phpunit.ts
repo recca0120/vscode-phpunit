@@ -3,12 +3,12 @@ import { join } from 'path'
 import { spawn } from 'child_process'
 import { Parser } from './parser'
 import { existsSync, unlinkSync } from 'fs'
-import { CommandFinder } from './command-finder'
+import { Finder } from './command'
 
 export class PHPUnit {
     public tmpdir = tmpdir()
     public rootPath = __dirname
-    public constructor(private parser = new Parser(), private finder = new CommandFinder()) {}
+    public constructor(private parser = new Parser(), private finder = new Finder()) {}
 
     public run(filePath: string, output: any = null): Promise<any> {
         return new Promise(resolve => {

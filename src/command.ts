@@ -2,7 +2,7 @@ import { execSync } from 'child_process'
 import { existsSync } from 'fs'
 import { resolve } from 'path'
 
-export class CommandFinder {
+export class Finder {
     public platform = process.platform
     public extensions = ['bat', 'exe', 'cmd']
     protected cache = {}
