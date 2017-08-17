@@ -3,6 +3,12 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.0.7
+- fix os path
+
+## 0.0.6
+- fix bug
+
 ## 0.0.5
 - when filename is .git.php will change to .php
 
