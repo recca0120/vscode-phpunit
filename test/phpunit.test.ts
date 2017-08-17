@@ -16,14 +16,10 @@ class TestParser extends Parser {
 }
 
 suite('PHPUnit Tests', () => {
-    test('PHPUnit Test', async () => {
-        const runner = new PHPUnit(
-            {
-                rootPath: __dirname,
-                tmpdir: __dirname,
-            },
-            new TestParser()
-        )
+    test('get error messages', async () => {
+        const runner = new PHPUnit(new TestParser())
+        runner.rootPath = __dirname;
+        runner.tmpdir = __dirname;
         const messages = await runner.run(join(__dirname, '../../test/fixtures/PHPUnitTest.php'))
 
         assert.deepEqual(messages[0], {

@@ -4,19 +4,11 @@ import { spawn } from 'child_process'
 import { Parser } from './Parser'
 import { existsSync, unlinkSync } from 'fs'
 
-interface Options {
-    rootPath: string
-    tmpdir: string
-}
 
 export class PHPUnit {
-    public constructor(
-        private options: Options = {
-            rootPath: __dirname,
-            tmpdir: tmpdir(),
-        },
-        private parser = new Parser()
-    ) {}
+    public tmpdir = tmpdir();
+    public rootPath = __dirname;
+    public constructor(private parser = new Parser()) {}
 
     protected isWindows(): boolean {
         return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(process.platform)
@@ -28,8 +20,8 @@ export class PHPUnit {
                 resolve([])
             }
 
-            const rootPath = this.options.rootPath
-            const xml = join(this.options.tmpdir, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
+            const rootPath = this.rootPath
+            const xml = join(this.tmpdir, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
 
             const extension = this.isWindows() === true ? '.bat' : ''
 
