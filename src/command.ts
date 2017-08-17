@@ -39,10 +39,6 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
     }
 
     public exists(file: string): boolean {
-        if (existsSync(file)) {
-            return true
-        }
-
         for (const extension of this.extensions) {
             if (existsSync(`${file}.${extension}`)) {
                 return true
@@ -53,10 +49,6 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
     }
 
     protected getExists(file: string): string {
-        if (existsSync(file)) {
-            return resolve(file)
-        }
-
         for (const extension of this.extensions) {
             if (existsSync(`${file}.${extension}`)) {
                 return resolve(`${file}.${extension}`)

@@ -12,12 +12,12 @@ class PHPUnit2Test extends TestCase
  
     public function testPassed()
     {
-        $this->assertTrue(true);
+        $this->assertTrue(true); 
     }
 
     public function testFailed() 
-    { 
-        $this->assertTrue(false);    
+    {  
+        $this->assertTrue(false); 
     }
 
     public function testSkipped()

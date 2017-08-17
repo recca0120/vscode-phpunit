@@ -6,8 +6,9 @@ import { existsSync, unlinkSync } from 'fs'
 import { Filesystem } from './command'
 
 export class PHPUnit {
-    public tmpPath = tmpdir()
     public rootPath = __dirname
+    public tmpPath = tmpdir()
+
     public constructor(private parser = new Parser(), private files = new Filesystem()) {}
 
     public setRootPath(rootPath: string): this {
