@@ -1,8 +1,10 @@
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
+import { resolve } from 'path'
 
 export class Finder {
     public platform = process.platform
+    public extensions = ['bat', 'exe', 'cmd']
     protected cache = {};
 
     public find(cmd: string): string {
@@ -10,14 +12,37 @@ export class Finder {
             return this.cache[cmd];
         }
 
-        if (existsSync(cmd)) {
-            return this.cache[cmd] = cmd;
+        return this.cache[cmd] = this.isWindows() === true ? this.getCommandByWindows(cmd) : this.getCommandByLinux(cmd);
+    }
+
+    protected getCommandByWindows(cmd: string): string {
+        if (existsSync(`${cmd}`)) {
+            return resolve(`${cmd}`)
         }
 
-        const executable = this.isWindows() === true ? 'where' : 'which'
-        const command = execSync(`${executable} "${cmd}"`).toString().replace('/\r\n/', '\n').split('\n').shift().trim()
+        for (let extension of this.extensions) {
+            if (existsSync(`${cmd}.${extension}`)) {
+                return resolve(`${cmd}.${extension}`)
+            }
+        }
 
-        return this.cache[cmd] = command;
+        try {
+            for (let extension of this.extensions) {
+                return execSync(`where "${cmd}.${extension}"`).toString().replace('/\r\n/', '\n').split('\n').shift().trim()
+            }
+        } catch (e) {
+
+        }
+
+        throw new Error('file not find');
+    }
+
+    protected getCommandByLinux(cmd: string): string {
+        if (existsSync(cmd)) {
+            return resolve(cmd);
+        }
+ 
+        return execSync(`which "${cmd}"`).toString().replace('/\r\n/', '\n').split('\n').shift().trim();
     }
 
     public isWindows(): boolean {
