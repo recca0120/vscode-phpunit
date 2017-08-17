@@ -4,10 +4,9 @@ import { spawn } from 'child_process'
 import { Parser } from './Parser'
 import { existsSync, unlinkSync } from 'fs'
 
-
 export class PHPUnit {
-    public tmpdir = tmpdir();
-    public rootPath = __dirname;
+    public tmpdir = tmpdir()
+    public rootPath = __dirname
     public constructor(private parser = new Parser()) {}
 
     protected isWindows(): boolean {
