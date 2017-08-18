@@ -11,9 +11,6 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    console.log(context.asAbsolutePath('./'));
-    console.log(context.extensionPath);
-
     context.subscriptions.push(new UnitTest(
         new DecorateManager(context)
     ).listen())

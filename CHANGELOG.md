@@ -3,6 +3,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.1.2
+- inject context
+- context.asAbsolutePath
+
 ## 0.1.1
 - gutter icon path
 
