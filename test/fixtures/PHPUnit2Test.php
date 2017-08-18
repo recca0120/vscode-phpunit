@@ -7,7 +7,7 @@ class PHPUnit2Test extends TestCase
 {
     protected function tearDown()
     { 
-        m::close();  
+        m::close();
     }
  
     public function testPassed()
@@ -16,8 +16,8 @@ class PHPUnit2Test extends TestCase
     }
 
     public function testFailed() 
-    {  
-        $this->assertTrue(false); 
+    {   
+        $this->assertTrue(false);  
     }
 
     public function testSkipped()

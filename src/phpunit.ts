@@ -9,6 +9,7 @@ import { tmpdir } from 'os'
 export class PHPUnit {
     public rootPath = __dirname
     public tmpPath = tmpdir()
+    private outputCallback = function() {}
 
     public constructor(private parser = new Parser(), private files = new Filesystem()) {}
 
@@ -24,7 +25,13 @@ export class PHPUnit {
         return this
     }
 
-    public handle(filePath: string, output: any = null): Promise<any> {
+    public setOutput(outputCallback: any): this {
+        this.outputCallback = outputCallback
+
+        return this
+    }
+
+    public handle(filePath: string): Promise<any> {
         return new Promise(resolve => {
             if (/\.git\.php$/.test(filePath) === true) {
                 resolve([])
@@ -46,13 +53,8 @@ export class PHPUnit {
 
             const args = [filePath, '--colors=always', '--log-junit', xml]
             const process = spawn(command, args, { cwd: rootPath })
-            const cb = (buffer: Buffer) => {
-                if (output !== null) {
-                    output.append(this.noAnsi(buffer.toString()))
-                }
-            }
-            process.stderr.on('data', cb)
-            process.stdout.on('data', cb)
+            process.stderr.on('data', this.outputCallback)
+            process.stdout.on('data', this.outputCallback)
             process.on('exit', async () => {
                 let messages: any = []
                 if (existsSync(xml) === true) {
@@ -63,9 +65,5 @@ export class PHPUnit {
                 resolve(messages)
             })
         })
-    }
-
-    public noAnsi(str: string): string {
-        return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
     }
 }

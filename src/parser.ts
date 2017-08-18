@@ -14,8 +14,8 @@ export interface Message {
         message: string
         name: string
     }
-    filePath: string
-    lineNumber: number
+    file: string
+    line: number
     state: State
     title: string
 }
@@ -57,8 +57,8 @@ export class Parser {
                     message: '',
                     name: '',
                 },
-                filePath: testcaseAttr.file,
-                lineNumber: (testcaseAttr.line || 1) - 1,
+                file: testcaseAttr.file,
+                line: (testcaseAttr.line || 1) - 1,
                 state: State.PASSED,
                 title,
             }
@@ -71,7 +71,7 @@ export class Parser {
         const files = this.stringToFiles(errorChar)
         const file = this.parseFilePath(files) || {
             filePath: testcaseAttr.file,
-            lineNumber: testcaseAttr.line,
+            line: testcaseAttr.line,
         }
 
         return {
@@ -80,8 +80,8 @@ export class Parser {
                 message: this.parseMessage(errorChar, files, name, title),
                 name: '',
             },
-            filePath: file.filePath,
-            lineNumber: file.lineNumber - 1,
+            file: file.filePath,
+            line: file.line - 1,
             state: state,
             title,
         }
@@ -144,7 +144,7 @@ export class Parser {
             .map(path => {
                 const [, file, line] = path.match(/(.*):(\d+)/)
 
-                return { filePath: file, lineNumber: line }
+                return { filePath: file, line: line }
             })
             .pop()
     }

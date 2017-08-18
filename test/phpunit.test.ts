@@ -35,8 +35,12 @@ suite('PHPUnit Tests', () => {
 
         assert.deepEqual(messages[0], {
             duration: 0.006241,
-            filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 12,
+            error: {
+                message: '',
+                name: '',
+            },
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 12,
             state: State.PASSED,
             title: 'testPassed',
         })
