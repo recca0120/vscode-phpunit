@@ -1,92 +1,18 @@
-import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
+import { ExtensionContext, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
 import { Message } from './parser'
 import { Window } from './wrapper/vscode'
-import { join } from 'path'
 
-export class Decorations {
-    public constructor(private window: Window = new Window()) {}
-    
-    public passed(): TextEditorDecorationType {
-        return this.window.createTextEditorDecorationType({
-            overviewRulerColor: 'green',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                gutterIconPath: this.gutterIconPath('passed.svg'),
-            },
-            dark: {
-                gutterIconPath: this.gutterIconPath('passed.svg'), 
-            },
-        })
-    }
-
-    public failed(): TextEditorDecorationType {
-        return this.window.createTextEditorDecorationType({
-            overviewRulerColor: 'red',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                gutterIconPath: this.gutterIconPath('failed.svg'),
-            },
-            dark: {
-                gutterIconPath: this.gutterIconPath('failed.svg'), 
-            },
-        })
-    }
-
-    public skipped(): TextEditorDecorationType {
-        return this.window.createTextEditorDecorationType({
-            overviewRulerColor: 'darkgrey',
-            overviewRulerLane: OverviewRulerLane.Left,
-            dark: {
-                gutterIconPath: this.gutterIconPath('skipped.svg'),
-            },
-            light: {
-                gutterIconPath: this.gutterIconPath('skipped.svg'), 
-            },
-        })
-    }
-
-    public incompleted(): TextEditorDecorationType {
-        return this.skipped()
-    }
-
-    public assertionFailed(text: string) {
-        return this.window.createTextEditorDecorationType({
-            isWholeLine: true,
-            overviewRulerColor: 'red',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                before: {
-                    color: '#FF564B',
-                },
-            },
-            dark: {
-                before: {
-                    color: '#AD322D',
-                },
-            },
-            after: {
-                contentText: ' // ' + text,
-            },
-        })
-    }
-
-    protected gutterIconPath(path: string) {
-        return join(...[__dirname, '/../../images', path]);
-    }
-}
-
-export class DecorateManager {
+export class DecorateManager{
     private assertionFails = []
-
     public decorationTypes: Map<string, TextEditorDecorationType>
 
-    public constructor(private decorations: Decorations = new Decorations()) {
+    public constructor(private context: ExtensionContext, private window: Window = new Window()) {
         this.decorationTypes = new Map([
-            ['passed', this.decorations.passed()],
-            ['failed', this.decorations.failed()],
-            ['skipped', this.decorations.skipped()],
-            ['incompleted', this.decorations.incompleted()],
+            ['passed', this.passed()],
+            ['failed', this.failed()],
+            ['skipped', this.skipped()],
+            ['incompleted', this.incompleted()],
         ])
     }
 
@@ -120,7 +46,7 @@ export class DecorateManager {
                 range: new Range(message.line, 0, message.line, 0),
                 hoverMessage: message.error.message,
             }
-            const style = this.decorations.assertionFailed(message.error.message)
+            const style = this.assertionFailed(message.error.message)
             this.assertionFails.push(style)
             editor.setDecorations(style, [decoration])
         })
@@ -144,5 +70,73 @@ export class DecorateManager {
             ['skipped', group.skipped],
             ['incompleted', group.incompleted],
         ])
+    }
+
+    protected passed(): TextEditorDecorationType {
+        return this.window.createTextEditorDecorationType({
+            overviewRulerColor: 'green',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                gutterIconPath: this.gutterIconPath('passed.svg'),
+            },
+            dark: {
+                gutterIconPath: this.gutterIconPath('passed.svg'), 
+            },
+        })
+    }
+
+    protected failed(): TextEditorDecorationType {
+        return this.window.createTextEditorDecorationType({
+            overviewRulerColor: 'red',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                gutterIconPath: this.gutterIconPath('failed.svg'),
+            },
+            dark: {
+                gutterIconPath: this.gutterIconPath('failed.svg'), 
+            },
+        })
+    }
+
+    protected skipped(): TextEditorDecorationType {
+        return this.window.createTextEditorDecorationType({
+            overviewRulerColor: 'darkgrey',
+            overviewRulerLane: OverviewRulerLane.Left,
+            dark: {
+                gutterIconPath: this.gutterIconPath('skipped.svg'),
+            },
+            light: {
+                gutterIconPath: this.gutterIconPath('skipped.svg'), 
+            },
+        })
+    }
+
+    protected incompleted(): TextEditorDecorationType {
+        return this.skipped()
+    }
+
+    protected assertionFailed(text: string) {
+        return this.window.createTextEditorDecorationType({
+            isWholeLine: true,
+            overviewRulerColor: 'red',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                before: {
+                    color: '#FF564B',
+                },
+            },
+            dark: {
+                before: {
+                    color: '#AD322D',
+                },
+            },
+            after: {
+                contentText: ' // ' + text,
+            },
+        })
+    }
+
+    protected gutterIconPath(path: string) {
+        return this.context.asAbsolutePath(`/images/${path}`]);
     }
 }

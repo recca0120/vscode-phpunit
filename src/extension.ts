@@ -11,7 +11,12 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    context.subscriptions.push(new UnitTest().listen())
+    console.log(context.asAbsolutePath('./'));
+    console.log(context.extensionPath);
+
+    context.subscriptions.push(new UnitTest(
+        new DecorateManager(context)
+    ).listen())
 
     // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
     //     const messages = await phpunit.run(e.document.fileName, output);
@@ -27,7 +32,7 @@ class UnitTest {
     private channel: OutputChannel
     private disposable: Disposable
     public constructor(
-        private decorateManager: DecorateManager = new DecorateManager(),
+        private decorateManager: DecorateManager,
         private window: Window = new Window(),
         private workspace: Workspace = new Workspace(),
         private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
