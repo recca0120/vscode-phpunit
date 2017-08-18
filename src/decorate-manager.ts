@@ -1,92 +1,94 @@
-import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, window } from 'vscode'
+import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
 import { Message } from './parser'
+import { Window } from './wrapper/vscode'
+import { join } from 'path'
 
-export function passed() {
-    return window.createTextEditorDecorationType({
-        overviewRulerColor: 'green',
-        overviewRulerLane: OverviewRulerLane.Left,
-        light: {
-            before: {
-                color: '#3BB26B',
-                contentText: '●',
+export class Decorations {
+    public constructor(private window: Window = new Window()) {}
+    
+    public passed(): TextEditorDecorationType {
+        return this.window.createTextEditorDecorationType({
+            overviewRulerColor: 'green',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                gutterIconPath: this.gutterIconPath('passed.svg'),
             },
-        },
-        dark: {
-            before: {
-                color: '#2F8F51',
-                contentText: '●',
+            dark: {
+                gutterIconPath: this.gutterIconPath('passed.svg'), 
             },
-        },
-    })
-}
+        })
+    }
 
-export function failed() {
-    return window.createTextEditorDecorationType({
-        overviewRulerColor: 'red',
-        overviewRulerLane: OverviewRulerLane.Left,
-        light: {
-            before: {
-                color: '#FF564B',
-                contentText: '●',
+    public failed(): TextEditorDecorationType {
+        return this.window.createTextEditorDecorationType({
+            overviewRulerColor: 'red',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                gutterIconPath: this.gutterIconPath('failed.svg'),
             },
-        },
-        dark: {
-            before: {
-                color: '#AD322D',
-                contentText: '●',
+            dark: {
+                gutterIconPath: this.gutterIconPath('failed.svg'), 
             },
-        },
-    })
-}
+        })
+    }
 
-export function skipped() {
-    return window.createTextEditorDecorationType({
-        overviewRulerColor: 'darkgrey',
-        overviewRulerLane: OverviewRulerLane.Left,
-        dark: {
-            before: {
-                color: '#3BB26B',
-                contentText: '○',
+    public skipped(): TextEditorDecorationType {
+        return this.window.createTextEditorDecorationType({
+            overviewRulerColor: 'darkgrey',
+            overviewRulerLane: OverviewRulerLane.Left,
+            dark: {
+                gutterIconPath: this.gutterIconPath('skipped.svg'),
             },
-        },
-        light: {
-            before: {
-                color: '#2F8F51',
-                contentText: '○',
+            light: {
+                gutterIconPath: this.gutterIconPath('skipped.svg'), 
             },
-        },
-    })
-}
+        })
+    }
 
-export function failingAssertionStyle(text: string) {
-    return window.createTextEditorDecorationType({
-        isWholeLine: true,
-        overviewRulerColor: 'red',
-        overviewRulerLane: OverviewRulerLane.Left,
-        light: {
-            before: {
-                color: '#FF564B',
+    public incompleted(): TextEditorDecorationType {
+        return this.skipped()
+    }
+
+    public assertionFailed(text: string) {
+        return this.window.createTextEditorDecorationType({
+            isWholeLine: true,
+            overviewRulerColor: 'red',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                before: {
+                    color: '#FF564B',
+                },
             },
-        },
-        dark: {
-            before: {
-                color: '#AD322D',
+            dark: {
+                before: {
+                    color: '#AD322D',
+                },
             },
-        },
-        after: {
-            contentText: ' // ' + text,
-        },
-    })
+            after: {
+                contentText: ' // ' + text,
+            },
+        })
+    }
+
+    protected gutterIconPath(path: string) {
+        return join(...[__dirname, '/../../images', path]);
+    }
 }
 
 export class DecorateManager {
-    public decorationTypes: Map<string, TextEditorDecorationType> = new Map([
-        ['passed', passed()],
-        ['failed', failed()],
-        ['skipped', skipped()],
-        ['incompleted', skipped()],
-    ])
+    private assertionFails = []
+
+    public decorationTypes: Map<string, TextEditorDecorationType>
+
+    public constructor(private decorations: Decorations = new Decorations()) {
+        this.decorationTypes = new Map([
+            ['passed', this.decorations.passed()],
+            ['failed', this.decorations.failed()],
+            ['skipped', this.decorations.skipped()],
+            ['incompleted', this.decorations.incompleted()],
+        ])
+    }
 
     public clearDecoratedGutter(editor: TextEditor): this {
         this.decorationTypes.forEach(decorationType => {
@@ -97,12 +99,34 @@ export class DecorateManager {
     }
 
     public decorateGutter(editor: TextEditor, messages: Message[]): void {
-        this.groupBy(messages).forEach((decorations, decorationType) => {
-            editor.setDecorations(this.decorationTypes.get(decorationType), decorations)
+        const groupBy = this.groupBy(messages)
+        groupBy.forEach((messages: Message[], decorationType: string) => {
+            editor.setDecorations(
+                this.decorationTypes.get(decorationType),
+                messages.map(message => {
+                    return {
+                        range: new Range(message.line, 0, message.line, 0),
+                        hoverMessage: message.state,
+                    }
+                })
+            )
+        })
+
+        this.assertionFails.forEach(style => editor.setDecorations(style, []))
+        this.assertionFails = []
+
+        groupBy.get('failed').forEach((message: Message) => {
+            const decoration = {
+                range: new Range(message.line, 0, message.line, 0),
+                hoverMessage: message.error.message,
+            }
+            const style = this.decorations.assertionFailed(message.error.message)
+            this.assertionFails.push(style)
+            editor.setDecorations(style, [decoration])
         })
     }
 
-    protected groupBy(messages: Message[]): Map<string, any> {
+    protected groupBy(messages: Message[]): Map<string, Message[]> {
         const group = {
             passed: [],
             failed: [],
@@ -111,10 +135,7 @@ export class DecorateManager {
         }
 
         messages.forEach((message: Message) => {
-            group[message.state].push({
-                range: new Range(message.line, 0, message.line, 1),
-                hoverMessage: message.state,
-            })
+            group[message.state].push(message)
         })
 
         return new Map([

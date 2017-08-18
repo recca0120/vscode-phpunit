@@ -1,5 +1,6 @@
-import { Disposable, ExtensionContext, OutputChannel, TextDocument, window, workspace } from 'vscode'
+import { Disposable, ExtensionContext, OutputChannel, TextDocument } from 'vscode'
 import { Message, Parser } from './parser'
+import { Window, Workspace } from './wrapper/vscode'
 
 import { DecorateManager } from './decorate-manager'
 import { Filesystem } from './filesystem'
@@ -26,18 +27,20 @@ class UnitTest {
     private channel: OutputChannel
     private disposable: Disposable
     public constructor(
+        private decorateManager: DecorateManager = new DecorateManager(),
+        private window: Window = new Window(),
+        private workspace: Workspace = new Workspace(),
         private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
-        private decorateManager: DecorateManager = new DecorateManager()
     ) {
-        this.channel = window.createOutputChannel('PHPUnit')
-        this.phpUnit.setRootPath(workspace.rootPath).setOutput((buffer: Buffer) => {
+        this.channel = this.window.createOutputChannel('PHPUnit')
+        this.phpUnit.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
             this.channel.append(this.noAnsi(buffer.toString()))
         })
     }
 
     public listen(): this {
         const subscriptions: Disposable[] = []
-        workspace.onDidOpenTextDocument(
+        this.workspace.onDidOpenTextDocument(
             (textDocument: TextDocument) => {
                 setTimeout(() => {
                     this.handle(textDocument)
@@ -46,7 +49,7 @@ class UnitTest {
             null,
             subscriptions
         )
-        workspace.onDidSaveTextDocument(
+        this.workspace.onDidSaveTextDocument(
             (textDocument: TextDocument) => {
                 this.handle(textDocument)
             },
@@ -59,7 +62,7 @@ class UnitTest {
     }
 
     protected async handle(doc: TextDocument) {
-        const editor = window.activeTextEditor
+        const editor = this.window.activeTextEditor
         const messages: Message[] = await this.phpUnit.handle(doc.fileName)
         this.decorateManager.clearDecoratedGutter(editor).decorateGutter(editor, messages)
     }

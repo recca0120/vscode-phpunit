@@ -7,22 +7,22 @@ class PHPUnit2Test extends TestCase
 {
     protected function tearDown()
     { 
-        m::close();
+        m::close(); 
     }
  
-    public function testPassed()
+    public function testPassed() 
     {
-        $this->assertTrue(true); 
-    }
-
+        $this->assertTrue(true);
+    } 
+ 
     public function testFailed() 
     {   
-        $this->assertTrue(false);  
+        $this->assertTrue(false); 
     }
 
     public function testSkipped()
     {
-        $this->markTestSkipped('The MySQLi extension is not available.');
+        $this->markTestSkipped('The MySQLi extension is not available.'); 
     }
 
     public function testIncomplete()
