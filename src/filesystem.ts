@@ -83,19 +83,29 @@ export class Filesystem extends AbstractFilesystem {
 
     public find(file: string): string {
         const key = file
-        if (this.cache.has(key) === false) {
-            this.cache.set(key, this.instance.find(key))
+        if (this.cache.has(key) === true) {
+            return this.cache.get(key)
         }
 
-        return this.cache.get(key)
+        const find = this.instance.find(key)
+        if (find) {
+            this.cache.set(key, find)
+        }
+
+        return find ? find : file
     }
 
     public exists(file: string): boolean {
         const key = `${file}-exists`
-        if (this.cache.has(key) === false) {
-            this.cache.set(key, this.instance.exists(file))
+        if (this.cache.has(key) === true) {
+            return this.cache.get(key)
         }
 
-        return this.cache.get(key)
+        const exists = this.instance.exists(file)
+        if (exists === true) {
+            this.cache.set(key, exists)
+        }
+
+        return exists
     }
 }
