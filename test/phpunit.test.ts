@@ -1,8 +1,9 @@
 import * as assert from 'assert'
+
 import { PHPUnit } from '../src/phpunit'
 import { Parser } from '../src/parser'
-import { join } from 'path'
 import { copySync } from 'fs-extra'
+import { join } from 'path'
 
 class TestParser extends Parser {
     public async parseXML() {

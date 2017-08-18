@@ -1,8 +1,10 @@
 'use strict'
+
+import { ExtensionContext, TextDocument, window, workspace } from 'vscode'
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import { PHPUnit } from './phpunit'
-import { ExtensionContext, workspace, TextDocument, window } from 'vscode'
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed

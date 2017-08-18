@@ -1,4 +1,5 @@
 import * as assert from 'assert'
+
 import { Parser } from '../src/parser'
 import { join } from 'path'
 

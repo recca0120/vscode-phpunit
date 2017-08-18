@@ -1,9 +1,10 @@
-import { tmpdir } from 'os'
+import { existsSync, unlinkSync } from 'fs'
+
+import { Filesystem } from './filesystem'
+import { Parser } from './parser'
 import { join } from 'path'
 import { spawn } from 'child_process'
-import { Parser } from './parser'
-import { existsSync, unlinkSync } from 'fs'
-import { Filesystem } from './command'
+import { tmpdir } from 'os'
 
 export class PHPUnit {
     public rootPath = __dirname
