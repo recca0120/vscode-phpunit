@@ -2,6 +2,8 @@
 
 Visual PHPUnit for VSCode
 
+![vscode-phpunit](images/vscode-phpunit.png)
+
 ### Why this package
 - When using PHPUnit in VSC, you can see a visual result, instead of wordings, after the testing.  This makes testing easier and more anjoyable.
 - The package helps you acchieve with just a few clicks.
