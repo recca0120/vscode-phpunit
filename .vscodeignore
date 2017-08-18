@@ -5,5 +5,7 @@ test/**
 src/**
 **/*.map
 .gitignore
+.travis.yml
 tsconfig.json
-vsc-extension-quickstart.md
+tslint.json
+*.vsix
