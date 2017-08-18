@@ -1,8 +1,9 @@
 import * as assert from 'assert'
 
+import { Parser, State } from '../src/parser'
+
 import { Filesystem } from './../src/filesystem'
 import { PHPUnit } from '../src/phpunit'
-import { Parser } from '../src/parser'
 import { copySync } from 'fs-extra'
 import { join } from 'path'
 
@@ -36,7 +37,7 @@ suite('PHPUnit Tests', () => {
             duration: 0.006241,
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 12,
-            state: 'passed',
+            state: State.PASSED,
             title: 'testPassed',
         })
     })

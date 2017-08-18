@@ -1,6 +1,7 @@
 import * as assert from 'assert'
 
-import { Parser } from '../src/parser'
+import { Parser, State } from '../src/parser'
+
 import { join } from 'path'
 
 suite('Parser Tests', () => {
@@ -16,9 +17,13 @@ suite('Parser Tests', () => {
 
         assert.deepEqual(messages[0], {
             duration: 0.006241,
+            error: {
+                message: '',
+                name: '',
+            },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 12,
-            state: 'passed',
+            state: State.PASSED,
             title: 'testPassed',
         })
     })
@@ -35,7 +40,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 19,
-            state: 'failed',
+            state: State.FAILED,
             title: 'testFailed',
         })
     })
@@ -53,7 +58,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 24,
-            state: 'failed',
+            state: State.FAILED,
             title: 'testError',
         })
     })
@@ -70,7 +75,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 29,
-            state: 'skipped',
+            state: State.SKIPPED,
             title: 'testSkipped',
         })
     })
@@ -87,7 +92,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 34,
-            state: 'incomplete',
+            state: State.INCOMPLETED,
             title: 'testIncomplete',
         })
     })
@@ -105,7 +110,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 44,
-            state: 'failed',
+            state: State.FAILED,
             title: 'testReceive',
         })
     })
@@ -124,7 +129,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 12,
-            state: 'failed',
+            state: State.FAILED,
             title: 'testCleanDirectory',
         })
     })
@@ -140,7 +145,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 22,
-            state: 'skipped',
+            state: State.SKIPPED,
             title: 'testSkipped',
         })
 
@@ -152,7 +157,7 @@ suite('Parser Tests', () => {
             },
             filePath: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
             lineNumber: 27,
-            state: 'skipped',
+            state: State.SKIPPED,
             title: 'testIncomplete',
         })
     })

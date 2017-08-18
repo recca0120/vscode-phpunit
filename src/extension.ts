@@ -1,12 +1,11 @@
-'use strict'
-
-import { ExtensionContext, TextDocument, window, workspace } from 'vscode'
-
-import { Filesystem } from './filesystem'
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+
+import { ExtensionContext, TextDocument, TextEditorDecorationType, window, workspace } from 'vscode'
+import { Message, Parser } from './parser'
+
+import { Filesystem } from './filesystem'
 import { PHPUnit } from './phpunit'
-import { Parser } from './parser'
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -29,6 +28,43 @@ export function activate(context: ExtensionContext) {
 
     const exec = async function(textDocument: TextDocument) {
         const messages = await phpunit.handle(textDocument.fileName, output)
+
+        const passed: TextEditorDecorationType[] = []
+        const failed: TextEditorDecorationType[] = []
+        const skipped: TextEditorDecorationType[] = []
+        const incompleted: TextEditorDecorationType[] = []
+
+        messages.map((message: Message) => {})
+        // const decorations = {
+        //     success: {},
+        //     fail: {},
+        //     warning: {}
+        // };
+
+        // for (const message of messages) {
+        //     switch message.state
+        // }
+
+        // const smallNumberDecorationType = window.createTextEditorDecorationType({
+        //     overviewRulerColor: 'red',
+        //     overviewRulerLane: OverviewRulerLane.Right,
+        //     light: {
+        //         before: {
+        //             color: '#FF564B',
+        //             contentText: '●',
+        //         },
+        //     },
+        //     dark: {
+        //         before: {
+        //             color: '#AD322D',
+        //             contentText: '●',
+        //         },
+        //     },
+        // })
+
+        // window.activeTextEditor.setDecorations(smallNumberDecorationType, [{
+        //     range: new Range(10, 0, 10, 0)
+        // }]);
 
         console.log(messages)
     }

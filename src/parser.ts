@@ -1,22 +1,41 @@
 import { parseString } from 'xml2js'
 import { readFile } from 'fs'
 
+export enum State {
+    PASSED = 'passed',
+    FAILED = 'failed',
+    SKIPPED = 'skipped',
+    INCOMPLETED = 'incompleted',
+}
+
+export interface Message {
+    duration: number
+    error: {
+        message: string
+        name: string
+    }
+    filePath: string
+    lineNumber: number
+    state: State
+    title: string
+}
+
 export class Parser {
-    public async parseString(str: string): Promise<any> {
+    public async parseString(str: string): Promise<Message[]> {
         const json = await this.xml2json(str)
 
         return this.parseTestsuite(json.testsuites)
     }
 
-    public async parseXML(fileName: string): Promise<any> {
+    public async parseXML(fileName: string): Promise<Message[]> {
         const str = await this.readFileAsync(fileName)
-        const messages = await this.parseString(str)
+        const messages: Message[] = await this.parseString(str)
 
         return messages
     }
 
-    protected parseTestsuite(testsuite: any): any {
-        let messages = []
+    protected parseTestsuite(testsuite: any): Message[] {
+        let messages: Message[] = []
         if (testsuite.testsuite) {
             messages = messages.concat(...testsuite.testsuite.map(this.parseTestsuite.bind(this)))
         } else if (testsuite.testcase) {
@@ -26,7 +45,7 @@ export class Parser {
         return messages
     }
 
-    protected parseTestcase(testcase: any): any {
+    protected parseTestcase(testcase: any): Message {
         const testcaseAttr = testcase.$
         const duration = parseFloat(testcaseAttr.time || 0)
         const title = testcaseAttr.name || ''
@@ -34,9 +53,13 @@ export class Parser {
         if (error === null) {
             return {
                 duration,
+                error: {
+                    message: '',
+                    name: '',
+                },
                 filePath: testcaseAttr.file,
                 lineNumber: (testcaseAttr.line || 1) - 1,
-                state: 'passed',
+                state: State.PASSED,
                 title,
             }
         }
@@ -76,7 +99,7 @@ export class Parser {
         if (testcase.skipped) {
             return {
                 $: {
-                    type: 'skipped',
+                    type: State.SKIPPED,
                 },
                 _: '',
             }
@@ -89,22 +112,22 @@ export class Parser {
         return str.replace(/\r\n/g, '\n')
     }
 
-    protected parseState(errAttr: any): string {
+    protected parseState(errAttr: any): State {
         const type = errAttr.type.toLowerCase()
 
         if (type.indexOf('skipped') !== -1) {
-            return 'skipped'
+            return State.SKIPPED
         }
 
         if (type.indexOf('incomplete') !== -1) {
-            return 'incomplete'
+            return State.INCOMPLETED
         }
 
         if (type.indexOf('failed') !== -1) {
-            return 'failed'
+            return State.FAILED
         }
 
-        return 'failed'
+        return State.FAILED
     }
 
     protected stringToFiles(errorChar: string): Array<string> {
