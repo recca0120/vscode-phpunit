@@ -1,8 +1,16 @@
-install:
-  - ps: Install-Product node 5.11 x64
+environment:
+  ELECTRON_NO_ATTACH_CONSOLE: 1
 
-build_script:
+install:
+  - ps: Install-Product node 6.6.0 x64
+  - npm install -g npm
   - npm install
+
+platform:
+  - x86
+  - x64
+
+build: off
 
 test_script:
   - npm test
