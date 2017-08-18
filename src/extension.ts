@@ -2,9 +2,11 @@
 
 import { ExtensionContext, TextDocument, window, workspace } from 'vscode'
 
+import { Filesystem } from './filesystem'
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import { PHPUnit } from './phpunit'
+import { Parser } from './parser'
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -14,7 +16,10 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
     const output = window.createOutputChannel('phpunit')
-    const phpunit = new PHPUnit().setRootPath(workspace.rootPath)
+    const parser = new Parser()
+    const filesystem = new Filesystem()
+    const phpunit = new PHPUnit(parser, filesystem)
+    phpunit.setRootPath(workspace.rootPath)
 
     // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
     //     const messages = await phpunit.run(e.document.fileName, output);
@@ -23,7 +28,7 @@ export function activate(context: ExtensionContext) {
     // context.subscriptions.push(disposable);
 
     const exec = async function(textDocument: TextDocument) {
-        const messages = await phpunit.run(textDocument.fileName, output)
+        const messages = await phpunit.handle(textDocument.fileName, output)
 
         console.log(messages)
     }

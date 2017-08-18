@@ -92,7 +92,7 @@ export class Filesystem extends AbstractFilesystem {
             this.cache.set(key, find)
         }
 
-        return find ? find : file
+        return find ? find : ''
     }
 
     public exists(file: string): boolean {

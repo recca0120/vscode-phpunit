@@ -24,17 +24,25 @@ export class PHPUnit {
         return this
     }
 
-    public run(filePath: string, output: any = null): Promise<any> {
+    public handle(filePath: string, output: any = null): Promise<any> {
         return new Promise(resolve => {
             if (/\.git\.php$/.test(filePath) === true) {
                 resolve([])
+
+                return
             }
 
             const rootPath = this.rootPath
             const xml = join(this.tmpPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
             const vendorPath = `${rootPath}/vendor/bin/phpunit`
             const command =
-                this.files.exists(vendorPath) === true ? this.files.find(vendorPath) : this.files.find('phpunit')
+                this.files.exists(vendorPath) === true ? this.files.find(vendorPath) : this.files.find(`phpunit`)
+
+            if (!command) {
+                resolve([])
+
+                return
+            }
 
             const args = [filePath, '--colors=always', '--log-junit', xml]
             const process = spawn(command, args, { cwd: rootPath })
