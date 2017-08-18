@@ -1,4 +1,4 @@
-import { OverviewRulerLane, Range, TextEditor, window } from 'vscode'
+import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, window } from 'vscode'
 
 import { Message } from './parser'
 
@@ -80,31 +80,48 @@ export function failingAssertionStyle(text: string) {
     })
 }
 
-export class Decorator {
-    public types = {
-        passed: passed(),
-        failed: failed(),
-        skipped: skipped(),
-        incompleted: skipped(),
+export class DecorateManager {
+    public decorationTypes: Map<string, TextEditorDecorationType> = new Map([
+        ['passed', passed()],
+        ['failed', failed()],
+        ['skipped', skipped()],
+        ['incompleted', skipped()],
+    ])
+
+    public clearDecoratedGutter(editor: TextEditor): this {
+        this.decorationTypes.forEach(decorationType => {
+            editor.setDecorations(decorationType, [])
+        })
+
+        return this
     }
 
-    public update(editor: TextEditor, messages: Message[]) {
-        for (const type in this.types) {
-            editor.setDecorations(this.types[type], [])
+    public decorateGutter(editor: TextEditor, messages: Message[]): void {
+        this.groupBy(messages).forEach((decorations, decorationType) => {
+            editor.setDecorations(this.decorationTypes.get(decorationType), decorations)
+        })
+    }
+
+    protected groupBy(messages: Message[]): Map<string, any> {
+        const group = {
+            passed: [],
+            failed: [],
+            skipped: [],
+            incompleted: [],
         }
-        const decorationGroups = {}
+
         messages.forEach((message: Message) => {
-            if (!decorationGroups[message.state]) {
-                decorationGroups[message.state] = []
-            }
-            decorationGroups[message.state].push({
+            group[message.state].push({
                 range: new Range(message.line, 0, message.line, 1),
                 hoverMessage: message.state,
             })
         })
 
-        for (const state in decorationGroups) {
-            editor.setDecorations(this.types[state], decorationGroups[state])
-        }
+        return new Map([
+            ['passed', group.passed],
+            ['failed', group.failed],
+            ['skipped', group.skipped],
+            ['incompleted', group.incompleted],
+        ])
     }
 }

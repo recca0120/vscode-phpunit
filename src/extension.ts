@@ -1,7 +1,7 @@
-import { ExtensionContext, TextDocument, window, workspace } from 'vscode'
+import { Disposable, ExtensionContext, OutputChannel, TextDocument, window, workspace } from 'vscode'
 import { Message, Parser } from './parser'
 
-import { Decorator } from './decorator'
+import { DecorateManager } from './decorate-manager'
 import { Filesystem } from './filesystem'
 import { PHPUnit } from './phpunit'
 
@@ -10,42 +10,65 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    const channel = window.createOutputChannel('phpunit')
-
-    const decorator = new Decorator()
-    const parser = new Parser()
-    const filesystem = new Filesystem()
-    const phpunit = new PHPUnit(parser, filesystem).setRootPath(workspace.rootPath).setOutput((buffer: Buffer) => {
-        channel.append(noAnsi(buffer.toString()))
-    })
+    context.subscriptions.push(new UnitTest().listen())
 
     // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
     //     const messages = await phpunit.run(e.document.fileName, output);
     //     console.log(messages);
     // });
-    // context.subscriptions.push(disposable);
-
-    const exec = async function(textDocument: TextDocument) {
-        const messages: Message[] = await phpunit.handle(textDocument.fileName)
-        decorator.update(window.activeTextEditor, messages)
-    }
-
-    const disposable2 = workspace.onDidOpenTextDocument((textDocument: TextDocument) => {
-        setTimeout(() => {
-            exec(textDocument)
-        }, 2000)
-    })
-    context.subscriptions.push(disposable2)
-
-    const disposable3 = workspace.onDidSaveTextDocument((textDocument: TextDocument) => {
-        exec(textDocument)
-    })
-    context.subscriptions.push(disposable3)
+    //
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-export function noAnsi(str: string): string {
-    return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+class UnitTest {
+    private channel: OutputChannel
+    private disposable: Disposable
+    public constructor(
+        private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
+        private decorateManager: DecorateManager = new DecorateManager()
+    ) {
+        this.channel = window.createOutputChannel('PHPUnit')
+        this.phpUnit.setRootPath(workspace.rootPath).setOutput((buffer: Buffer) => {
+            this.channel.append(this.noAnsi(buffer.toString()))
+        })
+    }
+
+    public listen(): this {
+        const subscriptions: Disposable[] = []
+        workspace.onDidOpenTextDocument(
+            (textDocument: TextDocument) => {
+                setTimeout(() => {
+                    this.handle(textDocument)
+                }, 2000)
+            },
+            null,
+            subscriptions
+        )
+        workspace.onDidSaveTextDocument(
+            (textDocument: TextDocument) => {
+                this.handle(textDocument)
+            },
+            null,
+            subscriptions
+        )
+        this.disposable = Disposable.from(...subscriptions)
+
+        return this
+    }
+
+    protected async handle(doc: TextDocument) {
+        const editor = window.activeTextEditor
+        const messages: Message[] = await this.phpUnit.handle(doc.fileName)
+        this.decorateManager.clearDecoratedGutter(editor).decorateGutter(editor, messages)
+    }
+
+    protected noAnsi(str: string): string {
+        return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+    }
+
+    public dispose() {
+        this.disposable.dispose()
+    }
 }
