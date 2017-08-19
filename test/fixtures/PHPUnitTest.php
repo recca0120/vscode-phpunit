@@ -3,16 +3,16 @@
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
-class PHPUnitTest extends TestCase
+class PHPUnitTest extends TestCase 
 {
     protected function tearDown()
-    {
+    { 
         m::close();
     }
 
     public function testPassed() 
     {
-        $this->assertTrue(true);
+        $this->assertTrue(true);  
     }
 
     public function testFailed()

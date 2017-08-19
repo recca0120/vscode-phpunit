@@ -10,7 +10,13 @@ import {
 } from 'vscode'
 
 export class Window {
-    public activeTextEditor: TextEditor = window.activeTextEditor
+    public getActiveTextEditor(): TextEditor {
+        return window.activeTextEditor
+    }
+
+    public onDidChangeActiveTextEditor(listener: any = () => {}, thisArgs ?: any, disposables ?: Disposable[]): Disposable {
+        return window.onDidChangeActiveTextEditor(listener, thisArgs, disposables)
+    }
 
     public createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType {
         return window.createTextEditorDecorationType(options)
@@ -34,5 +40,9 @@ export class Workspace {
 
     public onDidSaveTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
         return workspace.onDidSaveTextDocument(listener, thisArgs, disposables)
+    }
+
+    public onDidChangeTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
+        return workspace.onDidChangeTextDocument(listener, thisArgs, disposables);
     }
 }

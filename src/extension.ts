@@ -1,4 +1,4 @@
-import { Disposable, ExtensionContext, OutputChannel, TextDocument } from 'vscode'
+import { Disposable, ExtensionContext, OutputChannel, TextDocument, TextEditor } from 'vscode'
 import { Message, Parser } from './parser'
 import { Window, Workspace } from './wrapper/vscode'
 
@@ -11,9 +11,13 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    context.subscriptions.push(new UnitTest(
+    new UnitTest(
         new DecorateManager(context)
-    ).listen())
+    ).listen()
+
+    // context.subscriptions.push(new UnitTest(
+    //     new DecorateManager(context)
+    // ).listen())
 
     // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
     //     const messages = await phpunit.run(e.document.fileName, output);
@@ -41,31 +45,37 @@ class UnitTest {
     }
 
     public listen(): this {
+        let activeEditor = this.window.getActiveTextEditor();
         const subscriptions: Disposable[] = []
-        this.workspace.onDidOpenTextDocument(
-            (textDocument: TextDocument) => {
-                setTimeout(() => {
-                    this.handle(textDocument)
-                }, 2000)
-            },
-            null,
-            subscriptions
-        )
-        this.workspace.onDidSaveTextDocument(
-            (textDocument: TextDocument) => {
-                this.handle(textDocument)
-            },
-            null,
-            subscriptions
-        )
+
+        this.window.onDidChangeActiveTextEditor((editor: TextEditor) => {
+            activeEditor = editor;
+            this.handle(activeEditor);
+        }, null, subscriptions);
+
+        this.workspace.onDidSaveTextDocument((document: TextDocument) => {
+            if (document) {
+                this.handle(activeEditor)
+            }
+        }, null, subscriptions)
+
+        this.workspace.onDidChangeTextDocument((document: TextDocument) => {
+            if (activeEditor && document === activeEditor.document) {
+                this.handle(activeEditor)
+            }
+        }, null, subscriptions)
+
         this.disposable = Disposable.from(...subscriptions)
+
+        if (activeEditor) {
+            this.handle(activeEditor);
+        }
 
         return this
     }
 
-    protected async handle(doc: TextDocument) {
-        const editor = this.window.activeTextEditor
-        const messages: Message[] = await this.phpUnit.handle(doc.fileName)
+    public async handle(editor: TextEditor) {
+        const messages: Message[] = await this.phpUnit.handle(editor.document.fileName)
         this.decorateManager.clearDecoratedGutter(editor).decorateGutter(editor, messages)
     }
 

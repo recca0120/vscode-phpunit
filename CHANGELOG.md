@@ -3,6 +3,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.1.3
+- fix change textedior bug
+- assert message
+
 ## 0.1.2
 - inject context
 - context.asAbsolutePath
