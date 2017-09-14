@@ -42,6 +42,10 @@ export class Workspace {
         return workspace.onDidSaveTextDocument(listener, thisArgs, disposables)
     }
 
+    public onWillSaveTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
+        return workspace.onWillSaveTextDocument(listener, thisArgs, disposables);
+    }
+
     public onDidChangeTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
         return workspace.onDidChangeTextDocument(listener, thisArgs, disposables);
     }

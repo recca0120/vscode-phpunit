@@ -1,4 +1,4 @@
-import { Disposable, ExtensionContext, OutputChannel, TextDocument, TextEditor } from 'vscode'
+import { Disposable, ExtensionContext, OutputChannel, TextEditor } from 'vscode'
 import { Message, Parser } from './parser'
 import { Window, Workspace } from './wrapper/vscode'
 
@@ -11,19 +11,8 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    new UnitTest(
-        new DecorateManager(context)
-    ).listen()
-
-    // context.subscriptions.push(new UnitTest(
-    //     new DecorateManager(context)
-    // ).listen())
-
-    // const disposable = workspace.onWillSaveTextDocument(async (e: TextDocumentWillSaveEvent) => {
-    //     const messages = await phpunit.run(e.document.fileName, output);
-    //     console.log(messages);
-    // });
-    //
+    const decorateManager = new DecorateManager(context)
+    new UnitTest(decorateManager).listen()
 }
 
 // this method is called when your extension is deactivated
@@ -45,31 +34,37 @@ class UnitTest {
     }
 
     public listen(): this {
-        let activeEditor = this.window.getActiveTextEditor();
         const subscriptions: Disposable[] = []
 
-        this.window.onDidChangeActiveTextEditor((editor: TextEditor) => {
-            activeEditor = editor;
-            this.handle(activeEditor);
+        this.workspace.onDidOpenTextDocument(() => {
+            this.handle(this.window.getActiveTextEditor())
         }, null, subscriptions);
 
-        this.workspace.onDidSaveTextDocument((document: TextDocument) => {
-            if (document) {
-                this.handle(activeEditor)
-            }
-        }, null, subscriptions)
+        this.workspace.onWillSaveTextDocument(() => {
+            this.handle(this.window.getActiveTextEditor())
+        }, null, subscriptions);
 
-        this.workspace.onDidChangeTextDocument((document: TextDocument) => {
-            if (activeEditor && document === activeEditor.document) {
-                this.handle(activeEditor)
-            }
-        }, null, subscriptions)
+        // this.window.onDidChangeActiveTextEditor(() => {
+        //     this.handle(this.window.getActiveTextEditor())
+        // }, null, subscriptions);
+
+        // this.workspace.onDidSaveTextDocument((document: TextDocument) => {
+        //     if (document) {
+        //         this.handle(this.window.getActiveTextEditor())
+        //     }
+        // }, null, subscriptions)
+
+        // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
+        //     if (activeEditor && document === activeEditor.document) {
+        //         this.handle(this.window.getActiveTextEditor())
+        //     }
+        // }, null, subscriptions)
+
+        // if (this.window.getActiveTextEditor()) {
+        //     this.handle(this.window.getActiveTextEditor());
+        // }
 
         this.disposable = Disposable.from(...subscriptions)
-
-        if (activeEditor) {
-            this.handle(activeEditor);
-        }
 
         return this
     }
