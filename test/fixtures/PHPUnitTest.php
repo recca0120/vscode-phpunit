@@ -20,7 +20,7 @@ class PHPUnitTest extends TestCase
         $this->assertTrue(false);
     }
   
-    public function testSkipped()
+    public function testSkipped() 
     {
         $this->markTestSkipped('The MySQLi extension is not available.'); 
     } 

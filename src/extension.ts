@@ -84,10 +84,15 @@ class UnitTest {
 
     public async handle(editor: TextEditor) {
         const keywords = new RegExp(
-            ['PHPUnit\\\\Framework\\\\TestCase', 'PHPUnit\\Framework\\TestCase', 'PHPUnit_Framework_TestCase'].join('|')
+            [
+                'PHPUnit\\\\Framework\\\\TestCase', 
+                'PHPUnit\\Framework\\TestCase', 
+                'PHPUnit_Framework_TestCase',
+                'TestCase',
+            ].join('|')
         )
 
-        if (keywords.test(editor.document.getText()) === false) {
+        if (!editor.document || keywords.test(editor.document.getText()) === false) {
             return
         }
 
