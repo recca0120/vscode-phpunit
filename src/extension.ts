@@ -1,7 +1,7 @@
 import { DecorateManager, DecorationStyle } from './decorate-manager'
-import { Disposable, ExtensionContext, OutputChannel, TextEditor } from 'vscode'
-import { Message, Parser, State } from './parser'
-import { Window, Workspace } from './wrapper/vscode'
+import { Disposable, ExtensionContext, OutputChannel, TextDocument, TextEditor } from 'vscode'
+import { Languages, Window, Workspace } from './wrapper/vscode'
+import { Message, Parser } from './parser'
 
 import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
@@ -12,8 +12,8 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    // const decorateManager = new DecorateManager(context)
-    new UnitTest(new DecorateManager(new DecorationStyle(context.extensionPath)), new DiagnosticManager()).listen()
+    const decorateManager = new DecorateManager(new DecorationStyle(context.extensionPath))
+    context.subscriptions.push(new UnitTest(decorateManager).register())
 }
 
 // this method is called when your extension is deactivated
@@ -21,12 +21,13 @@ export function deactivate() {}
 
 class UnitTest {
     private disposable: Disposable
+
     public constructor(
         private decorateManager: DecorateManager,
-        private diagnosticManager: DiagnosticManager,
-        private window: Window = new Window(),
+        private diagnosticManager: DiagnosticManager = new DiagnosticManager(new Languages()),
+        private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
         private workspace: Workspace = new Workspace(),
-        private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem())
+        private window: Window = new Window()
     ) {
         this.setupOutputChannel()
     }
@@ -38,79 +39,56 @@ class UnitTest {
         })
     }
 
-    public listen(): this {
+    public register(): this {
         const subscriptions: Disposable[] = []
 
-        this.workspace.onDidOpenTextDocument(
-            () => {
-                this.handle(this.window.getActiveTextEditor())
-            },
-            null,
-            subscriptions
-        )
-
-        this.workspace.onWillSaveTextDocument(
-            () => {
-                this.handle(this.window.getActiveTextEditor())
-            },
-            null,
-            subscriptions
-        )
-
-        // this.window.onDidChangeActiveTextEditor(() => {
-        //     this.handle(this.window.getActiveTextEditor())
-        // }, null, subscriptions);
-
-        // this.workspace.onDidSaveTextDocument((document: TextDocument) => {
-        //     if (document) {
-        //         this.handle(this.window.getActiveTextEditor())
-        //     }
-        // }, null, subscriptions)
-
-        // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
-        //     if (activeEditor && document === activeEditor.document) {
-        //         this.handle(this.window.getActiveTextEditor())
-        //     }
-        // }, null, subscriptions)
-
-        // if (this.window.getActiveTextEditor()) {
-        //     this.handle(this.window.getActiveTextEditor());
-        // }
+        // this.workspace.onDidOpenTextDocument(this.trigger(false), null, subscriptions)
+        this.workspace.onWillSaveTextDocument(this.trigger(false), null, subscriptions)
+        // this.workspace.onDidSaveTextDocument(this.trigger(false), null, subscriptions)
+        // this.workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
+        // this.window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
 
         this.disposable = Disposable.from(...subscriptions)
 
         return this
     }
 
-    public async handle(editor: TextEditor) {
+    public async handle(editor: TextEditor = null) {
         const keywords = new RegExp(
             [
-                'PHPUnit\\\\Framework\\\\TestCase', 
-                'PHPUnit\\Framework\\TestCase', 
+                'PHPUnit\\\\Framework\\\\TestCase',
+                'PHPUnit\\Framework\\TestCase',
                 'PHPUnit_Framework_TestCase',
                 'TestCase',
             ].join('|')
         )
 
-        if (!editor.document || keywords.test(editor.document.getText()) === false) {
+        if (!editor || !editor.document || keywords.test(editor.document.getText()) === false) {
             return
         }
 
         const messages: Message[] = await this.phpUnit.handle(editor.document.fileName)
-        const messageGroup = this.groupMessageByState(messages)
+        this.decorateManager.handle(messages, editor)
+        this.diagnosticManager.handle(messages, editor)
+    }
 
-        this.decorateManager.decorateGutter(editor, messageGroup)
-        this.diagnosticManager.diagnostic(editor, messageGroup)
+    protected trigger(checkDocument: boolean = false) {
+        if (checkDocument === true) {
+            return (document: TextDocument) => {
+                const editor = this.window.getActiveTextEditor()
+                if (editor && document === editor.document) {
+                    this.handle(editor)
+                }
+            }
+        }
+
+        return () => {
+            this.handle(this.window.getActiveTextEditor())
+        }
     }
 
     protected noAnsi(str: string): string {
         return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-    }
-
-    protected groupMessageByState(messages: Message[]): Map<State, Message[]> {
-        return messages.reduce((messageGroup: Map<State, Message[]>, message: Message) => {
-            return messageGroup.set(message.state, messageGroup.get(message.state).concat(message))
-        }, new Map<State, Message[]>([[State.PASSED, []], [State.FAILED, []], [State.SKIPPED, []], [State.INCOMPLETED, []]]))
     }
 
     public dispose() {

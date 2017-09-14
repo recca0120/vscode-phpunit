@@ -2,7 +2,7 @@
     "name": "vscode-phpunit",
     "displayName": "VSCode-PHPUnit",
     "description": "",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "engines": {
@@ -23,7 +23,7 @@
         "test": "node ./node_modules/vscode/bin/test",
         "prettier": "prettier --tab-width 4",
         "prettier-write": "npm run prettier -- --parser typescript --no-semi --single-quote --trailing-comma es5 --write --print-width 120",
-        "prettier-project": "npm run prettier-write -- '?(__mocks__|src|tests)/**/*.ts'"
+        "prettier-project": "npm run prettier-write -- {test,src}/**/*.ts"
     },
     "license": "MIT",
     "keywords": [

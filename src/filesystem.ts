@@ -75,7 +75,9 @@ class Linux extends AbstractFilesystem implements FilesystemInterface {
 
 export class Filesystem extends AbstractFilesystem {
     protected instance: FilesystemInterface
-    protected cache = new Map()
+
+    protected cache = new Map<string, string>()
+
     public constructor() {
         super()
         this.instance = this.isWindows() ? new Windows() : new Linux()
@@ -98,12 +100,12 @@ export class Filesystem extends AbstractFilesystem {
     public exists(file: string): boolean {
         const key = `${file}-exists`
         if (this.cache.has(key) === true) {
-            return this.cache.get(key)
+            return true
         }
 
         const exists = this.instance.exists(file)
         if (exists === true) {
-            this.cache.set(key, exists)
+            this.cache.set(key, file)
         }
 
         return exists

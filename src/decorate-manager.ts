@@ -66,24 +66,26 @@ export class DecorationStyle {
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
+
+    private states: State[] = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
+
     public constructor(private decorationStyle: DecorationStyle, private window: Window = new Window()) {
-        this.styles = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED].reduce((styles, state: State) => {
-            return styles.set(state, this.window.createTextEditorDecorationType(this.decorationStyle.get(state)))
-        }, new Map<State, TextEditorDecorationType>())
+        this.styles = this.states.reduce(
+            (styles, state: State) =>
+                styles.set(state, this.window.createTextEditorDecorationType(this.decorationStyle.get(state))),
+            new Map<State, TextEditorDecorationType>()
+        )
     }
 
-    public decorateGutter(editor: TextEditor, messageGroup: Map<State, Message[]>) {
+    public handle(messages: Message[], editor: TextEditor) {
         this.clearDecoratedGutter(editor)
-
-        messageGroup.forEach((messages: Message[], state) => {
+        this.groupMessageByState(messages).forEach((messages: Message[], state) => {
             editor.setDecorations(
                 this.styles.get(state),
-                messages.map(message => {
-                    return {
-                        range: new Range(message.lineNumber, 0, message.lineNumber, 0),
-                        hoverMessage: message.state,
-                    }
-                })
+                messages.map(message => ({
+                    range: new Range(message.lineNumber, 0, message.lineNumber, 0),
+                    hoverMessage: message.state,
+                }))
             )
         })
     }
@@ -92,5 +94,13 @@ export class DecorateManager {
         for (const state of this.styles.keys()) {
             editor.setDecorations(this.styles.get(state), [])
         }
+    }
+
+    protected groupMessageByState(messages: Message[]): Map<State, Message[]> {
+        return messages.reduce(
+            (messageGroup: Map<State, Message[]>, message: Message) =>
+                messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
+            new Map<State, Message[]>([].concat(this.states.map(state => [state, []])))
+        )
     }
 }

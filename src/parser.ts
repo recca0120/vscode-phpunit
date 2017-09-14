@@ -79,7 +79,7 @@ export class Parser {
         return {
             duration,
             error: {
-                fullMessage: this.crlf2lf(errorChar),
+                fullMessage: this.parseFullMessage(errorChar, name, title),
                 message: this.parseMessage(errorChar, files, name, title),
                 name: '',
             },
@@ -161,6 +161,15 @@ export class Parser {
     protected parseMessage(message: string, files: Array<string>, name: string, title: string): string {
         message = this.crlf2lf(message)
         files.forEach(line => (message = message.replace(line, '')))
+        message = message.replace(/\n+$/, '')
+        message = this.replaceFirst(message, `${name}: `)
+        message = this.replaceFirst(message, `${title}\n`)
+
+        return message
+    }
+
+    protected parseFullMessage(message: string, name: string, title: string): string {
+        message = this.crlf2lf(message)
         message = message.replace(/\n+$/, '')
         message = this.replaceFirst(message, `${name}: `)
         message = this.replaceFirst(message, `${title}\n`)
