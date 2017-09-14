@@ -5,6 +5,7 @@ import {
     TextEditor,
     TextEditorDecorationType,
     WorkspaceConfiguration,
+    languages,
     window,
     workspace,
 } from 'vscode'
@@ -48,5 +49,11 @@ export class Workspace {
 
     public onDidChangeTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
         return workspace.onDidChangeTextDocument(listener, thisArgs, disposables);
+    }
+}
+
+export class Languages {
+    public createDiagnosticCollection(name = "PHPUnit") {
+        return languages.createDiagnosticCollection(name)
     }
 }
