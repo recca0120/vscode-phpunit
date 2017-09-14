@@ -1,18 +1,7 @@
 import { DecorateManager, DecorationStyle } from './decorate-manager'
-import {
-    Diagnostic,
-    DiagnosticCollection,
-    Disposable,
-    ExtensionContext,
-    OutputChannel,
-    Range,
-    TextEditor,
-    TextEditorDecorationType,
-    Uri,
-    window,
-} from 'vscode'
-import { Languages, Window, Workspace } from './wrapper/vscode'
+import { Disposable, ExtensionContext, OutputChannel, TextEditor } from 'vscode'
 import { Message, Parser, State } from './parser'
+import { Window, Workspace } from './wrapper/vscode'
 
 import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
@@ -43,7 +32,7 @@ class UnitTest {
     }
 
     private setupOutputChannel() {
-        const channel = this.window.createOutputChannel('PHPUnit')
+        const channel: OutputChannel = this.window.createOutputChannel('PHPUnit')
         this.phpUnit.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
             channel.append(this.noAnsi(buffer.toString()))
         })

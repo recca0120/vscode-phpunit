@@ -1,5 +1,5 @@
 import { Message, State } from './parser'
-import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, TextLine } from 'vscode'
+import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
 import { Window } from './wrapper/vscode'
 
