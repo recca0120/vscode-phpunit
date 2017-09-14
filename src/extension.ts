@@ -70,6 +70,16 @@ class UnitTest {
     }
 
     public async handle(editor: TextEditor) {
+        const keywords = new RegExp([
+            'PHPUnit\\\\Framework\\\\TestCase',
+            'PHPUnit\\Framework\\TestCase',
+            'PHPUnit_Framework_TestCase',
+        ].join('|'))
+
+        if (keywords.test(editor.document.getText()) === false) {
+            return
+        }
+        
         const messages: Message[] = await this.phpUnit.handle(editor.document.fileName)
         this.decorateManager.clearDecoratedGutter(editor).decorateGutter(editor, messages)
     }
