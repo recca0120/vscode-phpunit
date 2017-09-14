@@ -25,7 +25,7 @@ export class DiagnosticManager {
                             textLine.lineNumber,
                             textLine.text.trim().length
                         ),
-                        message.error.message
+                        message.error.fullMessage
                     )
                 })
             )

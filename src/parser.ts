@@ -11,6 +11,7 @@ export enum State {
 export interface Message {
     duration: number
     error: {
+        fullMessage: string
         message: string
         name: string
     }
@@ -54,6 +55,7 @@ export class Parser {
             return {
                 duration,
                 error: {
+                    fullMessage: '',
                     message: '',
                     name: '',
                 },
@@ -77,6 +79,7 @@ export class Parser {
         return {
             duration,
             error: {
+                fullMessage: this.crlf2lf(errorChar),
                 message: this.parseMessage(errorChar, files, name, title),
                 name: '',
             },
