@@ -111,6 +111,7 @@ class UnitTest {
     }
 
     public dispose() {
+        this.diagnosticManager.dispose()
         this.disposable.dispose()
     }
 }

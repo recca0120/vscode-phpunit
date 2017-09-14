@@ -34,6 +34,10 @@ export class DiagnosticManager {
         })
     }
 
+    public dispose() {
+        this.collection.dispose()
+    }
+
     protected groupMessageByFile(messages: Message[]): Map<string, Message[]> {
         return messages.reduce((messageGroup: Map<string, Message[]>, message: Message) => {
             let group = [];
