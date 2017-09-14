@@ -3,6 +3,12 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.2.0
+- Diagnostic
+- check keywords
+- trigger on onDidOpenTextDocument
+- trigger on onWillSaveTextDocument
+
 ## 0.1.3
 - fix change textedior bug
 - assert message
