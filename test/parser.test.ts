@@ -22,7 +22,7 @@ suite('Parser Tests', () => {
                 name: '',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 12,
+            lineNumber: 12,
             state: State.PASSED,
             title: 'testPassed',
         })
@@ -39,7 +39,7 @@ suite('Parser Tests', () => {
                 // name: 'PHPUnit_Framework_ExpectationFailedException',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 19,
+            lineNumber: 19,
             state: State.FAILED,
             title: 'testFailed',
         })
@@ -57,7 +57,7 @@ suite('Parser Tests', () => {
                 // name: 'PHPUnit_Framework_Exception',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 24,
+            lineNumber: 24,
             state: State.FAILED,
             title: 'testError',
         })
@@ -74,7 +74,7 @@ suite('Parser Tests', () => {
                 // name: 'PHPUnit_Framework_SkippedTestError',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 29,
+            lineNumber: 29,
             state: State.SKIPPED,
             title: 'testSkipped',
         })
@@ -91,7 +91,7 @@ suite('Parser Tests', () => {
                 // name: 'PHPUnit_Framework_IncompleteTestError',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 34,
+            lineNumber: 34,
             state: State.INCOMPLETED,
             title: 'testIncomplete',
         })
@@ -109,7 +109,7 @@ suite('Parser Tests', () => {
                 // name: 'BadMethodCallException',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 44,
+            lineNumber: 44,
             state: State.FAILED,
             title: 'testReceive',
         })
@@ -128,7 +128,7 @@ suite('Parser Tests', () => {
                 // name: 'Mockery\\Exception\\InvalidCountException',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 12,
+            lineNumber: 12,
             state: State.FAILED,
             title: 'testCleanDirectory',
         })
@@ -144,7 +144,7 @@ suite('Parser Tests', () => {
                 name: '',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 22,
+            lineNumber: 22,
             state: State.SKIPPED,
             title: 'testSkipped',
         })
@@ -156,7 +156,7 @@ suite('Parser Tests', () => {
                 name: '',
             },
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 27,
+            lineNumber: 27,
             state: State.SKIPPED,
             title: 'testIncomplete',
         })

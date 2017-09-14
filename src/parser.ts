@@ -15,7 +15,7 @@ export interface Message {
         name: string
     }
     file: string
-    line: number
+    lineNumber: number
     state: State
     title: string
 }
@@ -58,7 +58,7 @@ export class Parser {
                     name: '',
                 },
                 file: testcaseAttr.file,
-                line: (testcaseAttr.line || 1) - 1,
+                lineNumber: (testcaseAttr.line || 1) - 1,
                 state: State.PASSED,
                 title,
             }
@@ -81,7 +81,7 @@ export class Parser {
                 name: '',
             },
             file: file.filePath,
-            line: file.line - 1,
+            lineNumber: file.line - 1,
             state: state,
             title,
         }
