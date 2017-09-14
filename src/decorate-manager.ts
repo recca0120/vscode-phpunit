@@ -59,24 +59,6 @@ export class DecorationStyle {
         return this.skipped()
     }
 
-    public assertion(): Object {
-        return {
-            isWholeLine: true,
-            overviewRulerColor: 'red',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                before: {
-                    color: '#FF564B',
-                },
-            },
-            dark: {
-                before: {
-                    color: '#AD322D',
-                },
-            },
-        }
-    }
-
     private gutterIconPath(img: string) {
         return `${this.extensionPath}/images/${img}`
     }
@@ -84,7 +66,6 @@ export class DecorationStyle {
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
-    private assertionFails: TextEditorDecorationType[] = []
     public constructor(private decorationStyle: DecorationStyle, private window: Window = new Window) {
         this.styles = [
             State.PASSED,
@@ -112,31 +93,11 @@ export class DecorateManager {
                 })
             )
         })
-        
-        messageGroup.get(State.FAILED).forEach((message: Message) => {
-            const textLine: TextLine = editor.document.lineAt(message.lineNumber)
-            const assertionStyle = this.window.createTextEditorDecorationType(
-                this.decorationStyle.get('assertion')
-            )
-            editor.setDecorations(assertionStyle, [{
-                range: new Range(
-                    textLine.lineNumber, 
-                    textLine.firstNonWhitespaceCharacterIndex, 
-                    textLine.lineNumber, 
-                    textLine.text.trim().length
-                ),
-                hoverMessage: message.error.message,
-            }])
-            this.assertionFails.push(assertionStyle)
-        });
     }
 
     private clearDecoratedGutter(editor: TextEditor) {
         for (const state of this.styles.keys()) {
             editor.setDecorations(this.styles.get(state), [])
         }
-
-        this.assertionFails.forEach(decorationStyle => editor.setDecorations(decorationStyle, []))
-        this.assertionFails = [];
     }
 }
