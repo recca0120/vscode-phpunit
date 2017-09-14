@@ -1,4 +1,4 @@
-import { ExtensionContext, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
+import { ExtensionContext, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, TextLine } from 'vscode'
 
 import { Message } from './parser'
 import { Window } from './wrapper/vscode'
@@ -49,7 +49,7 @@ export class Decorations {
         return this.skipped()
     }
 
-    public assertionFailed(text: string) {
+    public assertionFailed() {
         return this.window.createTextEditorDecorationType({
             isWholeLine: true,
             overviewRulerColor: 'red',
@@ -63,9 +63,6 @@ export class Decorations {
                 before: {
                     color: '#AD322D',
                 },
-            },
-            after: {
-                contentText: ' // ' + text,
             },
         })
     }
@@ -105,22 +102,28 @@ export class DecorateManager{
                 this.decorationTypes.get(decorationType),
                 messages.map(message => {
                     return {
-                        range: new Range(message.line, 0, message.line, 0),
+                        range: new Range(message.lineNumber, 0, message.lineNumber, 0),
                         hoverMessage: message.state,
                     }
                 })
             )
-        })
+        }) 
 
         this.assertionFails.forEach(style => editor.setDecorations(style, []))
         this.assertionFails = []
 
         groupBy.get('failed').forEach((message: Message) => {
+            const textLine: TextLine = editor.document.lineAt(message.lineNumber)
             const decoration = {
-                range: new Range(message.line, 0, message.line, 0),
+                range: new Range(
+                    textLine.lineNumber, 
+                    textLine.firstNonWhitespaceCharacterIndex, 
+                    textLine.lineNumber, 
+                    textLine.text.trim().length
+                ),
                 hoverMessage: message.error.message,
             }
-            const style = this.decorations.assertionFailed(message.error.message)
+            const style = this.decorations.assertionFailed()
             this.assertionFails.push(style)
             editor.setDecorations(style, [decoration])
         })
