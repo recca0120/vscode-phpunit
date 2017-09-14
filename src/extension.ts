@@ -1,9 +1,20 @@
 import { DecorateManager, DecorationStyle } from './decorate-manager'
-import { Diagnostic, DiagnosticCollection, Disposable, ExtensionContext, OutputChannel, Range, TextEditor, TextEditorDecorationType, Uri, window } from 'vscode'
+import {
+    Diagnostic,
+    DiagnosticCollection,
+    Disposable,
+    ExtensionContext,
+    OutputChannel,
+    Range,
+    TextEditor,
+    TextEditorDecorationType,
+    Uri,
+    window,
+} from 'vscode'
 import { Languages, Window, Workspace } from './wrapper/vscode'
 import { Message, Parser, State } from './parser'
 
-import {DiagnosticManager} from './diagnostic-manager'
+import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
 import { PHPUnit } from './phpunit'
 
@@ -13,10 +24,7 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
     // const decorateManager = new DecorateManager(context)
-    new UnitTest(
-        new DecorateManager(new DecorationStyle(context.extensionPath)),
-        new DiagnosticManager
-    ).listen()
+    new UnitTest(new DecorateManager(new DecorationStyle(context.extensionPath)), new DiagnosticManager()).listen()
 }
 
 // this method is called when your extension is deactivated
@@ -29,7 +37,7 @@ class UnitTest {
         private diagnosticManager: DiagnosticManager,
         private window: Window = new Window(),
         private workspace: Workspace = new Workspace(),
-        private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
+        private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem())
     ) {
         this.setupOutputChannel()
     }
@@ -44,13 +52,21 @@ class UnitTest {
     public listen(): this {
         const subscriptions: Disposable[] = []
 
-        this.workspace.onDidOpenTextDocument(() => {
-            this.handle(this.window.getActiveTextEditor())
-        }, null, subscriptions);
+        this.workspace.onDidOpenTextDocument(
+            () => {
+                this.handle(this.window.getActiveTextEditor())
+            },
+            null,
+            subscriptions
+        )
 
-        this.workspace.onWillSaveTextDocument(() => {
-            this.handle(this.window.getActiveTextEditor())
-        }, null, subscriptions);
+        this.workspace.onWillSaveTextDocument(
+            () => {
+                this.handle(this.window.getActiveTextEditor())
+            },
+            null,
+            subscriptions
+        )
 
         // this.window.onDidChangeActiveTextEditor(() => {
         //     this.handle(this.window.getActiveTextEditor())
@@ -78,18 +94,16 @@ class UnitTest {
     }
 
     public async handle(editor: TextEditor) {
-        const keywords = new RegExp([
-            'PHPUnit\\\\Framework\\\\TestCase',
-            'PHPUnit\\Framework\\TestCase',
-            'PHPUnit_Framework_TestCase',
-        ].join('|'))
+        const keywords = new RegExp(
+            ['PHPUnit\\\\Framework\\\\TestCase', 'PHPUnit\\Framework\\TestCase', 'PHPUnit_Framework_TestCase'].join('|')
+        )
 
         if (keywords.test(editor.document.getText()) === false) {
             return
         }
-        
+
         const messages: Message[] = await this.phpUnit.handle(editor.document.fileName)
-        const messageGroup = this.groupMessageByState(messages);
+        const messageGroup = this.groupMessageByState(messages)
 
         this.decorateManager.decorateGutter(editor, messageGroup)
         this.diagnosticManager.diagnostic(editor, messageGroup)
@@ -101,13 +115,8 @@ class UnitTest {
 
     protected groupMessageByState(messages: Message[]): Map<State, Message[]> {
         return messages.reduce((messageGroup: Map<State, Message[]>, message: Message) => {
-            return messageGroup.set(message.state, messageGroup.get(message.state).concat(message));
-        }, new Map<State, Message[]>([
-            [State.PASSED, []],
-            [State.FAILED, []],
-            [State.SKIPPED, []],
-            [State.INCOMPLETED, []],
-        ]));
+            return messageGroup.set(message.state, messageGroup.get(message.state).concat(message))
+        }, new Map<State, Message[]>([[State.PASSED, []], [State.FAILED, []], [State.SKIPPED, []], [State.INCOMPLETED, []]]))
     }
 
     public dispose() {

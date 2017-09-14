@@ -1,32 +1,32 @@
 import { Message, State } from './parser'
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType, TextLine } from 'vscode'
 
-import {Window} from './wrapper/vscode'
+import { Window } from './wrapper/vscode'
 
 export class DecorationStyle {
-    public constructor (private extensionPath: string = '') {}
+    public constructor(private extensionPath: string = '') {}
 
     public get(state: string): Object {
-        return this[state]();
+        return this[state]()
     }
 
     public passed(): Object {
-        const gutterIconPath = this.gutterIconPath('passed.svg');
+        const gutterIconPath = this.gutterIconPath('passed.svg')
 
         return {
             overviewRulerColor: 'green',
             overviewRulerLane: OverviewRulerLane.Left,
             light: {
-                gutterIconPath: gutterIconPath
+                gutterIconPath: gutterIconPath,
             },
             dark: {
-                gutterIconPath: gutterIconPath
-            }
+                gutterIconPath: gutterIconPath,
+            },
         }
     }
-    
+
     public failed(): Object {
-        const gutterIconPath = this.gutterIconPath('failed.svg');
+        const gutterIconPath = this.gutterIconPath('failed.svg')
 
         return {
             overviewRulerColor: 'red',
@@ -35,13 +35,13 @@ export class DecorationStyle {
                 gutterIconPath: gutterIconPath,
             },
             dark: {
-                gutterIconPath: gutterIconPath, 
+                gutterIconPath: gutterIconPath,
             },
         }
     }
-    
+
     public skipped(): Object {
-        const gutterIconPath = this.gutterIconPath('skipped.svg');
+        const gutterIconPath = this.gutterIconPath('skipped.svg')
 
         return {
             overviewRulerColor: 'darkgrey',
@@ -54,7 +54,7 @@ export class DecorationStyle {
             },
         }
     }
-    
+
     public incompleted(): Object {
         return this.skipped()
     }
@@ -66,21 +66,14 @@ export class DecorationStyle {
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
-    public constructor(private decorationStyle: DecorationStyle, private window: Window = new Window) {
-        this.styles = [
-            State.PASSED,
-            State.FAILED,
-            State.SKIPPED,
-            State.INCOMPLETED,
-        ].reduce((styles, state: State) => {
-            return styles.set(state, this.window.createTextEditorDecorationType(
-                this.decorationStyle.get(state)
-            ))
+    public constructor(private decorationStyle: DecorationStyle, private window: Window = new Window()) {
+        this.styles = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED].reduce((styles, state: State) => {
+            return styles.set(state, this.window.createTextEditorDecorationType(this.decorationStyle.get(state)))
         }, new Map<State, TextEditorDecorationType>())
     }
 
     public decorateGutter(editor: TextEditor, messageGroup: Map<State, Message[]>) {
-        this.clearDecoratedGutter(editor);
+        this.clearDecoratedGutter(editor)
 
         messageGroup.forEach((messages: Message[], state) => {
             editor.setDecorations(

@@ -15,7 +15,11 @@ export class Window {
         return window.activeTextEditor
     }
 
-    public onDidChangeActiveTextEditor(listener: any = () => {}, thisArgs ?: any, disposables ?: Disposable[]): Disposable {
+    public onDidChangeActiveTextEditor(
+        listener: any = () => {},
+        thisArgs?: any,
+        disposables?: Disposable[]
+    ): Disposable {
         return window.onDidChangeActiveTextEditor(listener, thisArgs, disposables)
     }
 
@@ -44,16 +48,16 @@ export class Workspace {
     }
 
     public onWillSaveTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
-        return workspace.onWillSaveTextDocument(listener, thisArgs, disposables);
+        return workspace.onWillSaveTextDocument(listener, thisArgs, disposables)
     }
 
     public onDidChangeTextDocument(listener: any = () => {}, thisArgs?: any, disposables?: Disposable[]): Disposable {
-        return workspace.onDidChangeTextDocument(listener, thisArgs, disposables);
+        return workspace.onDidChangeTextDocument(listener, thisArgs, disposables)
     }
 }
 
 export class Languages {
-    public createDiagnosticCollection(name = "PHPUnit") {
+    public createDiagnosticCollection(name = 'PHPUnit') {
         return languages.createDiagnosticCollection(name)
     }
 }
