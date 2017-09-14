@@ -26,6 +26,7 @@ class UnitTest {
     private disposable: Disposable
     public constructor(
         private decorateManager: DecorateManager,
+        private diagnosticManager: DiagnosticManager,
         private window: Window = new Window(),
         private workspace: Workspace = new Workspace(),
         private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
@@ -91,6 +92,7 @@ class UnitTest {
         const messageGroup = this.groupMessageByState(messages);
 
         this.decorateManager.decorateGutter(editor, messageGroup)
+        this.diagnosticManager.diagnostic(editor, messageGroup)
     }
 
     protected noAnsi(str: string): string {
