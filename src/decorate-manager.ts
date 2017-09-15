@@ -3,7 +3,6 @@ import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from '
 
 import { MessageCollection } from './message-collection'
 import { Window } from './wrapper/vscode'
-import { groupMessageByState } from './helper'
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
@@ -25,7 +24,7 @@ export class DecorateManager {
             return
         }
 
-        groupMessageByState(messageCollection.get(fileName)).forEach((messages: Message[], state) => {
+        messageCollection.getByState(fileName).forEach((messages: Message[], state) => {
             editor.setDecorations(
                 this.styles.get(state),
                 messages.map(message => ({
