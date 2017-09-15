@@ -6,7 +6,7 @@ import { join } from 'path'
 import { spawn } from 'child_process'
 import { tmpdir } from 'os'
 
-export class PHPUnit {
+export class Shell {
     public rootPath = __dirname
 
     public tmpPath = tmpdir()

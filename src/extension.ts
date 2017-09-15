@@ -5,8 +5,8 @@ import { Languages, Window, Workspace } from './wrapper/vscode'
 import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
 import { MessageCollection } from './message-collection'
-import { PHPUnit } from './phpunit'
 import { Parser } from './parser'
+import { Shell } from './shell'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -14,13 +14,13 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
     const decorateManager = new DecorateManager(new DecorationStyle(context.extensionPath))
-    context.subscriptions.push(new UnitTest(decorateManager).register())
+    context.subscriptions.push(new Runner(decorateManager).register())
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-class UnitTest {
+class Runner {
     private disposable: Disposable
 
     private messageCollection: MessageCollection = new MessageCollection()
@@ -28,7 +28,7 @@ class UnitTest {
     public constructor(
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager = new DiagnosticManager(new Languages()),
-        private phpUnit: PHPUnit = new PHPUnit(new Parser(), new Filesystem()),
+        private shell: Shell = new Shell(new Parser(), new Filesystem()),
         private workspace: Workspace = new Workspace(),
         private window: Window = new Window()
     ) {
@@ -37,7 +37,7 @@ class UnitTest {
 
     private setupOutputChannel() {
         const channel: OutputChannel = this.window.createOutputChannel('PHPUnit')
-        this.phpUnit.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
+        this.shell.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
             channel.append(this.noAnsi(buffer.toString()))
         })
     }
@@ -96,7 +96,7 @@ class UnitTest {
     }
 
     protected async getMessage(editor: TextEditor) {
-        const messages = await this.phpUnit.handle(editor.document.fileName)
+        const messages = await this.shell.handle(editor.document.fileName)
         this.messageCollection.put(messages)
     }
 
