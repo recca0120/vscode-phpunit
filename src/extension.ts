@@ -90,6 +90,7 @@ class UnitTest {
     }
 
     public dispose() {
+        this.messageCollection.dispose()
         this.diagnosticManager.dispose()
         this.disposable.dispose()
     }

@@ -25,6 +25,10 @@ export class MessageCollection {
         this.items.forEach(callbackFn)
     }
 
+    public dispose() {
+        this.items.clear()
+    }
+
     protected getFileName(fileName: string): string {
         return removeDriveName(fileName)
     }

@@ -7,7 +7,7 @@ class PHPUnitTest extends TestCase
 { 
     protected function tearDown()
     { 
-        m::close();
+        m::close(); 
     } 
  
     public function testPassed()
