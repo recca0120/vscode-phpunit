@@ -1,4 +1,4 @@
-import { Message, State, stateGroup } from './parser'
+import { Message, State, stateKeys } from './parser'
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
 import { MessageCollection } from './message-collection'
@@ -9,7 +9,7 @@ export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
 
     public constructor(private decorationStyle: DecorationStyle, private window: Window = new Window()) {
-        this.styles = stateGroup().reduce(
+        this.styles = stateKeys().reduce(
             (styles, state: State) =>
                 styles.set(state, this.window.createTextEditorDecorationType(this.decorationStyle.get(state))),
             new Map<State, TextEditorDecorationType>()

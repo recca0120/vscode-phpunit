@@ -1,11 +1,12 @@
-import { Message, State, stateGroup } from './parser'
+import { Message, State, stateKeys } from './parser'
 
 export function groupMessageByState(messages: Message[]): Map<State, Message[]> {
-    return messages.reduce(
-        (messageGroup: Map<State, Message[]>, message: Message) =>
-            messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
-        new Map<State, Message[]>([].concat(stateGroup().map(state => [state, []])))
-    )
+    return messages.reduce((
+            messageGroup: Map<State, Message[]>, 
+            message: Message
+        ) => messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
+        new Map<State, Message[]>([].concat(stateKeys().map(state => [state, []]))
+    ))
 }
 
 export function groupMessageByFile(messages: Message[]): Map<string, Message[]> {

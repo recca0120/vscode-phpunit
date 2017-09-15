@@ -8,7 +8,7 @@ export enum State {
     INCOMPLETED = 'incompleted',
 }
 
-export function stateGroup() {
+export function stateKeys() {
     return [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
 }
 
