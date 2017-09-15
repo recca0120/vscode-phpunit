@@ -51,12 +51,12 @@ class Runner {
         // this.workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
         // this.window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
         this.window.onDidChangeActiveTextEditor(
-            () => this.restore(this.window.getActiveTextEditor()),
+            () => this.restore(this.getActiveTextEditor()),
             null,
             subscriptions
         )
 
-        this.restore(this.window.getActiveTextEditor())
+        this.restore(this.getActiveTextEditor())
 
         this.disposable = Disposable.from(...subscriptions)
 
@@ -111,7 +111,7 @@ class Runner {
     protected trigger(checkDocument: boolean = false) {
         if (checkDocument === true) {
             return (document: TextDocument) => {
-                const editor = this.window.getActiveTextEditor()
+                const editor = this.getActiveTextEditor()
                 if (editor && document === editor.document) {
                     this.handle(editor)
                 }
@@ -119,7 +119,7 @@ class Runner {
         }
 
         return () => {
-            this.handle(this.window.getActiveTextEditor())
+            this.handle(this.getActiveTextEditor())
         }
     }
 
@@ -142,5 +142,9 @@ class Runner {
 
     protected noAnsi(str: string): string {
         return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+    }
+
+    protected getActiveTextEditor(): TextEditor {
+        return this.window.getActiveTextEditor()
     }
 }
