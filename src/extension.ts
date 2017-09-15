@@ -2,6 +2,7 @@ import { DecorateManager, DecorationStyle } from './decorate-manager'
 import { Disposable, ExtensionContext, OutputChannel, TextDocument, TextEditor } from 'vscode'
 import { Languages, Window, Workspace } from './wrapper/vscode'
 import { Message, Parser } from './parser'
+import { groupMessageByFile, removeDriveName } from './helper'
 
 import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
@@ -21,6 +22,8 @@ export function deactivate() {}
 
 class UnitTest {
     private disposable: Disposable
+
+    private messagesGroupByFile: Map<string, Message[]> = new Map<string, Message[]>()
 
     public constructor(
         private decorateManager: DecorateManager,
@@ -47,6 +50,13 @@ class UnitTest {
         // this.workspace.onDidSaveTextDocument(this.trigger(false), null, subscriptions)
         // this.workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
         // this.window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
+        this.window.onDidChangeActiveTextEditor(
+            () => {
+                this.decoratedGutter(this.window.getActiveTextEditor())
+            },
+            null,
+            subscriptions
+        )
 
         this.disposable = Disposable.from(...subscriptions)
 
@@ -54,22 +64,26 @@ class UnitTest {
     }
 
     public async handle(editor: TextEditor = null) {
-        const keywords = new RegExp(
-            [
-                'PHPUnit\\\\Framework\\\\TestCase',
-                'PHPUnit\\Framework\\TestCase',
-                'PHPUnit_Framework_TestCase',
-                'TestCase',
-            ].join('|')
-        )
-
-        if (!editor || !editor.document || keywords.test(editor.document.getText()) === false) {
+        if (this.isPHPUnit(editor) === false) {
             return
         }
 
-        const messages: Message[] = await this.phpUnit.handle(editor.document.fileName)
-        this.decorateManager.handle(messages, editor)
-        this.diagnosticManager.handle(messages, editor)
+        const messages = await this.phpUnit.handle(editor.document.fileName)
+
+        groupMessageByFile(messages).forEach((messages: Message[], file: string) => {
+            this.messagesGroupByFile.set(removeDriveName(file), messages)
+        })
+
+        this.decoratedGutter(editor)
+        this.diagnosticManager.handle(this.messagesGroupByFile, editor)
+    }
+
+    public decoratedGutter(editor: TextEditor) {
+        if (this.isPHPUnit(editor) === false) {
+            return
+        }
+
+        this.decorateManager.handle(this.messagesGroupByFile, editor)
     }
 
     protected trigger(checkDocument: boolean = false) {
@@ -85,6 +99,23 @@ class UnitTest {
         return () => {
             this.handle(this.window.getActiveTextEditor())
         }
+    }
+
+    protected isPHPUnit(editor: TextEditor) {
+        const keywords = new RegExp(
+            [
+                'PHPUnit\\\\Framework\\\\TestCase',
+                'PHPUnit\\Framework\\TestCase',
+                'PHPUnit_Framework_TestCase',
+                'TestCase',
+            ].join('|')
+        )
+
+        if (!editor || !editor.document || keywords.test(editor.document.getText()) === false) {
+            return false
+        }
+
+        return true
     }
 
     protected noAnsi(str: string): string {

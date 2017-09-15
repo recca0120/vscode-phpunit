@@ -8,7 +8,9 @@ import { tmpdir } from 'os'
 
 export class PHPUnit {
     public rootPath = __dirname
+
     public tmpPath = tmpdir()
+
     private outputCallback = function() {}
 
     public constructor(private parser = new Parser(), private files = new Filesystem()) {}

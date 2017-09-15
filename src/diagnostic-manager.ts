@@ -10,15 +10,16 @@ export class DiagnosticManager {
         this.collection = this.languages.createDiagnosticCollection('PHPUnit')
     }
 
-    public handle(messages: Message[], editor: TextEditor) {
+    public handle(messagesGroupByFile: Map<string, Message[]>, editor: TextEditor) {
         this.collection.clear()
 
-        this.groupMessageByFile(messages).forEach((messages: Message[], file: string) => {
+        messagesGroupByFile.forEach((messages: Message[], file: string) => {
             this.collection.set(Uri.file(file), this.covertToDiagnostic(messages, editor))
         })
     }
 
     public dispose() {
+        this.collection.clear()
         this.collection.dispose()
     }
 
@@ -41,16 +42,5 @@ export class DiagnosticManager {
             textLine.lineNumber,
             textLine.firstNonWhitespaceCharacterIndex + textLine.text.trim().length
         )
-    }
-
-    protected groupMessageByFile(messages: Message[]): Map<string, Message[]> {
-        return messages.reduce((messageGroup: Map<string, Message[]>, message: Message) => {
-            let group = []
-            if (messageGroup.has(message.file) === true) {
-                group = messageGroup.get(message.file)
-            }
-
-            return messageGroup.set(message.file, group.concat(message))
-        }, new Map<string, Message[]>())
     }
 }

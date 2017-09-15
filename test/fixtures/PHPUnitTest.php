@@ -1,24 +1,24 @@
 <?php
-
+ 
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-
+ 
 class PHPUnitTest extends TestCase 
-{
+{ 
     protected function tearDown()
     { 
-        m::close(); 
-    }
-
-    public function testPassed()  
-    { 
-        $this->assertTrue(false); 
+        m::close();
     } 
  
-    public function testFailed() 
+    public function testPassed()  
+    { 
+        $this->assertTrue(false);  
+    } 
+ 
+    public function testFailed()
     {   
         $this->assertTrue(false);
-    }
+    } 
   
     public function testSkipped() 
     {

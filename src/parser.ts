@@ -8,6 +8,10 @@ export enum State {
     INCOMPLETED = 'incompleted',
 }
 
+export function stateGroup() {
+    return [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
+}
+
 export interface Message {
     duration: number
     error: {
@@ -15,7 +19,7 @@ export interface Message {
         message: string
         name: string
     }
-    file: string
+    fileName: string
     lineNumber: number
     state: State
     title: string
@@ -59,7 +63,7 @@ export class Parser {
                     message: '',
                     name: '',
                 },
-                file: testcaseAttr.file,
+                fileName: testcaseAttr.file,
                 lineNumber: (testcaseAttr.line || 1) - 1,
                 state: State.PASSED,
                 title,
@@ -83,7 +87,7 @@ export class Parser {
                 message: this.parseMessage(errorChar, files, name, title),
                 name: '',
             },
-            file: file.filePath,
+            fileName: file.filePath,
             lineNumber: file.line - 1,
             state: state,
             title,

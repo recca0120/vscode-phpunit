@@ -3,6 +3,12 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.2.4
+- keep messages
+
+## 0.2.3
+- keep decorate guttur
+
 ## 0.2.1
 - trigger on text has TestCase
 - disabled when editor.document isn't exists

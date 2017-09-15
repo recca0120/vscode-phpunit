@@ -16,11 +16,11 @@ class PHPUnit2Test extends TestCase
     }
  
     public function testFailed() 
-    {    
-        $this->assertTrue(false);
-    } 
+    { 
+        $this->assertTrue(false); 
+    }
 
-    public function testSkipped() 
+    public function testSkipped()  
     {
         $this->markTestSkipped('The MySQLi extension is not available.'); 
     }
