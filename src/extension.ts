@@ -1,12 +1,12 @@
 import { DecorateManager, DecorationStyle } from './decorate-manager'
 import { Disposable, ExtensionContext, OutputChannel, TextDocument, TextEditor } from 'vscode'
 import { Languages, Window, Workspace } from './wrapper/vscode'
-import { Message, Parser } from './parser'
-import { groupMessageByFile, removeDriveName } from './helper'
 
 import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
+import { MessageCollection } from './message-collection'
 import { PHPUnit } from './phpunit'
+import { Parser } from './parser'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -23,7 +23,7 @@ export function deactivate() {}
 class UnitTest {
     private disposable: Disposable
 
-    private messagesGroupByFile: Map<string, Message[]> = new Map<string, Message[]>()
+    private messageCollection: MessageCollection = new MessageCollection()
 
     public constructor(
         private decorateManager: DecorateManager,
@@ -51,39 +51,60 @@ class UnitTest {
         // this.workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
         // this.window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
         this.window.onDidChangeActiveTextEditor(
-            () => {
-                this.decoratedGutter(this.window.getActiveTextEditor())
-            },
+            () => this.restore(this.window.getActiveTextEditor()),
             null,
             subscriptions
         )
+
+        this.restore(this.window.getActiveTextEditor())
 
         this.disposable = Disposable.from(...subscriptions)
 
         return this
     }
 
-    public async handle(editor: TextEditor = null) {
-        if (this.isPHPUnit(editor) === false) {
+    public async handle(editor: TextEditor) {
+        if (this.isRunable(editor) === false) {
             return
         }
 
-        const messages = await this.phpUnit.handle(editor.document.fileName)
+        await this.getMessage(editor)
 
-        groupMessageByFile(messages).forEach((messages: Message[], file: string) => {
-            this.messagesGroupByFile.set(removeDriveName(file), messages)
-        })
-
-        this.decoratedGutter(editor)
-        this.diagnosticManager.handle(this.messagesGroupByFile, editor)
+        this.handleDecorate(editor)
+        this.handelDiagnostic(editor)
     }
 
-    public decoratedGutter(editor: TextEditor) {
-        if (this.isPHPUnit(editor) === false) {
+    public restore(editor: TextEditor): void {
+        if (this.isRunable(editor) === false) {
             return
         }
 
-        this.decorateManager.handle(this.messagesGroupByFile, editor)
+        if (this.messageCollection.has(editor.document.fileName)) {
+            this.handleDecorate(editor)
+            this.handelDiagnostic(editor)
+
+            return
+        }
+
+        this.handle(editor)
+    }
+
+    public dispose() {
+        this.diagnosticManager.dispose()
+        this.disposable.dispose()
+    }
+
+    protected async getMessage(editor: TextEditor) {
+        const messages = await this.phpUnit.handle(editor.document.fileName)
+        this.messageCollection.put(messages)
+    }
+
+    protected handleDecorate(editor: TextEditor) {
+        this.decorateManager.handle(this.messageCollection, editor)
+    }
+
+    protected handelDiagnostic(editor: TextEditor) {
+        this.diagnosticManager.handle(this.messageCollection, editor)
     }
 
     protected trigger(checkDocument: boolean = false) {
@@ -101,7 +122,7 @@ class UnitTest {
         }
     }
 
-    protected isPHPUnit(editor: TextEditor) {
+    protected isRunable(editor: TextEditor) {
         const keywords = new RegExp(
             [
                 'PHPUnit\\\\Framework\\\\TestCase',
@@ -120,10 +141,5 @@ class UnitTest {
 
     protected noAnsi(str: string): string {
         return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-    }
-
-    public dispose() {
-        this.diagnosticManager.dispose()
-        this.disposable.dispose()
     }
 }

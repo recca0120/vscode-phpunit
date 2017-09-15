@@ -2,6 +2,7 @@ import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor
 import { Message, State } from './parser'
 
 import { Languages } from './wrapper/vscode'
+import { MessageCollection } from './message-collection'
 
 export class DiagnosticManager {
     private collection: DiagnosticCollection
@@ -10,10 +11,10 @@ export class DiagnosticManager {
         this.collection = this.languages.createDiagnosticCollection('PHPUnit')
     }
 
-    public handle(messagesGroupByFile: Map<string, Message[]>, editor: TextEditor) {
+    public handle(messageCollection: MessageCollection, editor: TextEditor) {
         this.collection.clear()
 
-        messagesGroupByFile.forEach((messages: Message[], file: string) => {
+        messageCollection.forEach((messages: Message[], file: string) => {
             this.collection.set(Uri.file(file), this.covertToDiagnostic(messages, editor))
         })
     }

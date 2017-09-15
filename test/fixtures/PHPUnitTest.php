@@ -10,14 +10,14 @@ class PHPUnitTest extends TestCase
         m::close();
     } 
  
-    public function testPassed()  
+    public function testPassed()
     { 
         $this->assertTrue(false);  
     } 
  
     public function testFailed()
     {   
-        $this->assertTrue(false);
+        $this->assertTrue(false); 
     } 
   
     public function testSkipped() 
