@@ -137,6 +137,10 @@ class Runner {
             return false
         }
 
+        if (/\.git\.php$/.test(editor.document.fileName) === true) {
+            return false;
+          }
+
         return true
     }
 

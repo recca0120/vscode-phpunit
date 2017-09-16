@@ -37,13 +37,7 @@ export class Phpunit {
   }
 
   public handle(filePath: string): Promise<any> {
-    return new Promise(resolve => {
-      if (/\.git\.php$/.test(filePath) === true) {
-        resolve([]);
-
-        return;
-      }
-
+    return new Promise((resolve, reject) => {
       const rootPath = this.rootPath;
       const xml = join(
         this.tmpPath,
@@ -56,7 +50,7 @@ export class Phpunit {
           : this.files.find(`phpunit`);
 
       if (!command) {
-        resolve([]);
+        reject([]);
 
         return;
       }
