@@ -17,7 +17,7 @@ class PHPUnit2Test extends TestCase
  
     public function testFailed() 
     { 
-        $this->assertTrue(false); 
+        $this->assertTrue(false);  
     }
 
     public function testSkipped()  

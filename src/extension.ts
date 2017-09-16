@@ -6,7 +6,7 @@ import { DiagnosticManager } from './diagnostic-manager'
 import { Filesystem } from './filesystem'
 import { MessageCollection } from './message-collection'
 import { Parser } from './parser'
-import { Shell } from './shell'
+import { Phpunit } from './phpunit'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -28,7 +28,7 @@ class Runner {
     public constructor(
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager = new DiagnosticManager(new Languages()),
-        private shell: Shell = new Shell(new Parser(), new Filesystem()),
+        private shell: Phpunit = new Phpunit(new Parser(), new Filesystem()),
         private workspace: Workspace = new Workspace(),
         private window: Window = new Window()
     ) {
