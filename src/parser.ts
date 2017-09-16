@@ -8,8 +8,13 @@ export enum State {
     INCOMPLETED = 'incompleted',
 }
 
-export function stateKeys() {
+export function states() {
     return [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
+}
+
+export interface Position {
+    fileName: string
+    lineNumber: number
 }
 
 export interface Message {
@@ -74,21 +79,21 @@ export class Parser {
         const errorChar = this.crlf2lf(error._)
         const name = this.crlf2lf(errorAttr.type)
         const state = this.parseState(errorAttr)
-        const files = this.stringToFiles(errorChar)
-        const file = this.parseFilePath(files) || {
-            filePath: testcaseAttr.file,
-            line: testcaseAttr.line,
+        const callStack = this.parseCallStack(errorChar)
+        const file = this.getCurrentFile(callStack) || {
+            fileName: testcaseAttr.file,
+            lineNumber: testcaseAttr.line,
         }
 
         return {
             duration,
             error: {
                 fullMessage: this.parseFullMessage(errorChar, name, title),
-                message: this.parseMessage(errorChar, files, name, title),
+                message: this.parseMessage(errorChar, callStack, name, title),
                 name: '',
             },
-            fileName: file.filePath,
-            lineNumber: file.line - 1,
+            fileName: file.fileName,
+            lineNumber: file.lineNumber - 1,
             state: state,
             title,
         }
@@ -137,21 +142,27 @@ export class Parser {
         return State.FAILED
     }
 
-    protected stringToFiles(errorChar: string): Array<string> {
-        return errorChar.split('\n').map(line => line.trim()).filter(line => /(.*):(\d+)/.test(line))
+    protected parseCallStack(errorChar: string): Position[] {
+        return errorChar
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => /(.*):(\d+)/.test(line))
+            .map(path => {
+                const [, fileName, lineNumber] = path.match(/(.*):(\d+)/)
+
+                return {
+                    fileName,
+                    lineNumber: parseInt(lineNumber, 10),
+                }
+            })
     }
 
-    protected parseFilePath(files: Array<string>): any {
-        return files
-            .filter(path => {
+    protected getCurrentFile(callStack: Position[]): Position {
+        return callStack
+            .filter(position => {
                 const paths = ['vendor/mockery/mockery', 'vendor/phpunit/phpunit']
 
-                return new RegExp(paths.join('|'), 'ig').test(path.replace(/\\/g, '/')) === false
-            })
-            .map(path => {
-                const [, file, line] = path.match(/(.*):(\d+)/)
-
-                return { filePath: file, line: line }
+                return new RegExp(paths.join('|'), 'ig').test(position.fileName.replace(/\\/g, '/')) === false
             })
             .pop()
     }
@@ -162,9 +173,9 @@ export class Parser {
         return length === -1 ? str : str.substr(length + search.length)
     }
 
-    protected parseMessage(message: string, files: Array<string>, name: string, title: string): string {
+    protected parseMessage(message: string, files: Position[], name: string, title: string): string {
         message = this.crlf2lf(message)
-        files.forEach(line => (message = message.replace(line, '')))
+        files.forEach(position => (message = message.replace(`${position.fileName}:${position.lineNumber}`, '')))
         message = message.replace(/\n+$/, '')
         message = this.replaceFirst(message, `${name}: `)
         message = this.replaceFirst(message, `${title}\n`)

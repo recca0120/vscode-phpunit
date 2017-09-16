@@ -12,7 +12,7 @@ class TestParser extends Parser {
         const source = join(__dirname, '../../test/fixtures/junit.xml')
         const target = join(__dirname, 'vscode-phpunit-junit.xml')
         copySync(source, target)
-        const messages = await super.parseXML(target) 
+        const messages = await super.parseXML(target)
 
         return messages
     }
@@ -23,9 +23,9 @@ suite('PHPUnit Tests', () => {
         const filesystem = new Filesystem()
 
         const phpunit = new Phpunit(new TestParser())
-        phpunit.setRootPath(__dirname).setTmpDPath(__dirname)
+        phpunit.setRootPath(__dirname).setXmlDPath(__dirname)
 
-        const messages = await phpunit.handle(join(__dirname, '../../test/fixtures/PHPUnitTest.php'))
+        const messages = await phpunit.exec(join(__dirname, '../../test/fixtures/PHPUnitTest.php'))
 
         if (filesystem.isWindows() === true) {
             assert.ok(true)

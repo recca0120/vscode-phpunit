@@ -50,11 +50,7 @@ class Runner {
         // this.workspace.onDidSaveTextDocument(this.trigger(false), null, subscriptions)
         // this.workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
         // this.window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(
-            () => this.restore(this.getActiveTextEditor()),
-            null,
-            subscriptions
-        )
+        this.window.onDidChangeActiveTextEditor(() => this.restore(this.getActiveTextEditor()), null, subscriptions)
 
         this.restore(this.getActiveTextEditor())
 
@@ -96,7 +92,7 @@ class Runner {
     }
 
     protected async getMessage(editor: TextEditor) {
-        const messages = await this.shell.handle(editor.document.fileName)
+        const messages = await this.shell.exec(editor.document.fileName)
         this.messageCollection.put(messages)
     }
 
@@ -138,8 +134,8 @@ class Runner {
         }
 
         if (/\.git\.php$/.test(editor.document.fileName) === true) {
-            return false;
-          }
+            return false
+        }
 
         return true
     }

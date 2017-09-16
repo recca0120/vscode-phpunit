@@ -1,6 +1,7 @@
-import { execSync } from 'child_process'
+import { join, resolve } from 'path'
+
 import { existsSync } from 'fs'
-import { resolve } from 'path'
+import { spawnSync } from 'child_process'
 
 interface FilesystemInterface {
     find(file: string): string
@@ -14,10 +15,19 @@ abstract class AbstractFilesystem {
     public isWindows(): boolean {
         return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(this.platform)
     }
+
+    protected normalize(buffer: Buffer) {
+        return buffer
+            .toString()
+            .replace('/\r\n/', '\n')
+            .split('\n')
+            .shift()
+            .trim()
+    }
 }
 
 class Windows extends AbstractFilesystem implements FilesystemInterface {
-    public extensions = ['bat', 'exe', 'cmd']
+    public extensions = ['.bat', '.exe', '.cmd', '']
 
     public find(file: string): string {
         const exists = this.getExists(file)
@@ -26,21 +36,23 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
             return exists
         }
 
-        try {
-            for (const extension of this.extensions) {
-                return execSync(`where "${file}.${extension}"`)
-                    .toString()
-                    .replace('/\r\n/', '\n')
-                    .split('\n')
-                    .shift()
-                    .trim()
-            }
-        } catch (e) {}
+        for (const extension of this.extensions) {
+            const fileName = `${file}${extension}`
+            try {
+                const process = spawnSync('where', [fileName])
+
+                if (process.status === 0) {
+                    return this.normalize(new Buffer(process.output.join('')))
+                }
+            } catch (e) {}
+        }
+
+        return ''
     }
 
     public exists(file: string): boolean {
         for (const extension of this.extensions) {
-            if (existsSync(`${file}.${extension}`)) {
+            if (existsSync(`${file}${extension}`)) {
                 return true
             }
         }
@@ -50,8 +62,8 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
 
     protected getExists(file: string): string {
         for (const extension of this.extensions) {
-            if (existsSync(`${file}.${extension}`)) {
-                return resolve(`${file}.${extension}`)
+            if (existsSync(`${file}${extension}`)) {
+                return resolve(`${file}${extension}`)
             }
         }
 
@@ -60,12 +72,14 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
 }
 
 class Linux extends AbstractFilesystem implements FilesystemInterface {
-    public find(file: string): string {
-        if (existsSync(file)) {
-            return resolve(file)
+    public find(fileName: string): string {
+        if (existsSync(fileName)) {
+            return resolve(fileName)
         }
 
-        return execSync(`which "${file}"`).toString().replace('/\r\n/', '\n').split('\n').shift().trim()
+        const process = spawnSync('which', [fileName])
+
+        return this.normalize(new Buffer(process.output.join('')))
     }
 
     public exists(file: string): boolean {

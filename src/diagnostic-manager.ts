@@ -41,7 +41,7 @@ export class DiagnosticManager {
             textLine.lineNumber,
             textLine.firstNonWhitespaceCharacterIndex,
             textLine.lineNumber,
-            textLine.firstNonWhitespaceCharacterIndex + textLine.text.trim().length
+            textLine.range.end.character + 1
         )
     }
 }

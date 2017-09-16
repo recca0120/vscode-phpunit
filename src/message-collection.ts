@@ -1,4 +1,4 @@
-import { Message, State, stateKeys } from './parser'
+import { Message, State, states } from './parser'
 
 export class MessageCollection {
     private items: Map<string, Message[]> = new Map<string, Message[]>()
@@ -50,7 +50,7 @@ export class MessageCollection {
         return messages.reduce(
             (messageGroup: Map<State, Message[]>, message: Message) =>
                 messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
-            new Map<State, Message[]>([].concat(stateKeys().map(state => [state, []])))
+            new Map<State, Message[]>([].concat(states().map(state => [state, []])))
         )
     }
 
