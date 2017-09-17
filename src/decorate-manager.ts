@@ -7,7 +7,7 @@ import { resolve } from 'path'
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
-    private window
+    private window: any
     private extensionPath: string
 
     constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {

@@ -7,10 +7,8 @@ import { resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 
 export class Phpunit {
-    rootPath: string
-
-    xmlPath: string = tmpdir()
-
+    private rootPath: string
+    private xmlPath: string = tmpdir()
     private outputCallback: Function = function() {}
 
     constructor(
@@ -66,9 +64,9 @@ export class Phpunit {
 }
 
 export class Process {
-    stdErrCallback: Function = function() {}
-    stdOutCallback: Function = function() {}
-    exitCallback: Function = function() {}
+    private stdErrCallback: Function = function() {}
+    private stdOutCallback: Function = function() {}
+    private exitCallback: Function = function() {}
 
     spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess {
         const process: ChildProcess = spawn(command, args, options)
