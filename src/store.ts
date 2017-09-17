@@ -1,6 +1,6 @@
 import { Message, State, states } from './parser'
 
-export class MessageCollection {
+export class Store {
     private items: Map<string, Message[]> = new Map<string, Message[]>()
 
     public put(messages: Message[]): this {

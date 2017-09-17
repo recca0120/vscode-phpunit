@@ -2,9 +2,9 @@ import { Disposable, ExtensionContext, TextDocument, TextEditor, languages, wind
 
 import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
-import { MessageCollection } from './message-collection'
 import { Phpunit } from './phpunit'
 import { Project } from './project'
+import { Store } from './store'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -23,18 +23,18 @@ export function activate(context: ExtensionContext) {
     const phpunit: Phpunit = new Phpunit(project)
     const decorateManager = new DecorateManager(project)
     const diagnosticManager = new DiagnosticManager(project)
-    const extension = new Extension(project, phpunit, decorateManager, diagnosticManager)
+    const tester = new Tester(project, phpunit, decorateManager, diagnosticManager)
 
-    context.subscriptions.push(extension.register())
+    context.subscriptions.push(tester.subscribe())
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-export class Extension {
+export class Tester {
     private disposable: Disposable
 
-    private messageCollection: MessageCollection = new MessageCollection()
+    private store: Store = new Store()
 
     public constructor(
         private project: Project,
@@ -43,7 +43,7 @@ export class Extension {
         private diagnosticManager: DiagnosticManager
     ) {}
 
-    public register(): this {
+    public subscribe(): this {
         const subscriptions: Disposable[] = []
         const { window, workspace } = this.project
 
@@ -61,8 +61,8 @@ export class Extension {
         return this
     }
 
-    public async handle(editor: TextEditor) {
-        if (this.isRunable(editor) === false) {
+    public async exec(editor: TextEditor) {
+        if (this.isExecutable(editor) === false) {
             return
         }
 
@@ -73,37 +73,37 @@ export class Extension {
     }
 
     public restore(editor: TextEditor): void {
-        if (this.isRunable(editor) === false) {
+        if (this.isExecutable(editor) === false) {
             return
         }
 
-        if (this.messageCollection.has(editor.document.fileName)) {
+        if (this.store.has(editor.document.fileName)) {
             this.decoratedGutter(editor)
             this.handleDiagnostic(editor)
 
             return
         }
 
-        this.handle(editor)
+        this.exec(editor)
     }
 
     public dispose() {
-        this.messageCollection.dispose()
+        this.store.dispose()
         this.diagnosticManager.dispose()
         this.disposable.dispose()
     }
 
     protected async getMessage(editor: TextEditor) {
         const messages = await this.phpunit.exec(editor.document.fileName)
-        this.messageCollection.put(messages)
+        this.store.put(messages)
     }
 
     protected decoratedGutter(editor: TextEditor) {
-        this.decorateManager.decoratedGutter(this.messageCollection, editor)
+        this.decorateManager.decoratedGutter(this.store, editor)
     }
 
     protected handleDiagnostic(editor: TextEditor) {
-        this.diagnosticManager.handle(this.messageCollection, editor)
+        this.diagnosticManager.handle(this.store, editor)
     }
 
     protected trigger(checkDocument: boolean = false) {
@@ -111,17 +111,17 @@ export class Extension {
             return (document: TextDocument) => {
                 const editor = this.getActiveTextEditor()
                 if (editor && document === editor.document) {
-                    this.handle(editor)
+                    this.exec(editor)
                 }
             }
         }
 
         return () => {
-            this.handle(this.getActiveTextEditor())
+            this.exec(this.getActiveTextEditor())
         }
     }
 
-    protected isRunable(editor: TextEditor) {
+    protected isExecutable(editor: TextEditor) {
         const keywords = new RegExp(
             [
                 'PHPUnit\\\\Framework\\\\TestCase',

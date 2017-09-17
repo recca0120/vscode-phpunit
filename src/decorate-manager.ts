@@ -1,8 +1,8 @@
 import { Message, State, states } from './parser'
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
-import { MessageCollection } from './message-collection'
 import { Project } from './project'
+import { Store } from './store'
 import { resolve } from 'path'
 
 export class DecorateManager {
@@ -19,15 +19,15 @@ export class DecorateManager {
         }, new Map<State, TextEditorDecorationType>())
     }
 
-    public decoratedGutter(messageCollection: MessageCollection, editor: TextEditor): void {
+    public decoratedGutter(store: Store, editor: TextEditor): void {
         this.clearDecoratedGutter(editor)
 
         const fileName = editor.document.fileName
-        if (messageCollection.has(fileName) === false) {
+        if (store.has(fileName) === false) {
             return
         }
 
-        messageCollection.getByState(fileName).forEach((messages: Message[], state) => {
+        store.getByState(fileName).forEach((messages: Message[], state) => {
             editor.setDecorations(
                 this.styles.get(state),
                 messages.map(message => ({

@@ -1,8 +1,8 @@
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor, TextLine, Uri } from 'vscode'
 import { Message, State } from './parser'
 
-import { MessageCollection } from './message-collection'
 import { Project } from './project'
+import { Store } from './store'
 
 export class DiagnosticManager {
     private diagnostics: DiagnosticCollection
@@ -11,10 +11,10 @@ export class DiagnosticManager {
         this.diagnostics = this.project.diagnostics
     }
 
-    public handle(messageCollection: MessageCollection, editor: TextEditor) {
+    public handle(store: Store, editor: TextEditor) {
         this.diagnostics.clear()
 
-        messageCollection.forEach((messages: Message[], file: string) => {
+        store.forEach((messages: Message[], file: string) => {
             this.diagnostics.set(Uri.file(file), this.covertToDiagnostic(messages, editor))
         })
     }
