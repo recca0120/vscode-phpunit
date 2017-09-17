@@ -2,7 +2,7 @@ import { Phpunit, Process } from '../src/phpunit'
 
 import { Filesystem } from './../src/filesystem'
 import { Parser } from '../src/parser'
-import { Project } from '../src/project'
+import { Project } from '../src/tester'
 import { join } from 'path'
 
 describe('PHPUnit Tests', () => {
@@ -30,8 +30,7 @@ describe('PHPUnit Tests', () => {
         spyOn(parser, 'parseXML').and.returnValue(expected)
 
         const phpunit = new Phpunit(project, parser, filesystem, process)
-        const messages = await phpunit.exec(fileName)
-
+        const messages = await phpunit.exec(fileName, 'class Test extends TestCase')
         expect(messages).toBe(expected)
 
         expect(filesystem.exists).toHaveBeenCalledWith(join(__dirname, '/../src/vendor/bin/phpunit'))

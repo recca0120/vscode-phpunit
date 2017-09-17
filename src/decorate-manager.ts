@@ -1,19 +1,18 @@
 import { Message, State, StateKeys } from './parser'
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
-import { Project } from './project'
+import { Project } from './tester'
 import { Store } from './store'
 import { resolve } from 'path'
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
-    private window: any
     private extensionPath: string
+    private window: any
 
     constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
-        const { window, extensionPath } = project
-        this.window = window
-        this.extensionPath = extensionPath
+        this.extensionPath = project.extensionPath
+        this.window = project.window
 
         this.styles = StateKeys.reduce((styles, state: State) => {
             return styles.set(state, this.createTextEditorDecorationType(this.decorationStyle.get(state)))
@@ -21,8 +20,6 @@ export class DecorateManager {
     }
 
     decoratedGutter(store: Store, editor: TextEditor): this {
-        this.clearDecoratedGutter(editor)
-
         const fileName = editor.document.fileName
         if (store.has(fileName) === false) {
             return

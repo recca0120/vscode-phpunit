@@ -3,6 +3,14 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.2.9
+- skip abstract class
+- show error message
+
+## 0.2.8
+- show error message when not install phpunit binary
+- detect phpunit.xml or phpunit.xml.dis
+
 ## 0.2.7
 - jest test
 - refactoring

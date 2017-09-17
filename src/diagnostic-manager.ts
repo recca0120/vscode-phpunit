@@ -22,14 +22,14 @@ export class DiagnosticManager {
     private covertToDiagnostic(messages: Message[], editor: TextEditor): Diagnostic[] {
         return messages.map((message: Message) => {
             return new Diagnostic(
-                this.messageToRange(message, editor),
+                this.convertToRange(message, editor),
                 message.error.fullMessage,
                 message.state === State.FAILED ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
             )
         })
     }
 
-    private messageToRange(message: Message, editor: TextEditor) {
+    private convertToRange(message: Message, editor: TextEditor) {
         const textLine: TextLine = editor.document.lineAt(message.lineNumber)
 
         return new Range(

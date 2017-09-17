@@ -1,10 +1,9 @@
 import { DiagnosticCollection, ExtensionContext, OutputChannel, languages, window, workspace } from 'vscode'
+import { Project, Tester } from './tester'
 
 import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
 import { Phpunit } from './phpunit'
-import { Project } from './project'
-import { Tester } from './tester'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -19,7 +18,6 @@ export function activate(context: ExtensionContext) {
     }
 
     const name = 'phpunit'
-
     const outputChannel: OutputChannel = window.createOutputChannel(name)
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name)
 

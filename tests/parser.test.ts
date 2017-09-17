@@ -6,7 +6,7 @@ describe('Parser', () => {
     const parser: Parser = new Parser()
 
     async function getMessage(key: number): Promise<Message> {
-        const messages: Message[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
+        const messages: Message[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'), true)
 
         return messages[key]
     }

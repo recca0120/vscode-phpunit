@@ -36,15 +36,11 @@ export class Parser {
         return this.parseTestsuite(json.testsuites)
     }
 
-    async parseXML(fileName: string, clean: boolean = false): Promise<Message[]> {
-        if (existsSync(fileName) === false) {
-            throw `${fileName} not found`
-        }
+    async parseXML(fileName: string, testing: boolean = false): Promise<Message[]> {
+        const xmlContent = await this.readFileAsync(fileName)
+        const messages: Message[] = await this.parseString(xmlContent)
 
-        const str = await this.readFileAsync(fileName)
-        const messages: Message[] = await this.parseString(str)
-
-        if (clean === true && existsSync(fileName) === true) {
+        if (testing === false && existsSync(fileName) === true) {
             unlinkSync(fileName)
         }
 
