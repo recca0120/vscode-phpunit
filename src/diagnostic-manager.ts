@@ -1,15 +1,10 @@
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor, TextLine, Uri } from 'vscode'
 import { Message, State } from './parser'
 
-import { Project } from './project'
 import { Store } from './store'
 
 export class DiagnosticManager {
-    private diagnostics: DiagnosticCollection
-
-    public constructor(private project: Project) {
-        this.diagnostics = this.project.diagnostics
-    }
+    public constructor(private diagnostics: DiagnosticCollection) {}
 
     public handle(store: Store, editor: TextEditor) {
         this.diagnostics.clear()

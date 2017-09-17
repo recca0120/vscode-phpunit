@@ -20,12 +20,6 @@ export class Phpunit {
         private process = new Process()
     ) {
         this.rootPath = this.project.rootPath || __dirname
-
-        if (project.outputChannel) {
-            this.outputCallback = (buffer: Buffer) => {
-                project.outputChannel.append(this.noAnsi(buffer.toString()))
-            }
-        }
     }
 
     public setOutput(outputCallback: Function): this {
@@ -66,7 +60,7 @@ export class Phpunit {
         })
     }
 
-    protected noAnsi(str: string): string {
+    public noAnsi(str: string): string {
         return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
     }
 }

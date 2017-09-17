@@ -7,25 +7,20 @@ import { resolve } from 'path'
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
+    private window
+    private extensionPath: string
 
-    public constructor(private project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
-        const { window } = this.project
+    public constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
+        const { window, extensionPath } = project
+        this.window = window
+        this.extensionPath = extensionPath
+
         this.styles = StateKeys.reduce((styles, state: State) => {
-            return styles.set(
-                state,
-                window.createTextEditorDecorationType(
-                    this.decorationStyle.get(state, style => {
-                        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath)
-                        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath)
-
-                        return style
-                    })
-                )
-            )
+            return styles.set(state, this.createTextEditorDecorationType(this.decorationStyle.get(state)))
         }, new Map<State, TextEditorDecorationType>())
     }
 
-    public decoratedGutter(store: Store, editor: TextEditor): void {
+    public decoratedGutter(store: Store, editor: TextEditor): this {
         this.clearDecoratedGutter(editor)
 
         const fileName = editor.document.fileName
@@ -42,16 +37,25 @@ export class DecorateManager {
                 }))
             )
         })
+
+        return this
     }
 
-    private clearDecoratedGutter(editor: TextEditor) {
-        for (const state of this.styles.keys()) {
-            editor.setDecorations(this.styles.get(state), [])
-        }
+    public clearDecoratedGutter(editor: TextEditor): this {
+        Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []))
+
+        return this
     }
 
-    private gutterIconPath(img: string) {
-        return resolve(this.project.extensionPath, 'images', img)
+    private createTextEditorDecorationType(style: DecorationType) {
+        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath)
+        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath)
+
+        return this.window.createTextEditorDecorationType(style)
+    }
+
+    private gutterIconPath(img: string): string {
+        return resolve(this.extensionPath, 'images', img)
     }
 }
 
@@ -67,8 +71,8 @@ export interface DecorationType {
 }
 
 export class DecorationStyle {
-    public get(state: string, callback: Function = null): DecorationType {
-        return callback === null ? this[state]() : callback(this[state]())
+    public get(state: string): DecorationType {
+        return this[state]()
     }
 
     public passed(): DecorationType {

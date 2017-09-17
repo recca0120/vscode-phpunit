@@ -1,4 +1,14 @@
-import { Disposable, ExtensionContext, TextDocument, TextEditor, languages, window, workspace } from 'vscode'
+import {
+    DiagnosticCollection,
+    Disposable,
+    ExtensionContext,
+    OutputChannel,
+    TextDocument,
+    TextEditor,
+    languages,
+    window,
+    workspace,
+} from 'vscode'
 
 import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
@@ -15,14 +25,21 @@ export function activate(context: ExtensionContext) {
         window: window,
         workspace: workspace,
         rootPath: workspace.rootPath,
-        diagnostics: languages.createDiagnosticCollection('PHPUnit'),
         extensionPath: context.extensionPath,
-        outputChannel: window.createOutputChannel('PHPUnit'),
     }
 
-    const phpunit: Phpunit = new Phpunit(project)
+    const name = 'phpunit'
+
+    const outputChannel: OutputChannel = window.createOutputChannel(name)
+    const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name)
+
+    const phpunit: Phpunit = new Phpunit(project).setOutput((buffer: Buffer) => {
+        outputChannel.append(phpunit.noAnsi(buffer.toString()))
+    })
+
     const decorateManager = new DecorateManager(project)
-    const diagnosticManager = new DiagnosticManager(project)
+    const diagnosticManager = new DiagnosticManager(diagnostics)
+
     const tester = new Tester(project, phpunit, decorateManager, diagnosticManager)
 
     context.subscriptions.push(tester.subscribe())
