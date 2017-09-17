@@ -9,9 +9,9 @@ interface FilesystemInterface {
 }
 
 abstract class AbstractFilesystem {
-    public platform = process.platform
+    platform = process.platform
 
-    public isWindows(): boolean {
+    isWindows(): boolean {
         return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(this.platform)
     }
 
@@ -26,9 +26,9 @@ abstract class AbstractFilesystem {
 }
 
 class Windows extends AbstractFilesystem implements FilesystemInterface {
-    public extensions = ['.bat', '.exe', '.cmd', '']
+    extensions = ['.bat', '.exe', '.cmd', '']
 
-    public find(file: string): string {
+    find(file: string): string {
         const exists = this.getExists(file)
 
         if (exists) {
@@ -49,7 +49,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
         return ''
     }
 
-    public exists(file: string): boolean {
+    exists(file: string): boolean {
         for (const extension of this.extensions) {
             if (existsSync(`${file}${extension}`)) {
                 return true
@@ -59,7 +59,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
         return false
     }
 
-    protected getExists(file: string): string {
+    private getExists(file: string): string {
         for (const extension of this.extensions) {
             if (existsSync(`${file}${extension}`)) {
                 return resolve(`${file}${extension}`)
@@ -71,7 +71,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
 }
 
 class Linux extends AbstractFilesystem implements FilesystemInterface {
-    public find(fileName: string): string {
+    find(fileName: string): string {
         if (existsSync(fileName)) {
             return resolve(fileName)
         }
@@ -81,22 +81,22 @@ class Linux extends AbstractFilesystem implements FilesystemInterface {
         return this.normalize(new Buffer(process.output.join('')))
     }
 
-    public exists(file: string): boolean {
+    exists(file: string): boolean {
         return existsSync(file)
     }
 }
 
 export class Filesystem extends AbstractFilesystem {
-    protected instance: FilesystemInterface
+    private instance: FilesystemInterface
 
-    protected cache = new Map<string, string>()
+    private cache = new Map<string, string>()
 
-    public constructor() {
+    constructor() {
         super()
         this.instance = this.isWindows() ? new Windows() : new Linux()
     }
 
-    public find(file: string): string {
+    find(file: string): string {
         const key = file
         if (this.cache.has(key) === true) {
             return this.cache.get(key)
@@ -110,7 +110,7 @@ export class Filesystem extends AbstractFilesystem {
         return find ? find : ''
     }
 
-    public exists(file: string): boolean {
+    exists(file: string): boolean {
         const key = `${file}-exists`
         if (this.cache.has(key) === true) {
             return true

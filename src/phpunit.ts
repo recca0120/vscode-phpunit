@@ -7,13 +7,13 @@ import { resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 
 export class Phpunit {
-    public rootPath: string
+    rootPath: string
 
-    public xmlPath: string = tmpdir()
+    xmlPath: string = tmpdir()
 
     private outputCallback: Function = function() {}
 
-    public constructor(
+    constructor(
         private project: Project = {},
         private parser = new Parser(),
         private files = new Filesystem(),
@@ -22,13 +22,13 @@ export class Phpunit {
         this.rootPath = this.project.rootPath || __dirname
     }
 
-    public setOutput(outputCallback: Function): this {
+    setOutput(outputCallback: Function): this {
         this.outputCallback = outputCallback
 
         return this
     }
 
-    public exec(fileName: string): Promise<Message[]> {
+    exec(fileName: string): Promise<Message[]> {
         return new Promise((resolve, reject) => {
             const rootPath = this.rootPath
             const xmlFileName = pathResolve(this.xmlPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
@@ -60,17 +60,17 @@ export class Phpunit {
         })
     }
 
-    public noAnsi(str: string): string {
+    noAnsi(str: string): string {
         return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
     }
 }
 
 export class Process {
-    public stdErrCallback: Function = function() {}
-    public stdOutCallback: Function = function() {}
-    public exitCallback: Function = function() {}
+    stdErrCallback: Function = function() {}
+    stdOutCallback: Function = function() {}
+    exitCallback: Function = function() {}
 
-    public spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess {
+    spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess {
         const process: ChildProcess = spawn(command, args, options)
         process.stderr.on('data', this.stdErrCallback)
         process.stdout.on('data', this.stdOutCallback)
@@ -79,19 +79,19 @@ export class Process {
         return process
     }
 
-    public stdErr(callback: Function): this {
+    stdErr(callback: Function): this {
         this.stdErrCallback = callback
 
         return this
     }
 
-    public stdOut(callback: Function): this {
+    stdOut(callback: Function): this {
         this.stdOutCallback = callback
 
         return this
     }
 
-    public onExit(callback: Function): this {
+    onExit(callback: Function): this {
         this.exitCallback = callback
 
         return this

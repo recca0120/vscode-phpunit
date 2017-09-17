@@ -30,13 +30,13 @@ export interface Message {
 }
 
 export class Parser {
-    public async parseString(str: string): Promise<Message[]> {
+    async parseString(str: string): Promise<Message[]> {
         const json = await this.xml2json(str)
 
         return this.parseTestsuite(json.testsuites)
     }
 
-    public async parseXML(fileName: string, clean: boolean = false): Promise<Message[]> {
+    async parseXML(fileName: string, clean: boolean = false): Promise<Message[]> {
         if (existsSync(fileName) === false) {
             throw `${fileName} not found`
         }
@@ -51,7 +51,7 @@ export class Parser {
         return messages
     }
 
-    protected parseTestsuite(testsuite: any): Message[] {
+    private parseTestsuite(testsuite: any): Message[] {
         let messages: Message[] = []
         if (testsuite.testsuite) {
             messages = messages.concat(...testsuite.testsuite.map(this.parseTestsuite.bind(this)))
@@ -62,7 +62,7 @@ export class Parser {
         return messages
     }
 
-    protected parseTestcase(testcase: any): Message {
+    private parseTestcase(testcase: any): Message {
         const testcaseAttr = testcase.$
         const duration = parseFloat(testcaseAttr.time || 0)
         const title = testcaseAttr.name || ''
@@ -106,7 +106,7 @@ export class Parser {
         }
     }
 
-    protected getError(testcase: any): any {
+    private getError(testcase: any): any {
         if (testcase.failure) {
             return testcase.failure[0]
         }
@@ -127,11 +127,11 @@ export class Parser {
         return null
     }
 
-    protected crlf2lf(str: string): string {
+    private crlf2lf(str: string): string {
         return str.replace(/\r\n/g, '\n')
     }
 
-    protected parseState(errAttr: any): State {
+    private parseState(errAttr: any): State {
         const type = errAttr.type.toLowerCase()
 
         if (type.indexOf('skipped') !== -1) {
@@ -149,7 +149,7 @@ export class Parser {
         return State.FAILED
     }
 
-    protected parseCallStack(errorChar: string): Position[] {
+    private parseCallStack(errorChar: string): Position[] {
         return errorChar
             .split('\n')
             .map(line => line.trim())
@@ -164,7 +164,7 @@ export class Parser {
             })
     }
 
-    protected getCurrentFile(callStack: Position[]): Position {
+    private getCurrentFile(callStack: Position[]): Position {
         return callStack
             .filter(position => {
                 const paths = ['vendor/mockery/mockery', 'vendor/phpunit/phpunit']
@@ -174,13 +174,13 @@ export class Parser {
             .pop()
     }
 
-    protected replaceFirst(str: string, search: string): string {
+    private replaceFirst(str: string, search: string): string {
         const length = str.indexOf(search)
 
         return length === -1 ? str : str.substr(length + search.length)
     }
 
-    protected parseMessage(message: string, files: Position[], name: string, title: string): string {
+    private parseMessage(message: string, files: Position[], name: string, title: string): string {
         message = this.crlf2lf(message)
         files.forEach(position => (message = message.replace(`${position.fileName}:${position.lineNumber}`, '')))
         message = message.replace(/\n+$/, '')
@@ -190,7 +190,7 @@ export class Parser {
         return message
     }
 
-    protected parseFullMessage(message: string, name: string, title: string): string {
+    private parseFullMessage(message: string, name: string, title: string): string {
         message = this.crlf2lf(message)
         message = message.replace(/\n+$/, '')
         message = this.replaceFirst(message, `${name}: `)
@@ -199,7 +199,7 @@ export class Parser {
         return message
     }
 
-    protected readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {
+    private readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {
         return new Promise((resolve, reject) => {
             readFile(filePath, encoding, (error, data) => {
                 return error ? reject(error) : resolve(data)
@@ -207,7 +207,7 @@ export class Parser {
         })
     }
 
-    protected xml2json(xml: string): Promise<any> {
+    private xml2json(xml: string): Promise<any> {
         return new Promise((resolve, reject) => {
             parseString(xml, (error, json) => {
                 return error ? reject(error) : resolve(json)

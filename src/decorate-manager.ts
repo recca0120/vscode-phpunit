@@ -10,7 +10,7 @@ export class DecorateManager {
     private window
     private extensionPath: string
 
-    public constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
+    constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
         const { window, extensionPath } = project
         this.window = window
         this.extensionPath = extensionPath
@@ -20,7 +20,7 @@ export class DecorateManager {
         }, new Map<State, TextEditorDecorationType>())
     }
 
-    public decoratedGutter(store: Store, editor: TextEditor): this {
+    decoratedGutter(store: Store, editor: TextEditor): this {
         this.clearDecoratedGutter(editor)
 
         const fileName = editor.document.fileName
@@ -41,7 +41,7 @@ export class DecorateManager {
         return this
     }
 
-    public clearDecoratedGutter(editor: TextEditor): this {
+    clearDecoratedGutter(editor: TextEditor): this {
         Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []))
 
         return this
@@ -71,11 +71,11 @@ export interface DecorationType {
 }
 
 export class DecorationStyle {
-    public get(state: string): DecorationType {
+    get(state: string): DecorationType {
         return this[state]()
     }
 
-    public passed(): DecorationType {
+    passed(): DecorationType {
         return {
             overviewRulerColor: 'green',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -88,7 +88,7 @@ export class DecorationStyle {
         }
     }
 
-    public failed(): DecorationType {
+    failed(): DecorationType {
         return {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -101,7 +101,7 @@ export class DecorationStyle {
         }
     }
 
-    public skipped(): DecorationType {
+    skipped(): DecorationType {
         return {
             overviewRulerColor: 'darkgrey',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -114,7 +114,7 @@ export class DecorationStyle {
         }
     }
 
-    public incompleted(): DecorationType {
+    incompleted(): DecorationType {
         return this.skipped()
     }
 }

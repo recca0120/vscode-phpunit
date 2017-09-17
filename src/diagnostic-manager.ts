@@ -4,9 +4,9 @@ import { Message, State } from './parser'
 import { Store } from './store'
 
 export class DiagnosticManager {
-    public constructor(private diagnostics: DiagnosticCollection) {}
+    constructor(private diagnostics: DiagnosticCollection) {}
 
-    public handle(store: Store, editor: TextEditor) {
+    handle(store: Store, editor: TextEditor) {
         this.diagnostics.clear()
 
         store.forEach((messages: Message[], file: string) => {
@@ -14,12 +14,12 @@ export class DiagnosticManager {
         })
     }
 
-    public dispose() {
+    dispose() {
         this.diagnostics.clear()
         this.diagnostics.dispose()
     }
 
-    protected covertToDiagnostic(messages: Message[], editor: TextEditor): Diagnostic[] {
+    private covertToDiagnostic(messages: Message[], editor: TextEditor): Diagnostic[] {
         return messages.map((message: Message) => {
             return new Diagnostic(
                 this.messageToRange(message, editor),
@@ -29,7 +29,7 @@ export class DiagnosticManager {
         })
     }
 
-    protected messageToRange(message: Message, editor: TextEditor) {
+    private messageToRange(message: Message, editor: TextEditor) {
         const textLine: TextLine = editor.document.lineAt(message.lineNumber)
 
         return new Range(

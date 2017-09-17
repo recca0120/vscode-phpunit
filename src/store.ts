@@ -5,7 +5,7 @@ export class Store {
         this.put(messages)
     }
 
-    public put(messages: Message[]): this {
+    put(messages: Message[]): this {
         this.groupByFile(messages).forEach((messages: Message[], fileName: string) => {
             this.items.set(this.getFileName(fileName), messages)
         })
@@ -13,35 +13,35 @@ export class Store {
         return this
     }
 
-    public keys(): Iterable<string> {
+    keys(): Iterable<string> {
         return this.items.keys()
     }
 
-    public has(fileName: string): boolean {
+    has(fileName: string): boolean {
         return this.items.has(this.getFileName(fileName))
     }
 
-    public get(fileName: string): Message[] {
+    get(fileName: string): Message[] {
         return this.items.get(this.getFileName(fileName))
     }
 
-    public getByState(fileName: string): Map<State, Message[]> {
+    getByState(fileName: string): Map<State, Message[]> {
         return this.groupByState(this.get(fileName))
     }
 
-    public forEach(callbackFn): void {
+    forEach(callbackFn): void {
         this.items.forEach(callbackFn)
     }
 
-    public dispose(): void {
+    dispose(): void {
         this.items.clear()
     }
 
-    protected getFileName(fileName: string): string {
+    private getFileName(fileName: string): string {
         return this.removeDriveName(fileName)
     }
 
-    protected groupByFile(messages: Message[]): Map<string, Message[]> {
+    private groupByFile(messages: Message[]): Map<string, Message[]> {
         return messages.reduce((messageGroup: Map<string, Message[]>, message: Message) => {
             let group = []
             if (messageGroup.has(message.fileName) === true) {
@@ -52,7 +52,7 @@ export class Store {
         }, new Map<string, Message[]>())
     }
 
-    protected groupByState(messages: Message[]): Map<State, Message[]> {
+    private groupByState(messages: Message[]): Map<State, Message[]> {
         return messages.reduce(
             (messageGroup: Map<State, Message[]>, message: Message) =>
                 messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
@@ -60,7 +60,7 @@ export class Store {
         )
     }
 
-    protected removeDriveName(file): string {
+    private removeDriveName(file): string {
         return file.replace(/^\w:/i, '')
     }
 }

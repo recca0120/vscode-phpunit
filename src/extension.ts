@@ -53,14 +53,14 @@ export class Tester {
 
     private store: Store = new Store()
 
-    public constructor(
+    constructor(
         private project: Project,
         private phpunit: Phpunit,
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager
     ) {}
 
-    public subscribe(): this {
+    subscribe(): this {
         const subscriptions: Disposable[] = []
         const { window, workspace } = this.project
 
@@ -78,7 +78,7 @@ export class Tester {
         return this
     }
 
-    public async exec(editor: TextEditor) {
+    async exec(editor: TextEditor) {
         if (this.isExecutable(editor) === false) {
             return
         }
@@ -89,7 +89,7 @@ export class Tester {
         this.handleDiagnostic(editor)
     }
 
-    public restore(editor: TextEditor): void {
+    restore(editor: TextEditor): void {
         if (this.isExecutable(editor) === false) {
             return
         }
@@ -104,26 +104,26 @@ export class Tester {
         this.exec(editor)
     }
 
-    public dispose() {
+    dispose() {
         this.store.dispose()
         this.diagnosticManager.dispose()
         this.disposable.dispose()
     }
 
-    protected async getMessage(editor: TextEditor) {
+    private async getMessage(editor: TextEditor) {
         const messages = await this.phpunit.exec(editor.document.fileName)
         this.store.put(messages)
     }
 
-    protected decoratedGutter(editor: TextEditor) {
+    private decoratedGutter(editor: TextEditor) {
         this.decorateManager.decoratedGutter(this.store, editor)
     }
 
-    protected handleDiagnostic(editor: TextEditor) {
+    private handleDiagnostic(editor: TextEditor) {
         this.diagnosticManager.handle(this.store, editor)
     }
 
-    protected trigger(checkDocument: boolean = false) {
+    private trigger(checkDocument: boolean = false) {
         if (checkDocument === true) {
             return (document: TextDocument) => {
                 const editor = this.getActiveTextEditor()
@@ -138,7 +138,7 @@ export class Tester {
         }
     }
 
-    protected isExecutable(editor: TextEditor) {
+    private isExecutable(editor: TextEditor) {
         const keywords = new RegExp(
             [
                 'PHPUnit\\\\Framework\\\\TestCase',
@@ -159,7 +159,7 @@ export class Tester {
         return true
     }
 
-    protected getActiveTextEditor(): TextEditor {
+    private getActiveTextEditor(): TextEditor {
         return this.project.window.activeTextEditor
     }
 }
