@@ -82,6 +82,7 @@ export class Phpunit {
 
     private isExecutable(fileName: string, content: string): boolean {
         if (
+            /\.(php|inc)$/.test(fileName) === false ||
             /\.git\.php$/.test(fileName) === true ||
             this.isPhpunit(content) === false ||
             this.isAbstract(content) === true
