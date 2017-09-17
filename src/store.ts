@@ -4,7 +4,7 @@ export class Store {
     private items: Map<string, Message[]> = new Map<string, Message[]>()
 
     public put(messages: Message[]): this {
-        this.groupMessageByFile(messages).forEach((messages: Message[], fileName: string) => {
+        this.groupByFile(messages).forEach((messages: Message[], fileName: string) => {
             this.items.set(this.getFileName(fileName), messages)
         })
 
@@ -20,7 +20,7 @@ export class Store {
     }
 
     public getByState(fileName: string) {
-        return this.groupMessageByState(this.get(fileName))
+        return this.groupByState(this.get(fileName))
     }
 
     public forEach(callbackFn) {
@@ -35,7 +35,7 @@ export class Store {
         return this.removeDriveName(fileName)
     }
 
-    protected groupMessageByFile(messages: Message[]): Map<string, Message[]> {
+    protected groupByFile(messages: Message[]): Map<string, Message[]> {
         return messages.reduce((messageGroup: Map<string, Message[]>, message: Message) => {
             let group = []
             if (messageGroup.has(message.fileName) === true) {
@@ -46,7 +46,7 @@ export class Store {
         }, new Map<string, Message[]>())
     }
 
-    protected groupMessageByState(messages: Message[]): Map<State, Message[]> {
+    protected groupByState(messages: Message[]): Map<State, Message[]> {
         return messages.reduce(
             (messageGroup: Map<State, Message[]>, message: Message) =>
                 messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
