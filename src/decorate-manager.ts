@@ -8,10 +8,14 @@ import { resolve } from 'path'
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
 
-    public constructor(private project: Project) {
-        const decorationStyle: DecorationStyle = new DecorationStyle(project)
+    public constructor(private project: Project, private decorationStyle: DecorationStyle = new DecorationStyle) {
         this.styles = states().reduce((styles, state: State) => {
-            return styles.set(state, this.project.window.createTextEditorDecorationType(decorationStyle.get(state)))
+            const style = this.decorationStyle.get(state);
+
+            style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
+            style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
+
+            return styles.set(state, this.project.window.createTextEditorDecorationType(style))
         }, new Map<State, TextEditorDecorationType>())
     }
 
@@ -39,65 +43,57 @@ export class DecorateManager {
             editor.setDecorations(this.styles.get(state), [])
         }
     }
+
+    private gutterIconPath(img: string) {
+        return resolve(this.project.extensionPath, 'images', img)
+    }
 }
 
 export class DecorationStyle {
-    public constructor(private settings: Project) {}
-
-    public get(state: string): Object {
+    public get(state: string): any {
         return this[state]()
     }
 
-    public passed(): Object {
-        const gutterIconPath = this.gutterIconPath('passed.svg')
-
+    public passed(): any {
         return {
             overviewRulerColor: 'green',
             overviewRulerLane: OverviewRulerLane.Left,
             light: {
-                gutterIconPath: gutterIconPath,
+                gutterIconPath: 'passed.svg',
             },
             dark: {
-                gutterIconPath: gutterIconPath,
+                gutterIconPath: 'passed.svg',
             },
         }
     }
 
-    public failed(): Object {
-        const gutterIconPath = this.gutterIconPath('failed.svg')
-
+    public failed(): any {
         return {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
             light: {
-                gutterIconPath: gutterIconPath,
+                gutterIconPath: 'failed.svg',
             },
             dark: {
-                gutterIconPath: gutterIconPath,
+                gutterIconPath: 'failed.svg',
             },
         }
     }
 
-    public skipped(): Object {
-        const gutterIconPath = this.gutterIconPath('skipped.svg')
-
+    public skipped(): any {
         return {
             overviewRulerColor: 'darkgrey',
             overviewRulerLane: OverviewRulerLane.Left,
             dark: {
-                gutterIconPath: gutterIconPath,
+                gutterIconPath: 'skipped.svg',
             },
             light: {
-                gutterIconPath: gutterIconPath,
+                gutterIconPath: 'skipped.svg',
             },
         }
     }
 
-    public incompleted(): Object {
+    public incompleted(): any {
         return this.skipped()
-    }
-
-    private gutterIconPath(img: string) {
-        return resolve(this.settings.extensionPath, 'images', img)
     }
 }
