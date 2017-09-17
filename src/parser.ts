@@ -9,7 +9,7 @@ export enum State {
     INCOMPLETED = 'incompleted',
 }
 
-export const StateKeys = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED];
+export const StateKeys = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
 
 export interface Position {
     fileName: string

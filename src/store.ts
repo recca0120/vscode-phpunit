@@ -1,7 +1,9 @@
 import { Message, State, StateKeys } from './parser'
 
 export class Store {
-    private items: Map<string, Message[]> = new Map<string, Message[]>()
+    constructor(messages: Message[] = [], private items: Map<string, Message[]> = new Map<string, Message[]>()) {
+        this.put(messages)
+    }
 
     public put(messages: Message[]): this {
         this.groupByFile(messages).forEach((messages: Message[], fileName: string) => {
@@ -9,6 +11,10 @@ export class Store {
         })
 
         return this
+    }
+
+    public keys(): Iterable<string> {
+        return this.items.keys()
     }
 
     public has(fileName: string): boolean {
@@ -19,15 +25,15 @@ export class Store {
         return this.items.get(this.getFileName(fileName))
     }
 
-    public getByState(fileName: string) {
+    public getByState(fileName: string): Map<State, Message[]> {
         return this.groupByState(this.get(fileName))
     }
 
-    public forEach(callbackFn) {
+    public forEach(callbackFn): void {
         this.items.forEach(callbackFn)
     }
 
-    public dispose() {
+    public dispose(): void {
         this.items.clear()
     }
 

@@ -50,8 +50,10 @@
         "url": "https://github.com/recca0120/vscode-phpunit"
     },
     "devDependencies": {
+        "@types/faker": "^4.1.1",
         "@types/jest": "^20.0.8",
         "@types/node": "^6.0.88",
+        "faker": "^4.1.0",
         "fs-extra": "^4.0.2",
         "husky": "^0.14.3",
         "jest": "^20.0.4",
