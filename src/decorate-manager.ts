@@ -9,13 +9,19 @@ export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
 
     public constructor(private project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
+        const { window } = this.project
         this.styles = states().reduce((styles, state: State) => {
-            const style = this.decorationStyle.get(state)
+            return styles.set(
+                state,
+                window.createTextEditorDecorationType(
+                    this.decorationStyle.get(state, style => {
+                        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath)
+                        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath)
 
-            style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath)
-            style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath)
-
-            return styles.set(state, this.project.window.createTextEditorDecorationType(style))
+                        return style
+                    })
+                )
+            )
         }, new Map<State, TextEditorDecorationType>())
     }
 
@@ -49,12 +55,23 @@ export class DecorateManager {
     }
 }
 
+export interface DecorationType {
+    overviewRulerColor: string
+    overviewRulerLane: OverviewRulerLane
+    light: {
+        gutterIconPath: string
+    }
+    dark: {
+        gutterIconPath: string
+    }
+}
+
 export class DecorationStyle {
-    public get(state: string): any {
-        return this[state]()
+    public get(state: string, callback: Function = null): DecorationType {
+        return callback === null ? this[state]() : callback(this[state]())
     }
 
-    public passed(): any {
+    public passed(): DecorationType {
         return {
             overviewRulerColor: 'green',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -67,7 +84,7 @@ export class DecorationStyle {
         }
     }
 
-    public failed(): any {
+    public failed(): DecorationType {
         return {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -80,7 +97,7 @@ export class DecorationStyle {
         }
     }
 
-    public skipped(): any {
+    public skipped(): DecorationType {
         return {
             overviewRulerColor: 'darkgrey',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -93,7 +110,7 @@ export class DecorationStyle {
         }
     }
 
-    public incompleted(): any {
+    public incompleted(): DecorationType {
         return this.skipped()
     }
 }
