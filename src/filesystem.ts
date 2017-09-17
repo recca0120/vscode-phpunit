@@ -1,6 +1,5 @@
-import { join, resolve } from 'path'
-
 import { existsSync } from 'fs'
+import { resolve } from 'path'
 import { spawnSync } from 'child_process'
 
 interface FilesystemInterface {

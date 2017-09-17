@@ -1,22 +1,58 @@
-import { ChildProcess, spawn } from 'child_process'
+import { ChildProcess, SpawnOptions, spawn } from 'child_process'
 import { Message, Parser } from './parser'
-import { existsSync, unlinkSync } from 'fs'
 
 import { Filesystem } from './filesystem'
-import { join } from 'path'
+import { resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 
-export class Phpunit {
-    public rootPath = __dirname
+export class Process {
+    public stdErrCallback: Function = function() {}
+    public stdOutCallback: Function = function() {}
+    public exitCallback: Function = function() {}
 
-    public xmlPath = tmpdir()
+    public spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess {
+        const process: ChildProcess = spawn(command, args, options)
+        process.stderr.on('data', this.stdErrCallback)
+        process.stdout.on('data', this.stdOutCallback)
+        process.on('exit', this.exitCallback)
+
+        return process
+    }
+
+    public stdErr(callback: Function): this {
+        this.stdErrCallback = callback
+
+        return this
+    }
+
+    public stdOut(callback: Function): this {
+        this.stdOutCallback = callback
+
+        return this
+    }
+
+    public onExit(callback: Function): this {
+        this.exitCallback = callback
+
+        return this
+    }
+}
+
+export class Phpunit {
+    public rootPath: string = __dirname
+
+    public xmlPath: string = tmpdir()
 
     private outputCallback: Function = function() {}
 
-    public constructor(private parser = new Parser(), private files = new Filesystem()) {}
+    public constructor(
+        private parser = new Parser(),
+        private files = new Filesystem(),
+        private process = new Process()
+    ) {}
 
     public setRootPath(rootPath: string): this {
-        this.rootPath = rootPath
+        this.rootPath = rootPath || this.rootPath
 
         return this
     }
@@ -36,8 +72,9 @@ export class Phpunit {
     public exec(fileName: string): Promise<Message[]> {
         return new Promise((resolve, reject) => {
             const rootPath = this.rootPath
-            const xml = join(this.xmlPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
-            const vendorPath = `${rootPath}/vendor/bin/phpunit`
+            const xmlFileName = pathResolve(this.xmlPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
+            const vendorPath = pathResolve(rootPath, 'vendor/bin/phpunit')
+
             const command =
                 this.files.exists(vendorPath) === true ? this.files.find(vendorPath) : this.files.find(`phpunit`)
 
@@ -47,20 +84,20 @@ export class Phpunit {
                 return
             }
 
-            const args = [fileName, '--colors=always', '--log-junit', xml]
-            const process: ChildProcess = spawn(command, args, { cwd: rootPath })
-            process.stderr.on('data', this.outputCallback)
-            process.stdout.on('data', this.outputCallback)
-            process.on('exit', async () => {
-                if (existsSync(xml) === false) {
-                    reject()
-                    return
-                }
+            const args = [fileName, '--colors=always', '--log-junit', xmlFileName]
 
-                const messages = await this.parser.parseXML(xml)
-                unlinkSync(xml)
-                resolve(messages)
-            })
+            this.process
+                .stdErr(this.outputCallback)
+                .stdOut(this.outputCallback)
+                .onExit(async () => {
+                    try {
+                        const messages = await this.parser.parseXML(xmlFileName, true)
+                        resolve(messages)
+                    } catch (e) {
+                        reject(e)
+                    }
+                })
+                .spawn(command, args, { cwd: rootPath })
         })
     }
 }

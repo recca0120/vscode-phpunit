@@ -3,6 +3,7 @@ import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from '
 
 import { MessageCollection } from './message-collection'
 import { Window } from './wrapper/vscode'
+import { resolve } from "path";
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
@@ -98,6 +99,6 @@ export class DecorationStyle {
     }
 
     private gutterIconPath(img: string) {
-        return `${this.extensionPath}/images/${img}`
+        return resolve(this.extensionPath, 'images', img)
     }
 }

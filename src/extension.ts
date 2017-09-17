@@ -28,7 +28,7 @@ class Runner {
     public constructor(
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager = new DiagnosticManager(new Languages()),
-        private shell: Phpunit = new Phpunit(new Parser(), new Filesystem()),
+        private phpunit: Phpunit = new Phpunit(new Parser(), new Filesystem()),
         private workspace: Workspace = new Workspace(),
         private window: Window = new Window()
     ) {
@@ -37,7 +37,7 @@ class Runner {
 
     private setupOutputChannel() {
         const channel: OutputChannel = this.window.createOutputChannel('PHPUnit')
-        this.shell.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
+        this.phpunit.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
             channel.append(this.noAnsi(buffer.toString()))
         })
     }
@@ -92,7 +92,7 @@ class Runner {
     }
 
     protected async getMessage(editor: TextEditor) {
-        const messages = await this.shell.exec(editor.document.fileName)
+        const messages = await this.phpunit.exec(editor.document.fileName)
         this.messageCollection.put(messages)
     }
 

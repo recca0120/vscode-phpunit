@@ -16,6 +16,8 @@ describe('Filesystem Tests', () => {
     it('find file', () => {
         const filesystem = new Filesystem()
 
-        expect(filesystem.find('tests/filesystem.test.ts')).toEqual(join(__dirname, '../tests/filesystem.test.ts'))
+        expect(filesystem.find(join('tests', 'filesystem.test.ts'))).toEqual(
+            join(__dirname, '../tests/filesystem.test.ts')
+        )
     })
 })
