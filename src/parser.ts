@@ -36,15 +36,27 @@ export class Parser {
         return this.parseTestsuite(json.testsuites)
     }
 
-    async parseXML(fileName: string, testing: boolean = false): Promise<Message[]> {
-        const xmlContent = await this.readFileAsync(fileName)
-        const messages: Message[] = await this.parseString(xmlContent)
+    parseXML(fileName: string, testing: boolean = false): Promise<Message[]> {
+        return new Promise(async resolve => {
+            let messages: Message[] = []
 
-        if (testing === false && existsSync(fileName) === true) {
-            unlinkSync(fileName)
-        }
+            try {
+                const xmlContent = await this.readFileAsync(fileName)
+                messages = await this.parseString(xmlContent)
+            } catch (e) {}
 
-        return messages
+            if (testing === false && existsSync(fileName) === true) {
+                try {
+                    unlinkSync(fileName)
+                } catch (e) {
+                    setTimeout(() => {
+                        unlinkSync(fileName)
+                    }, 10000)
+                }
+            }
+
+            resolve(messages)
+        })
     }
 
     private parseTestsuite(testsuite: any): Message[] {
@@ -192,7 +204,7 @@ export class Parser {
         message = this.replaceFirst(message, `${name}: `)
         message = this.replaceFirst(message, `${title}\n`)
 
-        return message
+        return message.length > 1000 ? `${message.substr(0, 1000)}...` : message
     }
 
     private readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {

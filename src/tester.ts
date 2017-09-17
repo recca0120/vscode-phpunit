@@ -35,12 +35,10 @@ export class Tester {
         this.workspace.onWillSaveTextDocument(this.exec.bind(this), null, subscriptions)
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
-        //     const editor = this.getActiveTextEditor()
-        //     if (editor && document === editor.document) {
+        //     if (this.hasEditor && document === this.document) {
         //         this.restore()
         //     }
         // }, null, subscriptions)
-        // this.window.onDidChangeActiveTextEditor(this.restore.bind(this), null, subscriptions)
         this.window.onDidChangeActiveTextEditor(this.restore.bind(this), null, subscriptions)
 
         this.restore()
@@ -54,7 +52,7 @@ export class Tester {
         this.clearDecoratedGutter()
 
         try {
-            if (!this.editor || !this.document) {
+            if (!this.hasEditor) {
                 return
             }
 
@@ -67,25 +65,31 @@ export class Tester {
         } catch (e) {
             switch (e) {
                 case State.PHPUNIT_NOT_FOUND:
-                    this.window.showErrorMessage('composer require phpunit/phpunit')
+                    this.window.showErrorMessage('[phpunit] composer require phpunit/phpunit')
                     console.error(this.phpunit.getLastOutput())
                     break
                 case State.PHPUNIT_EXECUTE_ERROR:
-                    this.window.showErrorMessage('composer install')
+                    // this.window.showErrorMessage('[phpunit] something wrong')
                     console.error(this.phpunit.getLastOutput())
                     break
                 case State.NOT_RUNNABLE:
+                    console.log(e)
+                    break
+                default:
+                    console.log(e)
                     break
             }
         }
     }
 
     restore(): void {
+        if (!this.hasEditor) {
+            return
+        }
+
         if (this.store.has(this.document.fileName)) {
             this.decoratedGutter()
             this.handleDiagnostic()
-
-            return
         }
 
         this.exec()
@@ -115,5 +119,9 @@ export class Tester {
 
     get document(): TextDocument {
         return this.window.activeTextEditor.document
+    }
+
+    get hasEditor(): boolean {
+        return !!this.editor && !!this.document
     }
 }

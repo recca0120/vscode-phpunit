@@ -11,6 +11,7 @@ export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
     PHPUNIT_EXECUTE_ERROR = 'phpunit_execute_error',
     NOT_RUNNABLE = 'not_runnable',
+    PROCESS_KILLED = 'process_killed',
 }
 
 export class Phpunit {
@@ -84,8 +85,8 @@ export class Phpunit {
         if (
             /\.(php|inc)$/.test(fileName) === false ||
             /\.git\.php$/.test(fileName) === true ||
-            this.isPhpunit(content) === false ||
-            this.isAbstract(content) === true
+            this.isAbstract(fileName, content) === true ||
+            this.isPhpunit(content) === false
         ) {
             return false
         }
@@ -97,15 +98,10 @@ export class Phpunit {
         return new RegExp(this.keywords.join('|'), 'i').test(content)
     }
 
-    private isAbstract(content: string) {
-        return new RegExp(
-            this.keywords
-                .map((keyword: string) => {
-                    return `abstract\\s+class\\s+(\\w+)\\s+extends\\s+${keyword}`
-                })
-                .join('|'),
-            'i'
-        ).test(content)
+    private isAbstract(fileName: string, content: string) {
+        const className = fileName.substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1).replace(/\.(php|inc)/i, '')
+
+        return new RegExp(`(abstract|trait|interface)\s+${className}`, 'i').test(content)
     }
 
     private getConfigurationFile(): string {
@@ -143,19 +139,25 @@ export class Process {
     stdErrCallback: Function = function() {}
     stdOutCallback: Function = function() {}
     exitCallback: Function = function() {}
+    private process: ChildProcess = null
 
     spawn(parameters: string[], options?: SpawnOptions): ChildProcess {
         this.lastOutput = ''
         const command: string = parameters.shift()
-        const process: ChildProcess = spawn(command, parameters, options)
-        process.stderr.on('data', this.stdErrCallback)
-        process.stdout.on('data', this.stdOutCallback)
-        process.on('exit', this.exitCallback)
 
-        process.stderr.on('data', this.setLastOutput.bind(this))
-        process.stdout.on('data', this.setLastOutput.bind(this))
+        if (this.process) {
+            this.process.kill('SIGKILL')
+        }
 
-        return process
+        this.process = spawn(command, parameters, options)
+        this.process.stderr.on('data', this.stdErrCallback)
+        this.process.stdout.on('data', this.stdOutCallback)
+        this.process.on('exit', this.exitCallback)
+
+        this.process.stderr.on('data', this.setLastOutput.bind(this))
+        this.process.stdout.on('data', this.setLastOutput.bind(this))
+
+        return this.process
     }
 
     stdErr(callback: Function): this {

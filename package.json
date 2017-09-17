@@ -2,7 +2,7 @@
     "name": "vscode-phpunit",
     "displayName": "VSCode-PHPUnit",
     "description": "",
-    "version": "0.2.10",
+    "version": "0.2.11",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "engines": {
