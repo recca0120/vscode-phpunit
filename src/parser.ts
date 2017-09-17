@@ -9,9 +9,7 @@ export enum State {
     INCOMPLETED = 'incompleted',
 }
 
-export function states() {
-    return [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
-}
+export const StateKeys = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED];
 
 export interface Position {
     fileName: string
@@ -89,7 +87,7 @@ export class Parser {
         const name = this.crlf2lf(errorAttr.type)
         const state = this.parseState(errorAttr)
         const callStack = this.parseCallStack(errorChar)
-        const file = this.getCurrentFile(callStack) || {
+        const currentFile = this.getCurrentFile(callStack) || {
             fileName: testcaseAttr.file,
             lineNumber: testcaseAttr.line,
         }
@@ -101,8 +99,8 @@ export class Parser {
                 message: this.parseMessage(errorChar, callStack, name, title),
                 name: '',
             },
-            fileName: file.fileName,
-            lineNumber: file.lineNumber - 1,
+            fileName: currentFile.fileName,
+            lineNumber: currentFile.lineNumber - 1,
             state: state,
             title,
         }

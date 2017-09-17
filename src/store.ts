@@ -1,4 +1,4 @@
-import { Message, State, states } from './parser'
+import { Message, State, StateKeys } from './parser'
 
 export class Store {
     private items: Map<string, Message[]> = new Map<string, Message[]>()
@@ -50,7 +50,7 @@ export class Store {
         return messages.reduce(
             (messageGroup: Map<State, Message[]>, message: Message) =>
                 messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
-            new Map<State, Message[]>([].concat(states().map(state => [state, []])))
+            new Map<State, Message[]>([].concat(StateKeys.map(state => [state, []])))
         )
     }
 
