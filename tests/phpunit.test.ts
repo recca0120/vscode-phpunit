@@ -2,10 +2,12 @@ import { Phpunit, Process } from '../src/phpunit'
 
 import { Filesystem } from './../src/filesystem'
 import { Parser } from '../src/parser'
+import { Project } from '../src/project'
 import { join } from 'path'
 
 describe('PHPUnit Tests', () => {
     it('get error messages', async () => {
+        const project: Project = {}
         const parser = new Parser()
         const filesystem = new Filesystem()
         const process = new Process()
@@ -27,7 +29,7 @@ describe('PHPUnit Tests', () => {
         ]
         spyOn(parser, 'parseXML').and.returnValue(expected)
 
-        const phpunit = new Phpunit(parser, filesystem, process)
+        const phpunit = new Phpunit(project, parser, filesystem, process)
         const messages = await phpunit.exec(fileName)
 
         expect(messages).toBe(expected)

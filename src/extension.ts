@@ -1,56 +1,58 @@
-import { DecorateManager, DecorationStyle } from './decorate-manager'
-import { Disposable, ExtensionContext, OutputChannel, TextDocument, TextEditor } from 'vscode'
-import { Languages, Window, Workspace } from './wrapper/vscode'
+import { Disposable, ExtensionContext, TextDocument, TextEditor, languages, window, workspace } from 'vscode'
 
+import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
-import { Filesystem } from './filesystem'
 import { MessageCollection } from './message-collection'
-import { Parser } from './parser'
 import { Phpunit } from './phpunit'
+import { Project } from './project'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!')
 
-    const decorateManager = new DecorateManager(new DecorationStyle(context.extensionPath))
-    context.subscriptions.push(new Runner(decorateManager).register())
+    const project: Project = {
+        window: window,
+        workspace: workspace,
+        rootPath: workspace.rootPath,
+        extensionPath: context.extensionPath,
+        outputChannel: window.createOutputChannel('PHPUnit'),
+        diagnosticCollection: languages.createDiagnosticCollection('PHPUnit'),
+    }
+
+    const phpunit: Phpunit = new Phpunit(project)
+    const decorateManager = new DecorateManager(project)
+    const diagnosticManager = new DiagnosticManager(project)
+    const extension = new Extension(project, phpunit, decorateManager, diagnosticManager)
+
+    context.subscriptions.push(extension.register())
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-class Runner {
+export class Extension {
     private disposable: Disposable
 
     private messageCollection: MessageCollection = new MessageCollection()
 
     public constructor(
+        private project: Project,
+        private phpunit: Phpunit,
         private decorateManager: DecorateManager,
-        private diagnosticManager: DiagnosticManager = new DiagnosticManager(new Languages()),
-        private phpunit: Phpunit = new Phpunit(new Parser(), new Filesystem()),
-        private workspace: Workspace = new Workspace(),
-        private window: Window = new Window()
-    ) {
-        this.setupOutputChannel()
-    }
-
-    private setupOutputChannel() {
-        const channel: OutputChannel = this.window.createOutputChannel('PHPUnit')
-        this.phpunit.setRootPath(this.workspace.rootPath).setOutput((buffer: Buffer) => {
-            channel.append(this.noAnsi(buffer.toString()))
-        })
-    }
+        private diagnosticManager: DiagnosticManager
+    ) {}
 
     public register(): this {
         const subscriptions: Disposable[] = []
+        const { window, workspace } = this.project
 
-        // this.workspace.onDidOpenTextDocument(this.trigger(false), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(this.trigger(false), null, subscriptions)
-        // this.workspace.onDidSaveTextDocument(this.trigger(false), null, subscriptions)
-        // this.workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
-        // this.window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(() => this.restore(this.getActiveTextEditor()), null, subscriptions)
+        // workspace.onDidOpenTextDocument(this.trigger(false), null, subscriptions)
+        workspace.onWillSaveTextDocument(this.trigger(false), null, subscriptions)
+        // workspace.onDidSaveTextDocument(this.trigger(false), null, subscriptions)
+        // workspace.onDidChangeTextDocument(this.trigger(true), null, subscriptions)
+        // window.onDidChangeActiveTextEditor(this.trigger(false), null, subscriptions)
+        window.onDidChangeActiveTextEditor(() => this.restore(this.getActiveTextEditor()), null, subscriptions)
 
         this.restore(this.getActiveTextEditor())
 
@@ -140,11 +142,7 @@ class Runner {
         return true
     }
 
-    protected noAnsi(str: string): string {
-        return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-    }
-
     protected getActiveTextEditor(): TextEditor {
-        return this.window.getActiveTextEditor()
+        return this.project.window.activeTextEditor
     }
 }

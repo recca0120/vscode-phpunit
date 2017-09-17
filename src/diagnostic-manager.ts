@@ -1,14 +1,14 @@
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor, TextLine, Uri } from 'vscode'
 import { Message, State } from './parser'
 
-import { Languages } from './wrapper/vscode'
 import { MessageCollection } from './message-collection'
+import { Project } from './project'
 
 export class DiagnosticManager {
     private collection: DiagnosticCollection
 
-    public constructor(private languages: Languages = new Languages()) {
-        this.collection = this.languages.createDiagnosticCollection('PHPUnit')
+    public constructor(private project: Project) {
+        this.collection = this.project.diagnosticCollection
     }
 
     public handle(messageCollection: MessageCollection, editor: TextEditor) {

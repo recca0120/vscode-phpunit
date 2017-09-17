@@ -2,18 +2,17 @@ import { Message, State, states } from './parser'
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
 
 import { MessageCollection } from './message-collection'
-import { Window } from './wrapper/vscode'
-import { resolve } from "path";
+import { Project } from './project'
+import { resolve } from 'path'
 
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
 
-    public constructor(private decorationStyle: DecorationStyle, private window: Window = new Window()) {
-        this.styles = states().reduce(
-            (styles, state: State) =>
-                styles.set(state, this.window.createTextEditorDecorationType(this.decorationStyle.get(state))),
-            new Map<State, TextEditorDecorationType>()
-        )
+    public constructor(private project: Project) {
+        const decorationStyle: DecorationStyle = new DecorationStyle(project)
+        this.styles = states().reduce((styles, state: State) => {
+            return styles.set(state, this.project.window.createTextEditorDecorationType(decorationStyle.get(state)))
+        }, new Map<State, TextEditorDecorationType>())
     }
 
     public handle(messageCollection: MessageCollection, editor: TextEditor): void {
@@ -43,7 +42,7 @@ export class DecorateManager {
 }
 
 export class DecorationStyle {
-    public constructor(private extensionPath: string = '') {}
+    public constructor(private settings: Project) {}
 
     public get(state: string): Object {
         return this[state]()
@@ -99,6 +98,6 @@ export class DecorationStyle {
     }
 
     private gutterIconPath(img: string) {
-        return resolve(this.extensionPath, 'images', img)
+        return resolve(this.settings.extensionPath, 'images', img)
     }
 }

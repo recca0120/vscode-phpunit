@@ -2,65 +2,30 @@ import { ChildProcess, SpawnOptions, spawn } from 'child_process'
 import { Message, Parser } from './parser'
 
 import { Filesystem } from './filesystem'
+import { Project } from './project'
 import { resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 
-export class Process {
-    public stdErrCallback: Function = function() {}
-    public stdOutCallback: Function = function() {}
-    public exitCallback: Function = function() {}
-
-    public spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess {
-        const process: ChildProcess = spawn(command, args, options)
-        process.stderr.on('data', this.stdErrCallback)
-        process.stdout.on('data', this.stdOutCallback)
-        process.on('exit', this.exitCallback)
-
-        return process
-    }
-
-    public stdErr(callback: Function): this {
-        this.stdErrCallback = callback
-
-        return this
-    }
-
-    public stdOut(callback: Function): this {
-        this.stdOutCallback = callback
-
-        return this
-    }
-
-    public onExit(callback: Function): this {
-        this.exitCallback = callback
-
-        return this
-    }
-}
-
 export class Phpunit {
-    public rootPath: string = __dirname
+    public rootPath: string
 
     public xmlPath: string = tmpdir()
 
     private outputCallback: Function = function() {}
 
     public constructor(
+        private project: Project = {},
         private parser = new Parser(),
         private files = new Filesystem(),
         private process = new Process()
-    ) {}
+    ) {
+        this.rootPath = this.project.rootPath || __dirname
 
-    public setRootPath(rootPath: string): this {
-        this.rootPath = rootPath || this.rootPath
-
-        return this
-    }
-
-    public setXmlDPath(xmlPath: string): this {
-        this.xmlPath = xmlPath
-
-        return this
+        if (project.outputChannel) {
+            this.outputCallback = (buffer: Buffer) => {
+                project.outputChannel.append(this.noAnsi(buffer.toString()))
+            }
+        }
     }
 
     public setOutput(outputCallback: Function): this {
@@ -99,5 +64,42 @@ export class Phpunit {
                 })
                 .spawn(command, args, { cwd: rootPath })
         })
+    }
+
+    protected noAnsi(str: string): string {
+        return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+    }
+}
+
+export class Process {
+    public stdErrCallback: Function = function() {}
+    public stdOutCallback: Function = function() {}
+    public exitCallback: Function = function() {}
+
+    public spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess {
+        const process: ChildProcess = spawn(command, args, options)
+        process.stderr.on('data', this.stdErrCallback)
+        process.stdout.on('data', this.stdOutCallback)
+        process.on('exit', this.exitCallback)
+
+        return process
+    }
+
+    public stdErr(callback: Function): this {
+        this.stdErrCallback = callback
+
+        return this
+    }
+
+    public stdOut(callback: Function): this {
+        this.stdOutCallback = callback
+
+        return this
+    }
+
+    public onExit(callback: Function): this {
+        this.exitCallback = callback
+
+        return this
     }
 }
