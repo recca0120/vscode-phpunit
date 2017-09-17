@@ -15,9 +15,9 @@ export function activate(context: ExtensionContext) {
         window: window,
         workspace: workspace,
         rootPath: workspace.rootPath,
+        diagnostics: languages.createDiagnosticCollection('PHPUnit'),
         extensionPath: context.extensionPath,
         outputChannel: window.createOutputChannel('PHPUnit'),
-        diagnosticCollection: languages.createDiagnosticCollection('PHPUnit'),
     }
 
     const phpunit: Phpunit = new Phpunit(project)

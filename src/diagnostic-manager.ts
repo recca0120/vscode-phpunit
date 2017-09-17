@@ -2,26 +2,26 @@ import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor
 import { Message, State } from './parser'
 
 import { MessageCollection } from './message-collection'
-import { Project } from './project'
+import { Project } from "./project";
 
 export class DiagnosticManager {
-    private collection: DiagnosticCollection
+    private diagnostics: DiagnosticCollection
 
     public constructor(private project: Project) {
-        this.collection = this.project.diagnosticCollection
+        this.diagnostics = this.project.diagnostics
     }
 
     public handle(messageCollection: MessageCollection, editor: TextEditor) {
-        this.collection.clear()
+        this.diagnostics.clear()
 
         messageCollection.forEach((messages: Message[], file: string) => {
-            this.collection.set(Uri.file(file), this.covertToDiagnostic(messages, editor))
+            this.diagnostics.set(Uri.file(file), this.covertToDiagnostic(messages, editor))
         })
     }
 
     public dispose() {
-        this.collection.clear()
-        this.collection.dispose()
+        this.diagnostics.clear()
+        this.diagnostics.dispose()
     }
 
     protected covertToDiagnostic(messages: Message[], editor: TextEditor): Diagnostic[] {
