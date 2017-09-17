@@ -2,7 +2,7 @@ import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor
 import { Message, State } from './parser'
 
 import { MessageCollection } from './message-collection'
-import { Project } from "./project";
+import { Project } from './project'
 
 export class DiagnosticManager {
     private diagnostics: DiagnosticCollection

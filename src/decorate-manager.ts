@@ -8,18 +8,18 @@ import { resolve } from 'path'
 export class DecorateManager {
     private styles: Map<State, TextEditorDecorationType>
 
-    public constructor(private project: Project, private decorationStyle: DecorationStyle = new DecorationStyle) {
+    public constructor(private project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
         this.styles = states().reduce((styles, state: State) => {
-            const style = this.decorationStyle.get(state);
+            const style = this.decorationStyle.get(state)
 
-            style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
-            style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
+            style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath)
+            style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath)
 
             return styles.set(state, this.project.window.createTextEditorDecorationType(style))
         }, new Map<State, TextEditorDecorationType>())
     }
 
-    public handle(messageCollection: MessageCollection, editor: TextEditor): void {
+    public decoratedGutter(messageCollection: MessageCollection, editor: TextEditor): void {
         this.clearDecoratedGutter(editor)
 
         const fileName = editor.document.fileName

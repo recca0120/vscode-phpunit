@@ -68,8 +68,8 @@ export class Extension {
 
         await this.getMessage(editor)
 
-        this.handleDecorate(editor)
-        this.handelDiagnostic(editor)
+        this.decoratedGutter(editor)
+        this.handleDiagnostic(editor)
     }
 
     public restore(editor: TextEditor): void {
@@ -78,8 +78,8 @@ export class Extension {
         }
 
         if (this.messageCollection.has(editor.document.fileName)) {
-            this.handleDecorate(editor)
-            this.handelDiagnostic(editor)
+            this.decoratedGutter(editor)
+            this.handleDiagnostic(editor)
 
             return
         }
@@ -98,11 +98,11 @@ export class Extension {
         this.messageCollection.put(messages)
     }
 
-    protected handleDecorate(editor: TextEditor) {
-        this.decorateManager.handle(this.messageCollection, editor)
+    protected decoratedGutter(editor: TextEditor) {
+        this.decorateManager.decoratedGutter(this.messageCollection, editor)
     }
 
-    protected handelDiagnostic(editor: TextEditor) {
+    protected handleDiagnostic(editor: TextEditor) {
         this.diagnosticManager.handle(this.messageCollection, editor)
     }
 
