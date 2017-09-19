@@ -1,7 +1,13 @@
 # Change Log
 All notable changes to the "vscode-phpunit" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+Check [Keep a Changelog](http://keepachangelog.com/) for 
+recommendations on how to structure this file.
+
+## 0.2.12
+- full message
+- [diagnostic] message pass State = PASSED
+- clear phpunit output
 
 ## 0.2.11
 - fix bugs

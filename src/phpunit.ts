@@ -19,6 +19,7 @@ export class Phpunit {
     private configurationFile: string = null
     private xmlPath: string = tmpdir()
     private outputCallback: Function = function() {}
+    private beforeOutputCallback: Function = function() {}
     private keywords: string[] = [
         'PHPUnit\\\\Framework\\\\TestCase',
         'PHPUnit\\Framework\\TestCase',
@@ -33,6 +34,12 @@ export class Phpunit {
         private process = new Process()
     ) {
         this.rootPath = this.project.rootPath || __dirname
+    }
+
+    beforeOuput(beforeOutputCallback: Function): this {
+        this.beforeOutputCallback = beforeOutputCallback
+
+        return this
     }
 
     setOutput(outputCallback: Function): this {
@@ -57,6 +64,8 @@ export class Phpunit {
                 parameters.push('--configuration')
                 parameters.push(configurationFile)
             }
+
+            this.beforeOutputCallback()
 
             this.process
                 .stdErr(this.outputCallback)
@@ -146,7 +155,8 @@ export class Process {
         const command: string = parameters.shift()
 
         if (this.process) {
-            this.process.kill('SIGKILL')
+            this.process.kill()
+            this.process = null
         }
 
         this.process = spawn(command, parameters, options)

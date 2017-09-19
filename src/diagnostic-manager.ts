@@ -10,7 +10,15 @@ export class DiagnosticManager {
         this.diagnostics.clear()
 
         store.forEach((messages: Message[], file: string) => {
-            this.diagnostics.set(Uri.file(file), this.covertToDiagnostic(messages, editor))
+            this.diagnostics.set(
+                Uri.file(file),
+                this.covertToDiagnostic(
+                    messages.filter((message: Message) => {
+                        return message.state !== State.PASSED
+                    }),
+                    editor
+                )
+            )
         })
     }
 
@@ -20,13 +28,21 @@ export class DiagnosticManager {
     }
 
     private covertToDiagnostic(messages: Message[], editor: TextEditor): Diagnostic[] {
-        return messages.map((message: Message) => {
-            return new Diagnostic(
-                this.convertToRange(message, editor),
-                message.error.fullMessage,
-                message.state === State.FAILED ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
-            )
-        })
+        return messages
+            .map((message: Message) => {
+                try {
+                    return new Diagnostic(
+                        this.convertToRange(message, editor),
+                        message.error.fullMessage,
+                        message.state === State.FAILED ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+                    )
+                } catch (e) {
+                    return null
+                }
+            })
+            .filter(message => {
+                return !!message
+            })
     }
 
     private convertToRange(message: Message, editor: TextEditor) {

@@ -204,7 +204,7 @@ export class Parser {
         message = this.replaceFirst(message, `${name}: `)
         message = this.replaceFirst(message, `${title}\n`)
 
-        return message.length > 1000 ? `${message.substr(0, 1000)}...` : message
+        return message
     }
 
     private readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {

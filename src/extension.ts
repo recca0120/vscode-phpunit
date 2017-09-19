@@ -17,13 +17,17 @@ export function activate(context: ExtensionContext) {
         extensionPath: context.extensionPath,
     }
 
-    const name = 'phpunit'
+    const name = 'PHPUnit'
     const outputChannel: OutputChannel = window.createOutputChannel(name)
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name)
 
-    const phpunit: Phpunit = new Phpunit(project).setOutput((buffer: Buffer) => {
-        outputChannel.append(phpunit.noAnsi(buffer.toString()))
-    })
+    const phpunit: Phpunit = new Phpunit(project)
+        .beforeOuput(() => {
+            outputChannel.clear()
+        })
+        .setOutput((buffer: Buffer) => {
+            outputChannel.append(phpunit.noAnsi(buffer.toString()))
+        })
 
     const decorateManager = new DecorateManager(project)
     const diagnosticManager = new DiagnosticManager(diagnostics)

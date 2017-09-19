@@ -39,9 +39,9 @@ export class Tester {
         //         this.restore()
         //     }
         // }, null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(this.restore.bind(this), null, subscriptions)
+        this.window.onDidChangeActiveTextEditor(this.exec.bind(this), null, subscriptions)
 
-        this.restore()
+        this.exec()
 
         this.disposable = Disposable.from(...subscriptions)
 
