@@ -1,4 +1,4 @@
-import { Phpunit, Process } from '../src/phpunit'
+import { PHPUnit, Process, Validator } from '../src/phpunit'
 
 import { Filesystem } from './../src/filesystem'
 import { Parser } from '../src/parser'
@@ -7,33 +7,62 @@ import { join } from 'path'
 
 describe('PHPUnit Tests', () => {
     it('get error messages', async () => {
-        const project: Project = {}
+        const fileName = 'MyTest.php'
+        const content = 'class MyTest extends TestCase'
+
+        const project = {}
         const parser = new Parser()
-        const filesystem = new Filesystem()
         const process = new Process()
-        const fileName = 'fakeFileName'
-        spyOn(filesystem, 'exists').and.returnValue(true)
-        const command = 'phpunit'
-        spyOn(filesystem, 'find').and.returnValue(command)
-
-        spyOn(process, 'spawn').and.callFake(async () => {
-            const messages = await process.exitCallback()
-
-            return messages
+        const filesystem = new Filesystem()
+        const phpunit = new PHPUnit(project, parser, filesystem, process)
+        const msgs = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
+        spyOn(filesystem, 'find').and.returnValue('phpunit')
+        spyOn(parser, 'parseXML').and.returnValue(msgs)
+        spyOn(process, 'spawn').and.callFake(() => {
+            process.emit('exit')
         })
 
-        const expected = [
-            {
-                foo: 'bar',
-            },
-        ]
-        spyOn(parser, 'parseXML').and.returnValue(expected)
+        const messages = await phpunit.run(fileName, content)
 
-        const phpunit = new Phpunit(project, parser, filesystem, process)
-        const messages = await phpunit.exec(fileName, 'class Test extends TestCase')
-        expect(messages).toBe(expected)
+        expect(filesystem.find).toHaveBeenCalled()
+        expect(parser.parseXML).toHaveBeenCalled()
+        expect(process.spawn).toHaveBeenCalled()
+        expect(messages).toBe(msgs)
+    })
+})
 
-        expect(filesystem.exists).toHaveBeenCalledWith(join(__dirname, '/../src/vendor/bin/phpunit'))
-        expect(filesystem.find).toHaveBeenCalledWith(join(__dirname, '/../src/vendor/bin/phpunit'))
+describe('Process Tests', () => {
+    it('it should exec echo 123', done => {
+        const proc = new Process()
+
+        proc.spawn(['echo', '123'])
+
+        proc.on('stdout', (buffer: Buffer) => {
+            expect(buffer.toString().trim()).toEqual('123')
+            done()
+        })
+    })
+})
+
+describe('Validator Tests', () => {
+    it('validate filename', () => {
+        const validator = new Validator()
+
+        expect(validator.fileName('test.php')).toBeTruthy()
+        expect(validator.fileName('test.inc')).toBeTruthy()
+        expect(validator.fileName('test.bat')).toBeFalsy()
+        expect(validator.fileName('test.git.php')).toBeFalsy()
+        expect(validator.fileName('test.git.inc')).toBeFalsy()
+        expect(validator.fileName('test.git.bat')).toBeFalsy()
+    })
+
+    it('validate class name', () => {
+        const validator = new Validator()
+
+        expect(validator.className('MyTest.php', 'class MyTest extends TestCase')).toBeTruthy()
+        expect(validator.className('MyTest.php', 'class MyTest extends PHPUnit\\Framework\\TestCase')).toBeTruthy()
+        expect(validator.className('MyTest.php', 'class MyTest extends PHPUnit_Framework_TestCase')).toBeTruthy()
+        expect(validator.className('MyTest.php', 'class MyTest')).toBeFalsy()
+        expect(validator.className('MyTest.php', 'class MyTest1 extends TestCase')).toBeFalsy()
     })
 })

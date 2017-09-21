@@ -1,116 +1,82 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process'
 import { Message, Parser } from './parser'
+import { existsSync, readFileSync } from 'fs'
 
+import { EventEmitter } from 'events'
 import { Filesystem } from './filesystem'
 import { Project } from './tester'
-import { existsSync } from 'fs'
 import { resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
     PHPUNIT_EXECUTE_ERROR = 'phpunit_execute_error',
-    NOT_RUNNABLE = 'not_runnable',
-    PROCESS_KILLED = 'process_killed',
+    PHPUNIT_NOT_TESTCASE = 'phpunit_not_testcase',
+    PHPUNIT_NOT_PHP = 'phpunit_not_php',
 }
 
-export class Phpunit {
+export class PHPUnit extends EventEmitter {
     private rootPath: string
     private configurationFile: string = null
     private xmlPath: string = tmpdir()
-    private outputCallback: Function = function() {}
-    private beforeOutputCallback: Function = function() {}
-    private keywords: string[] = [
-        'PHPUnit\\\\Framework\\\\TestCase',
-        'PHPUnit\\Framework\\TestCase',
-        'PHPUnit_Framework_TestCase',
-        'TestCase',
-    ]
 
     constructor(
         private project: Project = {},
         private parser = new Parser(),
         private files = new Filesystem(),
-        private process = new Process()
+        private process = new Process(),
+        private validator = new Validator()
     ) {
+        super()
         this.rootPath = this.project.rootPath || __dirname
+        this.process
+            .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
+            .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
     }
 
-    beforeOuput(beforeOutputCallback: Function): this {
-        this.beforeOutputCallback = beforeOutputCallback
-
-        return this
-    }
-
-    setOutput(outputCallback: Function): this {
-        this.outputCallback = outputCallback
-
-        return this
-    }
-
-    exec(fileName: string, content?: string): Promise<Message[]> {
+    run(fileName: string, content?: string): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            if (this.isExecutable(fileName, content) === false) {
-                reject(State.NOT_RUNNABLE)
+            const command = this.getCommand()
 
-                return
+            if (!command) {
+                reject(State.PHPUNIT_NOT_FOUND)
             }
 
-            const command = this.getCommand()
+            if (this.validator.fileName(fileName) === false) {
+                reject(State.PHPUNIT_NOT_PHP)
+            }
+
+            if (this.validator.className(fileName, content) === false) {
+                reject(State.PHPUNIT_NOT_TESTCASE)
+            }
+
             const xmlFileName = pathResolve(this.xmlPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
-            const parameters: string[] = [command, fileName, '--colors=always', '--log-junit', xmlFileName]
+            const parameters: string[] = [
+                command,
+                fileName,
+                // '--colors=always',
+                '--log-junit',
+                xmlFileName,
+            ]
             const configurationFile: string = this.getConfigurationFile()
             if (configurationFile) {
                 parameters.push('--configuration')
                 parameters.push(configurationFile)
             }
 
-            this.beforeOutputCallback()
-
             this.process
-                .stdErr(this.outputCallback)
-                .stdOut(this.outputCallback)
-                .onExit(async () => {
+                .once('exit', async () => {
                     try {
                         const messages = await this.parser.parseXML(xmlFileName)
                         resolve(messages)
                     } catch (e) {
                         reject(State.PHPUNIT_EXECUTE_ERROR)
+                    } finally {
+                        this.files.unlink(xmlFileName)
                     }
                 })
                 .spawn(parameters, { cwd: this.rootPath })
         })
-    }
-
-    getLastOutput(): string {
-        return this.noAnsi(this.process.getLastOutput())
-    }
-
-    noAnsi(content: string): string {
-        return content.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-    }
-
-    private isExecutable(fileName: string, content: string): boolean {
-        if (
-            /\.(php|inc)$/.test(fileName) === false ||
-            /\.git\.php$/.test(fileName) === true ||
-            this.isAbstract(fileName, content) === true ||
-            this.isPhpunit(content) === false
-        ) {
-            return false
-        }
-
-        return true
-    }
-
-    private isPhpunit(content: string): boolean {
-        return new RegExp(this.keywords.join('|'), 'i').test(content)
-    }
-
-    private isAbstract(fileName: string, content: string) {
-        const className = fileName.substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1).replace(/\.(php|inc)/i, '')
-
-        return new RegExp(`(abstract|trait|interface)\s+${className}`, 'i').test(content)
     }
 
     private getConfigurationFile(): string {
@@ -131,68 +97,58 @@ export class Phpunit {
     }
 
     private getCommand(): string {
-        const vendorPath = pathResolve(this.rootPath, 'vendor/bin/phpunit')
-        const command =
-            this.files.exists(vendorPath) === true ? this.files.find(vendorPath) : this.files.find('phpunit')
+        const paths = [`${this.rootPath}/`, '']
 
-        if (!command) {
-            throw State.PHPUNIT_NOT_FOUND
-        }
+        const command = paths
+            .map(path => {
+                return this.files.find(`${path}phpunit`)
+            })
+            .filter(command => command !== '')
 
-        return command
+        return command.length > 0 ? command[0] : ''
     }
 }
 
-export class Process {
-    lastOutput: string = ''
-    stdErrCallback: Function = function() {}
-    stdOutCallback: Function = function() {}
-    exitCallback: Function = function() {}
-    private process: ChildProcess = null
-
+export class Process extends EventEmitter {
     spawn(parameters: string[], options?: SpawnOptions): ChildProcess {
-        this.lastOutput = ''
         const command: string = parameters.shift()
+        const process = spawn(command, parameters, options)
+        process.stdout.on('data', (buffer: Buffer) => {
+            this.emit('stdout', buffer)
+        })
 
-        if (this.process) {
-            this.process.kill()
-            this.process = null
+        process.stderr.on('data', (buffer: Buffer) => {
+            this.emit('stderr', buffer)
+        })
+
+        process.on('exit', code => {
+            this.emit('exit', code)
+        })
+
+        return process
+    }
+}
+
+export class Validator {
+    testCaseClass: string[] = [
+        'PHPUnit\\\\Framework\\\\TestCase',
+        'PHPUnit\\Framework\\TestCase',
+        'PHPUnit_Framework_TestCase',
+        'TestCase',
+    ]
+
+    fileName(fileName: string): boolean {
+        return /\.git\.(php|inc)/.test(fileName) === false && /\.(php|inc)$/.test(fileName) === true
+    }
+
+    className(fileName: string, content?: string) {
+        content = content || readFileSync(fileName).toString()
+        const className = fileName.substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1).replace(/\.(php|inc)/i, '')
+
+        if (new RegExp(`(abstract\\s+class|trait|interface)\\s+${className}`, 'i').test(content)) {
+            return false
         }
 
-        this.process = spawn(command, parameters, options)
-        this.process.stderr.on('data', this.stdErrCallback)
-        this.process.stdout.on('data', this.stdOutCallback)
-        this.process.on('exit', this.exitCallback)
-
-        this.process.stderr.on('data', this.setLastOutput.bind(this))
-        this.process.stdout.on('data', this.setLastOutput.bind(this))
-
-        return this.process
-    }
-
-    stdErr(callback: Function): this {
-        this.stdErrCallback = callback
-
-        return this
-    }
-
-    stdOut(callback: Function): this {
-        this.stdOutCallback = callback
-
-        return this
-    }
-
-    onExit(callback: Function): this {
-        this.exitCallback = callback
-
-        return this
-    }
-
-    getLastOutput(): string {
-        return this.lastOutput
-    }
-
-    private setLastOutput(buffer: Buffer) {
-        this.lastOutput += buffer.toString()
+        return new RegExp(`class\\s+${className}\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content)
     }
 }

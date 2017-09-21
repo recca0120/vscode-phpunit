@@ -1,5 +1,5 @@
 import { Disposable, TextDocument, TextEditor } from 'vscode'
-import { Phpunit, State } from './phpunit'
+import { PHPUnit, State } from './phpunit'
 
 import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
@@ -14,12 +14,13 @@ export interface Project {
 
 export class Tester {
     private disposable: Disposable
+    private locked = false
     private window: any
     private workspace: any
 
     constructor(
         project: Project,
-        private phpunit: Phpunit,
+        private phpunit: PHPUnit,
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager,
         private store: Store = new Store()
@@ -32,67 +33,71 @@ export class Tester {
         const subscriptions: Disposable[] = []
 
         // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(this.exec.bind(this), null, subscriptions)
+        this.workspace.onWillSaveTextDocument(
+            () => {
+                this.unlock().run()
+            },
+            null,
+            subscriptions
+        )
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
         //         this.restore()
         //     }
         // }, null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(this.exec.bind(this), null, subscriptions)
-
-        this.exec()
-
+        this.window.onDidChangeActiveTextEditor(
+            () => {
+                this.lock().run()
+            },
+            null,
+            subscriptions
+        )
         this.disposable = Disposable.from(...subscriptions)
 
         return this
     }
 
-    async exec() {
-        this.clearDecoratedGutter()
+    lock(): this {
+        this.locked = true
 
+        return this
+    }
+
+    unlock(): this {
+        this.locked = false
+
+        return this
+    }
+
+    isLocked(): boolean {
+        return this.locked
+    }
+
+    async run() {
         try {
-            if (!this.hasEditor) {
+            this.clearDecoratedGutter()
+            const fileName = this.document.fileName
+
+            if (this.isLocked() === true && this.store.has(fileName) === true) {
+                this.decoratedGutter()
+                this.handleDiagnostic()
+
                 return
             }
 
-            const fileName = this.document.fileName
-            const messages = await this.phpunit.exec(fileName, this.document.getText())
+            const messages = await this.phpunit.run(fileName)
             this.store.put(messages)
 
             this.decoratedGutter()
             this.handleDiagnostic()
         } catch (e) {
-            switch (e) {
-                case State.PHPUNIT_NOT_FOUND:
-                    this.window.showErrorMessage('[phpunit] composer require phpunit/phpunit')
-                    console.error(this.phpunit.getLastOutput())
-                    break
-                case State.PHPUNIT_EXECUTE_ERROR:
-                    // this.window.showErrorMessage('[phpunit] something wrong')
-                    console.error(this.phpunit.getLastOutput())
-                    break
-                case State.NOT_RUNNABLE:
-                    console.log(e)
-                    break
-                default:
-                    console.log(e)
-                    break
+            if (e !== State.PHPUNIT_NOT_PHP) {
+                this.unlock()
             }
-        }
-    }
 
-    restore(): void {
-        if (!this.hasEditor) {
-            return
+            console.warn(e)
         }
-
-        if (this.store.has(this.document.fileName)) {
-            this.decoratedGutter()
-            this.handleDiagnostic()
-        }
-
-        this.exec()
     }
 
     dispose() {

@@ -3,7 +3,7 @@ import { Project, Tester } from './tester'
 
 import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
-import { Phpunit } from './phpunit'
+import { PHPUnit } from './phpunit'
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -21,17 +21,11 @@ export function activate(context: ExtensionContext) {
     const outputChannel: OutputChannel = window.createOutputChannel(name)
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name)
 
-    const phpunit: Phpunit = new Phpunit(project)
-        .beforeOuput(() => {
-            outputChannel.clear()
-        })
-        .setOutput((buffer: Buffer) => {
-            outputChannel.append(phpunit.noAnsi(buffer.toString()))
-        })
-
+    const phpunit: PHPUnit = new PHPUnit(project).on('stdout', (buffer: Buffer) =>
+        outputChannel.append(buffer.toString())
+    )
     const decorateManager = new DecorateManager(project)
     const diagnosticManager = new DiagnosticManager(diagnostics)
-
     const tester = new Tester(project, phpunit, decorateManager, diagnosticManager)
 
     context.subscriptions.push(tester.subscribe())

@@ -1,6 +1,5 @@
-import { existsSync, readFile, unlinkSync } from 'fs'
-
 import { parseString } from 'xml2js'
+import { readFile } from 'fs'
 
 export enum State {
     PASSED = 'passed',
@@ -36,27 +35,10 @@ export class Parser {
         return this.parseTestsuite(json.testsuites)
     }
 
-    parseXML(fileName: string, testing: boolean = false): Promise<Message[]> {
-        return new Promise(async resolve => {
-            let messages: Message[] = []
+    async parseXML(fileName: string): Promise<Message[]> {
+        const xmlContent = await this.readFileAsync(fileName)
 
-            try {
-                const xmlContent = await this.readFileAsync(fileName)
-                messages = await this.parseString(xmlContent)
-            } catch (e) {}
-
-            if (testing === false && existsSync(fileName) === true) {
-                try {
-                    unlinkSync(fileName)
-                } catch (e) {
-                    setTimeout(() => {
-                        unlinkSync(fileName)
-                    }, 10000)
-                }
-            }
-
-            resolve(messages)
-        })
+        return this.parseString(xmlContent)
     }
 
     private parseTestsuite(testsuite: any): Message[] {
