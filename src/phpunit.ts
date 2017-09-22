@@ -64,10 +64,12 @@ export class PHPUnit extends EventEmitter {
                 parameters.push(configurationFile)
             }
 
-            this.emit('stdout', parameters.join(' ') + ' \n\n')
+            this.emit('stdout', `${parameters.join(' ')}\n\n`)
 
             this.process
                 .once('exit', async () => {
+                    this.emit('stdout', '\n\n')
+
                     try {
                         const testCases: TestCase[] = await this.parser.parseXML(xmlFileName)
                         resolve(testCases)
