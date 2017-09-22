@@ -1,114 +1,157 @@
 import { parseString } from 'xml2js'
 import { readFile } from 'fs'
 
-export enum State {
+export enum Type {
     PASSED = 'passed',
-    FAILED = 'failed',
+    ERROR = 'error',
+    WARNING = 'warning',
+    FAILURE = 'failure',
+    INCOMPLETE = 'incomplete',
+    RISKY = 'risky',
     SKIPPED = 'skipped',
-    INCOMPLETED = 'incompleted',
+    FAILED = 'failed',
 }
 
-export const StateKeys = [State.PASSED, State.FAILED, State.SKIPPED, State.INCOMPLETED]
+export const TypeGroup = new Map<Type, Type>([
+    [Type.PASSED, Type.PASSED],
+    [Type.ERROR, Type.ERROR],
+    [Type.WARNING, Type.SKIPPED],
+    [Type.FAILURE, Type.ERROR],
+    [Type.INCOMPLETE, Type.INCOMPLETE],
+    [Type.RISKY, Type.ERROR],
+    [Type.SKIPPED, Type.SKIPPED],
+    [Type.FAILED, Type.ERROR],
+])
 
-export interface Position {
-    fileName: string
-    lineNumber: number
+export const TypeKeys = [Type.PASSED, Type.ERROR, Type.INCOMPLETE, Type.SKIPPED]
+
+export interface Detail {
+    file: string
+    line: number
 }
 
-export interface Message {
-    duration: number
-    error: {
-        fullMessage: string
-        message: string
-        name: string
-    }
-    fileName: string
-    lineNumber: number
-    state: State
-    title: string
+export interface Fault {
+    message: string
+    type?: string
+    details?: Detail
+}
+
+export interface TestCase {
+    name: string
+    class: string
+    classname?: string
+    file: string
+    line: number
+    time: number
+    type: Type
+    fault?: Fault
 }
 
 export class Parser {
-    async parseString(str: string): Promise<Message[]> {
+    async parseString(str: string): Promise<TestCase[]> {
         const json = await this.xml2json(str)
 
-        return this.parseTestsuite(json.testsuites)
+        return this.parseTestSuite(json.testsuites)
     }
 
-    async parseXML(fileName: string): Promise<Message[]> {
+    async parseXML(fileName: string): Promise<TestCase[]> {
         const xmlContent = await this.readFileAsync(fileName)
 
         return this.parseString(xmlContent)
     }
 
-    private parseTestsuite(testsuite: any): Message[] {
-        let messages: Message[] = []
-        if (testsuite.testsuite) {
-            messages = messages.concat(...testsuite.testsuite.map(this.parseTestsuite.bind(this)))
-        } else if (testsuite.testcase) {
-            messages = messages.concat(...testsuite.testcase.map(this.parseTestcase.bind(this)))
+    private parseTestSuite(testSuitNode: any): TestCase[] {
+        let testCase: TestCase[] = []
+        if (testSuitNode.testsuite) {
+            testCase = testCase.concat(...testSuitNode.testsuite.map(this.parseTestSuite.bind(this)))
+        } else if (testSuitNode.testcase) {
+            testCase = testCase.concat(...testSuitNode.testcase.map(this.parseTestCase.bind(this)))
         }
 
-        return messages
+        return testCase
     }
 
-    private parseTestcase(testcase: any): Message {
-        const testcaseAttr = testcase.$
-        const duration = parseFloat(testcaseAttr.time || 0)
-        const title = testcaseAttr.name || ''
-        const error = this.getError(testcase)
-        if (error === null) {
-            return {
-                duration,
-                error: {
-                    fullMessage: '',
-                    message: '',
-                    name: '',
-                },
-                fileName: testcaseAttr.file,
-                lineNumber: (testcaseAttr.line || 1) - 1,
-                state: State.PASSED,
-                title,
-            }
+    private parseTestCase(testCaseNode: any): TestCase {
+        const testCaseNodeAttr = testCaseNode.$
+
+        const testCase: TestCase = {
+            name: testCaseNodeAttr.name || null,
+            class: testCaseNodeAttr.class,
+            classname: testCaseNodeAttr.classname || null,
+            file: testCaseNodeAttr.file,
+            line: parseInt(testCaseNodeAttr.line || 1, 10) - 1,
+            time: parseFloat(testCaseNodeAttr.time || 0),
+            type: Type.PASSED,
         }
 
-        const errorAttr = error.$
-        const errorChar = this.crlf2lf(error._)
-        const name = this.crlf2lf(errorAttr.type)
-        const state = this.parseState(errorAttr)
-        const callStack = this.parseCallStack(errorChar)
-        const currentFile = this.getCurrentFile(callStack) || {
-            fileName: testcaseAttr.file,
-            lineNumber: testcaseAttr.line,
+        const faultNode = this.getFaultNode(testCaseNode)
+
+        if (faultNode === null) {
+            return testCase
         }
 
-        return {
-            duration,
-            error: {
-                fullMessage: this.parseFullMessage(errorChar, name, title),
-                message: this.parseMessage(errorChar, callStack, name, title),
-                name: '',
+        const faultNodeAttr = faultNode.$
+        let message: string = this.parseMessage(faultNode)
+        const details: Detail[] = this.parseDetails(message)
+
+        details.forEach((detail: Detail) => {
+            message = message.replace(`${detail.file}:${detail.line + 1}`, '').trim()
+        })
+
+        return Object.assign(testCase, this.currentFile(details, testCase), {
+            type: faultNode.type,
+            fault: {
+                type: faultNodeAttr.type || '',
+                message: message.trim(),
+                details: details.filter((detail: Detail) => detail.file !== testCase.file),
             },
-            fileName: currentFile.fileName,
-            lineNumber: currentFile.lineNumber - 1,
-            state: state,
-            title,
-        }
+        })
     }
 
-    private getError(testcase: any): any {
-        if (testcase.failure) {
-            return testcase.failure[0]
+    private currentFile(details: Detail[], testCase: TestCase) {
+        details = details.filter((detail: Detail) => testCase.file === detail.file)
+
+        return details.length !== 0
+            ? details[details.length - 1]
+            : {
+                  file: testCase.file,
+                  line: testCase.line,
+              }
+    }
+
+    private getFaultNode(testCaseNode: any): any {
+        if (testCaseNode.error) {
+            return Object.assign(
+                {
+                    type: this.parseErrorType(testCaseNode.error[0]),
+                },
+                testCaseNode.error[0]
+            )
         }
 
-        if (testcase.error) {
-            return testcase.error[0]
+        if (testCaseNode.warning) {
+            return Object.assign(
+                {
+                    type: Type.WARNING,
+                },
+                testCaseNode.warning[0]
+            )
         }
 
-        if (testcase.skipped) {
+        if (testCaseNode.failure) {
+            return Object.assign(
+                {
+                    type: Type.FAILURE,
+                },
+                testCaseNode.failure[0]
+            )
+        }
+
+        if (testCaseNode.skipped || testCaseNode.incomplete) {
             return {
+                type: Type.SKIPPED,
                 $: {
-                    type: State.SKIPPED,
+                    type: Type.SKIPPED,
                 },
                 _: '',
             }
@@ -117,76 +160,45 @@ export class Parser {
         return null
     }
 
-    private crlf2lf(str: string): string {
-        return str.replace(/\r\n/g, '\n')
+    private parseMessage(faultNode: any): string {
+        return this.crlf2lf(faultNode._)
     }
 
-    private parseState(errAttr: any): State {
-        const type = errAttr.type.toLowerCase()
-
-        if (type.indexOf('skipped') !== -1) {
-            return State.SKIPPED
-        }
-
-        if (type.indexOf('incomplete') !== -1) {
-            return State.INCOMPLETED
-        }
-
-        if (type.indexOf('failed') !== -1) {
-            return State.FAILED
-        }
-
-        return State.FAILED
-    }
-
-    private parseCallStack(errorChar: string): Position[] {
-        return errorChar
+    private parseDetails(message: string): Detail[] {
+        return message
             .split('\n')
             .map(line => line.trim())
-            .filter(line => /(.*):(\d+)/.test(line))
+            .filter(line => /(.*):(\d+)$/.test(line))
             .map(path => {
-                const [, fileName, lineNumber] = path.match(/(.*):(\d+)/)
+                const [, file, line] = path.match(/(.*):(\d+)/)
 
                 return {
-                    fileName,
-                    lineNumber: parseInt(lineNumber, 10),
+                    file,
+                    line: parseInt(line, 10) - 1,
                 }
             })
     }
 
-    private getCurrentFile(callStack: Position[]): Position {
-        return callStack
-            .filter(position => {
-                const paths = ['vendor/mockery/mockery', 'vendor/phpunit/phpunit']
+    private parseErrorType(errorNode: any): Type {
+        const errorType = errorNode.$.type.toLowerCase()
 
-                return new RegExp(paths.join('|'), 'ig').test(position.fileName.replace(/\\/g, '/')) === false
-            })
-            .pop()
+        if (errorType.indexOf(Type.SKIPPED) !== -1) {
+            return Type.SKIPPED
+        }
+
+        if (errorType.indexOf(Type.INCOMPLETE) !== -1) {
+            return Type.INCOMPLETE
+        }
+
+        if (errorType.indexOf(Type.FAILED) !== -1) {
+            return Type.FAILED
+        }
+
+        return Type.ERROR
     }
 
-    private replaceFirst(str: string, search: string): string {
-        const length = str.indexOf(search)
-
-        return length === -1 ? str : str.substr(length + search.length)
-    }
-
-    private parseMessage(message: string, files: Position[], name: string, title: string): string {
-        message = this.crlf2lf(message)
-        files.forEach(position => (message = message.replace(`${position.fileName}:${position.lineNumber}`, '')))
-        message = message.replace(/\n+$/, '')
-        message = this.replaceFirst(message, `${name}: `)
-        message = this.replaceFirst(message, `${title}\n`)
-
-        return message
-    }
-
-    private parseFullMessage(message: string, name: string, title: string): string {
-        message = this.crlf2lf(message)
-        message = message.replace(/\n+$/, '')
-        message = this.replaceFirst(message, `${name}: `)
-        message = this.replaceFirst(message, `${title}\n`)
-
-        return message
+    private crlf2lf(str: string): string {
+        return str.replace(/\r\n/g, '\n')
     }
 
     private readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {

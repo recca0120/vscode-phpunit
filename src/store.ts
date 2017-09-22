@@ -1,62 +1,62 @@
-import { Message, State, StateKeys } from './parser'
+import { TestCase, Type, TypeGroup, TypeKeys } from './parser'
 
-export class Store {
-    constructor(messages: Message[] = [], private items: Map<string, Message[]> = new Map<string, Message[]>()) {
-        this.put(messages)
+export class Store extends Map<string, TestCase[]> {
+    constructor(testCases: TestCase[] = [], items: Map<string, TestCase[]> = new Map<string, TestCase[]>()) {
+        super(items)
+        this.put(testCases)
     }
 
-    put(messages: Message[]): this {
-        this.groupByFile(messages).forEach((messages: Message[], fileName: string) => {
-            this.items.set(this.getFileName(fileName), messages)
+    put(testCases: TestCase[]): this {
+        this.groupByFile(testCases).forEach((testCases: TestCase[], fileName: string) => {
+            this.set(
+                this.getFileName(fileName),
+                testCases.map((testCase: TestCase) => {
+                    return Object.assign(testCase, {
+                        type: TypeGroup.get(testCase.type),
+                    })
+                })
+            )
         })
 
         return this
     }
 
-    keys(): Iterable<string> {
-        return this.items.keys()
-    }
-
     has(fileName: string): boolean {
-        return this.items.has(this.getFileName(fileName))
+        return super.has(this.getFileName(fileName))
     }
 
-    get(fileName: string): Message[] {
-        return this.items.get(this.getFileName(fileName))
+    get(fileName: string): TestCase[] {
+        return super.get(this.getFileName(fileName))
     }
 
-    getByState(fileName: string): Map<State, Message[]> {
-        return this.groupByState(this.get(fileName))
-    }
-
-    forEach(callbackFn): void {
-        this.items.forEach(callbackFn)
+    getByType(fileName: string): Map<Type, TestCase[]> {
+        return this.groupByType(this.get(fileName))
     }
 
     dispose(): void {
-        this.items.clear()
+        this.clear()
     }
 
     private getFileName(fileName: string): string {
         return this.removeDriveName(fileName)
     }
 
-    private groupByFile(messages: Message[]): Map<string, Message[]> {
-        return messages.reduce((messageGroup: Map<string, Message[]>, message: Message) => {
+    private groupByFile(testCases: TestCase[]): Map<string, TestCase[]> {
+        return testCases.reduce((testCasesGroup: Map<string, TestCase[]>, testCase: TestCase) => {
             let group = []
-            if (messageGroup.has(message.fileName) === true) {
-                group = messageGroup.get(message.fileName)
+            if (testCasesGroup.has(testCase.file) === true) {
+                group = testCasesGroup.get(testCase.file)
             }
 
-            return messageGroup.set(message.fileName, group.concat(message))
-        }, new Map<string, Message[]>())
+            return testCasesGroup.set(testCase.file, group.concat(testCase))
+        }, new Map<string, TestCase[]>())
     }
 
-    private groupByState(messages: Message[]): Map<State, Message[]> {
-        return messages.reduce(
-            (messageGroup: Map<State, Message[]>, message: Message) =>
-                messageGroup.set(message.state, messageGroup.get(message.state).concat(message)),
-            new Map<State, Message[]>([].concat(StateKeys.map(state => [state, []])))
+    private groupByType(testCases: TestCase[]): Map<Type, TestCase[]> {
+        return testCases.reduce(
+            (testCasesGroup: Map<Type, TestCase[]>, testCase: TestCase) =>
+                testCasesGroup.set(testCase.type, testCasesGroup.get(testCase.type).concat(testCase)),
+            new Map<Type, TestCase[]>([].concat(TypeKeys.map(type => [type, []])))
         )
     }
 

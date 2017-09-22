@@ -4,6 +4,13 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 Check [Keep a Changelog](http://keepachangelog.com/) for 
 recommendations on how to structure this file.
 
+## 0.2.15
+- refactoring parser.ts
+- refactoring store.ts
+
+## 0.2.14
+- event emitter
+
 ## 0.2.12
 - full message
 - [diagnostic] message pass State = PASSED

@@ -11,19 +11,19 @@ class PHPUnitTest extends TestCase
     }
  
     public function testPassed()
-    { 
+    {
         $this->assertTrue(true);
     } 
  
     public function testFailed()
     {
-        $this->assertTrue(false);
+        $this->assertTrue(false); 
     } 
   
     public function testSkipped() 
     {
         $this->markTestSkipped('The MySQLi extension is not available.'); 
-    } 
+    }
 
     public function testIncomplete() 
     {

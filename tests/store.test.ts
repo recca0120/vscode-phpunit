@@ -1,34 +1,35 @@
 import * as faker from 'faker'
 
-import { Message, State, StateKeys } from '../src/parser'
+import { TestCase, Type, TypeKeys } from '../src/parser'
 
 import { Store } from '../src/store'
 import { resolve } from 'path'
 
-function generatorRandomMessages(num = 10, options: any = {}): Message[] {
-    const messages: Message[] = []
+function generatorRandomTestCases(num = 10, options: any = {}): TestCase[] {
+    const testCases: TestCase[] = []
 
     for (let i = 0; i < num; i++) {
-        messages.push(
+        testCases.push(
             Object.assign(
                 {
-                    duration: faker.random.number(),
-                    error: {
-                        fullMessage: faker.lorem.text(),
+                    name: faker.random.word(),
+                    class: faker.random.word(),
+                    classname: faker.random.word(),
+                    file: resolve(__dirname, faker.system.commonFileName('php', 'text')),
+                    line: faker.random.number(),
+                    time: faker.random.number(),
+                    type: faker.random.arrayElement(TypeKeys),
+                    fault: {
+                        type: faker.random.word(),
                         message: faker.lorem.text(),
-                        name: faker.lorem.text(),
                     },
-                    fileName: resolve(__dirname, faker.system.commonFileName('php', 'text')),
-                    lineNumber: faker.random.number(),
-                    state: faker.random.arrayElement(StateKeys),
-                    title: faker.lorem.text(),
                 },
                 options
             )
         )
     }
 
-    return messages
+    return testCases
 }
 
 describe('Store Tests', () => {
@@ -36,16 +37,16 @@ describe('Store Tests', () => {
         const fileName1: string = resolve(__dirname, faker.system.commonFileName('php', 'text'))
         const fileName2: string = resolve(__dirname, faker.system.commonFileName('php', 'text'))
 
-        const messages1: Message[] = generatorRandomMessages(10, {
-            fileName: fileName1,
+        const testCases1: TestCase[] = generatorRandomTestCases(10, {
+            file: fileName1,
         })
 
-        const messages2: Message[] = generatorRandomMessages(5, {
-            fileName: fileName2,
+        const testCases2: TestCase[] = generatorRandomTestCases(5, {
+            file: fileName2,
         })
 
         const store: Store = new Store()
-        store.put(messages1).put(messages2)
+        store.put(testCases1).put(testCases2)
 
         const keys = Array.from(store.keys())
 
@@ -54,67 +55,53 @@ describe('Store Tests', () => {
         })
         expect(keys.length).toBe(2)
         expect(store.has(fileName1)).toBeTruthy()
-        expect(store.get(fileName1)).toEqual(messages1)
+        expect(store.get(fileName1)).toEqual(testCases1)
         expect(store.has(fileName2)).toBeTruthy()
-        expect(store.get(fileName2)).toEqual(messages2)
+        expect(store.get(fileName2)).toEqual(testCases2)
     })
 
     it('it should group by state', () => {
         const fileName = resolve(__dirname, faker.system.commonFileName('php', 'text'))
-        const messages: Message[] = generatorRandomMessages(10, {
-            fileName: fileName,
-            state: State.PASSED,
+        const testCases: TestCase[] = generatorRandomTestCases(10, {
+            file: fileName,
+            type: Type.PASSED,
         })
             .concat(
-                generatorRandomMessages(5, {
-                    fileName: fileName,
-                    state: State.FAILED,
+                generatorRandomTestCases(5, {
+                    file: fileName,
+                    type: Type.ERROR,
                 })
             )
             .concat(
-                generatorRandomMessages(8, {
-                    fileName: fileName,
-                    state: State.SKIPPED,
+                generatorRandomTestCases(8, {
+                    file: fileName,
+                    type: Type.SKIPPED,
                 })
             )
             .concat(
-                generatorRandomMessages(6, {
-                    fileName: fileName,
-                    state: State.INCOMPLETED,
+                generatorRandomTestCases(6, {
+                    file: fileName,
+                    type: Type.INCOMPLETE,
                 })
             )
 
         const store: Store = new Store()
-        store.put(messages)
+        store.put(testCases)
 
-        const groupByState = store.getByState(fileName)
+        const groupByType = store.getByType(fileName)
 
-        expect(groupByState.get(State.PASSED).length).toBe(10)
-        expect(groupByState.get(State.FAILED).length).toBe(5)
-        expect(groupByState.get(State.SKIPPED).length).toBe(8)
-        expect(groupByState.get(State.INCOMPLETED).length).toBe(6)
-    })
-
-    it('it should execute foreach', () => {
-        const items: Map<string, Message[]> = new Map<string, Message[]>()
-        const store: Store = new Store([], items)
-
-        spyOn(items, 'forEach')
-
-        const callback: Function = () => {}
-        store.forEach(callback)
-
-        expect(items.forEach).toHaveBeenCalledTimes(1)
-        expect(items.forEach).toHaveBeenCalledWith(callback)
+        expect(groupByType.get(Type.PASSED).length).toBe(10)
+        expect(groupByType.get(Type.ERROR).length).toBe(5)
+        expect(groupByType.get(Type.SKIPPED).length).toBe(8)
+        expect(groupByType.get(Type.INCOMPLETE).length).toBe(6)
     })
 
     it('it should execute clear', () => {
-        const items: Map<string, Message[]> = new Map<string, Message[]>()
-        const store: Store = new Store([], items)
-
-        spyOn(items, 'clear')
+        const store: Store = new Store()
+        const testCases: TestCase[] = generatorRandomTestCases(10)
+        store.put(testCases)
+        expect(store.size).toBe(10)
         store.dispose()
-
-        expect(items.clear).toHaveBeenCalledTimes(1)
+        expect(store.size).toBe(0)
     })
 })

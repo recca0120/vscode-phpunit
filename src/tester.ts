@@ -4,6 +4,7 @@ import { PHPUnit, State } from './phpunit'
 import { DecorateManager } from './decorate-manager'
 import { DiagnosticManager } from './diagnostic-manager'
 import { Store } from './store'
+import { TestCase } from './parser'
 
 export interface Project {
     window?: any
@@ -33,26 +34,15 @@ export class Tester {
         const subscriptions: Disposable[] = []
 
         // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(
-            () => {
-                this.unlock().run()
-            },
-            null,
-            subscriptions
-        )
+        this.workspace.onWillSaveTextDocument(() => this.unlock().run(), null, subscriptions)
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
         //         this.restore()
         //     }
         // }, null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(
-            () => {
-                this.lock().run()
-            },
-            null,
-            subscriptions
-        )
+        this.window.onDidChangeActiveTextEditor(() => this.lock().run(), null, subscriptions)
+        this.lock().run()
         this.disposable = Disposable.from(...subscriptions)
 
         return this
@@ -86,17 +76,22 @@ export class Tester {
                 return
             }
 
-            const messages = await this.phpunit.run(fileName)
-            this.store.put(messages)
+            const testCases: TestCase[] = await this.phpunit.run(fileName, this.document.getText())
+            this.store.put(testCases)
 
             this.decoratedGutter()
             this.handleDiagnostic()
         } catch (e) {
-            if (e !== State.PHPUNIT_NOT_PHP) {
-                this.unlock()
+            switch (e) {
+                case State.PHPUNIT_NOT_PHP:
+                    this.unlock()
+                    break
+                case State.PHPUNIT_EXECUTE_ERROR:
+                case State.PHPUNIT_NOT_TESTCASE:
+                case State.PHPUNIT_NOT_PHP:
+                    console.warn(e)
+                    break
             }
-
-            console.warn(e)
         }
     }
 

@@ -1,4 +1,4 @@
-import { existsSync, unlinkSync } from 'fs'
+import { accessSync, existsSync, unlinkSync } from 'fs'
 
 import { resolve } from 'path'
 import { spawnSync } from 'child_process'
@@ -127,13 +127,16 @@ export class Filesystem extends AbstractFilesystem {
 
     unlink(file: string): void {
         try {
-            setTimeout(() => {
-                if (existsSync(file) === true) {
+            if (existsSync(file) === true) {
+                if (accessSync(file)) {
                     unlinkSync(file)
+                } else {
+                    setTimeout(() => {
+                        this.unlink(file)
+                    }, 500)
                 }
-            }, 500)
+            }
         } catch (e) {
-            console.log(e)
             this.unlink(file)
         }
     }

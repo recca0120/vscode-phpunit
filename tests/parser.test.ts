@@ -1,176 +1,189 @@
-import { Message, Parser, State } from '../src/parser'
+import { Parser, TestCase, Type } from '../src/parser'
 
 import { join } from 'path'
 
 describe('Parser', () => {
     const parser: Parser = new Parser()
 
-    async function getMessage(key: number): Promise<Message> {
-        const messages: Message[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'), true)
+    async function getTestCase(key: number): Promise<TestCase> {
+        const testCase: TestCase[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
 
-        return messages[key]
+        return testCase[key]
     }
 
     it('it should parse passed', async () => {
-        const message = await getMessage(0)
+        const testCase = await getTestCase(0)
 
-        expect(message).toEqual({
-            duration: 0.006241,
-            error: {
-                fullMessage: '',
-                message: '',
-                name: '',
-            },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 12,
-            state: State.PASSED,
-            title: 'testPassed',
+        expect(testCase).toEqual({
+            name: 'testPassed',
+            class: 'PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 12,
+            time: 0.006241,
+            type: Type.PASSED,
         })
     })
 
     it('it should parse failed', async () => {
-        const message = await getMessage(1)
+        const testCase = await getTestCase(1)
 
-        expect(message).toEqual({
-            duration: 0.001918,
-            error: {
-                fullMessage: jasmine.anything(),
-                message: 'Failed asserting that false is true.',
-                name: '',
-                // name: 'PHPUnit_Framework_ExpectationFailedException',
+        expect(testCase).toEqual({
+            name: 'testFailed',
+            class: 'PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 19,
+            time: 0.001918,
+            type: Type.FAILURE,
+            fault: {
+                type: 'PHPUnit_Framework_ExpectationFailedException',
+                message: ['PHPUnitTest::testFailed', 'Failed asserting that false is true.'].join('\n'),
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 19,
-            state: State.FAILED,
-            title: 'testFailed',
         })
     })
 
     it('it should parse error', async () => {
-        const message = await getMessage(2)
+        const testCase = await getTestCase(2)
 
-        expect(message).toEqual({
-            duration: 0.001087,
-            error: {
-                fullMessage: jasmine.anything(),
-                message:
-                    'Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name',
-                name: '',
-                // name: 'PHPUnit_Framework_Exception',
+        expect(testCase).toEqual({
+            name: 'testError',
+            class: 'PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 24,
+            time: 0.001087,
+            type: Type.ERROR,
+            fault: {
+                type: 'PHPUnit_Framework_Exception',
+                message: [
+                    'PHPUnitTest::testError',
+                    'PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name',
+                ].join('\n'),
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 24,
-            state: State.FAILED,
-            title: 'testError',
         })
     })
 
     it('it should parse skipped', async () => {
-        const message = await getMessage(3)
+        const testCase = await getTestCase(3)
 
-        expect(message).toEqual({
-            duration: 0.001138,
-            error: {
-                fullMessage: jasmine.anything(),
+        expect(testCase).toEqual({
+            name: 'testSkipped',
+            class: 'PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 29,
+            time: 0.001138,
+            type: Type.SKIPPED,
+            fault: {
+                type: 'PHPUnit_Framework_SkippedTestError',
                 message: 'Skipped Test',
-                name: '',
-                // name: 'PHPUnit_Framework_SkippedTestError',
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 29,
-            state: State.SKIPPED,
-            title: 'testSkipped',
         })
     })
 
     it('it should parse incomplete', async () => {
-        const message = await getMessage(4)
+        const testCase = await getTestCase(4)
 
-        expect(message).toEqual({
-            duration: 0.001081,
-            error: {
-                fullMessage: jasmine.anything(),
+        expect(testCase).toEqual({
+            name: 'testIncomplete',
+            class: 'PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 34,
+            time: 0.001081,
+            type: Type.INCOMPLETE,
+            fault: {
+                type: 'PHPUnit_Framework_IncompleteTestError',
                 message: 'Incomplete Test',
-                name: '',
-                // name: 'PHPUnit_Framework_IncompleteTestError',
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 34,
-            state: State.INCOMPLETED,
-            title: 'testIncomplete',
         })
     })
 
     it('it should parse exception', async () => {
-        const message = await getMessage(5)
+        const testCase = await getTestCase(5)
 
-        expect(message).toEqual({
-            duration: 0.164687,
-            error: {
-                fullMessage: jasmine.anything(),
-                message:
-                    'Method Mockery_1_Symfony_Component_HttpFoundation_File_UploadedFile::getClientOriginalName() does not exist on this mock object',
-                name: '',
-                // name: 'BadMethodCallException',
+        expect(testCase).toEqual({
+            name: 'testReceive',
+            class: 'PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 44,
+            time: 0.164687,
+            type: Type.ERROR,
+            fault: {
+                type: 'BadMethodCallException',
+                message: [
+                    'PHPUnitTest::testReceive',
+                    'BadMethodCallException: Method Mockery_1_Symfony_Component_HttpFoundation_File_UploadedFile::getClientOriginalName() does not exist on this mock object',
+                ].join('\n'),
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 44,
-            state: State.FAILED,
-            title: 'testReceive',
         })
     })
 
     it('it should get current error message when mockery call not correct.', async () => {
-        const message = await getMessage(6)
+        const testCase = await getTestCase(6)
 
-        expect(message).toEqual({
-            duration: 0.008761,
-            error: {
-                fullMessage: jasmine.anything(),
-                message:
-                    'Method delete("C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php") ' +
-                    'from Mockery_1_Recca0120_Upload_Filesystem should be called\n exactly 1 times but called 0 times.',
-                name: '',
-                // name: 'Mockery\\Exception\\InvalidCountException',
+        expect(testCase).toEqual({
+            name: 'testCleanDirectory',
+            class: 'Recca0120\\Upload\\Tests\\PHPUnitTest',
+            classname: null,
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 12,
+            time: 0.008761,
+            type: Type.ERROR,
+            fault: {
+                type: 'Mockery\\Exception\\InvalidCountException',
+                message: [
+                    'Recca0120\\Upload\\Tests\\PHPUnitTest::testCleanDirectory',
+                    'Mockery\\Exception\\InvalidCountException: Method delete("C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php") from Mockery_1_Recca0120_Upload_Filesystem should be called',
+                    ' exactly 1 times but called 0 times.',
+                ].join('\n'),
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 12,
-            state: State.FAILED,
-            title: 'testCleanDirectory',
         })
     })
 
     it('it should be skipped when testcase has skipped tag', async () => {
-        const message = await getMessage(7)
+        const testCase = await getTestCase(7)
 
-        expect(message).toEqual({
-            duration: 0.001352,
-            error: {
-                fullMessage: jasmine.anything(),
+        expect(testCase).toEqual({
+            name: 'testSkipped',
+            class: 'PHPUnitTest',
+            classname: 'PHPUnitTest',
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 22,
+            time: 0.001352,
+            type: Type.SKIPPED,
+            fault: {
+                type: 'skipped',
                 message: '',
-                name: '',
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 22,
-            state: State.SKIPPED,
-            title: 'testSkipped',
         })
     })
 
     it('it should be skipped when testcase has skipped tag', async () => {
-        const message = await getMessage(8)
+        const testCase = await getTestCase(8)
 
-        expect(message).toEqual({
-            duration: 0.000954,
-            error: {
-                fullMessage: jasmine.anything(),
+        expect(testCase).toEqual({
+            name: 'testIncomplete',
+            class: 'PHPUnitTest',
+            classname: 'PHPUnitTest',
+            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+            line: 27,
+            time: 0.000954,
+            type: Type.SKIPPED,
+            fault: {
+                type: 'skipped',
                 message: '',
-                name: '',
+                details: jasmine.anything(),
             },
-            fileName: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            lineNumber: 27,
-            state: State.SKIPPED,
-            title: 'testIncomplete',
         })
     })
 })

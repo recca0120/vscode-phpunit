@@ -1,5 +1,5 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process'
-import { Message, Parser } from './parser'
+import { Parser, TestCase } from './parser'
 import { existsSync, readFileSync } from 'fs'
 
 import { EventEmitter } from 'events'
@@ -34,20 +34,20 @@ export class PHPUnit extends EventEmitter {
             .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
     }
 
-    run(fileName: string, content?: string): Promise<Message[]> {
+    run(fileName: string, content?: string): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
             const command = this.getCommand()
 
             if (!command) {
-                reject(State.PHPUNIT_NOT_FOUND)
+                return reject(State.PHPUNIT_NOT_FOUND)
             }
 
             if (this.validator.fileName(fileName) === false) {
-                reject(State.PHPUNIT_NOT_PHP)
+                return reject(State.PHPUNIT_NOT_PHP)
             }
 
             if (this.validator.className(fileName, content) === false) {
-                reject(State.PHPUNIT_NOT_TESTCASE)
+                return reject(State.PHPUNIT_NOT_TESTCASE)
             }
 
             const xmlFileName = pathResolve(this.xmlPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
@@ -64,11 +64,13 @@ export class PHPUnit extends EventEmitter {
                 parameters.push(configurationFile)
             }
 
+            this.emit('stdout', parameters.join(' ') + ' \n\n')
+
             this.process
                 .once('exit', async () => {
                     try {
-                        const messages = await this.parser.parseXML(xmlFileName)
-                        resolve(messages)
+                        const testCases: TestCase[] = await this.parser.parseXML(xmlFileName)
+                        resolve(testCases)
                     } catch (e) {
                         reject(State.PHPUNIT_EXECUTE_ERROR)
                     } finally {

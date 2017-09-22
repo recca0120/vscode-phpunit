@@ -15,19 +15,19 @@ describe('PHPUnit Tests', () => {
         const process = new Process()
         const filesystem = new Filesystem()
         const phpunit = new PHPUnit(project, parser, filesystem, process)
-        const msgs = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
+        const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
         spyOn(filesystem, 'find').and.returnValue('phpunit')
-        spyOn(parser, 'parseXML').and.returnValue(msgs)
+        spyOn(parser, 'parseXML').and.returnValue(tests)
         spyOn(process, 'spawn').and.callFake(() => {
             process.emit('exit')
         })
 
-        const messages = await phpunit.run(fileName, content)
+        const testCases = await phpunit.run(fileName, content)
 
         expect(filesystem.find).toHaveBeenCalled()
         expect(parser.parseXML).toHaveBeenCalled()
         expect(process.spawn).toHaveBeenCalled()
-        expect(messages).toBe(msgs)
+        expect(testCases).toBe(tests)
     })
 })
 

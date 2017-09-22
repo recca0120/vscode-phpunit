@@ -1,5 +1,14 @@
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextEditor, TextLine, Uri } from 'vscode'
-import { Message, State } from './parser'
+import {
+    Diagnostic,
+    DiagnosticCollection,
+    DiagnosticSeverity,
+    Position,
+    Range,
+    TextEditor,
+    TextLine,
+    Uri,
+} from 'vscode'
+import { TestCase, Type } from './parser'
 
 import { Store } from './store'
 
@@ -7,17 +16,14 @@ export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
 
     handle(store: Store, editor: TextEditor) {
-        this.diagnostics.clear()
-
-        store.forEach((messages: Message[], file: string) => {
+        store.forEach((testCases: TestCase[], file: string) => {
             this.diagnostics.set(
                 Uri.file(file),
-                this.covertToDiagnostic(
-                    messages.filter((message: Message) => {
-                        return message.state !== State.PASSED
-                    }),
-                    editor
-                )
+                testCases
+                    .filter((testCase: TestCase) => {
+                        return testCase.type !== Type.PASSED
+                    })
+                    .map(testCase => this.convertToDiagnostic(testCase, editor))
             )
         })
     }
@@ -27,32 +33,25 @@ export class DiagnosticManager {
         this.diagnostics.dispose()
     }
 
-    private covertToDiagnostic(messages: Message[], editor: TextEditor): Diagnostic[] {
-        return messages
-            .map((message: Message) => {
-                try {
-                    return new Diagnostic(
-                        this.convertToRange(message, editor),
-                        message.error.fullMessage,
-                        message.state === State.FAILED ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
-                    )
-                } catch (e) {
-                    return null
-                }
-            })
-            .filter(message => {
-                return !!message
-            })
+    private convertToDiagnostic(testCase: TestCase, editor?: TextEditor): Diagnostic {
+        const diagnostic: Diagnostic = new Diagnostic(
+            this.convertToRange(testCase, editor),
+            testCase.fault.message,
+            testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+        )
+        diagnostic.source = 'PHPUnit'
+
+        return diagnostic
     }
 
-    private convertToRange(message: Message, editor: TextEditor) {
-        const textLine: TextLine = editor.document.lineAt(message.lineNumber)
+    private convertToRange(testCase: TestCase, editor?: TextEditor) {
+        const textLine: TextLine = editor.document.lineAt(testCase.line)
 
-        return new Range(
-            textLine.lineNumber,
-            textLine.firstNonWhitespaceCharacterIndex,
-            textLine.lineNumber,
-            textLine.range.end.character + 1
+        const range = new Range(
+            new Position(textLine.lineNumber, textLine.firstNonWhitespaceCharacterIndex),
+            new Position(textLine.lineNumber, textLine.range.end.character + 1)
         )
+
+        return range
     }
 }

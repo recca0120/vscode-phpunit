@@ -1,12 +1,12 @@
-import { Message, State, StateKeys } from './parser'
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
+import { TestCase, Type, TypeKeys } from './parser'
 
 import { Project } from './tester'
 import { Store } from './store'
 import { resolve } from 'path'
 
 export class DecorateManager {
-    private styles: Map<State, TextEditorDecorationType>
+    private styles: Map<Type, TextEditorDecorationType>
     private extensionPath: string
     private window: any
 
@@ -14,9 +14,9 @@ export class DecorateManager {
         this.extensionPath = project.extensionPath
         this.window = project.window
 
-        this.styles = StateKeys.reduce((styles, state: State) => {
-            return styles.set(state, this.createTextEditorDecorationType(this.decorationStyle.get(state)))
-        }, new Map<State, TextEditorDecorationType>())
+        this.styles = TypeKeys.reduce((styles, type: Type) => {
+            return styles.set(type, this.createTextEditorDecorationType(this.decorationStyle.get(type)))
+        }, new Map<Type, TextEditorDecorationType>())
     }
 
     decoratedGutter(store: Store, editor: TextEditor): this {
@@ -25,12 +25,12 @@ export class DecorateManager {
             return
         }
 
-        store.getByState(fileName).forEach((messages: Message[], state) => {
+        store.getByType(fileName).forEach((testCases: TestCase[], state) => {
             editor.setDecorations(
                 this.styles.get(state),
-                messages.map(message => ({
-                    range: new Range(message.lineNumber, 0, message.lineNumber, 0),
-                    hoverMessage: message.state,
+                testCases.map(testCase => ({
+                    range: new Range(testCase.line, 0, testCase.line, 0),
+                    hoverMessage: testCase.type,
                 }))
             )
         })
@@ -68,8 +68,8 @@ export interface DecorationType {
 }
 
 export class DecorationStyle {
-    get(state: string): DecorationType {
-        return this[state]()
+    get(type: Type): DecorationType {
+        return this[type]()
     }
 
     passed(): DecorationType {
@@ -85,7 +85,7 @@ export class DecorationStyle {
         }
     }
 
-    failed(): DecorationType {
+    error(): DecorationType {
         return {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -111,7 +111,7 @@ export class DecorationStyle {
         }
     }
 
-    incompleted(): DecorationType {
+    incomplete(): DecorationType {
         return this.skipped()
     }
 }
