@@ -1,12 +1,9 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process'
 import { Parser, TestCase } from './parser'
-import { existsSync, readFileSync } from 'fs'
 
 import { EventEmitter } from 'events'
 import { Filesystem } from './filesystem'
 import { Project } from './tester'
-import { resolve as pathResolve } from 'path'
-import { tmpdir } from 'os'
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -18,7 +15,6 @@ export enum State {
 export class PHPUnit extends EventEmitter {
     private rootPath: string
     private configurationFile: string = null
-    private xmlPath: string = tmpdir()
 
     constructor(
         private project: Project = {},
@@ -50,7 +46,7 @@ export class PHPUnit extends EventEmitter {
                 return reject(State.PHPUNIT_NOT_TESTCASE)
             }
 
-            const xmlFileName = pathResolve(this.xmlPath, `vscode-phpunit-junit-${new Date().getTime()}.xml`)
+            const xmlFileName = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`)
             const parameters: string[] = [
                 command,
                 fileName,
@@ -92,7 +88,7 @@ export class PHPUnit extends EventEmitter {
 
         for (let i = 0; i < configurationFiles.length; i++) {
             const configurationFile = `${this.rootPath}/${configurationFiles[i]}`
-            if (existsSync(configurationFile) === true) {
+            if (this.files.exists(configurationFile) === true) {
                 return (this.configurationFile = configurationFile)
             }
         }
@@ -101,15 +97,15 @@ export class PHPUnit extends EventEmitter {
     }
 
     private getCommand(): string {
-        const paths = [`${this.rootPath}/`, '']
+        const paths = [`${this.rootPath}/vendor/bin/phpunit`, `${this.rootPath}/phpunit.phar`, 'phpunit']
 
-        const command = paths
+        const commands = paths
             .map(path => {
-                return this.files.find(`${path}phpunit`)
+                return this.files.find(path)
             })
             .filter(command => command !== '')
 
-        return command.length > 0 ? command[0] : ''
+        return commands.length > 0 ? commands[0] : ''
     }
 }
 
@@ -141,12 +137,14 @@ export class Validator {
         'TestCase',
     ]
 
+    constructor(private files: Filesystem = new Filesystem()) {}
+
     fileName(fileName: string): boolean {
         return /\.git\.(php|inc)/.test(fileName) === false && /\.(php|inc)$/.test(fileName) === true
     }
 
     className(fileName: string, content?: string) {
-        content = content || readFileSync(fileName).toString()
+        content = content || this.files.getContent(fileName)
         const className = fileName.substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1).replace(/\.(php|inc)/i, '')
 
         if (new RegExp(`(abstract\\s+class|trait|interface)\\s+${className}`, 'i').test(content)) {

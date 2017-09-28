@@ -1,5 +1,5 @@
-import { accessSync, existsSync, unlinkSync } from 'fs'
-
+import { accessSync, existsSync, unlinkSync, readFileSync } from 'fs'
+import { tmpdir } from 'os'
 import { resolve } from 'path'
 import { spawnSync } from 'child_process'
 
@@ -139,5 +139,13 @@ export class Filesystem extends AbstractFilesystem {
         } catch (e) {
             this.unlink(file)
         }
+    }
+
+    getContent(file: string): string {
+        return readFileSync(file).toString()
+    }
+
+    tmpfile(tmpname) {
+        return resolve(tmpdir(), tmpname)
     }
 }

@@ -91,6 +91,9 @@ export class Tester {
                 case State.PHPUNIT_NOT_PHP:
                     console.warn(e)
                     break
+                default:
+                    console.error(e)
+                    break
             }
         }
     }
