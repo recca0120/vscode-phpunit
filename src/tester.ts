@@ -83,16 +83,14 @@ export class Tester {
             this.handleDiagnostic()
         } catch (e) {
             switch (e) {
-                case State.PHPUNIT_NOT_PHP:
-                    this.unlock()
-                    break
+                case State.PHPUNIT_NOT_FOUND:
                 case State.PHPUNIT_EXECUTE_ERROR:
+                default:
+                    console.error(e)
+                    break
                 case State.PHPUNIT_NOT_TESTCASE:
                 case State.PHPUNIT_NOT_PHP:
                     console.warn(e)
-                    break
-                default:
-                    console.error(e)
                     break
             }
         }

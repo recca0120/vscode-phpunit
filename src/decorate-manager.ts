@@ -20,9 +20,13 @@ export class DecorateManager {
     }
 
     decoratedGutter(store: Store, editor: TextEditor): this {
+        if (!editor.setDecorations) {
+            return this
+        }
+
         const fileName = editor.document.fileName
         if (store.has(fileName) === false) {
-            return
+            return this
         }
 
         store.getByType(fileName).forEach((testCases: TestCase[], state) => {
