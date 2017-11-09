@@ -68,6 +68,7 @@ export class Command {
         const execPath = this.execPath;
 
         if (!execPath) {
+            console.error(execPath);
             throw State.PHPUNIT_NOT_FOUND;
         }
 
