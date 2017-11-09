@@ -24,6 +24,7 @@ export class DiagnosticManager {
                         return testCase.type !== Type.PASSED;
                     })
                     .map(testCase => this.convertToDiagnostic(testCase, editor))
+                    .filter(diagnostic => diagnostic !== null)
             );
         });
     }
@@ -34,14 +35,20 @@ export class DiagnosticManager {
     }
 
     private convertToDiagnostic(testCase: TestCase, editor?: TextEditor): Diagnostic {
-        const diagnostic: Diagnostic = new Diagnostic(
-            this.convertToRange(testCase, editor),
-            testCase.fault.message,
-            testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
-        );
-        diagnostic.source = 'PHPUnit';
-
-        return diagnostic;
+        try {
+            const diagnostic: Diagnostic = new Diagnostic(
+                this.convertToRange(testCase, editor),
+                testCase.fault.message,
+                testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+            );
+            diagnostic.source = 'PHPUnit';
+    
+            return diagnostic;
+    
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
     }
 
     private convertToRange(testCase: TestCase, editor?: TextEditor) {
