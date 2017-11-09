@@ -1,9 +1,9 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process';
+import { Config, Project } from './tester';
 import { Parser, TestCase } from './parser';
 
 import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
-import { Project } from './tester';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -15,6 +15,10 @@ export enum State {
 export class PHPUnit extends EventEmitter {
     private rootPath: string;
     private configurationFile: string = null;
+    private config: Config = {
+        execPath: '',
+        args: [],
+    }
 
     constructor(
         private project: Project = {},
@@ -25,19 +29,14 @@ export class PHPUnit extends EventEmitter {
     ) {
         super();
         this.rootPath = this.project.rootPath || __dirname;
+        this.config = Object.assign(this.config, this.project.config);
         this.process
             .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
             .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer));
     }
 
-    run(fileName: string, content?: string): Promise<TestCase[]> {
+    handle(fileName: string, content?: string): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
-            const command = this.getCommand();
-
-            if (!command) {
-                return reject(State.PHPUNIT_NOT_FOUND);
-            }
-
             if (this.validator.fileName(fileName) === false) {
                 return reject(State.PHPUNIT_NOT_PHP);
             }
@@ -46,19 +45,27 @@ export class PHPUnit extends EventEmitter {
                 return reject(State.PHPUNIT_NOT_TESTCASE);
             }
 
-            const xmlFileName = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`);
-            const parameters: string[] = [
+            try {
+                const command = this.config.execPath || this.getCommand();
+                const xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}-${Math.ceil(Math.random()*1000)}.xml`);
+
+                let parameters: string[] = [
                 command,
                 fileName,
                 // '--colors=always',
                 '--log-junit',
-                xmlFileName,
+                xml,
             ];
+
             const configurationFile: string = this.getConfigurationFile();
             if (configurationFile) {
-                parameters.push('--configuration');
-                parameters.push(configurationFile);
+                parameters = Object.assign(parameters, [
+                    '--configuration',
+                    configurationFile
+                ]);
             }
+
+            parameters = Object.assign(parameters, this.config.args);
 
             this.emit('stdout', `${parameters.join(' ')}\n\n`);
 
@@ -67,15 +74,22 @@ export class PHPUnit extends EventEmitter {
                     this.emit('stdout', '\n\n');
 
                     try {
-                        const testCases: TestCase[] = await this.parser.parseXML(xmlFileName);
+                        const testCases: TestCase[] = await this.parser.parseXML(xml);
                         resolve(testCases);
                     } catch (e) {
                         reject(State.PHPUNIT_EXECUTE_ERROR);
                     } finally {
-                        this.files.unlink(xmlFileName);
+                        this.files.unlink(xml);
                     }
                 })
                 .spawn(parameters, { cwd: this.rootPath });
+            } catch (e) {
+                reject(e);
+            }
+
+            
+            
+            
         });
     }
 
@@ -97,15 +111,21 @@ export class PHPUnit extends EventEmitter {
     }
 
     private getCommand(): string {
-        const paths = [`${this.rootPath}/vendor/bin/phpunit`, `${this.rootPath}/phpunit.phar`, 'phpunit'];
+        const paths = [
+            `${this.rootPath}/vendor/bin/phpunit`, 
+            `${this.rootPath}/phpunit.phar`, 
+            'phpunit'
+        ];
 
         const commands = paths
-            .map(path => {
-                return this.files.find(path);
-            })
+            .map(path => this.files.find(path))
             .filter(command => command !== '');
 
-        return commands.length > 0 ? commands[0] : '';
+        if (commands.length === 0) {
+            throw State.PHPUNIT_NOT_FOUND;
+        }
+
+        return commands[0];
     }
 }
 

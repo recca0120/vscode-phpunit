@@ -21,13 +21,42 @@ describe('PHPUnit Tests', () => {
             process.emit('exit');
         });
 
-        const testCases = await phpunit.run(fileName, content);
+        const testCases = await phpunit.handle(fileName, content);
 
         expect(filesystem.find).toHaveBeenCalled();
         expect(parser.parseXML).toHaveBeenCalled();
         expect(process.spawn).toHaveBeenCalled();
         expect(testCases).toBe(tests);
     });
+
+    // it('call execPath', async () => {
+    //     const fileName = 'MyTest.php';
+    //     const content = 'class MyTest extends TestCase';
+
+    //     const project = {
+    //         config: {
+    //             execPath: 'foo',
+    //             args: ['foo', 'bar']
+    //         }
+    //     };
+    //     const parser = new Parser();
+    //     const process = new Process();
+    //     const filesystem = new Filesystem();
+    //     const phpunit = new PHPUnit(project, parser, filesystem, process);
+    //     const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
+    //     spyOn(filesystem, 'find').and.returnValue('phpunit');
+    //     spyOn(parser, 'parseXML').and.returnValue(tests);
+    //     spyOn(process, 'spawn').and.callFake(() => {
+    //         process.emit('exit');
+    //     });
+
+    //     const testCases = await phpunit.run(fileName, content);
+
+    //     expect(filesystem.find).toHaveBeenCalled();
+    //     expect(parser.parseXML).toHaveBeenCalled();
+    //     expect(process.spawn).toHaveBeenCalled();
+    //     expect(testCases).toBe(tests);
+    // });
 });
 
 describe('Process Tests', () => {

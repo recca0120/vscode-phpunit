@@ -6,11 +6,17 @@ import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { TestCase } from './parser';
 
+export interface Config {
+    execPath: string;
+    args: Array<String>;
+};
+
 export interface Project {
     window?: any;
     workspace?: any;
     rootPath?: string;
     extensionPath?: string;
+    config?: Config;
 }
 
 export class Tester {
@@ -24,7 +30,7 @@ export class Tester {
         private phpunit: PHPUnit,
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager,
-        private store: Store = new Store()
+        private store: Store = new Store(),
     ) {
         this.window = project.window;
         this.workspace = project.workspace;
@@ -34,15 +40,15 @@ export class Tester {
         const subscriptions: Disposable[] = [];
 
         // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(() => this.unlock().run(), null, subscriptions);
+        this.workspace.onWillSaveTextDocument(() => this.unlock().handle(), null, subscriptions);
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
         //         this.restore()
         //     }
         // }, null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(() => this.lock().run(), null, subscriptions);
-        this.lock().run();
+        this.window.onDidChangeActiveTextEditor(() => this.lock().handle(), null, subscriptions);
+        this.lock().handle();
         this.disposable = Disposable.from(...subscriptions);
 
         return this;
@@ -64,7 +70,7 @@ export class Tester {
         return this.locked;
     }
 
-    async run() {
+    async handle() {
         try {
             this.clearDecoratedGutter();
             const fileName = this.document.fileName;
@@ -76,7 +82,7 @@ export class Tester {
                 return;
             }
 
-            const testCases: TestCase[] = await this.phpunit.run(fileName, this.document.getText());
+            const testCases: TestCase[] = await this.phpunit.handle(fileName, this.document.getText());
             this.store.put(testCases);
 
             this.decoratedGutter();

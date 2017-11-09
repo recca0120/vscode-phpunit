@@ -1,5 +1,5 @@
+import { Config, Project, Tester } from './tester';
 import { DiagnosticCollection, ExtensionContext, OutputChannel, languages, window, workspace } from 'vscode';
-import { Project, Tester } from './tester';
 
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
@@ -15,6 +15,10 @@ export function activate(context: ExtensionContext) {
         workspace: workspace,
         rootPath: workspace.rootPath,
         extensionPath: context.extensionPath,
+        config: Object.assign({
+            execPath: '',
+            args: [],
+        }, workspace.getConfiguration("phpunit")),
     };
 
     const name = 'PHPUnit';
