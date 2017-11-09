@@ -12,121 +12,161 @@ export enum State {
     PHPUNIT_NOT_PHP = 'phpunit_not_php',
 }
 
-export class PHPUnit extends EventEmitter {
-    private rootPath: string;
-    private configurationFile: string = null;
-    private config: Config = {
-        execPath: '',
-        args: [],
-    }
+export class Command {
+    private xml: string;
 
     constructor(
-        private project: Project = {},
-        private parser = new Parser(),
-        private files = new Filesystem(),
-        private process = new Process(),
-        private validator = new Validator()
+        private fileName: string,
+        private args: Array<string> = [],
+        private execPath: string = '',
+        private rootPath: string = __dirname,
+        private files = new Filesystem()
     ) {
+        this.execPath = !this.execPath ? this.getExecutable() : this.execPath;
+        this.xml = this.files.tmpfile(
+            `vscode-phpunit-junit-${new Date().getTime()}-${Math.ceil(Math.random() * 1000)}.xml`
+        );
+    }
+
+    public getRootPath() {
+        return this.rootPath;
+    }
+
+    public getXML() {
+        return this.xml;
+    }
+
+    public getArguments() {
+        const execPath = this.execPath;
+
+        if (!execPath) {
+            throw State.PHPUNIT_NOT_FOUND;
+        }
+
+        return execPath
+            .split(' ')
+            .concat([this.fileName])
+            .concat(['--log-junit', this.getXML()])
+            .concat(this.getConfiguration())
+            .concat(this.args);
+    }
+
+    public clear() {
+        this.files.unlink(this.getXML());
+    }
+
+    private getConfiguration(): Array<string> {
+        const configurationFiles = ['phpunit.xml', 'phpunit.xml.dist'];
+        for (let i = 0; i < configurationFiles.length; i++) {
+            const configurationFile = `${this.rootPath}/${configurationFiles[i]}`;
+            if (this.files.exists(configurationFile) === true) {
+                return ['--configuration', configurationFile];
+            }
+        }
+
+        return [];
+    }
+
+    private getExecutable(): string {
+        const paths = [`${this.rootPath}/vendor/bin/phpunit`, `${this.rootPath}/phpunit.phar`, 'phpunit'];
+        const commands = paths.map(path => this.files.find(path)).filter(command => command !== '');
+
+        return commands.length === 0 ? '' : commands[0];
+    }
+}
+
+export class PHPUnit extends EventEmitter {
+    constructor(private parser = new Parser(), private process = new Process()) {
         super();
-        this.rootPath = this.project.rootPath || __dirname;
-        this.config = Object.assign(this.config, this.project.config);
         this.process
             .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
             .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer));
     }
 
-    handle(fileName: string, content?: string): Promise<TestCase[]> {
+    handle(command: Command): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
-            if (this.validator.fileName(fileName) === false) {
-                return reject(State.PHPUNIT_NOT_PHP);
-            }
-
-            if (this.validator.className(fileName, content) === false) {
-                return reject(State.PHPUNIT_NOT_TESTCASE);
-            }
-
-            try {
-                const command = this.config.execPath || this.getCommand();
-                const xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}-${Math.ceil(Math.random()*1000)}.xml`);
-
-                let parameters: string[] = [
-                command,
-                fileName,
-                // '--colors=always',
-                '--log-junit',
-                xml,
-            ];
-
-            const configurationFile: string = this.getConfigurationFile();
-            if (configurationFile) {
-                parameters = Object.assign(parameters, [
-                    '--configuration',
-                    configurationFile
-                ]);
-            }
-
-            parameters = Object.assign(parameters, this.config.args);
-
-            this.emit('stdout', `${parameters.join(' ')}\n\n`);
+            const args = command.getArguments();
+            this.emit('stdout', `${args.join(' ')}\n\n`);
 
             this.process
                 .once('exit', async () => {
                     this.emit('stdout', '\n\n');
-
                     try {
-                        const testCases: TestCase[] = await this.parser.parseXML(xml);
-                        resolve(testCases);
+                        resolve(await this.parser.parseXML(command.getXML()));
                     } catch (e) {
                         reject(State.PHPUNIT_EXECUTE_ERROR);
                     } finally {
-                        this.files.unlink(xml);
+                        command.clear();
                     }
                 })
-                .spawn(parameters, { cwd: this.rootPath });
-            } catch (e) {
-                reject(e);
-            }
-
-            
-            
-            
+                .spawn(args, { cwd: command.getRootPath() });
         });
     }
 
-    private getConfigurationFile(): string {
-        if (this.configurationFile !== null) {
-            return this.configurationFile;
-        }
+    // handle(fileName: string, content?: string): Promise<TestCase[]> {
+    //     return new Promise((resolve, reject) => {
+    //         if (this.validator.fileName(fileName) === false) {
+    //             return reject(State.PHPUNIT_NOT_PHP);
+    //         }
 
-        const configurationFiles = ['phpunit.xml', 'phpunit.xml.dist'];
+    //         if (this.validator.className(fileName, content) === false) {
+    //             return reject(State.PHPUNIT_NOT_TESTCASE);
+    //         }
 
-        for (let i = 0; i < configurationFiles.length; i++) {
-            const configurationFile = `${this.rootPath}/${configurationFiles[i]}`;
-            if (this.files.exists(configurationFile) === true) {
-                return (this.configurationFile = configurationFile);
-            }
-        }
+    //         try {
+    //             const command = this.config.execPath || this.getCommand();
+    //             const xml = this.files.tmpfile(
+    //                 `vscode-phpunit-junit-${new Date().getTime()}-${Math.ceil(Math.random() * 1000)}.xml`
+    //             );
 
-        return (this.configurationFile = '');
-    }
+    //             let parameters: string[] = [
+    //                 command,
+    //                 fileName,
+    //                 // '--colors=always',
+    //                 '--log-junit',
+    //                 xml,
+    //             ];
 
-    private getCommand(): string {
-        const paths = [
-            `${this.rootPath}/vendor/bin/phpunit`, 
-            `${this.rootPath}/phpunit.phar`, 
-            'phpunit'
-        ];
+    //             const configurationFile: string = this.getConfigurationFile();
+    //             if (configurationFile) {
+    //                 parameters = Object.assign(parameters, ['--configuration', configurationFile]);
+    //             }
 
-        const commands = paths
-            .map(path => this.files.find(path))
-            .filter(command => command !== '');
+    //             parameters = Object.assign(parameters, this.config.args);
 
-        if (commands.length === 0) {
-            throw State.PHPUNIT_NOT_FOUND;
-        }
+    //             this.emit('stdout', `${parameters.join(' ')}\n\n`);
 
-        return commands[0];
-    }
+    //             this.process
+    //                 .once('exit', async () => {
+    //                     this.emit('stdout', '\n\n');
+
+    //                     try {
+    //                         const testCases: TestCase[] = await this.parser.parseXML(xml);
+    //                         resolve(testCases);
+    //                     } catch (e) {
+    //                         reject(State.PHPUNIT_EXECUTE_ERROR);
+    //                     } finally {
+    //                         this.files.unlink(xml);
+    //                     }
+    //                 })
+    //                 .spawn(parameters, { cwd: this.rootPath });
+    //         } catch (e) {
+    //             reject(e);
+    //         }
+    //     });
+    // }
+
+    // private getCommand(): string {
+    //     const paths = [`${this.rootPath}/vendor/bin/phpunit`, `${this.rootPath}/phpunit.phar`, 'phpunit'];
+
+    //     const commands = paths.map(path => this.files.find(path)).filter(command => command !== '');
+
+    //     if (commands.length === 0) {
+    //         throw State.PHPUNIT_NOT_FOUND;
+    //     }
+
+    //     return commands[0];
+    // }
 }
 
 export class Process extends EventEmitter {

@@ -42,9 +42,8 @@ export class DiagnosticManager {
                 testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
             );
             diagnostic.source = 'PHPUnit';
-    
+
             return diagnostic;
-    
         } catch (e) {
             console.error(e);
             return null;

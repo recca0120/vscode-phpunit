@@ -15,10 +15,13 @@ export function activate(context: ExtensionContext) {
         workspace: workspace,
         rootPath: workspace.rootPath,
         extensionPath: context.extensionPath,
-        config: Object.assign({
-            execPath: '',
-            args: [],
-        }, workspace.getConfiguration("phpunit")),
+        config: Object.assign(
+            {
+                execPath: '',
+                args: [],
+            },
+            workspace.getConfiguration('phpunit')
+        ),
     };
 
     const name = 'PHPUnit';

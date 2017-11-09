@@ -1,5 +1,5 @@
+import { Command, PHPUnit, State, Validator } from './phpunit';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
-import { PHPUnit, State } from './phpunit';
 
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
@@ -9,7 +9,7 @@ import { TestCase } from './parser';
 export interface Config {
     execPath: string;
     args: Array<String>;
-};
+}
 
 export interface Project {
     window?: any;
@@ -31,6 +31,7 @@ export class Tester {
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager,
         private store: Store = new Store(),
+        private validator: Validator = new Validator()
     ) {
         this.window = project.window;
         this.workspace = project.workspace;
@@ -71,9 +72,22 @@ export class Tester {
     }
 
     async handle() {
+        const fileName = this.document.fileName;
+
+        if (this.validator.fileName(fileName) === false) {
+            console.warn(State.PHPUNIT_NOT_PHP);
+
+            return;
+        }
+
+        if (this.validator.className(fileName, this.document.getText()) === false) {
+            console.warn(State.PHPUNIT_NOT_TESTCASE);
+
+            return;
+        }
+
         try {
             this.clearDecoratedGutter();
-            const fileName = this.document.fileName;
 
             if (this.isLocked() === true && this.store.has(fileName) === true) {
                 this.decoratedGutter();
@@ -82,23 +96,15 @@ export class Tester {
                 return;
             }
 
-            const testCases: TestCase[] = await this.phpunit.handle(fileName, this.document.getText());
+            const command = new Command(fileName, [], '', this.workspace.rootPath);
+
+            const testCases: TestCase[] = await this.phpunit.handle(command);
             this.store.put(testCases);
 
             this.decoratedGutter();
             this.handleDiagnostic();
         } catch (e) {
-            switch (e) {
-                case State.PHPUNIT_NOT_FOUND:
-                case State.PHPUNIT_EXECUTE_ERROR:
-                default:
-                    console.error(e);
-                    break;
-                case State.PHPUNIT_NOT_TESTCASE:
-                case State.PHPUNIT_NOT_PHP:
-                    console.warn(e);
-                    break;
-            }
+            console.error(e);
         }
     }
 

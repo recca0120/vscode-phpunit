@@ -1,4 +1,4 @@
-import { PHPUnit, Process, Validator } from '../src/phpunit';
+import { Command, PHPUnit, Process, Validator } from '../src/phpunit';
 
 import { Filesystem } from './../src/filesystem';
 import { Parser } from '../src/parser';
@@ -6,57 +6,22 @@ import { join } from 'path';
 
 describe('PHPUnit Tests', () => {
     it('get error messages', async () => {
-        const fileName = 'MyTest.php';
-        const content = 'class MyTest extends TestCase';
-
-        const project = {};
         const parser = new Parser();
         const process = new Process();
-        const filesystem = new Filesystem();
-        const phpunit = new PHPUnit(project, parser, filesystem, process);
+        const phpunit = new PHPUnit(parser, process);
         const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
-        spyOn(filesystem, 'find').and.returnValue('phpunit');
         spyOn(parser, 'parseXML').and.returnValue(tests);
         spyOn(process, 'spawn').and.callFake(() => {
             process.emit('exit');
         });
 
-        const testCases = await phpunit.handle(fileName, content);
+        const command = new Command('foo.php', []);
+        const result = await phpunit.handle(command);
 
-        expect(filesystem.find).toHaveBeenCalled();
         expect(parser.parseXML).toHaveBeenCalled();
         expect(process.spawn).toHaveBeenCalled();
-        expect(testCases).toBe(tests);
+        expect(result).toBe(tests);
     });
-
-    // it('call execPath', async () => {
-    //     const fileName = 'MyTest.php';
-    //     const content = 'class MyTest extends TestCase';
-
-    //     const project = {
-    //         config: {
-    //             execPath: 'foo',
-    //             args: ['foo', 'bar']
-    //         }
-    //     };
-    //     const parser = new Parser();
-    //     const process = new Process();
-    //     const filesystem = new Filesystem();
-    //     const phpunit = new PHPUnit(project, parser, filesystem, process);
-    //     const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
-    //     spyOn(filesystem, 'find').and.returnValue('phpunit');
-    //     spyOn(parser, 'parseXML').and.returnValue(tests);
-    //     spyOn(process, 'spawn').and.callFake(() => {
-    //         process.emit('exit');
-    //     });
-
-    //     const testCases = await phpunit.run(fileName, content);
-
-    //     expect(filesystem.find).toHaveBeenCalled();
-    //     expect(parser.parseXML).toHaveBeenCalled();
-    //     expect(process.spawn).toHaveBeenCalled();
-    //     expect(testCases).toBe(tests);
-    // });
 });
 
 describe('Process Tests', () => {
@@ -69,6 +34,73 @@ describe('Process Tests', () => {
             expect(buffer.toString().trim()).toEqual('123');
             done();
         });
+    });
+});
+
+describe('Command Tests', () => {
+    it('get arguments', () => {
+        const filePath = 'foo.fileName';
+        const args = [];
+        const execPath = '';
+        const rootPath = 'foo.rootPath';
+        const files = new Filesystem();
+        const xml = 'foo.xml';
+        spyOn(files, 'find').and.returnValue('phpunit');
+        spyOn(files, 'tmpfile').and.returnValue(xml);
+
+        const command = new Command(filePath, args, execPath, rootPath, files);
+
+        expect(command.getArguments()).toEqual(['phpunit', filePath, '--log-junit', xml]);
+    });
+
+    it('get arguments with exec path', () => {
+        const filePath = 'foo.fileName';
+        const args = [];
+        const execPath = 'foo.execPath';
+        const rootPath = 'foo.rootPath';
+        const files = new Filesystem();
+        const xml = 'foo.xml';
+        spyOn(files, 'tmpfile').and.returnValue(xml);
+
+        const command = new Command(filePath, args, execPath, rootPath, files);
+
+        expect(command.getArguments()).toEqual([execPath, filePath, '--log-junit', xml]);
+    });
+
+    it('get arguments with exec path and args', () => {
+        const filePath = 'foo.fileName';
+        const args = ['--foo', 'bar'];
+        const execPath = 'foo.execPath';
+        const rootPath = 'foo.rootPath';
+        const files = new Filesystem();
+        const xml = 'foo.xml';
+        spyOn(files, 'tmpfile').and.returnValue(xml);
+
+        const command = new Command(filePath, args, execPath, rootPath, files);
+
+        expect(command.getArguments()).toEqual([execPath, filePath, '--log-junit', xml, '--foo', 'bar']);
+    });
+
+    it('get arguments with configuration', () => {
+        const filePath = 'foo.fileName';
+        const args = [];
+        const execPath = 'foo.execPath';
+        const rootPath = 'foo.rootPath';
+        const files = new Filesystem();
+        const xml = 'foo.xml';
+        spyOn(files, 'tmpfile').and.returnValue(xml);
+        spyOn(files, 'exists').and.returnValue(true);
+
+        const command = new Command(filePath, args, execPath, rootPath, files);
+
+        expect(command.getArguments()).toEqual([
+            execPath,
+            filePath,
+            '--log-junit',
+            xml,
+            '--configuration',
+            `${rootPath}/phpunit.xml`,
+        ]);
     });
 });
 
