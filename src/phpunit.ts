@@ -12,21 +12,25 @@ export enum State {
 }
 
 export class PHPUnit extends EventEmitter {
-    constructor(private parser = new Parser(), private process = new Process()) {
+    constructor(private parser = new Parser(), private processFactory = new ProcessFactory()) {
         super();
-        this.process
-            .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
-            .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer));
+        // this.process
+        //     .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
+        //     .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer));
     }
 
     handle(command: Command): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
             const args = command.getArguments();
             const xml = command.getXML();
+
             this.emit('stdout', `${args.join(' ')}\n\n`);
 
-            this.process
-                .once('exit', () => {
+            this.processFactory
+                .create()
+                .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
+                .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
+                .on('exit', () => {
                     this.emit('stdout', '\n\n');
                     this.parser
                         .parseXML(xml)
@@ -35,8 +39,8 @@ export class PHPUnit extends EventEmitter {
                             command.clear();
                         })
                         .catch(error => {
-                            console.error(error);
                             command.clear();
+                            reject(error);
                         });
                 })
                 .spawn(args, { cwd: command.rootPath });
@@ -55,7 +59,7 @@ export class Command {
         private files = new Filesystem()
     ) {
         this.execPath = !this.execPath || this.execPath.trim() === 'phpunit' ? this.getExecutable() : this.execPath;
-        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}}.xml`);
+        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`);
     }
 
     getXML() {
@@ -96,6 +100,12 @@ export class Command {
         const commands = paths.map(path => this.files.find(path)).filter(command => command !== '');
 
         return commands.length === 0 ? '' : commands[0];
+    }
+}
+
+export class ProcessFactory {
+    public create() {
+        return new Process();
     }
 }
 

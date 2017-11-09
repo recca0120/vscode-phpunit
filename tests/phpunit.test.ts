@@ -1,4 +1,4 @@
-import { Command, PHPUnit, Process, Validator } from '../src/phpunit';
+import { Command, PHPUnit, Process, ProcessFactory, Validator } from '../src/phpunit';
 
 import { Filesystem } from './../src/filesystem';
 import { Parser } from '../src/parser';
@@ -7,9 +7,11 @@ import { join } from 'path';
 describe('PHPUnit Tests', () => {
     it('get error messages', async () => {
         const parser = new Parser();
+        const processFactory = new ProcessFactory();
         const process = new Process();
-        const phpunit = new PHPUnit(parser, process);
+        const phpunit = new PHPUnit(parser, processFactory);
         const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
+        spyOn(processFactory, 'create').and.returnValue(process);
         spyOn(parser, 'parseXML').and.returnValue(Promise.resolve(tests));
         spyOn(process, 'spawn').and.callFake(() => {
             process.emit('exit');
