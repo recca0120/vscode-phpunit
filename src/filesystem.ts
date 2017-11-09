@@ -146,7 +146,7 @@ export class Filesystem extends AbstractFilesystem {
         return readFileSync(file).toString();
     }
 
-    tmpfile(tmpname: string, dir:string = '') {
+    tmpfile(tmpname: string, dir: string = '') {
         return pathResolve(!dir ? tmpdir() : dir, tmpname);
     }
 }

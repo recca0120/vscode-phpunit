@@ -54,9 +54,9 @@ export class Command {
         private args: Array<string> = [],
         private execPath: string = '',
         public rootPath: string = __dirname,
-        public junitPath:string = '',
+        public junitPath: string = '',
         private files = new Filesystem()
-    ) { 
+    ) {
         this.execPath = !this.execPath || this.execPath.trim() === 'phpunit' ? this.getExecutable() : this.execPath;
         this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`, junitPath);
     }
