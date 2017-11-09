@@ -52,11 +52,9 @@ export class DiagnosticManager {
     private convertToRange(testCase: TestCase, editor?: TextEditor) {
         const textLine: TextLine = editor.document.lineAt(testCase.line);
 
-        const range = new Range(
+        return new Range(
             new Position(textLine.lineNumber, textLine.firstNonWhitespaceCharacterIndex),
             new Position(textLine.lineNumber, textLine.range.end.character + 1)
         );
-
-        return range;
     }
 }

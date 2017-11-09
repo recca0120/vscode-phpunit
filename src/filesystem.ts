@@ -52,13 +52,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
     }
 
     exists(file: string): boolean {
-        for (const extension of this.extensions) {
-            if (existsSync(`${file}${extension}`)) {
-                return true;
-            }
-        }
-
-        return false;
+        return this.extensions.some(extension => existsSync(`${file}${extension}`));
     }
 
     private getExists(file: string): string {
@@ -78,9 +72,7 @@ class Unix extends AbstractFilesystem implements FilesystemInterface {
             return pathResolve(fileName);
         }
 
-        const process = spawnSync('which', [fileName]);
-
-        return this.normalize(new Buffer(process.output.join('')));
+        return this.normalize(new Buffer(spawnSync('which', [fileName]).output.join('')));
     }
 
     exists(file: string): boolean {

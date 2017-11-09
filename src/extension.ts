@@ -10,16 +10,8 @@ export function activate(context: ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "vscode-phpunit" is now active!');
 
-    const project: Project = new Project(window, workspace, context.extensionPath);
-
-    // {
-    //     window: window,
-    //     workspace: workspace,
-    //     rootPath: workspace.rootPath,
-    //     extensionPath: context.extensionPath,
-    // }
-
     const name = 'PHPUnit';
+    const project: Project = new Project(window, workspace, context.extensionPath);
     const outputChannel: OutputChannel = window.createOutputChannel(name);
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name);
 

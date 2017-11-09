@@ -76,19 +76,25 @@ export class Command {
             throw State.PHPUNIT_NOT_FOUND;
         }
 
-        return [execPath]
-            .concat(
-                this.parseOptions(
-                    this.getConfiguration()
-                        .concat(this.args)
-                        .concat(['--log-junit', this.getXML()])
-                )
-            )
-            .concat([this.fileName]);
+        return [
+            [execPath],
+            this.parseOptions(
+                this.getConfiguration()
+                    .concat(this.args)
+                    .concat(['--log-junit', this.getXML()])
+            ),
+            [this.fileName],
+        ].reduce((result, next) => {
+            return result.concat(next);
+        }, []);
     }
 
     clear() {
         this.files.unlink(this.getXML());
+    }
+
+    get rootPath() {
+        return this.options.rootPath;
     }
 
     private parseOptions(args: Array<string>) {
@@ -133,26 +139,17 @@ export class Command {
     }
 
     private getConfiguration(): Array<string> {
-        const configurationFiles = ['phpunit.xml', 'phpunit.xml.dist'];
-        for (let i = 0; i < configurationFiles.length; i++) {
-            const configurationFile = `${this.options.rootPath}/${configurationFiles[i]}`;
-            if (this.files.exists(configurationFile) === true) {
-                return ['--configuration', configurationFile];
-            }
-        }
+        const configurationFile = ['phpunit.xml', 'phpunit.xml.dist']
+            .map(configurationFile => `${this.options.rootPath}/${configurationFile}`)
+            .find(configurationFile => this.files.exists(configurationFile));
 
-        return [];
+        return configurationFile ? ['--configuration', configurationFile] : [];
     }
 
     private getExecutable(): string {
-        const paths = [
-            `${this.options.rootPath}/vendor/bin/phpunit`,
-            `${this.options.rootPath}/phpunit.phar`,
-            'phpunit',
-        ];
-        const commands = paths.map(path => this.files.find(path)).filter(command => command !== '');
-
-        return commands.length === 0 ? '' : commands[0];
+        return [`${this.options.rootPath}/vendor/bin/phpunit`, `${this.options.rootPath}/phpunit.phar`, 'phpunit']
+            .map(path => this.files.find(path))
+            .find(command => command !== '');
     }
 }
 
