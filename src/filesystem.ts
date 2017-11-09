@@ -1,7 +1,8 @@
-import { accessSync, existsSync, unlinkSync, readFileSync } from 'fs';
-import { tmpdir } from 'os';
-import { resolve } from 'path';
+import { accessSync, existsSync, readFileSync, unlinkSync } from 'fs';
+
+import { resolve as pathResolve } from 'path';
 import { spawnSync } from 'child_process';
+import { tmpdir } from 'os';
 
 interface FilesystemInterface {
     find(file: string): string;
@@ -63,7 +64,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
     private getExists(file: string): string {
         for (const extension of this.extensions) {
             if (existsSync(`${file}${extension}`)) {
-                return resolve(`${file}${extension}`);
+                return pathResolve(`${file}${extension}`);
             }
         }
 
@@ -74,7 +75,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
 class Linux extends AbstractFilesystem implements FilesystemInterface {
     find(fileName: string): string {
         if (existsSync(fileName)) {
-            return resolve(fileName);
+            return pathResolve(fileName);
         }
 
         const process = spawnSync('which', [fileName]);
@@ -145,7 +146,7 @@ export class Filesystem extends AbstractFilesystem {
         return readFileSync(file).toString();
     }
 
-    tmpfile(tmpname) {
-        return resolve(tmpdir(), tmpname);
+    tmpfile(tmpname: string, dir:string = '') {
+        return pathResolve(!dir ? tmpdir() : dir, tmpname);
     }
 }

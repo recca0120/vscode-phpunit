@@ -38,9 +38,7 @@ export class Tester {
 
         // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
         this.workspace.onDidChangeConfiguration(
-            () => {
-                this.config = this.workspace.getConfiguration('phpunit');
-            },
+            () => (this.config = this.workspace.getConfiguration('phpunit')),
             null,
             subscriptions
         );
@@ -102,10 +100,10 @@ export class Tester {
             return;
         }
 
-        const { execPath, args } = this.config;
+        const { execPath, args, junitPath } = this.config;
 
         this.phpunit
-            .handle(new Command(fileName, args, execPath, this.workspace.rootPath))
+            .handle(new Command(fileName, args, execPath, this.workspace.rootPath, junitPath))
             .then(testCases => {
                 this.store.put(testCases);
                 this.decoratedGutter();

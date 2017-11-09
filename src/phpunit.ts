@@ -3,6 +3,7 @@ import { Parser, TestCase } from './parser';
 
 import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
+import { tmpdir } from 'os';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -14,14 +15,11 @@ export enum State {
 export class PHPUnit extends EventEmitter {
     constructor(private parser = new Parser(), private processFactory = new ProcessFactory()) {
         super();
-        // this.process
-        //     .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
-        //     .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer));
     }
 
     handle(command: Command): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
-            const args = command.getArguments();
+            const args = command.toArray();
             const xml = command.getXML();
 
             this.emit('stdout', `${args.join(' ')}\n\n`);
@@ -56,31 +54,78 @@ export class Command {
         private args: Array<string> = [],
         private execPath: string = '',
         public rootPath: string = __dirname,
+        public junitPath:string = '',
         private files = new Filesystem()
-    ) {
+    ) { 
         this.execPath = !this.execPath || this.execPath.trim() === 'phpunit' ? this.getExecutable() : this.execPath;
-        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`);
+        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`, junitPath);
     }
 
     getXML() {
         return this.xml;
     }
 
-    getArguments() {
+    toArray() {
         const execPath = this.execPath;
 
         if (!execPath) {
             throw State.PHPUNIT_NOT_FOUND;
         }
 
-        return [execPath, this.fileName]
-            .concat(['--log-junit', this.getXML()])
-            .concat(this.getConfiguration())
-            .concat(this.args);
+        return [execPath]
+            .concat(
+                this.parseOptions(
+                    this.getConfiguration()
+                        .concat(this.args)
+                        .concat(['--log-junit', this.getXML()])
+                )
+            )
+            .concat([this.fileName]);
     }
 
     clear() {
         this.files.unlink(this.getXML());
+    }
+
+    private parseOptions(args: Array<string>) {
+        const options = [];
+        const multiple = ['-d', '--include-path'];
+        const map: Map<string, string> = new Map();
+
+        for (let i = 0; i < args.length; i++) {
+            const key = args[i];
+            if (key.startsWith('-') === true) {
+                const value = args[i + 1];
+                const startsWith = value.startsWith('-');
+                if (startsWith === false) {
+                    i++;
+                }
+
+                if (value.startsWith('-') === false) {
+                    if (multiple.indexOf(key) !== -1) {
+                        const val = map.has(key) ? map.get(key).split('|') : [];
+                        map.set(key, val.concat([value]).join('|'));
+                    } else {
+                        map.set(key, value);
+                    }
+                } else {
+                    map.set(key, null);
+                }
+            } else {
+                options.push(key);
+            }
+        }
+
+        return [...map.entries()].sort().reduce((opts: Array<string>, item: Array<string>) => {
+            const [key, value] = item;
+            if (multiple.indexOf(key) !== -1) {
+                return value.split('|').reduce((result, value) => {
+                    return result.concat([key, value]);
+                }, opts);
+            }
+
+            return opts.concat(item.filter(v => v !== null));
+        }, options);
     }
 
     private getConfiguration(): Array<string> {
