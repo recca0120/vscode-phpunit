@@ -72,7 +72,7 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
     }
 }
 
-class Linux extends AbstractFilesystem implements FilesystemInterface {
+class Unix extends AbstractFilesystem implements FilesystemInterface {
     find(fileName: string): string {
         if (existsSync(fileName)) {
             return pathResolve(fileName);
@@ -88,14 +88,19 @@ class Linux extends AbstractFilesystem implements FilesystemInterface {
     }
 }
 
+const cache = new Map<string, string>();
+const windows = new Windows();
+const unix = new Unix();
+
 export class Filesystem extends AbstractFilesystem {
     private instance: FilesystemInterface;
 
-    private cache = new Map<string, string>();
+    private cache: Map<string, string>;
 
     constructor() {
         super();
-        this.instance = this.isWindows() ? new Windows() : new Linux();
+        this.instance = this.isWindows() ? windows : unix;
+        this.cache = cache;
     }
 
     find(file: string): string {

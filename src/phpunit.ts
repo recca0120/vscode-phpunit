@@ -3,7 +3,6 @@ import { Parser, TestCase } from './parser';
 
 import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
-import { tmpdir } from 'os';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
