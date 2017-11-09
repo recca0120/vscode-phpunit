@@ -21,8 +21,8 @@
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "jest",
-        "prettier": "prettier --tab-width 4",
-        "prettier-write": "npm run prettier -- --parser typescript --no-semi --single-quote --trailing-comma es5 --write --print-width 120",
+        "prettier": "prettier",
+        "prettier-write": "npm run prettier -- --single-quote --trailing-comma es5 --write --print-width 120 --tab-width 4",
         "prettier-project": "npm run prettier-write -- {test,tests,src}/**/*.ts"
     },
     "license": "MIT",

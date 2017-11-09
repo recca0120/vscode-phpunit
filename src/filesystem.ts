@@ -1,19 +1,19 @@
-import { accessSync, existsSync, unlinkSync, readFileSync } from 'fs'
-import { tmpdir } from 'os'
-import { resolve } from 'path'
-import { spawnSync } from 'child_process'
+import { accessSync, existsSync, unlinkSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { resolve } from 'path';
+import { spawnSync } from 'child_process';
 
 interface FilesystemInterface {
-    find(file: string): string
-    exists(file: string): boolean
-    isWindows(): boolean
+    find(file: string): string;
+    exists(file: string): boolean;
+    isWindows(): boolean;
 }
 
 abstract class AbstractFilesystem {
-    platform = process.platform
+    platform = process.platform;
 
     isWindows(): boolean {
-        return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(this.platform)
+        return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(this.platform);
     }
 
     protected normalize(buffer: Buffer) {
@@ -22,130 +22,130 @@ abstract class AbstractFilesystem {
             .replace('/\r\n/', '\n')
             .split('\n')
             .shift()
-            .trim()
+            .trim();
     }
 }
 
 class Windows extends AbstractFilesystem implements FilesystemInterface {
-    extensions = ['.bat', '.exe', '.cmd', '']
+    extensions = ['.bat', '.exe', '.cmd', ''];
 
     find(file: string): string {
-        const exists = this.getExists(file)
+        const exists = this.getExists(file);
 
         if (exists) {
-            return exists
+            return exists;
         }
 
         for (const extension of this.extensions) {
-            const fileName = `${file}${extension}`
+            const fileName = `${file}${extension}`;
             try {
-                const process = spawnSync('where', [fileName])
+                const process = spawnSync('where', [fileName]);
 
                 if (process.status === 0) {
-                    return this.normalize(new Buffer(process.output.join('')))
+                    return this.normalize(new Buffer(process.output.join('')));
                 }
             } catch (e) {}
         }
 
-        return ''
+        return '';
     }
 
     exists(file: string): boolean {
         for (const extension of this.extensions) {
             if (existsSync(`${file}${extension}`)) {
-                return true
+                return true;
             }
         }
 
-        return false
+        return false;
     }
 
     private getExists(file: string): string {
         for (const extension of this.extensions) {
             if (existsSync(`${file}${extension}`)) {
-                return resolve(`${file}${extension}`)
+                return resolve(`${file}${extension}`);
             }
         }
 
-        return ''
+        return '';
     }
 }
 
 class Linux extends AbstractFilesystem implements FilesystemInterface {
     find(fileName: string): string {
         if (existsSync(fileName)) {
-            return resolve(fileName)
+            return resolve(fileName);
         }
 
-        const process = spawnSync('which', [fileName])
+        const process = spawnSync('which', [fileName]);
 
-        return this.normalize(new Buffer(process.output.join('')))
+        return this.normalize(new Buffer(process.output.join('')));
     }
 
     exists(file: string): boolean {
-        return existsSync(file)
+        return existsSync(file);
     }
 }
 
 export class Filesystem extends AbstractFilesystem {
-    private instance: FilesystemInterface
+    private instance: FilesystemInterface;
 
-    private cache = new Map<string, string>()
+    private cache = new Map<string, string>();
 
     constructor() {
-        super()
-        this.instance = this.isWindows() ? new Windows() : new Linux()
+        super();
+        this.instance = this.isWindows() ? new Windows() : new Linux();
     }
 
     find(file: string): string {
-        const key = file
+        const key = file;
         if (this.cache.has(key) === true) {
-            return this.cache.get(key)
+            return this.cache.get(key);
         }
 
-        const find = this.instance.find(key)
+        const find = this.instance.find(key);
         if (find) {
-            this.cache.set(key, find)
+            this.cache.set(key, find);
         }
 
-        return find ? find : ''
+        return find ? find : '';
     }
 
     exists(file: string): boolean {
-        const key = `${file}-exists`
+        const key = `${file}-exists`;
         if (this.cache.has(key) === true) {
-            return true
+            return true;
         }
 
-        const exists = this.instance.exists(file)
+        const exists = this.instance.exists(file);
         if (exists === true) {
-            this.cache.set(key, file)
+            this.cache.set(key, file);
         }
 
-        return exists
+        return exists;
     }
 
     unlink(file: string): void {
         try {
             if (existsSync(file) === true) {
                 if (accessSync(file)) {
-                    unlinkSync(file)
+                    unlinkSync(file);
                 } else {
                     setTimeout(() => {
-                        this.unlink(file)
-                    }, 500)
+                        this.unlink(file);
+                    }, 500);
                 }
             }
         } catch (e) {
-            this.unlink(file)
+            this.unlink(file);
         }
     }
 
     getContent(file: string): string {
-        return readFileSync(file).toString()
+        return readFileSync(file).toString();
     }
 
     tmpfile(tmpname) {
-        return resolve(tmpdir(), tmpname)
+        return resolve(tmpdir(), tmpname);
     }
 }

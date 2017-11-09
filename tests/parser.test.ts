@@ -1,18 +1,18 @@
-import { Parser, TestCase, Type } from '../src/parser'
+import { Parser, TestCase, Type } from '../src/parser';
 
-import { join } from 'path'
+import { join } from 'path';
 
 describe('Parser', () => {
-    const parser: Parser = new Parser()
+    const parser: Parser = new Parser();
 
     async function getTestCase(key: number): Promise<TestCase> {
-        const testCases: TestCase[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
+        const testCases: TestCase[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
 
-        return testCases[key]
+        return testCases[key];
     }
 
     it('it should parse passed', async () => {
-        const testCase = await getTestCase(0)
+        const testCase = await getTestCase(0);
 
         expect(testCase).toEqual({
             name: 'testPassed',
@@ -22,11 +22,11 @@ describe('Parser', () => {
             line: 12,
             time: 0.006241,
             type: Type.PASSED,
-        })
-    })
+        });
+    });
 
     it('it should parse failed', async () => {
-        const testCase = await getTestCase(1)
+        const testCase = await getTestCase(1);
 
         expect(testCase).toEqual({
             name: 'testFailed',
@@ -41,11 +41,11 @@ describe('Parser', () => {
                 message: ['PHPUnitTest::testFailed', 'Failed asserting that false is true.'].join('\n'),
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should parse error', async () => {
-        const testCase = await getTestCase(2)
+        const testCase = await getTestCase(2);
 
         expect(testCase).toEqual({
             name: 'testError',
@@ -63,11 +63,11 @@ describe('Parser', () => {
                 ].join('\n'),
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should parse skipped', async () => {
-        const testCase = await getTestCase(3)
+        const testCase = await getTestCase(3);
 
         expect(testCase).toEqual({
             name: 'testSkipped',
@@ -82,11 +82,11 @@ describe('Parser', () => {
                 message: 'Skipped Test',
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should parse incomplete', async () => {
-        const testCase = await getTestCase(4)
+        const testCase = await getTestCase(4);
 
         expect(testCase).toEqual({
             name: 'testIncomplete',
@@ -101,11 +101,11 @@ describe('Parser', () => {
                 message: 'Incomplete Test',
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should parse exception', async () => {
-        const testCase = await getTestCase(5)
+        const testCase = await getTestCase(5);
 
         expect(testCase).toEqual({
             name: 'testReceive',
@@ -123,11 +123,11 @@ describe('Parser', () => {
                 ].join('\n'),
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should get current error message when mockery call not correct.', async () => {
-        const testCase = await getTestCase(6)
+        const testCase = await getTestCase(6);
 
         expect(testCase).toEqual({
             name: 'testCleanDirectory',
@@ -146,11 +146,11 @@ describe('Parser', () => {
                 ].join('\n'),
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should be skipped when testcase has skipped tag', async () => {
-        const testCase = await getTestCase(7)
+        const testCase = await getTestCase(7);
 
         expect(testCase).toEqual({
             name: 'testSkipped',
@@ -165,11 +165,11 @@ describe('Parser', () => {
                 message: '',
                 details: jasmine.anything(),
             },
-        })
-    })
+        });
+    });
 
     it('it should be skipped when testcase has skipped tag', async () => {
-        const testCase = await getTestCase(8)
+        const testCase = await getTestCase(8);
 
         expect(testCase).toEqual({
             name: 'testIncomplete',
@@ -184,6 +184,6 @@ describe('Parser', () => {
                 message: '',
                 details: jasmine.anything(),
             },
-        })
-    })
-})
+        });
+    });
+});

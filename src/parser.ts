@@ -1,5 +1,5 @@
-import { parseString } from 'xml2js'
-import { readFile } from 'fs'
+import { parseString } from 'xml2js';
+import { readFile } from 'fs';
 
 export enum Type {
     PASSED = 'passed',
@@ -21,58 +21,58 @@ export const TypeGroup = new Map<Type, Type>([
     [Type.RISKY, Type.ERROR],
     [Type.SKIPPED, Type.SKIPPED],
     [Type.FAILED, Type.ERROR],
-])
+]);
 
-export const TypeKeys = [Type.PASSED, Type.ERROR, Type.INCOMPLETE, Type.SKIPPED]
+export const TypeKeys = [Type.PASSED, Type.ERROR, Type.INCOMPLETE, Type.SKIPPED];
 
 export interface Detail {
-    file: string
-    line: number
+    file: string;
+    line: number;
 }
 
 export interface Fault {
-    message: string
-    type?: string
-    details?: Detail
+    message: string;
+    type?: string;
+    details?: Detail;
 }
 
 export interface TestCase {
-    name: string
-    class: string
-    classname?: string
-    file: string
-    line: number
-    time: number
-    type: Type
-    fault?: Fault
+    name: string;
+    class: string;
+    classname?: string;
+    file: string;
+    line: number;
+    time: number;
+    type: Type;
+    fault?: Fault;
 }
 
 export class Parser {
     async parseString(str: string): Promise<TestCase[]> {
-        const json = await this.xml2json(str)
+        const json = await this.xml2json(str);
 
-        return this.parseTestSuite(json.testsuites)
+        return this.parseTestSuite(json.testsuites);
     }
 
     async parseXML(fileName: string): Promise<TestCase[]> {
-        const xmlContent = await this.readFileAsync(fileName)
+        const xmlContent = await this.readFileAsync(fileName);
 
-        return this.parseString(xmlContent)
+        return this.parseString(xmlContent);
     }
 
     private parseTestSuite(testSuitNode: any): TestCase[] {
-        let testCase: TestCase[] = []
+        let testCase: TestCase[] = [];
         if (testSuitNode.testsuite) {
-            testCase = testCase.concat(...testSuitNode.testsuite.map(this.parseTestSuite.bind(this)))
+            testCase = testCase.concat(...testSuitNode.testsuite.map(this.parseTestSuite.bind(this)));
         } else if (testSuitNode.testcase) {
-            testCase = testCase.concat(...testSuitNode.testcase.map(this.parseTestCase.bind(this)))
+            testCase = testCase.concat(...testSuitNode.testcase.map(this.parseTestCase.bind(this)));
         }
 
-        return testCase
+        return testCase;
     }
 
     private parseTestCase(testCaseNode: any): TestCase {
-        const testCaseNodeAttr = testCaseNode.$
+        const testCaseNodeAttr = testCaseNode.$;
 
         const testCase: TestCase = {
             name: testCaseNodeAttr.name || null,
@@ -82,21 +82,21 @@ export class Parser {
             line: parseInt(testCaseNodeAttr.line || 1, 10) - 1,
             time: parseFloat(testCaseNodeAttr.time || 0),
             type: Type.PASSED,
-        }
+        };
 
-        const faultNode = this.getFaultNode(testCaseNode)
+        const faultNode = this.getFaultNode(testCaseNode);
 
         if (faultNode === null) {
-            return testCase
+            return testCase;
         }
 
-        const faultNodeAttr = faultNode.$
-        let message: string = this.parseMessage(faultNode)
-        const details: Detail[] = this.parseDetails(message)
+        const faultNodeAttr = faultNode.$;
+        let message: string = this.parseMessage(faultNode);
+        const details: Detail[] = this.parseDetails(message);
 
         details.forEach((detail: Detail) => {
-            message = message.replace(`${detail.file}:${detail.line + 1}`, '').trim()
-        })
+            message = message.replace(`${detail.file}:${detail.line + 1}`, '').trim();
+        });
 
         return Object.assign(testCase, this.currentFile(details, testCase), {
             type: faultNode.type,
@@ -105,18 +105,18 @@ export class Parser {
                 message: message.trim(),
                 details: details.filter((detail: Detail) => detail.file !== testCase.file),
             },
-        })
+        });
     }
 
     private currentFile(details: Detail[], testCase: TestCase) {
-        details = details.filter((detail: Detail) => testCase.file === detail.file)
+        details = details.filter((detail: Detail) => testCase.file === detail.file);
 
         return details.length !== 0
             ? details[details.length - 1]
             : {
                   file: testCase.file,
                   line: testCase.line,
-              }
+              };
     }
 
     private getFaultNode(testCaseNode: any): any {
@@ -126,7 +126,7 @@ export class Parser {
                     type: this.parseErrorType(testCaseNode.error[0]),
                 },
                 testCaseNode.error[0]
-            )
+            );
         }
 
         if (testCaseNode.warning) {
@@ -135,7 +135,7 @@ export class Parser {
                     type: Type.WARNING,
                 },
                 testCaseNode.warning[0]
-            )
+            );
         }
 
         if (testCaseNode.failure) {
@@ -144,7 +144,7 @@ export class Parser {
                     type: Type.FAILURE,
                 },
                 testCaseNode.failure[0]
-            )
+            );
         }
 
         if (testCaseNode.skipped || testCaseNode.incomplete) {
@@ -154,14 +154,14 @@ export class Parser {
                     type: Type.SKIPPED,
                 },
                 _: '',
-            }
+            };
         }
 
-        return null
+        return null;
     }
 
     private parseMessage(faultNode: any): string {
-        return this.crlf2lf(faultNode._)
+        return this.crlf2lf(faultNode._);
     }
 
     private parseDetails(message: string): Detail[] {
@@ -170,50 +170,50 @@ export class Parser {
             .map(line => line.trim())
             .filter(line => /(.*):(\d+)$/.test(line))
             .map(path => {
-                const [, file, line] = path.match(/(.*):(\d+)/)
+                const [, file, line] = path.match(/(.*):(\d+)/);
 
                 return {
                     file,
                     line: parseInt(line, 10) - 1,
-                }
-            })
+                };
+            });
     }
 
     private parseErrorType(errorNode: any): Type {
-        const errorType = errorNode.$.type.toLowerCase()
+        const errorType = errorNode.$.type.toLowerCase();
 
         if (errorType.indexOf(Type.SKIPPED) !== -1) {
-            return Type.SKIPPED
+            return Type.SKIPPED;
         }
 
         if (errorType.indexOf(Type.INCOMPLETE) !== -1) {
-            return Type.INCOMPLETE
+            return Type.INCOMPLETE;
         }
 
         if (errorType.indexOf(Type.FAILED) !== -1) {
-            return Type.FAILED
+            return Type.FAILED;
         }
 
-        return Type.ERROR
+        return Type.ERROR;
     }
 
     private crlf2lf(str: string): string {
-        return str.replace(/\r\n/g, '\n')
+        return str.replace(/\r\n/g, '\n');
     }
 
     private readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {
         return new Promise((resolve, reject) => {
             readFile(filePath, encoding, (error, data) => {
-                return error ? reject(error) : resolve(data)
-            })
-        })
+                return error ? reject(error) : resolve(data);
+            });
+        });
     }
 
     private xml2json(xml: string): Promise<any> {
         return new Promise((resolve, reject) => {
             parseString(xml, (error, json) => {
-                return error ? reject(error) : resolve(json)
-            })
-        })
+                return error ? reject(error) : resolve(json);
+            });
+        });
     }
 }

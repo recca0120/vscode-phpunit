@@ -1,32 +1,32 @@
-import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode'
-import { TestCase, Type, TypeKeys } from './parser'
+import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
+import { TestCase, Type, TypeKeys } from './parser';
 
-import { Project } from './tester'
-import { Store } from './store'
-import { resolve } from 'path'
+import { Project } from './tester';
+import { Store } from './store';
+import { resolve } from 'path';
 
 export class DecorateManager {
-    private styles: Map<Type, TextEditorDecorationType>
-    private extensionPath: string
-    private window: any
+    private styles: Map<Type, TextEditorDecorationType>;
+    private extensionPath: string;
+    private window: any;
 
     constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
-        this.extensionPath = project.extensionPath
-        this.window = project.window
+        this.extensionPath = project.extensionPath;
+        this.window = project.window;
 
         this.styles = TypeKeys.reduce((styles, type: Type) => {
-            return styles.set(type, this.createTextEditorDecorationType(this.decorationStyle.get(type)))
-        }, new Map<Type, TextEditorDecorationType>())
+            return styles.set(type, this.createTextEditorDecorationType(this.decorationStyle.get(type)));
+        }, new Map<Type, TextEditorDecorationType>());
     }
 
     decoratedGutter(store: Store, editor: TextEditor): this {
         if (!editor.setDecorations) {
-            return this
+            return this;
         }
 
-        const fileName = editor.document.fileName
+        const fileName = editor.document.fileName;
         if (store.has(fileName) === false) {
-            return this
+            return this;
         }
 
         store.getByType(fileName).forEach((testCases: TestCase[], state) => {
@@ -36,44 +36,44 @@ export class DecorateManager {
                     range: new Range(testCase.line, 0, testCase.line, 0),
                     hoverMessage: testCase.type,
                 }))
-            )
-        })
+            );
+        });
 
-        return this
+        return this;
     }
 
     clearDecoratedGutter(editor: TextEditor): this {
-        Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []))
+        Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []));
 
-        return this
+        return this;
     }
 
     private createTextEditorDecorationType(style: DecorationType) {
-        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath)
-        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath)
+        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
+        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
 
-        return this.window.createTextEditorDecorationType(style)
+        return this.window.createTextEditorDecorationType(style);
     }
 
     private gutterIconPath(img: string): string {
-        return resolve(this.extensionPath, 'images', img)
+        return resolve(this.extensionPath, 'images', img);
     }
 }
 
 export interface DecorationType {
-    overviewRulerColor: string
-    overviewRulerLane: OverviewRulerLane
+    overviewRulerColor: string;
+    overviewRulerLane: OverviewRulerLane;
     light: {
-        gutterIconPath: string
-    }
+        gutterIconPath: string;
+    };
     dark: {
-        gutterIconPath: string
-    }
+        gutterIconPath: string;
+    };
 }
 
 export class DecorationStyle {
     get(type: Type): DecorationType {
-        return this[type]()
+        return this[type]();
     }
 
     passed(): DecorationType {
@@ -86,7 +86,7 @@ export class DecorationStyle {
             dark: {
                 gutterIconPath: 'passed.svg',
             },
-        }
+        };
     }
 
     error(): DecorationType {
@@ -99,7 +99,7 @@ export class DecorationStyle {
             dark: {
                 gutterIconPath: 'failed.svg',
             },
-        }
+        };
     }
 
     skipped(): DecorationType {
@@ -112,10 +112,10 @@ export class DecorationStyle {
             light: {
                 gutterIconPath: 'skipped.svg',
             },
-        }
+        };
     }
 
     incomplete(): DecorationType {
-        return this.skipped()
+        return this.skipped();
     }
 }
