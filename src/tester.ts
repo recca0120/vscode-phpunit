@@ -1,9 +1,11 @@
-import { Command, PHPUnit, State, Validator } from './phpunit';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { PHPUnit, State } from './phpunit';
 
+import { Command } from './command';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
+import { Validator } from './validator';
 
 export class Project {
     constructor(public window: any, public workspace: any, public extensionPath: string) {}
