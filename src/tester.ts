@@ -100,10 +100,10 @@ export class Tester {
             return;
         }
 
-        const { execPath, args, junitPath } = this.config;
+        const { execPath, args } = this.config;
 
         this.phpunit
-            .handle(new Command(fileName, args, execPath, this.workspace.rootPath, junitPath))
+            .handle(new Command(fileName, args, execPath, this.workspace.rootPath))
             .then(testCases => {
                 this.store.put(testCases);
                 this.decoratedGutter();

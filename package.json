@@ -30,11 +30,6 @@
                     "type": "array",
                     "default": [],
                     "description": "Any phpunit args (phpunit --help)"
-                },
-                "phpunit.junitPath": {
-                    "type": "string",
-                    "default": "",
-                    "description": "junitPath"
                 }
             }
         }
