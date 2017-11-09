@@ -11,13 +11,16 @@ describe('PHPUnit Tests', () => {
         const process = new Process();
         const phpunit = new PHPUnit(parser, processFactory);
         const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
+        const files = new Filesystem();
+
+        spyOn(files, 'find').and.returnValue('phpunit');
         spyOn(processFactory, 'create').and.returnValue(process);
         spyOn(parser, 'parseXML').and.returnValue(Promise.resolve(tests));
         spyOn(process, 'spawn').and.callFake(() => {
             process.emit('exit');
         });
 
-        const command = new Command('foo.php', []);
+        const command = new Command('foo.php', [], '', '', '', files);
         const result = await phpunit.handle(command);
 
         expect(parser.parseXML).toHaveBeenCalled();
