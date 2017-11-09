@@ -20,7 +20,15 @@ describe('PHPUnit Tests', () => {
             process.emit('exit');
         });
 
-        const command = new Command('foo.php', [], '', '', '', files);
+        const command = new Command(
+            'foo.php',
+            [],
+            '',
+            {
+                rootPath: '',
+            },
+            files
+        );
         const result = await phpunit.handle(command);
 
         expect(parser.parseXML).toHaveBeenCalled();
@@ -54,7 +62,16 @@ describe('Command Tests', () => {
         spyOn(files, 'find').and.returnValue('phpunit');
         spyOn(files, 'tmpfile').and.returnValue(xml);
 
-        const command = new Command(filePath, args, execPath, rootPath, junitPath, files);
+        const command = new Command(
+            filePath,
+            args,
+            execPath,
+            {
+                rootPath,
+                junitPath,
+            },
+            files
+        );
 
         expect(command.toArray()).toEqual(['phpunit', '--log-junit', xml, filePath]);
 
@@ -71,7 +88,7 @@ describe('Command Tests', () => {
         const xml = 'foo.xml';
         spyOn(files, 'tmpfile').and.returnValue(xml);
 
-        const command = new Command(filePath, args, execPath, rootPath, junitPath, files);
+        const command = new Command(filePath, args, execPath, { rootPath, junitPath }, files);
 
         expect(command.toArray()).toEqual([execPath, '--log-junit', xml, filePath]);
 
@@ -89,7 +106,7 @@ describe('Command Tests', () => {
         spyOn(files, 'tmpfile').and.returnValue(xml);
         spyOn(files, 'exists').and.returnValue(true);
 
-        const command = new Command(filePath, args, execPath, rootPath, junitPath, files);
+        const command = new Command(filePath, args, execPath, { rootPath, junitPath }, files);
 
         expect(command.toArray()).toEqual([
             execPath,
@@ -122,7 +139,7 @@ describe('Command Tests', () => {
         spyOn(files, 'tmpfile').and.returnValue(xml);
         spyOn(files, 'exists').and.returnValue(true);
 
-        const command = new Command(filePath, args, execPath, rootPath, junitPath, files);
+        const command = new Command(filePath, args, execPath, { rootPath, junitPath }, files);
 
         expect(command.toArray()).toEqual([
             execPath,

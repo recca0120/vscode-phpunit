@@ -45,6 +45,10 @@ export class PHPUnit extends EventEmitter {
     }
 }
 
+interface CommandOptions {
+    rootPath: string;
+}
+
 export class Command {
     private xml: string;
 
@@ -52,12 +56,13 @@ export class Command {
         private fileName: string,
         private args: Array<string> = [],
         private execPath: string = '',
-        public rootPath: string = __dirname,
-        public junitPath: string = '',
+        public options: CommandOptions = {
+            rootPath: __dirname,
+        },
         private files = new Filesystem()
     ) {
         this.execPath = !this.execPath || this.execPath.trim() === 'phpunit' ? this.getExecutable() : this.execPath;
-        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`, junitPath);
+        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`);
     }
 
     getXML() {
@@ -130,7 +135,7 @@ export class Command {
     private getConfiguration(): Array<string> {
         const configurationFiles = ['phpunit.xml', 'phpunit.xml.dist'];
         for (let i = 0; i < configurationFiles.length; i++) {
-            const configurationFile = `${this.rootPath}/${configurationFiles[i]}`;
+            const configurationFile = `${this.options.rootPath}/${configurationFiles[i]}`;
             if (this.files.exists(configurationFile) === true) {
                 return ['--configuration', configurationFile];
             }
@@ -140,7 +145,11 @@ export class Command {
     }
 
     private getExecutable(): string {
-        const paths = [`${this.rootPath}/vendor/bin/phpunit`, `${this.rootPath}/phpunit.phar`, 'phpunit'];
+        const paths = [
+            `${this.options.rootPath}/vendor/bin/phpunit`,
+            `${this.options.rootPath}/phpunit.phar`,
+            'phpunit',
+        ];
         const commands = paths.map(path => this.files.find(path)).filter(command => command !== '');
 
         return commands.length === 0 ? '' : commands[0];

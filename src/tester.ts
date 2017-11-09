@@ -103,7 +103,11 @@ export class Tester {
         const { execPath, args } = this.config;
 
         this.phpunit
-            .handle(new Command(fileName, args, execPath, this.workspace.rootPath))
+            .handle(
+                new Command(fileName, args, execPath, {
+                    rootPath: this.workspace.rootPath,
+                })
+            )
             .then(testCases => {
                 this.store.put(testCases);
                 this.decoratedGutter();
