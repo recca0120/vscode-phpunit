@@ -1,5 +1,8 @@
 {
     "extends": ["tslint-config-prettier"],
+    "env": {
+      "jest": true
+    },
     "rules": {
       "class-name": true,
       "curly": true,
