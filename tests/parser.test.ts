@@ -6,9 +6,9 @@ describe('Parser', () => {
     const parser: Parser = new Parser()
 
     async function getTestCase(key: number): Promise<TestCase> {
-        const testCase: TestCase[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
+        const testCases: TestCase[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'))
 
-        return testCase[key]
+        return testCases[key]
     }
 
     it('it should parse passed', async () => {

@@ -2,7 +2,6 @@ import { PHPUnit, Process, Validator } from '../src/phpunit'
 
 import { Filesystem } from './../src/filesystem'
 import { Parser } from '../src/parser'
-import { Project } from '../src/tester'
 import { join } from 'path'
 
 describe('PHPUnit Tests', () => {
