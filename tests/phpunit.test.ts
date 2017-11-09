@@ -10,7 +10,7 @@ describe('PHPUnit Tests', () => {
         const process = new Process();
         const phpunit = new PHPUnit(parser, process);
         const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
-        spyOn(parser, 'parseXML').and.returnValue(tests);
+        spyOn(parser, 'parseXML').and.returnValue(Promise.resolve(tests));
         spyOn(process, 'spawn').and.callFake(() => {
             process.emit('exit');
         });
@@ -51,6 +51,8 @@ describe('Command Tests', () => {
         const command = new Command(filePath, args, execPath, rootPath, files);
 
         expect(command.getArguments()).toEqual(['phpunit', filePath, '--log-junit', xml]);
+
+        command.clear();
     });
 
     it('get arguments with exec path', () => {
@@ -65,6 +67,8 @@ describe('Command Tests', () => {
         const command = new Command(filePath, args, execPath, rootPath, files);
 
         expect(command.getArguments()).toEqual([execPath, filePath, '--log-junit', xml]);
+
+        command.clear();
     });
 
     it('get arguments with exec path and args', () => {
@@ -79,6 +83,8 @@ describe('Command Tests', () => {
         const command = new Command(filePath, args, execPath, rootPath, files);
 
         expect(command.getArguments()).toEqual([execPath, filePath, '--log-junit', xml, '--foo', 'bar']);
+
+        command.clear();
     });
 
     it('get arguments with configuration', () => {
@@ -101,6 +107,8 @@ describe('Command Tests', () => {
             '--configuration',
             `${rootPath}/phpunit.xml`,
         ]);
+
+        command.clear();
     });
 });
 

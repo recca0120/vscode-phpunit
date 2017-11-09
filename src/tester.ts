@@ -4,19 +4,13 @@ import { Disposable, TextDocument, TextEditor } from 'vscode';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
-import { TestCase } from './parser';
 
-export interface Config {
-    execPath: string;
-    args: Array<String>;
-}
+export class Project {
+    constructor(public window: any, public workspace: any, public extensionPath: string) {}
 
-export interface Project {
-    window?: any;
-    workspace?: any;
-    rootPath?: string;
-    extensionPath?: string;
-    config?: Config;
+    get rootPath() {
+        return this.workspace.rootPath;
+    }
 }
 
 export class Tester {
@@ -24,6 +18,7 @@ export class Tester {
     private locked = false;
     private window: any;
     private workspace: any;
+    private config: any;
 
     constructor(
         project: Project,
@@ -35,12 +30,20 @@ export class Tester {
     ) {
         this.window = project.window;
         this.workspace = project.workspace;
+        this.config = this.workspace.getConfiguration('phpunit');
     }
 
     subscribe(): this {
         const subscriptions: Disposable[] = [];
 
         // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
+        this.workspace.onDidChangeConfiguration(
+            () => {
+                this.config = this.workspace.getConfiguration('phpunit');
+            },
+            null,
+            subscriptions
+        );
         this.workspace.onWillSaveTextDocument(() => this.unlock().handle(), null, subscriptions);
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
@@ -71,7 +74,11 @@ export class Tester {
         return this.locked;
     }
 
-    async handle() {
+    handle() {
+        if (this.hasEditor === false) {
+            return;
+        }
+
         const fileName = this.document.fileName;
 
         if (this.validator.fileName(fileName) === false) {
@@ -86,26 +93,29 @@ export class Tester {
             return;
         }
 
-        try {
-            this.clearDecoratedGutter();
+        this.clearDecoratedGutter();
 
-            if (this.isLocked() === true && this.store.has(fileName) === true) {
-                this.decoratedGutter();
-                this.handleDiagnostic();
-
-                return;
-            }
-
-            const command = new Command(fileName, [], '', this.workspace.rootPath);
-
-            const testCases: TestCase[] = await this.phpunit.handle(command);
-            this.store.put(testCases);
-
+        if (this.isLocked() === true && this.store.has(fileName) === true) {
             this.decoratedGutter();
             this.handleDiagnostic();
-        } catch (e) {
-            console.error(e);
+
+            return;
         }
+
+        const { execPath, args } = this.config;
+
+        this.phpunit
+            .handle(new Command(fileName, args, execPath, this.workspace.rootPath))
+            .then(testCases => {
+                this.store.put(testCases);
+                this.decoratedGutter();
+                this.handleDiagnostic();
+            })
+            .catch(error => {
+                this.decoratedGutter();
+                this.handleDiagnostic();
+                console.error(error);
+            });
     }
 
     dispose() {

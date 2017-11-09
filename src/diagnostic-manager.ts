@@ -45,7 +45,6 @@ export class DiagnosticManager {
 
             return diagnostic;
         } catch (e) {
-            console.error(e);
             return null;
         }
     }

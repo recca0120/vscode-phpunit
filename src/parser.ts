@@ -33,7 +33,7 @@ export interface Detail {
 export interface Fault {
     message: string;
     type?: string;
-    details?: Detail;
+    details?: Detail[];
 }
 
 export interface TestCase {
@@ -48,16 +48,12 @@ export interface TestCase {
 }
 
 export class Parser {
-    async parseString(str: string): Promise<TestCase[]> {
-        const json = await this.xml2json(str);
-
-        return this.parseTestSuite(json.testsuites);
+    parseString(content: string): Promise<TestCase[]> {
+        return this.xml2json(content).then(json => this.parseTestSuite(json.testsuites));
     }
 
-    async parseXML(fileName: string): Promise<TestCase[]> {
-        const xmlContent = await this.readFileAsync(fileName);
-
-        return this.parseString(xmlContent);
+    parseXML(fileName: string): Promise<TestCase[]> {
+        return this.readFileAsync(fileName).then((content: string) => this.parseString(content));
     }
 
     private parseTestSuite(testSuitNode: any): TestCase[] {
