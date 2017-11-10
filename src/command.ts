@@ -33,17 +33,11 @@ export class Command {
             throw State.PHPUNIT_NOT_FOUND;
         }
 
-        return [
-            [execPath],
-            this.parseOptions(
-                this.getConfiguration()
-                    .concat(this.args)
-                    .concat(['--log-junit', this.getXML()])
-            ),
-            [this.fileName],
-        ].reduce((result, next) => {
-            return result.concat(next);
-        }, []);
+        const args = this.getConfiguration()
+            .concat(this.args)
+            .concat(['--log-junit', this.getXML()]);
+
+        return [execPath].concat(this.parseOptions(args)).concat([this.fileName]);
     }
 
     clear() {

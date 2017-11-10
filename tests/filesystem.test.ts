@@ -1,10 +1,11 @@
 import { Filesystem } from '../src/filesystem';
+import { isWindows } from '../src/helpers';
 import { join } from 'path';
 
 describe('Filesystem Tests', () => {
     it('find command', () => {
         const filesystem = new Filesystem();
-        if (filesystem.isWindows() === true) {
+        if (isWindows() === true) {
             expect(filesystem.find('cmd').toLowerCase()).toEqual('C:\\Windows\\System32\\cmd.exe'.toLowerCase());
         } else {
             expect(filesystem.find('ls').toLowerCase()).toEqual('/bin/ls');

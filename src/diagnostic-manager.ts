@@ -11,6 +11,7 @@ import {
 import { TestCase, Type } from './parser';
 
 import { Store } from './store';
+import { tap } from './helpers';
 
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
@@ -20,9 +21,7 @@ export class DiagnosticManager {
             this.diagnostics.set(
                 Uri.file(file),
                 testCases
-                    .filter((testCase: TestCase) => {
-                        return testCase.type !== Type.PASSED;
-                    })
+                    .filter((testCase: TestCase) => testCase.type !== Type.PASSED)
                     .map(testCase => this.convertToDiagnostic(testCase, editor))
                     .filter(diagnostic => diagnostic !== null)
             );
@@ -36,14 +35,16 @@ export class DiagnosticManager {
 
     private convertToDiagnostic(testCase: TestCase, editor?: TextEditor): Diagnostic {
         try {
-            const diagnostic: Diagnostic = new Diagnostic(
-                this.convertToRange(testCase, editor),
-                testCase.fault.message,
-                testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+            return tap(
+                new Diagnostic(
+                    this.convertToRange(testCase, editor),
+                    testCase.fault.message,
+                    testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+                ),
+                (diagnostic: Diagnostic) => {
+                    diagnostic.source = 'PHPUnit';
+                }
             );
-            diagnostic.source = 'PHPUnit';
-
-            return diagnostic;
         } catch (e) {
             return null;
         }

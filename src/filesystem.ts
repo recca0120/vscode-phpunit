@@ -1,5 +1,6 @@
 import { accessSync, existsSync, readFileSync, unlinkSync } from 'fs';
 
+import { isWindows } from './helpers';
 import { resolve as pathResolve } from 'path';
 import { spawnSync } from 'child_process';
 import { tmpdir } from 'os';
@@ -7,16 +8,9 @@ import { tmpdir } from 'os';
 interface FilesystemInterface {
     find(file: string): string;
     exists(file: string): boolean;
-    isWindows(): boolean;
 }
 
 abstract class AbstractFilesystem {
-    platform = process.platform;
-
-    isWindows(): boolean {
-        return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(this.platform);
-    }
-
     protected normalize(buffer: Buffer) {
         return buffer
             .toString()
@@ -68,11 +62,9 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
 
 class Unix extends AbstractFilesystem implements FilesystemInterface {
     find(fileName: string): string {
-        if (existsSync(fileName)) {
-            return pathResolve(fileName);
-        }
-
-        return this.normalize(new Buffer(spawnSync('which', [fileName]).output.join('')));
+        return this.exists(fileName)
+            ? pathResolve(fileName)
+            : this.normalize(new Buffer(spawnSync('which', [fileName]).output.join('')));
     }
 
     exists(file: string): boolean {
@@ -81,8 +73,7 @@ class Unix extends AbstractFilesystem implements FilesystemInterface {
 }
 
 const cache = new Map<string, string>();
-const windows = new Windows();
-const unix = new Unix();
+const instance = isWindows() ? new Windows() : new Unix();
 
 export class Filesystem extends AbstractFilesystem {
     private instance: FilesystemInterface;
@@ -91,7 +82,7 @@ export class Filesystem extends AbstractFilesystem {
 
     constructor() {
         super();
-        this.instance = this.isWindows() ? windows : unix;
+        this.instance = instance;
         this.cache = cache;
     }
 
