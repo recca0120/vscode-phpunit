@@ -1,4 +1,4 @@
-import { Parser, TestCase } from './parser';
+import { JUnitParser, ParserFactory, TestCase } from './parser';
 
 import { Command } from './command';
 import { EventEmitter } from 'events';
@@ -12,12 +12,13 @@ export enum State {
 }
 
 export class PHPUnit extends EventEmitter {
-    constructor(private parser = new Parser(), private processFactory = new ProcessFactory()) {
+    constructor(private parserFactory = new ParserFactory(), private processFactory = new ProcessFactory()) {
         super();
     }
 
     handle(command: Command): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
+            const parser = this.parserFactory.create('junit');
             const args = command.toArray();
             const xml = command.getXML();
 
@@ -29,8 +30,8 @@ export class PHPUnit extends EventEmitter {
                 .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
                 .on('exit', () => {
                     this.emit('stdout', '\n\n');
-                    this.parser
-                        .parseXML(xml)
+                    parser
+                        .parse(xml)
                         .then(testCases => {
                             resolve(testCases);
                             command.clear();

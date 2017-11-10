@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 
-import { TestCase, Type, TypeKeys } from '../src/parser';
+import { TestCase, Type, TypeKeys } from '../src/parser/parser';
 
 import { Store } from '../src/store';
 import { resolve } from 'path';

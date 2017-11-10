@@ -1,12 +1,12 @@
-import { Parser, TestCase, Type } from '../src/parser';
+import { JUnitParser, TestCase, Type } from '../src/parser';
 
-import { join } from 'path';
+import { join as pathJoin } from 'path';
 
-describe('Parser', () => {
-    const parser: Parser = new Parser();
+describe('JUnit Parser', () => {
+    const parser: JUnitParser = new JUnitParser();
 
     async function getTestCase(key: number): Promise<TestCase> {
-        const testCases: TestCase[] = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
+        const testCases: TestCase[] = await parser.parse(pathJoin(__dirname, 'fixtures/junit.xml'));
 
         return testCases[key];
     }

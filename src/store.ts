@@ -1,4 +1,4 @@
-import { TestCase, Type, TypeGroup, TypeKeys } from './parser';
+import { TestCase, Type, TypeGroup, TypeKeys } from './parser/parser';
 
 export class Store extends Map<string, TestCase[]> {
     constructor(testCases: TestCase[] = [], items: Map<string, TestCase[]> = new Map<string, TestCase[]>()) {

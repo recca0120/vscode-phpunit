@@ -1,23 +1,25 @@
+import { JUnitParser, ParserFactory } from '../src/parser';
 import { Process, ProcessFactory } from '../src/process';
 
 import { Command } from '../src/command';
 import { Filesystem } from './../src/filesystem';
 import { PHPUnit } from '../src/phpunit';
-import { Parser } from '../src/parser';
 import { join } from 'path';
 
 describe('PHPUnit Tests', () => {
     it('get error messages', async () => {
-        const parser = new Parser();
+        const parserFactory = new ParserFactory();
+        const parser = new JUnitParser();
         const processFactory = new ProcessFactory();
         const process = new Process();
-        const phpunit = new PHPUnit(parser, processFactory);
-        const tests = await parser.parseXML(join(__dirname, 'fixtures/junit.xml'));
+        const phpunit = new PHPUnit(parserFactory, processFactory);
+        const tests = await parser.parse(join(__dirname, 'fixtures/junit.xml'));
         const files = new Filesystem();
 
         spyOn(files, 'find').and.returnValue('phpunit');
+        spyOn(parserFactory, 'create').and.returnValue(parser);
         spyOn(processFactory, 'create').and.returnValue(process);
-        spyOn(parser, 'parseXML').and.returnValue(Promise.resolve(tests));
+        spyOn(parser, 'parse').and.returnValue(Promise.resolve(tests));
         spyOn(process, 'spawn').and.callFake(() => {
             process.emit('exit');
         });
@@ -33,7 +35,7 @@ describe('PHPUnit Tests', () => {
         );
         const result = await phpunit.handle(command);
 
-        expect(parser.parseXML).toHaveBeenCalled();
+        expect(parser.parse).toHaveBeenCalled();
         expect(process.spawn).toHaveBeenCalled();
         expect(result).toBe(tests);
     });

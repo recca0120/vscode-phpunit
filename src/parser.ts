@@ -47,7 +47,15 @@ export interface TestCase {
     fault?: Fault;
 }
 
-export class Parser {
+export interface Parser {
+    parse(string: any): Promise<TestCase[]>;
+}
+
+export class JUnitParser implements Parser {
+    parse(fileName: string): Promise<TestCase[]> {
+        return this.parseXML(fileName);
+    }
+
     parseString(content: string): Promise<TestCase[]> {
         return this.xml2json(content).then(json => this.parseTestSuite(json.testsuites));
     }
@@ -211,5 +219,14 @@ export class Parser {
                 return error ? reject(error) : resolve(json);
             });
         });
+    }
+}
+
+export class ParserFactory {
+    public create(className): Parser {
+        switch (className) {
+            default:
+                return new JUnitParser();
+        }
     }
 }

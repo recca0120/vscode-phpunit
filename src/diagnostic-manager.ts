@@ -8,7 +8,7 @@ import {
     TextLine,
     Uri,
 } from 'vscode';
-import { TestCase, Type } from './parser';
+import { TestCase, Type } from './parser/parser';
 
 import { Store } from './store';
 import { tap } from './helpers';

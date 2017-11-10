@@ -71,7 +71,7 @@
             "^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
         },
         "testMatch": [
-            "**/tests/*.(ts|tsx|js)"
+            "**/tests/**/*.(ts|tsx|js)"
         ]
     },
     "keywords": [

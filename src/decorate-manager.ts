@@ -1,5 +1,5 @@
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
-import { TestCase, Type, TypeKeys } from './parser';
+import { TestCase, Type, TypeKeys } from './parser/parser';
 
 import { Project } from './tester';
 import { Store } from './store';
