@@ -18,10 +18,10 @@ export function readFileAsync(filePath: string, encoding = 'utf8'): Promise<stri
     });
 }
 
-const cache: Map<string, Array<string>> = new Map<string, Array<string>>();
+const cache: Map<string, string[]> = new Map<string, string[]>();
 
 export class LineData {
-    private cache: Map<string, Array<string>>;
+    private cache: Map<string, string[]>;
 
     constructor() {
         this.cache = cache;
@@ -41,7 +41,7 @@ export class LineData {
         });
     }
 
-    private getLines(file: string): Promise<Array<string>> {
+    private getLines(file: string): Promise<string[]> {
         if (this.cache.has(file) === true) {
             return Promise.resolve(this.cache.get(file));
         }

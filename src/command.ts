@@ -13,7 +13,7 @@ export class Command {
 
     constructor(
         private fileName: string,
-        private args: Array<string> = [],
+        private args: string[] = [],
         private execPath: string = '',
         public options: CommandOptions = {
             rootPath: __dirname,
@@ -50,7 +50,7 @@ export class Command {
         return this.options.rootPath;
     }
 
-    private parseOptions(args: Array<string>) {
+    private parseOptions(args: string[]) {
         const parseOptions = minimist(args);
         const keys = Object.keys(parseOptions).filter(key => key !== '_');
         keys.sort();
@@ -75,7 +75,7 @@ export class Command {
         }, parseOptions._);
     }
 
-    private getConfiguration(): Array<string> {
+    private getConfiguration(): string[] {
         const configurationFile = ['phpunit.xml', 'phpunit.xml.dist']
             .map(configurationFile => `${this.options.rootPath}/${configurationFile}`)
             .find(configurationFile => this.files.exists(configurationFile));

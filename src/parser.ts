@@ -117,18 +117,14 @@ export class JUnitParser extends Parser {
         }
 
         const faultNodeAttr = faultNode.$;
-        let message: string = this.parseMessage(faultNode);
-        const details: Detail[] = this.parseDetails(message);
-
-        details.forEach((detail: Detail) => {
-            message = message.replace(`${detail.file}:${detail.line + 1}`, '').trim();
-        });
+        const details: Detail[] = this.parseDetails(faultNode);
+        const message = this.parseMessage(faultNode, details);
 
         return Object.assign(testCase, this.currentFile(details, testCase), {
             type: faultNode.type,
             fault: {
                 type: faultNodeAttr.type || '',
-                message: message.trim(),
+                message: message,
                 details: details.filter((detail: Detail) => detail.file !== testCase.file),
             },
         });
@@ -186,13 +182,20 @@ export class JUnitParser extends Parser {
         return null;
     }
 
-    private parseMessage(faultNode: any): string {
-        return this.crlf2lf(faultNode._);
+    private parseMessage(faultNode: any, details: Detail[]): string {
+        const messages: string[] = details
+            .reduce((result, detail) => {
+                return result.replace(`${detail.file}:${detail.line + 1}`, '').trim();
+            }, this.crlf2lf(faultNode._))
+            .split(/\r\n|\n/);
+
+        const message = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');
+
+        return faultNode.$.type ? message.replace(new RegExp(`^${faultNode.$.type}:`, 'g'), '').trim() : message.trim();
     }
 
-    private parseDetails(message: string): Detail[] {
-        return message
-            .split('\n')
+    private parseDetails(faultNode: any): Detail[] {
+        return faultNode._.split('\n')
             .map(line => line.trim())
             .filter(line => /(.*):(\d+)$/.test(line))
             .map(path => {
@@ -342,7 +345,7 @@ export class TeamCityParser extends Parser {
         }, []);
     }
 
-    private convertToArguments(content: string): Array<string> {
+    private convertToArguments(content: string): string[] {
         return content
             .split(/\r|\n/)
             .filter(line => /^##teamcity/.test(line))
@@ -352,7 +355,7 @@ export class TeamCityParser extends Parser {
                     .replace(/^##teamcity\[|\]$/g, '')
                     .replace(/\\/g, '/');
 
-                const argv: Array<string> = minimistString(line)._;
+                const argv: string[] = minimistString(line)._;
                 const type: string = argv.shift();
 
                 return argv.reduce(

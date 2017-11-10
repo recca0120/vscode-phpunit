@@ -39,7 +39,7 @@ describe('TeamCityParser', () => {
                 type: Type.FAILURE,
                 fault: {
                     message: 'Failed asserting that false is true.',
-                    details: jasmine.anything(),
+                    details: [],
                 },
             });
         });
@@ -57,7 +57,7 @@ describe('TeamCityParser', () => {
                 type: Type.SKIPPED,
                 fault: {
                     message: 'The MySQLi extension is not available.',
-                    details: jasmine.anything(),
+                    details: [],
                 },
             });
         });
@@ -75,7 +75,7 @@ describe('TeamCityParser', () => {
                 type: Type.SKIPPED,
                 fault: {
                     message: 'This test has not been implemented yet.',
-                    details: jasmine.anything(),
+                    details: [],
                 },
             });
         });
@@ -109,7 +109,7 @@ describe('TeamCityParser', () => {
                 type: Type.FAILURE,
                 fault: {
                     message: 'Failed asserting that false is true.',
-                    details: jasmine.anything(),
+                    details: [],
                 },
             });
         });
@@ -127,7 +127,7 @@ describe('TeamCityParser', () => {
                 type: Type.SKIPPED,
                 fault: {
                     message: 'The MySQLi extension is not available.',
-                    details: jasmine.anything(),
+                    details: [],
                 },
             });
         });
@@ -145,7 +145,7 @@ describe('TeamCityParser', () => {
                 type: Type.SKIPPED,
                 fault: {
                     message: 'This test has not been implemented yet.',
-                    details: jasmine.anything(),
+                    details: [],
                 },
             });
         });
@@ -188,13 +188,13 @@ describe('JUnitParser', () => {
             type: Type.FAILURE,
             fault: {
                 type: 'PHPUnit_Framework_ExpectationFailedException',
-                message: ['PHPUnitTest::testFailed', 'Failed asserting that false is true.'].join('\n'),
-                details: jasmine.anything(),
+                message: 'Failed asserting that false is true.',
+                details: [],
             },
         });
     });
 
-    it('it should parse skipped', async () => {
+    it('it should parse error', async () => {
         const testCase = await getTestCase(2);
 
         expect(testCase).toEqual({
@@ -207,11 +207,9 @@ describe('JUnitParser', () => {
             type: Type.ERROR,
             fault: {
                 type: 'PHPUnit_Framework_Exception',
-                message: [
-                    'PHPUnitTest::testError',
-                    'PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name',
-                ].join('\n'),
-                details: jasmine.anything(),
+                message:
+                    'Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name',
+                details: [],
             },
         });
     });
@@ -230,7 +228,7 @@ describe('JUnitParser', () => {
             fault: {
                 type: 'PHPUnit_Framework_SkippedTestError',
                 message: 'Skipped Test',
-                details: jasmine.anything(),
+                details: [],
             },
         });
     });
@@ -249,7 +247,7 @@ describe('JUnitParser', () => {
             fault: {
                 type: 'PHPUnit_Framework_IncompleteTestError',
                 message: 'Incomplete Test',
-                details: jasmine.anything(),
+                details: [],
             },
         });
     });
@@ -267,11 +265,18 @@ describe('JUnitParser', () => {
             type: Type.ERROR,
             fault: {
                 type: 'BadMethodCallException',
-                message: [
-                    'PHPUnitTest::testReceive',
-                    'BadMethodCallException: Method Mockery_1_Symfony_Component_HttpFoundation_File_UploadedFile::getClientOriginalName() does not exist on this mock object',
-                ].join('\n'),
-                details: jasmine.anything(),
+                message:
+                    'Method Mockery_1_Symfony_Component_HttpFoundation_File_UploadedFile::getClientOriginalName() does not exist on this mock object',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\github\\tester-phpunit\\src\\Receiver.php',
+                        line: 84,
+                    },
+                    {
+                        file: 'C:\\Users\\recca\\github\\tester-phpunit\\src\\Receiver.php',
+                        line: 67,
+                    },
+                ],
             },
         });
     });
@@ -290,11 +295,49 @@ describe('JUnitParser', () => {
             fault: {
                 type: 'Mockery\\Exception\\InvalidCountException',
                 message: [
-                    'Recca0120\\Upload\\Tests\\PHPUnitTest::testCleanDirectory',
                     'Mockery\\Exception\\InvalidCountException: Method delete("C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php") from Mockery_1_Recca0120_Upload_Filesystem should be called',
                     ' exactly 1 times but called 0 times.',
                 ].join('\n'),
-                details: jasmine.anything(),
+                details: [
+                    {
+                        file:
+                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
+                        line: 36,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
+                        line: 297,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
+                        line: 119,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        line: 296,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        line: 281,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery.php',
+                        line: 151,
+                    },
+                    {
+                        file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
+                        line: 187,
+                    },
+                    {
+                        file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
+                        line: 117,
+                    },
+                ],
             },
         });
     });
@@ -313,7 +356,7 @@ describe('JUnitParser', () => {
             fault: {
                 type: 'skipped',
                 message: '',
-                details: jasmine.anything(),
+                details: [],
             },
         });
     });
@@ -332,7 +375,7 @@ describe('JUnitParser', () => {
             fault: {
                 type: 'skipped',
                 message: '',
-                details: jasmine.anything(),
+                details: [],
             },
         });
     });
