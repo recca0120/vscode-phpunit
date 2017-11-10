@@ -8,6 +8,17 @@ Visual PHPUnit for VSCode
 - When using PHPUnit in VSC, you can see a visual result, instead of wordings, after the testing.  This makes testing easier and more anjoyable.
 - The package helps you acchieve with just a few clicks.
 
+### Setup
+- Install phpunit or have phpunit installed through composer.
+- Set the config values
+```JSON
+{
+    "phpunit.execPath": "path/to/phpunit", // If this value is set to '' it will try to use the composer phpunit installation.
+    "phpunit.args": [
+        "--configuration", "./phpunit.xml.dist"
+    ]
+}
+```
 
 ### How to use
 - Install the package
