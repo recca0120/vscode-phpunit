@@ -1,8 +1,32 @@
-import { JUnitParser, TestCase, Type } from '../src/parser';
+import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 
 import { join as pathJoin } from 'path';
 
-describe('JUnit Parser', () => {
+describe('TeamCityParser', () => {
+    const parser: TeamCityParser = new TeamCityParser;
+    
+    async function getTestCase(key: number): Promise<TestCase> {
+        const testCases: TestCase[] = await parser.parseFile(pathJoin(__dirname, 'fixtures/teamcity.txt'));
+
+        return testCases[key];
+    }
+
+    it('it should parse passed', async () => {
+        const testCase = await getTestCase(0);
+
+        // expect(testCase).toEqual({
+        //     name: 'testPassed',
+        //     class: 'PHPUnitTest',
+        //     classname: null,
+        //     file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
+        //     line: 12,
+        //     time: 0.006241,
+        //     type: Type.PASSED,
+        // });
+    });
+});
+
+describe('JUnitParser', () => {
     const parser: JUnitParser = new JUnitParser();
 
     async function getTestCase(key: number): Promise<TestCase> {

@@ -1,6 +1,8 @@
 import { parseString } from 'xml2js';
 import { readFile } from 'fs';
 
+const minimistString = require('minimist-string');
+
 export enum Type {
     PASSED = 'passed',
     ERROR = 'error',
@@ -47,21 +49,47 @@ export interface TestCase {
     fault?: Fault;
 }
 
-export interface Parser {
-    parse(string: any): Promise<TestCase[]>;
+export abstract class Parser {
+    abstract parse(content: any): Promise<TestCase[]>;
+
+    abstract parseString(content: string): Promise<TestCase[]>;
+
+    parseFile(fileName: string): Promise<TestCase[]> {
+        return this.readFileAsync(fileName).then((content: string) => this.parseString(content));
+    }
+
+    protected readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {
+        return new Promise((resolve, reject) => {
+            readFile(filePath, encoding, (error, data) => {
+                return error ? reject(error) : resolve(data);
+            });
+        });
+    }
 }
 
-export class JUnitParser implements Parser {
+export class ParserFactory {
+    private map = {
+        'teamcity': TeamCityParser,
+        'junit': JUnitParser,
+    }
+    
+    public create(name): Parser {
+        name = name.toLowerCase();
+        if (!this.map[name]) {
+            throw Error('wrong parser');
+        }
+
+        return new this.map[name];
+    }
+}
+
+export class JUnitParser extends Parser {
     parse(fileName: string): Promise<TestCase[]> {
-        return this.parseXML(fileName);
+        return this.parseFile(fileName);
     }
 
     parseString(content: string): Promise<TestCase[]> {
         return this.xml2json(content).then(json => this.parseTestSuite(json.testsuites));
-    }
-
-    parseXML(fileName: string): Promise<TestCase[]> {
-        return this.readFileAsync(fileName).then((content: string) => this.parseString(content));
     }
 
     private parseTestSuite(testSuitNode: any): TestCase[] {
@@ -205,14 +233,6 @@ export class JUnitParser implements Parser {
         return str.replace(/\r\n/g, '\n');
     }
 
-    private readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {
-        return new Promise((resolve, reject) => {
-            readFile(filePath, encoding, (error, data) => {
-                return error ? reject(error) : resolve(data);
-            });
-        });
-    }
-
     private xml2json(xml: string): Promise<any> {
         return new Promise((resolve, reject) => {
             parseString(xml, (error, json) => {
@@ -222,11 +242,20 @@ export class JUnitParser implements Parser {
     }
 }
 
-export class ParserFactory {
-    public create(className): Parser {
-        switch (className) {
-            default:
-                return new JUnitParser();
-        }
+export class TeamCityParser extends Parser {
+    parse(content: string): Promise<TestCase[]> {
+        return Promise.resolve([]);
+    }
+    
+    parseString(content: string): Promise<TestCase[]> {
+        
+        content.split(/\r|\n/).filter(line => /^##teamcity/.test(line)).map((line) => {
+            line = line
+                .trim()
+                .replace(/^##teamcity\[|\]$/g, '');
+            // console.log(minimistString(line))
+        });
+ 
+        return Promise.resolve([]);
     }
 }

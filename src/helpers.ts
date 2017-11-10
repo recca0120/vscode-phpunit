@@ -7,3 +7,4 @@ export function tap(val: any, callback: Function): any {
 
     return val;
 }
+

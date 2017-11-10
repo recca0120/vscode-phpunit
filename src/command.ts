@@ -1,6 +1,8 @@
 import { Filesystem } from './filesystem';
 import { State } from './phpunit';
 
+const minimist = require('minimist');
+
 interface CommandOptions {
     rootPath: string;
     junitPath?: string;
@@ -49,44 +51,28 @@ export class Command {
     }
 
     private parseOptions(args: Array<string>) {
-        const options = [];
-        const multiple = ['-d', '--include-path'];
-        const map: Map<string, string> = new Map();
+        const parseOptions = minimist(args);
+        const keys = Object.keys(parseOptions).filter(key => key !== '_');
+        keys.sort();
 
-        for (let i = 0; i < args.length; i++) {
-            const key = args[i];
-            if (key.startsWith('-') === true) {
-                const value = args[i + 1];
-                const startsWith = value.startsWith('-');
-                if (startsWith === false) {
-                    i++;
-                }
+        return keys.reduce((prev, key) => {
+            const k = key.length === 1 ? `-${key}` : `--${key}`
+            let value = parseOptions[key];
 
-                if (value.startsWith('-') === false) {
-                    if (multiple.indexOf(key) !== -1) {
-                        const val = map.has(key) ? map.get(key).split('|') : [];
-                        map.set(key, val.concat([value]).join('|'));
-                    } else {
-                        map.set(key, value);
-                    }
-                } else {
-                    map.set(key, null);
-                }
-            } else {
-                options.push(key);
-            }
-        }
-
-        return [...map.entries()].sort().reduce((opts: Array<string>, item: Array<string>) => {
-            const [key, value] = item;
-            if (multiple.indexOf(key) !== -1) {
-                return value.split('|').reduce((result, value) => {
-                    return result.concat([key, value]);
-                }, opts);
+            if (['d', 'include-path'].indexOf(key) === -1 && value instanceof Array) {
+                value = value[value.length -1];
             }
 
-            return opts.concat(item.filter(v => v !== null));
-        }, options);
+            if (key === 'colors') {
+                return prev.concat(`--colors=${value}`)
+            }
+
+            return value instanceof Array
+                ? value.reduce((opts, v) => {
+                    return opts.concat([k, v]);
+                }, prev)
+                : prev.concat([k, value])
+        }, parseOptions._);
     }
 
     private getConfiguration(): Array<string> {

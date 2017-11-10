@@ -52,7 +52,7 @@ describe('Command Tests', () => {
 
     it('get arguments with exec path and args', () => {
         const filePath = 'foo.fileName';
-        const args = ['--foo', 'bar', '--configuration', 'foo.xml', '-c', 'bootstrap.php', '-d', 'a=b', '-d', 'b=c'];
+        const args = ['--foo', 'bar', '--configuration', 'foo.xml', '-c', 'bootstrap.php', '-d', 'a=b', '-d', 'b=c', '--colors', 'always'];
         const execPath = 'foo.execPath';
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
@@ -65,18 +65,19 @@ describe('Command Tests', () => {
 
         expect(command.toArray()).toEqual([
             execPath,
-            '--configuration',
-            'foo.xml',
-            '--foo',
-            'bar',
-            '--log-junit',
-            xml,
             '-c',
             'bootstrap.php',
+            "--colors=always",
+            '--configuration',
+            'foo.xml',
             '-d',
             'a=b',
             '-d',
             'b=c',
+            '--foo',
+            'bar',
+            '--log-junit',
+            xml,
             filePath,
         ]);
 
