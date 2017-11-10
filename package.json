@@ -33,7 +33,7 @@
             "properties": {
                 "phpunit.execPath": {
                     "type": "string",
-                    "default": "phpunit",
+                    "default": "",
                     "description": "Path to phpunit executable."
                 },
                 "phpunit.args": {
@@ -42,7 +42,14 @@
                     "description": "Any phpunit args (phpunit --help)"
                 }
             }
-        }
+        },
+        "grammars": [
+            {
+                "language": "Log",
+                "scopeName": "code.log",
+                "path": "./syntaxes/phpunit.tmLanguage"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
