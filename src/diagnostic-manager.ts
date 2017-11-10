@@ -34,20 +34,16 @@ export class DiagnosticManager {
     }
 
     private convertToDiagnostic(testCase: TestCase, editor?: TextEditor): Diagnostic {
-        try {
-            return tap(
-                new Diagnostic(
-                    this.convertToRange(testCase, editor),
-                    testCase.fault.message,
-                    testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
-                ),
-                (diagnostic: Diagnostic) => {
-                    diagnostic.source = 'PHPUnit';
-                }
-            );
-        } catch (e) {
-            return null;
-        }
+        return tap(
+            new Diagnostic(
+                this.convertToRange(testCase, editor),
+                testCase.fault.message,
+                testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+            ),
+            (diagnostic: Diagnostic) => {
+                diagnostic.source = 'PHPUnit';
+            }
+        );
     }
 
     private convertToRange(testCase: TestCase, editor?: TextEditor) {
