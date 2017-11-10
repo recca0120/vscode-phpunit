@@ -1,4 +1,4 @@
-import { JUnitParser, ParserFactory, TestCase } from './parser';
+import { ParserFactory, TestCase } from './parser';
 
 import { Command } from './command';
 import { EventEmitter } from 'events';

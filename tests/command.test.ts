@@ -52,7 +52,20 @@ describe('Command Tests', () => {
 
     it('get arguments with exec path and args', () => {
         const filePath = 'foo.fileName';
-        const args = ['--foo', 'bar', '--configuration', 'foo.xml', '-c', 'bootstrap.php', '-d', 'a=b', '-d', 'b=c', '--colors', 'always'];
+        const args = [
+            '--foo',
+            'bar',
+            '--configuration',
+            'foo.xml',
+            '-c',
+            'bootstrap.php',
+            '-d',
+            'a=b',
+            '-d',
+            'b=c',
+            '--colors',
+            'always',
+        ];
         const execPath = 'foo.execPath';
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
@@ -67,7 +80,7 @@ describe('Command Tests', () => {
             execPath,
             '-c',
             'bootstrap.php',
-            "--colors=always",
+            '--colors=always',
             '--configuration',
             'foo.xml',
             '-d',

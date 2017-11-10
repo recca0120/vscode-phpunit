@@ -3,26 +3,152 @@ import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 import { join as pathJoin } from 'path';
 
 describe('TeamCityParser', () => {
-    const parser: TeamCityParser = new TeamCityParser;
-    
+    const parser: TeamCityParser = new TeamCityParser();
+
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parseFile(pathJoin(__dirname, 'fixtures/teamcity.txt'));
 
         return testCases[key];
     }
 
-    it('it should parse passed', async () => {
-        const testCase = await getTestCase(0);
+    describe('PHPUnit2Test', () => {
+        it('it should parse passed', async () => {
+            const testCase = await getTestCase(0);
 
-        // expect(testCase).toEqual({
-        //     name: 'testPassed',
-        //     class: 'PHPUnitTest',
-        //     classname: null,
-        //     file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-        //     line: 12,
-        //     time: 0.006241,
-        //     type: Type.PASSED,
-        // });
+            expect(testCase).toEqual({
+                name: 'testPassed',
+                class: 'PHPUnit2Test',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnit2Test.php',
+                line: 13,
+                time: 10,
+                type: Type.PASSED,
+            });
+        });
+
+        it('it should parse failed', async () => {
+            const testCase = await getTestCase(1);
+
+            expect(testCase).toEqual({
+                name: 'testFailed',
+                class: 'PHPUnit2Test',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnit2Test.php',
+                line: 20,
+                time: 0,
+                type: Type.FAILURE,
+                fault: {
+                    message: 'Failed asserting that false is true.',
+                    details: jasmine.anything(),
+                },
+            });
+        });
+
+        it('it should parse skipped when mark skipped', async () => {
+            const testCase = await getTestCase(2);
+
+            expect(testCase).toEqual({
+                name: 'testSkipped',
+                class: 'PHPUnit2Test',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnit2Test.php',
+                line: 25,
+                time: 0,
+                type: Type.SKIPPED,
+                fault: {
+                    message: 'The MySQLi extension is not available.',
+                    details: jasmine.anything(),
+                },
+            });
+        });
+
+        it('it should parse skipped when mark incomplete', async () => {
+            const testCase = await getTestCase(3);
+
+            expect(testCase).toEqual({
+                name: 'testIncomplete',
+                class: 'PHPUnit2Test',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnit2Test.php',
+                line: 30,
+                time: 0,
+                type: Type.SKIPPED,
+                fault: {
+                    message: 'This test has not been implemented yet.',
+                    details: jasmine.anything(),
+                },
+            });
+        });
+    });
+
+    describe('PHPUnitTest', () => {
+        it('it should parse passed', async () => {
+            const testCase = await getTestCase(4);
+
+            expect(testCase).toEqual({
+                name: 'testPassed',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 13,
+                time: 0,
+                type: Type.PASSED,
+            });
+        });
+
+        it('it should parse failed', async () => {
+            const testCase = await getTestCase(5);
+
+            expect(testCase).toEqual({
+                name: 'testFailed',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 20,
+                time: 0,
+                type: Type.FAILURE,
+                fault: {
+                    message: 'Failed asserting that false is true.',
+                    details: jasmine.anything(),
+                },
+            });
+        });
+
+        it('it should parse skipped when mark skipped', async () => {
+            const testCase = await getTestCase(6);
+
+            expect(testCase).toEqual({
+                name: 'testSkipped',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 25,
+                time: 0,
+                type: Type.SKIPPED,
+                fault: {
+                    message: 'The MySQLi extension is not available.',
+                    details: jasmine.anything(),
+                },
+            });
+        });
+
+        it('it should parse skipped when mark incomplete', async () => {
+            const testCase = await getTestCase(7);
+
+            expect(testCase).toEqual({
+                name: 'testIncomplete',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 30,
+                time: 0,
+                type: Type.SKIPPED,
+                fault: {
+                    message: 'This test has not been implemented yet.',
+                    details: jasmine.anything(),
+                },
+            });
+        });
     });
 });
 
@@ -68,7 +194,7 @@ describe('JUnitParser', () => {
         });
     });
 
-    it('it should parse error', async () => {
+    it('it should parse skipped', async () => {
         const testCase = await getTestCase(2);
 
         expect(testCase).toEqual({

@@ -56,22 +56,22 @@ export class Command {
         keys.sort();
 
         return keys.reduce((prev, key) => {
-            const k = key.length === 1 ? `-${key}` : `--${key}`
+            const k = key.length === 1 ? `-${key}` : `--${key}`;
             let value = parseOptions[key];
 
             if (['d', 'include-path'].indexOf(key) === -1 && value instanceof Array) {
-                value = value[value.length -1];
+                value = value[value.length - 1];
             }
 
             if (key === 'colors') {
-                return prev.concat(`--colors=${value}`)
+                return prev.concat(`--colors=${value}`);
             }
 
             return value instanceof Array
                 ? value.reduce((opts, v) => {
-                    return opts.concat([k, v]);
-                }, prev)
-                : prev.concat([k, value])
+                      return opts.concat([k, v]);
+                  }, prev)
+                : prev.concat([k, value]);
         }, parseOptions._);
     }
 

@@ -1,7 +1,9 @@
+import { LineData, isWindows, readFileAsync, tap } from './helpers';
+
 import { parseString } from 'xml2js';
-import { readFile } from 'fs';
 
 const minimistString = require('minimist-string');
+const os = isWindows() ? 'windows' : 'unix';
 
 export enum Type {
     PASSED = 'passed',
@@ -55,31 +57,23 @@ export abstract class Parser {
     abstract parseString(content: string): Promise<TestCase[]>;
 
     parseFile(fileName: string): Promise<TestCase[]> {
-        return this.readFileAsync(fileName).then((content: string) => this.parseString(content));
-    }
-
-    protected readFileAsync(filePath: string, encoding = 'utf8'): Promise<string> {
-        return new Promise((resolve, reject) => {
-            readFile(filePath, encoding, (error, data) => {
-                return error ? reject(error) : resolve(data);
-            });
-        });
+        return readFileAsync(fileName).then((content: string) => this.parseString(content));
     }
 }
 
 export class ParserFactory {
     private map = {
-        'teamcity': TeamCityParser,
-        'junit': JUnitParser,
-    }
-    
+        teamcity: TeamCityParser,
+        junit: JUnitParser,
+    };
+
     public create(name): Parser {
         name = name.toLowerCase();
         if (!this.map[name]) {
             throw Error('wrong parser');
         }
 
-        return new this.map[name];
+        return new this.map[name]();
     }
 }
 
@@ -243,19 +237,140 @@ export class JUnitParser extends Parser {
 }
 
 export class TeamCityParser extends Parser {
-    parse(content: string): Promise<TestCase[]> {
-        return Promise.resolve([]);
+    private typeMap = {
+        testPassed: Type.PASSED,
+        testFailed: Type.FAILURE,
+        testIgnored: Type.SKIPPED,
+    };
+
+    constructor(private lineData = new LineData()) {
+        super();
     }
-    
+
+    parse(content: string): Promise<TestCase[]> {
+        return this.parseString(content);
+    }
+
     parseString(content: string): Promise<TestCase[]> {
-        
-        content.split(/\r|\n/).filter(line => /^##teamcity/.test(line)).map((line) => {
-            line = line
-                .trim()
-                .replace(/^##teamcity\[|\]$/g, '');
-            // console.log(minimistString(line))
-        });
- 
-        return Promise.resolve([]);
+        return [this.convertToArguments, this.groupByType, this.convertToTestCase].reduce((result, method) => {
+            return method.call(this, result);
+        }, content);
+    }
+
+    private convertToTestCase(groups: Array<Array<any>>): Promise<TestCase[]> {
+        return Promise.all(
+            groups.map(group => {
+                if (group.length === 2) {
+                    group.splice(1, 0, {
+                        type: 'testPassed',
+                    });
+                }
+
+                const [start, error, finish] = group;
+                const [file, className, name] = tap(
+                    start.locationHint
+                        .trim()
+                        .replace(/^php_qn:\/\//, '')
+                        .replace('::/', '::')
+                        .split('::'),
+                    data => (data[0] = this.renamePath(data[0]))
+                );
+
+                const type = this.typeMap[error.type];
+
+                const testCase = {
+                    name,
+                    class: className,
+                    classname: null,
+                    file,
+                    line: 0,
+                    time: parseFloat(finish.duration),
+                    type,
+                };
+
+                if (type === Type.PASSED) {
+                    return this.lineData.lineNumber(file, `function ${name}`).then(line => {
+                        return tap(testCase, testCase => {
+                            testCase.line = line;
+                        });
+                    });
+                }
+
+                const details: Array<Detail> = this.convertToDetail(error.details);
+                const detail = details[0] ? details[0] : {};
+
+                return Promise.resolve(
+                    Object.assign(testCase, detail, {
+                        fault: {
+                            message: error.message,
+                            details: details.filter(detail => detail.file !== file),
+                        },
+                    })
+                );
+            })
+        );
+    }
+
+    private convertToDetail(content: string): Array<Detail> {
+        return content
+            .split('|n')
+            .map(line => line.trim())
+            .filter(line => !!line)
+            .map(path => {
+                const [, file, line] = path.match(/(.*):(\d+)/);
+
+                return {
+                    file: this.renamePath(file),
+                    line: parseInt(line, 10),
+                };
+            });
+    }
+
+    private groupByType(items: Array<any>): Array<Array<any>> {
+        let counter = 0;
+        return items.reduce((results, item) => {
+            if (!results[counter]) {
+                results[counter] = [];
+            }
+            results[counter].push(item);
+
+            if (item.type === 'testFinished') {
+                counter++;
+            }
+
+            return results;
+        }, []);
+    }
+
+    private convertToArguments(content: string): Array<string> {
+        return content
+            .split(/\r|\n/)
+            .filter(line => /^##teamcity/.test(line))
+            .map(line => {
+                line = line
+                    .trim()
+                    .replace(/^##teamcity\[|\]$/g, '')
+                    .replace(/\\/g, '/');
+
+                const argv: Array<string> = minimistString(line)._;
+                const type: string = argv.shift();
+
+                return argv.reduce(
+                    (options, arg) => {
+                        return tap(options, opts => {
+                            const [key, value] = arg.split('=');
+                            opts[key] = value;
+                        });
+                    },
+                    {
+                        type,
+                    }
+                );
+            })
+            .filter(item => ['testCount', 'testSuiteStarted', 'testSuiteFinished'].indexOf(item.type) === -1);
+    }
+
+    private renamePath(path: string) {
+        return os === 'windows' ? path.replace(/\//g, '\\') : path;
     }
 }

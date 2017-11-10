@@ -98,7 +98,6 @@
     },
     "dependencies": {
         "@types/minimist": "^1.2.0",
-        "@types/minimist-options": "^3.0.0",
         "@types/xml2js": "^0.4.0",
         "minimist-string": "^1.0.2",
         "xml2js": "^0.4.19"
