@@ -31,7 +31,7 @@ describe('TeamCityParser', () => {
                 classname: null,
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnit2Test.php',
                 line: 13,
-                time: 10,
+                time: 0.02,
                 type: Type.PASSED,
             });
         });
@@ -184,7 +184,7 @@ describe('TeamCityParser', () => {
             });
         });
 
-        it('it should parse risky when no assertions', async () => {
+        it('it should parse no assertions', async () => {
             const testCase = await getTestCase(9);
 
             expect(testCase).toEqual({
@@ -197,6 +197,25 @@ describe('TeamCityParser', () => {
                 type: Type.RISKY,
                 fault: {
                     message: 'This test did not perform any assertions',
+                    details: [],
+                },
+            });
+        });
+
+        it('it should parse array is not same', async () => {
+            const testCase = await getTestCase(10);
+
+            expect(testCase).toEqual({
+                name: 'testAssertNotEquals',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 39,
+                time: 0,
+                type: Type.FAILURE,
+                fault: {
+                    message:
+                        "Failed asserting that Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n) is identical to Array &0 (\n    'a' => 'b'\n    'c' => 'd'\n).",
                     details: [],
                 },
             });

@@ -34,4 +34,8 @@ class PHPUnitTest extends TestCase
     {
         
     }
+
+    public function testAssertNotEquals() {
+        $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);
+    }
 } 

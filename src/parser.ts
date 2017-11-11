@@ -266,17 +266,10 @@ export class TeamCityParser extends Parser {
                 }
 
                 const [start, error, finish] = group;
-                const [file, className, name] = tap(
-                    start.locationHint
-                        .trim()
-                        .replace(/^php_qn:\/\//, '')
-                        .replace('::/', '::')
-                        .split('::'),
-                    data => {
-                        data[0] = this.renamePath(data[0]);
-                        data[1] = data[1].replace(/\//g, '\\');
-                    }
-                );
+                const [file, className, name] = start.locationHint
+                    .replace(/php_qn:\/\//g, '')
+                    .replace(/::\\/g, '::')
+                    .split('::');
 
                 const type = this.typeMap[error.type];
 
@@ -286,7 +279,7 @@ export class TeamCityParser extends Parser {
                     classname: null,
                     file,
                     line: 1,
-                    time: parseFloat(finish.duration),
+                    time: parseFloat(finish.duration) / 1000,
                     type,
                 };
 
@@ -319,14 +312,13 @@ export class TeamCityParser extends Parser {
     private convertToDetail(content: string): Array<Detail> {
         return content
             .split('|n')
-            .map(line => line.trim())
             .filter(line => !!line)
             .reverse()
             .map(path => {
                 const [, file, line] = path.match(/(.*):(\d+)/);
 
                 return {
-                    file: this.renamePath(file),
+                    file,
                     line: parseInt(line, 10),
                 };
             });
@@ -357,7 +349,8 @@ export class TeamCityParser extends Parser {
                 line = line
                     .trim()
                     .replace(/^##teamcity\[|\]$/g, '')
-                    .replace(/\\/g, '/');
+                    .replace(/\\/g, '||')
+                    .replace(/\|\'/g, "\\'");
 
                 const argv: string[] = minimistString(line)._;
                 const type: string = argv.shift();
@@ -365,7 +358,14 @@ export class TeamCityParser extends Parser {
                 return argv.reduce(
                     (options, arg) => {
                         return tap(options, opts => {
-                            const [key, value] = arg.split('=');
+                            const split = arg.split('=');
+                            const key = split.shift();
+                            const value = split
+                                .join('=')
+                                .replace(/\|\|/g, '\\')
+                                .replace(/\|n/g, '\n')
+                                .trim();
+
                             opts[key] = value;
                         });
                     },
@@ -375,10 +375,6 @@ export class TeamCityParser extends Parser {
                 );
             })
             .filter(item => ['testCount', 'testSuiteStarted', 'testSuiteFinished'].indexOf(item.type) === -1);
-    }
-
-    private renamePath(path: string) {
-        return os === 'windows' ? path.replace(/\//g, '\\') : path;
     }
 }
 
