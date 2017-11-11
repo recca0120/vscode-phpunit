@@ -8,6 +8,8 @@ recommendations on how to structure this file.
 - support teamcity log
 - warning phpunit could not find
 - xml2js -> x2js
+- risky status
+- warning when phpunit not install
 
 ## 0.3.0
 - add config
