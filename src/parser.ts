@@ -1,7 +1,7 @@
+import { TextLine, TextLineFactory } from './text-line';
 import { minimistString, tap, xml2js } from './helpers';
 
 import { Filesystem } from './filesystem';
-import { TextRange } from './text-range';
 
 export enum Type {
     PASSED = 'passed',
@@ -182,8 +182,6 @@ export class JUnitParser extends Parser {
             };
         }
 
-        // PHPUnit\Framework\RiskyTestError
-
         return null;
     }
 
@@ -233,7 +231,7 @@ export class TeamCityParser extends Parser {
         testIgnored: Type.SKIPPED,
     };
 
-    constructor(private textRange = new TextRange(), files: Filesystem = new Filesystem()) {
+    constructor(private textLine = new TextLineFactory(), files: Filesystem = new Filesystem()) {
         super(files);
     }
 
@@ -290,9 +288,9 @@ export class TeamCityParser extends Parser {
                 }
                 const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
 
-                return this.textRange.lineNumber(file, pattern).then(line => {
+                return this.textLine.create(file, pattern).then((textLine: TextLine) => {
                     return Object.assign(testCase, {
-                        line: line,
+                        line: textLine.lineNumber,
                     });
                 });
             })

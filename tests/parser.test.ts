@@ -1,13 +1,13 @@
 import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 
 import { Filesystem } from '../src/filesystem';
-import { TextRange } from '../src/text-range';
+import { TextLineFactory } from '../src/text-line';
 import { join as pathJoin } from 'path';
 
 describe('TeamCityParser', () => {
     const files: Filesystem = new Filesystem();
-    const textRange: TextRange = new TextRange(files);
-    const parser: TeamCityParser = new TeamCityParser(textRange);
+    const textLineFactory: TextLineFactory = new TextLineFactory(files);
+    const parser: TeamCityParser = new TeamCityParser(textLineFactory);
 
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parseFile(pathJoin(__dirname, 'fixtures/teamcity.txt'));
