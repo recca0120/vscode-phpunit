@@ -253,7 +253,9 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.convertToTestCase(this.groupByType(this.convertToArguments(content)));
+        return tap(this.convertToTestCase(this.groupByType(this.convertToArguments(content))), () => {
+            this.textRange.reset();
+        });
     }
 
     private convertToTestCase(groups: Array<TeamCity[]>): Promise<TestCase[]> {

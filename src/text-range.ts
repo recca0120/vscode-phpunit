@@ -24,6 +24,10 @@ export class TextRange {
         });
     }
 
+    reset() {
+        this.cache.clear();
+    }
+
     private getLines(file: string): Promise<string[]> {
         if (this.cache.has(file) === true) {
             return Promise.resolve(this.cache.get(file));
