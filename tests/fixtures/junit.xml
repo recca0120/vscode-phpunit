@@ -60,4 +60,12 @@ C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:118
       <skipped/>
     </testcase>
   </testsuite>
+  <testsuite>
+      <testcase name="testRisky" class="PHPUnitTest" classname="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="35" assertions="0" time="0.205927">
+        <error type="PHPUnit\Framework\RiskyTestError">Risky Test
+  C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:195
+  C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:148
+  </error>
+      </testcase>
+  </testsuite>
 </testsuites>

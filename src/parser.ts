@@ -103,21 +103,21 @@ export class JUnitParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return xml2js(content).then(this.parseTestSuite.bind(this));
+        return xml2js(content).then(json => this.parseTestSuite(json.testsuites));
     }
 
     private parseTestSuite(testSuiteNode: any): Promise<TestCase[]> {
-        const suiteNode = testSuiteNode.testsuites || testSuiteNode.testsuite;
-
-        if (suiteNode) {
-            return suiteNode instanceof Array
-                ? Promise.all([].concat(...suiteNode.map(this.parseTestSuite.bind(this))))
-                : this.parseTestSuite(suiteNode);
+        if (testSuiteNode.testsuite) {
+            return testSuiteNode.testsuite instanceof Array
+                ? Promise.all([].concat(...testSuiteNode.testsuite.map(this.parseTestSuite.bind(this)))).then(items => {
+                      return items.reduce((prev, next) => prev.concat(next), []);
+                  })
+                : this.parseTestSuite(testSuiteNode.testsuite);
         }
 
         return testSuiteNode.testcase instanceof Array
             ? Promise.all([].concat(...testSuiteNode.testcase.map(this.parseTestCase.bind(this))))
-            : Promise.all([this.parseTestCase(testSuiteNode)]);
+            : Promise.all([this.parseTestCase(testSuiteNode.testcase)]);
     }
 
     protected parseTestCase(testCaseNode: any): Promise<TestCase> {
@@ -157,19 +157,19 @@ export class JUnitParser extends Parser {
         const keys = Object.keys(testCaseNode);
 
         if (keys.indexOf('error') !== -1) {
-            return tap(testCaseNode.error, (error) => {
+            return tap(testCaseNode.error, error => {
                 error.type = this.parseErrorType(testCaseNode.error);
             });
         }
 
         if (keys.indexOf('warning') !== -1) {
-            return tap(testCaseNode.warning, (warning) => {
+            return tap(testCaseNode.warning, warning => {
                 warning.type = Type.WARNING;
             });
         }
 
         if (keys.indexOf('failure') !== -1) {
-            return tap(testCaseNode.failure, (failure) => {
+            return tap(testCaseNode.failure, failure => {
                 failure.type = Type.FAILURE;
             });
         }
@@ -181,6 +181,8 @@ export class JUnitParser extends Parser {
                 __text: '',
             };
         }
+
+        // PHPUnit\Framework\RiskyTestError
 
         return null;
     }
@@ -200,19 +202,11 @@ export class JUnitParser extends Parser {
     private parseErrorType(errorNode: any): Type {
         const errorType = errorNode._type.toLowerCase();
 
-        if (errorType.indexOf(Type.SKIPPED) !== -1) {
-            return Type.SKIPPED;
-        }
-
-        if (errorType.indexOf(Type.INCOMPLETE) !== -1) {
-            return Type.INCOMPLETE;
-        }
-
-        if (errorType.indexOf(Type.FAILED) !== -1) {
-            return Type.FAILED;
-        }
-
-        return Type.ERROR;
+        return (
+            [Type.WARNING, Type.FAILURE, Type.INCOMPLETE, Type.RISKY, Type.SKIPPED, Type.FAILED].find(
+                type => errorType.indexOf(type) !== -1
+            ) || Type.ERROR
+        );
     }
 
     private crlf2lf(content: string): string {
