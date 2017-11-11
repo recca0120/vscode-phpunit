@@ -81,10 +81,10 @@ export class DecorationStyle {
             overviewRulerColor: 'green',
             overviewRulerLane: OverviewRulerLane.Left,
             light: {
-                gutterIconPath: 'passed.svg',
+                gutterIconPath: 'success.svg',
             },
             dark: {
-                gutterIconPath: 'passed.svg',
+                gutterIconPath: 'success.svg',
             },
         };
     }
@@ -94,10 +94,10 @@ export class DecorationStyle {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
             light: {
-                gutterIconPath: 'failed.svg',
+                gutterIconPath: 'danger.svg',
             },
             dark: {
-                gutterIconPath: 'failed.svg',
+                gutterIconPath: 'danger.svg',
             },
         };
     }
@@ -108,10 +108,10 @@ export class DecorationStyle {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
             dark: {
-                gutterIconPath: 'risky.svg',
+                gutterIconPath: 'danger-light.svg',
             },
             light: {
-                gutterIconPath: 'risky.svg',
+                gutterIconPath: 'danger-light.svg',
             },
         };
     }
@@ -121,10 +121,10 @@ export class DecorationStyle {
             overviewRulerColor: 'darkgrey',
             overviewRulerLane: OverviewRulerLane.Left,
             dark: {
-                gutterIconPath: 'skipped.svg',
+                gutterIconPath: 'warning.svg',
             },
             light: {
-                gutterIconPath: 'skipped.svg',
+                gutterIconPath: 'warning.svg',
             },
         };
     }
