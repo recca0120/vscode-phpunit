@@ -169,7 +169,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 12,
+            line: 13,
             time: 0.006241,
             type: Type.PASSED,
         });
@@ -183,7 +183,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 19,
+            line: 20,
             time: 0.001918,
             type: Type.FAILURE,
             fault: {
@@ -202,7 +202,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 24,
+            line: 25,
             time: 0.001087,
             type: Type.ERROR,
             fault: {
@@ -222,7 +222,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 29,
+            line: 30,
             time: 0.001138,
             type: Type.SKIPPED,
             fault: {
@@ -241,7 +241,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 34,
+            line: 35,
             time: 0.001081,
             type: Type.INCOMPLETE,
             fault: {
@@ -260,7 +260,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 44,
+            line: 45,
             time: 0.164687,
             type: Type.ERROR,
             fault: {
@@ -270,11 +270,11 @@ describe('JUnitParser', () => {
                 details: [
                     {
                         file: 'C:\\Users\\recca\\github\\tester-phpunit\\src\\Receiver.php',
-                        line: 84,
+                        line: 85,
                     },
                     {
                         file: 'C:\\Users\\recca\\github\\tester-phpunit\\src\\Receiver.php',
-                        line: 67,
+                        line: 68,
                     },
                 ],
             },
@@ -289,7 +289,7 @@ describe('JUnitParser', () => {
             class: 'Recca0120\\Upload\\Tests\\PHPUnitTest',
             classname: null,
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 12,
+            line: 13,
             time: 0.008761,
             type: Type.ERROR,
             fault: {
@@ -302,40 +302,40 @@ describe('JUnitParser', () => {
                     {
                         file:
                             'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
-                        line: 36,
+                        line: 37,
                     },
                     {
                         file:
                             'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
-                        line: 297,
+                        line: 298,
                     },
                     {
                         file:
                             'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
-                        line: 119,
+                        line: 120,
                     },
                     {
                         file:
                             'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
-                        line: 296,
+                        line: 297,
                     },
                     {
                         file:
                             'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
-                        line: 281,
+                        line: 282,
                     },
                     {
                         file:
                             'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery.php',
-                        line: 151,
+                        line: 152,
                     },
                     {
                         file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
-                        line: 187,
+                        line: 188,
                     },
                     {
                         file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
-                        line: 117,
+                        line: 118,
                     },
                 ],
             },
@@ -350,7 +350,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 22,
+            line: 23,
             time: 0.001352,
             type: Type.SKIPPED,
             fault: {
@@ -369,7 +369,7 @@ describe('JUnitParser', () => {
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
             file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 27,
+            line: 28,
             time: 0.000954,
             type: Type.SKIPPED,
             fault: {

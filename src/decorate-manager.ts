@@ -33,7 +33,7 @@ export class DecorateManager {
             editor.setDecorations(
                 this.styles.get(state),
                 testCases.map(testCase => ({
-                    range: new Range(testCase.line, 0, testCase.line, 0),
+                    range: new Range(testCase.line - 1, 0, testCase.line - 1, 0),
                     hoverMessage: testCase.type,
                 }))
             );

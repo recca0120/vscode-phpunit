@@ -3,6 +3,7 @@ import { ParserFactory, TestCase } from './parser';
 import { Command } from './command';
 import { EventEmitter } from 'events';
 import { ProcessFactory } from './process';
+import { tap } from './helpers';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -18,30 +19,35 @@ export class PHPUnit extends EventEmitter {
 
     handle(command: Command): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
-            const parser = this.parserFactory.create('junit');
-            const args = command.toArray();
-            const xml = command.getXML();
+            const args = command.args();
+            const type = args.some(arg => arg === '--log-junit') ? 'junit' : 'teamcity';
+            const buffers: string[] = [];
 
             this.emit('stdout', `${args.join(' ')}\n\n`);
 
-            this.processFactory
-                .create()
-                .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
+            tap(this.processFactory.create(), (process) => {
+                process.on('stdout', (buffer: Buffer) => {
+                    buffers.push(buffer.toString());
+                    this.emit('stdout', buffer);
+                })
                 .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
                 .on('exit', () => {
                     this.emit('stdout', '\n\n');
-                    parser
-                        .parse(xml)
-                        .then(testCases => {
-                            resolve(testCases);
-                            command.clear();
-                        })
-                        .catch(error => {
-                            command.clear();
-                            reject(error);
-                        });
+                    tap(this.parserFactory.create(type), parser => {
+                        parser
+                            .parse(type === 'junit' ? command.getXML() : buffers.join(''))
+                            .then(testCases => {
+                                resolve(testCases);
+                                command.clear();
+                            })
+                            .catch(error => {
+                                command.clear();
+                                reject(error);
+                            });
+                    });
                 })
                 .spawn(args, { cwd: command.rootPath });
+            })
         });
     }
 }

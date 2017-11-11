@@ -20,7 +20,7 @@ export function readFileAsync(filePath: string, encoding = 'utf8'): Promise<stri
 
 const cache: Map<string, string[]> = new Map<string, string[]>();
 
-export class LineData {
+export class TextRange {
     private cache: Map<string, string[]>;
 
     constructor() {

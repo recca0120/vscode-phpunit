@@ -1,5 +1,6 @@
 import { Filesystem } from './filesystem';
 import { State } from './phpunit';
+import { tap } from './helpers';
 
 const minimist = require('minimist');
 
@@ -13,7 +14,7 @@ export class Command {
 
     constructor(
         private fileName: string,
-        private args: string[] = [],
+        private parameters: string[] = [],
         private execPath: string = '',
         public options: CommandOptions = {
             rootPath: __dirname,
@@ -28,18 +29,12 @@ export class Command {
         return this.xml;
     }
 
-    toArray() {
-        const execPath = this.execPath;
-
-        if (!execPath) {
+    args() {
+        if (!this.execPath) {
             throw State.PHPUNIT_NOT_FOUND;
         }
 
-        const args = this.getConfiguration()
-            .concat(this.args)
-            .concat(['--log-junit', this.getXML()]);
-
-        return [execPath].concat(this.parseOptions(args)).concat([this.fileName]);
+        return this.parseOptions([this.execPath].concat(this.parameters)).concat([this.fileName]);
     }
 
     clear() {
@@ -51,11 +46,35 @@ export class Command {
     }
 
     private parseOptions(args: string[]) {
-        const parseOptions = minimist(args);
-        const keys = Object.keys(parseOptions).filter(key => key !== '_');
-        keys.sort();
+        const parseOptions = tap(
+            minimist(args, {
+                boolean: ['teamcity'],
+            }),
+            options => {
+                if (!options.c && !options.configuration) {
+                    const configuration = this.getConfiguration();
+                    if (configuration) {
+                        options.configuration = configuration;
+                    }
+                }
 
-        return keys.reduce((prev, key) => {
+                if (options.c && options.configuration) {
+                    options.configuration = false;
+                }
+
+                if (!options['log-junit']) {
+                    options['log-junit'] = this.getXML();
+                }
+
+                if (options.teamcity) {
+                    options['log-junit'] = false;
+                }
+            }
+        );
+
+        return tap(Object.keys(parseOptions).filter(key => key !== '_'), keys => {
+            keys.sort();
+        }).reduce((prev, key) => {
             const k = key.length === 1 ? `-${key}` : `--${key}`;
             let value = parseOptions[key];
 
@@ -67,6 +86,14 @@ export class Command {
                 return prev.concat(`--colors=${value}`);
             }
 
+            if (value === true) {
+                return prev.concat([k]);
+            }
+
+            if (!value) {
+                return prev;
+            }
+
             return value instanceof Array
                 ? value.reduce((opts, v) => {
                       return opts.concat([k, v]);
@@ -75,12 +102,10 @@ export class Command {
         }, parseOptions._);
     }
 
-    private getConfiguration(): string[] {
-        const configurationFile = ['phpunit.xml', 'phpunit.xml.dist']
+    private getConfiguration(): string {
+        return ['phpunit.xml', 'phpunit.xml.dist']
             .map(configurationFile => `${this.options.rootPath}/${configurationFile}`)
             .find(configurationFile => this.files.exists(configurationFile));
-
-        return configurationFile ? ['--configuration', configurationFile] : [];
     }
 
     private getExecutable(): string {

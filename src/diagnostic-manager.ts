@@ -47,7 +47,7 @@ export class DiagnosticManager {
     }
 
     private convertToRange(testCase: TestCase, editor?: TextEditor) {
-        const textLine: TextLine = editor.document.lineAt(testCase.line);
+        const textLine: TextLine = editor.document.lineAt(testCase.line - 1);
 
         return new Range(
             new Position(textLine.lineNumber, textLine.firstNonWhitespaceCharacterIndex),

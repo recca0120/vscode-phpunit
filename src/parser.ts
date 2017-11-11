@@ -1,4 +1,4 @@
-import { LineData, isWindows, readFileAsync, tap } from './helpers';
+import { TextRange, isWindows, readFileAsync, tap } from './helpers';
 
 import { parseString } from 'xml2js';
 
@@ -61,22 +61,6 @@ export abstract class Parser {
     }
 }
 
-export class ParserFactory {
-    private map = {
-        teamcity: TeamCityParser,
-        junit: JUnitParser,
-    };
-
-    public create(name): Parser {
-        name = name.toLowerCase();
-        if (!this.map[name]) {
-            throw Error('wrong parser');
-        }
-
-        return new this.map[name]();
-    }
-}
-
 export class JUnitParser extends Parser {
     parse(fileName: string): Promise<TestCase[]> {
         return this.parseFile(fileName);
@@ -105,7 +89,7 @@ export class JUnitParser extends Parser {
             class: testCaseNodeAttr.class,
             classname: testCaseNodeAttr.classname || null,
             file: testCaseNodeAttr.file,
-            line: parseInt(testCaseNodeAttr.line || 1, 10) - 1,
+            line: parseInt(testCaseNodeAttr.line || 1, 10),
             time: parseFloat(testCaseNodeAttr.time || 0),
             type: Type.PASSED,
         };
@@ -185,7 +169,7 @@ export class JUnitParser extends Parser {
     private parseMessage(faultNode: any, details: Detail[]): string {
         const messages: string[] = details
             .reduce((result, detail) => {
-                return result.replace(`${detail.file}:${detail.line + 1}`, '').trim();
+                return result.replace(`${detail.file}:${detail.line}`, '').trim();
             }, this.crlf2lf(faultNode._))
             .split(/\r\n|\n/);
 
@@ -203,7 +187,7 @@ export class JUnitParser extends Parser {
 
                 return {
                     file,
-                    line: parseInt(line, 10) - 1,
+                    line: parseInt(line, 10),
                 };
             });
     }
@@ -239,6 +223,17 @@ export class JUnitParser extends Parser {
     }
 }
 
+interface TeamCity {
+    type: string;
+    count?: string;
+    name?: string;
+    flowId?: string;
+    locationHint?: string;
+    duration?: string;
+    message?: string;
+    details?: string;
+}
+
 export class TeamCityParser extends Parser {
     private typeMap = {
         testPassed: Type.PASSED,
@@ -246,7 +241,7 @@ export class TeamCityParser extends Parser {
         testIgnored: Type.SKIPPED,
     };
 
-    constructor(private lineData = new LineData()) {
+    constructor(private textRange = new TextRange()) {
         super();
     }
 
@@ -255,12 +250,10 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return [this.convertToArguments, this.groupByType, this.convertToTestCase].reduce((result, method) => {
-            return method.call(this, result);
-        }, content);
+        return this.convertToTestCase(this.groupByType(this.convertToArguments(content)));
     }
 
-    private convertToTestCase(groups: Array<Array<any>>): Promise<TestCase[]> {
+    private convertToTestCase(groups: Array<TeamCity[]>): Promise<TestCase[]> {
         return Promise.all(
             groups.map(group => {
                 if (group.length === 2) {
@@ -276,40 +269,46 @@ export class TeamCityParser extends Parser {
                         .replace(/^php_qn:\/\//, '')
                         .replace('::/', '::')
                         .split('::'),
-                    data => (data[0] = this.renamePath(data[0]))
+                    data => {
+                        data[0] = this.renamePath(data[0]);
+                        data[1] = data[1].replace(/\//g, '\\');
+                    }
                 );
 
                 const type = this.typeMap[error.type];
 
-                const testCase = {
+                const testCase: TestCase = {
                     name,
-                    class: className,
+                    class: className.substr(className.lastIndexOf('\\') + 1),
                     classname: null,
                     file,
-                    line: 0,
+                    line: 1,
                     time: parseFloat(finish.duration),
                     type,
                 };
 
-                if (type === Type.PASSED) {
-                    return this.lineData.lineNumber(file, `function ${name}`).then(line => {
-                        return tap(testCase, testCase => {
-                            testCase.line = line;
-                        });
-                    });
-                }
+                if (type !== Type.PASSED) {
+                    const details: Array<Detail> = this.convertToDetail(error.details);
+                    const detail: Detail = details.shift();
 
-                const details: Array<Detail> = this.convertToDetail(error.details);
-                const detail = details[0] ? details[0] : {};
-
-                return Promise.resolve(
-                    Object.assign(testCase, detail, {
+                    Object.assign(testCase, {
+                        type: !detail && testCase.type === Type.FAILURE ? Type.RISKY : testCase.type,
                         fault: {
                             message: error.message,
-                            details: details.filter(detail => detail.file !== file),
+                            details: details,
                         },
-                    })
-                );
+                    });
+
+                    if (detail) {
+                        return Promise.resolve(Object.assign(testCase, detail));
+                    }
+                }
+
+                return this.textRange.lineNumber(file, `function ${name}`).then(line => {
+                    return Object.assign(testCase, {
+                        line: line,
+                    });
+                });
             })
         );
     }
@@ -319,6 +318,7 @@ export class TeamCityParser extends Parser {
             .split('|n')
             .map(line => line.trim())
             .filter(line => !!line)
+            .reverse()
             .map(path => {
                 const [, file, line] = path.match(/(.*):(\d+)/);
 
@@ -329,8 +329,9 @@ export class TeamCityParser extends Parser {
             });
     }
 
-    private groupByType(items: Array<any>): Array<Array<any>> {
+    private groupByType(items: TeamCity[]): Array<TeamCity[]> {
         let counter = 0;
+
         return items.reduce((results, item) => {
             if (!results[counter]) {
                 results[counter] = [];
@@ -345,7 +346,7 @@ export class TeamCityParser extends Parser {
         }, []);
     }
 
-    private convertToArguments(content: string): string[] {
+    private convertToArguments(content: string): TeamCity[] {
         return content
             .split(/\r|\n/)
             .filter(line => /^##teamcity/.test(line))
@@ -375,5 +376,16 @@ export class TeamCityParser extends Parser {
 
     private renamePath(path: string) {
         return os === 'windows' ? path.replace(/\//g, '\\') : path;
+    }
+}
+
+export class ParserFactory {
+    public create(name): Parser {
+        switch (name.toLowerCase()) {
+            case 'teamcity':
+                return new TeamCityParser();
+            default:
+                return new JUnitParser();
+        }
     }
 }
