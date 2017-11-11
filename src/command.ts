@@ -1,8 +1,7 @@
+import { minimist, tap } from './helpers';
+
 import { Filesystem } from './filesystem';
 import { State } from './phpunit';
-import { tap } from './helpers';
-
-const minimist = require('minimist');
 
 interface CommandOptions {
     rootPath: string;

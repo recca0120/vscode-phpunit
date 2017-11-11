@@ -1,8 +1,9 @@
-import { TextRange, isWindows, readFileAsync, tap } from './helpers';
+import { isWindows, minimistString, tap } from './helpers';
 
+import { Filesystem } from './filesystem';
+import { TextRange } from './text-range';
 import { parseString } from 'xml2js';
 
-const minimistString = require('minimist-string');
 const os = isWindows() ? 'windows' : 'unix';
 
 export enum Type {
@@ -52,12 +53,14 @@ export interface TestCase {
 }
 
 export abstract class Parser {
+    constructor(private files: Filesystem = new Filesystem()) {}
+
     abstract parse(content: any): Promise<TestCase[]>;
 
     abstract parseString(content: string): Promise<TestCase[]>;
 
     parseFile(fileName: string): Promise<TestCase[]> {
-        return readFileAsync(fileName).then((content: string) => this.parseString(content));
+        return this.files.getAsync(fileName).then((content: string) => this.parseString(content));
     }
 }
 
@@ -241,8 +244,8 @@ export class TeamCityParser extends Parser {
         testIgnored: Type.SKIPPED,
     };
 
-    constructor(private textRange = new TextRange()) {
-        super();
+    constructor(private textRange = new TextRange(), files: Filesystem = new Filesystem()) {
+        super(files);
     }
 
     parse(content: string): Promise<TestCase[]> {

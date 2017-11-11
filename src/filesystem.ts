@@ -1,4 +1,4 @@
-import { accessSync, existsSync, readFileSync, unlinkSync } from 'fs';
+import { accessSync, existsSync, readFile, readFileSync, unlinkSync } from 'fs';
 
 import { isWindows } from './helpers';
 import { resolve as pathResolve } from 'path';
@@ -130,8 +130,16 @@ export class Filesystem extends AbstractFilesystem {
         }
     }
 
-    getContent(file: string): string {
-        return readFileSync(file).toString();
+    get(path: string): string {
+        return readFileSync(path).toString();
+    }
+
+    getAsync(path: string, encoding = 'utf8'): Promise<string> {
+        return new Promise((resolve, reject) => {
+            readFile(path, encoding, (error, data) => {
+                return error ? reject(error) : resolve(data);
+            });
+        });
     }
 
     tmpfile(tmpname: string, dir: string = '') {

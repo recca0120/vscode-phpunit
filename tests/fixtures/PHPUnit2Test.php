@@ -29,4 +29,9 @@ class PHPUnit2Test extends TestCase
     {
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
+
+    public function testNoAssertions()
+    {
+        
+    }
 } 

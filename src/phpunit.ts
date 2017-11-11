@@ -25,29 +25,30 @@ export class PHPUnit extends EventEmitter {
 
             this.emit('stdout', `${args.join(' ')}\n\n`);
 
-            tap(this.processFactory.create(), (process) => {
-                process.on('stdout', (buffer: Buffer) => {
-                    buffers.push(buffer.toString());
-                    this.emit('stdout', buffer);
-                })
-                .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
-                .on('exit', () => {
-                    this.emit('stdout', '\n\n');
-                    tap(this.parserFactory.create(type), parser => {
-                        parser
-                            .parse(type === 'junit' ? command.getXML() : buffers.join(''))
-                            .then(testCases => {
-                                resolve(testCases);
-                                command.clear();
-                            })
-                            .catch(error => {
-                                command.clear();
-                                reject(error);
-                            });
-                    });
-                })
-                .spawn(args, { cwd: command.rootPath });
-            })
+            tap(this.processFactory.create(), process => {
+                process
+                    .on('stdout', (buffer: Buffer) => {
+                        buffers.push(buffer.toString());
+                        this.emit('stdout', buffer);
+                    })
+                    .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
+                    .on('exit', () => {
+                        this.emit('stdout', '\n\n');
+                        tap(this.parserFactory.create(type), parser => {
+                            parser
+                                .parse(type === 'junit' ? command.getXML() : buffers.join(''))
+                                .then(testCases => {
+                                    resolve(testCases);
+                                    command.clear();
+                                })
+                                .catch(error => {
+                                    command.clear();
+                                    reject(error);
+                                });
+                        });
+                    })
+                    .spawn(args, { cwd: command.rootPath });
+            });
         });
     }
 }

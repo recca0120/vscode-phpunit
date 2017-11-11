@@ -1,9 +1,13 @@
 import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 
+import { Filesystem } from '../src/filesystem';
+import { TextRange } from '../src/text-range';
 import { join as pathJoin } from 'path';
 
 describe('TeamCityParser', () => {
-    const parser: TeamCityParser = new TeamCityParser();
+    const files: Filesystem = new Filesystem();
+    const textRange: TextRange = new TextRange(files);
+    const parser: TeamCityParser = new TeamCityParser(textRange);
 
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parseFile(pathJoin(__dirname, 'fixtures/teamcity.txt'));
@@ -12,6 +16,12 @@ describe('TeamCityParser', () => {
     }
 
     describe('PHPUnit2Test', () => {
+        beforeEach(() => {
+            spyOn(files, 'getAsync').and.returnValue(
+                Promise.resolve(files.get(pathJoin(__dirname, 'fixtures/PHPUnit2Test.php')))
+            );
+        });
+
         it('it should parse passed', async () => {
             const testCase = await getTestCase(0);
 
@@ -79,11 +89,35 @@ describe('TeamCityParser', () => {
                 },
             });
         });
+
+        it('it should parse risky when no assertions', async () => {
+            const testCase = await getTestCase(4);
+
+            expect(testCase).toEqual({
+                name: 'testNoAssertions',
+                class: 'PHPUnit2Test',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnit2Test.php',
+                line: 33,
+                time: 0,
+                type: Type.RISKY,
+                fault: {
+                    message: 'This test did not perform any assertions',
+                    details: [],
+                },
+            });
+        });
     });
 
     describe('PHPUnitTest', () => {
+        beforeEach(() => {
+            spyOn(files, 'getAsync').and.returnValue(
+                Promise.resolve(files.get(pathJoin(__dirname, 'fixtures/PHPUnitTest.php')))
+            );
+        });
+
         it('it should parse passed', async () => {
-            const testCase = await getTestCase(4);
+            const testCase = await getTestCase(5);
 
             expect(testCase).toEqual({
                 name: 'testPassed',
@@ -97,7 +131,7 @@ describe('TeamCityParser', () => {
         });
 
         it('it should parse failed', async () => {
-            const testCase = await getTestCase(5);
+            const testCase = await getTestCase(6);
 
             expect(testCase).toEqual({
                 name: 'testFailed',
@@ -115,7 +149,7 @@ describe('TeamCityParser', () => {
         });
 
         it('it should parse skipped when mark skipped', async () => {
-            const testCase = await getTestCase(6);
+            const testCase = await getTestCase(7);
 
             expect(testCase).toEqual({
                 name: 'testSkipped',
@@ -133,7 +167,7 @@ describe('TeamCityParser', () => {
         });
 
         it('it should parse skipped when mark incomplete', async () => {
-            const testCase = await getTestCase(7);
+            const testCase = await getTestCase(8);
 
             expect(testCase).toEqual({
                 name: 'testIncomplete',
@@ -145,6 +179,24 @@ describe('TeamCityParser', () => {
                 type: Type.SKIPPED,
                 fault: {
                     message: 'This test has not been implemented yet.',
+                    details: [],
+                },
+            });
+        });
+
+        it('it should parse risky when no assertions', async () => {
+            const testCase = await getTestCase(9);
+
+            expect(testCase).toEqual({
+                name: 'testNoAssertions',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 33,
+                time: 0,
+                type: Type.RISKY,
+                fault: {
+                    message: 'This test did not perform any assertions',
                     details: [],
                 },
             });
