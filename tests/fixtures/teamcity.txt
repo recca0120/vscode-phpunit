@@ -77,6 +77,17 @@ PHPUnit 6.4.2 by Sebastian Bergmann and contributors.
 
 ##teamcity[testSuiteFinished name='tests/fixtures/' flowId='11960']
 
+##teamcity[testCount count='1' flowId='18584']
+
+##teamcity[testSuiteStarted name='tests/fixtures/' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::PHPUnitTest' flowId='18584']
+
+##teamcity[testStarted name='testDetailsHasCurrentFile' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::PHPUnitTest::testDetailsHasCurrentFile' flowId='18584']
+
+##teamcity[testFailed name='testDetailsHasCurrentFile' message='Invalid JSON was returned from the route.' details=' C:\Users\recca\Desktop\vscode-phpunit\vendor\laravel\framework\src\Illuminate\Foundation\Testing\TestResponse.php:434|n C:\Users\recca\Desktop\vscode-phpunit\vendor\laravel\framework\src\Illuminate\Foundation\Testing\TestResponse.php:290|n C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php:31|n ' flowId='18584']
+
+##teamcity[testFinished name='testDetailsHasCurrentFile' duration='990' flowId='18584']
+
+##teamcity[testSuiteFinished name='tests/fixtures/' flowId='18584']
 
 Time: 224 ms, Memory: 4.00MB
 

@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 Check [Keep a Changelog](http://keepachangelog.com/) for 
 recommendations on how to structure this file.
 
+## 0.4.0
+- support teamcity log
+- warning phpunit could not find
+
 ## 0.3.0
 - add config
 - add syntaxes

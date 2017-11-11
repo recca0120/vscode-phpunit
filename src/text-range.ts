@@ -10,11 +10,11 @@ export class TextRange {
         this.cache = cache;
     }
 
-    lineNumber(file, keyword): Promise<number> {
+    lineNumber(file, pattern: RegExp): Promise<number> {
         return this.getLines(file).then(lines => {
             let lineNumber = 0;
             for (let i = 0; i < lines.length; i++) {
-                if (lines[i].indexOf(keyword) !== -1) {
+                if (pattern.test(lines[i]) === true) {
                     lineNumber = i + 1;
                     break;
                 }

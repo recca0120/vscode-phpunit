@@ -1,5 +1,6 @@
 import { ParserFactory, TestCase } from './parser';
 
+import { ChildProcess } from 'child_process';
 import { Command } from './command';
 import { EventEmitter } from 'events';
 import { ProcessFactory } from './process';
@@ -12,12 +13,42 @@ export enum State {
     PHPUNIT_NOT_PHP = 'phpunit_not_php',
 }
 
+class Delayed {
+    private timer: any;
+
+    resolve(promise: Promise<any>, time = 500): Promise<any> {
+        this.cancel();
+
+        return new Promise(resolve => {
+            this.timer = setTimeout(() => {
+                resolve(true);
+            }, time);
+        }).then(() => {
+            return promise;
+        });
+    }
+
+    cancel() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+
+        return this;
+    }
+}
+
+const delayed = new Delayed();
+
 export class PHPUnit extends EventEmitter {
     constructor(private parserFactory = new ParserFactory(), private processFactory = new ProcessFactory()) {
         super();
     }
 
     handle(command: Command): Promise<TestCase[]> {
+        return delayed.resolve(this.fire(command), 50);
+    }
+
+    private fire(command: Command): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
             const args = command.args();
             const type = args.some(arg => arg === '--log-junit') ? 'junit' : 'teamcity';

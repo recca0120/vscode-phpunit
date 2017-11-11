@@ -6,6 +6,7 @@ import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
+import { showWarningMessage } from './../.vscode-test/resources/app/out/vs/vscode.d';
 
 export class Project {
     constructor(public window: any, public workspace: any, public extensionPath: string) {}
@@ -118,6 +119,9 @@ export class Tester {
             .catch(error => {
                 this.decoratedGutter();
                 this.handleDiagnostic();
+                if (error === State.PHPUNIT_NOT_FOUND) {
+                    this.window.showWarningMessage("Couldn't find a phpunit file.");
+                }
                 console.error(error);
             });
     }

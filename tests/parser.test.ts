@@ -220,6 +220,35 @@ describe('TeamCityParser', () => {
                 },
             });
         });
+
+        it('details has current file', async () => {
+            const testCase = await getTestCase(11);
+
+            expect(testCase).toEqual({
+                name: 'testDetailsHasCurrentFile',
+                class: 'PHPUnitTest',
+                classname: null,
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\tests\\fixtures\\PHPUnitTest.php',
+                line: 31,
+                time: 0.99,
+                type: Type.FAILURE,
+                fault: {
+                    message: 'Invalid JSON was returned from the route.',
+                    details: [
+                        {
+                            file:
+                                'C:\\Users\\recca\\Desktop\\vscode-phpunit\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Testing\\TestResponse.php',
+                            line: 434,
+                        },
+                        {
+                            file:
+                                'C:\\Users\\recca\\Desktop\\vscode-phpunit\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Testing\\TestResponse.php',
+                            line: 290,
+                        },
+                    ],
+                },
+            });
+        });
     });
 });
 

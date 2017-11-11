@@ -62,6 +62,40 @@ export abstract class Parser {
     parseFile(fileName: string): Promise<TestCase[]> {
         return this.files.getAsync(fileName).then((content: string) => this.parseString(content));
     }
+
+    protected abstract parseTestCase(data: any);
+
+    protected currentFile(details: Detail[], testCase: TestCase) {
+        const detail: Detail = details.find(
+            (detail: Detail) => testCase.file === detail.file && testCase.line !== detail.line
+        );
+
+        return detail
+            ? detail
+            : {
+                  file: testCase.file,
+                  line: testCase.line,
+              };
+    }
+
+    protected filterDetails(details: Detail[], currentFile: Detail): Detail[] {
+        return details.filter((detail: Detail) => detail.file !== currentFile.file && currentFile.line !== detail.line);
+    }
+
+    protected parseDetails(content: string): Detail[] {
+        return content
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => /(.*):(\d+)$/.test(line))
+            .map(path => {
+                const [, file, line] = path.match(/(.*):(\d+)/);
+
+                return {
+                    file: file.trim(),
+                    line: parseInt(line, 10),
+                };
+            });
+    }
 }
 
 export class JUnitParser extends Parser {
@@ -84,7 +118,7 @@ export class JUnitParser extends Parser {
         return testCase;
     }
 
-    private parseTestCase(testCaseNode: any): TestCase {
+    protected parseTestCase(testCaseNode: any): TestCase {
         const testCaseNodeAttr = testCaseNode.$;
 
         const testCase: TestCase = {
@@ -104,28 +138,18 @@ export class JUnitParser extends Parser {
         }
 
         const faultNodeAttr = faultNode.$;
-        const details: Detail[] = this.parseDetails(faultNode);
+        const details: Detail[] = this.parseDetails(faultNode._);
+        const currentFile = this.currentFile(details, testCase);
         const message = this.parseMessage(faultNode, details);
 
-        return Object.assign(testCase, this.currentFile(details, testCase), {
+        return Object.assign(testCase, currentFile, {
             type: faultNode.type,
             fault: {
                 type: faultNodeAttr.type || '',
                 message: message,
-                details: details.filter((detail: Detail) => detail.file !== testCase.file),
+                details: this.filterDetails(details, currentFile),
             },
         });
-    }
-
-    private currentFile(details: Detail[], testCase: TestCase) {
-        details = details.filter((detail: Detail) => testCase.file === detail.file);
-
-        return details.length !== 0
-            ? details[details.length - 1]
-            : {
-                  file: testCase.file,
-                  line: testCase.line,
-              };
     }
 
     private getFaultNode(testCaseNode: any): any {
@@ -179,20 +203,6 @@ export class JUnitParser extends Parser {
         const message = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');
 
         return faultNode.$.type ? message.replace(new RegExp(`^${faultNode.$.type}:`, 'g'), '').trim() : message.trim();
-    }
-
-    private parseDetails(faultNode: any): Detail[] {
-        return faultNode._.split('\n')
-            .map(line => line.trim())
-            .filter(line => /(.*):(\d+)$/.test(line))
-            .map(path => {
-                const [, file, line] = path.match(/(.*):(\d+)/);
-
-                return {
-                    file,
-                    line: parseInt(line, 10),
-                };
-            });
     }
 
     private parseErrorType(errorNode: any): Type {
@@ -253,12 +263,10 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return tap(this.convertToTestCase(this.groupByType(this.convertToArguments(content))), () => {
-            this.textRange.reset();
-        });
+        return this.parseTestCase(this.groupByType(this.convertToArguments(content))));
     }
 
-    private convertToTestCase(groups: Array<TeamCity[]>): Promise<TestCase[]> {
+    protected parseTestCase(groups: TeamCity[][]): Promise<TestCase[]> {
         return Promise.all(
             groups.map(group => {
                 if (group.length === 2) {
@@ -280,29 +288,30 @@ export class TeamCityParser extends Parser {
                     class: className.substr(className.lastIndexOf('\\') + 1),
                     classname: null,
                     file,
-                    line: 1,
+                    line: 0,
                     time: parseFloat(finish.duration) / 1000,
                     type,
                 };
 
                 if (type !== Type.PASSED) {
-                    const details: Array<Detail> = this.convertToDetail(error.details);
-                    const detail: Detail = details.shift();
+                    const details: Detail[] = this.parseDetails(error.details);
+                    const currentFile = this.currentFile(details, testCase);
 
-                    Object.assign(testCase, {
-                        type: !detail && testCase.type === Type.FAILURE ? Type.RISKY : testCase.type,
+                    Object.assign(testCase, currentFile, {
+                        type: currentFile.line === 0 && testCase.type === Type.FAILURE ? Type.RISKY : testCase.type,
                         fault: {
                             message: error.message,
-                            details: details,
+                            details: this.filterDetails(details, currentFile),
                         },
                     });
 
-                    if (detail) {
-                        return Promise.resolve(Object.assign(testCase, detail));
+                    if (testCase.line !== 0) {
+                        return Promise.resolve(testCase);
                     }
                 }
+                const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
 
-                return this.textRange.lineNumber(file, `function ${name}`).then(line => {
+                return this.textRange.lineNumber(file, pattern).then(line => {
                     return Object.assign(testCase, {
                         line: line,
                     });
@@ -311,22 +320,7 @@ export class TeamCityParser extends Parser {
         );
     }
 
-    private convertToDetail(content: string): Array<Detail> {
-        return content
-            .split('|n')
-            .filter(line => !!line)
-            .reverse()
-            .map(path => {
-                const [, file, line] = path.match(/(.*):(\d+)/);
-
-                return {
-                    file,
-                    line: parseInt(line, 10),
-                };
-            });
-    }
-
-    private groupByType(items: TeamCity[]): Array<TeamCity[]> {
+    private groupByType(items: TeamCity[]): TeamCity[][] {
         let counter = 0;
 
         return items.reduce((results, item) => {

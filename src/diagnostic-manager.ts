@@ -11,6 +11,7 @@ import {
 import { TestCase, Type } from './parser';
 
 import { Store } from './store';
+import { resolve as pathResolve } from 'path';
 import { tap } from './helpers';
 
 export class DiagnosticManager {
@@ -21,7 +22,10 @@ export class DiagnosticManager {
             this.diagnostics.set(
                 Uri.file(file),
                 testCases
-                    .filter((testCase: TestCase) => testCase.type !== Type.PASSED)
+                    .filter(
+                        testCase =>
+                            testCase.type !== Type.PASSED
+                    )
                     .map(testCase => this.convertToDiagnostic(testCase, editor))
                     .filter(diagnostic => diagnostic !== null)
             );
@@ -47,11 +51,19 @@ export class DiagnosticManager {
     }
 
     private convertToRange(testCase: TestCase, editor?: TextEditor) {
-        const textLine: TextLine = editor.document.lineAt(testCase.line - 1);
-
-        return new Range(
-            new Position(textLine.lineNumber, textLine.firstNonWhitespaceCharacterIndex),
-            new Position(textLine.lineNumber, textLine.range.end.character + 1)
-        );
+        if (pathResolve(editor.document.fileName) === pathResolve(testCase.file)) {
+            const textLine: TextLine = editor.document.lineAt(testCase.line - 1);
+            
+            return new Range(
+                new Position(textLine.lineNumber, textLine.firstNonWhitespaceCharacterIndex),
+                new Position(textLine.lineNumber, textLine.range.end.character + 1)
+            );
+        } else {
+            return new Range(
+                new Position(testCase.line, 0),
+                new Position(testCase.line, 1000)
+            );
+        }
+        
     }
 }

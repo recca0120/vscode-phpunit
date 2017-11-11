@@ -20,7 +20,6 @@ export class Command {
         },
         private files = new Filesystem()
     ) {
-        this.execPath = !this.execPath || this.execPath.trim() === 'phpunit' ? this.getExecutable() : this.execPath;
         this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`);
     }
 
@@ -29,11 +28,13 @@ export class Command {
     }
 
     args() {
-        if (!this.execPath) {
+        const execPath = !this.execPath || this.execPath.trim() === 'phpunit' ? this.getExecutable() : this.execPath;
+
+        if (!execPath) {
             throw State.PHPUNIT_NOT_FOUND;
         }
 
-        return this.parseOptions([this.execPath].concat(this.parameters)).concat([this.fileName]);
+        return this.parseOptions([execPath].concat(this.parameters)).concat([this.fileName]);
     }
 
     clear() {
