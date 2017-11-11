@@ -55,7 +55,7 @@ export class TextLineFactory {
     }
 
     create(file, pattern: RegExp): Promise<TextLine> {
-        return this.read(file).then(lines => {
+        return this.getContent(file).then(lines => {
             let lineNumber = 0;
             let text = '';
             for (let i = 0; i < lines.length; i++) {
@@ -91,7 +91,7 @@ export class TextLineFactory {
         this.cache.clear();
     }
 
-    private read(file: string): Promise<string[]> {
+    private getContent(file: string): Promise<string[]> {
         if (this.cache.has(file) === true) {
             return Promise.resolve(this.cache.get(file));
         }
