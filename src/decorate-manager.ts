@@ -102,6 +102,20 @@ export class DecorationStyle {
         };
     }
 
+    risky(): DecorationType {
+        return {
+            // overviewRulerColor: '#ffa0a0',
+            overviewRulerColor: 'red',
+            overviewRulerLane: OverviewRulerLane.Left,
+            dark: {
+                gutterIconPath: 'risky.svg',
+            },
+            light: {
+                gutterIconPath: 'risky.svg',
+            },
+        };
+    }
+
     skipped(): DecorationType {
         return {
             overviewRulerColor: 'darkgrey',

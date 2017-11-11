@@ -20,12 +20,14 @@ export const TypeGroup = new Map<Type, Type>([
     [Type.WARNING, Type.SKIPPED],
     [Type.FAILURE, Type.ERROR],
     [Type.INCOMPLETE, Type.INCOMPLETE],
-    [Type.RISKY, Type.ERROR],
+    [Type.RISKY, Type.RISKY],
     [Type.SKIPPED, Type.SKIPPED],
     [Type.FAILED, Type.ERROR],
 ]);
 
-export const TypeKeys = [Type.PASSED, Type.ERROR, Type.INCOMPLETE, Type.SKIPPED];
+export const TypeKeys = Array.from(TypeGroup.values()).reduce((types, next) => {
+    return types.indexOf(next) === -1 ? types.concat([next]) : types;
+}, []);
 
 export interface Detail {
     file: string;
@@ -104,20 +106,18 @@ export class JUnitParser extends Parser {
         return xml2js(content).then(this.parseTestSuite.bind(this));
     }
 
-    private parseTestSuite(testSuitNode: any): TestCase[] {
-        if (testSuitNode.testsuites) {
-            return this.parseTestSuite(testSuitNode.testsuites);
+    private parseTestSuite(testSuiteNode: any): Promise<TestCase[]> {
+        const suiteNode = testSuiteNode.testsuites || testSuiteNode.testsuite;
+
+        if (suiteNode) {
+            return suiteNode instanceof Array
+                ? Promise.all([].concat(...suiteNode.map(this.parseTestSuite.bind(this))))
+                : this.parseTestSuite(suiteNode);
         }
 
-        if (testSuitNode.testsuite) {
-            return [].concat(...testSuitNode.testsuite.map(this.parseTestSuite.bind(this)));
-        }
-
-        if (testSuitNode.testcase) {
-            return [].concat(...testSuitNode.testcase.map(this.parseTestCase.bind(this)));
-        }
-
-        return [];
+        return testSuiteNode.testcase instanceof Array
+            ? Promise.all([].concat(...testSuiteNode.testcase.map(this.parseTestCase.bind(this))))
+            : Promise.all([this.parseTestCase(testSuiteNode)]);
     }
 
     protected parseTestCase(testCaseNode: any): Promise<TestCase> {
@@ -157,30 +157,21 @@ export class JUnitParser extends Parser {
         const keys = Object.keys(testCaseNode);
 
         if (keys.indexOf('error') !== -1) {
-            return Object.assign(
-                {
-                    type: this.parseErrorType(testCaseNode.error),
-                },
-                testCaseNode.error
-            );
+            return tap(testCaseNode.error, (error) => {
+                error.type = this.parseErrorType(testCaseNode.error);
+            });
         }
 
         if (keys.indexOf('warning') !== -1) {
-            return Object.assign(
-                {
-                    type: Type.WARNING,
-                },
-                testCaseNode.warning
-            );
+            return tap(testCaseNode.warning, (warning) => {
+                warning.type = Type.WARNING;
+            });
         }
 
         if (keys.indexOf('failure') !== -1) {
-            return Object.assign(
-                {
-                    type: Type.FAILURE,
-                },
-                testCaseNode.failure
-            );
+            return tap(testCaseNode.failure, (failure) => {
+                failure.type = Type.FAILURE;
+            });
         }
 
         if (keys.indexOf('skipped') !== -1 || keys.indexOf('incomplete') !== -1) {
