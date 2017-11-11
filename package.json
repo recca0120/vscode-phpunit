@@ -98,9 +98,8 @@
     },
     "dependencies": {
         "@types/minimist": "^1.2.0",
-        "@types/xml2js": "^0.4.0",
         "minimist-string": "^1.0.2",
-        "xml2js": "^0.4.19"
+        "x2js": "^3.1.1"
     },
     "lint-staged": {
         "linters": {

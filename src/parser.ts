@@ -1,8 +1,7 @@
-import { minimistString, tap } from './helpers';
+import { minimistString, tap, xml2js } from './helpers';
 
 import { Filesystem } from './filesystem';
 import { TextRange } from './text-range';
-import { parseString } from 'xml2js';
 
 export enum Type {
     PASSED = 'passed',
@@ -102,89 +101,93 @@ export class JUnitParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.xml2json(content).then(json => this.parseTestSuite(json.testsuites));
+        return xml2js(content).then(this.parseTestSuite.bind(this));
     }
 
     private parseTestSuite(testSuitNode: any): TestCase[] {
-        let testCase: TestCase[] = [];
-        if (testSuitNode.testsuite) {
-            testCase = testCase.concat(...testSuitNode.testsuite.map(this.parseTestSuite.bind(this)));
-        } else if (testSuitNode.testcase) {
-            testCase = testCase.concat(...testSuitNode.testcase.map(this.parseTestCase.bind(this)));
+        if (testSuitNode.testsuites) {
+            return this.parseTestSuite(testSuitNode.testsuites);
         }
 
-        return testCase;
+        if (testSuitNode.testsuite) {
+            return [].concat(...testSuitNode.testsuite.map(this.parseTestSuite.bind(this)));
+        }
+
+        if (testSuitNode.testcase) {
+            return [].concat(...testSuitNode.testcase.map(this.parseTestCase.bind(this)));
+        }
+
+        return [];
     }
 
-    protected parseTestCase(testCaseNode: any): TestCase {
-        const testCaseNodeAttr = testCaseNode.$;
-
+    protected parseTestCase(testCaseNode: any): Promise<TestCase> {
         const testCase: TestCase = {
-            name: testCaseNodeAttr.name || null,
-            class: testCaseNodeAttr.class,
-            classname: testCaseNodeAttr.classname || null,
-            file: testCaseNodeAttr.file,
-            line: parseInt(testCaseNodeAttr.line || 1, 10),
-            time: parseFloat(testCaseNodeAttr.time || 0),
+            name: testCaseNode._name || null,
+            class: testCaseNode._class,
+            classname: testCaseNode._classname || null,
+            file: testCaseNode._file,
+            line: parseInt(testCaseNode._line || 1, 10),
+            time: parseFloat(testCaseNode._time || 0),
             type: Type.PASSED,
         };
 
         const faultNode = this.getFaultNode(testCaseNode);
 
         if (faultNode === null) {
-            return testCase;
+            return Promise.resolve(testCase);
         }
 
-        const faultNodeAttr = faultNode.$;
-        const details: Detail[] = this.parseDetails(faultNode._);
+        const details: Detail[] = this.parseDetails(faultNode.__text);
         const currentFile = this.currentFile(details, testCase);
         const message = this.parseMessage(faultNode, details);
 
-        return Object.assign(testCase, currentFile, {
-            type: faultNode.type,
-            fault: {
-                type: faultNodeAttr.type || '',
-                message: message,
-                details: this.filterDetails(details, currentFile),
-            },
-        });
+        return Promise.resolve(
+            Object.assign(testCase, currentFile, {
+                type: faultNode.type,
+                fault: {
+                    type: faultNode._type || '',
+                    message: message,
+                    details: this.filterDetails(details, currentFile),
+                },
+            })
+        );
     }
 
     private getFaultNode(testCaseNode: any): any {
-        if (testCaseNode.error) {
+        const keys = Object.keys(testCaseNode);
+
+        if (keys.indexOf('error') !== -1) {
             return Object.assign(
                 {
-                    type: this.parseErrorType(testCaseNode.error[0]),
+                    type: this.parseErrorType(testCaseNode.error),
                 },
-                testCaseNode.error[0]
+                testCaseNode.error
             );
         }
 
-        if (testCaseNode.warning) {
+        if (keys.indexOf('warning') !== -1) {
             return Object.assign(
                 {
                     type: Type.WARNING,
                 },
-                testCaseNode.warning[0]
+                testCaseNode.warning
             );
         }
 
-        if (testCaseNode.failure) {
+        if (keys.indexOf('failure') !== -1) {
             return Object.assign(
                 {
                     type: Type.FAILURE,
                 },
-                testCaseNode.failure[0]
+                testCaseNode.failure
             );
         }
 
-        if (testCaseNode.skipped || testCaseNode.incomplete) {
+        if (keys.indexOf('skipped') !== -1 || keys.indexOf('incomplete') !== -1) {
             return {
                 type: Type.SKIPPED,
-                $: {
-                    type: Type.SKIPPED,
-                },
-                _: '',
+                _type: Type.SKIPPED,
+                __text: '',
             };
         }
 
@@ -195,16 +198,16 @@ export class JUnitParser extends Parser {
         const messages: string[] = details
             .reduce((result, detail) => {
                 return result.replace(`${detail.file}:${detail.line}`, '').trim();
-            }, this.crlf2lf(faultNode._))
+            }, this.crlf2lf(faultNode.__text))
             .split(/\r\n|\n/);
 
         const message = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');
 
-        return faultNode.$.type ? message.replace(new RegExp(`^${faultNode.$.type}:`, 'g'), '').trim() : message.trim();
+        return faultNode._type ? message.replace(new RegExp(`^${faultNode._type}:`, 'g'), '').trim() : message.trim();
     }
 
     private parseErrorType(errorNode: any): Type {
-        const errorType = errorNode.$.type.toLowerCase();
+        const errorType = errorNode._type.toLowerCase();
 
         if (errorType.indexOf(Type.SKIPPED) !== -1) {
             return Type.SKIPPED;
@@ -221,16 +224,8 @@ export class JUnitParser extends Parser {
         return Type.ERROR;
     }
 
-    private crlf2lf(str: string): string {
-        return str.replace(/\r\n/g, '\n');
-    }
-
-    private xml2json(xml: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            parseString(xml, (error, json) => {
-                return error ? reject(error) : resolve(json);
-            });
-        });
+    private crlf2lf(content: string): string {
+        return content.replace(/\r\n/g, '\n');
     }
 }
 
@@ -328,7 +323,7 @@ export class TeamCityParser extends Parser {
             }
             results[counter].push(item);
 
-            if (item.type === 'testFinished') {
+            if (item.status === 'testFinished') {
                 counter++;
             }
 
@@ -366,7 +361,7 @@ export class TeamCityParser extends Parser {
                     });
                 }, teamCity);
             })
-            .filter(item => ['testCount', 'testSuiteStarted', 'testSuiteFinished'].indexOf(item.type) === -1);
+            .filter(item => ['testCount', 'testSuiteStarted', 'testSuiteFinished'].indexOf(item.status) === -1);
     }
 }
 

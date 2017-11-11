@@ -7,6 +7,7 @@ recommendations on how to structure this file.
 ## 0.4.0
 - support teamcity log
 - warning phpunit could not find
+- xml2js -> x2js
 
 ## 0.3.0
 - add config
