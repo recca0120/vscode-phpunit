@@ -6,7 +6,6 @@ import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
-import { showWarningMessage } from './../.vscode-test/resources/app/out/vs/vscode.d';
 
 export class Project {
     constructor(public window: any, public workspace: any, public extensionPath: string) {}

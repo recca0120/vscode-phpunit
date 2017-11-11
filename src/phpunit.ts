@@ -1,6 +1,5 @@
 import { ParserFactory, TestCase } from './parser';
 
-import { ChildProcess } from 'child_process';
 import { Command } from './command';
 import { EventEmitter } from 'events';
 import { ProcessFactory } from './process';

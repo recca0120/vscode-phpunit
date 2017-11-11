@@ -1,10 +1,8 @@
-import { isWindows, minimistString, tap } from './helpers';
+import { minimistString, tap } from './helpers';
 
 import { Filesystem } from './filesystem';
 import { TextRange } from './text-range';
 import { parseString } from 'xml2js';
-
-const os = isWindows() ? 'windows' : 'unix';
 
 export enum Type {
     PASSED = 'passed',
@@ -237,7 +235,8 @@ export class JUnitParser extends Parser {
 }
 
 interface TeamCity {
-    type: string;
+    status: string;
+    type?: string;
     count?: string;
     name?: string;
     flowId?: string;
@@ -263,7 +262,7 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.parseTestCase(this.groupByType(this.convertToArguments(content))));
+        return this.parseTestCase(this.groupByType(this.convertToArguments(content)));
     }
 
     protected parseTestCase(groups: TeamCity[][]): Promise<TestCase[]> {
@@ -271,7 +270,7 @@ export class TeamCityParser extends Parser {
             groups.map(group => {
                 if (group.length === 2) {
                     group.splice(1, 0, {
-                        type: 'testPassed',
+                        status: 'testPassed',
                     });
                 }
 
@@ -281,7 +280,7 @@ export class TeamCityParser extends Parser {
                     .replace(/::\\/g, '::')
                     .split('::');
 
-                const type = this.typeMap[error.type];
+                const type = this.typeMap[error.status];
 
                 const testCase: TestCase = {
                     name,
@@ -349,26 +348,23 @@ export class TeamCityParser extends Parser {
                     .replace(/\|\'/g, "\\'");
 
                 const argv: string[] = minimistString(line)._;
-                const type: string = argv.shift();
+                const teamCity: TeamCity = {
+                    status: argv.shift(),
+                };
 
-                return argv.reduce(
-                    (options, arg) => {
-                        return tap(options, opts => {
-                            const split = arg.split('=');
-                            const key = split.shift();
-                            const value = split
-                                .join('=')
-                                .replace(/\|\|/g, '\\')
-                                .replace(/\|n/g, '\n')
-                                .trim();
+                return argv.reduce((options, arg) => {
+                    return tap(options, opts => {
+                        const split = arg.split('=');
+                        const key = split.shift();
+                        const value = split
+                            .join('=')
+                            .replace(/\|\|/g, '\\')
+                            .replace(/\|n/g, '\n')
+                            .trim();
 
-                            opts[key] = value;
-                        });
-                    },
-                    {
-                        type,
-                    }
-                );
+                        opts[key] = value;
+                    });
+                }, teamCity);
             })
             .filter(item => ['testCount', 'testSuiteStarted', 'testSuiteFinished'].indexOf(item.type) === -1);
     }
