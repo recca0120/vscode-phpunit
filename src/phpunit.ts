@@ -5,7 +5,7 @@ import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
 import { ProcessFactory } from './process';
 import { container } from './container';
-import {tap} from './helpers'
+import { tap } from './helpers';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -17,22 +17,31 @@ export enum State {
 class Delayed {
     private timer: any;
 
-    resolve(callback: Function, time = 500): Promise<any> {
+    private rejectFn: Function = null;
+
+    resolve(callback: Function, timeout = 200): Promise<any> {
         this.cancel();
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
+            this.bindReject(reject);
             this.timer = setTimeout(() => {
+                this.bindReject(null);
                 resolve(callback());
-            }, time);
+            }, timeout);
         });
     }
 
-    cancel() {
-        if (this.timer) {
+    cancel(message = 'cancelled') {
+        if (this.rejectFn) {
+            this.rejectFn(message);
             clearTimeout(this.timer);
+            this.timer = null;
+            this.bindReject(null);
         }
+    }
 
-        return this;
+    private bindReject(rejectFn: Function) {
+        this.rejectFn = rejectFn;
     }
 }
 
@@ -51,7 +60,7 @@ export class PHPUnit extends EventEmitter {
     handle(path: string, options: CommandOptions, execPath: string = ''): Promise<TestCase[]> {
         return delayed.resolve(() => {
             return this.fire(path, options, execPath);
-        }, 100);
+        }, 500);
     }
 
     private fire(path: string, options: CommandOptions, execPath: string = ''): Promise<TestCase[]> {
@@ -69,7 +78,7 @@ export class PHPUnit extends EventEmitter {
             this.emit('stdout', `${spawnOptions.join(' ')}\n\n`);
             this.processFactory
                 .create()
-                .on('stdout', (buffer: Buffer) => this.emit('stderr', buffer))
+                .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
                 .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
                 .spawn(spawnOptions, {
                     cwd: this.basePath,
@@ -77,7 +86,7 @@ export class PHPUnit extends EventEmitter {
                 .then(output => {
                     this.emit('stdout', '\n\n');
                     const parser = this.parserFactory.create(options.has('--teamcity') ? 'teamcity' : 'junit');
-                    const content = options.has('--teamcity') ? output : options.get('--log-xml');
+                    const content = options.has('--teamcity') ? output : options.get('--log-junit');
                     parser
                         .parse(content)
                         .then(items => resolve(items))
@@ -93,7 +102,7 @@ export class PHPUnit extends EventEmitter {
     }
 
     private getExecutable(execPath: string = ''): string {
-        return tap(execPath !== '' && execPath !== 'phpunit' ? execPath : this.findExecutable(), (execPath) => {
+        return tap(execPath !== '' && execPath !== 'phpunit' ? execPath : this.findExecutable(), execPath => {
             if (!execPath) {
                 throw State.PHPUNIT_NOT_FOUND;
             }
