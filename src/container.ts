@@ -17,10 +17,10 @@ interface Singleton {
     store: Store;
     textLineFactory: TextLineFactory;
     validator: Validator;
-    extensionPath: string;
     window?: any;
     workspace?: any;
     context?: ExtensionContext;
+    extensionPath: string
 }
 
 export class Container {
@@ -30,7 +30,10 @@ export class Container {
         store,
         textLineFactory,
         validator,
-        extensionPath: '',
+        workspace: {
+            rootPath: __dirname,
+        },
+        extensionPath: __dirname,
     };
 
     get basePath(): string {
@@ -38,7 +41,7 @@ export class Container {
     }
 
     get extensionPath(): string {
-        return this.get('context').extensionPath;
+        return this.getSingleton('extensionPath');
     }
 
     get window(): any {

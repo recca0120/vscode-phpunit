@@ -14,7 +14,8 @@ export function activate(context: ExtensionContext) {
     container
         .set('window', window)
         .set('workspace', workspace)
-        .set('context', context);
+        .set('context', context)
+        .set('extensionPath', context.extensionPath);
 
     const name = 'PHPUnit';
     const outputChannel: OutputChannel = window.createOutputChannel(name);
