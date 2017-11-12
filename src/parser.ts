@@ -56,7 +56,9 @@ export abstract class Parser {
     constructor(
         protected files: Filesystem = container.files,
         protected textLineFactory: TextLineFactory = container.textLineFactory
-    ) {}
+    ) {
+        this.textLineFactory.dispose();
+    }
 
     abstract parse(content: any): Promise<TestCase[]>;
 
@@ -64,10 +66,6 @@ export abstract class Parser {
 
     parseFile(fileName: string): Promise<TestCase[]> {
         return this.files.getAsync(fileName).then((content: string) => this.parseString(content));
-    }
-
-    dispose(): void {
-        this.textLineFactory.dispose();
     }
 
     protected abstract parseTestCase(data: any);

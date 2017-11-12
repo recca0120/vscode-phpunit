@@ -3,7 +3,6 @@ import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 import { Filesystem } from '../src/filesystem';
 import { TextLineFactory } from '../src/text-line';
 import { join as pathJoin } from 'path';
-import { readFileSync } from 'fs';
 
 describe('TeamCityParser', () => {
     const files: Filesystem = new Filesystem();
