@@ -1,9 +1,10 @@
 import { DiagnosticCollection, ExtensionContext, OutputChannel, languages, window, workspace } from 'vscode';
-import { Project, Tester } from './tester';
 
+import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { PHPUnit } from './phpunit';
+import { Tester } from './tester';
 import { container } from './container';
 
 export function activate(context: ExtensionContext) {
@@ -12,6 +13,7 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!');
 
     container
+        .setConfig(workspace.getConfiguration('phpunit'))
         .set('window', window)
         .set('workspace', workspace)
         .set('context', context)

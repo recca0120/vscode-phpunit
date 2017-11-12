@@ -1,10 +1,12 @@
+import { ConfigRepository } from './config';
 import { ExtensionContext } from 'vscode';
 import { Filesystem } from './filesystem';
 import { ProcessFactory } from './process';
 import { Store } from './store';
 import { TextLineFactory } from './text-line';
 import { Validator } from './validator';
-
+import { WorkspaceConfiguration } from vscode;
+const config = new ConfigRepository();
 const files = new Filesystem();
 const processFactory = new ProcessFactory();
 const store = new Store();
@@ -12,6 +14,7 @@ const textLineFactory = new TextLineFactory(files);
 const validator = new Validator(files);
 
 interface Singleton {
+    config: ConfigRepository;
     files: Filesystem;
     processFactory: ProcessFactory;
     store: Store;
@@ -20,11 +23,12 @@ interface Singleton {
     window?: any;
     workspace?: any;
     context?: ExtensionContext;
-    extensionPath: string
+    extensionPath: string;
 }
 
 export class Container {
     protected singleton: Singleton = {
+        config,
         files,
         processFactory,
         store,
@@ -35,6 +39,10 @@ export class Container {
         },
         extensionPath: __dirname,
     };
+
+    setConfig(workspaceConfigure: WorkspaceConfiguration): Container {
+        return this.setSingleton('config', new ConfigRepository(workspaceConfigure));
+    }
 
     get basePath(): string {
         return this.workspace.rootPath;
@@ -50,6 +58,10 @@ export class Container {
 
     get workspace(): any {
         return this.getSingleton('workspace');
+    }
+
+    get config(): ConfigRepository {
+        return this.getSingleton('config');
     }
 
     get context(): ExtensionContext {

@@ -2,6 +2,7 @@ import { Disposable, TextDocument, TextEditor } from 'vscode';
 import { PHPUnit, State } from './phpunit';
 
 import { CommandOptions } from './command-options';
+import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
@@ -13,21 +14,21 @@ export class Tester {
     private locked = false;
     private window: any;
     private workspace: any;
-    private config: any;
+    private store: Store;
+    private validator: Validator;
+    private config: ConfigRepository;
 
     constructor(
         private container: Container,
         private phpunit: PHPUnit,
         private decorateManager: DecorateManager,
-        private diagnosticManager: DiagnosticManager,
-        private store: Store = null,
-        private validator: Validator = null
+        private diagnosticManager: DiagnosticManager
     ) {
         this.window = this.container.window;
         this.workspace = this.container.workspace;
-        this.store = this.store || this.container.store;
-        this.validator = this.validator || this.container.validator;
-        this.config = this.workspace.getConfiguration('phpunit');
+        this.store = this.container.store;
+        this.validator = this.container.validator;
+        this.config = this.container.config;
     }
 
     subscribe(): this {
@@ -81,10 +82,8 @@ export class Tester {
             return;
         }
 
-        const { execPath, args } = this.config;
-
         this.phpunit
-            .handle(fileName, new CommandOptions(args), execPath)
+            .handle(fileName, new CommandOptions(this.config.get('args')), this.config.get('execPath'))
             .then(items => {
                 this.store.put(items);
                 this.decoratedGutter();
