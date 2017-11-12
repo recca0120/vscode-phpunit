@@ -23,7 +23,8 @@ export class Delay {
     }
 
     cancel(message = 'cancelled') {
-        this.id++;
+        this.id = this.id > 100 ? 0 : this.id + 1;
+
         if (this.cancelled() === false) {
             this.rejectFn(message);
             this.reset();
