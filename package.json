@@ -64,6 +64,7 @@
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "jest",
         "test:watch": "jest --watch",
+        "precommit": "lint-staged",
         "prettier": "prettier",
         "prettier-write": "npm run prettier -- --single-quote --trailing-comma es5 --write --print-width 120 --tab-width 4",
         "prettier-project": "npm run prettier-write -- {test,tests,src}/**/*.ts"
