@@ -14,7 +14,6 @@ const delay = new Delay();
 
 export class Tester {
     private disposable: Disposable;
-    private locked = false;
     private window: any;
     private workspace: any;
     private store: Store;
@@ -36,13 +35,13 @@ export class Tester {
 
     subscribe(): this {
         const subscriptions: Disposable[] = [];
-        this.window.onDidChangeActiveTextEditor(() => this.documentChanged(true, 1000), null, subscriptions);
-        // this.workspace.onDidOpenTextDocument(() => this.documentChanged(true, 1000), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(() => this.documentChanged(false, 50), null, subscriptions);
-        // this.workspace.onDidSaveTextDocument(() => this.documentChanged(false, 50), null, subscriptions)
+        this.window.onDidChangeActiveTextEditor(() => this.delayDocumentChanged(1000, false), null, subscriptions);
+        // this.workspace.onDidOpenTextDocument(() => this.delayDocumentChanged(1000, false), null, subscriptions)
+        this.workspace.onWillSaveTextDocument(() => this.delayDocumentChanged(50, true), null, subscriptions);
+        // this.workspace.onDidSaveTextDocument(() => this.delayDocumentChanged(50, true), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
-        //         this.documentChanged(false, 50)
+        //         this.delayDocumentChanged(50, true)
         //     }
         // }, null, subscriptions)
 
@@ -51,9 +50,30 @@ export class Tester {
         return this;
     }
 
-    handle(path: string, args: string[] = []) {
-        const execPath: string = this.config.get('execPath');
-        const options: CommandOptions = new CommandOptions(this.config.get('args').concat(args));
+    handle(path: string, args: string[] = [], content: string = '', force = true) {
+        this.clearDecoratedGutter();
+
+        if (path && this.validator.fileName(path) === false) {
+            console.warn(State.PHPUNIT_NOT_PHP, path);
+
+            return false;
+        }
+
+        if (content && this.validator.className(path, content) === false) {
+            console.warn(State.PHPUNIT_NOT_TESTCASE, path, content);
+
+            return;
+        }
+
+        if (force === false && this.store.has(path) === true) {
+            this.decoratedGutter();
+            this.handleDiagnostic();
+
+            return false;
+        }
+
+        const execPath: string = this.config.get('execPath', '');
+        const options: CommandOptions = new CommandOptions(this.config.get('args', []).concat(args));
 
         this.phpunit
             .handle(path, options, execPath)
@@ -72,61 +92,15 @@ export class Tester {
             });
     }
 
-    private documentChanged(lock = true, timeout = 50) {
-        return delay.resolve(() => this.handleDocumentChanged(lock), timeout);
-    }
-
-    private handleDocumentChanged(lock = false) {
+    private delayDocumentChanged(timeout = 50, force = false) {
         if (this.hasEditor === false) {
             return false;
         }
 
-        if (lock === true) {
-            this.lock();
-        } else {
-            this.unlock();
-        }
-
         const path: string = this.fileName;
+        const content: string = this.document.getText();
 
-        this.clearDecoratedGutter();
-
-        if (this.validator.fileName(path) === false) {
-            console.warn(State.PHPUNIT_NOT_PHP, path);
-
-            return false;
-        }
-
-        if (this.validator.className(path, this.document.getText()) === false) {
-            console.warn(State.PHPUNIT_NOT_TESTCASE, path, this.document.getText());
-
-            return;
-        }
-
-        if (this.isLocked() === true && this.store.has(path) === true) {
-            this.decoratedGutter();
-            this.handleDiagnostic();
-
-            return false;
-        }
-
-        this.handle(this.fileName, []);
-    }
-
-    lock(): this {
-        this.locked = true;
-
-        return this;
-    }
-
-    unlock(): this {
-        this.locked = false;
-
-        return this;
-    }
-
-    isLocked(): boolean {
-        return this.locked;
+        return delay.resolve(() => this.handle(path, [], content, force), timeout);
     }
 
     dispose() {
