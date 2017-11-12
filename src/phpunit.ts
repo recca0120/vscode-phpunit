@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
 import { ProcessFactory } from './process';
 import { container } from './container';
+import {tap} from './helpers'
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -58,7 +59,7 @@ export class PHPUnit extends EventEmitter {
             if (options.has('--teamcity') === false) {
                 options.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
             }
-    
+
             if (options.has('-c') === false) {
                 options.put('-c', this.getConfiguration());
             }
@@ -92,17 +93,16 @@ export class PHPUnit extends EventEmitter {
     }
 
     private getExecutable(execPath: string = ''): string {
-        execPath =
-            execPath !== '' && execPath !== 'phpunit'
-                ? execPath
-                : [`${this.basePath}/vendor/bin/phpunit`, `${this.basePath}/phpunit.phar`, 'phpunit']
-                      .map(path => this.files.find(path))
-                      .find(path => path !== '');
+        return tap(execPath !== '' && execPath !== 'phpunit' ? execPath : this.findExecutable(), (execPath) => {
+            if (!execPath) {
+                throw State.PHPUNIT_NOT_FOUND;
+            }
+        });
+    }
 
-        if (!execPath) {
-            throw State.PHPUNIT_NOT_FOUND;
-        }
-
-        return execPath;
+    private findExecutable(): string {
+        return [`${this.basePath}/vendor/bin/phpunit`, `${this.basePath}/phpunit.phar`, 'phpunit']
+            .map(path => this.files.find(path))
+            .find(path => path !== '');
     }
 }
