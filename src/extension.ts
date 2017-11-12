@@ -14,10 +14,9 @@ export function activate(context: ExtensionContext) {
     container
         .set('window', window)
         .set('workspace', workspace)
-        .set('extensionPath', context.extensionPath);
+        .set('context', context);
 
     const name = 'PHPUnit';
-    const project: Project = new Project(window, workspace, context.extensionPath);
     const outputChannel: OutputChannel = window.createOutputChannel(name);
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name);
 
