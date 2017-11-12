@@ -16,7 +16,7 @@ export class Validator {
 
     className(fileName: string, content?: string) {
         content = content || this.files.get(fileName);
-        
+
         const className = fileName
             .substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1)
             .replace(/\.(php|inc)/i, '');

@@ -1,7 +1,7 @@
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
 import { TestCase, Type, TypeKeys } from './parser';
 
-import { Project } from './tester';
+import { Container } from './container';
 import { Store } from './store';
 import { resolve } from 'path';
 
@@ -10,9 +10,9 @@ export class DecorateManager {
     private extensionPath: string;
     private window: any;
 
-    constructor(project: Project, private decorationStyle: DecorationStyle = new DecorationStyle()) {
-        this.extensionPath = project.extensionPath;
-        this.window = project.window;
+    constructor(container: Container, private decorationStyle: DecorationStyle = new DecorationStyle()) {
+        this.extensionPath = container.extensionPath;
+        this.window = container.window;
 
         this.styles = TypeKeys.reduce((styles, type: Type) => {
             return styles.set(type, this.createTextEditorDecorationType(this.decorationStyle.get(type)));
