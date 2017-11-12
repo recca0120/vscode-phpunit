@@ -13,7 +13,7 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "vscode-phpunit" is now active!');
 
     container
-        .setConfig(workspace.getConfiguration('phpunit'))
+        .set('config', new ConfigRepository(workspace))
         .set('window', window)
         .set('workspace', workspace)
         .set('context', context)

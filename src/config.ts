@@ -1,37 +1,45 @@
-import { WorkspaceConfiguration } from 'vscode';
+class FakeWorkspaceConfiguration {
+    constructor(public name) {}
 
-export class Fake implements WorkspaceConfiguration {
-    readonly [key: string]: any;
-    get<T>(): T;
-    get<T>(): T;
-    get() {
-        throw new Error('Method not implemented.');
+    get(): any {
+        return 'fake';
     }
-    has(): boolean {
-        throw new Error('Method not implemented.');
+
+    update() {
+        return true;
     }
-    inspect<T>(): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } {
-        throw new Error('Method not implemented.');
+
+    has() {
+        return true;
     }
-    update(): Thenable<void> {
-        throw new Error('Method not implemented.');
+}
+
+class FakeWorkspace {
+    public rootPath: string = __dirname;
+
+    getConfiguration(name: string) {
+        return new FakeWorkspaceConfiguration(name);
     }
 }
 
 export class ConfigRepository {
-    constructor(private workspaceConfigure: WorkspaceConfiguration = new Fake()) {}
+    constructor(private workspace = new FakeWorkspace()) {}
 
-    get(key: string): any {
-        return this.workspaceConfigure.get(key);
+    private getWorkspaceConfigure(): any {
+        return this.workspace.getConfiguration('phpunit');
+    }
+
+    get(key: string, defaultValue?: any): any {
+        return this.getWorkspaceConfigure().get(key, defaultValue);
     }
 
     put(key: string, value: any): ConfigRepository {
-        this.workspaceConfigure.update(key, value);
+        this.getWorkspaceConfigure().update(key, value);
 
         return this;
     }
 
     has(key: string): boolean {
-        return this.workspaceConfigure.has(key);
+        return this.getWorkspaceConfigure().has(key);
     }
 }

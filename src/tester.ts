@@ -40,50 +40,26 @@ export class Tester {
         //     null,
         //     subscriptions
         // );
-        this.workspace.onWillSaveTextDocument(() => this.unlock().handle(), null, subscriptions);
+        this.workspace.onWillSaveTextDocument(() => this.unlock().fire(), null, subscriptions);
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
         //         this.restore()
         //     }
         // }, null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(() => this.lock().handle(), null, subscriptions);
-        this.lock().handle();
+        this.window.onDidChangeActiveTextEditor(() => this.lock().fire(), null, subscriptions);
+        this.lock().fire();
         this.disposable = Disposable.from(...subscriptions);
 
         return this;
     }
 
-    handle() {
-        if (this.hasEditor === false) {
-            return;
-        }
-
-        const fileName = this.document.fileName;
-
-        if (this.validator.fileName(fileName) === false) {
-            console.warn(State.PHPUNIT_NOT_PHP);
-
-            return;
-        }
-
-        if (this.validator.className(fileName, this.document.getText()) === false) {
-            console.warn(State.PHPUNIT_NOT_TESTCASE);
-
-            return;
-        }
-
-        this.clearDecoratedGutter();
-
-        if (this.isLocked() === true && this.store.has(fileName) === true) {
-            this.decoratedGutter();
-            this.handleDiagnostic();
-
-            return;
-        }
+    handle(path: string, args: string[] = []) {
+        const execPath: string = this.config.get('execPath');
+        const options: CommandOptions = new CommandOptions(this.config.get('args').concat(args));
 
         this.phpunit
-            .handle(fileName, new CommandOptions(this.config.get('args')), this.config.get('execPath'))
+            .handle(path, options, execPath)
             .then(items => {
                 this.store.put(items);
                 this.decoratedGutter();
@@ -97,6 +73,37 @@ export class Tester {
                 }
                 console.error(error);
             });
+    }
+
+    fire() {
+        if (this.hasEditor === false) {
+            return false;
+        }
+
+        const path: string = this.fileName;
+
+        this.clearDecoratedGutter();
+
+        if (this.validator.fileName(path) === false) {
+            console.warn(State.PHPUNIT_NOT_PHP, path);
+
+            return false;
+        }
+
+        if (this.validator.className(path, this.document.getText()) === false) {
+            console.warn(State.PHPUNIT_NOT_TESTCASE, path, this.document.getText());
+
+            return;
+        }
+
+        if (this.isLocked() === true && this.store.has(path) === true) {
+            this.decoratedGutter();
+            this.handleDiagnostic();
+
+            return false;
+        }
+
+        this.handle(this.fileName, []);
     }
 
     lock(): this {
@@ -139,6 +146,10 @@ export class Tester {
 
     get document(): TextDocument {
         return this.window.activeTextEditor.document;
+    }
+
+    get fileName(): string {
+        return this.hasEditor ? this.document.fileName : '';
     }
 
     get hasEditor(): boolean {

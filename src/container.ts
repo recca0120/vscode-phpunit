@@ -5,7 +5,7 @@ import { ProcessFactory } from './process';
 import { Store } from './store';
 import { TextLineFactory } from './text-line';
 import { Validator } from './validator';
-import { WorkspaceConfiguration } from vscode;
+
 const config = new ConfigRepository();
 const files = new Filesystem();
 const processFactory = new ProcessFactory();
@@ -39,10 +39,6 @@ export class Container {
         },
         extensionPath: __dirname,
     };
-
-    setConfig(workspaceConfigure: WorkspaceConfiguration): Container {
-        return this.setSingleton('config', new ConfigRepository(workspaceConfigure));
-    }
 
     get basePath(): string {
         return this.workspace.rootPath;
