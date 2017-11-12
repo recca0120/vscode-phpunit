@@ -3,11 +3,12 @@ import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 import { Filesystem } from '../src/filesystem';
 import { TextLineFactory } from '../src/text-line';
 import { join as pathJoin } from 'path';
+import { readFileSync } from 'fs';
 
 describe('TeamCityParser', () => {
     const files: Filesystem = new Filesystem();
     const textLineFactory: TextLineFactory = new TextLineFactory(files);
-    const parser: TeamCityParser = new TeamCityParser(textLineFactory);
+    const parser: TeamCityParser = new TeamCityParser(files, textLineFactory);
 
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parseFile(pathJoin(__dirname, 'fixtures/teamcity.txt'));
@@ -17,9 +18,9 @@ describe('TeamCityParser', () => {
 
     describe('PHPUnit2Test', () => {
         beforeEach(() => {
-            spyOn(files, 'getAsync').and.returnValue(
-                Promise.resolve(files.get(pathJoin(__dirname, 'fixtures/PHPUnit2Test.php')))
-            );
+            spyOn(files, 'getAsync').and.callFake(fileName => {
+                return Promise.resolve(files.get(fileName));
+            });
         });
 
         it('it should parse passed', async () => {
@@ -111,9 +112,9 @@ describe('TeamCityParser', () => {
 
     describe('PHPUnitTest', () => {
         beforeEach(() => {
-            spyOn(files, 'getAsync').and.returnValue(
-                Promise.resolve(files.get(pathJoin(__dirname, 'fixtures/PHPUnitTest.php')))
-            );
+            spyOn(files, 'getAsync').and.callFake(fileName => {
+                return Promise.resolve(files.get(fileName));
+            });
         });
 
         it('it should parse passed', async () => {
@@ -253,13 +254,21 @@ describe('TeamCityParser', () => {
 });
 
 describe('JUnitParser', () => {
-    const parser: JUnitParser = new JUnitParser();
+    const files: Filesystem = new Filesystem();
+    const textLineFactory: TextLineFactory = new TextLineFactory(files);
+    const parser: JUnitParser = new JUnitParser(files, textLineFactory);
 
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parse(pathJoin(__dirname, 'fixtures/junit.xml'));
 
         return testCases[key];
     }
+
+    beforeEach(() => {
+        spyOn(files, 'getAsync').and.callFake(fileName => {
+            return Promise.resolve(files.get(fileName));
+        });
+    });
 
     it('it should parse passed', async () => {
         const testCase = await getTestCase(0);

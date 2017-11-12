@@ -73,10 +73,12 @@ export class PHPUnit extends EventEmitter {
                                 )
                                 .then(testCases => {
                                     command.dispose();
+                                    parser.dispose();
                                     resolve(testCases);
                                 })
                                 .catch(error => {
                                     command.dispose();
+                                    parser.dispose();
                                     reject(error);
                                 });
                         });

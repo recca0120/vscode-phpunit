@@ -52,7 +52,7 @@ export interface TestCase {
 }
 
 export abstract class Parser {
-    constructor(private files: Filesystem = new Filesystem()) {}
+    constructor(protected files: Filesystem = new Filesystem(), protected textLineFactory = new TextLineFactory()) {}
 
     abstract parse(content: any): Promise<TestCase[]>;
 
@@ -60,6 +60,10 @@ export abstract class Parser {
 
     parseFile(fileName: string): Promise<TestCase[]> {
         return this.files.getAsync(fileName).then((content: string) => this.parseString(content));
+    }
+
+    dispose(): void {
+        this.textLineFactory.dispose();
     }
 
     protected abstract parseTestCase(data: any);
@@ -231,20 +235,12 @@ export class TeamCityParser extends Parser {
         testIgnored: Type.SKIPPED,
     };
 
-    constructor(private textLineFactory = new TextLineFactory(), files: Filesystem = new Filesystem()) {
-        super(files);
-    }
-
     parse(content: string): Promise<TestCase[]> {
         return this.parseString(content);
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.parseTestCase(this.groupByType(this.parseTeamCity(content))).then(testCases => {
-            this.textLineFactory.dispose();
-
-            return testCases;
-        });
+        return this.parseTestCase(this.groupByType(this.parseTeamCity(content)));
     }
 
     protected parseTestCase(groups: TeamCity[][]): Promise<TestCase[]> {
@@ -308,23 +304,6 @@ export class TeamCityParser extends Parser {
         );
     }
 
-    private groupByType(items: TeamCity[]): TeamCity[][] {
-        let counter = 0;
-
-        return items.reduce((results, item) => {
-            if (!results[counter]) {
-                results[counter] = [];
-            }
-            results[counter].push(item);
-
-            if (item.status === 'testFinished') {
-                counter++;
-            }
-
-            return results;
-        }, []);
-    }
-
     private parseTeamCity(content: string): TeamCity[] {
         return content
             .split(/\r|\n/)
@@ -356,6 +335,23 @@ export class TeamCityParser extends Parser {
                 }, teamCity);
             })
             .filter(item => ['testCount', 'testSuiteStarted', 'testSuiteFinished'].indexOf(item.status) === -1);
+    }
+
+    private groupByType(items: TeamCity[]): TeamCity[][] {
+        let counter = 0;
+
+        return items.reduce((results, item) => {
+            if (!results[counter]) {
+                results[counter] = [];
+            }
+            results[counter].push(item);
+
+            if (item.status === 'testFinished') {
+                counter++;
+            }
+
+            return results;
+        }, []);
     }
 }
 
