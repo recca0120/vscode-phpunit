@@ -25,13 +25,18 @@
     "main": "./out/src/extension",
     "activationEvents": [
         "onLanguage:php",
-        "onCommand:phpunit.TestFile"
+        "onCommand:phpunit.TestFile",
+        "onCommand:phpunit.TestSuite"
     ],
     "contributes": {
         "commands": [
             {
                 "command": "phpunit.TestFile",
                 "title": "PHPUnit Test Current File"
+            },
+            {
+                "command": "phpunit.TestSuite",
+                "title": "PHPUnit Test All Suite"
             }
         ],
         "configuration": {

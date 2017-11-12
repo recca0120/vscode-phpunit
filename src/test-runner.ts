@@ -35,7 +35,7 @@ export class TestRunner {
 
     subscribe(commands: any): this {
         const subscriptions: Disposable[] = [];
-        
+
         this.window.onDidChangeActiveTextEditor(() => this.delayDocumentChanged(1000, false), null, subscriptions);
         // this.workspace.onDidOpenTextDocument(() => this.delayDocumentChanged(1000, false), null, subscriptions)
         this.workspace.onWillSaveTextDocument(() => this.delayDocumentChanged(50, true), null, subscriptions);
@@ -46,10 +46,17 @@ export class TestRunner {
         //     }
         // }, null, subscriptions)
 
+        subscriptions.push(
+            commands.registerCommand('phpunit.TestFile', () => {
+                this.delayDocumentChanged(0, true);
+            })
+        );
 
-        subscriptions.push(commands.registerCommand('phpunit.TestFile', () => {
-            this.delayDocumentChanged(0, true);
-        }));
+        subscriptions.push(
+            commands.registerCommand('phpunit.TestSuite', () => {
+                this.handle('');
+            })
+        );
 
         this.disposable = Disposable.from(...subscriptions);
 
@@ -92,7 +99,7 @@ export class TestRunner {
                 this.decoratedGutter();
                 this.handleDiagnostic();
                 if (error === State.PHPUNIT_NOT_FOUND) {
-                    this.window.showErrorMessage("'Couldn\'t find a vendor/bin/phpunit file'");
+                    this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
                 }
                 console.error(error);
             });
