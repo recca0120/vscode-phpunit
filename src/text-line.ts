@@ -45,61 +45,72 @@ export interface TextLine {
     readonly isEmptyOrWhitespace: boolean;
 }
 
-const cache: Map<string, string[]> = new Map<string, string[]>();
+export const TextLineCache: Map<string, string> = new Map<string, string>();
 
 export class TextLineFactory {
-    private cache: Map<string, string[]>;
+    private cache: Map<string, string>;
 
     constructor(private files: Filesystem = new Filesystem()) {
-        this.cache = cache;
+        this.cache = TextLineCache;
     }
 
-    create(file, pattern: RegExp): Promise<TextLine> {
-        return this.getContent(file).then(lines => {
-            let lineNumber = 0;
-            let text = '';
+    search(content: string, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
+        return new Promise((resolve) => {
+            const lines = content.split(/\r\n|\n/);
+            const results: TextLine[] = [];
+
             for (let i = 0; i < lines.length; i++) {
                 if (pattern.test(lines[i]) === true) {
-                    lineNumber = i + 1;
-                    text = lines[i];
-                    break;
+                    results.push(this.createTextLine(i+1, lines[i]));
+                    if (mutiple === false) {
+                        break;
+                    }
                 }
             }
-            const firstNonWhitespaceCharacterIndex = text.search(/\S|$/);
 
-            return Promise.resolve({
-                lineNumber,
-                text,
-                range: {
-                    start: {
-                        line: lineNumber,
-                        character: firstNonWhitespaceCharacterIndex,
-                    },
-                    end: {
-                        line: lineNumber,
-                        character: text.length,
-                    },
-                },
-                // rangeIncludingLineBreak
-                firstNonWhitespaceCharacterIndex: firstNonWhitespaceCharacterIndex,
-                isEmptyOrWhitespace: text.length === 0,
-            });
+            resolve(results);
         });
     }
 
-    reset() {
+    searchFile(file, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
+        return this.getContent(file).then(content => this.search(content, pattern, mutiple))
+    }
+
+    dispose() {
         this.cache.clear();
     }
 
-    private getContent(file: string): Promise<string[]> {
+    private createTextLine(lineNumber: number, text: string): TextLine {
+        const firstNonWhitespaceCharacterIndex = text.search(/\S|$/);
+
+        return {
+            lineNumber,
+            text,
+            range: {
+                start: {
+                    line: lineNumber,
+                    character: firstNonWhitespaceCharacterIndex,
+                },
+                end: {
+                    line: lineNumber,
+                    character: text.length,
+                },
+            },
+            // rangeIncludingLineBreak
+            firstNonWhitespaceCharacterIndex: firstNonWhitespaceCharacterIndex,
+            isEmptyOrWhitespace: text.length === 0,
+        };
+    }
+
+    private getContent(file: string): Promise<string> {
         if (this.cache.has(file) === true) {
             return Promise.resolve(this.cache.get(file));
         }
 
         return this.files.getAsync(file).then((content: string) => {
             return Promise.resolve(
-                tap(content.split(/\r\n|\n/), lines => {
-                    this.cache.set(file, lines);
+                tap(content, content => {
+                    this.cache.set(file, content);
                 })
             );
         });

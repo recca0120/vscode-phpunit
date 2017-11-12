@@ -231,7 +231,7 @@ export class TeamCityParser extends Parser {
         testIgnored: Type.SKIPPED,
     };
 
-    constructor(private textLine = new TextLineFactory(), files: Filesystem = new Filesystem()) {
+    constructor(private textLineFactory = new TextLineFactory(), files: Filesystem = new Filesystem()) {
         super(files);
     }
 
@@ -240,7 +240,11 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.parseTestCase(this.groupByType(this.convertToArguments(content)));
+        return this.parseTestCase(this.groupByType(this.parseTeamCity(content))).then((testCases) => {
+            this.textLineFactory.dispose();
+            
+            return testCases;
+        });
     }
 
     protected parseTestCase(groups: TeamCity[][]): Promise<TestCase[]> {
@@ -288,7 +292,11 @@ export class TeamCityParser extends Parser {
                 }
                 const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
 
-                return this.textLine.create(file, pattern).then((textLine: TextLine) => {
+                return this.textLineFactory.searchFile(file, pattern, false).then((items: TextLine[]) => {
+                    const textLine = items.length > 0 ? items[0] : {
+                        lineNumber: 0
+                    }
+
                     return Object.assign(testCase, {
                         line: textLine.lineNumber,
                     });
@@ -314,7 +322,7 @@ export class TeamCityParser extends Parser {
         }, []);
     }
 
-    private convertToArguments(content: string): TeamCity[] {
+    private parseTeamCity(content: string): TeamCity[] {
         return content
             .split(/\r|\n/)
             .filter(line => /^##teamcity/.test(line))
