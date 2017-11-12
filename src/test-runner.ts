@@ -33,8 +33,9 @@ export class TestRunner {
         this.config = this.container.config;
     }
 
-    subscribe(): this {
+    subscribe(commands: any): this {
         const subscriptions: Disposable[] = [];
+        
         this.window.onDidChangeActiveTextEditor(() => this.delayDocumentChanged(1000, false), null, subscriptions);
         // this.workspace.onDidOpenTextDocument(() => this.delayDocumentChanged(1000, false), null, subscriptions)
         this.workspace.onWillSaveTextDocument(() => this.delayDocumentChanged(50, true), null, subscriptions);
@@ -44,6 +45,11 @@ export class TestRunner {
         //         this.delayDocumentChanged(50, true)
         //     }
         // }, null, subscriptions)
+
+
+        subscriptions.push(commands.registerCommand('phpunit.TestFile', () => {
+            this.delayDocumentChanged(0, true);
+        }));
 
         this.disposable = Disposable.from(...subscriptions);
 

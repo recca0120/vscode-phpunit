@@ -1,4 +1,4 @@
-import { DiagnosticCollection, ExtensionContext, OutputChannel, languages, window, workspace } from 'vscode';
+import { DiagnosticCollection, ExtensionContext, OutputChannel, commands, languages, window, workspace } from 'vscode';
 
 import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
@@ -34,7 +34,7 @@ export function activate(context: ExtensionContext) {
     const diagnosticManager = new DiagnosticManager(diagnostics);
     const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);
 
-    context.subscriptions.push(testRunner.subscribe());
+    context.subscriptions.push(testRunner.subscribe(commands));
 }
 
 // this method is called when your extension is deactivated
