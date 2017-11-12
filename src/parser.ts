@@ -240,9 +240,9 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.parseTestCase(this.groupByType(this.parseTeamCity(content))).then((testCases) => {
+        return this.parseTestCase(this.groupByType(this.parseTeamCity(content))).then(testCases => {
             this.textLineFactory.dispose();
-            
+
             return testCases;
         });
     }
@@ -293,9 +293,12 @@ export class TeamCityParser extends Parser {
                 const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
 
                 return this.textLineFactory.searchFile(file, pattern, false).then((items: TextLine[]) => {
-                    const textLine = items.length > 0 ? items[0] : {
-                        lineNumber: 0
-                    }
+                    const textLine =
+                        items.length > 0
+                            ? items[0]
+                            : {
+                                  lineNumber: 0,
+                              };
 
                     return Object.assign(testCase, {
                         line: textLine.lineNumber,

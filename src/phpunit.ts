@@ -51,14 +51,14 @@ export class PHPUnit extends EventEmitter {
         return new Promise((resolve, reject) => {
             const args = command.args();
             const type = args.some(arg => arg === '--log-junit') ? 'junit' : 'teamcity';
-            const buffers: string[] = [];
+            const buffers: Buffer[] = [];
 
             this.emit('stdout', `${args.join(' ')}\n\n`);
 
             tap(this.processFactory.create(), process => {
                 process
                     .on('stdout', (buffer: Buffer) => {
-                        buffers.push(buffer.toString());
+                        buffers.push(buffer);
                         this.emit('stdout', buffer);
                     })
                     .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
@@ -66,7 +66,11 @@ export class PHPUnit extends EventEmitter {
                         this.emit('stdout', '\n\n');
                         tap(this.parserFactory.create(type), parser => {
                             parser
-                                .parse(type === 'junit' ? command.getXML() : buffers.join(''))
+                                .parse(
+                                    type === 'junit'
+                                        ? command.getXML()
+                                        : buffers.map(buffer => buffer.toString()).join('')
+                                )
                                 .then(testCases => {
                                     command.dispose();
                                     resolve(testCases);

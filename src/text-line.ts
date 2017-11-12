@@ -55,13 +55,13 @@ export class TextLineFactory {
     }
 
     search(content: string, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const lines = content.split(/\r\n|\n/);
             const results: TextLine[] = [];
 
             for (let i = 0; i < lines.length; i++) {
                 if (pattern.test(lines[i]) === true) {
-                    results.push(this.createTextLine(i+1, lines[i]));
+                    results.push(this.createTextLine(i + 1, lines[i]));
                     if (mutiple === false) {
                         break;
                     }
@@ -73,7 +73,7 @@ export class TextLineFactory {
     }
 
     searchFile(file, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
-        return this.getContent(file).then(content => this.search(content, pattern, mutiple))
+        return this.getContent(file).then(content => this.search(content, pattern, mutiple));
     }
 
     dispose() {
