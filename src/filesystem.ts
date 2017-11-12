@@ -72,8 +72,9 @@ class Unix extends AbstractFilesystem implements FilesystemInterface {
     }
 }
 
-const cache = new Map<string, string>();
 const instance = isWindows() ? new Windows() : new Unix();
+
+export const FilesystemCache = new Map<string, string>();
 
 export class Filesystem extends AbstractFilesystem {
     private instance: FilesystemInterface;
@@ -83,7 +84,7 @@ export class Filesystem extends AbstractFilesystem {
     constructor() {
         super();
         this.instance = instance;
-        this.cache = cache;
+        this.cache = FilesystemCache;
     }
 
     find(file: string): string {
