@@ -37,7 +37,7 @@ export class Command {
         return this.parseOptions([execPath].concat(this.parameters)).concat([this.fileName]);
     }
 
-    clear() {
+    dispose() {
         this.files.unlink(this.getXML());
     }
 

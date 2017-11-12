@@ -26,7 +26,7 @@ describe('Command Tests', () => {
 
         expect(command.args()).toEqual(['phpunit', '--log-junit', xml, filePath]);
 
-        command.clear();
+        command.dispose();
     });
 
     it('get arguments with exec path', () => {
@@ -43,7 +43,7 @@ describe('Command Tests', () => {
 
         expect(command.args()).toEqual([execPath, '--log-junit', xml, filePath]);
 
-        command.clear();
+        command.dispose();
     });
 
     it('get arguments with exec path and args', () => {
@@ -75,7 +75,7 @@ describe('Command Tests', () => {
             filePath,
         ]);
 
-        command.clear();
+        command.dispose();
     });
 
     it('get arguments with configuration', () => {
@@ -100,7 +100,7 @@ describe('Command Tests', () => {
             filePath,
         ]);
 
-        command.clear();
+        command.dispose();
     });
 
     it('get arguments with --teamcity', () => {
@@ -124,6 +124,6 @@ describe('Command Tests', () => {
             filePath,
         ]);
 
-        command.clear();
+        command.dispose();
     });
 });
