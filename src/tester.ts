@@ -86,7 +86,7 @@ export class Tester {
                 this.decoratedGutter();
                 this.handleDiagnostic();
                 if (error === State.PHPUNIT_NOT_FOUND) {
-                    this.window.showWarningMessage("Couldn't find a phpunit file.");
+                    this.window.showErrorMessage("'Couldn\'t find a vendor/bin/phpunit file'");
                 }
                 console.error(error);
             });

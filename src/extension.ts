@@ -19,11 +19,15 @@ export function activate(context: ExtensionContext) {
         .set('context', context)
         .set('extensionPath', context.extensionPath);
 
-    const name = 'PHPUnit';
-    const outputChannel: OutputChannel = window.createOutputChannel(name);
-    const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(name);
+    const outputChannel: OutputChannel = window.createOutputChannel(container.name);
+    const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
 
-    const phpunit: PHPUnit = new PHPUnit().on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
+    const phpunit: PHPUnit = new PHPUnit(
+        container.parserFactory,
+        container.processFactory,
+        container.files,
+        container.basePath
+    ).on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
     const tester = new Tester(container, phpunit, decorateManager, diagnosticManager);

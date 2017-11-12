@@ -4,7 +4,6 @@ import { CommandOptions } from './command-options';
 import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
 import { ProcessFactory } from './process';
-import { container } from './container';
 import { tap } from './helpers';
 
 export enum State {
@@ -17,9 +16,9 @@ export enum State {
 export class PHPUnit extends EventEmitter {
     constructor(
         private parserFactory = new ParserFactory(),
-        private processFactory: ProcessFactory = container.processFactory,
-        private basePath: string = container.basePath,
-        private files: Filesystem = container.files
+        private processFactory: ProcessFactory = new ProcessFactory(),
+        private files: Filesystem = new Filesystem,
+        private basePath: string = __dirname
     ) {
         super();
     }

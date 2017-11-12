@@ -1,6 +1,7 @@
 import { ConfigRepository } from './config';
 import { ExtensionContext } from 'vscode';
 import { Filesystem } from './filesystem';
+import { ParserFactory } from './parser';
 import { ProcessFactory } from './process';
 import { Store } from './store';
 import { TextLineFactory } from './text-line';
@@ -11,6 +12,7 @@ const files = new Filesystem();
 const processFactory = new ProcessFactory();
 const store = new Store();
 const textLineFactory = new TextLineFactory(files);
+const parserFactory = new ParserFactory(files, textLineFactory);
 const validator = new Validator(files);
 
 interface Singleton {
@@ -19,6 +21,7 @@ interface Singleton {
     processFactory: ProcessFactory;
     store: Store;
     textLineFactory: TextLineFactory;
+    parserFactory: ParserFactory;
     validator: Validator;
     window?: any;
     workspace?: any;
@@ -27,12 +30,15 @@ interface Singleton {
 }
 
 export class Container {
+    public name: string = 'PHPUnit';
+    
     protected singleton: Singleton = {
         config,
         files,
         processFactory,
         store,
         textLineFactory,
+        parserFactory,
         validator,
         workspace: {
             rootPath: __dirname,
@@ -80,23 +86,27 @@ export class Container {
         return this.getSingleton('textLineFactory');
     }
 
+    get parserFactory(): ParserFactory{
+        return this.getSingleton('parserFactory');
+    }
+
     get validator(): Validator {
         return this.getSingleton('validator');
     }
 
-    get(key) {
+    get(key): any {
         return this.getSingleton(key);
     }
 
-    set(key, object) {
+    set(key, object): Container {
         return this.setSingleton(key, object);
     }
 
-    protected getSingleton(key) {
+    protected getSingleton(key):any {
         return this.singleton[key];
     }
 
-    protected setSingleton(key, object) {
+    protected setSingleton(key, object): Container {
         this.singleton[key] = object;
 
         return this;
@@ -104,3 +114,4 @@ export class Container {
 }
 
 export const container: Container = new Container();
+

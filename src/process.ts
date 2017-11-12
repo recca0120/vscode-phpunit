@@ -29,7 +29,7 @@ export class Process extends EventEmitter {
 }
 
 export class ProcessFactory {
-    public create() {
+    public create(): Process {
         return new Process();
     }
 }
