@@ -5,9 +5,12 @@ import { CommandOptions } from './command-options';
 import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
+import { Delay } from './delay';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
+
+const delay = new Delay();
 
 export class Tester {
     private disposable: Disposable;
@@ -33,22 +36,16 @@ export class Tester {
 
     subscribe(): this {
         const subscriptions: Disposable[] = [];
-
-        // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
-        // this.workspace.onDidChangeConfiguration(
-        //     () => (this.config = this.workspace.getConfiguration('phpunit')),
-        //     null,
-        //     subscriptions
-        // );
-        this.workspace.onWillSaveTextDocument(() => this.unlock().fire(), null, subscriptions);
-        // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
+        this.window.onDidChangeActiveTextEditor(() => this.documentChanged(true, 1000), null, subscriptions);
+        // this.workspace.onDidOpenTextDocument(() => this.documentChanged(true, 1000), null, subscriptions)
+        this.workspace.onWillSaveTextDocument(() => this.documentChanged(false, 50), null, subscriptions);
+        // this.workspace.onDidSaveTextDocument(() => this.documentChanged(false, 50), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
-        //         this.restore()
+        //         this.documentChanged(false, 50)
         //     }
         // }, null, subscriptions)
-        this.window.onDidChangeActiveTextEditor(() => this.lock().fire(), null, subscriptions);
-        this.lock().fire();
+
         this.disposable = Disposable.from(...subscriptions);
 
         return this;
@@ -75,9 +72,19 @@ export class Tester {
             });
     }
 
-    fire() {
+    private documentChanged(lock = true, timeout = 50) {
+        return delay.resolve(() => this.handleDocumentChanged(lock), timeout);
+    }
+
+    private handleDocumentChanged(lock = false) {
         if (this.hasEditor === false) {
             return false;
+        }
+
+        if (lock === true) {
+            this.lock();
+        } else {
+            this.unlock();
         }
 
         const path: string = this.fileName;

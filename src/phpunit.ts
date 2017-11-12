@@ -14,39 +14,6 @@ export enum State {
     PHPUNIT_NOT_PHP = 'phpunit_not_php',
 }
 
-class Delayed {
-    private timer: any;
-
-    private rejectFn: Function = null;
-
-    resolve(callback: Function, timeout = 200): Promise<any> {
-        this.cancel();
-
-        return new Promise((resolve, reject) => {
-            this.bindReject(reject);
-            this.timer = setTimeout(() => {
-                this.bindReject(null);
-                resolve(callback());
-            }, timeout);
-        });
-    }
-
-    cancel(message = 'cancelled') {
-        if (this.rejectFn) {
-            this.rejectFn(message);
-            clearTimeout(this.timer);
-            this.timer = null;
-            this.bindReject(null);
-        }
-    }
-
-    private bindReject(rejectFn: Function) {
-        this.rejectFn = rejectFn;
-    }
-}
-
-const delayed = new Delayed();
-
 export class PHPUnit extends EventEmitter {
     constructor(
         private parserFactory = new ParserFactory(),
@@ -58,12 +25,6 @@ export class PHPUnit extends EventEmitter {
     }
 
     handle(path: string, options: CommandOptions, execPath: string = ''): Promise<TestCase[]> {
-        return delayed.resolve(() => {
-            return this.fire(path, options, execPath);
-        }, 500);
-    }
-
-    private fire(path: string, options: CommandOptions, execPath: string = ''): Promise<TestCase[]> {
         return new Promise((resolve, reject) => {
             if (options.has('--teamcity') === false) {
                 options.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
