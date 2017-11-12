@@ -2,6 +2,7 @@ import { minimist, tap } from './helpers';
 
 import { Filesystem } from './filesystem';
 import { State } from './phpunit';
+import {container} from './container';
 
 interface CommandOptions {
     rootPath: string;
@@ -9,7 +10,10 @@ interface CommandOptions {
 }
 
 export class Command {
-    private xml: string;
+    public temp = [
+        '',
+        'xml',
+    ];
 
     constructor(
         private fileName: string,
@@ -18,13 +22,15 @@ export class Command {
         public options: CommandOptions = {
             rootPath: __dirname,
         },
-        private files = new Filesystem()
+        private files: Filesystem = container.files
     ) {
-        this.xml = this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`);
+        const filename = 'vscode-phpunit-junit';
+        const time = new Date().getTime();
+        this.temp[0] = this.files.tmpfile(`${filename}-${time}`);
     }
 
-    getXML() {
-        return this.xml;
+    getTempfile() {
+        return this.temp.join('.');
     }
 
     args() {
@@ -38,7 +44,7 @@ export class Command {
     }
 
     dispose() {
-        this.files.unlink(this.getXML());
+        this.files.unlink(this.getTempfile());
     }
 
     get rootPath() {
@@ -63,7 +69,7 @@ export class Command {
                 }
 
                 if (!options['log-junit']) {
-                    options['log-junit'] = this.getXML();
+                    options['log-junit'] = this.getTempfile();
                 }
 
                 if (options.teamcity) {

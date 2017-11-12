@@ -6,6 +6,8 @@ recommendations on how to structure this file.
 
 ## 0.4.1
 - refactoring TextLine
+- container
+- fix bugs
 
 ## 0.4.0
 - support teamcity log

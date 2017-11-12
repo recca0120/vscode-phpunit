@@ -6,6 +6,7 @@ import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
+import { container } from './container';
 
 export class Project {
     constructor(public window: any, public workspace: any, public extensionPath: string) {}
@@ -27,8 +28,8 @@ export class Tester {
         private phpunit: PHPUnit,
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager,
-        private store: Store = new Store(),
-        private validator: Validator = new Validator()
+        private store: Store = container.store,
+        private validator: Validator = container.validator
     ) {
         this.window = project.window;
         this.workspace = project.workspace;

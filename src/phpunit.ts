@@ -3,6 +3,7 @@ import { ParserFactory, TestCase } from './parser';
 import { Command } from './command';
 import { EventEmitter } from 'events';
 import { ProcessFactory } from './process';
+import { container } from './container';
 import { tap } from './helpers';
 
 export enum State {
@@ -39,7 +40,10 @@ class Delayed {
 const delayed = new Delayed();
 
 export class PHPUnit extends EventEmitter {
-    constructor(private parserFactory = new ParserFactory(), private processFactory = new ProcessFactory()) {
+    constructor(
+        private parserFactory = new ParserFactory(),
+        private processFactory: ProcessFactory = container.processFactory
+    ) {
         super();
     }
 
@@ -68,7 +72,7 @@ export class PHPUnit extends EventEmitter {
                             parser
                                 .parse(
                                     type === 'junit'
-                                        ? command.getXML()
+                                        ? command.getTempfile()
                                         : buffers.map(buffer => buffer.toString()).join('')
                                 )
                                 .then(testCases => {

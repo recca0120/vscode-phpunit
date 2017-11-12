@@ -9,7 +9,7 @@ describe('Command Tests', () => {
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
         const files = new Filesystem();
-        const xml = 'foo.xml';
+        const xml = 'foo';
         spyOn(files, 'find').and.returnValue('phpunit');
         spyOn(files, 'tmpfile').and.returnValue(xml);
 
@@ -24,7 +24,7 @@ describe('Command Tests', () => {
             files
         );
 
-        expect(command.args()).toEqual(['phpunit', '--log-junit', xml, filePath]);
+        expect(command.args()).toEqual(['phpunit', '--log-junit', `${xml}.xml`, filePath]);
 
         command.dispose();
     });
@@ -36,12 +36,12 @@ describe('Command Tests', () => {
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
         const files = new Filesystem();
-        const xml = 'foo.xml';
+        const xml = 'foo';
         spyOn(files, 'tmpfile').and.returnValue(xml);
 
         const command = new Command(filePath, args, execPath, { rootPath, junitPath }, files);
 
-        expect(command.args()).toEqual([execPath, '--log-junit', xml, filePath]);
+        expect(command.args()).toEqual([execPath, '--log-junit', `${xml}.xml`, filePath]);
 
         command.dispose();
     });
@@ -53,7 +53,7 @@ describe('Command Tests', () => {
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
         const files = new Filesystem();
-        const xml = 'foo.xml';
+        const xml = 'foo';
         spyOn(files, 'tmpfile').and.returnValue(xml);
         spyOn(files, 'exists').and.returnValue(true);
 
@@ -71,7 +71,7 @@ describe('Command Tests', () => {
             '--foo',
             'bar',
             '--log-junit',
-            xml,
+            `${xml}.xml`,
             filePath,
         ]);
 
@@ -85,7 +85,7 @@ describe('Command Tests', () => {
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
         const files = new Filesystem();
-        const xml = 'foo.xml';
+        const xml = 'foo';
         spyOn(files, 'tmpfile').and.returnValue(xml);
         spyOn(files, 'exists').and.returnValue(true);
 
@@ -96,7 +96,7 @@ describe('Command Tests', () => {
             '--configuration',
             `${rootPath}/phpunit.xml`,
             '--log-junit',
-            xml,
+            `${xml}.xml`,
             filePath,
         ]);
 
@@ -110,7 +110,7 @@ describe('Command Tests', () => {
         const rootPath = 'foo.rootPath';
         const junitPath = 'foo.junitPath';
         const files = new Filesystem();
-        const xml = 'foo.xml';
+        const xml = 'foo';
         spyOn(files, 'tmpfile').and.returnValue(xml);
         spyOn(files, 'exists').and.returnValue(true);
 

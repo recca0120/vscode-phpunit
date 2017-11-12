@@ -2,6 +2,7 @@ import { TextLine, TextLineFactory } from './text-line';
 import { minimistString, tap, xml2js } from './helpers';
 
 import { Filesystem } from './filesystem';
+import { container } from './container';
 
 export enum Type {
     PASSED = 'passed',
@@ -52,7 +53,10 @@ export interface TestCase {
 }
 
 export abstract class Parser {
-    constructor(protected files: Filesystem = new Filesystem(), protected textLineFactory = new TextLineFactory()) {}
+    constructor(
+        protected files: Filesystem = container.files,
+        protected textLineFactory: TextLineFactory = container.textLineFactory
+    ) {}
 
     abstract parse(content: any): Promise<TestCase[]>;
 
@@ -356,12 +360,17 @@ export class TeamCityParser extends Parser {
 }
 
 export class ParserFactory {
+    constructor(
+        protected files: Filesystem = container.files,
+        protected textLineFactory: TextLineFactory = container.textLineFactory
+    ) {}
+
     public create(name): Parser {
         switch (name.toLowerCase()) {
             case 'teamcity':
-                return new TeamCityParser();
+                return new TeamCityParser(this.files, this.textLineFactory);
             default:
-                return new JUnitParser();
+                return new JUnitParser(this.files, this.textLineFactory);
         }
     }
 }
