@@ -5,12 +5,10 @@ import { CommandOptions } from './command-options';
 import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
-import { Delay } from './delay';
+import { DelayHandler } from './delay-handler';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
-
-const delay = new Delay();
 
 export class TestRunner {
     private disposable: Disposable;
@@ -19,6 +17,7 @@ export class TestRunner {
     private store: Store;
     private validator: Validator;
     private config: ConfigRepository;
+    private delayHandler: DelayHandler = new DelayHandler();
 
     constructor(
         private container: Container,
@@ -36,19 +35,19 @@ export class TestRunner {
     subscribe(commands: any): this {
         const subscriptions: Disposable[] = [];
 
-        this.window.onDidChangeActiveTextEditor(() => this.delayDocumentChanged(1000, false), null, subscriptions);
-        // this.workspace.onDidOpenTextDocument(() => this.delayDocumentChanged(1000, false), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(() => this.delayDocumentChanged(50, true), null, subscriptions);
-        // this.workspace.onDidSaveTextDocument(() => this.delayDocumentChanged(50, true), null, subscriptions)
+        this.window.onDidChangeActiveTextEditor(() => this.onDocumentChanged(1000, false), null, subscriptions);
+        // this.workspace.onDidOpenTextDocument(() => this.onDocumentChanged(1000, false), null, subscriptions)
+        this.workspace.onWillSaveTextDocument(() => this.onDocumentChanged(50, true), null, subscriptions);
+        // this.workspace.onDidSaveTextDocument(() => this.onDocumentChanged(50, true), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
         //     if (this.hasEditor && document === this.document) {
-        //         this.delayDocumentChanged(50, true)
+        //         this.onDocumentChanged(50, true)
         //     }
         // }, null, subscriptions)
 
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
-                this.delayDocumentChanged(0, true);
+                this.onDocumentChanged(0, true);
             })
         );
 
@@ -105,15 +104,19 @@ export class TestRunner {
             });
     }
 
-    private delayDocumentChanged(timeout = 50, force = false) {
+    delay(delay: number, path: string, args: string[] = [], content: string = '', force = true) {
+        return this.delayHandler.resolve(() => this.handle(path, args, content, force), delay);
+    }
+
+    onDocumentChanged(delay = 50, force = false) {
         if (this.hasEditor === false) {
-            return false;
+            return;
         }
 
         const path: string = this.fileName;
         const content: string = this.document.getText();
 
-        return delay.resolve(() => this.handle(path, [], content, force), timeout);
+        return this.delay(delay, path, [], content, force);
     }
 
     dispose() {

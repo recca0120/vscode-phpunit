@@ -1,4 +1,4 @@
-export class Delay {
+export class DelayHandler {
     private id: number = 0;
 
     private rejectFn: Function = null;
