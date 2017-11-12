@@ -3,7 +3,7 @@ export class DelayHandler {
 
     private rejectFn: Function = null;
 
-    resolve(callback: Function, timeout = 200): Promise<any> {
+    resolve(timeout = 200): Promise<boolean> {
         this.cancel();
 
         return new Promise((resolve, reject) => {
@@ -15,10 +15,10 @@ export class DelayHandler {
             }, timeout);
         }).then((id: number) => {
             if (this.id !== id) {
-                return Promise.resolve([]);
+                return Promise.resolve(true);
             }
 
-            return callback();
+            return Promise.resolve(false);
         });
     }
 

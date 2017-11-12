@@ -1,4 +1,4 @@
-import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
 import { PHPUnit, State } from './phpunit';
 
 import { CommandOptions } from './command-options';
@@ -35,24 +35,61 @@ export class TestRunner {
     subscribe(commands: any): this {
         const subscriptions: Disposable[] = [];
 
-        this.window.onDidChangeActiveTextEditor(this.testOnOpen.bind(this), null, subscriptions);
-        // this.workspace.onDidOpenTextDocument(this.testOnOpen.bind(this), null, subscriptions);
-        this.workspace.onWillSaveTextDocument(this.testOnSave.bind(this), null, subscriptions);
-        // this.workspace.onDidSaveTextDocument(this.testOnSave.bind(this), null, subscriptions);
-        // this.workspace.onDidChangeTextDocument(
-        //     (document: TextDocument) => {
-        //         if (!!this.hasEditor || document !== this.document) {
-        //             return;
-        //         }
-        //         this.testOnSave();
-        //     },
-        //     null,
-        //     subscriptions
-        // );
+        this.workspace.onDidOpenTextDocument(
+            (document: TextDocument) => {
+                if (!this.hasEditor) {
+                    return;
+                }
+
+                const path = this.document.fileName;
+
+                if (<boolean>this.config.get('testOnOpen') === false || this.store.has(path) === true) {
+                    this.decoratedGutter();
+                    return;
+                }
+
+                this.handle(path, [], {
+                    content: document.getText(),
+                    delay: 200,
+                });
+            },
+            null,
+            subscriptions
+        );
+
+        this.workspace.onWillSaveTextDocument(
+            (event: TextDocumentWillSaveEvent) => {
+                if (<boolean>this.config.get('testOnSave') === false) {
+                    return;
+                }
+
+                event.waitUntil(
+                    new Promise(resolve => {
+                        const document = event.document;
+                        const path = document.fileName;
+
+                        this.handle(path, [], {
+                            content: document.getText(),
+                            delay: 50,
+                        });
+
+                        resolve();
+                    })
+                );
+            },
+            null,
+            subscriptions
+        );
 
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
-                this.testCurrentFile(50, true);
+                const document = this.document;
+                const path = document.fileName;
+
+                this.handle(path, [], {
+                    content: document.getText(),
+                    delay: 0,
+                });
             })
         );
 
@@ -67,73 +104,53 @@ export class TestRunner {
         return this;
     }
 
-    handle(path: string, args: string[] = [], content: string = '', force = true) {
-        this.clearDecoratedGutter();
+    handle(path: string, args: string[] = [], options?: any) {
+        return new Promise((resolve, reject) => {
+            const content: string = options.content || '';
+            const delay: number = options.delay || 0;
 
-        if (path && this.validator.fileName(path) === false) {
-            console.warn(State.PHPUNIT_NOT_PHP, path);
-
-            return false;
-        }
-
-        if (content && this.validator.className(path, content) === false) {
-            console.warn(State.PHPUNIT_NOT_TESTCASE, path, content);
-
-            return;
-        }
-
-        if (force === false && this.store.has(path) === true) {
-            this.decoratedGutter();
-            this.handleDiagnostic();
-
-            return false;
-        }
-
-        const execPath: string = this.config.get('execPath', '');
-        const options: CommandOptions = new CommandOptions(this.config.get('args', []).concat(args));
-
-        this.phpunit
-            .handle(path, options, execPath)
-            .then(items => {
-                this.store.put(items);
-                this.decoratedGutter();
-                this.handleDiagnostic();
-            })
-            .catch(error => {
-                this.decoratedGutter();
-                this.handleDiagnostic();
-                if (error === State.PHPUNIT_NOT_FOUND) {
-                    this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
+            this.delayHandler.resolve(delay).then((cancelled: boolean) => {
+                if (cancelled === true) {
+                    return;
                 }
-                console.error(error);
+
+                this.clearDecoratedGutter();
+
+                if (path && this.validator.fileName(path) === false) {
+                    console.warn(State.PHPUNIT_NOT_PHP, path);
+
+                    return false;
+                }
+
+                if (content && this.validator.className(path, content) === false) {
+                    console.warn(State.PHPUNIT_NOT_TESTCASE, path, content);
+
+                    return;
+                }
+
+                const commandOptions: CommandOptions = new CommandOptions(this.config.get('args', []).concat(args));
+                const execPath: string = this.config.get('execPath', '');
+
+                const handlePromise = this.phpunit.handle(path, commandOptions, execPath);
+
+                handlePromise.then(items => {
+                    this.store.put(items);
+                    this.decoratedGutter();
+                    this.handleDiagnostic();
+                    resolve(items);
+                });
+
+                handlePromise.catch(error => {
+                    this.decoratedGutter();
+                    this.handleDiagnostic();
+                    if (error === State.PHPUNIT_NOT_FOUND) {
+                        this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
+                    }
+                    console.error(error);
+                    reject(error);
+                });
             });
-    }
-
-    delay(delay: number, path: string, args: string[] = [], content: string = '', force = true) {
-        return this.delayHandler.resolve(() => this.handle(path, args, content, force), delay);
-    }
-
-    testCurrentFile(delay = 50, force = false) {
-        if (this.hasEditor === false) {
-            return;
-        }
-
-        const path: string = this.fileName;
-        const content: string = this.document.getText();
-
-        return this.delay(delay, path, [], content, force);
-    }
-
-    testOnOpen() {
-        if (<boolean>this.config.get('testOnOpen', true) === true) {
-            this.testCurrentFile(1000, false);
-        }
-    }
-
-    testOnSave() {
-        if (<boolean>this.config.get('testOnSave') === true) {
-            this.testCurrentFile(100, true);
-        }
+        });
     }
 
     dispose() {
@@ -160,10 +177,6 @@ export class TestRunner {
 
     get document(): TextDocument {
         return this.window.activeTextEditor.document;
-    }
-
-    get fileName(): string {
-        return this.hasEditor ? this.document.fileName : '';
     }
 
     get hasEditor(): boolean {
