@@ -34,7 +34,7 @@
                 "phpunit.execPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to phpunit executable."
+                    "description": "Path to phpunit executable (try to use composer if empty)."
                 },
                 "phpunit.args": {
                     "type": "array",
