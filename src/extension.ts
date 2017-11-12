@@ -6,6 +6,7 @@ import { DiagnosticManager } from './diagnostic-manager';
 import { PHPUnit } from './phpunit';
 import { TestRunner } from './test-runner';
 import { container } from './container';
+import { tap } from './helpers';
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -20,18 +21,22 @@ export function activate(context: ExtensionContext) {
         .set('extensionPath', context.extensionPath);
 
     const outputChannel: OutputChannel = window.createOutputChannel(container.name);
+
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
 
-    const phpunit: PHPUnit = new PHPUnit(
-        container.parserFactory,
-        container.processFactory,
-        container.files,
-        container.basePath
-    )
-        .on('before', () => outputChannel.clear())
-        .on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
+    const phpunit: PHPUnit = tap(
+        new PHPUnit(container.parserFactory, container.processFactory, container.files, container.basePath),
+        phpunit => {
+            phpunit
+                .on('before', () => outputChannel.clear())
+                .on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
+        }
+    );
+
     const decorateManager = new DecorateManager(container);
+
     const diagnosticManager = new DiagnosticManager(diagnostics);
+
     const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);
 
     context.subscriptions.push(testRunner.subscribe(commands));
