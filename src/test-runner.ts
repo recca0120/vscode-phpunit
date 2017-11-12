@@ -12,7 +12,7 @@ import { Validator } from './validator';
 
 const delay = new Delay();
 
-export class Tester {
+export class TestRunner {
     private disposable: Disposable;
     private window: any;
     private workspace: any;

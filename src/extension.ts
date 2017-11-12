@@ -4,7 +4,7 @@ import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { PHPUnit } from './phpunit';
-import { Tester } from './tester';
+import { TestRunner } from './test-runner';
 import { container } from './container';
 
 export function activate(context: ExtensionContext) {
@@ -27,12 +27,14 @@ export function activate(context: ExtensionContext) {
         container.processFactory,
         container.files,
         container.basePath
-    ).on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
+    )
+    .on('before', () => outputChannel.clear())
+    .on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
-    const tester = new Tester(container, phpunit, decorateManager, diagnosticManager);
+    const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);
 
-    context.subscriptions.push(tester.subscribe());
+    context.subscriptions.push(testRunner.subscribe());
 }
 
 // this method is called when your extension is deactivated

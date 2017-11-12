@@ -35,6 +35,7 @@ export class PHPUnit extends EventEmitter {
 
             const spawnOptions = [this.getExecutable(execPath)].concat(options.toArray()).concat([path]);
 
+            this.emit('before')
             this.emit('stdout', `${spawnOptions.join(' ')}\n\n`);
             this.processFactory
                 .create()
