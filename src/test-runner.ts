@@ -47,7 +47,7 @@ export class TestRunner {
 
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
-                this.onDocumentChanged(0, true);
+                this.onDocumentChanged(50, true);
             })
         );
 
