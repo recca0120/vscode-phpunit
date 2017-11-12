@@ -68,11 +68,11 @@ export class PHPUnit extends EventEmitter {
                             parser
                                 .parse(type === 'junit' ? command.getXML() : buffers.join(''))
                                 .then(testCases => {
+                                    command.dispose();
                                     resolve(testCases);
-                                    command.clear();
                                 })
                                 .catch(error => {
-                                    command.clear();
+                                    command.dispose();
                                     reject(error);
                                 });
                         });
