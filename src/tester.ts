@@ -1,20 +1,12 @@
 import { Disposable, TextDocument, TextEditor } from 'vscode';
 import { PHPUnit, State } from './phpunit';
 
-import { Command } from './command';
+import { CommandOptions } from './command-options';
+import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
-import { container } from './container';
-
-export class Project {
-    constructor(public window: any, public workspace: any, public extensionPath: string) {}
-
-    get rootPath() {
-        return this.workspace.rootPath;
-    }
-}
 
 export class Tester {
     private disposable: Disposable;
@@ -24,15 +16,17 @@ export class Tester {
     private config: any;
 
     constructor(
-        project: Project,
+        private container: Container,
         private phpunit: PHPUnit,
         private decorateManager: DecorateManager,
         private diagnosticManager: DiagnosticManager,
-        private store: Store = container.store,
-        private validator: Validator = container.validator
+        private store: Store = null,
+        private validator: Validator = null
     ) {
-        this.window = project.window;
-        this.workspace = project.workspace;
+        this.window = this.container.window;
+        this.workspace = this.container.workspace;
+        this.store = this.store || this.container.store;
+        this.validator = this.validator || this.container.validator;
         this.config = this.workspace.getConfiguration('phpunit');
     }
 
@@ -40,11 +34,11 @@ export class Tester {
         const subscriptions: Disposable[] = [];
 
         // this.workspace.onDidOpenTextDocument(this.restore.bind(this), null, subscriptions)
-        this.workspace.onDidChangeConfiguration(
-            () => (this.config = this.workspace.getConfiguration('phpunit')),
-            null,
-            subscriptions
-        );
+        // this.workspace.onDidChangeConfiguration(
+        //     () => (this.config = this.workspace.getConfiguration('phpunit')),
+        //     null,
+        //     subscriptions
+        // );
         this.workspace.onWillSaveTextDocument(() => this.unlock().handle(), null, subscriptions);
         // this.workspace.onDidSaveTextDocument(this.restore.bind(this), null, subscriptions)
         // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
@@ -57,22 +51,6 @@ export class Tester {
         this.disposable = Disposable.from(...subscriptions);
 
         return this;
-    }
-
-    lock(): this {
-        this.locked = true;
-
-        return this;
-    }
-
-    unlock(): this {
-        this.locked = false;
-
-        return this;
-    }
-
-    isLocked(): boolean {
-        return this.locked;
     }
 
     handle() {
@@ -106,13 +84,9 @@ export class Tester {
         const { execPath, args } = this.config;
 
         this.phpunit
-            .handle(
-                new Command(fileName, args, execPath, {
-                    rootPath: this.workspace.rootPath,
-                })
-            )
-            .then(testCases => {
-                this.store.put(testCases);
+            .handle(fileName, new CommandOptions(args), execPath)
+            .then(items => {
+                this.store.put(items);
                 this.decoratedGutter();
                 this.handleDiagnostic();
             })
@@ -124,6 +98,22 @@ export class Tester {
                 }
                 console.error(error);
             });
+    }
+
+    lock(): this {
+        this.locked = true;
+
+        return this;
+    }
+
+    unlock(): this {
+        this.locked = false;
+
+        return this;
+    }
+
+    isLocked(): boolean {
+        return this.locked;
     }
 
     dispose() {
