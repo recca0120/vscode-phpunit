@@ -50,7 +50,7 @@ export const TextLineCache: Map<string, string> = new Map<string, string>();
 export class TextLineFactory {
     private cache: Map<string, string>;
 
-    constructor(private files: Filesystem = new Filesystem) {
+    constructor(private files: Filesystem = new Filesystem()) {
         this.cache = TextLineCache;
     }
 

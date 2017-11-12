@@ -28,8 +28,8 @@ export function activate(context: ExtensionContext) {
         container.files,
         container.basePath
     )
-    .on('before', () => outputChannel.clear())
-    .on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
+        .on('before', () => outputChannel.clear())
+        .on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
     const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);

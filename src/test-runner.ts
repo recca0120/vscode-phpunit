@@ -35,19 +35,24 @@ export class TestRunner {
     subscribe(commands: any): this {
         const subscriptions: Disposable[] = [];
 
-        this.window.onDidChangeActiveTextEditor(() => this.onDocumentChanged(1000, false), null, subscriptions);
-        // this.workspace.onDidOpenTextDocument(() => this.onDocumentChanged(1000, false), null, subscriptions)
-        this.workspace.onWillSaveTextDocument(() => this.onDocumentChanged(50, true), null, subscriptions);
-        // this.workspace.onDidSaveTextDocument(() => this.onDocumentChanged(50, true), null, subscriptions)
-        // this.workspace.onDidChangeTextDocument((document: TextDocument) => {
-        //     if (this.hasEditor && document === this.document) {
-        //         this.onDocumentChanged(50, true)
-        //     }
-        // }, null, subscriptions)
+        this.window.onDidChangeActiveTextEditor(this.testOnOpen.bind(this), null, subscriptions);
+        // this.workspace.onDidOpenTextDocument(this.testOnOpen.bind(this), null, subscriptions);
+        this.workspace.onWillSaveTextDocument(this.testOnSave.bind(this), null, subscriptions);
+        // this.workspace.onDidSaveTextDocument(this.testOnSave.bind(this), null, subscriptions);
+        // this.workspace.onDidChangeTextDocument(
+        //     (document: TextDocument) => {
+        //         if (!!this.hasEditor || document !== this.document) {
+        //             return;
+        //         }
+        //         this.testOnSave();
+        //     },
+        //     null,
+        //     subscriptions
+        // );
 
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
-                this.onDocumentChanged(50, true);
+                this.testCurrentFile(50, true);
             })
         );
 
@@ -108,7 +113,7 @@ export class TestRunner {
         return this.delayHandler.resolve(() => this.handle(path, args, content, force), delay);
     }
 
-    onDocumentChanged(delay = 50, force = false) {
+    testCurrentFile(delay = 50, force = false) {
         if (this.hasEditor === false) {
             return;
         }
@@ -117,6 +122,18 @@ export class TestRunner {
         const content: string = this.document.getText();
 
         return this.delay(delay, path, [], content, force);
+    }
+
+    testOnOpen() {
+        if (<boolean>this.config.get('testOnOpen', true) === true) {
+            this.testCurrentFile(1000, false);
+        }
+    }
+
+    testOnSave() {
+        if (<boolean>this.config.get('testOnSave') === true) {
+            this.testCurrentFile(100, true);
+        }
     }
 
     dispose() {

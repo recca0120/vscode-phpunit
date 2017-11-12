@@ -52,6 +52,16 @@
                     "type": "array",
                     "default": [],
                     "description": "Any phpunit args (phpunit --help)"
+                },
+                "phpunit.testOnOpen": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Should test files on open?"
+                },
+                "phpunit.testOnSave": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Should test files on save?"
                 }
             }
         },

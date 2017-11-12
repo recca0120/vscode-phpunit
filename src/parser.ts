@@ -53,8 +53,8 @@ export interface TestCase {
 
 export abstract class Parser {
     constructor(
-        protected files: Filesystem = new Filesystem,
-        protected textLineFactory: TextLineFactory = new TextLineFactory
+        protected files: Filesystem = new Filesystem(),
+        protected textLineFactory: TextLineFactory = new TextLineFactory()
     ) {
         this.textLineFactory.dispose();
     }
@@ -358,8 +358,8 @@ export class TeamCityParser extends Parser {
 
 export class ParserFactory {
     constructor(
-        protected files: Filesystem = new Filesystem,
-        protected textLineFactory: TextLineFactory = new TextLineFactory
+        protected files: Filesystem = new Filesystem(),
+        protected textLineFactory: TextLineFactory = new TextLineFactory()
     ) {}
 
     public create(name): Parser {

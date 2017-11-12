@@ -31,7 +31,7 @@ interface Singleton {
 
 export class Container {
     public name: string = 'PHPUnit';
-    
+
     protected singleton: Singleton = {
         config,
         files,
@@ -86,7 +86,7 @@ export class Container {
         return this.getSingleton('textLineFactory');
     }
 
-    get parserFactory(): ParserFactory{
+    get parserFactory(): ParserFactory {
         return this.getSingleton('parserFactory');
     }
 
@@ -102,7 +102,7 @@ export class Container {
         return this.setSingleton(key, object);
     }
 
-    protected getSingleton(key):any {
+    protected getSingleton(key): any {
         return this.singleton[key];
     }
 
@@ -114,4 +114,3 @@ export class Container {
 }
 
 export const container: Container = new Container();
-

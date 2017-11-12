@@ -17,7 +17,7 @@ export class PHPUnit extends EventEmitter {
     constructor(
         private parserFactory = new ParserFactory(),
         private processFactory: ProcessFactory = new ProcessFactory(),
-        private files: Filesystem = new Filesystem,
+        private files: Filesystem = new Filesystem(),
         private basePath: string = __dirname
     ) {
         super();
@@ -35,7 +35,7 @@ export class PHPUnit extends EventEmitter {
 
             const spawnOptions = [this.getExecutable(execPath)].concat(options.toArray()).concat([path]);
 
-            this.emit('before')
+            this.emit('before');
             this.emit('stdout', `${spawnOptions.join(' ')}\n\n`);
             this.processFactory
                 .create()
