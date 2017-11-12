@@ -23,7 +23,7 @@ class FakeWorkspace {
 }
 
 export class ConfigRepository {
-    constructor(private workspace = new FakeWorkspace()) {}
+    constructor(private workspace: any = new FakeWorkspace()) {}
 
     private getWorkspaceConfigure(): any {
         return this.workspace.getConfiguration('phpunit');
