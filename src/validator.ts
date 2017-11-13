@@ -19,7 +19,8 @@ export class Validator {
 
         const className = fileName
             .substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1)
-            .replace(/\.(php|inc)/i, '');
+            .replace(/\.(php|inc)$/i, '')
+            .trim();
 
         if (new RegExp(`(abstract\\s+class|trait|interface)\\s+${className}`, 'i').test(content)) {
             return false;

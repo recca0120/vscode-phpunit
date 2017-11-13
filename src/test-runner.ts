@@ -45,6 +45,7 @@ export class TestRunner {
 
                 if (<boolean>this.config.get('testOnOpen') === false || this.store.has(path) === true) {
                     this.decoratedGutter();
+
                     return;
                 }
 
@@ -118,12 +119,14 @@ export class TestRunner {
 
                 if (path && this.validator.fileName(path) === false) {
                     console.warn(State.PHPUNIT_NOT_PHP, path);
+                    reject(State.PHPUNIT_NOT_PHP);
 
                     return false;
                 }
 
                 if (content && this.validator.className(path, content) === false) {
                     console.warn(State.PHPUNIT_NOT_TESTCASE, path, content);
+                    reject(State.PHPUNIT_NOT_TESTCASE);
 
                     return;
                 }
@@ -168,7 +171,7 @@ export class TestRunner {
     }
 
     private handleDiagnostic() {
-        this.diagnosticManager.handle(this.store, this.editor);
+        this.diagnosticManager.handle(this.store, this.document);
     }
 
     get editor(): TextEditor {
