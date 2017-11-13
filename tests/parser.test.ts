@@ -2,15 +2,16 @@ import { JUnitParser, TeamCityParser, TestCase, Type } from '../src/parser';
 
 import { Filesystem } from '../src/filesystem';
 import { TextLineFactory } from '../src/text-line';
-import { join as pathJoin } from 'path';
+import { resolve as pathResolve } from 'path';
 
 describe('TeamCityParser', () => {
     const files: Filesystem = new Filesystem();
     const textLineFactory: TextLineFactory = new TextLineFactory(files);
+
     const parser: TeamCityParser = new TeamCityParser(files, textLineFactory);
 
     async function getTestCase(key: number): Promise<TestCase> {
-        const testCases: TestCase[] = await parser.parseFile(pathJoin(__dirname, 'fixtures/teamcity.txt'));
+        const testCases: TestCase[] = await parser.parseFile(pathResolve(__dirname, 'fixtures/teamcity.txt'));
 
         return testCases[key];
     }
@@ -18,7 +19,9 @@ describe('TeamCityParser', () => {
     describe('PHPUnit2Test', () => {
         beforeEach(() => {
             spyOn(files, 'getAsync').and.callFake(fileName => {
-                return Promise.resolve(files.get(fileName));
+                return Promise.resolve(
+                    files.get(pathResolve(__dirname, '../', fileName.substr(fileName.indexOf('tests\\fixtures'))))
+                );
             });
         });
 
@@ -258,7 +261,7 @@ describe('JUnitParser', () => {
     const parser: JUnitParser = new JUnitParser(files, textLineFactory);
 
     async function getTestCase(key: number): Promise<TestCase> {
-        const testCases: TestCase[] = await parser.parse(pathJoin(__dirname, 'fixtures/junit.xml'));
+        const testCases: TestCase[] = await parser.parse(pathResolve(__dirname, 'fixtures/junit.xml'));
 
         return testCases[key];
     }
