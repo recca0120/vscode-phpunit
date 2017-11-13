@@ -4,7 +4,6 @@ import { CommandArguments } from './command-arguments';
 import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
 import { ProcessFactory } from './process';
-import { tap } from './helpers';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
@@ -57,7 +56,12 @@ export class PHPUnit extends EventEmitter {
                     const content = args.has('--teamcity') ? output : args.get('--log-junit');
                     parser
                         .parse(content)
-                        .then(items => resolve(items))
+                        .then(items => {
+                            if (args.has('--log-junit')) {
+                                this.files.unlink(args.get('--log-junit'));
+                            }
+                            resolve(items);
+                        })
                         .catch(error => reject(error));
                 });
         });
@@ -79,7 +83,7 @@ export class PHPUnit extends EventEmitter {
                 `phpunit.phar`,
                 'laravel/phpunit.phar',
                 'phpunit',
-            ],
+            ].filter(path => !!path),
             basePath
         );
 
