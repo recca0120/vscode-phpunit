@@ -2,7 +2,6 @@ import { minimist, tap } from './helpers';
 
 export class CommandArguments {
     private options: any;
-    private keys: string[];
 
     constructor(options: string[] = []) {
         this.options = this.parseOptions(options);

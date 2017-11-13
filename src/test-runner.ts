@@ -9,7 +9,6 @@ import { DelayHandler } from './delay-handler';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
-import { basename } from 'path';
 
 export class TestRunner {
     private disposable: Disposable;
