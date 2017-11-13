@@ -19,6 +19,8 @@ describe('Validator Tests', () => {
         expect(validator.className('MyTest.php', 'class MyTest extends PHPUnit\\Framework\\TestCase')).toBeTruthy();
         expect(validator.className('MyTest.php', 'class MyTest extends PHPUnit_Framework_TestCase')).toBeTruthy();
         expect(validator.className('MyTest.php', 'class MyTest')).toBeFalsy();
-        expect(validator.className('MyTest.php', 'class MyTest1 extends TestCase')).toBeFalsy();
+        expect(validator.className('MyTest.php', 'class MyTest1 extends TestCase')).toBeTruthy();
+        // expect(validator.className('MyTest.php', 'class MyTest')).toBeFalsy();
+        // expect(validator.className('MyTest.php', 'class MyTest1 extends TestCase')).toBeFalsy();
     });
 });

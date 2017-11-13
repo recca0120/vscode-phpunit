@@ -6,9 +6,10 @@ import { resolve as pathResolve } from 'path';
 
 describe('TeamCityParser', () => {
     const files: Filesystem = new Filesystem();
-    const textLineFactory: TextLineFactory = new TextLineFactory(files);
+    const files2: Filesystem = new Filesystem();
 
-    const parser: TeamCityParser = new TeamCityParser(files, textLineFactory);
+    const textLineFactory: TextLineFactory = new TextLineFactory(files);
+    const parser: TeamCityParser = new TeamCityParser(files2, textLineFactory);
 
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parseFile(pathResolve(__dirname, 'fixtures/teamcity.txt'));
@@ -19,9 +20,11 @@ describe('TeamCityParser', () => {
     describe('PHPUnit2Test', () => {
         beforeEach(() => {
             spyOn(files, 'getAsync').and.callFake(fileName => {
-                return Promise.resolve(
-                    files.get(pathResolve(__dirname, '../', fileName.substr(fileName.indexOf('tests\\fixtures'))))
-                );
+                return Promise.resolve(files.get(pathResolve(__dirname, 'fixtures/PHPUnit2Test.php')));
+            });
+
+            spyOn(files2, 'getAsync').and.callFake(fileName => {
+                return Promise.resolve(files.get(pathResolve(__dirname, 'fixtures/teamcity.txt')));
             });
         });
 
@@ -115,7 +118,11 @@ describe('TeamCityParser', () => {
     describe('PHPUnitTest', () => {
         beforeEach(() => {
             spyOn(files, 'getAsync').and.callFake(fileName => {
-                return Promise.resolve(files.get(fileName));
+                return Promise.resolve(files.get(pathResolve(__dirname, 'fixtures/PHPUnit2Test.php')));
+            });
+
+            spyOn(files2, 'getAsync').and.callFake(fileName => {
+                return Promise.resolve(files.get(pathResolve(__dirname, 'fixtures/teamcity.txt')));
             });
         });
 

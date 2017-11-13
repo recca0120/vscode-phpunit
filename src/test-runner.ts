@@ -137,6 +137,7 @@ export class TestRunner {
                 const commandArguments: CommandArguments = new CommandArguments(
                     this.config.get('args', []).concat(args)
                 );
+
                 const options = {
                     execPath: this.config.get('execPath', ''),
                     basePath: this.container.basePath(this.editor, this.workspace),

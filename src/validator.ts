@@ -17,15 +17,21 @@ export class Validator {
     className(fileName: string, content?: string) {
         content = content || this.files.get(fileName);
 
-        const className = fileName
-            .substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1)
-            .replace(/\.(php|inc)$/i, '')
-            .trim();
-
-        if (new RegExp(`(abstract\\s+class|trait|interface)\\s+${className}`, 'i').test(content)) {
+        if (new RegExp(`(abstract\\s+class|trait|interface)\\s+`, 'i').test(content)) {
             return false;
         }
 
-        return new RegExp(`class\\s+${className}\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content);
+        return new RegExp(`class\\s+.+\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content);
+
+        // const className = fileName
+        //     .substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1)
+        //     .replace(/\.(php|inc)$/i, '')
+        //     .trim();
+
+        // if (new RegExp(`(abstract\\s+class|trait|interface)\\s+${className}`, 'i').test(content)) {
+        //     return false;
+        // }
+
+        // return new RegExp(`class\\s+${className}\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content);
     }
 }
