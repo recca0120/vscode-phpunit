@@ -27,12 +27,7 @@ export function activate(context: ExtensionContext) {
 
     const diagnosticManager = new DiagnosticManager(diagnostics);
 
-    const phpunit: PHPUnit = new PHPUnit(
-        container.parserFactory,
-        container.processFactory,
-        container.files,
-        container.basePath
-    );
+    const phpunit: PHPUnit = new PHPUnit(container.parserFactory, container.processFactory, container.files);
 
     phpunit
         .on('before', () => outputChannel.clear())

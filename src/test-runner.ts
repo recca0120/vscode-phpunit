@@ -1,7 +1,7 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
 import { PHPUnit, State } from './phpunit';
 
-import { CommandOptions } from './command-options';
+import { CommandArguments } from './command-arguments';
 import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
@@ -9,6 +9,7 @@ import { DelayHandler } from './delay-handler';
 import { DiagnosticManager } from './diagnostic-manager';
 import { Store } from './store';
 import { Validator } from './validator';
+import { basename } from 'path';
 
 export class TestRunner {
     private disposable: Disposable;
@@ -118,14 +119,14 @@ export class TestRunner {
                 }
 
                 if (path && this.validator.fileName(path) === false) {
-                    console.warn(State.PHPUNIT_NOT_PHP, path);
+                    console.warn(State.PHPUNIT_NOT_PHP);
                     reject(State.PHPUNIT_NOT_PHP);
 
                     return false;
                 }
 
                 if (content && this.validator.className(path, content) === false) {
-                    console.warn(State.PHPUNIT_NOT_TESTCASE, path, content);
+                    console.warn(State.PHPUNIT_NOT_TESTCASE);
                     reject(State.PHPUNIT_NOT_TESTCASE);
 
                     return;
@@ -133,10 +134,15 @@ export class TestRunner {
 
                 this.clearDecoratedGutter();
 
-                const commandOptions: CommandOptions = new CommandOptions(this.config.get('args', []).concat(args));
-                const execPath: string = this.config.get('execPath', '');
+                const commandArguments: CommandArguments = new CommandArguments(
+                    this.config.get('args', []).concat(args)
+                );
+                const options = {
+                    execPath: this.config.get('execPath', ''),
+                    basePath: this.container.basePath(this.editor, this.workspace),
+                };
 
-                const handlePromise = this.phpunit.handle(path, commandOptions, execPath);
+                const handlePromise = this.phpunit.handle(path, commandArguments, options);
 
                 handlePromise.then(items => {
                     this.store.put(items);

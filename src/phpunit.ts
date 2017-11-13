@@ -1,6 +1,6 @@
 import { ParserFactory, TestCase } from './parser';
 
-import { CommandOptions } from './command-options';
+import { CommandArguments } from './command-arguments';
 import { EventEmitter } from 'events';
 import { Filesystem } from './filesystem';
 import { ProcessFactory } from './process';
@@ -13,27 +13,34 @@ export enum State {
     PHPUNIT_NOT_PHP = 'phpunit_not_php',
 }
 
+interface Options {
+    basePath?: string;
+    execPath?: string;
+}
+
 export class PHPUnit extends EventEmitter {
     constructor(
         private parserFactory = new ParserFactory(),
         private processFactory: ProcessFactory = new ProcessFactory(),
-        private files: Filesystem = new Filesystem(),
-        private basePath: string = __dirname
+        private files: Filesystem = new Filesystem()
     ) {
         super();
     }
 
-    handle(path: string, options: CommandOptions, execPath: string = ''): Promise<TestCase[]> {
+    handle(path: string, args: CommandArguments, options: Options = {}): Promise<TestCase[]> {
+        const basePath: string = options.basePath || __dirname;
+        const execPath: string = options.execPath || '';
+
         return new Promise((resolve, reject) => {
-            if (options.has('--teamcity') === false) {
-                options.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
+            if (args.has('--teamcity') === false) {
+                args.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
             }
 
-            if (options.has('-c') === false) {
-                options.put('-c', this.getConfiguration());
+            if (args.has('-c') === false) {
+                args.put('-c', this.getConfiguration(basePath));
             }
 
-            const spawnOptions = [this.getExecutable(execPath)].concat(options.toArray()).concat([path]);
+            const spawnOptions = [this.getExecutable(execPath, basePath)].concat(args.toArray()).concat([path]);
 
             this.emit('before');
             this.emit('stdout', `${spawnOptions.join(' ')}\n\n`);
@@ -42,12 +49,12 @@ export class PHPUnit extends EventEmitter {
                 .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
                 .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
                 .spawn(spawnOptions, {
-                    cwd: this.basePath,
+                    cwd: basePath,
                 })
                 .then(output => {
                     this.emit('stdout', '\n\n');
-                    const parser = this.parserFactory.create(options.has('--teamcity') ? 'teamcity' : 'junit');
-                    const content = options.has('--teamcity') ? output : options.get('--log-junit');
+                    const parser = this.parserFactory.create(args.has('--teamcity') ? 'teamcity' : 'junit');
+                    const content = args.has('--teamcity') ? output : args.get('--log-junit');
                     parser
                         .parse(content)
                         .then(items => resolve(items))
@@ -56,22 +63,27 @@ export class PHPUnit extends EventEmitter {
         });
     }
 
-    private getConfiguration(): string {
-        return ['phpunit.xml', 'phpunit.xml.dist']
-            .map(file => `${this.basePath}/${file}`)
-            .find(file => this.files.exists(file));
+    private getConfiguration(basePath: string): string {
+        return ['phpunit.xml', 'phpunit.xml.dist', 'laravel/phpunit.xml', 'laravel/phpunit.xml.dist']
+            .map(path => this.files.find(`${basePath}/${path}`))
+            .find(path => path !== '');
     }
 
-    private getExecutable(execPath: string = ''): string {
-        return tap(execPath !== '' && execPath !== 'phpunit' ? execPath : this.findExecutable(), execPath => {
+    private getExecutable(execPath: string, basePath: string): string {
+        return tap(execPath !== '' && execPath !== 'phpunit' ? execPath : this.findExecutable(basePath), execPath => {
             if (!execPath) {
                 throw State.PHPUNIT_NOT_FOUND;
             }
         });
     }
 
-    private findExecutable(): string {
-        return [`${this.basePath}/vendor/bin/phpunit`, `${this.basePath}/phpunit.phar`, 'phpunit']
+    private findExecutable(basePath: string): string {
+        return [
+            `${basePath}/vendor/bin/phpunit`,
+            `${basePath}/laravel/vendor/bin/phpunit`,
+            `${basePath}/phpunit.phar`,
+            'phpunit',
+        ]
             .map(path => this.files.find(path))
             .find(path => path !== '');
     }

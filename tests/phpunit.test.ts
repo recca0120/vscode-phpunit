@@ -1,7 +1,7 @@
 import { JUnitParser, ParserFactory } from '../src/parser';
 import { Process, ProcessFactory } from '../src/process';
 
-import { CommandOptions } from '../src/command-options';
+import { CommandArguments } from '../src/command-arguments';
 import { Filesystem } from './../src/filesystem';
 import { PHPUnit } from '../src/phpunit';
 import { join } from 'path';
@@ -15,10 +15,13 @@ describe('PHPUnit Tests', () => {
         const phpunit = new PHPUnit(parserFactory, processFactory);
         const tests = await parser.parse(join(__dirname, 'fixtures/junit.xml'));
         const files = new Filesystem();
-        const execPath = 'phpunit';
+        const optons = {
+            execPath: 'phpunit',
+            basePath: __dirname,
+        };
 
         const path = 'FooTest.php';
-        const options = new CommandOptions();
+        const args = new CommandArguments();
 
         spyOn(files, 'find').and.returnValue('phpunit');
         spyOn(processFactory, 'create').and.returnValue(process);
@@ -28,7 +31,7 @@ describe('PHPUnit Tests', () => {
 
         spyOn(process, 'spawn').and.returnValue(Promise.resolve(process));
 
-        const result = await phpunit.handle(path, options, execPath);
+        const result = await phpunit.handle(path, args, optons);
 
         expect(process.spawn).toHaveBeenCalled();
         expect(parser.parse).toHaveBeenCalled();

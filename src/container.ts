@@ -1,5 +1,6 @@
+import { ExtensionContext, TextEditor } from 'vscode';
+
 import { ConfigRepository } from './config';
-import { ExtensionContext } from 'vscode';
 import { Filesystem } from './filesystem';
 import { ParserFactory } from './parser';
 import { ProcessFactory } from './process';
@@ -46,8 +47,18 @@ export class Container {
         extensionPath: __dirname,
     };
 
-    get basePath(): string {
-        return this.workspace.rootPath;
+    basePath(editor?: TextEditor, workspace?: any): string {
+        editor = editor || this.window.activeTextEditor;
+        workspace = workspace || this.workspace;
+
+        if (!editor) {
+            return workspace.rootPath;
+        }
+
+        const resource = editor.document.uri;
+        const folder = workspace.getWorkspaceFolder(resource);
+
+        return !folder ? workspace.rootPath : folder.uri.fsPath;
     }
 
     get extensionPath(): string {
