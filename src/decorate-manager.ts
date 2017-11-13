@@ -21,13 +21,13 @@ export class DecorateManager {
 
     decoratedGutter(store: Store, editors: TextEditor[]): this {
         editors.forEach((editor: TextEditor) => {
-            const fileName = editor.document.fileName;
+            const path = editor.document.uri.fsPath;
 
-            if (store.has(fileName) === false) {
+            if (store.has(path) === false) {
                 return;
             }
 
-            store.getByType(fileName).forEach((testCases: TestCase[], state) => {
+            store.getByType(path).forEach((testCases: TestCase[], state) => {
                 editor.setDecorations(
                     this.styles.get(state),
                     testCases.map(testCase => ({

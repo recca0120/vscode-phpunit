@@ -41,7 +41,7 @@ export class TestRunner {
                     return;
                 }
 
-                const path = this.document.fileName;
+                const path = this.document.uri.fsPath;
 
                 if (<boolean>this.config.get('testOnOpen') === false || this.store.has(path) === true) {
                     this.decoratedGutter();
@@ -67,7 +67,7 @@ export class TestRunner {
                 event.waitUntil(
                     new Promise(resolve => {
                         const document = event.document;
-                        const path = document.fileName;
+                        const path = document.uri.fsPath;
 
                         this.handle(path, [], {
                             content: document.getText(),
@@ -85,7 +85,7 @@ export class TestRunner {
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
                 const document = this.document;
-                const path = document.fileName;
+                const path = document.uri.fsPath;
 
                 this.handle(path, [], {
                     content: document.getText(),
@@ -116,6 +116,15 @@ export class TestRunner {
 
                     return;
                 }
+
+                // _formatted:"file:///c%3A/Users/recca/UniServerZ/www/vietnam45/tests/Unit/SQL/FunctionsTest.php"
+                // _fsPath:"c:\Users\recca\UniServerZ\www\vietnam45\tests\Unit\SQL\FunctionsTest.php"
+                // authority:""
+                // fragment:""
+                // fsPath:"c:\Users\recca\UniServerZ\www\vietnam45\tests\Unit\SQL\FunctionsTest.php"
+                // path:"/c:/Users/recca/UniServerZ/www/vietnam45/tests/Unit/SQL/FunctionsTest.php"
+                // query:""
+                // scheme:"file"
 
                 if (path && this.validator.fileName(path) === false) {
                     console.warn(State.PHPUNIT_NOT_PHP);

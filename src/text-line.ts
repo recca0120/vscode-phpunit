@@ -1,5 +1,6 @@
+import { normalizePath, tap } from './helpers';
+
 import { Filesystem } from './filesystem';
-import { tap } from './helpers';
 
 export interface Position {
     line: number;
@@ -103,14 +104,14 @@ export class TextLineFactory {
     }
 
     private getContent(file: string): Promise<string> {
-        if (this.cache.has(file) === true) {
-            return Promise.resolve(this.cache.get(file));
+        if (this.cache.has(normalizePath(file)) === true) {
+            return Promise.resolve(this.cache.get(normalizePath(file)));
         }
 
         return this.files.getAsync(file).then((content: string) => {
             return Promise.resolve(
                 tap(content, content => {
-                    this.cache.set(file, content);
+                    this.cache.set(normalizePath(file), content);
                 })
             );
         });

@@ -36,6 +36,8 @@ export function activate(context: ExtensionContext) {
     const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);
 
     context.subscriptions.push(testRunner.subscribe(commands));
+
+    return testRunner;
 }
 
 // this method is called when your extension is deactivated

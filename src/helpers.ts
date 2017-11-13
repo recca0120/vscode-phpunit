@@ -21,3 +21,7 @@ export function tap(val: any, callback: Function): any {
 
     return val;
 }
+
+export function normalizePath(path: string): string {
+    return !path ? '' : path.replace(/^\w:/i, '').trim();
+}

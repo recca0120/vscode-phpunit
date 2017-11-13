@@ -10,10 +10,10 @@ import {
     Uri,
 } from 'vscode';
 import { TestCase, Type } from './parser';
+import { normalizePath, tap } from './helpers';
 
 import { Store } from './store';
 import { resolve as pathResolve } from 'path';
-import { tap } from './helpers';
 
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
@@ -53,7 +53,7 @@ export class DiagnosticManager {
             let start = 0;
             let end = 1000;
 
-            if (pathResolve(document.fileName) === pathResolve(testCase.file)) {
+            if (document && document.uri && normalizePath(document.uri.fsPath) === normalizePath(testCase.file)) {
                 const textLine: TextLine = document.lineAt(testCase.line);
                 start = textLine.firstNonWhitespaceCharacterIndex;
                 end = textLine.range.end.character + 1;

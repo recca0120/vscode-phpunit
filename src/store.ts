@@ -1,5 +1,7 @@
 import { TestCase, Type, TypeGroup, TypeKeys } from './parser';
 
+import { normalizePath } from './helpers';
+
 export class Store extends Map<string, TestCase[]> {
     constructor(testCases: TestCase[] = [], items: Map<string, TestCase[]> = new Map<string, TestCase[]>()) {
         super(items);
@@ -9,7 +11,7 @@ export class Store extends Map<string, TestCase[]> {
     put(testCases: TestCase[]): this {
         this.groupByFile(testCases).forEach((testCases: TestCase[], fileName: string) => {
             this.set(
-                this.getFileName(fileName),
+                normalizePath(fileName),
                 testCases.map((testCase: TestCase) => {
                     return Object.assign(testCase, {
                         type: TypeGroup.get(testCase.type),
@@ -22,11 +24,11 @@ export class Store extends Map<string, TestCase[]> {
     }
 
     has(fileName: string): boolean {
-        return super.has(this.getFileName(fileName));
+        return super.has(normalizePath(fileName));
     }
 
     get(fileName: string): TestCase[] {
-        return super.get(this.getFileName(fileName));
+        return super.get(normalizePath(fileName));
     }
 
     getByType(fileName: string): Map<Type, TestCase[]> {
@@ -35,10 +37,6 @@ export class Store extends Map<string, TestCase[]> {
 
     dispose(): void {
         this.clear();
-    }
-
-    private getFileName(fileName: string): string {
-        return this.removeDriveName(fileName);
     }
 
     private groupByFile(testCases: TestCase[]): Map<string, TestCase[]> {
@@ -58,9 +56,5 @@ export class Store extends Map<string, TestCase[]> {
                 testCasesGroup.set(testCase.type, testCasesGroup.get(testCase.type).concat(testCase)),
             new Map<Type, TestCase[]>([].concat(TypeKeys.map(type => [type, []])))
         );
-    }
-
-    private removeDriveName(file): string {
-        return file.replace(/^\w:/i, '');
     }
 }
