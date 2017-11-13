@@ -64,26 +64,40 @@ export class PHPUnit extends EventEmitter {
     }
 
     private getConfiguration(basePath: string): string {
-        return ['phpunit.xml', 'phpunit.xml.dist', 'laravel/phpunit.xml', 'laravel/phpunit.xml.dist']
-            .map(path => this.files.find(`${basePath}/${path}`))
-            .find(path => path !== '');
+        return this.findFile(
+            ['phpunit.xml', 'phpunit.xml.dist', 'laravel/phpunit.xml', 'laravel/phpunit.xml.dist'],
+            basePath
+        );
     }
 
     private getExecutable(execPath: string, basePath: string): string {
-        return tap(execPath !== '' && execPath !== 'phpunit' ? execPath : this.findExecutable(basePath), execPath => {
-            if (!execPath) {
-                throw State.PHPUNIT_NOT_FOUND;
-            }
-        });
+        const path: string = this.findFile(
+            [
+                execPath,
+                `vendor/bin/phpunit`,
+                `laravel/vendor/bin/phpunit`,
+                `phpunit.phar`,
+                'laravel/phpunit.phar',
+                'phpunit',
+            ],
+            basePath
+        );
+
+        if (!path) {
+            throw State.PHPUNIT_NOT_FOUND;
+        }
+
+        return path;
     }
 
-    private findExecutable(basePath: string): string {
-        return [
-            `${basePath}/vendor/bin/phpunit`,
-            `${basePath}/laravel/vendor/bin/phpunit`,
-            `${basePath}/phpunit.phar`,
-            'phpunit',
-        ]
+    private findFile(files: string[], basePath?: string): string {
+        let findFiles = [];
+        if (basePath) {
+            findFiles = findFiles.concat(files.map(path => `${basePath}/${path}`));
+        }
+
+        return findFiles
+            .concat(files)
             .map(path => this.files.find(path))
             .find(path => path !== '');
     }
