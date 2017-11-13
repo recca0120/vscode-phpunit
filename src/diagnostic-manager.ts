@@ -5,6 +5,7 @@ import {
     Position,
     Range,
     TextDocument,
+    TextEditor,
     TextLine,
     Uri,
 } from 'vscode';
@@ -17,14 +18,16 @@ import { tap } from './helpers';
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
 
-    handle(store: Store, document?: TextDocument) {
-        store.forEach((testCases: TestCase[], file: string) => {
-            Promise.all(
-                testCases
-                    .filter(testCase => testCase.type !== Type.PASSED)
-                    .map(testCase => this.convertToDiagnostic(testCase, document))
-            ).then((diagnostics: Diagnostic[]) => {
-                this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
+    handle(store: Store, editors: TextEditor[]) {
+        editors.forEach((editor: TextEditor) => {
+            store.forEach((testCases: TestCase[], file: string) => {
+                Promise.all(
+                    testCases
+                        .filter(testCase => testCase.type !== Type.PASSED)
+                        .map(testCase => this.convertToDiagnostic(testCase, editor.document))
+                ).then((diagnostics: Diagnostic[]) => {
+                    this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
+                });
             });
         });
     }

@@ -112,10 +112,10 @@ export class TestRunner {
 
             this.delayHandler.resolve(delay).then((cancelled: boolean) => {
                 if (cancelled === true) {
+                    resolve();
+
                     return;
                 }
-
-                this.clearDecoratedGutter();
 
                 if (path && this.validator.fileName(path) === false) {
                     console.warn(State.PHPUNIT_NOT_PHP, path);
@@ -130,6 +130,8 @@ export class TestRunner {
 
                     return;
                 }
+
+                this.clearDecoratedGutter();
 
                 const commandOptions: CommandOptions = new CommandOptions(this.config.get('args', []).concat(args));
                 const execPath: string = this.config.get('execPath', '');
@@ -163,15 +165,15 @@ export class TestRunner {
     }
 
     private decoratedGutter() {
-        this.decorateManager.decoratedGutter(this.store, this.editor);
+        this.decorateManager.decoratedGutter(this.store, this.window.visibleTextEditors);
     }
 
     private clearDecoratedGutter() {
-        this.decorateManager.clearDecoratedGutter(this.editor);
+        this.decorateManager.clearDecoratedGutter(this.window.visibleTextEditors);
     }
 
     private handleDiagnostic() {
-        this.diagnosticManager.handle(this.store, this.document);
+        this.diagnosticManager.handle(this.store, this.window.visibleTextEditors);
     }
 
     get editor(): TextEditor {

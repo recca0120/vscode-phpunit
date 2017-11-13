@@ -19,31 +19,32 @@ export class DecorateManager {
         }, new Map<Type, TextEditorDecorationType>());
     }
 
-    decoratedGutter(store: Store, editor: TextEditor): this {
-        if (!editor.setDecorations) {
-            return this;
-        }
+    decoratedGutter(store: Store, editors: TextEditor[]): this {
+        editors.forEach((editor: TextEditor) => {
+            const fileName = editor.document.fileName;
 
-        const fileName = editor.document.fileName;
-        if (store.has(fileName) === false) {
-            return this;
-        }
+            if (store.has(fileName) === false) {
+                return;
+            }
 
-        store.getByType(fileName).forEach((testCases: TestCase[], state) => {
-            editor.setDecorations(
-                this.styles.get(state),
-                testCases.map(testCase => ({
-                    range: new Range(testCase.line - 1, 0, testCase.line - 1, 0),
-                    hoverMessage: testCase.type,
-                }))
-            );
+            store.getByType(fileName).forEach((testCases: TestCase[], state) => {
+                editor.setDecorations(
+                    this.styles.get(state),
+                    testCases.map(testCase => ({
+                        range: new Range(testCase.line - 1, 0, testCase.line - 1, 0),
+                        hoverMessage: testCase.type,
+                    }))
+                );
+            });
         });
 
         return this;
     }
 
-    clearDecoratedGutter(editor: TextEditor): this {
-        Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []));
+    clearDecoratedGutter(editors: TextEditor[]): this {
+        editors.forEach((editor: TextEditor) => {
+            Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []));
+        });
 
         return this;
     }
