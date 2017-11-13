@@ -1,12 +1,11 @@
 import { minimist, tap } from './helpers';
 
-export class CommandOptions {
+export class CommandArguments {
     private options: any;
     private keys: string[];
 
     constructor(options: string[] = []) {
         this.options = this.parseOptions(options);
-        this.keys = Object.keys(this.options);
     }
 
     has(key) {
@@ -28,7 +27,7 @@ export class CommandOptions {
     }
 
     toArray() {
-        return tap(this.keys.filter(key => key !== '_'), keys => {
+        return tap(Object.keys(this.options).filter(key => key !== '_'), keys => {
             keys.sort();
         }).reduce((prev, key) => {
             const k = key.length === 1 ? `-${key}` : `--${key}`;

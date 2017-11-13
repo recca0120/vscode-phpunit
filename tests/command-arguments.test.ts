@@ -1,8 +1,17 @@
-import { CommandOptions } from '../src/command-options';
+import { CommandArguments } from '../src/command-arguments';
 
 describe('Command Options Tests', () => {
     it('filter options', () => {
-        const options = new CommandOptions(['--log-junit', 'test.xml', '--teamcity', '-d', 'a=b', '-d', 'c=d', 'ssh']);
+        const options = new CommandArguments([
+            '--log-junit',
+            'test.xml',
+            '--teamcity',
+            '-d',
+            'a=b',
+            '-d',
+            'c=d',
+            'ssh',
+        ]);
 
         expect(options.has('--log-junit')).toBe(false);
         expect(options.has('--teamcity')).toBe(true);
