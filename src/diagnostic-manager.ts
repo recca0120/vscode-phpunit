@@ -4,7 +4,7 @@ import {
     DiagnosticSeverity,
     Position,
     Range,
-    TextEditor,
+    TextDocument,
     TextLine,
     Uri,
 } from 'vscode';
@@ -17,46 +17,51 @@ import { tap } from './helpers';
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
 
-    handle(store: Store, editor: TextEditor) {
+    handle(store: Store, document?: TextDocument) {
         store.forEach((testCases: TestCase[], file: string) => {
-            this.diagnostics.set(
-                Uri.file(file),
+            Promise.all(
                 testCases
                     .filter(testCase => testCase.type !== Type.PASSED)
-                    .map(testCase => this.convertToDiagnostic(testCase, editor))
-                    .filter(diagnostic => diagnostic !== null)
+                    .map(testCase => this.convertToDiagnostic(testCase, document))
+            ).then((diagnostics: Diagnostic[]) => {
+                this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
+            });
+        });
+    }
+
+    private convertToDiagnostic(testCase: TestCase, document?: TextDocument): Promise<Diagnostic> {
+        return this.convertToRange(testCase, document).then((range: Range) => {
+            return tap(
+                new Diagnostic(
+                    range,
+                    testCase.fault.message,
+                    testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+                ),
+                (diagnostic: Diagnostic) => {
+                    diagnostic.source = 'PHPUnit';
+                }
             );
+        });
+    }
+
+    private convertToRange(testCase: TestCase, document?: TextDocument): Promise<Range> {
+        return new Promise(resolve => {
+            const line = testCase.line - 1;
+            let start = 0;
+            let end = 1000;
+
+            if (pathResolve(document.fileName) === pathResolve(testCase.file)) {
+                const textLine: TextLine = document.lineAt(testCase.line);
+                start = textLine.firstNonWhitespaceCharacterIndex;
+                end = textLine.range.end.character + 1;
+            }
+
+            resolve(new Range(new Position(line, start), new Position(line, end)));
         });
     }
 
     dispose() {
         this.diagnostics.clear();
         this.diagnostics.dispose();
-    }
-
-    private convertToDiagnostic(testCase: TestCase, editor?: TextEditor): Diagnostic {
-        return tap(
-            new Diagnostic(
-                this.convertToRange(testCase, editor),
-                testCase.fault.message,
-                testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
-            ),
-            (diagnostic: Diagnostic) => {
-                diagnostic.source = 'PHPUnit';
-            }
-        );
-    }
-
-    private convertToRange(testCase: TestCase, editor?: TextEditor) {
-        if (pathResolve(editor.document.fileName) === pathResolve(testCase.file)) {
-            const textLine: TextLine = editor.document.lineAt(testCase.line - 1);
-
-            return new Range(
-                new Position(textLine.lineNumber, textLine.firstNonWhitespaceCharacterIndex),
-                new Position(textLine.lineNumber, textLine.range.end.character + 1)
-            );
-        } else {
-            return new Range(new Position(testCase.line, 0), new Position(testCase.line, 1000));
-        }
     }
 }
