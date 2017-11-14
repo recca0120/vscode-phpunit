@@ -20,7 +20,7 @@
         "vscode": "^1.15.0"
     },
     "categories": [
-        "Other"
+        "Languages", "Other"
     ],
     "main": "./out/src/extension",
     "activationEvents": [
