@@ -2,7 +2,7 @@ import { ExtensionContext, TextEditor } from 'vscode';
 
 import { ConfigRepository } from './config';
 import { Filesystem } from './filesystem';
-import { ParserFactory } from './parsers/parser';
+import { ParserFactory } from './parsers/parser-factory';
 import { ProcessFactory } from './command/process';
 import { Store } from './store';
 import { TextLineFactory } from './text-line';

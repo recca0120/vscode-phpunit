@@ -1,9 +1,9 @@
-import { ParserFactory, TestCase } from '../parsers/parser';
-
 import { Arguments } from './arguments';
 import { EventEmitter } from 'events';
 import { Filesystem } from '../filesystem';
+import { ParserFactory } from '../parsers/parser-factory';
 import { ProcessFactory } from './process';
+import { TestCase } from '../parsers/parser';
 
 export enum State {
     PHPUNIT_NOT_FOUND = 'phpunit_not_found',
