@@ -25,3 +25,7 @@ export function tap(val: any, callback: Function): any {
 export function normalizePath(path: string): string {
     return !path ? '' : path.replace(/^\w:/i, '').trim();
 }
+
+export function noANSI(message: string): string {
+    return message.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+}

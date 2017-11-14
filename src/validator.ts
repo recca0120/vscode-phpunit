@@ -1,4 +1,5 @@
 import { Filesystem } from './filesystem';
+import { State } from './command/phpunit';
 
 export class Validator {
     testCaseClass: string[] = [
@@ -10,11 +11,23 @@ export class Validator {
 
     constructor(private files: Filesystem = new Filesystem()) {}
 
-    fileName(fileName: string): boolean {
+    validate(path: string, content?: string) {
+        if (path && this.validateExtension(path) === false) {
+            throw State.PHPUNIT_NOT_PHP;
+        }
+
+        if (content && this.vaildateTestCase(path, content) === false) {
+            throw State.PHPUNIT_NOT_TESTCASE;
+        }
+
+        return true;
+    }
+
+    validateExtension(fileName: string): boolean {
         return /\.git\.(php|inc)/.test(fileName) === false && /\.(php|inc)$/.test(fileName) === true;
     }
 
-    className(fileName: string, content?: string) {
+    vaildateTestCase(fileName: string, content?: string) {
         content = content || this.files.get(fileName);
 
         if (new RegExp(`(abstract\\s+class|trait|interface)\\s+`, 'i').test(content)) {

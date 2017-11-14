@@ -126,18 +126,13 @@ export class TestRunner {
                 // query:""
                 // scheme:"file"
 
-                if (path && this.validator.fileName(path) === false) {
-                    console.warn(State.PHPUNIT_NOT_PHP);
-                    reject(State.PHPUNIT_NOT_PHP);
+                try {
+                    this.validator.validate(path, content);
+                } catch (error) {
+                    console.warn(error);
+                    reject(error);
 
                     return false;
-                }
-
-                if (content && this.validator.className(path, content) === false) {
-                    console.warn(State.PHPUNIT_NOT_TESTCASE);
-                    reject(State.PHPUNIT_NOT_TESTCASE);
-
-                    return;
                 }
 
                 this.clearDecoratedGutter();

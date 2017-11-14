@@ -1,9 +1,10 @@
-import { JUnitParser, ParserFactory } from '../../src/parsers/parser';
 import { Process, ProcessFactory } from '../../src/command/process';
 
 import { Arguments } from '../../src/command/arguments';
 import { Filesystem } from '../../src/filesystem';
+import { JUnitParser } from '../../src/parsers/junit';
 import { PHPUnit } from '../../src/command/phpunit';
+import { ParserFactory } from '../../src/parsers/parser-factory';
 import { join } from 'path';
 
 describe('PHPUnit Tests', () => {
