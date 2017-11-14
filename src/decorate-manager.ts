@@ -105,8 +105,7 @@ export class DecorationStyle {
 
     risky(): DecorationType {
         return {
-            // overviewRulerColor: '#ffa0a0',
-            overviewRulerColor: 'red',
+            overviewRulerColor: '#ffa0a0',
             overviewRulerLane: OverviewRulerLane.Left,
             dark: {
                 gutterIconPath: 'danger-light.svg',
@@ -119,7 +118,7 @@ export class DecorationStyle {
 
     skipped(): DecorationType {
         return {
-            overviewRulerColor: 'darkgrey',
+            overviewRulerColor: '#d2a032',
             overviewRulerLane: OverviewRulerLane.Left,
             dark: {
                 gutterIconPath: 'warning.svg',
