@@ -85,10 +85,14 @@ export class Filesystem extends AbstractFilesystem {
         this.cache = FilesystemCache;
     }
 
+    private key(files: string[]) {
+        return JSON.stringify(files.join('-'));
+    }
+
     find(search: string[] | string): string {
         const files = search instanceof Array ? search : [search];
 
-        const key = JSON.stringify(files.join('-'));
+        const key = this.key(files);
         if (this.cache.has(key) === true) {
             return this.cache.get(key);
         }
@@ -105,18 +109,23 @@ export class Filesystem extends AbstractFilesystem {
         return '';
     }
 
-    exists(file: string): boolean {
-        const key = `${JSON.stringify(file)}-exists`;
+    exists(search: string[] | string): boolean {
+        const files = search instanceof Array ? search : [search];
+
+        const key = `${this.key(files)}-exists`;
         if (this.cache.has(key) === true) {
             return true;
         }
 
-        const exists = this.instance.exists(file);
-        if (exists === true) {
-            this.cache.set(key, file);
+        for (const file of files) {
+            const exists = this.instance.exists(file);
+            if (exists === true) {
+                this.cache.set(key, file);
+            }
+            return exists;
         }
 
-        return exists;
+        return false;
     }
 
     unlink(file: string): void {

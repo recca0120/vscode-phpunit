@@ -1,5 +1,6 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
 import { PHPUnit, State } from './command/phpunit';
+import { TestCase, Type } from './parsers/parser';
 
 import { Arguments } from './command/arguments';
 import { ConfigRepository } from './config';
@@ -9,8 +10,8 @@ import { DelayHandler } from './delay-handler';
 import { DiagnosticManager } from './diagnostic-manager';
 import { StatusBar } from './status-bar';
 import { Store } from './store';
-import { Type } from './parsers/parser';
 import { Validator } from './validator';
+import { tap } from './helpers';
 
 export interface TestRunnerOptions {
     container: Container;
@@ -27,13 +28,14 @@ export class TestRunner {
     private store: Store;
     private validator: Validator;
     private config: ConfigRepository;
-    private commandDelayed: DelayHandler = new DelayHandler('PHPUnit Cancelled');
 
     private container: Container;
     private command: PHPUnit;
     private statusBar: StatusBar;
     private decorateManager: DecorateManager;
     private diagnosticManager: DiagnosticManager;
+
+    private delayHandler = new DelayHandler();
 
     constructor(options: TestRunnerOptions) {
         this.container = options.container;
@@ -58,9 +60,17 @@ export class TestRunner {
                     return;
                 }
 
-                const document: TextDocument = editor.document;
+                this.delayHandler.delay(1000).then(cancelled => {
+                    if (cancelled === true) {
+                        return;
+                    }
 
-                this.commandDelayed.delay(100).then(() => {
+                    const document: TextDocument = editor.document;
+
+                    if (this.validator.isGitFile(document.uri.fsPath)) {
+                        return;
+                    }
+
                     this.decoratedGutter();
 
                     if (<boolean>this.config.get('testOnOpen') === false || this.store.has(document.uri.fsPath)) {
@@ -71,7 +81,6 @@ export class TestRunner {
                     const content = document.getText();
                     this.handle(path, [], {
                         content,
-                        delay: 50,
                     });
                 });
             },
@@ -120,50 +129,64 @@ export class TestRunner {
     handle(path: string, args: string[] = [], options?: any) {
         const content: string = options.content || '';
 
-        this.statusBar.show();
-
-        try {
-            this.validator.validate(path, content);
-        } catch (error) {
-            console.warn(error);
-            this.statusBar.hide();
-
-            return Promise.reject(error);
+        if (this.validate(path, content) === false) {
+            return;
         }
 
+        this.statusBar.show();
         this.statusBar.running('testing changes');
 
         this.clearDecoratedGutter();
 
-        const params: Arguments = new Arguments(this.config.get('args', []).concat(args));
+        return tap(
+            this.command.handle(path, this.config.get('args', []).concat(args), {
+                execPath: this.config.get('execPath', ''),
+                basePath: this.container.basePath(this.editor, this.workspace),
+            }),
+            promise => {
+                promise.then(this.onFinish.bind(this));
+                promise.catch(this.onError.bind(this));
+            }
+        );
+    }
 
-        const opts = {
-            execPath: this.config.get('execPath', ''),
-            basePath: this.container.basePath(this.editor, this.workspace),
-        };
+    private onFinish(items: TestCase[]): Promise<TestCase[]> {
+        this.store.put(items);
 
-        return this.command
-            .handle(path, params, opts)
-            .then(items => {
-                items.some(item => item.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
+        this.decoratedGutter();
+        this.handleDiagnostic();
 
-                this.store.put(items);
-                this.decoratedGutter();
-                this.handleDiagnostic();
+        items.some(item => item.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
 
-                return Promise.resolve(items);
-            })
-            .catch(error => {
-                this.decoratedGutter();
-                this.handleDiagnostic();
-                if (error === State.PHPUNIT_NOT_FOUND) {
-                    this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
-                }
-                console.error(error);
-                this.statusBar.failed(error);
+        return Promise.resolve(items);
+    }
 
-                return Promise.resolve(error);
-            });
+    private onError(error): Promise<any> {
+        this.decoratedGutter();
+        this.handleDiagnostic();
+
+        this.statusBar.failed(error);
+
+        if (error === State.PHPUNIT_NOT_FOUND) {
+            this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
+        }
+
+        console.error(error);
+
+        return Promise.reject(error);
+    }
+
+    private validate(path, content) {
+        try {
+            this.validator.validate(path, content);
+
+            return true;
+        } catch (error) {
+            console.warn(error);
+            this.statusBar.hide();
+
+            return false;
+        }
     }
 
     dispose() {

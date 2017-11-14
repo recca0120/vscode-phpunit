@@ -31,7 +31,7 @@ describe('PHPUnit Tests', () => {
 
         spyOn(process, 'spawn').and.returnValue(Promise.resolve(process));
 
-        const result = await phpunit.handle(path, args, optons);
+        const result = await phpunit.handle(path, [], optons);
 
         expect(process.spawn).toHaveBeenCalled();
         expect(parser.parse).toHaveBeenCalled();

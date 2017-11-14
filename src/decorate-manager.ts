@@ -3,6 +3,7 @@ import { TestCase, Type, TypeKeys } from './parsers/parser';
 
 import { Container } from './container';
 import { Store } from './store';
+import { normalizePath } from './helpers';
 import { resolve } from 'path';
 
 export class DecorateManager {
@@ -21,7 +22,7 @@ export class DecorateManager {
 
     decoratedGutter(store: Store, editors: TextEditor[]): this {
         editors.forEach((editor: TextEditor) => {
-            const path = editor.document.uri.fsPath;
+            const path = normalizePath(editor.document.uri.fsPath);
 
             if (store.has(path) === false) {
                 return;

@@ -27,20 +27,22 @@ export class PHPUnit extends EventEmitter {
         super();
     }
 
-    handle(path: string, args: Arguments, options: Options = {}): Promise<TestCase[]> {
+    handle(path: string, args: string[], options: Options = {}): Promise<TestCase[]> {
         const basePath: string = options.basePath || __dirname;
         const execPath: string = options.execPath || '';
 
+        const parameters = new Arguments(args);
+
         return new Promise((resolve, reject) => {
-            if (args.has('--teamcity') === false) {
-                args.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
+            if (parameters.has('--teamcity') === false) {
+                parameters.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
             }
 
-            if (args.has('-c') === false) {
-                args.put('-c', this.getConfiguration(basePath) || false);
+            if (parameters.has('-c') === false) {
+                parameters.put('-c', this.getConfiguration(basePath) || false);
             }
 
-            const spawnOptions = [this.getExecutable(execPath, basePath)].concat(args.toArray()).concat([path]);
+            const spawnOptions = [this.getExecutable(execPath, basePath)].concat(parameters.toArray()).concat([path]);
 
             this.emit('start', `${spawnOptions.join(' ')}\n\n`);
             this.processFactory
@@ -52,13 +54,13 @@ export class PHPUnit extends EventEmitter {
                 })
                 .then(output => {
                     this.emit('exit', output);
-                    const parser = this.parserFactory.create(args.has('--teamcity') ? 'teamcity' : 'junit');
-                    const content = args.has('--teamcity') ? output : args.get('--log-junit');
+                    const parser = this.parserFactory.create(parameters.has('--teamcity') ? 'teamcity' : 'junit');
+                    const content = parameters.has('--teamcity') ? output : parameters.get('--log-junit');
                     parser
                         .parse(content)
                         .then(items => {
-                            if (args.has('--log-junit')) {
-                                this.files.unlink(args.get('--log-junit'));
+                            if (parameters.has('--log-junit')) {
+                                this.files.unlink(parameters.get('--log-junit'));
                             }
                             resolve(items);
                         })

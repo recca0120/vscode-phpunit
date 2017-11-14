@@ -30,7 +30,8 @@ export function normalizePath(path: string): string {
         : path
               .trim()
               .replace(/^(\w):/i, '/$1')
-              .replace(/\\/, '/');
+              .replace(/\\/g, '/')
+              .toLowerCase();
 }
 
 export function noANSI(message: string): string {
