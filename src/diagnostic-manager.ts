@@ -53,7 +53,8 @@ export class DiagnosticManager {
             let end = 1000;
 
             if (document && document.uri && normalizePath(document.uri.fsPath) === normalizePath(testCase.file)) {
-                const textLine: TextLine = document.lineAt(testCase.line);
+                const textLine: TextLine = document.lineAt(line);
+
                 start = textLine.firstNonWhitespaceCharacterIndex;
                 end = textLine.range.end.character + 1;
             }
