@@ -27,7 +27,7 @@ export class DelayHandler {
     }
 
     cancel() {
-        this.id = this.id > 100 ? 0 : this.id + 1;
+        this.id = ++this.id % 100;
 
         if (this.cancelled() === false) {
             this.rejectFn(this.message);
