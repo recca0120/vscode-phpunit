@@ -1,8 +1,13 @@
 # Change Log
 All notable changes to the "vscode-phpunit" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for 
+Check [Keep a Changelog](http://keepachangelog.com/) for
 recommendations on how to structure this file.
+
+## 0.4.6
+- better perforamce in windows
+- status bar
+- fix bugs
 
 ## 0.4.5
 # fix bugs
