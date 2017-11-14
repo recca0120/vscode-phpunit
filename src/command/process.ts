@@ -1,7 +1,7 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process';
 
 import { EventEmitter } from 'events';
-import { tap } from './helpers';
+import { tap } from '../helpers';
 
 export class Process extends EventEmitter {
     spawn(parameters: string[], options?: SpawnOptions): Promise<string> {

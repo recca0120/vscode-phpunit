@@ -1,7 +1,7 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
-import { PHPUnit, State } from './phpunit';
+import { PHPUnit, State } from './command/phpunit';
 
-import { CommandArguments } from './command-arguments';
+import { Arguments } from './command/arguments';
 import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
@@ -142,9 +142,7 @@ export class TestRunner {
 
                 this.clearDecoratedGutter();
 
-                const commandArguments: CommandArguments = new CommandArguments(
-                    this.config.get('args', []).concat(args)
-                );
+                const commandArguments: Arguments = new Arguments(this.config.get('args', []).concat(args));
 
                 const options = {
                     execPath: this.config.get('execPath', ''),

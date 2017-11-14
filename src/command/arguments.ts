@@ -1,6 +1,6 @@
-import { minimist, tap } from './helpers';
+import { minimist, tap } from '../helpers';
 
-export class CommandArguments {
+export class Arguments {
     private options: any;
 
     constructor(options: string[] = []) {

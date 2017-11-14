@@ -3,7 +3,7 @@ import { DiagnosticCollection, ExtensionContext, OutputChannel, commands, langua
 import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
-import { PHPUnit } from './phpunit';
+import { PHPUnit } from './command/phpunit';
 import { TestRunner } from './test-runner';
 import { container } from './container';
 

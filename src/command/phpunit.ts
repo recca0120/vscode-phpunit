@@ -1,8 +1,8 @@
-import { ParserFactory, TestCase } from './parsers/parser';
+import { ParserFactory, TestCase } from '../parsers/parser';
 
-import { CommandArguments } from './command-arguments';
+import { Arguments } from './arguments';
 import { EventEmitter } from 'events';
-import { Filesystem } from './filesystem';
+import { Filesystem } from '../filesystem';
 import { ProcessFactory } from './process';
 
 export enum State {
@@ -26,7 +26,7 @@ export class PHPUnit extends EventEmitter {
         super();
     }
 
-    handle(path: string, args: CommandArguments, options: Options = {}): Promise<TestCase[]> {
+    handle(path: string, args: Arguments, options: Options = {}): Promise<TestCase[]> {
         const basePath: string = options.basePath || __dirname;
         const execPath: string = options.execPath || '';
 
@@ -95,12 +95,12 @@ export class PHPUnit extends EventEmitter {
     }
 
     private findFile(files: string[], basePath?: string): string {
-        let findFiles = [];
+        let searchPaths = [];
         if (basePath) {
-            findFiles = findFiles.concat(files.map(path => `${basePath}/${path}`));
+            searchPaths = searchPaths.concat(files.map(path => `${basePath}/${path}`));
         }
 
-        return findFiles
+        return searchPaths
             .concat(files)
             .map(path => this.files.find(path))
             .find(path => path !== '');

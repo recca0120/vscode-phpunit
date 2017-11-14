@@ -1,4 +1,4 @@
-import { Process } from '../src/process';
+import { Process } from '../../src/command/process';
 
 describe('Process Tests', () => {
     it('it should exec echo 123', done => {

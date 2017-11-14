@@ -1,9 +1,9 @@
-import { JUnitParser, ParserFactory } from '../src/parsers/parser';
-import { Process, ProcessFactory } from '../src/process';
+import { JUnitParser, ParserFactory } from '../../src/parsers/parser';
+import { Process, ProcessFactory } from '../../src/command/process';
 
-import { CommandArguments } from '../src/command-arguments';
-import { Filesystem } from './../src/filesystem';
-import { PHPUnit } from '../src/phpunit';
+import { Arguments } from '../../src/command/arguments';
+import { Filesystem } from '../../src/filesystem';
+import { PHPUnit } from '../../src/command/phpunit';
 import { join } from 'path';
 
 describe('PHPUnit Tests', () => {
@@ -13,7 +13,7 @@ describe('PHPUnit Tests', () => {
         const processFactory = new ProcessFactory();
         const process = new Process();
         const phpunit = new PHPUnit(parserFactory, processFactory);
-        const tests = await parser.parse(join(__dirname, 'fixtures/junit.xml'));
+        const tests = await parser.parse(join(__dirname, '..', 'fixtures/junit.xml'));
         const files = new Filesystem();
         const optons = {
             execPath: 'phpunit',
@@ -21,9 +21,8 @@ describe('PHPUnit Tests', () => {
         };
 
         const path = 'FooTest.php';
-        const args = new CommandArguments();
+        const args = new Arguments();
 
-        spyOn(files, 'find').and.returnValue('phpunit');
         spyOn(processFactory, 'create').and.returnValue(process);
 
         spyOn(parserFactory, 'create').and.returnValue(parser);
@@ -35,7 +34,6 @@ describe('PHPUnit Tests', () => {
 
         expect(process.spawn).toHaveBeenCalled();
         expect(parser.parse).toHaveBeenCalled();
-        // expect(files.find).toHaveBeenCalled();
 
         expect(result).toBe(tests);
     });
