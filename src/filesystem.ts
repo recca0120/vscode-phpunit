@@ -1,8 +1,7 @@
 import { accessSync, existsSync, readFile, readFileSync, unlinkSync } from 'fs';
-import { resolve as pathResolve, sep } from 'path';
 
 import { isWindows } from './helpers';
-import { spawnSync } from 'child_process';
+import { resolve as pathResolve } from 'path';
 import { tmpdir } from 'os';
 
 interface FilesystemInterface {

@@ -2,7 +2,6 @@ import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 
 import { PHPUnit, State } from './command/phpunit';
 import { TestCase, Type } from './parsers/parser';
 
-import { Arguments } from './command/arguments';
 import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
@@ -183,7 +182,6 @@ export class TestRunner {
             return true;
         } catch (error) {
             console.warn(error);
-            this.statusBar.hide();
 
             return false;
         }
