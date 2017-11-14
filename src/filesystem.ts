@@ -22,24 +22,21 @@ abstract class AbstractFilesystem {
 }
 
 class Windows extends AbstractFilesystem implements FilesystemInterface {
-    extensions = ['.bat', '.exe', '.cmd', ''];
+    private readonly extensions = ['.bat', '.exe', '.cmd', ''];
 
     find(file: string): string {
         const exists = this.getExists(file);
-
         if (exists) {
             return exists;
         }
 
-        for (const extension of this.extensions) {
-            const fileName = `${file}${extension}`;
-            try {
-                const process = spawnSync('where', [fileName]);
+        const paths = process.env.PATH.split(';');
 
-                if (process.status === 0) {
-                    return this.normalize(new Buffer(process.output.join('')));
-                }
-            } catch (e) {}
+        for (const path of paths) {
+            const find = this.getExists(`${path}\\${file}`);
+            if (find) {
+                return find;
+            }
         }
 
         return '';
@@ -51,8 +48,9 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
 
     private getExists(file: string): string {
         for (const extension of this.extensions) {
-            if (existsSync(`${file}${extension}`)) {
-                return pathResolve(`${file}${extension}`);
+            const path = `${file}${extension}`;
+            if (existsSync(path) === true) {
+                return pathResolve(path) || path;
             }
         }
 
@@ -87,22 +85,28 @@ export class Filesystem extends AbstractFilesystem {
         this.cache = FilesystemCache;
     }
 
-    find(file: string): string {
-        const key = file;
+    find(search: string[] | string): string {
+        const files = search instanceof Array ? search : [search];
+
+        const key = JSON.stringify(files.join('-'));
         if (this.cache.has(key) === true) {
             return this.cache.get(key);
         }
 
-        const find = this.instance.find(key);
-        if (find) {
-            this.cache.set(key, find);
+        for (const file of files) {
+            const find = this.instance.find(file);
+            if (find) {
+                this.cache.set(key, find);
+
+                return find;
+            }
         }
 
-        return find ? find : '';
+        return '';
     }
 
     exists(file: string): boolean {
-        const key = `${file}-exists`;
+        const key = `${JSON.stringify(file)}-exists`;
         if (this.cache.has(key) === true) {
             return true;
         }
