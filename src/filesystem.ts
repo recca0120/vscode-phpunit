@@ -1,7 +1,7 @@
 import { accessSync, existsSync, readFile, readFileSync, unlinkSync } from 'fs';
+import { resolve as pathResolve, sep } from 'path';
 
 import { isWindows } from './helpers';
-import { resolve as pathResolve } from 'path';
 import { spawnSync } from 'child_process';
 import { tmpdir } from 'os';
 
@@ -10,7 +10,36 @@ interface FilesystemInterface {
     exists(file: string): boolean;
 }
 
-abstract class AbstractFilesystem {
+class POSIX implements FilesystemInterface {
+    protected cwd: string = process.cwd();
+    protected paths: string[] = process.env.PATH.split(/:|;/).map(path => path.replace(/(:|;)$/, '').trim());
+    protected extensions = [''];
+    protected separator: string = '/';
+
+    find(file: string): string {
+        const exists = this.getExists(file);
+        if (exists) {
+            return exists;
+        }
+
+        for (const path of this.paths) {
+            const find = this.getExists(`${path}${this.separator}${file}`);
+            if (find) {
+                return pathResolve(find);
+            }
+        }
+
+        return '';
+    }
+
+    exists(file: string): boolean {
+        if (this.extensions.some(extension => existsSync(`${this.cwd}${this.separator}${file}${extension}`))) {
+            return true;
+        }
+
+        return this.extensions.some(extension => existsSync(`${file}${extension}`));
+    }
+
     protected normalize(buffer: Buffer) {
         return buffer
             .toString()
@@ -19,38 +48,14 @@ abstract class AbstractFilesystem {
             .shift()
             .trim();
     }
-}
 
-class Windows extends AbstractFilesystem implements FilesystemInterface {
-    private readonly extensions = ['.bat', '.exe', '.cmd', ''];
-
-    find(file: string): string {
-        const exists = this.getExists(file);
-        if (exists) {
-            return exists;
-        }
-
-        const paths = process.env.PATH.split(';');
-
-        for (const path of paths) {
-            const find = this.getExists(`${path}\\${file}`);
-            if (find) {
-                return find;
-            }
-        }
-
-        return '';
-    }
-
-    exists(file: string): boolean {
-        return this.extensions.some(extension => existsSync(`${file}${extension}`));
-    }
-
-    private getExists(file: string): string {
-        for (const extension of this.extensions) {
-            const path = `${file}${extension}`;
-            if (existsSync(path) === true) {
-                return pathResolve(path) || path;
+    protected getExists(file: string): string {
+        for (const cwd of [`${this.cwd}\\`, '']) {
+            for (const extension of this.extensions) {
+                const path = `${cwd}${file}${extension}`;
+                if (existsSync(path) === true) {
+                    return pathResolve(path);
+                }
             }
         }
 
@@ -58,29 +63,21 @@ class Windows extends AbstractFilesystem implements FilesystemInterface {
     }
 }
 
-class Unix extends AbstractFilesystem implements FilesystemInterface {
-    find(fileName: string): string {
-        return this.exists(fileName)
-            ? pathResolve(fileName)
-            : this.normalize(new Buffer(spawnSync('which', [fileName]).output.join('')));
-    }
-
-    exists(file: string): boolean {
-        return existsSync(file);
-    }
+class Windows extends POSIX {
+    protected extensions = ['.bat', '.exe', '.cmd', ''];
+    protected ds: string = '\\';
 }
 
-const instance = isWindows() ? new Windows() : new Unix();
+const instance = isWindows() ? new Windows() : new POSIX();
 
 export const FilesystemCache = new Map<string, string>();
 
-export class Filesystem extends AbstractFilesystem {
+export class Filesystem implements FilesystemInterface {
     private instance: FilesystemInterface;
 
     private cache: Map<string, string>;
 
     constructor() {
-        super();
         this.instance = instance;
         this.cache = FilesystemCache;
     }
