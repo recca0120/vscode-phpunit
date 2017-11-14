@@ -37,7 +37,7 @@ export class PHPUnit extends EventEmitter {
             }
 
             if (args.has('-c') === false) {
-                args.put('-c', this.getConfiguration(basePath));
+                args.put('-c', this.getConfiguration(basePath) || false);
             }
 
             const spawnOptions = [this.getExecutable(execPath, basePath)].concat(args.toArray()).concat([path]);
@@ -83,7 +83,7 @@ export class PHPUnit extends EventEmitter {
                 `phpunit.phar`,
                 'laravel/phpunit.phar',
                 'phpunit',
-            ].filter(path => !!path),
+            ].filter(path => path !== ''),
             basePath
         );
 
@@ -100,9 +100,6 @@ export class PHPUnit extends EventEmitter {
             searchPaths = searchPaths.concat(files.map(path => `${basePath}/${path}`));
         }
 
-        return searchPaths
-            .concat(files)
-            .map(path => this.files.find(path))
-            .find(path => path !== '');
+        return this.files.find(searchPaths.concat(files));
     }
 }

@@ -1,9 +1,19 @@
-import { DiagnosticCollection, ExtensionContext, OutputChannel, commands, languages, window, workspace } from 'vscode';
+import {
+    DiagnosticCollection,
+    ExtensionContext,
+    OutputChannel,
+    StatusBarAlignment,
+    commands,
+    languages,
+    window,
+    workspace,
+} from 'vscode';
 
 import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
 import { PHPUnit } from './command/phpunit';
+import { StatusBar } from './status-bar';
 import { TestRunner } from './test-runner';
 import { container } from './container';
 
@@ -23,16 +33,27 @@ export function activate(context: ExtensionContext) {
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
-    const phpunit: PHPUnit = new PHPUnit(container.parserFactory, container.processFactory, container.files);
-    const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);
+    const command: PHPUnit = new PHPUnit(container.parserFactory, container.processFactory, container.files);
 
-    phpunit.on('start', (buffer: Buffer) => {
+    command.on('start', (buffer: Buffer) => {
         channel.clear();
         channel.append(buffer.toString());
     });
-    phpunit.on('stdout', (buffer: Buffer) => channel.append(buffer.toString()));
-    phpunit.on('exit', () => {
+    command.on('stdout', (buffer: Buffer) => channel.append(buffer.toString()));
+    command.on('exit', () => {
         channel.append('\n\n');
+    });
+
+    const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 100);
+
+    const statusBar = new StatusBar(statusBarItem, container);
+
+    const testRunner = new TestRunner({
+        container,
+        command,
+        statusBar,
+        decorateManager,
+        diagnosticManager,
     });
 
     context.subscriptions.push(testRunner.subscribe(commands));

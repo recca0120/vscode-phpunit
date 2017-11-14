@@ -7,8 +7,18 @@ import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
 import { DelayHandler } from './delay-handler';
 import { DiagnosticManager } from './diagnostic-manager';
+import { StatusBar } from './status-bar';
 import { Store } from './store';
+import { Type } from './parsers/parser';
 import { Validator } from './validator';
+
+export interface TestRunnerOptions {
+    container: Container;
+    command: PHPUnit;
+    statusBar: StatusBar;
+    decorateManager: DecorateManager;
+    diagnosticManager: DiagnosticManager;
+}
 
 export class TestRunner {
     private disposable: Disposable;
@@ -17,15 +27,21 @@ export class TestRunner {
     private store: Store;
     private validator: Validator;
     private config: ConfigRepository;
-    private phpUnitDelayed: DelayHandler = new DelayHandler('PHPUnit Cancelled');
-    private decorateDelayed: DelayHandler = new DelayHandler('Decorate Calncelled');
+    private commandDelayed: DelayHandler = new DelayHandler('PHPUnit Cancelled');
 
-    constructor(
-        private container: Container,
-        private phpunit: PHPUnit,
-        private decorateManager: DecorateManager,
-        private diagnosticManager: DiagnosticManager
-    ) {
+    private container: Container;
+    private command: PHPUnit;
+    private statusBar: StatusBar;
+    private decorateManager: DecorateManager;
+    private diagnosticManager: DiagnosticManager;
+
+    constructor(options: TestRunnerOptions) {
+        this.container = options.container;
+        this.command = options.command;
+        this.statusBar = options.statusBar;
+        this.decorateManager = options.decorateManager;
+        this.diagnosticManager = options.diagnosticManager;
+
         this.window = this.container.window;
         this.workspace = this.container.workspace;
         this.store = this.container.store;
@@ -44,23 +60,19 @@ export class TestRunner {
 
                 const document: TextDocument = editor.document;
 
-                if (this.validator.isGitFile(document.uri.fsPath) === true) {
-                    return;
-                }
-
-                this.decorateDelayed.delay(100).then(() => {
+                this.commandDelayed.delay(100).then(() => {
                     this.decoratedGutter();
-                });
 
-                if (<boolean>this.config.get('testOnOpen') === false || this.store.has(document.uri.fsPath)) {
-                    return;
-                }
+                    if (<boolean>this.config.get('testOnOpen') === false || this.store.has(document.uri.fsPath)) {
+                        return;
+                    }
 
-                const path = document.uri.fsPath;
-                const content = document.getText();
-                this.handle(path, [], {
-                    content,
-                    delay: 50,
+                    const path = document.uri.fsPath;
+                    const content = document.getText();
+                    this.handle(path, [], {
+                        content,
+                        delay: 50,
+                    });
                 });
             },
             null,
@@ -68,18 +80,15 @@ export class TestRunner {
         );
 
         this.workspace.onWillSaveTextDocument(
-            (event: TextDocumentWillSaveEvent) => () => {
+            (event: TextDocumentWillSaveEvent) => {
                 const document: TextDocument = event.document;
                 if (<boolean>this.config.get('testOnSave') === false) {
                     return;
                 }
-
                 const path = document.uri.fsPath;
                 const content = document.getText();
-
                 this.handle(path, [], {
                     content,
-                    delay: 50,
                 });
             },
             null,
@@ -93,7 +102,6 @@ export class TestRunner {
                 const content = document.getText();
                 this.handle(path, [], {
                     content,
-                    delay: 0,
                 });
             })
         );
@@ -111,44 +119,51 @@ export class TestRunner {
 
     handle(path: string, args: string[] = [], options?: any) {
         const content: string = options.content || '';
-        const delay: number = options.delay || 0;
+
+        this.statusBar.show();
+
+        try {
+            this.validator.validate(path, content);
+        } catch (error) {
+            console.warn(error);
+            this.statusBar.hide();
+
+            return Promise.reject(error);
+        }
+
+        this.statusBar.running('testing changes');
+
+        this.clearDecoratedGutter();
+
+        const params: Arguments = new Arguments(this.config.get('args', []).concat(args));
 
         const opts = {
             execPath: this.config.get('execPath', ''),
             basePath: this.container.basePath(this.editor, this.workspace),
         };
 
-        return this.phpUnitDelayed.delay(delay).then(() => {
-            try {
-                this.validator.validate(path, content);
-            } catch (error) {
-                console.warn(error);
+        return this.command
+            .handle(path, params, opts)
+            .then(items => {
+                items.some(item => item.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
 
-                return Promise.reject(error);
-            }
+                this.store.put(items);
+                this.decoratedGutter();
+                this.handleDiagnostic();
 
-            this.clearDecoratedGutter();
+                return Promise.resolve(items);
+            })
+            .catch(error => {
+                this.decoratedGutter();
+                this.handleDiagnostic();
+                if (error === State.PHPUNIT_NOT_FOUND) {
+                    this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
+                }
+                console.error(error);
+                this.statusBar.failed(error);
 
-            const params: Arguments = new Arguments(this.config.get('args', []).concat(args));
-
-            return this.phpunit
-                .handle(path, params, opts)
-                .then(items => {
-                    this.store.put(items);
-                    this.decoratedGutter();
-                    this.handleDiagnostic();
-
-                    return Promise.resolve(items);
-                })
-                .catch(error => {
-                    this.decoratedGutter();
-                    this.handleDiagnostic();
-                    if (error === State.PHPUNIT_NOT_FOUND) {
-                        this.window.showErrorMessage("'Couldn't find a vendor/bin/phpunit file'");
-                    }
-                    console.error(error);
-                });
-        });
+                return Promise.resolve(error);
+            });
     }
 
     dispose() {
@@ -158,11 +173,11 @@ export class TestRunner {
     }
 
     private decoratedGutter() {
-        this.decorateManager.decoratedGutter(this.store, this.window.visibleTextEditors);
+        this.decorateManager.decoratedGutter(this.store, [this.window.activeTextEditor]);
     }
 
     private clearDecoratedGutter() {
-        this.decorateManager.clearDecoratedGutter(this.window.visibleTextEditors);
+        this.decorateManager.clearDecoratedGutter([this.window.activeTextEditor]);
     }
 
     private handleDiagnostic() {

@@ -1,6 +1,8 @@
-import * as x2js from 'x2js';
 export const minimist = require('minimist');
+
 export const minimistString = require('minimist-string');
+
+import * as x2js from 'x2js';
 
 export const xml2js = (function() {
     const instance = new x2js();
@@ -23,7 +25,12 @@ export function tap(val: any, callback: Function): any {
 }
 
 export function normalizePath(path: string): string {
-    return !path ? '' : path.replace(/^\w:/i, '').trim();
+    return !path
+        ? ''
+        : path
+              .trim()
+              .replace(/^(\w):/i, '/$1')
+              .replace(/\\/, '/');
 }
 
 export function noANSI(message: string): string {
