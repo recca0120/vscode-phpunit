@@ -1,6 +1,8 @@
 import { Detail, Parser, TestCase, Type } from './parser';
 import { minimistString, tap } from '../helpers';
 
+import { TextLine } from '../text-line';
+
 interface TeamCity {
     status: string;
     type?: string;

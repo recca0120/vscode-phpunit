@@ -13,7 +13,6 @@ import { TestCase, Type } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
 import { Store } from './store';
-import { resolve as pathResolve } from 'path';
 
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
