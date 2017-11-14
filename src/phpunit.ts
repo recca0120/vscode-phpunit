@@ -1,4 +1,4 @@
-import { ParserFactory, TestCase } from './parser';
+import { ParserFactory, TestCase } from './parsers/parser';
 
 import { CommandArguments } from './command-arguments';
 import { EventEmitter } from 'events';

@@ -1,4 +1,4 @@
-import { JUnitParser, ParserFactory } from '../src/parser';
+import { JUnitParser, ParserFactory } from '../src/parsers/parser';
 import { Process, ProcessFactory } from '../src/process';
 
 import { CommandArguments } from '../src/command-arguments';

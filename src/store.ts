@@ -1,4 +1,4 @@
-import { TestCase, Type, TypeGroup, TypeKeys } from './parser';
+import { TestCase, Type, TypeGroup, TypeKeys } from './parsers/parser';
 
 import { normalizePath } from './helpers';
 

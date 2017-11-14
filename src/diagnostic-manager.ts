@@ -9,7 +9,7 @@ import {
     TextLine,
     Uri,
 } from 'vscode';
-import { TestCase, Type } from './parser';
+import { TestCase, Type } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
 import { Store } from './store';
