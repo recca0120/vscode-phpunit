@@ -12,22 +12,31 @@ export class Validator {
     constructor(private files: Filesystem = new Filesystem()) {}
 
     validate(path: string, content?: string) {
-        if (path && this.validateExtension(path) === false) {
+        if (path && this.isGitFile(path) === true) {
+            console.warn(path);
+            throw State.PHPUNIT_GIT_FILE;
+        }
+
+        if (path && this.allowExtension(path) === false) {
             throw State.PHPUNIT_NOT_PHP;
         }
 
-        if (content && this.vaildateTestCase(path, content) === false) {
+        if (content && this.isTestCase(path, content) === false) {
             throw State.PHPUNIT_NOT_TESTCASE;
         }
 
         return true;
     }
 
-    validateExtension(fileName: string): boolean {
-        return /\.git\.(php|inc)/.test(fileName) === false && /\.(php|inc)$/.test(fileName) === true;
+    isGitFile(fileName: string): boolean {
+        return /(\.git\.(php|inc)|\.(php|inc)\.git)$/.test(fileName) === true;
     }
 
-    vaildateTestCase(fileName: string, content?: string) {
+    allowExtension(fileName: string): boolean {
+        return /\.(php|inc)$/.test(fileName) === true;
+    }
+
+    isTestCase(fileName: string, content?: string) {
         content = content || this.files.get(fileName);
 
         if (new RegExp(`(abstract\\s+class|trait|interface)\\s+`, 'i').test(content)) {

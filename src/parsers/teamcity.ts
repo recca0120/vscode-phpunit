@@ -84,7 +84,7 @@ export class TeamCityParser extends Parser {
                               };
 
                     return Object.assign(testCase, {
-                        line: textLine.lineNumber,
+                        line: textLine.lineNumber + 1,
                     });
                 });
             })

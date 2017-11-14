@@ -51,10 +51,13 @@ export class Container {
         editor = editor || this.window.activeTextEditor;
         workspace = workspace || this.workspace;
 
-        if (!editor) {
+        return this.workspaceFolder(workspace, editor);
+    }
+
+    workspaceFolder(workspace: any, editor: TextEditor) {
+        if (!editor || !workspace.workspaceFolders || workspace.workspaceFolders.length < 2) {
             return workspace.rootPath;
         }
-
         const resource = editor.document.uri;
         const folder = workspace.getWorkspaceFolder(resource);
 

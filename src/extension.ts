@@ -19,15 +19,21 @@ export function activate(context: ExtensionContext) {
         .set('context', context)
         .set('extensionPath', context.extensionPath);
 
-    const outputChannel: OutputChannel = window.createOutputChannel(container.name);
+    const channel: OutputChannel = window.createOutputChannel(container.name);
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
     const phpunit: PHPUnit = new PHPUnit(container.parserFactory, container.processFactory, container.files);
     const testRunner = new TestRunner(container, phpunit, decorateManager, diagnosticManager);
 
-    phpunit.on('before', () => outputChannel.clear());
-    phpunit.on('stdout', (buffer: Buffer) => outputChannel.append(buffer.toString()));
+    phpunit.on('start', (buffer: Buffer) => {
+        channel.clear();
+        channel.append(buffer.toString());
+    });
+    phpunit.on('stdout', (buffer: Buffer) => channel.append(buffer.toString()));
+    phpunit.on('exit', () => {
+        channel.append('\n\n');
+    });
 
     context.subscriptions.push(testRunner.subscribe(commands));
 

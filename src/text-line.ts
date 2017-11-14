@@ -62,7 +62,7 @@ export class TextLineFactory {
 
             for (let i = 0; i < lines.length; i++) {
                 if (pattern.test(lines[i]) === true) {
-                    results.push(this.createTextLine(i + 1, lines[i]));
+                    results.push(this.createTextLine(i, lines[i]));
                     if (mutiple === false) {
                         break;
                     }

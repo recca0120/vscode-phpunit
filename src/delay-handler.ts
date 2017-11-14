@@ -3,7 +3,9 @@ export class DelayHandler {
 
     private rejectFn: Function = null;
 
-    resolve(timeout = 200): Promise<boolean> {
+    constructor(private message?: string) {}
+
+    delay(timeout = 200): Promise<boolean> {
         this.cancel();
 
         return new Promise((resolve, reject) => {
@@ -13,20 +15,22 @@ export class DelayHandler {
                     resolve(id);
                 })(this.id);
             }, timeout);
-        }).then((id: number) => {
-            if (this.id !== id) {
-                return Promise.resolve(true);
-            }
+        })
+            .catch(() => {})
+            .then((id: number) => {
+                if (this.id !== id) {
+                    return Promise.resolve(true);
+                }
 
-            return Promise.resolve(false);
-        });
+                return Promise.resolve(false);
+            });
     }
 
-    cancel(message = 'cancelled') {
+    cancel() {
         this.id = this.id > 100 ? 0 : this.id + 1;
 
         if (this.cancelled() === false) {
-            this.rejectFn(message);
+            this.rejectFn(this.message);
             this.reset();
         }
     }

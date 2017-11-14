@@ -1,30 +1,30 @@
 import { Validator } from '../src/validator';
 
 describe('Validator Tests', () => {
-    it('validate filename', () => {
-        const validator = new Validator();
+    const validator = new Validator();
 
-        expect(validator.validateExtension('test.php')).toBeTruthy();
-        expect(validator.validateExtension('test.inc')).toBeTruthy();
-        expect(validator.validateExtension('test.bat')).toBeFalsy();
-        expect(validator.validateExtension('test.git.php')).toBeFalsy();
-        expect(validator.validateExtension('test.git.inc')).toBeFalsy();
-        expect(validator.validateExtension('test.git.bat')).toBeFalsy();
+    it('allow extension', () => {
+        expect(validator.allowExtension('test.php')).toBeTruthy();
+        expect(validator.allowExtension('test.inc')).toBeTruthy();
+        expect(validator.allowExtension('test.bat')).toBeFalsy();
     });
 
-    it('validate class name', () => {
-        const validator = new Validator();
+    it('is git file', () => {
+        expect(validator.isGitFile('test.php')).toBeFalsy();
+        expect(validator.isGitFile('test.inc')).toBeFalsy();
+        expect(validator.isGitFile('test.git.php')).toBeTruthy();
+        expect(validator.isGitFile('test.git.inc')).toBeTruthy();
+        expect(validator.isGitFile('test.php.git')).toBeTruthy();
+        expect(validator.isGitFile('test.inc.git')).toBeTruthy();
+    });
 
-        expect(validator.vaildateTestCase('MyTest.php', 'class MyTest extends TestCase')).toBeTruthy();
-        expect(
-            validator.vaildateTestCase('MyTest.php', 'class MyTest extends PHPUnit\\Framework\\TestCase')
-        ).toBeTruthy();
-        expect(
-            validator.vaildateTestCase('MyTest.php', 'class MyTest extends PHPUnit_Framework_TestCase')
-        ).toBeTruthy();
-        expect(validator.vaildateTestCase('MyTest.php', 'class MyTest')).toBeFalsy();
-        expect(validator.vaildateTestCase('MyTest.php', 'class MyTest1 extends TestCase')).toBeTruthy();
-        // expect(validator.className('MyTest.php', 'class MyTest')).toBeFalsy();
-        // expect(validator.className('MyTest.php', 'class MyTest1 extends TestCase')).toBeFalsy();
+    it('is testcase', () => {
+        expect(validator.isTestCase('MyTest.php', 'class MyTest extends TestCase')).toBeTruthy();
+        expect(validator.isTestCase('MyTest.php', 'class MyTest extends PHPUnit\\Framework\\TestCase')).toBeTruthy();
+        expect(validator.isTestCase('MyTest.php', 'class MyTest extends PHPUnit_Framework_TestCase')).toBeTruthy();
+        expect(validator.isTestCase('MyTest.php', 'class MyTest')).toBeFalsy();
+        expect(validator.isTestCase('MyTest.php', 'class MyTest1 extends TestCase')).toBeTruthy();
+        // expect(validator.isTestCase('MyTest.php', 'class MyTest')).toBeFalsy();
+        // expect(validator.isTestCase('MyTest.php', 'class MyTest1 extends TestCase')).toBeFalsy();
     });
 });
