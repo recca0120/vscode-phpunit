@@ -37,32 +37,32 @@ describe('Store Tests', () => {
         const fileName1: string = resolve(__dirname, faker.system.commonFileName('php', 'text'));
         const fileName2: string = resolve(__dirname, faker.system.commonFileName('php', 'text'));
 
-        const testCases1: TestCase[] = generatorRandomTestCases(10, {
+        const items1: TestCase[] = generatorRandomTestCases(10, {
             file: fileName1,
         });
 
-        const testCases2: TestCase[] = generatorRandomTestCases(5, {
+        const items2: TestCase[] = generatorRandomTestCases(5, {
             file: fileName2,
         });
 
         const store: Store = new Store();
-        store.put(testCases1).put(testCases2);
+        store.put(items1).put(items2);
 
-        const keys = Array.from(store.keys());
-
+        const keys = Array.from(Array.from(store.groupBy('file').keys()));
         keys.forEach(key => {
             expect(key).not.toMatch(/^\d{1, 1}:\\/);
         });
         expect(keys.length).toBe(2);
+        expect(store.count()).toBe(15);
         expect(store.has(fileName1)).toBeTruthy();
-        expect(store.get(fileName1)).toEqual(testCases1);
+        expect(store.get(fileName1).all()).toEqual(items1);
         expect(store.has(fileName2)).toBeTruthy();
-        expect(store.get(fileName2)).toEqual(testCases2);
+        expect(store.get(fileName2).all()).toEqual(items2);
     });
 
     it('it should group by state', () => {
         const fileName = resolve(__dirname, faker.system.commonFileName('php', 'text'));
-        const testCases: TestCase[] = generatorRandomTestCases(10, {
+        const items: TestCase[] = generatorRandomTestCases(10, {
             file: fileName,
             type: Type.PASSED,
         })
@@ -86,22 +86,22 @@ describe('Store Tests', () => {
             );
 
         const store: Store = new Store();
-        store.put(testCases);
+        store.put(items);
 
-        const groupByType = store.getByType(fileName);
+        const groupByType = store.get(fileName).groupBy('type');
 
-        expect(groupByType.get(Type.PASSED).length).toBe(10);
-        expect(groupByType.get(Type.ERROR).length).toBe(5);
-        expect(groupByType.get(Type.SKIPPED).length).toBe(8);
-        expect(groupByType.get(Type.INCOMPLETE).length).toBe(6);
+        expect(groupByType.get(Type.PASSED).count()).toBe(10);
+        expect(groupByType.get(Type.ERROR).count()).toBe(5);
+        expect(groupByType.get(Type.SKIPPED).count()).toBe(8);
+        expect(groupByType.get(Type.INCOMPLETE).count()).toBe(6);
     });
 
     it('it should execute clear', () => {
         const store: Store = new Store();
-        const testCases: TestCase[] = generatorRandomTestCases(10);
-        store.put(testCases);
-        expect(store.size).toBe(10);
+        const items: TestCase[] = generatorRandomTestCases(10);
+        store.put(items);
+        expect(store.count()).toBe(10);
         store.dispose();
-        expect(store.size).toBe(0);
+        expect(store.count()).toBe(0);
     });
 });

@@ -19,7 +19,7 @@ export class DiagnosticManager {
 
     handle(store: Store, editors: TextEditor[]) {
         editors.forEach((editor: TextEditor) => {
-            store.forEach((testCases: TestCase[], file: string) => {
+            store.each((testCases: TestCase[], file: string) => {
                 Promise.all(
                     testCases
                         .filter(testCase => testCase.type !== Type.PASSED)

@@ -1,60 +1,109 @@
-import { TestCase, Type, TypeGroup, TypeKeys } from './parsers/parser';
+import { normalizePath, tap } from './helpers';
 
-import { normalizePath } from './helpers';
+export class Collection {
+    constructor(protected items: any[] = []) {}
 
-export class Store extends Map<string, TestCase[]> {
-    constructor(testCases: TestCase[] = [], items: Map<string, TestCase[]> = new Map<string, TestCase[]>()) {
-        super(items);
-        this.put(testCases);
-    }
-
-    put(testCases: TestCase[]): this {
-        this.groupByFile(testCases).forEach((testCases: TestCase[], fileName: string) => {
-            this.set(
-                normalizePath(fileName),
-                testCases.map((testCase: TestCase) => {
-                    return Object.assign(testCase, {
-                        type: TypeGroup.get(testCase.type),
-                    });
-                })
-            );
-        });
+    push(item: any) {
+        this.items.push(item);
 
         return this;
     }
 
-    has(fileName: string): boolean {
-        return super.has(normalizePath(fileName));
+    put(items: any[]): Collection {
+        this.items = this.items.concat(items);
+
+        return this;
     }
 
-    get(fileName: string): TestCase[] {
-        return super.get(normalizePath(fileName));
+    has(attribute): boolean {
+        return this.items.some(this.createAttributeCallback(attribute));
     }
 
-    getByType(fileName: string): Map<Type, TestCase[]> {
-        return this.groupByType(this.get(fileName));
+    where(attribute): Collection {
+        return this.filter(this.createAttributeCallback(attribute));
     }
 
-    dispose(): void {
-        this.clear();
+    first(): any {
+        return this.items[0];
     }
 
-    private groupByFile(testCases: TestCase[]): Map<string, TestCase[]> {
-        return testCases.reduce((testCasesGroup: Map<string, TestCase[]>, testCase: TestCase) => {
-            let group = [];
-            if (testCasesGroup.has(testCase.file) === true) {
-                group = testCasesGroup.get(testCase.file);
-            }
-
-            return testCasesGroup.set(testCase.file, group.concat(testCase));
-        }, new Map<string, TestCase[]>());
+    filter(callback: any): Collection {
+        return new Collection(this.items.filter(callback));
     }
 
-    private groupByType(testCases: TestCase[]): Map<Type, TestCase[]> {
-        return testCases.reduce(
-            (testCasesGroup: Map<Type, TestCase[]>, testCase: TestCase) =>
-                testCasesGroup.set(testCase.type, testCasesGroup.get(testCase.type).concat(testCase)),
-            new Map<Type, TestCase[]>([].concat(TypeKeys.map(type => [type, []])))
-        );
+    map(callback: any): any[] {
+        return this.items.map(callback);
+    }
+
+    forEach(callback: any) {
+        this.items.forEach(callback);
+    }
+
+    each(callback: any) {
+        this.forEach(callback);
+    }
+
+    reduce(callback, initialize) {
+        return this.items.reduce(callback, initialize);
+    }
+
+    groupBy(attribute) {
+        const callback =
+            typeof attribute === 'string'
+                ? (group, item) => {
+                      group.set(
+                          item[attribute],
+                          tap(
+                              group.has(item[attribute]) ? group.get(item[attribute]) : new Collection(),
+                              collection => {
+                                  collection.push(item);
+                              }
+                          )
+                      );
+
+                      return group;
+                  }
+                : attribute;
+
+        return this.items.reduce(callback, new Map());
+    }
+
+    count(): number {
+        return this.items.length;
+    }
+
+    all(): any[] {
+        return this.items;
+    }
+
+    clear() {
+        this.items = [];
+
+        return this;
+    }
+
+    private createAttributeCallback(attribute) {
+        return typeof attribute === 'string' ? (attribute = item => !!item[attribute]) : attribute;
+    }
+}
+
+export class Store extends Collection {
+    put(items: any[]): Collection {
+        const files = items.map(item => normalizePath(item.file));
+        this.items = this.items.filter(item => files.indexOf(normalizePath(item.file)) === -1).concat(items);
+
+        return this;
+    }
+
+    has(path: string): boolean {
+        return super.has(item => normalizePath(item.file) === normalizePath(path));
+    }
+
+    get(path: string): Collection {
+        return this.where(item => normalizePath(item.file) === normalizePath(path));
+    }
+
+    dispose() {
+        return this.clear();
     }
 }

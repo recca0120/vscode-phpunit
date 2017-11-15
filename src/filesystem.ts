@@ -64,7 +64,7 @@ class POSIX implements FilesystemInterface {
 
 class Windows extends POSIX {
     protected extensions = ['.bat', '.exe', '.cmd', ''];
-    protected ds: string = '\\';
+    protected separator: string = '\\';
 }
 
 const instance = isWindows() ? new Windows() : new POSIX();

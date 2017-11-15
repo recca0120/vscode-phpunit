@@ -55,32 +55,10 @@ export class TestRunner {
 
         this.window.onDidChangeActiveTextEditor(
             (editor: TextEditor) => {
-                if (!editor) {
-                    return;
-                }
-
                 this.delayHandler.delay(1000).then(cancelled => {
-                    if (cancelled === true) {
-                        return;
+                    if (cancelled === false && this.validator.isGitFile(editor.document.uri.fsPath) === false) {
+                        this.onOpen(editor.document);
                     }
-
-                    const document: TextDocument = editor.document;
-
-                    if (this.validator.isGitFile(document.uri.fsPath)) {
-                        return;
-                    }
-
-                    this.decoratedGutter();
-
-                    if (<boolean>this.config.get('testOnOpen') === false || this.store.has(document.uri.fsPath)) {
-                        return;
-                    }
-
-                    const path = document.uri.fsPath;
-                    const content = document.getText();
-                    this.handle(path, [], {
-                        content,
-                    });
                 });
             },
             null,
@@ -88,29 +66,14 @@ export class TestRunner {
         );
 
         this.workspace.onWillSaveTextDocument(
-            (event: TextDocumentWillSaveEvent) => {
-                const document: TextDocument = event.document;
-                if (<boolean>this.config.get('testOnSave') === false) {
-                    return;
-                }
-                const path = document.uri.fsPath;
-                const content = document.getText();
-                this.handle(path, [], {
-                    content,
-                });
-            },
+            (event: TextDocumentWillSaveEvent) => this.onSave(event.document),
             null,
             subscriptions
         );
 
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
-                const document = this.document;
-                const path = document.uri.fsPath;
-                const content = document.getText();
-                this.handle(path, [], {
-                    content,
-                });
+                this.fire(this.window.activeTextEditor.document);
             })
         );
 
@@ -140,13 +103,35 @@ export class TestRunner {
         return tap(
             this.command.handle(path, this.config.get('args', []).concat(args), {
                 execPath: this.config.get('execPath', ''),
-                basePath: this.container.basePath(this.editor, this.workspace),
+                basePath: this.container.basePath(this.window.activeTextEditor, this.workspace),
             }),
             promise => {
                 promise.then(this.onFinish.bind(this));
                 promise.catch(this.onError.bind(this));
             }
         );
+    }
+
+    private fire(document: TextDocument) {
+        const path = document.uri.fsPath;
+        const content = document.getText();
+        this.handle(path, [], {
+            content,
+        });
+    }
+
+    private onOpen(document: TextDocument) {
+        this.decoratedGutter();
+
+        if (<boolean>this.config.get('testOnOpen') === true && this.store.has(document.uri.fsPath) === false) {
+            this.fire(document);
+        }
+    }
+
+    private onSave(document: TextDocument) {
+        if (<boolean>this.config.get('testOnSave') === true) {
+            this.fire(document);
+        }
     }
 
     private onFinish(items: TestCase[]): Promise<TestCase[]> {
@@ -203,17 +188,5 @@ export class TestRunner {
 
     private handleDiagnostic() {
         this.diagnosticManager.handle(this.store, this.window.visibleTextEditors);
-    }
-
-    get editor(): TextEditor {
-        return this.window.activeTextEditor;
-    }
-
-    get document(): TextDocument {
-        return this.window.activeTextEditor.document;
-    }
-
-    get hasEditor(): boolean {
-        return !!this.editor && !!this.document;
     }
 }

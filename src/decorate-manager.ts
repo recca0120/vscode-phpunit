@@ -28,15 +28,18 @@ export class DecorateManager {
                 return;
             }
 
-            store.getByType(path).forEach((testCases: TestCase[], state) => {
-                editor.setDecorations(
-                    this.styles.get(state),
-                    testCases.map(testCase => ({
-                        range: new Range(testCase.line - 1, 0, testCase.line - 1, 0),
-                        hoverMessage: testCase.type,
-                    }))
-                );
-            });
+            store
+                .get(path)
+                .groupBy('type')
+                .forEach((items: TestCase[], style: Type) => {
+                    editor.setDecorations(
+                        this.styles.get(style),
+                        items.map(item => ({
+                            range: new Range(item.line - 1, 0, item.line - 1, 0),
+                            hoverMessage: item.type,
+                        }))
+                    );
+                });
         });
 
         return this;
