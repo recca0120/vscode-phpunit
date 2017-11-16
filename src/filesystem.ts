@@ -1,8 +1,20 @@
-import { accessSync, existsSync, readFile, readFileSync, unlinkSync } from 'fs';
+import { readFile, readFileSync, statSync, unlinkSync } from 'fs';
 
 import { isWindows } from './helpers';
 import { resolve as pathResolve } from 'path';
 import { tmpdir } from 'os';
+
+function existsSync(filePath) {
+    try {
+        statSync(filePath);
+    } catch (err) {
+        console.error(err);
+        if (err.code === 'ENOENT') {
+            return false;
+        }
+    }
+    return true;
+}
 
 interface FilesystemInterface {
     find(file: string): string;
@@ -127,16 +139,12 @@ export class Filesystem implements FilesystemInterface {
     unlink(file: string): void {
         try {
             if (existsSync(file) === true) {
-                if (accessSync(file)) {
-                    unlinkSync(file);
-                } else {
-                    setTimeout(() => {
-                        this.unlink(file);
-                    }, 500);
-                }
+                unlinkSync(file);
             }
         } catch (e) {
-            this.unlink(file);
+            setTimeout(() => {
+                this.unlink(file);
+            }, 500);
         }
     }
 
