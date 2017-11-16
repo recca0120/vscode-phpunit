@@ -55,6 +55,8 @@ export class TestRunner {
 
         this.window.onDidChangeActiveTextEditor(
             (editor: TextEditor) => {
+                this.decoratedGutter();
+
                 this.delayHandler.delay(1000).then(cancelled => {
                     if (cancelled === false && this.validator.isGitFile(editor.document.uri.fsPath) === false) {
                         this.onOpen(editor.document);
@@ -121,8 +123,6 @@ export class TestRunner {
     }
 
     private onOpen(document: TextDocument) {
-        this.decoratedGutter();
-
         if (<boolean>this.config.get('testOnOpen') === true && this.store.has(document.uri.fsPath) === false) {
             this.trigger(document);
         }

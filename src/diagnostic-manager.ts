@@ -18,17 +18,19 @@ export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
 
     handle(store: Store, editors: TextEditor[]) {
-        editors.forEach((editor: TextEditor) => {
-            store.each((testCases: TestCase[], file: string) => {
+        editors.forEach((editor: TextEditor) =>
+            tap(editor.document.uri.fsPath, file =>
                 Promise.all(
-                    testCases
+                    store
+                        .get(file)
                         .filter(testCase => testCase.type !== Type.PASSED)
                         .map(testCase => this.convertToDiagnostic(testCase, editor.document))
+                        .values()
                 ).then((diagnostics: Diagnostic[]) => {
                     this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
-                });
-            });
-        });
+                })
+            )
+        );
     }
 
     private convertToDiagnostic(testCase: TestCase, document?: TextDocument): Promise<Diagnostic> {

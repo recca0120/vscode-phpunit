@@ -1,7 +1,8 @@
+import { Detail, TestCase, Type, TypeMap } from './parsers/parser';
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
-import { TestCase, Type, TypeMap } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
+import { Collection } from './store';
 import { Container } from './container';
 import { Store } from './store';
 import { resolve } from 'path';
@@ -24,22 +25,45 @@ export class DecorateManager {
         editors.forEach((editor: TextEditor) => {
             const path = normalizePath(editor.document.uri.fsPath);
 
-            if (store.has(path) === false) {
+            const gutters = store.reduce((gutters, item) => {
+                if (path === normalizePath(item.file)) {
+                    gutters.push({
+                        type: item.type,
+                        file: item.file,
+                        line: item.line,
+                    });
+                }
+
+                if (item.fault) {
+                    item.fault.details.forEach(detail => {
+                        if (path === normalizePath(detail.file)) {
+                            gutters.push({
+                                type: item.type,
+                                file: detail.file,
+                                line: detail.line,
+                            });
+                        }
+                    });
+                }
+
+                return gutters;
+            }, []);
+
+            if (gutters.count() === 0) {
                 return;
             }
 
-            store
-                .get(path)
-                .groupBy('type')
-                .forEach((items: TestCase[], type: Type) => {
-                    editor.setDecorations(
-                        this.styles.get(type) || this.styles.get(Type.ERROR),
-                        items.map(item => ({
+            gutters.groupBy('type').forEach((items, type) => {
+                editor.setDecorations(
+                    this.styles.get(type),
+                    items
+                        .map(item => ({
                             range: new Range(item.line - 1, 0, item.line - 1, 0),
                             hoverMessage: item.type,
                         }))
-                    );
-                });
+                        .all()
+                );
+            });
         });
 
         return this;

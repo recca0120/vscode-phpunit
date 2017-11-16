@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 Check [Keep a Changelog](http://keepachangelog.com/) for
 recommendations on how to structure this file.
 
+## 0.5.0
+- trigger relation file
+- refactoring store
+
 ## 0.4.6
 - better perforamce in windows
 - status bar
