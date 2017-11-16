@@ -39,7 +39,7 @@ export class DecorateManager {
                             range: new Range(item.line - 1, 0, item.line - 1, 0),
                             hoverMessage: item.type,
                         }))
-                        .all()
+                        .values()
                 );
             });
         });
@@ -48,20 +48,18 @@ export class DecorateManager {
     }
 
     clearDecoratedGutter(editors: TextEditor[]): this {
-        editors.forEach((editor: TextEditor) => {
-            Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []));
-        });
+        editors.forEach((editor: TextEditor) =>
+            Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []))
+        );
 
         return this;
     }
 
     private createTextEditorDecorationType(style: DecorationType) {
-        return this.window.createTextEditorDecorationType(
-            tap(style, () => {
-                style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
-                style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
-            })
-        );
+        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
+        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
+
+        return this.window.createTextEditorDecorationType(style);
     }
 
     private gutterIconPath(img: string): string {

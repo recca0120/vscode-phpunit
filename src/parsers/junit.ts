@@ -2,8 +2,8 @@ import { Detail, Parser, TestCase, Type } from './parser';
 import { tap, xml2js } from '../helpers';
 
 export class JUnitParser extends Parser {
-    parse(fileName: string): Promise<TestCase[]> {
-        return this.parseFile(fileName);
+    parse(path: string): Promise<TestCase[]> {
+        return this.parseFile(path);
     }
 
     parseString(content: string): Promise<TestCase[]> {
@@ -13,9 +13,9 @@ export class JUnitParser extends Parser {
     private parseTestSuite(testSuiteNode: any): Promise<TestCase[]> {
         if (testSuiteNode.testsuite) {
             return testSuiteNode.testsuite instanceof Array
-                ? Promise.all([].concat(...testSuiteNode.testsuite.map(this.parseTestSuite.bind(this)))).then(items => {
-                      return items.reduce((prev, next) => prev.concat(next), []);
-                  })
+                ? Promise.all([].concat(...testSuiteNode.testsuite.map(this.parseTestSuite.bind(this)))).then(items =>
+                      items.reduce((prev, next) => prev.concat(next), [])
+                  )
                 : this.parseTestSuite(testSuiteNode.testsuite);
         }
 
