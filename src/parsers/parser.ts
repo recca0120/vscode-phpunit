@@ -57,16 +57,14 @@ export abstract class Parser {
 
     abstract parseString(content: string): Promise<TestCase[]>;
 
-    parseFile(fileName: string): Promise<TestCase[]> {
-        return this.files.getAsync(fileName).then((content: string) => this.parseString(content));
+    parseFile(path: string): Promise<TestCase[]> {
+        return this.files.getAsync(path).then((content: string) => this.parseString(content));
     }
 
     protected abstract parseTestCase(data: any);
 
     protected currentFile(details: Detail[], testCase: TestCase) {
-        const detail: Detail = details.find(
-            (detail: Detail) => testCase.file === detail.file && testCase.line !== detail.line
-        );
+        const detail: Detail = details.find(detail => testCase.file === detail.file && testCase.line !== detail.line);
 
         return detail
             ? detail
@@ -77,7 +75,7 @@ export abstract class Parser {
     }
 
     protected filterDetails(details: Detail[], currentFile: Detail): Detail[] {
-        return details.filter((detail: Detail) => detail.file !== currentFile.file && currentFile.line !== detail.line);
+        return details.filter(detail => detail.file !== currentFile.file && currentFile.line !== detail.line);
     }
 
     protected parseDetails(content: string): Detail[] {
