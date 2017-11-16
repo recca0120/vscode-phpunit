@@ -1,13 +1,13 @@
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
-import { TestCase, Type, TypeKeys } from './parsers/parser';
+import { TestCase, Type, TypeMap } from './parsers/parser';
+import { normalizePath, tap } from './helpers';
 
 import { Container } from './container';
 import { Store } from './store';
-import { normalizePath } from './helpers';
 import { resolve } from 'path';
 
 export class DecorateManager {
-    private styles: Map<Type, TextEditorDecorationType>;
+    private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
     private extensionPath: string;
     private window: any;
 
@@ -15,9 +15,9 @@ export class DecorateManager {
         this.extensionPath = container.extensionPath;
         this.window = container.window;
 
-        this.styles = TypeKeys.reduce((styles, type: Type) => {
-            return styles.set(type, this.createTextEditorDecorationType(this.decorationStyle.get(type)));
-        }, new Map<Type, TextEditorDecorationType>());
+        TypeMap.forEach((mapTo, key) => {
+            this.styles.set(key, this.createTextEditorDecorationType(this.decorationStyle.get(mapTo)));
+        });
     }
 
     decoratedGutter(store: Store, editors: TextEditor[]): this {
@@ -31,9 +31,9 @@ export class DecorateManager {
             store
                 .get(path)
                 .groupBy('type')
-                .forEach((items: TestCase[], style: Type) => {
+                .forEach((items: TestCase[], type: Type) => {
                     editor.setDecorations(
-                        this.styles.get(style),
+                        this.styles.get(type) || this.styles.get(Type.ERROR),
                         items.map(item => ({
                             range: new Range(item.line - 1, 0, item.line - 1, 0),
                             hoverMessage: item.type,
@@ -54,10 +54,12 @@ export class DecorateManager {
     }
 
     private createTextEditorDecorationType(style: DecorationType) {
-        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
-        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
-
-        return this.window.createTextEditorDecorationType(style);
+        return this.window.createTextEditorDecorationType(
+            tap(style, () => {
+                style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
+                style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
+            })
+        );
     }
 
     private gutterIconPath(img: string): string {

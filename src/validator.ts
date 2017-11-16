@@ -11,33 +11,16 @@ export class Validator {
 
     constructor(private files: Filesystem = new Filesystem()) {}
 
-    validate(path: string, content?: string) {
-        if (path && this.isGitFile(path) === true) {
-            console.warn(path);
-            throw State.PHPUNIT_GIT_FILE;
-        }
-
-        if (path && this.allowExtension(path) === false) {
-            throw State.PHPUNIT_NOT_PHP;
-        }
-
-        if (content && this.isTestCase(path, content) === false) {
-            throw State.PHPUNIT_NOT_TESTCASE;
-        }
-
-        return true;
+    isGitFile(path: string): boolean {
+        return /(\.git\.(php|inc)|\.(php|inc)\.git)$/.test(path) === true;
     }
 
-    isGitFile(fileName: string): boolean {
-        return /(\.git\.(php|inc)|\.(php|inc)\.git)$/.test(fileName) === true;
+    allowExtension(path: string): boolean {
+        return /\.(php|inc)$/.test(path) === true;
     }
 
-    allowExtension(fileName: string): boolean {
-        return /\.(php|inc)$/.test(fileName) === true;
-    }
-
-    isTestCase(fileName: string, content?: string) {
-        content = content || this.files.get(fileName);
+    isTestCase(path: string) {
+        const content = this.files.get(path);
 
         if (new RegExp(`(abstract\\s+class|trait|interface)\\s+`, 'i').test(content)) {
             return false;
@@ -45,8 +28,8 @@ export class Validator {
 
         return new RegExp(`class\\s+.+\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content);
 
-        // const className = fileName
-        //     .substr(fileName.replace(/\\/g, '/').lastIndexOf('/') + 1)
+        // const className = path
+        //     .substr(path.replace(/\\/g, '/').lastIndexOf('/') + 1)
         //     .replace(/\.(php|inc)$/i, '')
         //     .trim();
 

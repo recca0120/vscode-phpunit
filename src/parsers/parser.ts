@@ -12,7 +12,7 @@ export enum Type {
     FAILED = 'failed',
 }
 
-export const TypeGroup = new Map<Type, Type>([
+export const TypeMap = new Map<Type, Type>([
     [Type.PASSED, Type.PASSED],
     [Type.ERROR, Type.ERROR],
     [Type.WARNING, Type.SKIPPED],
@@ -22,10 +22,6 @@ export const TypeGroup = new Map<Type, Type>([
     [Type.SKIPPED, Type.SKIPPED],
     [Type.FAILED, Type.ERROR],
 ]);
-
-export const TypeKeys = Array.from(TypeGroup.values()).reduce((types, next) => {
-    return types.indexOf(next) === -1 ? types.concat([next]) : types;
-}, []);
 
 export interface Detail {
     file: string;

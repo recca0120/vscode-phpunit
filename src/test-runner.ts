@@ -1,6 +1,6 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
+import { Fault, TestCase, Type } from './parsers/parser';
 import { PHPUnit, State } from './command/phpunit';
-import { TestCase, Type } from './parsers/parser';
 
 import { ConfigRepository } from './config';
 import { Container } from './container';
@@ -73,7 +73,7 @@ export class TestRunner {
 
         subscriptions.push(
             commands.registerCommand('phpunit.TestFile', () => {
-                this.fire(this.window.activeTextEditor.document);
+                this.trigger(this.window.activeTextEditor.document);
             })
         );
 
@@ -88,11 +88,13 @@ export class TestRunner {
         return this;
     }
 
-    handle(path: string, args: string[] = [], options?: any) {
-        const content: string = options.content || '';
+    handle(path: string, args: string[] = []): Promise<TestCase[]> {
+        if (this.validator.allowExtension(path) === false) {
+            return Promise.reject(State.PHPUNIT_NOT_PHP);
+        }
 
-        if (this.validate(path, content) === false) {
-            return;
+        if (this.validator.isTestCase(path) === false) {
+            return Promise.reject(State.PHPUNIT_NOT_TESTCASE);
         }
 
         this.statusBar.show();
@@ -112,26 +114,38 @@ export class TestRunner {
         );
     }
 
-    private fire(document: TextDocument) {
+    private trigger(document: TextDocument): Promise<TestCase[]> {
         const path = document.uri.fsPath;
-        const content = document.getText();
-        this.handle(path, [], {
-            content,
-        });
+
+        return this.handle(path, []);
     }
 
     private onOpen(document: TextDocument) {
         this.decoratedGutter();
 
         if (<boolean>this.config.get('testOnOpen') === true && this.store.has(document.uri.fsPath) === false) {
-            this.fire(document);
+            this.trigger(document);
         }
     }
 
     private onSave(document: TextDocument) {
-        if (<boolean>this.config.get('testOnSave') === true) {
-            this.fire(document);
+        if (<boolean>this.config.get('testOnSave') === false) {
+            return;
         }
+
+        this.trigger(document)
+            .then(() => {
+                this.triggerRelationFile(document);
+            })
+            .catch(() => {
+                this.triggerRelationFile(document);
+            });
+    }
+
+    private triggerRelationFile(document: TextDocument) {
+        this.store.getDetails(document.uri.fsPath).forEach(item => {
+            this.handle(item.file);
+        });
     }
 
     private onFinish(items: TestCase[]): Promise<TestCase[]> {
@@ -158,18 +172,6 @@ export class TestRunner {
         console.error(error);
 
         return Promise.reject(error);
-    }
-
-    private validate(path, content) {
-        try {
-            this.validator.validate(path, content);
-
-            return true;
-        } catch (error) {
-            console.warn(error);
-
-            return false;
-        }
     }
 
     dispose() {

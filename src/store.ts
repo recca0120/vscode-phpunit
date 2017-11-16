@@ -103,6 +103,16 @@ export class Store extends Collection {
         return this.where(item => normalizePath(item.file) === normalizePath(path));
     }
 
+    getDetails(path: string) {
+        return this.filter(item => {
+            if (normalizePath(item.file) === normalizePath(path) || !item.fault) {
+                return false;
+            }
+
+            return item.fault.details.filter(detail => normalizePath(detail.file) === normalizePath(path));
+        });
+    }
+
     dispose() {
         return this.clear();
     }
