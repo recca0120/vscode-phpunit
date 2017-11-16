@@ -2,29 +2,34 @@ import { Collection } from './collection';
 import { normalizePath } from './helpers';
 
 export class Store extends Collection {
+    constructor(items: any[] = []) {
+        super();
+        this.put(items);
+    }
+
     put(items: any[]): Collection {
-        const files = items.map(item => normalizePath(item.file));
-        this.items = this.items.filter(item => files.indexOf(normalizePath(item.file)) === -1).concat(items);
+        const files = items.map(item => this.generateKey(item.file));
+        this.items = this.items.filter(item => files.indexOf(this.generateKey(item.file)) === -1).concat(items);
 
         return this;
     }
 
     has(path: string): boolean {
-        return super.has('file', path);
+        return this.get(path).length > 0;
     }
 
     get(path: string): Collection {
-        return this.where(item => normalizePath(item.file) === normalizePath(path));
+        return this.where(item => this.generateKey(item.file) === this.generateKey(path));
     }
 
     getDetails() {
         return this.reduce((results, item) => {
             results.push({
-                key: normalizePath(item.file),
+                key: this.generateKey(item.file),
                 type: item.type,
                 file: item.file,
                 line: item.line,
-                message: item.fault.message,
+                message: item.fault ? item.fault.message : null,
             });
 
             return !item.fault
@@ -32,7 +37,7 @@ export class Store extends Collection {
                 : results.concat(
                       item.fault.details.map(detail => {
                           return {
-                              key: normalizePath(detail.file),
+                              key: this.generateKey(detail.file),
                               type: item.type,
                               file: detail.file,
                               line: detail.line,
@@ -43,8 +48,8 @@ export class Store extends Collection {
         }, []);
     }
 
-    filterDetails(path: string) {
-        return this.filter(item => {
+    whereTestCase(path: string) {
+        return this.where(item => {
             if (normalizePath(item.file) === normalizePath(path) || !item.fault) {
                 return false;
             }
@@ -55,5 +60,9 @@ export class Store extends Collection {
 
     dispose() {
         return this.clear();
+    }
+
+    private generateKey(path) {
+        return normalizePath(path);
     }
 }

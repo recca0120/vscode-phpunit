@@ -1,15 +1,18 @@
+import { Filesystem } from '../src/filesystem';
 import { Validator } from '../src/validator';
 
 describe('Validator Tests', () => {
-    const validator = new Validator();
-
     it('allow extension', () => {
+        const validator = new Validator();
+
         expect(validator.allowExtension('test.php')).toBeTruthy();
         expect(validator.allowExtension('test.inc')).toBeTruthy();
         expect(validator.allowExtension('test.bat')).toBeFalsy();
     });
 
     it('is git file', () => {
+        const validator = new Validator();
+
         expect(validator.isGitFile('test.php')).toBeFalsy();
         expect(validator.isGitFile('test.inc')).toBeFalsy();
         expect(validator.isGitFile('test.git.php')).toBeTruthy();
@@ -19,12 +22,23 @@ describe('Validator Tests', () => {
     });
 
     it('is testcase', () => {
-        expect(validator.isTestCase('MyTest.php', 'class MyTest extends TestCase')).toBeTruthy();
-        expect(validator.isTestCase('MyTest.php', 'class MyTest extends PHPUnit\\Framework\\TestCase')).toBeTruthy();
-        expect(validator.isTestCase('MyTest.php', 'class MyTest extends PHPUnit_Framework_TestCase')).toBeTruthy();
-        expect(validator.isTestCase('MyTest.php', 'class MyTest')).toBeFalsy();
-        expect(validator.isTestCase('MyTest.php', 'class MyTest1 extends TestCase')).toBeTruthy();
-        // expect(validator.isTestCase('MyTest.php', 'class MyTest')).toBeFalsy();
-        // expect(validator.isTestCase('MyTest.php', 'class MyTest1 extends TestCase')).toBeFalsy();
+        const files = new Filesystem();
+        const validator = new Validator(files);
+
+        spyOn(files, 'get').and.returnValues(
+            ...[
+                'class MyTest extends TestCase',
+                'class MyTest extends PHPUnit\\Framework\\TestCase',
+                'class MyTest extends PHPUnit_Framework_TestCase',
+                'class MyTest',
+                'class MyTest1 extends TestCase',
+            ]
+        );
+
+        expect(validator.isTestCase('MyTest.php')).toBeTruthy();
+        expect(validator.isTestCase('MyTest.php')).toBeTruthy();
+        expect(validator.isTestCase('MyTest.php')).toBeTruthy();
+        expect(validator.isTestCase('MyTest.php')).toBeFalsy();
+        expect(validator.isTestCase('MyTest.php')).toBeTruthy();
     });
 });

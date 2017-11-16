@@ -8,7 +8,6 @@ function existsSync(filePath) {
     try {
         statSync(filePath);
     } catch (err) {
-        console.error(err);
         if (err.code === 'ENOENT') {
             return false;
         }

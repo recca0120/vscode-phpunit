@@ -26,16 +26,5 @@ export class Validator {
         }
 
         return new RegExp(`class\\s+.+\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content);
-
-        // const className = path
-        //     .substr(path.replace(/\\/g, '/').lastIndexOf('/') + 1)
-        //     .replace(/\.(php|inc)$/i, '')
-        //     .trim();
-
-        // if (new RegExp(`(abstract\\s+class|trait|interface)\\s+${className}`, 'i').test(content)) {
-        //     return false;
-        // }
-
-        // return new RegExp(`class\\s+${className}\\s+extends\\s+(${this.testCaseClass.join('|')})`, 'i').test(content);
     }
 }

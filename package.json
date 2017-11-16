@@ -3,7 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
@@ -95,7 +95,7 @@
             "^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
         },
         "testMatch": [
-            "**/tests/**/*.(ts|tsx|js)"
+            "**/tests/**/*.test.(ts|tsx|js)"
         ]
     },
     "keywords": [

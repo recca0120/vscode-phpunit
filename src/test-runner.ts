@@ -110,7 +110,7 @@ export class TestRunner {
                 basePath: this.container.basePath(this.window.activeTextEditor, this.workspace),
             }),
             promise => {
-                promise.then(this.onFinish.bind(this));
+                promise.then(this.onCompleted.bind(this));
                 promise.catch(this.onError.bind(this));
             }
         );
@@ -134,19 +134,11 @@ export class TestRunner {
         }
 
         this.trigger(document)
-            .then(() => {
-                this.triggerRelationFile(document);
-            })
-            .catch(() => {
-                this.triggerRelationFile(document);
-            });
+            .then(() => this.triggerRelationFile(document))
+            .catch(() => this.triggerRelationFile(document));
     }
 
-    private triggerRelationFile(document: TextDocument) {
-        this.store.filterDetails(document.uri.fsPath).forEach(item => this.handle(item.file));
-    }
-
-    private onFinish(items: TestCase[]): Promise<TestCase[]> {
+    private onCompleted(items: TestCase[]): Promise<TestCase[]> {
         this.store.put(items);
 
         this.decoratedGutter();
@@ -172,10 +164,8 @@ export class TestRunner {
         return Promise.reject(error);
     }
 
-    dispose() {
-        this.store.dispose();
-        this.diagnosticManager.dispose();
-        this.disposable.dispose();
+    private triggerRelationFile(document: TextDocument) {
+        this.store.whereTestCase(document.uri.fsPath).forEach(item => this.handle(item.file));
     }
 
     private decoratedGutter() {
@@ -188,5 +178,11 @@ export class TestRunner {
 
     private handleDiagnostic() {
         this.diagnosticManager.handle(this.store, this.window.visibleTextEditors);
+    }
+
+    dispose() {
+        this.store.dispose();
+        this.diagnosticManager.dispose();
+        this.disposable.dispose();
     }
 }
