@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 
-import { TestCase, Type, TypeKeys } from '../src/parsers/parser';
+import { TestCase, Type } from '../src/parsers/parser';
 
 import { Store } from '../src/store';
 import { resolve } from 'path';
@@ -18,7 +18,16 @@ function generatorRandomTestCases(num = 10, options: any = {}): TestCase[] {
                     file: resolve(__dirname, faker.system.commonFileName('php', 'text')),
                     line: faker.random.number(),
                     time: faker.random.number(),
-                    type: faker.random.arrayElement(TypeKeys),
+                    type: faker.random.arrayElement([
+                        Type.PASSED,
+                        Type.ERROR,
+                        Type.WARNING,
+                        Type.FAILURE,
+                        Type.INCOMPLETE,
+                        Type.RISKY,
+                        Type.SKIPPED,
+                        Type.FAILED,
+                    ]),
                     fault: {
                         type: faker.random.word(),
                         message: faker.lorem.text(),

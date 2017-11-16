@@ -10,7 +10,7 @@ export class Store extends Collection {
     }
 
     has(path: string): boolean {
-        return super.has(item => normalizePath(item.file) === normalizePath(path));
+        return super.has('file', path);
     }
 
     get(path: string): Collection {

@@ -3,6 +3,10 @@ import { tap } from './helpers';
 export class Collection {
     constructor(protected items: any[] = []) {}
 
+    concat(items: any[]): Collection {
+        return new Collection(this.items.concat(items));
+    }
+
     push(item: any) {
         this.items.push(item);
 
@@ -15,16 +19,16 @@ export class Collection {
         return this;
     }
 
-    has(attribute): boolean {
-        return this.items.some(this.createAttributeCallback(attribute));
+    has(key, value?): boolean {
+        return this.items.some(this.createFilterCallback(key, value));
     }
 
-    where(attribute): Collection {
-        return this.filter(this.createAttributeCallback(attribute));
+    where(key, value?): Collection {
+        return this.filter(this.createFilterCallback(key, value));
     }
 
     first(): any {
-        return this.items[0];
+        return this.items[0] || null;
     }
 
     filter(callback: any): Collection {
@@ -83,7 +87,15 @@ export class Collection {
         return this.count();
     }
 
-    private createAttributeCallback(attribute) {
-        return typeof attribute === 'string' ? (attribute = item => !!item[attribute]) : attribute;
+    protected createFilterCallback(key, value?: any) {
+        return typeof key === 'string'
+            ? item => {
+                  if (!value) {
+                      return !!item[key];
+                  }
+
+                  return !!item[key] && item[key] === value;
+              }
+            : key;
     }
 }
