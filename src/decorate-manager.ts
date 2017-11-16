@@ -1,8 +1,7 @@
-import { Detail, TestCase, Type, TypeMap } from './parsers/parser';
 import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
+import { Type, TypeMap } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
-import { Collection } from './store';
 import { Container } from './container';
 import { Store } from './store';
 import { resolve } from 'path';
@@ -22,32 +21,11 @@ export class DecorateManager {
     }
 
     decoratedGutter(store: Store, editors: TextEditor[]): this {
+        const details = store.getDetails();
+
         editors.forEach((editor: TextEditor) => {
-            const path = normalizePath(editor.document.uri.fsPath);
-
-            const gutters = store.reduce((gutters, item) => {
-                if (path === normalizePath(item.file)) {
-                    gutters.push({
-                        type: item.type,
-                        file: item.file,
-                        line: item.line,
-                    });
-                }
-
-                if (item.fault) {
-                    item.fault.details.forEach(detail => {
-                        if (path === normalizePath(detail.file)) {
-                            gutters.push({
-                                type: item.type,
-                                file: detail.file,
-                                line: detail.line,
-                            });
-                        }
-                    });
-                }
-
-                return gutters;
-            }, []);
+            const key = normalizePath(editor.document.uri.fsPath);
+            const gutters = details.where('key', key);
 
             if (gutters.count() === 0) {
                 return;

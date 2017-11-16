@@ -9,37 +9,45 @@ import {
     TextLine,
     Uri,
 } from 'vscode';
-import { TestCase, Type } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
 import { Store } from './store';
+import { Type } from './parsers/parser';
 
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
 
     handle(store: Store, editors: TextEditor[]) {
-        editors.forEach((editor: TextEditor) =>
-            tap(editor.document.uri.fsPath, file =>
-                Promise.all(
-                    store
-                        .get(file)
-                        .filter(testCase => testCase.type !== Type.PASSED)
-                        .map(testCase => this.convertToDiagnostic(testCase, editor.document))
-                        .values()
-                ).then((diagnostics: Diagnostic[]) => {
+        this.diagnostics.clear();
+
+        const details = store
+            .getDetails()
+            .filter(item => item.type !== Type.PASSED)
+            .groupBy('key');
+
+        editors.forEach((editor: TextEditor) => {
+            const file = editor.document.uri.fsPath;
+            const key = normalizePath(file);
+
+            if (details.has(key)) {
+                const promises: Promise<Diagnostic>[] = details
+                    .get(key)
+                    .values()
+                    .map(item => this.convertToDiagnostic(item, editor.document));
+                Promise.all(promises).then((diagnostics: Diagnostic[]) => {
                     this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
-                })
-            )
-        );
+                });
+            }
+        });
     }
 
-    private convertToDiagnostic(testCase: TestCase, document?: TextDocument): Promise<Diagnostic> {
-        return this.convertToRange(testCase, document).then((range: Range) => {
+    private convertToDiagnostic(item, document?: TextDocument): Promise<Diagnostic> {
+        return this.convertToRange(item, document).then((range: Range) => {
             return tap(
                 new Diagnostic(
                     range,
-                    testCase.fault.message,
-                    testCase.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+                    item.message,
+                    item.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
                 ),
                 (diagnostic: Diagnostic) => {
                     diagnostic.source = 'PHPUnit';
@@ -48,13 +56,13 @@ export class DiagnosticManager {
         });
     }
 
-    private convertToRange(testCase: TestCase, document?: TextDocument): Promise<Range> {
+    private convertToRange(item, document?: TextDocument): Promise<Range> {
         return new Promise(resolve => {
-            const line = testCase.line - 1;
+            const line = item.line - 1;
             let start = 0;
             let end = 1000;
 
-            if (document && document.uri && normalizePath(document.uri.fsPath) === normalizePath(testCase.file)) {
+            if (document && document.uri && normalizePath(document.uri.fsPath) === normalizePath(item.file)) {
                 const textLine: TextLine = document.lineAt(line);
 
                 start = textLine.firstNonWhitespaceCharacterIndex;

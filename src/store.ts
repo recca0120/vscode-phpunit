@@ -17,7 +17,33 @@ export class Store extends Collection {
         return this.where(item => normalizePath(item.file) === normalizePath(path));
     }
 
-    getDetails(path: string) {
+    getDetails() {
+        return this.reduce((results, item) => {
+            results.push({
+                key: normalizePath(item.file),
+                type: item.type,
+                file: item.file,
+                line: item.line,
+                message: item.fault.message,
+            });
+
+            return !item.fault
+                ? results
+                : results.concat(
+                      item.fault.details.map(detail => {
+                          return {
+                              key: normalizePath(detail.file),
+                              type: item.type,
+                              file: detail.file,
+                              line: detail.line,
+                              message: item.fault.message,
+                          };
+                      })
+                  );
+        }, []);
+    }
+
+    filterDetails(path: string) {
         return this.filter(item => {
             if (normalizePath(item.file) === normalizePath(path) || !item.fault) {
                 return false;

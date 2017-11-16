@@ -1,5 +1,4 @@
 import { Filesystem } from './filesystem';
-import { State } from './command/phpunit';
 
 export class Validator {
     testCaseClass: string[] = [

@@ -1,6 +1,6 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
-import { Fault, TestCase, Type } from './parsers/parser';
 import { PHPUnit, State } from './command/phpunit';
+import { TestCase, Type } from './parsers/parser';
 
 import { ConfigRepository } from './config';
 import { Container } from './container';
@@ -143,9 +143,7 @@ export class TestRunner {
     }
 
     private triggerRelationFile(document: TextDocument) {
-        this.store.getDetails(document.uri.fsPath).forEach(item => {
-            this.handle(item.file);
-        });
+        this.store.filterDetails(document.uri.fsPath).forEach(item => this.handle(item.file));
     }
 
     private onFinish(items: TestCase[]): Promise<TestCase[]> {
@@ -181,11 +179,11 @@ export class TestRunner {
     }
 
     private decoratedGutter() {
-        this.decorateManager.decoratedGutter(this.store, [this.window.activeTextEditor]);
+        this.decorateManager.decoratedGutter(this.store, this.window.visibleTextEditors);
     }
 
     private clearDecoratedGutter() {
-        this.decorateManager.clearDecoratedGutter([this.window.activeTextEditor]);
+        this.decorateManager.clearDecoratedGutter(this.window.visibleTextEditors);
     }
 
     private handleDiagnostic() {
