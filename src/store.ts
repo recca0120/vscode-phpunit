@@ -1,15 +1,21 @@
 import { Collection } from './collection';
+import { Message } from '_debugger';
+import { TestCase } from './parsers/parser';
 import { normalizePath } from './helpers';
 
-export class Store extends Collection {
-    constructor(items: any[] = []) {
+export class Store extends Collection<TestCase> {
+    constructor(items: TestCase[] = []) {
         super();
         this.put(items);
     }
 
-    put(items: any[]): Collection {
+    put(items: TestCase[]): this {
         const files = items.map(item => this.generateKey(item.file));
-        this.items = this.items.filter(item => files.indexOf(this.generateKey(item.file)) === -1).concat(items);
+        this.items = this.items
+            .filter((item: TestCase) => {
+                return files.indexOf(this.generateKey(item.file)) === -1;
+            })
+            .concat(items);
 
         return this;
     }
@@ -18,8 +24,10 @@ export class Store extends Collection {
         return this.get(path).length > 0;
     }
 
-    get(path: string): Collection {
-        return this.where(item => this.generateKey(item.file) === this.generateKey(path));
+    get(path: string): Collection<TestCase> {
+        return this.where(item => {
+            return this.generateKey(item.file) === this.generateKey(path);
+        });
     }
 
     getDetails() {
@@ -29,7 +37,9 @@ export class Store extends Collection {
                 type: item.type,
                 file: item.file,
                 line: item.line,
-                message: item.fault ? item.fault.message : null,
+                fault: {
+                    message: item.fault ? item.fault.message : null,
+                },
             });
 
             return !item.fault
@@ -41,7 +51,9 @@ export class Store extends Collection {
                               type: item.type,
                               file: detail.file,
                               line: detail.line,
-                              message: item.fault.message,
+                              fault: {
+                                  message: item.fault.message,
+                              },
                           };
                       })
                   );
@@ -62,7 +74,7 @@ export class Store extends Collection {
         return this.clear();
     }
 
-    private generateKey(path) {
+    private generateKey(path): string {
         return normalizePath(path);
     }
 }

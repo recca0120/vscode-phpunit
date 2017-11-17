@@ -1,49 +1,49 @@
 import { tap } from './helpers';
 
-export class Collection {
-    constructor(protected items: any[] = []) {}
+export class Collection<T> {
+    constructor(protected items: T[] = []) {}
 
-    concat(items: any[]): Collection {
+    concat(items: T[]): Collection<T> {
         return new Collection(this.items.concat(items));
     }
 
-    push(item: any) {
+    push(item: T): this {
         this.items.push(item);
 
         return this;
     }
 
-    put(items: any[]): Collection {
+    put(items: T[]): this {
         this.items = this.items.concat(items);
 
         return this;
     }
 
-    has(key, value?): boolean {
+    has(key: any, value?): boolean {
         return this.items.some(this.createFilterCallback(key, value));
     }
 
-    where(key, value?): Collection {
+    where(key: any, value?): Collection<T> {
         return this.filter(this.createFilterCallback(key, value));
     }
 
-    first(): any {
+    first(): T {
         return this.items[0] || null;
     }
 
-    filter(callback: any): Collection {
+    filter(callback): Collection<T> {
         return new Collection(this.items.filter(callback));
     }
 
-    map(callback: any): Collection {
+    map(callback): Collection<T> {
         return new Collection(this.items.map(callback));
     }
 
-    reduce(callback, initialize): Collection {
+    reduce(callback, initialize: T[]): Collection<T> {
         return new Collection(this.items.reduce(callback, initialize));
     }
 
-    forEach(callback: any) {
+    forEach(callback) {
         this.items.forEach(callback);
     }
 
@@ -69,25 +69,25 @@ export class Collection {
         return this.items.length;
     }
 
-    values(): any[] {
+    values(): T[] {
         return this.items;
     }
 
-    all(): any[] {
+    all(): T[] {
         return this.values();
     }
 
-    clear() {
+    clear(): Collection<T> {
         this.items = [];
 
         return this;
     }
 
-    get length() {
+    get length(): number {
         return this.count();
     }
 
-    protected createFilterCallback(key, value?: any) {
+    protected createFilterCallback(key: any, value?: any) {
         return typeof key === 'string'
             ? item => {
                   if (!value) {

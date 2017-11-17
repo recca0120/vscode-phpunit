@@ -48,7 +48,9 @@ describe('Store Test', () => {
                         type: item.type,
                         file: item.file,
                         line: item.line,
-                        message: item.fault ? item.fault.message : null,
+                        fault: {
+                            message: item.fault ? item.fault.message : null,
+                        },
                     });
 
                     return !item.fault
@@ -60,7 +62,9 @@ describe('Store Test', () => {
                                       type: item.type,
                                       file: detail.file,
                                       line: detail.line,
-                                      message: item.fault.message,
+                                      fault: {
+                                          message: item.fault.message,
+                                      },
                                   };
                               })
                           );
