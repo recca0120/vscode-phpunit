@@ -50,15 +50,6 @@ class POSIX implements FilesystemInterface {
         return this.extensions.some(extension => existsSync(`${file}${extension}`));
     }
 
-    protected normalize(buffer: Buffer) {
-        return buffer
-            .toString()
-            .replace('/\r\n/', '\n')
-            .split('\n')
-            .shift()
-            .trim();
-    }
-
     protected getExists(file: string): string {
         for (const cwd of [`${this.cwd}\\`, '']) {
             for (const extension of this.extensions) {
