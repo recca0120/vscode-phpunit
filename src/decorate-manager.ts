@@ -1,4 +1,4 @@
-import { OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
+import { DecorationRenderOptions, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
 import { Type, TypeMap } from './parsers/parser';
 
 import { Container } from './container';
@@ -10,6 +10,7 @@ export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
     private extensionPath: string;
     private window: any;
+    // private assertions: TextEditorDecorationType[] = []
 
     constructor(container: Container, private decorationStyle: DecorationStyle = new DecorationStyle()) {
         this.extensionPath = container.extensionPath;
@@ -36,28 +37,50 @@ export class DecorateManager {
                     this.styles.get(type),
                     items
                         .map(item => ({
-                            range: new Range(item.line - 1, 0, item.line - 1, 0),
-                            hoverMessage: item.type,
+                            range: new Range(item.line - 1, 0, item.line - 1, 1e3),
+                            hoverMessage: item.fault.message,
                         }))
                         .values()
                 );
             });
+
+            // this.assertions = gutters.filter(item => item.type !== Type.PASSED).values().map(item => {
+            //     const assertion = this.createTextEditorDecorationType(this.decorationStyle.get('assertion', item.fault.message));
+            //     editor.setDecorations(
+            //         assertion,
+            //         [{
+            //             range: new Range(item.line - 1, 0, item.line - 1, 1e3),
+            //         }]
+            //     );
+
+            //     return assertion;
+            // });
         });
 
         return this;
     }
 
     clearDecoratedGutter(editors: TextEditor[]): this {
-        editors.forEach((editor: TextEditor) =>
-            Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []))
-        );
+        editors.forEach((editor: TextEditor) => {
+            Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []));
+            // this.assertions.forEach(assertion => editor.setDecorations(assertion, []))
+        });
 
         return this;
     }
 
-    private createTextEditorDecorationType(style: DecorationType) {
-        style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
-        style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
+    private createTextEditorDecorationType(style): TextEditorDecorationType {
+        if (style.gutterIconPath) {
+            style.gutterIconPath = this.gutterIconPath(style.gutterIconPath);
+        }
+
+        if (style.light && style.light.gutterIconPath) {
+            style.light.gutterIconPath = this.gutterIconPath(style.light.gutterIconPath);
+        }
+
+        if (style.dark && style.dark.gutterIconPath) {
+            style.dark.gutterIconPath = this.gutterIconPath(style.dark.gutterIconPath);
+        }
 
         return this.window.createTextEditorDecorationType(style);
     }
@@ -67,23 +90,12 @@ export class DecorateManager {
     }
 }
 
-export interface DecorationType {
-    overviewRulerColor: string;
-    overviewRulerLane: OverviewRulerLane;
-    light: {
-        gutterIconPath: string;
-    };
-    dark: {
-        gutterIconPath: string;
-    };
-}
-
 export class DecorationStyle {
-    get(type: Type): DecorationType {
-        return this[type]();
+    get(type: string | Type, text?: string[] | string) {
+        return this[type](text);
     }
 
-    passed(): DecorationType {
+    passed(): DecorationRenderOptions {
         return {
             overviewRulerColor: 'green',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -96,7 +108,7 @@ export class DecorationStyle {
         };
     }
 
-    error(): DecorationType {
+    error(): DecorationRenderOptions {
         return {
             overviewRulerColor: 'red',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -109,7 +121,7 @@ export class DecorationStyle {
         };
     }
 
-    risky(): DecorationType {
+    risky(): DecorationRenderOptions {
         return {
             overviewRulerColor: '#ffa0a0',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -122,7 +134,7 @@ export class DecorationStyle {
         };
     }
 
-    skipped(): DecorationType {
+    skipped(): DecorationRenderOptions {
         return {
             overviewRulerColor: '#d2a032',
             overviewRulerLane: OverviewRulerLane.Left,
@@ -135,7 +147,28 @@ export class DecorationStyle {
         };
     }
 
-    incomplete(): DecorationType {
+    incomplete(): DecorationRenderOptions {
         return this.skipped();
+    }
+
+    assertion(text: string): DecorationRenderOptions {
+        return {
+            isWholeLine: true,
+            overviewRulerColor: 'red',
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                before: {
+                    color: '#FF564B',
+                },
+            },
+            dark: {
+                before: {
+                    color: '#AD322D',
+                },
+            },
+            after: {
+                contentText: ' // ' + text,
+            },
+        };
     }
 }

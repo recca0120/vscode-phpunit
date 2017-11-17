@@ -46,7 +46,7 @@ export class DiagnosticManager {
             return tap(
                 new Diagnostic(
                     range,
-                    item.message,
+                    item.fault.message,
                     item.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
                 ),
                 (diagnostic: Diagnostic) => {
