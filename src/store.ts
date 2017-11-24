@@ -1,5 +1,4 @@
 import { Collection } from './collection';
-import { Message } from '_debugger';
 import { TestCase } from './parsers/parser';
 import { normalizePath } from './helpers';
 

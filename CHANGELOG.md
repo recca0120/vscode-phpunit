@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 Check [Keep a Changelog](http://keepachangelog.com/) for
 recommendations on how to structure this file.
 
+## 0.5.2
+- fix bugs
+- preview
+
 ## 0.5.1
 - fix bugs
 

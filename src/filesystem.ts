@@ -12,6 +12,7 @@ function existsSync(filePath) {
             return false;
         }
     }
+
     return true;
 }
 

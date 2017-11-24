@@ -11,3 +11,5 @@ tslint.json
 *.vsix
 tests/**
 scripts/**
+demo/**
+preview.gif
