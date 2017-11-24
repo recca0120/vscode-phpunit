@@ -30,7 +30,7 @@ export class PHPUnit extends EventEmitter {
     handle(path: string, args: string[], options: Options = {}): Promise<TestCase[]> {
         const basePath: string = options.basePath || __dirname;
         const execPath: string = options.execPath || '';
-
+        const cwd: string = this.files.isFile(path) ? this.files.dirname(path) : path;
         const parameters = new Arguments(args);
 
         return new Promise((resolve, reject) => {
@@ -39,10 +39,12 @@ export class PHPUnit extends EventEmitter {
             }
 
             if (parameters.has('-c') === false) {
-                parameters.put('-c', this.getConfiguration(basePath) || false);
+                parameters.put('-c', this.getConfiguration(cwd, basePath) || false);
             }
 
-            const spawnOptions = [this.getExecutable(execPath, basePath)].concat(parameters.toArray()).concat([path]);
+            const spawnOptions = [this.getExecutable(execPath, cwd, basePath)]
+                .concat(parameters.toArray())
+                .concat([path]);
 
             this.emit('start', `${spawnOptions.join(' ')}\n\n`);
             this.processFactory
@@ -69,23 +71,14 @@ export class PHPUnit extends EventEmitter {
         });
     }
 
-    private getConfiguration(basePath: string): string {
-        return this.findFile(
-            ['phpunit.xml', 'phpunit.xml.dist', 'laravel/phpunit.xml', 'laravel/phpunit.xml.dist'],
-            basePath
-        );
+    private getConfiguration(cwd: string, basePath: string): string {
+        return this.findFile(['phpunit.xml', 'phpunit.xml.dist'], cwd, basePath);
     }
 
-    private getExecutable(execPath: string, basePath: string): string {
+    private getExecutable(execPath: string, cwd: string, basePath: string): string {
         const path: string = this.findFile(
-            [
-                execPath,
-                `vendor/bin/phpunit`,
-                `laravel/vendor/bin/phpunit`,
-                `phpunit.phar`,
-                'laravel/phpunit.phar',
-                'phpunit',
-            ].filter(path => path !== ''),
+            [execPath, `vendor/bin/phpunit`, `phpunit.phar`, 'phpunit'].filter(path => path !== ''),
+            cwd,
             basePath
         );
 
@@ -96,12 +89,7 @@ export class PHPUnit extends EventEmitter {
         return path;
     }
 
-    private findFile(files: string[], basePath?: string): string {
-        let searchPaths = [];
-        if (basePath) {
-            searchPaths = searchPaths.concat(files.map(path => `${basePath}/${path}`));
-        }
-
-        return this.files.find(searchPaths.concat(files));
+    private findFile(search: string[], cwd: string, basePath: string): string {
+        return this.files.findUp(search, cwd, basePath);
     }
 }

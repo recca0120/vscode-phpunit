@@ -1,7 +1,7 @@
+import { dirname, parse as pathParse, resolve as pathResolve } from 'path';
 import { readFile, readFileSync, statSync, unlinkSync } from 'fs';
 
 import { isWindows } from './helpers';
-import { resolve as pathResolve } from 'path';
 import { tmpdir } from 'os';
 
 function existsSync(filePath) {
@@ -16,48 +16,95 @@ function existsSync(filePath) {
     return true;
 }
 
+function ensureArray(search: string[] | string): string[] {
+    return search instanceof Array ? search : [search];
+}
+
 interface FilesystemInterface {
-    find(file: string): string;
-    exists(file: string): boolean;
+    find(search: string[] | string, cwd?: string): string;
+    exists(search: string[] | string, cwd?: string): boolean;
+    findUp(search: string[] | string, cwd?: string, root?: string): string;
 }
 
 class POSIX implements FilesystemInterface {
-    protected cwd: string = process.cwd();
-    protected paths: string[] = process.env.PATH.split(/:|;/).map(path => path.replace(/(:|;)$/, '').trim());
+    protected systemPaths: string[] = process.env.PATH.split(/;/).map(path => path.replace(/(;)$/, '').trim());
     protected extensions = [''];
     protected separator: string = '/';
 
-    find(file: string): string {
-        const exists = this.getExists(file);
-        if (exists) {
-            return exists;
+    findUp(search: string[] | string, cwd: string = process.cwd(), root: string = ''): string {
+        root = root === '' ? pathParse(cwd).root : pathResolve(root);
+
+        let find = '';
+        let parent = cwd;
+
+        do {
+            cwd = parent;
+
+            find = this.findByPath(search, cwd);
+
+            if (find) {
+                return find;
+            }
+
+            parent = pathResolve(parent, '..');
+        } while (parent !== root && parent !== cwd);
+
+        return this.findBySystemPath(search);
+    }
+
+    find(search: string[] | string, cwd: string = process.cwd()): string {
+        search = ensureArray(search);
+
+        const find = this.findByPath(search, cwd);
+
+        if (find) {
+            return find;
         }
 
-        for (const path of this.paths) {
-            const find = this.getExists(`${path}${this.separator}${file}`);
-            if (find) {
-                return pathResolve(find);
+        return this.findBySystemPath(search);
+    }
+
+    exists(search: string[] | string, cwd: string = process.cwd()): boolean {
+        search = ensureArray(search);
+
+        for (const file of search) {
+            if (
+                this.extensions.some(extension => existsSync(`${cwd}${this.separator}${file}${extension}`)) ||
+                this.extensions.some(extension => existsSync(`${file}${extension}`))
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected findByPath(search: string[] | string, cwd: string = process.cwd()): string {
+        search = ensureArray(search);
+
+        for (const file of search) {
+            for (const pwd of [`${cwd}${this.separator}`, '']) {
+                for (const extension of this.extensions) {
+                    const path = `${pwd}${file}${extension}`;
+
+                    if (existsSync(path) === true) {
+                        return pathResolve(path);
+                    }
+                }
             }
         }
 
         return '';
     }
 
-    exists(file: string): boolean {
-        if (this.extensions.some(extension => existsSync(`${this.cwd}${this.separator}${file}${extension}`))) {
-            return true;
-        }
+    protected findBySystemPath(search: string[] | string): string {
+        search = ensureArray(search);
 
-        return this.extensions.some(extension => existsSync(`${file}${extension}`));
-    }
+        for (const systemPath of this.systemPaths) {
+            const find = this.findByPath(search, systemPath);
 
-    protected getExists(file: string): string {
-        for (const cwd of [`${this.cwd}\\`, '']) {
-            for (const extension of this.extensions) {
-                const path = `${cwd}${file}${extension}`;
-                if (existsSync(path) === true) {
-                    return pathResolve(path);
-                }
+            if (find) {
+                return find;
             }
         }
 
@@ -84,44 +131,61 @@ export class Filesystem implements FilesystemInterface {
         this.cache = FilesystemCache;
     }
 
-    private key(files: string[]) {
-        return JSON.stringify(files.join('-'));
+    private key(search: string[]) {
+        return JSON.stringify(search.join('-'));
     }
 
-    find(search: string[] | string): string {
-        const files = search instanceof Array ? search : [search];
+    findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
+        search = ensureArray(search);
 
-        const key = this.key(files);
+        const key = this.key(search.concat([cwd, basePath]));
+
         if (this.cache.has(key) === true) {
             return this.cache.get(key);
         }
 
-        for (const file of files) {
-            const find = this.instance.find(file);
-            if (find) {
-                this.cache.set(key, find);
+        const find = this.instance.findUp(search, cwd, basePath);
 
-                return find;
-            }
+        if (find) {
+            this.cache.set(key, find);
         }
 
-        return '';
+        return find;
     }
 
-    exists(search: string[] | string): boolean {
-        const files = search instanceof Array ? search : [search];
+    find(search: string[] | string, cwd: string = process.cwd()): string {
+        search = ensureArray(search);
 
-        const key = `${this.key(files)}-exists`;
+        const key = this.key(search.concat([cwd]));
+
+        if (this.cache.has(key) === true) {
+            return this.cache.get(key);
+        }
+
+        const find = this.instance.find(search, cwd);
+
+        if (find) {
+            this.cache.set(key, find);
+        }
+
+        return find;
+    }
+
+    exists(search: string[] | string, cwd: string = process.cwd()): boolean {
+        search = ensureArray(search);
+
+        const key = `${this.key(search.concat([cwd]))}-exists`;
+
         if (this.cache.has(key) === true) {
             return true;
         }
 
-        for (const file of files) {
-            const exists = this.instance.exists(file);
-            if (exists === true) {
-                this.cache.set(key, file);
-            }
-            return exists;
+        const exists = this.instance.exists(search, cwd);
+
+        if (exists === true) {
+            this.cache.set(key, '1');
+
+            return true;
         }
 
         return false;
@@ -153,5 +217,13 @@ export class Filesystem implements FilesystemInterface {
 
     tmpfile(tmpname: string, dir: string = '') {
         return pathResolve(!dir ? tmpdir() : dir, tmpname);
+    }
+
+    isFile(path: string): boolean {
+        return statSync(path).isFile();
+    }
+
+    dirname(path: string): string {
+        return dirname(path);
     }
 }

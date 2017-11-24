@@ -4,7 +4,7 @@ import { normalizePath, tap } from './helpers';
 
 import { Container } from './container';
 import { Store } from './store';
-import { resolve } from 'path';
+import { resolve as pathResolve } from 'path';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
@@ -93,7 +93,7 @@ export class DecorateManager {
     }
 
     private gutterIconPath(img: string): string {
-        return resolve(this.extensionPath, 'images', img);
+        return pathResolve(this.extensionPath, 'images', img);
     }
 
     private clearAssertions() {

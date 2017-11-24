@@ -1,22 +1,27 @@
 import { Filesystem } from '../src/filesystem';
 import { isWindows } from '../src/helpers';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 
 describe('Filesystem Tests', () => {
     it('find command', () => {
-        const filesystem = new Filesystem();
+        const files = new Filesystem();
         if (isWindows() === true) {
-            expect(filesystem.find('cmd').toLowerCase()).toEqual('C:\\Windows\\System32\\cmd.exe'.toLowerCase());
+            expect(files.find('cmd').toLowerCase()).toEqual('C:\\Windows\\System32\\cmd.exe'.toLowerCase());
         } else {
-            expect(filesystem.find('ls').toLowerCase()).toEqual('/bin/ls');
+            expect(files.find('ls').toLowerCase()).toEqual('/bin/ls');
         }
     });
 
     it('find file', () => {
-        const filesystem = new Filesystem();
+        const files = new Filesystem();
 
-        expect(filesystem.find(join('tests', 'filesystem.test.ts'))).toEqual(
-            join(__dirname, '../tests/filesystem.test.ts')
+        expect(files.find(pathResolve('tests', 'filesystem.test.ts'))).toEqual(
+            pathResolve(__dirname, '../tests/filesystem.test.ts')
         );
+    });
+
+    it('find up', () => {
+        const files = new Filesystem();
+        expect(files.findUp('filesystem.test.ts', pathResolve(__dirname, 'fixtures'), __filename)).toEqual(__filename);
     });
 });
