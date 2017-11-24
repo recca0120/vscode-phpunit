@@ -72,11 +72,11 @@ export class PHPUnit extends EventEmitter {
     }
 
     private getConfiguration(cwd: string, basePath: string): string {
-        return this.findFile(['phpunit.xml', 'phpunit.xml.dist'], cwd, basePath);
+        return this.files.findUp(['phpunit.xml', 'phpunit.xml.dist'], cwd, basePath);
     }
 
     private getExecutable(execPath: string, cwd: string, basePath: string): string {
-        const path: string = this.findFile(
+        const path: string = this.files.findUp(
             [execPath, `vendor/bin/phpunit`, `phpunit.phar`, 'phpunit'].filter(path => path !== ''),
             cwd,
             basePath
@@ -87,9 +87,5 @@ export class PHPUnit extends EventEmitter {
         }
 
         return path;
-    }
-
-    private findFile(search: string[], cwd: string, basePath: string): string {
-        return this.files.findUp(search, cwd, basePath);
     }
 }
