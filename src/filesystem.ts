@@ -27,7 +27,7 @@ interface FilesystemInterface {
 }
 
 class POSIX implements FilesystemInterface {
-    protected systemPaths: string[] = process.env.PATH.split(/;/).map(path => path.replace(/(;)$/, '').trim());
+    protected systemPaths: string[] = process.env.PATH.split(/:/g).map(path => path.replace(/(:)$/, '').trim());
     protected extensions = [''];
     protected separator: string = '/';
 
@@ -113,6 +113,7 @@ class POSIX implements FilesystemInterface {
 }
 
 class Windows extends POSIX {
+    protected systemPaths: string[] = process.env.PATH.split(/;/g).map(path => path.replace(/(;)$/, '').trim());
     protected extensions = ['.bat', '.exe', '.cmd', ''];
     protected separator: string = '\\';
 }
