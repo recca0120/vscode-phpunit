@@ -1,28 +1,30 @@
 import { DecorationRenderOptions, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
 import { Type, TypeMap } from './parsers/parser';
+import { normalizePath, tap } from './helpers';
 
 import { Container } from './container';
 import { Store } from './store';
-import { normalizePath } from './helpers';
 import { resolve } from 'path';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
     private extensionPath: string;
     private window: any;
-    // private assertions: TextEditorDecorationType[] = []
+    private assertions: TextEditorDecorationType[] = [];
 
     constructor(container: Container, private decorationStyle: DecorationStyle = new DecorationStyle()) {
         this.extensionPath = container.extensionPath;
         this.window = container.window;
 
         TypeMap.forEach((mapTo, key) => {
-            this.styles.set(key, this.createTextEditorDecorationType(this.decorationStyle.get(mapTo)));
+            this.styles.set(key, this.createTextEditorDecorationType(this.decorationStyle.create(mapTo)));
         });
     }
 
     decoratedGutter(store: Store, editors: TextEditor[]): this {
         const details = store.getDetails();
+
+        this.clearAssertions();
 
         editors.forEach((editor: TextEditor) => {
             const key = normalizePath(editor.document.uri.fsPath);
@@ -44,17 +46,23 @@ export class DecorateManager {
                 );
             });
 
-            // this.assertions = gutters.filter(item => item.type !== Type.PASSED).values().map(item => {
-            //     const assertion = this.createTextEditorDecorationType(this.decorationStyle.get('assertion', item.fault.message));
-            //     editor.setDecorations(
-            //         assertion,
-            //         [{
-            //             range: new Range(item.line - 1, 0, item.line - 1, 1e3),
-            //         }]
-            //     );
-
-            //     return assertion;
-            // });
+            this.assertions = gutters
+                .filter(item => item.type !== Type.PASSED)
+                .values()
+                .map(item =>
+                    tap(
+                        this.createTextEditorDecorationType(
+                            this.decorationStyle.create('assertion', item.fault.message)
+                        ),
+                        assertion => {
+                            editor.setDecorations(assertion, [
+                                {
+                                    range: new Range(item.line - 1, 0, item.line - 1, 1e3),
+                                },
+                            ]);
+                        }
+                    )
+                );
         });
 
         return this;
@@ -62,8 +70,7 @@ export class DecorateManager {
 
     clearDecoratedGutter(editors: TextEditor[]): this {
         editors.forEach((editor: TextEditor) => {
-            Array.from(this.styles.keys()).forEach(state => editor.setDecorations(this.styles.get(state), []));
-            // this.assertions.forEach(assertion => editor.setDecorations(assertion, []))
+            Array.from(this.styles.keys()).forEach(style => editor.setDecorations(this.styles.get(style), []));
         });
 
         return this;
@@ -88,10 +95,18 @@ export class DecorateManager {
     private gutterIconPath(img: string): string {
         return resolve(this.extensionPath, 'images', img);
     }
+
+    private clearAssertions() {
+        this.assertions.forEach(assertion => {
+            assertion.dispose();
+        });
+
+        this.assertions = [];
+    }
 }
 
 export class DecorationStyle {
-    get(type: string | Type, text?: string[] | string) {
+    create(type: string | Type, text?: string[] | string) {
         return this[type](text);
     }
 
