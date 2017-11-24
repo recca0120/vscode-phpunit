@@ -27,24 +27,22 @@ export class PHPUnit extends EventEmitter {
         super();
     }
 
-    handle(path: string, args: string[], options: Options = {}): Promise<TestCase[]> {
+    handle(path: string, thisArgs: string[], options: Options = {}): Promise<TestCase[]> {
         const basePath: string = options.basePath || __dirname;
         const execPath: string = options.execPath || '';
         const cwd: string = this.files.isFile(path) ? this.files.dirname(path) : path;
-        const parameters = new Arguments(args);
+        const args = new Arguments(thisArgs);
 
         return new Promise((resolve, reject) => {
-            if (parameters.has('--teamcity') === false) {
-                parameters.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
+            if (args.has('--teamcity') === false) {
+                args.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
             }
 
-            if (parameters.has('-c') === false) {
-                parameters.put('-c', this.getConfiguration(cwd, basePath) || false);
+            if (args.has('-c') === false) {
+                args.put('-c', this.getConfiguration(cwd, basePath) || false);
             }
 
-            const spawnOptions = [this.getExecutable(execPath, cwd, basePath)]
-                .concat(parameters.toArray())
-                .concat([path]);
+            const spawnOptions = [this.getExecutable(execPath, cwd, basePath)].concat(args.toArray()).concat([path]);
 
             this.emit('start', `${spawnOptions.join(' ')}\n\n`);
             this.processFactory
@@ -56,13 +54,13 @@ export class PHPUnit extends EventEmitter {
                 })
                 .then(output => {
                     this.emit('exit', output);
-                    const parser = this.parserFactory.create(parameters.has('--teamcity') ? 'teamcity' : 'junit');
-                    const content = parameters.has('--teamcity') ? output : parameters.get('--log-junit');
+                    const parser = this.parserFactory.create(args.has('--teamcity') ? 'teamcity' : 'junit');
+                    const content = args.has('--teamcity') ? output : args.get('--log-junit');
                     parser
                         .parse(content)
                         .then(items => {
-                            if (parameters.has('--log-junit')) {
-                                this.files.unlink(parameters.get('--log-junit'));
+                            if (args.has('--log-junit')) {
+                                this.files.unlink(args.get('--log-junit'));
                             }
                             resolve(items);
                         })
