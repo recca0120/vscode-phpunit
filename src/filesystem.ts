@@ -77,7 +77,6 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
 
     findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
         const root = pathParse(cwd).root;
-
         basePath = basePath === '' ? root : pathResolve(basePath);
 
         do {
@@ -88,9 +87,9 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
             }
 
             cwd = pathResolve(cwd, '..');
-        } while (cwd !== basePath || root !== cwd);
+        } while (root !== cwd);
 
-        return this.findBySystemPath(search);
+        return this.find(search, cwd);
     }
 
     find(search: string[] | string, cwd: string = process.cwd()): string {

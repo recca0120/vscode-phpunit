@@ -3,8 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "preview": true,
-    "version": "0.5.7",
+    "version": "0.5.8",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
@@ -123,7 +122,9 @@
     },
     "dependencies": {
         "@types/minimist": "^1.2.0",
+        "g": "^2.0.1",
         "minimist-string": "^1.0.2",
+        "vsce": "^1.33.2",
         "x2js": "^3.1.1"
     },
     "lint-staged": {
