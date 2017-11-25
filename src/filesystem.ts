@@ -1,7 +1,7 @@
 import { dirname, parse as pathParse, resolve as pathResolve } from 'path';
+import { isWindows, tap } from './helpers';
 import { readFile, readFileSync, statSync, unlinkSync } from 'fs';
 
-import { isWindows } from './helpers';
 import { tmpdir } from 'os';
 
 function existsSync(filePath) {
@@ -26,25 +26,62 @@ interface FilesystemInterface {
     findUp(search: string[] | string, cwd?: string, root?: string): string;
 }
 
-class POSIX implements FilesystemInterface {
+export abstract class AbstractFilesystem {
+    unlink(file: string): void {
+        try {
+            if (existsSync(file) === true) {
+                unlinkSync(file);
+            }
+        } catch (e) {
+            setTimeout(() => {
+                this.unlink(file);
+            }, 500);
+        }
+    }
+
+    get(path: string): string {
+        return readFileSync(path).toString();
+    }
+
+    getAsync(path: string, encoding = 'utf8'): Promise<string> {
+        return new Promise((resolve, reject) => {
+            readFile(path, encoding, (error, data) => {
+                return error ? reject(error) : resolve(data);
+            });
+        });
+    }
+
+    tmpfile(tmpname: string, dir: string = '') {
+        return pathResolve(!dir ? tmpdir() : dir, tmpname);
+    }
+
+    isFile(path: string): boolean {
+        return statSync(path).isFile();
+    }
+
+    dirname(path: string): string {
+        return dirname(path);
+    }
+}
+
+class POSIX extends AbstractFilesystem implements FilesystemInterface {
     protected systemPaths: string[] = process.env.PATH.split(/:|;/g).map(path => path.replace(/(:|;)$/, '').trim());
     protected extensions = [''];
     protected separator: string = '/';
 
     findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
         const root = pathParse(cwd).root;
+
         basePath = basePath === '' ? root : pathResolve(basePath);
 
-        let find = '';
-
         do {
-            find = this.findByPath(search, cwd);
+            const find = this.findByPath(search, cwd);
 
             if (find) {
                 return find;
             }
 
-            cwd = pathResolve(parent, '..');
+            cwd = pathResolve(cwd, '..');
         } while (cwd !== basePath && root !== cwd);
 
         return this.findBySystemPath(search);
@@ -116,113 +153,60 @@ class Windows extends POSIX {
     protected separator: string = '\\';
 }
 
-const instance = isWindows() ? new Windows() : new POSIX();
-
-export const FilesystemCache = new Map<string, string>();
-
-export class Filesystem implements FilesystemInterface {
-    private instance: FilesystemInterface;
-
-    private cache: Map<string, string>;
-
-    constructor() {
-        this.instance = instance;
-        this.cache = FilesystemCache;
-    }
-
-    private key(search: string[]) {
-        return JSON.stringify(search.join('-'));
+export class Filesystem extends AbstractFilesystem implements FilesystemInterface {
+    constructor(private instance: FilesystemInterface = isWindows() ? new Windows() : new POSIX()) {
+        super();
     }
 
     findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
-        search = ensureArray(search);
-
-        const key = this.key(search.concat([cwd, basePath]));
-
-        if (this.cache.has(key) === true) {
-            return this.cache.get(key);
-        }
-
-        const find = this.instance.findUp(search, cwd, basePath);
-
-        if (find) {
-            this.cache.set(key, find);
-        }
-
-        return find;
+        return this.instance.findUp(ensureArray(search), cwd, basePath);
     }
 
     find(search: string[] | string, cwd: string = process.cwd()): string {
-        search = ensureArray(search);
-
-        const key = this.key(search.concat([cwd]));
-
-        if (this.cache.has(key) === true) {
-            return this.cache.get(key);
-        }
-
-        const find = this.instance.find(search, cwd);
-
-        if (find) {
-            this.cache.set(key, find);
-        }
-
-        return find;
+        return this.instance.find(ensureArray(search), cwd);
     }
 
     exists(search: string[] | string, cwd: string = process.cwd()): boolean {
-        search = ensureArray(search);
+        return this.instance.exists(ensureArray(search), cwd);
+    }
+}
 
-        const key = `${this.key(search.concat([cwd]))}-exists`;
+export class CachableFilesystem extends AbstractFilesystem implements FilesystemInterface {
+    private cache: Map<string, string> = new Map<string, string>();
 
-        if (this.cache.has(key) === true) {
-            return true;
-        }
-
-        const exists = this.instance.exists(search, cwd);
-
-        if (exists === true) {
-            this.cache.set(key, '1');
-
-            return true;
-        }
-
-        return false;
+    constructor(private files = new Filesystem()) {
+        super();
     }
 
-    unlink(file: string): void {
-        try {
-            if (existsSync(file) === true) {
-                unlinkSync(file);
-            }
-        } catch (e) {
-            setTimeout(() => {
-                this.unlink(file);
-            }, 500);
-        }
+    findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
+        const key = this.key(search, [cwd, basePath]);
+
+        return this.cache.has(key) === true
+            ? this.cache.get(key)
+            : tap(this.files.findUp(search, cwd, basePath), find => this.cache.set(key, find));
     }
 
-    get(path: string): string {
-        return readFileSync(path).toString();
+    find(search: string[] | string, cwd: string = process.cwd()): string {
+        const key = this.key(search, [cwd]);
+
+        return this.cache.has(key) === true
+            ? this.cache.get(key)
+            : tap(this.files.find(search, cwd), find => this.cache.set(key, find));
     }
 
-    getAsync(path: string, encoding = 'utf8'): Promise<string> {
-        return new Promise((resolve, reject) => {
-            readFile(path, encoding, (error, data) => {
-                return error ? reject(error) : resolve(data);
-            });
-        });
+    exists(search: string[] | string, cwd: string = process.cwd()): boolean {
+        const key = this.key(search, [cwd, 'exists']);
+
+        return this.cache.has(key) === true
+            ? this.cache.get(key)
+            : tap(this.files.exists(search, cwd), find => this.cache.set(key, find));
     }
 
-    tmpfile(tmpname: string, dir: string = '') {
-        return pathResolve(!dir ? tmpdir() : dir, tmpname);
-    }
-
-    isFile(path: string): boolean {
-        return statSync(path).isFile();
-    }
-
-    dirname(path: string): string {
-        return dirname(path);
+    private key(search: string[] | string, opts: string[] = []) {
+        return JSON.stringify(
+            ensureArray(search)
+                .concat(opts)
+                .join('-')
+        );
     }
 }
