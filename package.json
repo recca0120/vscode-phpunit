@@ -85,19 +85,6 @@
         "prettier-write": "npm run prettier -- --single-quote --trailing-comma es5 --write --print-width 120 --tab-width 4",
         "prettier-project": "npm run prettier-write -- {test,tests,src}/**/*.ts"
     },
-    "jest": {
-        "moduleFileExtensions": [
-            "ts",
-            "tsx",
-            "js"
-        ],
-        "transform": {
-            "^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
-        },
-        "testMatch": [
-            "**/tests/**/*.test.(ts|tsx|js)"
-        ]
-    },
     "keywords": [
         "phpunit",
         "test",
@@ -122,10 +109,21 @@
     },
     "dependencies": {
         "@types/minimist": "^1.2.0",
-        "g": "^2.0.1",
         "minimist-string": "^1.0.2",
-        "vsce": "^1.33.2",
         "x2js": "^3.1.1"
+    },
+    "jest": {
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js"
+        ],
+        "transform": {
+            "^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
+        },
+        "testMatch": [
+            "**/tests/**/*.test.(ts|tsx|js)"
+        ]
     },
     "lint-staged": {
         "linters": {
