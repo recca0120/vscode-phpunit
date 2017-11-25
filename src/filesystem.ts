@@ -27,7 +27,7 @@ interface FilesystemInterface {
 }
 
 class POSIX implements FilesystemInterface {
-    protected systemPaths: string[] = process.env.PATH.split(/:/g).map(path => path.replace(/(:)$/, '').trim());
+    protected systemPaths: string[] = process.env.PATH.split(/:|;/g).map(path => path.replace(/(:|;)$/, '').trim());
     protected extensions = [''];
     protected separator: string = '/';
 
