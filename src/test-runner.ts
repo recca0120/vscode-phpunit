@@ -93,7 +93,7 @@ export class TestRunner {
         return this;
     }
 
-    handle(path: string, args: string[] = []): Promise<TestCase[]> {
+    handle(path: string, thisArgs: string[] = []): Promise<TestCase[]> {
         if (this.validator.allowExtension(path) === false) {
             return Promise.reject(State.PHPUNIT_NOT_PHP);
         }
@@ -108,7 +108,7 @@ export class TestRunner {
         this.clearDecoratedGutter();
 
         return tap(
-            this.command.handle(path, this.config.get('args', []).concat(args), {
+            this.command.handle(path, this.config.get('args', []).concat(thisArgs), {
                 execPath: this.config.get('execPath', ''),
                 basePath: this.container.basePath(this.window.activeTextEditor, this.workspace),
             }),
