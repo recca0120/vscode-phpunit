@@ -1,4 +1,5 @@
-import { Filesystem } from '../filesystem';
+import { CachableFilesystem, FilesystemInterface } from '../filesystem';
+
 import { JUnitParser } from './junit';
 import { Parser } from './parser';
 import { TeamCityParser } from './teamcity';
@@ -6,7 +7,7 @@ import { TextLineFactory } from '../text-line';
 
 export class ParserFactory {
     constructor(
-        protected files: Filesystem = new Filesystem(),
+        protected files: FilesystemInterface = new CachableFilesystem(),
         protected textLineFactory: TextLineFactory = new TextLineFactory()
     ) {}
 

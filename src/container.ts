@@ -1,7 +1,7 @@
+import { CachableFilesystem, FilesystemInterface } from './filesystem';
 import { ExtensionContext, TextEditor } from 'vscode';
 
 import { ConfigRepository } from './config';
-import { Filesystem } from './filesystem';
 import { ParserFactory } from './parsers/parser-factory';
 import { ProcessFactory } from './command/process';
 import { Store } from './store';
@@ -9,7 +9,7 @@ import { TextLineFactory } from './text-line';
 import { Validator } from './validator';
 
 const config = new ConfigRepository();
-const files = new Filesystem();
+const files = new CachableFilesystem();
 const processFactory = new ProcessFactory();
 const store = new Store();
 const textLineFactory = new TextLineFactory(files);
@@ -18,7 +18,7 @@ const validator = new Validator(files);
 
 interface Singleton {
     config: ConfigRepository;
-    files: Filesystem;
+    files: FilesystemInterface;
     processFactory: ProcessFactory;
     store: Store;
     textLineFactory: TextLineFactory;
@@ -84,7 +84,7 @@ export class Container {
         return this.getSingleton('context');
     }
 
-    get files(): Filesystem {
+    get files(): FilesystemInterface {
         return this.getSingleton('files');
     }
 

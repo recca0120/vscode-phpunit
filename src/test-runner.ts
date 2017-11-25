@@ -5,7 +5,6 @@ import { TestCase, Type } from './parsers/parser';
 import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
-import { DelayHandler } from './delay-handler';
 import { Delayer } from './delayer';
 import { DiagnosticManager } from './diagnostic-manager';
 import { StatusBar } from './status-bar';

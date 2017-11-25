@@ -20,13 +20,31 @@ function ensureArray(search: string[] | string): string[] {
     return search instanceof Array ? search : [search];
 }
 
-interface FilesystemInterface {
+export interface FilesystemInterface {
     find(search: string[] | string, cwd?: string): string;
     exists(search: string[] | string, cwd?: string): boolean;
     findUp(search: string[] | string, cwd?: string, root?: string): string;
+    get(path: string): string;
+    getAsync(path: string, encoding?: string): Promise<string>;
+    unlink(file: string): void;
+    tmpfile(tmpname: string, dir?: string): string;
+    isFile(path: string): boolean;
+    dirname(path: string): string;
 }
 
 export abstract class AbstractFilesystem {
+    get(path: string): string {
+        return readFileSync(path).toString();
+    }
+
+    getAsync(path: string, encoding: string = 'utf8'): Promise<string> {
+        return new Promise((resolve, reject) => {
+            readFile(path, encoding, (error, data) => {
+                return error ? reject(error) : resolve(data);
+            });
+        });
+    }
+
     unlink(file: string): void {
         try {
             if (existsSync(file) === true) {
@@ -39,19 +57,7 @@ export abstract class AbstractFilesystem {
         }
     }
 
-    get(path: string): string {
-        return readFileSync(path).toString();
-    }
-
-    getAsync(path: string, encoding = 'utf8'): Promise<string> {
-        return new Promise((resolve, reject) => {
-            readFile(path, encoding, (error, data) => {
-                return error ? reject(error) : resolve(data);
-            });
-        });
-    }
-
-    tmpfile(tmpname: string, dir: string = '') {
+    tmpfile(tmpname: string, dir: string = ''): string {
         return pathResolve(!dir ? tmpdir() : dir, tmpname);
     }
 
@@ -171,8 +177,10 @@ export class Filesystem extends AbstractFilesystem implements FilesystemInterfac
     }
 }
 
+const FilesystemCache = new Map<string, string>();
+
 export class CachableFilesystem extends AbstractFilesystem implements FilesystemInterface {
-    private cache: Map<string, string> = new Map<string, string>();
+    private cache: Map<string, string> = FilesystemCache;
 
     constructor(private files = new Filesystem()) {
         super();

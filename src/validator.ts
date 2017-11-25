@@ -1,4 +1,4 @@
-import { Filesystem } from './filesystem';
+import { CachableFilesystem, FilesystemInterface } from './filesystem';
 
 export class Validator {
     testCaseClass: string[] = [
@@ -8,7 +8,7 @@ export class Validator {
         'TestCase',
     ];
 
-    constructor(private files: Filesystem = new Filesystem()) {}
+    constructor(private files: FilesystemInterface = new CachableFilesystem()) {}
 
     isGitFile(path: string): boolean {
         return /(\.git\.(php|inc)|\.(php|inc)\.git)$/.test(path) === true;

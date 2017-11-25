@@ -1,6 +1,7 @@
+import { CachableFilesystem, FilesystemInterface } from '../filesystem';
+
 import { Arguments } from './arguments';
 import { EventEmitter } from 'events';
-import { Filesystem } from '../filesystem';
 import { ParserFactory } from '../parsers/parser-factory';
 import { ProcessFactory } from './process';
 import { TestCase } from '../parsers/parser';
@@ -22,7 +23,7 @@ export class PHPUnit {
     constructor(
         private parserFactory = new ParserFactory(),
         private processFactory: ProcessFactory = new ProcessFactory(),
-        private files: Filesystem = new Filesystem(),
+        private files: FilesystemInterface = new CachableFilesystem(),
         private eventEmitter: EventEmitter = new EventEmitter()
     ) {}
 

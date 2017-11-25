@@ -1,6 +1,5 @@
+import { CachableFilesystem, FilesystemInterface } from './filesystem';
 import { normalizePath, tap } from './helpers';
-
-import { Filesystem } from './filesystem';
 
 export interface Position {
     line: number;
@@ -51,7 +50,7 @@ export const TextLineCache: Map<string, string> = new Map<string, string>();
 export class TextLineFactory {
     private cache: Map<string, string>;
 
-    constructor(private files: Filesystem = new Filesystem()) {
+    constructor(private files: FilesystemInterface = new CachableFilesystem()) {
         this.cache = TextLineCache;
     }
 

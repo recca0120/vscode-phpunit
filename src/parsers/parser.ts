@@ -1,4 +1,5 @@
-import { Filesystem } from '../filesystem';
+import { CachableFilesystem, FilesystemInterface } from '../filesystem';
+
 import { TextLineFactory } from '../text-line';
 
 export enum Type {
@@ -47,7 +48,7 @@ export interface TestCase {
 
 export abstract class Parser {
     constructor(
-        protected files: Filesystem = new Filesystem(),
+        protected files: FilesystemInterface = new CachableFilesystem(),
         protected textLineFactory: TextLineFactory = new TextLineFactory()
     ) {
         this.textLineFactory.dispose();
