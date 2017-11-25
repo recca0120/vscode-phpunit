@@ -3,7 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
