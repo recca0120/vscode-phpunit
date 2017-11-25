@@ -31,23 +31,21 @@ class POSIX implements FilesystemInterface {
     protected extensions = [''];
     protected separator: string = '/';
 
-    findUp(search: string[] | string, cwd: string = process.cwd(), root: string = ''): string {
-        root = root === '' ? pathParse(cwd).root : pathResolve(root);
+    findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
+        const root = pathParse(cwd).root;
+        basePath = basePath === '' ? root : pathResolve(basePath);
 
         let find = '';
-        let parent = cwd;
 
         do {
-            cwd = parent;
-
             find = this.findByPath(search, cwd);
 
             if (find) {
                 return find;
             }
 
-            parent = pathResolve(parent, '..');
-        } while (parent !== root && parent !== cwd);
+            cwd = pathResolve(parent, '..');
+        } while (cwd !== basePath && root !== cwd);
 
         return this.findBySystemPath(search);
     }
