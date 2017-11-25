@@ -160,38 +160,34 @@ class Windows extends POSIX {
 }
 
 export class Filesystem extends AbstractFilesystem implements FilesystemInterface {
-    constructor(private instance: FilesystemInterface = isWindows() ? new Windows() : new POSIX()) {
+    constructor(private files: FilesystemInterface = isWindows() ? new Windows() : new POSIX()) {
         super();
     }
 
     findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
-        return this.instance.findUp(ensureArray(search), cwd, basePath);
+        return this.files.findUp(ensureArray(search), cwd, basePath);
     }
 
     find(search: string[] | string, cwd: string = process.cwd()): string {
-        return this.instance.find(ensureArray(search), cwd);
+        return this.files.find(ensureArray(search), cwd);
     }
 
     exists(search: string[] | string, cwd: string = process.cwd()): boolean {
-        return this.instance.exists(ensureArray(search), cwd);
+        return this.files.exists(ensureArray(search), cwd);
     }
 }
 
 const FilesystemCache = new Map<string, string>();
 
-export class CachableFilesystem extends AbstractFilesystem implements FilesystemInterface {
+export class CachableFilesystem extends Filesystem {
     private cache: Map<string, string> = FilesystemCache;
-
-    constructor(private files = new Filesystem()) {
-        super();
-    }
 
     findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
         const key = this.key(search, [cwd, basePath]);
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(this.files.findUp(search, cwd, basePath), find => this.cache.set(key, find));
+            : tap(super.findUp(search, cwd, basePath), find => this.cache.set(key, find));
     }
 
     find(search: string[] | string, cwd: string = process.cwd()): string {
@@ -199,7 +195,7 @@ export class CachableFilesystem extends AbstractFilesystem implements Filesystem
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(this.files.find(search, cwd), find => this.cache.set(key, find));
+            : tap(super.find(search, cwd), find => this.cache.set(key, find));
     }
 
     exists(search: string[] | string, cwd: string = process.cwd()): boolean {
@@ -207,7 +203,7 @@ export class CachableFilesystem extends AbstractFilesystem implements Filesystem
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(this.files.exists(search, cwd), find => this.cache.set(key, find));
+            : tap(super.exists(search, cwd), find => this.cache.set(key, find));
     }
 
     private key(search: string[] | string, opts: string[] = []) {
