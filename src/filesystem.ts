@@ -88,7 +88,7 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
             }
 
             cwd = pathResolve(cwd, '..');
-        } while (cwd !== basePath && root !== cwd);
+        } while (cwd !== basePath || root !== cwd);
 
         return this.findBySystemPath(search);
     }
