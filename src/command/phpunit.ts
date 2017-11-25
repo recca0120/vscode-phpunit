@@ -18,14 +18,13 @@ interface Options {
     execPath?: string;
 }
 
-export class PHPUnit extends EventEmitter {
+export class PHPUnit {
     constructor(
         private parserFactory = new ParserFactory(),
         private processFactory: ProcessFactory = new ProcessFactory(),
-        private files: Filesystem = new Filesystem()
-    ) {
-        super();
-    }
+        private files: Filesystem = new Filesystem(),
+        private eventEmitter: EventEmitter = new EventEmitter()
+    ) {}
 
     handle(path: string, thisArgs: string[], options: Options = {}): Promise<TestCase[]> {
         const basePath: string = options.basePath || __dirname;
@@ -44,16 +43,17 @@ export class PHPUnit extends EventEmitter {
 
             const spawnOptions = [this.getExecutable(execPath, cwd, basePath)].concat(args.toArray()).concat([path]);
 
-            this.emit('start', `${spawnOptions.join(' ')}\n\n`);
+            this.eventEmitter.emit('start', `${spawnOptions.join(' ')}\n\n`);
+
             this.processFactory
                 .create()
-                .on('stdout', (buffer: Buffer) => this.emit('stdout', buffer))
-                .on('stderr', (buffer: Buffer) => this.emit('stderr', buffer))
+                .on('stdout', (buffer: Buffer) => this.eventEmitter.emit('stdout', buffer))
+                .on('stderr', (buffer: Buffer) => this.eventEmitter.emit('stderr', buffer))
                 .spawn(spawnOptions, {
                     cwd: basePath,
                 })
                 .then(output => {
-                    this.emit('exit', output);
+                    this.eventEmitter.emit('exit', output);
                     const parser = this.parserFactory.create(args.has('--teamcity') ? 'teamcity' : 'junit');
                     const content = args.has('--teamcity') ? output : args.get('--log-junit');
                     parser
@@ -67,6 +67,12 @@ export class PHPUnit extends EventEmitter {
                         .catch(error => reject(error));
                 });
         });
+    }
+
+    on(name: string | symbol, callback: Function): PHPUnit {
+        this.eventEmitter.on(name, callback);
+
+        return this;
     }
 
     private getConfiguration(cwd: string, basePath: string): string {

@@ -16,6 +16,7 @@ import { PHPUnit } from './command/phpunit';
 import { StatusBar } from './status-bar';
 import { TestRunner } from './test-runner';
 import { container } from './container';
+import { tap } from './helpers';
 
 export function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -33,20 +34,17 @@ export function activate(context: ExtensionContext) {
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
-    const command: PHPUnit = new PHPUnit(container.parserFactory, container.processFactory, container.files);
+    const command: PHPUnit = tap(
+        new PHPUnit(container.parserFactory, container.processFactory, container.files),
+        command =>
+            command
+                .on('start', () => channel.clear())
+                .on('start', (buffer: Buffer) => channel.append(buffer.toString()))
+                .on('stdout', (buffer: Buffer) => channel.append(buffer.toString()))
+                .on('exit', () => channel.append('\n\n'))
+    );
 
-    command.on('start', (buffer: Buffer) => {
-        channel.clear();
-        channel.append(buffer.toString());
-    });
-    command.on('stdout', (buffer: Buffer) => channel.append(buffer.toString()));
-    command.on('exit', () => {
-        channel.append('\n\n');
-    });
-
-    const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 100);
-
-    const statusBar = new StatusBar(statusBarItem, container);
+    const statusBar = new StatusBar(window.createStatusBarItem(StatusBarAlignment.Right, 100), container);
 
     const testRunner = new TestRunner({
         container,
