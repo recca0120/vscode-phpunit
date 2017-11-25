@@ -6,6 +6,7 @@ import { ConfigRepository } from './config';
 import { Container } from './container';
 import { DecorateManager } from './decorate-manager';
 import { DelayHandler } from './delay-handler';
+import { Delayer } from './delayer';
 import { DiagnosticManager } from './diagnostic-manager';
 import { StatusBar } from './status-bar';
 import { Store } from './store';
@@ -34,7 +35,7 @@ export class TestRunner {
     private decorateManager: DecorateManager;
     private diagnosticManager: DiagnosticManager;
 
-    private delayHandler = new DelayHandler();
+    private delayer = new Delayer<void>(1000);
 
     constructor(options: TestRunnerOptions) {
         this.container = options.container;
@@ -55,12 +56,14 @@ export class TestRunner {
 
         this.window.onDidChangeActiveTextEditor(
             (editor: TextEditor) => {
+                if (this.validator.isGitFile(editor.document.uri.fsPath) === true) {
+                    return;
+                }
+
                 this.decoratedGutter();
 
-                this.delayHandler.delay(1000).then(cancelled => {
-                    if (cancelled === false && this.validator.isGitFile(editor.document.uri.fsPath) === false) {
-                        this.onOpen(editor.document);
-                    }
+                this.delayer.trigger(() => {
+                    this.onOpen(editor.document);
                 });
             },
             null,
