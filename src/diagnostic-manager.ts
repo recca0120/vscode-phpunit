@@ -47,7 +47,9 @@ export class DiagnosticManager {
                 new Diagnostic(
                     range,
                     (item.fault as Fault).message,
-                    item.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+                    [Type.INCOMPLETE, Type.SKIPPED].indexOf(item.type) !== -1
+                        ? DiagnosticSeverity.Warning
+                        : DiagnosticSeverity.Error
                 ),
                 (diagnostic: Diagnostic) => {
                     diagnostic.source = 'PHPUnit';
