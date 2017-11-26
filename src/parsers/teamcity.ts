@@ -73,6 +73,7 @@ export class TeamCityParser extends Parser {
                 return Promise.resolve(testCase);
             }
         }
+
         const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
 
         return this.textLineFactory.searchFile(file, pattern, false).then((items: TextLine[]) => {
