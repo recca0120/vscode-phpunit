@@ -8,7 +8,6 @@ import { Store } from './store';
 import { TextLineFactory } from './text-line';
 import { Validator } from './validator';
 
-const config = new ConfigRepository();
 const files = new CachableFilesystem();
 const processFactory = new ProcessFactory();
 const store = new Store();
@@ -18,13 +17,13 @@ const validator = new Validator(files);
 
 interface Singleton {
     [key: string]: any;
-    config: ConfigRepository;
     files: FilesystemInterface;
     processFactory: ProcessFactory;
     store: Store;
     textLineFactory: TextLineFactory;
     parserFactory: ParserFactory;
     validator: Validator;
+    config?: ConfigRepository;
     window?: any;
     workspace?: any;
     context?: ExtensionContext;
@@ -35,7 +34,6 @@ export class Container {
     public name: string = 'PHPUnit';
 
     protected singleton: Singleton = {
-        config,
         files,
         processFactory,
         store,

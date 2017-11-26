@@ -1,29 +1,5 @@
-class FakeWorkspaceConfiguration {
-    constructor(public name = 'PHPUnit') {}
-
-    get(): any {
-        return 'fake';
-    }
-
-    update() {
-        return true;
-    }
-
-    has() {
-        return true;
-    }
-}
-
-class FakeWorkspace {
-    public rootPath: string = __dirname;
-
-    getConfiguration(name: string) {
-        return new FakeWorkspaceConfiguration(name);
-    }
-}
-
 export class ConfigRepository {
-    constructor(private workspace: any = new FakeWorkspace()) {}
+    constructor(private workspace: any) {}
 
     private getWorkspaceConfigure(): any {
         return this.workspace.getConfiguration('phpunit');
