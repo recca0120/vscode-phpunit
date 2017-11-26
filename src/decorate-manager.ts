@@ -109,25 +109,7 @@ export class DecorateManager {
 
 export class DecorationStyle {
     create(type: string | Type, text: string = ''): any {
-        switch (type) {
-            case Type.PASSED:
-            case 'passed':
-                return this.passed();
-            case Type.ERROR:
-            case 'error':
-                return this.error();
-            case Type.RISKY:
-            case 'risky':
-                return this.risky();
-            case Type.SKIPPED:
-            case 'skipped':
-                return this.skipped();
-            case Type.INCOMPLETE:
-            case 'incomplete':
-                return this.incomplete();
-            case 'assertion':
-                return this.assertion(text);
-        }
+        return (<any>this)[type](text);
     }
 
     passed(): DecorationRenderOptions {

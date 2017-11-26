@@ -14,11 +14,6 @@ export enum State {
     PHPUNIT_NOT_PHP = 'phpunit_not_php',
 }
 
-interface Options {
-    basePath?: string;
-    execPath?: string;
-}
-
 export class PHPUnit {
     constructor(
         private parserFactory = new ParserFactory(),
@@ -27,8 +22,15 @@ export class PHPUnit {
         private eventEmitter: EventEmitter = new EventEmitter()
     ) {}
 
-    handle(path: string, thisArgs: string[], options: Options = {}): Promise<TestCase[]> {
-        const basePath: string = options.basePath || __dirname;
+    handle(
+        path: string,
+        thisArgs: string[],
+        options: any = {
+            basePath: __dirname,
+            execPath: '',
+        }
+    ): Promise<TestCase[]> {
+        const basePath: string = options.basePath;
         const execPath: string = options.execPath || '';
         const cwd: string = this.files.isFile(path) ? this.files.dirname(path) : path;
         const args = new Arguments(thisArgs);
