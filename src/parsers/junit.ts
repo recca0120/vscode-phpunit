@@ -1,5 +1,15 @@
 import { Detail, Parser, TestCase, Type } from './parser';
-import { tap, xml2js } from '../helpers';
+
+import { parseString } from 'xml2js';
+import { tap } from '../helpers';
+
+function xml2json(content: string) {
+    return new Promise((resolve, reject) => {
+        parseString(content, { trim: true, async: true }, (error, result) => {
+            error ? reject(error) : resolve(result);
+        });
+    });
+}
 
 export class JUnitParser extends Parser {
     parse(path: string): Promise<TestCase[]> {
@@ -7,7 +17,7 @@ export class JUnitParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return xml2js(content).then(json => this.parseTestSuite(json.testsuites));
+        return xml2json(content).then((json: any) => this.parseTestSuite(json.testsuites));
     }
 
     private parseTestSuite(testSuiteNode: any): Promise<TestCase[]> {
@@ -26,12 +36,12 @@ export class JUnitParser extends Parser {
 
     protected parseTestCase(testCaseNode: any): Promise<TestCase> {
         const testCase: TestCase = {
-            name: testCaseNode._name || null,
-            class: testCaseNode._class,
-            classname: testCaseNode._classname || null,
-            file: testCaseNode._file,
-            line: parseInt(testCaseNode._line || 1, 10),
-            time: parseFloat(testCaseNode._time || 0),
+            name: testCaseNode.$.name || null,
+            class: testCaseNode.$.class,
+            classname: testCaseNode.$.classname || null,
+            file: testCaseNode.$.file,
+            line: parseInt(testCaseNode.$.line || 1, 10),
+            time: parseFloat(testCaseNode.$.time || 0),
             type: Type.PASSED,
         };
 
@@ -41,7 +51,7 @@ export class JUnitParser extends Parser {
             return Promise.resolve(testCase);
         }
 
-        const details: Detail[] = this.parseDetails(faultNode.__text);
+        const details: Detail[] = this.parseDetails(faultNode._);
         const currentFile = this.currentFile(details, testCase);
         const message = this.parseMessage(faultNode, details);
 
@@ -49,7 +59,7 @@ export class JUnitParser extends Parser {
             Object.assign(testCase, currentFile, {
                 type: faultNode.type,
                 fault: {
-                    type: faultNode._type || '',
+                    type: faultNode.$.type || '',
                     message: message,
                     details: this.filterDetails(details, currentFile),
                 },
@@ -61,28 +71,40 @@ export class JUnitParser extends Parser {
         const keys = Object.keys(testCaseNode);
 
         if (keys.indexOf('error') !== -1) {
-            return tap(testCaseNode.error, error => {
-                error.type = this.parseErrorType(testCaseNode.error);
+            return tap(testCaseNode.error[0], error => {
+                error.type = this.parseErrorType(error);
             });
         }
 
         if (keys.indexOf('warning') !== -1) {
-            return tap(testCaseNode.warning, warning => {
+            return tap(testCaseNode.warning[0], warning => {
                 warning.type = Type.WARNING;
             });
         }
 
         if (keys.indexOf('failure') !== -1) {
-            return tap(testCaseNode.failure, failure => {
+            return tap(testCaseNode.failure[0], failure => {
                 failure.type = Type.FAILURE;
             });
         }
 
-        if (keys.indexOf('skipped') !== -1 || keys.indexOf('incomplete') !== -1) {
+        if (keys.indexOf('skipped') !== -1) {
             return {
                 type: Type.SKIPPED,
-                _type: Type.SKIPPED,
-                __text: '',
+                $: {
+                    type: Type.SKIPPED,
+                },
+                _: '',
+            };
+        }
+
+        if (keys.indexOf('incomplete') !== -1) {
+            return {
+                type: Type.INCOMPLETE,
+                $: {
+                    type: Type.INCOMPLETE,
+                },
+                _: '',
             };
         }
 
@@ -93,16 +115,16 @@ export class JUnitParser extends Parser {
         const messages: string[] = details
             .reduce((result, detail) => {
                 return result.replace(`${detail.file}:${detail.line}`, '').trim();
-            }, this.crlf2lf(faultNode.__text))
+            }, this.crlf2lf(faultNode._))
             .split(/\r\n|\n/);
 
         const message = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');
 
-        return faultNode._type ? message.replace(new RegExp(`^${faultNode._type}:`, 'g'), '').trim() : message.trim();
+        return faultNode.$.type ? message.replace(new RegExp(`^${faultNode.$.type}:`, 'g'), '').trim() : message.trim();
     }
 
     private parseErrorType(errorNode: any): Type {
-        const errorType = errorNode._type.toLowerCase();
+        const errorType = errorNode.$.type.toLowerCase();
 
         return (
             [Type.WARNING, Type.FAILURE, Type.INCOMPLETE, Type.RISKY, Type.SKIPPED, Type.FAILED].find(

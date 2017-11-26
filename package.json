@@ -94,7 +94,8 @@
     "devDependencies": {
         "@types/faker": "^4.1.1",
         "@types/jest": "^20.0.8",
-        "@types/node": "^6.0.90",
+        "@types/node": "^7.0.43",
+        "@types/xml2js": "^0.4.2",
         "faker": "^4.1.0",
         "fs-extra": "^4.0.2",
         "husky": "^0.14.3",
@@ -105,12 +106,12 @@
         "tslint": "^5.8.0",
         "tslint-config-prettier": "^1.6.0",
         "typescript": "^2.6.1",
-        "vscode": "^1.1.5"
+        "vscode": "^1.1.6"
     },
     "dependencies": {
-        "@types/minimist": "^1.2.0",
+        "minimist": "^1.2.0",
         "minimist-string": "^1.0.2",
-        "x2js": "^3.1.1"
+        "xml2js": "^0.4.19"
     },
     "jest": {
         "moduleFileExtensions": [

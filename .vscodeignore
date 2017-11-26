@@ -13,3 +13,4 @@ tests/**
 scripts/**
 demo/**
 preview.gif
+appveryor.yml

@@ -1,21 +1,23 @@
 {
     "compilerOptions": {
-        "alwaysStrict": true,
         "module": "commonjs",
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
         "target": "es6",
         "outDir": "out",
         "lib": [
-            "es6",
-            "dom"
+            "es6"
         ],
         "sourceMap": true,
-        "rootDir": "."
+        "rootDir": "src",
+        "strict": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false
     },
     "exclude": [
         "node_modules",
         ".vscode-test",
         "tests"
     ]
-} 
+}

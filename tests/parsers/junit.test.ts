@@ -1,4 +1,4 @@
-import { TeamCityParser, TestCase, Type } from '../../src/parsers/parser';
+import { TestCase, Type } from '../../src/parsers/parser';
 
 import { Filesystem } from '../../src/filesystem';
 import { JUnitParser } from '../../src/parsers/junit';

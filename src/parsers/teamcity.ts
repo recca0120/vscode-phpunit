@@ -1,7 +1,9 @@
+import * as minimistString from 'minimist-string';
+
 import { Detail, Parser, TestCase, Type } from './parser';
-import { minimistString, tap } from '../helpers';
 
 import { TextLine } from '../text-line';
+import { tap } from '../helpers';
 
 interface TeamCity {
     status: string;

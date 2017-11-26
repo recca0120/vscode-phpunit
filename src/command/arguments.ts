@@ -1,4 +1,6 @@
-import { minimist, tap } from '../helpers';
+import * as minimist from 'minimist';
+
+import { tap } from '../helpers';
 
 export class Arguments {
     private options: any;
