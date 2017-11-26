@@ -36,7 +36,7 @@ export function activate(context: ExtensionContext) {
     const diagnosticManager = new DiagnosticManager(diagnostics);
     const command: PHPUnit = tap(
         new PHPUnit(container.parserFactory, container.processFactory, container.files),
-        command =>
+        (command: PHPUnit) =>
             command
                 .on('start', () => channel.clear())
                 .on('start', (buffer: Buffer) => channel.append(buffer.toString()))

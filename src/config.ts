@@ -1,5 +1,5 @@
 class FakeWorkspaceConfiguration {
-    constructor(public name) {}
+    constructor(public name = 'PHPUnit') {}
 
     get(): any {
         return 'fake';

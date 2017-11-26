@@ -9,10 +9,10 @@ import {
     TextLine,
     Uri,
 } from 'vscode';
+import { Fault, TestCase, Type } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
 import { Store } from './store';
-import { Type } from './parsers/parser';
 
 export class DiagnosticManager {
     constructor(private diagnostics: DiagnosticCollection) {}
@@ -22,7 +22,7 @@ export class DiagnosticManager {
 
         const details = store
             .getDetails()
-            .filter(item => item.type !== Type.PASSED)
+            .filter((item: TestCase) => item.type !== Type.PASSED)
             .groupBy('key');
 
         editors.forEach((editor: TextEditor) => {
@@ -33,7 +33,7 @@ export class DiagnosticManager {
                 const promises: Promise<Diagnostic>[] = details
                     .get(key)
                     .values()
-                    .map(item => this.convertToDiagnostic(item, editor.document));
+                    .map((item: TestCase) => this.convertToDiagnostic(item, editor.document));
                 Promise.all(promises).then((diagnostics: Diagnostic[]) => {
                     this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
                 });
@@ -41,12 +41,12 @@ export class DiagnosticManager {
         });
     }
 
-    private convertToDiagnostic(item, document?: TextDocument): Promise<Diagnostic> {
+    private convertToDiagnostic(item: TestCase, document?: TextDocument): Promise<Diagnostic> {
         return this.convertToRange(item, document).then((range: Range) => {
             return tap(
                 new Diagnostic(
                     range,
-                    item.fault.message,
+                    (item.fault as Fault).message,
                     item.type === Type.ERROR ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
                 ),
                 (diagnostic: Diagnostic) => {
@@ -56,7 +56,7 @@ export class DiagnosticManager {
         });
     }
 
-    private convertToRange(item, document?: TextDocument): Promise<Range> {
+    private convertToRange(item: TestCase, document?: TextDocument): Promise<Range> {
         return new Promise(resolve => {
             const line = item.line - 1;
             let start = 0;

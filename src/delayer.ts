@@ -5,16 +5,16 @@ export interface ITask<T> {
 export class Delayer<T> {
     public defaultDelay: number;
     private timeout: any; // Timer
-    private completionPromise: Promise<T>;
-    private onSuccess: (value?: T | Thenable<T>) => void;
+    private completionPromise: Promise<T> | null;
+    private onSuccess: (value?: any) => void;
     private task: ITask<T>;
 
     constructor(defaultDelay: number) {
         this.defaultDelay = defaultDelay;
         this.timeout = null;
         this.completionPromise = null;
-        this.onSuccess = null;
-        this.task = null;
+        this.onSuccess = () => {};
+        this.task = (): any => {};
     }
 
     public trigger(task: ITask<T>, delay: number = this.defaultDelay): Promise<T> {
@@ -28,9 +28,9 @@ export class Delayer<T> {
                 this.onSuccess = resolve;
             }).then(() => {
                 this.completionPromise = null;
-                this.onSuccess = null;
+                this.onSuccess = () => {};
                 const result = this.task();
-                this.task = null;
+                this.task = (): any => {};
 
                 return result;
             });
@@ -46,7 +46,7 @@ export class Delayer<T> {
         return this.completionPromise;
     }
 
-    public forceDelivery(): Promise<T> {
+    public forceDelivery(): Promise<T> | null {
         if (!this.completionPromise) {
             return null;
         }

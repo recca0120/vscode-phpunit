@@ -1,4 +1,4 @@
-import * as minimistString from 'minimist-string';
+const parseSentence = require('minimist-string');
 
 import { Detail, Parser, TestCase, Type } from './parser';
 
@@ -18,7 +18,7 @@ interface TeamCity {
 }
 
 export class TeamCityParser extends Parser {
-    private typeMap = {
+    private typeMap: any = {
         testPassed: Type.PASSED,
         testFailed: Type.FAILURE,
         testIgnored: Type.SKIPPED,
@@ -29,68 +29,64 @@ export class TeamCityParser extends Parser {
     }
 
     parseString(content: string): Promise<TestCase[]> {
-        return this.parseTestCase(this.groupByType(this.parseTeamCity(content)));
+        return Promise.all(this.groupByType(this.parseTeamCity(content)).map(group => this.parseTestCase(group)));
     }
 
-    protected parseTestCase(groups: TeamCity[][]): Promise<TestCase[]> {
-        return Promise.all(
-            groups.map(group => {
-                if (group.length === 2) {
-                    group.splice(1, 0, {
-                        status: 'testPassed',
-                    });
-                }
+    protected parseTestCase(group: any): Promise<TestCase> {
+        if (group.length === 2) {
+            group.splice(1, 0, {
+                status: 'testPassed',
+            });
+        }
 
-                const [start, error, finish] = group;
-                const [file, className, name] = start.locationHint
-                    .replace(/php_qn:\/\//g, '')
-                    .replace(/::\\/g, '::')
-                    .split('::');
+        const [start, error, finish] = group;
+        const [file, className, name] = start.locationHint
+            .replace(/php_qn:\/\//g, '')
+            .replace(/::\\/g, '::')
+            .split('::');
 
-                const type = this.typeMap[error.status];
+        const type = this.typeMap[error.status];
 
-                const testCase: TestCase = {
-                    name,
-                    class: className.substr(className.lastIndexOf('\\') + 1),
-                    classname: null,
-                    file,
-                    line: 0,
-                    time: parseFloat(finish.duration) / 1000,
-                    type,
-                };
+        const testCase: TestCase = {
+            name,
+            class: className.substr(className.lastIndexOf('\\') + 1),
+            classname: null,
+            file,
+            line: 0,
+            time: parseFloat(finish.duration as string) / 1000,
+            type,
+        };
 
-                if (type !== Type.PASSED) {
-                    const details: Detail[] = this.parseDetails(error.details);
-                    const currentFile = this.currentFile(details, testCase);
+        if (type !== Type.PASSED) {
+            const details: Detail[] = this.parseDetails(error.details as string);
+            const currentFile = this.currentFile(details, testCase);
 
-                    Object.assign(testCase, currentFile, {
-                        type: currentFile.line === 0 && testCase.type === Type.FAILURE ? Type.RISKY : testCase.type,
-                        fault: {
-                            message: error.message,
-                            details: this.filterDetails(details, currentFile),
-                        },
-                    });
+            Object.assign(testCase, currentFile, {
+                type: currentFile.line === 0 && testCase.type === Type.FAILURE ? Type.RISKY : testCase.type,
+                fault: {
+                    message: error.message,
+                    details: this.filterDetails(details, currentFile),
+                },
+            });
 
-                    if (testCase.line !== 0) {
-                        return Promise.resolve(testCase);
-                    }
-                }
-                const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
+            if (testCase.line !== 0) {
+                return Promise.resolve(testCase);
+            }
+        }
+        const pattern = new RegExp(`function\\s+${name}\\s*\\(`);
 
-                return this.textLineFactory.searchFile(file, pattern, false).then((items: TextLine[]) => {
-                    const textLine =
-                        items.length > 0
-                            ? items[0]
-                            : {
-                                  lineNumber: 0,
-                              };
+        return this.textLineFactory.searchFile(file, pattern, false).then((items: TextLine[]) => {
+            const textLine =
+                items.length > 0
+                    ? items[0]
+                    : {
+                          lineNumber: 0,
+                      };
 
-                    return Object.assign(testCase, {
-                        line: textLine.lineNumber + 1,
-                    });
-                });
-            })
-        );
+            return Object.assign(testCase, {
+                line: textLine.lineNumber + 1,
+            });
+        });
     }
 
     private parseTeamCity(content: string): TeamCity[] {
@@ -104,15 +100,15 @@ export class TeamCityParser extends Parser {
                     .replace(/\\/g, '||')
                     .replace(/\|\'/g, "\\'");
 
-                const argv: string[] = minimistString(line)._;
+                const argv: string[] = parseSentence(line)._;
                 const teamCity: TeamCity = {
-                    status: argv.shift(),
+                    status: argv.shift() as string,
                 };
 
                 return argv.reduce((options, arg) => {
-                    return tap(options, opts => {
+                    return tap(options, (opts: any) => {
                         const split = arg.split('=');
-                        const key = split.shift();
+                        const key = split.shift() as string;
                         const value = split
                             .join('=')
                             .replace(/\|\|/g, '\\')
@@ -129,10 +125,11 @@ export class TeamCityParser extends Parser {
     private groupByType(items: TeamCity[]): TeamCity[][] {
         let counter = 0;
 
-        return items.reduce((results, item) => {
+        return items.reduce((results: any[], item: TeamCity) => {
             if (!results[counter]) {
                 results[counter] = [];
             }
+
             results[counter].push(item);
 
             if (item.status === 'testFinished') {

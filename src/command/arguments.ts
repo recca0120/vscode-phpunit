@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+const minimist = require('minimist');
 
 import { tap } from '../helpers';
 
@@ -9,28 +9,28 @@ export class Arguments {
         this.options = this.parseOptions(options);
     }
 
-    has(key) {
+    has(key: string) {
         return !!this.options[this.normalizeKey(key)];
     }
 
-    put(key, value) {
+    put(key: string, value: any) {
         this.options[this.normalizeKey(key)] = value;
 
         return this;
     }
 
-    get(key) {
+    get(key: string) {
         return this.options[this.normalizeKey(key)];
     }
 
-    remove(key) {
+    remove(key: string) {
         delete this.options[this.normalizeKey(key)];
     }
 
     toArray() {
-        return tap(Object.keys(this.options).filter(key => key !== '_'), keys => {
+        return tap(Object.keys(this.options).filter(key => key !== '_'), (keys: string[]) => {
             keys.sort();
-        }).reduce((prev, key) => {
+        }).reduce((prev: string[], key: string) => {
             const k = key.length === 1 ? `-${key}` : `--${key}`;
             let value = this.get(key);
 
@@ -58,7 +58,7 @@ export class Arguments {
         }, this.options._);
     }
 
-    private normalizeKey(key) {
+    private normalizeKey(key: string) {
         return key.replace(/^-+/g, '');
     }
 
@@ -67,7 +67,7 @@ export class Arguments {
             minimist(opts, {
                 boolean: ['teamcity'],
             }),
-            options => {
+            (options: any) => {
                 options['log-junit'] = false;
                 if (options['c'] || options['configuration']) {
                     options['c'] = options['c'] || options['configuration'];

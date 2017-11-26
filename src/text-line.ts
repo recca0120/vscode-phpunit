@@ -72,8 +72,8 @@ export class TextLineFactory {
         });
     }
 
-    searchFile(file, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
-        return this.getContent(file).then(content => this.search(content, pattern, mutiple));
+    searchFile(file: string, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
+        return this.getContent(file).then((content: string) => this.search(content, pattern, mutiple));
     }
 
     dispose() {
@@ -104,12 +104,12 @@ export class TextLineFactory {
 
     private getContent(file: string): Promise<string> {
         if (this.cache.has(normalizePath(file)) === true) {
-            return Promise.resolve(this.cache.get(normalizePath(file)));
+            return Promise.resolve(this.cache.get(normalizePath(file)) || '');
         }
 
         return this.files.getAsync(file).then((content: string) => {
             return Promise.resolve(
-                tap(content, content => {
+                tap(content, (content: string) => {
                     this.cache.set(normalizePath(file), content);
                 })
             );

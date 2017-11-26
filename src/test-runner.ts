@@ -111,7 +111,7 @@ export class TestRunner {
                 execPath: this.config.get('execPath', ''),
                 basePath: this.container.basePath(this.window.activeTextEditor, this.workspace),
             }),
-            promise => {
+            (promise: Promise<TestCase[]>) => {
                 promise.then(this.onCompleted.bind(this));
                 promise.catch(this.onError.bind(this));
             }
@@ -151,7 +151,7 @@ export class TestRunner {
         return Promise.resolve(items);
     }
 
-    private onError(error): Promise<any> {
+    private onError(error: string): Promise<any> {
         this.decoratedGutter();
         this.handleDiagnostic();
 
@@ -167,7 +167,7 @@ export class TestRunner {
     }
 
     private triggerRelationFile(document: TextDocument) {
-        this.store.whereTestCase(document.uri.fsPath).forEach(item => this.handle(item.file));
+        this.store.whereTestCase(document.uri.fsPath).forEach((item: TestCase) => this.handle(item.file));
     }
 
     private decoratedGutter() {

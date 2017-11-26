@@ -19,11 +19,11 @@ export class Collection<T> {
         return this;
     }
 
-    has(key: any, value?): boolean {
+    has(key: any, value?: any): boolean {
         return this.items.some(this.createFilterCallback(key, value));
     }
 
-    where(key: any, value?): Collection<T> {
+    where(key: any, value?: any): Collection<T> {
         return this.filter(this.createFilterCallback(key, value));
     }
 
@@ -31,32 +31,32 @@ export class Collection<T> {
         return this.items[0] || null;
     }
 
-    filter(callback): Collection<T> {
+    filter(callback: any): Collection<T> {
         return new Collection(this.items.filter(callback));
     }
 
-    map(callback): Collection<T> {
+    map(callback: any): Collection<T> {
         return new Collection(this.items.map(callback));
     }
 
-    reduce(callback, initialize: T[]): Collection<T> {
+    reduce(callback: any, initialize: T[]): Collection<T> {
         return new Collection(this.items.reduce(callback, initialize));
     }
 
-    forEach(callback) {
+    forEach(callback: any) {
         this.items.forEach(callback);
     }
 
-    groupBy(attribute) {
+    groupBy(attribute: any) {
         const callback =
             typeof attribute === 'string'
-                ? (group, item) =>
-                      tap(group, group => {
+                ? (group: any, item: any) =>
+                      tap(group, (group: any) => {
                           group.set(
                               item[attribute],
                               tap(
                                   group.has(item[attribute]) ? group.get(item[attribute]) : new Collection(),
-                                  collection => collection.push(item)
+                                  (collection: Collection<T>) => collection.push(item)
                               )
                           );
                       })
@@ -89,7 +89,7 @@ export class Collection<T> {
 
     protected createFilterCallback(key: any, value?: any) {
         return typeof key === 'string'
-            ? item => {
+            ? (item: any) => {
                   if (!value) {
                       return !!item[key];
                   }

@@ -1,5 +1,6 @@
+import { Detail, Fault, TestCase } from './parsers/parser';
+
 import { Collection } from './collection';
-import { TestCase } from './parsers/parser';
 import { normalizePath } from './helpers';
 
 export class Store extends Collection<TestCase> {
@@ -24,13 +25,13 @@ export class Store extends Collection<TestCase> {
     }
 
     get(path: string): Collection<TestCase> {
-        return this.where(item => {
+        return this.where((item: TestCase) => {
             return this.generateKey(item.file) === this.generateKey(path);
         });
     }
 
     getDetails() {
-        return this.reduce((results, item) => {
+        return this.reduce((results: any[], item: TestCase) => {
             results.push({
                 key: this.generateKey(item.file),
                 type: item.type,
@@ -44,14 +45,14 @@ export class Store extends Collection<TestCase> {
             return !item.fault
                 ? results
                 : results.concat(
-                      item.fault.details.map(detail => {
+                      (item.fault.details as Detail[]).map((detail: Detail) => {
                           return {
                               key: this.generateKey(detail.file),
                               type: item.type,
                               file: detail.file,
                               line: detail.line,
                               fault: {
-                                  message: item.fault.message,
+                                  message: (item.fault as Fault).message,
                               },
                           };
                       })
@@ -60,12 +61,14 @@ export class Store extends Collection<TestCase> {
     }
 
     whereTestCase(path: string) {
-        return this.where(item => {
+        return this.where((item: TestCase) => {
             if (normalizePath(item.file) === normalizePath(path) || !item.fault) {
                 return false;
             }
 
-            return item.fault.details.filter(detail => normalizePath(detail.file) === normalizePath(path));
+            return (item.fault.details as Detail[]).filter(
+                (detail: Detail) => normalizePath(detail.file) === normalizePath(path)
+            );
         });
     }
 
@@ -73,7 +76,7 @@ export class Store extends Collection<TestCase> {
         return this.clear();
     }
 
-    private generateKey(path): string {
+    private generateKey(path: string): string {
         return normalizePath(path);
     }
 }

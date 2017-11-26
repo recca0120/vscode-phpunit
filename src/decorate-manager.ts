@@ -1,5 +1,5 @@
 import { DecorationRenderOptions, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
-import { Type, TypeMap } from './parsers/parser';
+import { Fault, TestCase, Type, TypeMap } from './parsers/parser';
 import { normalizePath, tap } from './helpers';
 
 import { Container } from './container';
@@ -36,25 +36,25 @@ export class DecorateManager {
 
             gutters.groupBy('type').forEach((items, type) => {
                 editor.setDecorations(
-                    this.styles.get(type),
+                    this.styles.get(type) as TextEditorDecorationType,
                     items
-                        .map(item => ({
+                        .map((item: TestCase) => ({
                             range: new Range(item.line - 1, 0, item.line - 1, 1e3),
-                            hoverMessage: item.fault.message,
+                            hoverMessage: (item.fault as Fault).message,
                         }))
                         .values()
                 );
             });
 
             this.assertions = gutters
-                .filter(item => item.type !== Type.PASSED)
+                .filter((item: TestCase) => item.type !== Type.PASSED)
                 .values()
                 .map(item =>
                     tap(
                         this.createTextEditorDecorationType(
-                            this.decorationStyle.create('assertion', item.fault.message)
+                            this.decorationStyle.create('assertion', (item.fault as Fault).message)
                         ),
-                        assertion => {
+                        (assertion: TextEditorDecorationType) => {
                             editor.setDecorations(assertion, [
                                 {
                                     range: new Range(item.line - 1, 0, item.line - 1, 1e3),
@@ -70,13 +70,15 @@ export class DecorateManager {
 
     clearDecoratedGutter(editors: TextEditor[]): this {
         editors.forEach((editor: TextEditor) => {
-            Array.from(this.styles.keys()).forEach(style => editor.setDecorations(this.styles.get(style), []));
+            Array.from(this.styles.keys()).forEach(style =>
+                editor.setDecorations(this.styles.get(style) as TextEditorDecorationType, [])
+            );
         });
 
         return this;
     }
 
-    private createTextEditorDecorationType(style): TextEditorDecorationType {
+    private createTextEditorDecorationType(style: any): TextEditorDecorationType {
         if (style.gutterIconPath) {
             style.gutterIconPath = this.gutterIconPath(style.gutterIconPath);
         }
@@ -106,8 +108,26 @@ export class DecorateManager {
 }
 
 export class DecorationStyle {
-    create(type: string | Type, text?: string[] | string) {
-        return this[type](text);
+    create(type: string | Type, text: string = ''): any {
+        switch (type) {
+            case Type.PASSED:
+            case 'passed':
+                return this.passed();
+            case Type.ERROR:
+            case 'error':
+                return this.error();
+            case Type.RISKY:
+            case 'risky':
+                return this.risky();
+            case Type.SKIPPED:
+            case 'skipped':
+                return this.skipped();
+            case Type.INCOMPLETE:
+            case 'incomplete':
+                return this.incomplete();
+            case 'assertion':
+                return this.assertion(text);
+        }
     }
 
     passed(): DecorationRenderOptions {

@@ -38,7 +38,7 @@ export interface Fault {
 export interface TestCase {
     name: string;
     class: string;
-    classname?: string;
+    classname?: string | null;
     file: string;
     line: number;
     time: number;
@@ -54,7 +54,7 @@ export abstract class Parser {
         this.textLineFactory.dispose();
     }
 
-    abstract parse(content: any): Promise<TestCase[]>;
+    abstract parse(content: string): Promise<TestCase[]>;
 
     abstract parseString(content: string): Promise<TestCase[]>;
 
@@ -62,17 +62,15 @@ export abstract class Parser {
         return this.files.getAsync(path).then((content: string) => this.parseString(content));
     }
 
-    protected abstract parseTestCase(data: any);
+    protected abstract parseTestCase(data: any): Promise<TestCase>;
 
-    protected currentFile(details: Detail[], testCase: TestCase) {
-        const detail: Detail = details.find(detail => testCase.file === detail.file && testCase.line !== detail.line);
-
-        return detail
-            ? detail
-            : {
-                  file: testCase.file,
-                  line: testCase.line,
-              };
+    protected currentFile(details: Detail[], testCase: TestCase): Detail {
+        return (
+            details.find(detail => testCase.file === detail.file && testCase.line !== detail.line) || {
+                file: testCase.file,
+                line: testCase.line,
+            }
+        );
     }
 
     protected filterDetails(details: Detail[], currentFile: Detail): Detail[] {
@@ -85,7 +83,7 @@ export abstract class Parser {
             .map(line => line.trim())
             .filter(line => /(.*):(\d+)$/.test(line))
             .map(path => {
-                const [, file, line] = path.match(/(.*):(\d+)/);
+                const [, file, line] = path.match(/(.*):(\d+)/) as string[];
 
                 return {
                     file: file.trim(),

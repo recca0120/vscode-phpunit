@@ -1,11 +1,12 @@
 import { Detail, Parser, TestCase, Type } from './parser';
 
-import { parseString } from 'xml2js';
 import { tap } from '../helpers';
+
+const parseString = require('xml2js').parseString;
 
 function xml2json(content: string) {
     return new Promise((resolve, reject) => {
-        parseString(content, { trim: true, async: true }, (error, result) => {
+        parseString(content, { trim: true, async: true }, (error: any, result: any) => {
             error ? reject(error) : resolve(result);
         });
     });
@@ -71,19 +72,19 @@ export class JUnitParser extends Parser {
         const keys = Object.keys(testCaseNode);
 
         if (keys.indexOf('error') !== -1) {
-            return tap(testCaseNode.error[0], error => {
+            return tap(testCaseNode.error[0], (error: any) => {
                 error.type = this.parseErrorType(error);
             });
         }
 
         if (keys.indexOf('warning') !== -1) {
-            return tap(testCaseNode.warning[0], warning => {
+            return tap(testCaseNode.warning[0], (warning: any) => {
                 warning.type = Type.WARNING;
             });
         }
 
         if (keys.indexOf('failure') !== -1) {
-            return tap(testCaseNode.failure[0], failure => {
+            return tap(testCaseNode.failure[0], (failure: any) => {
                 failure.type = Type.FAILURE;
             });
         }

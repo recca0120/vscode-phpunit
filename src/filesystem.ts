@@ -4,7 +4,7 @@ import { readFile, readFileSync, statSync, unlinkSync } from 'fs';
 
 import { tmpdir } from 'os';
 
-function existsSync(filePath) {
+function existsSync(filePath: string) {
     try {
         statSync(filePath);
     } catch (err) {
@@ -71,7 +71,9 @@ export abstract class AbstractFilesystem {
 }
 
 class POSIX extends AbstractFilesystem implements FilesystemInterface {
-    protected systemPaths: string[] = process.env.PATH.split(/:|;/g).map(path => path.replace(/(:|;)$/, '').trim());
+    protected systemPaths: string[] = process.env.PATH.split(/:|;/g).map((path: string) =>
+        path.replace(/(:|;)$/, '').trim()
+    );
     protected extensions = [''];
     protected separator: string = '/';
 
@@ -147,7 +149,9 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
 }
 
 class Windows extends POSIX {
-    protected systemPaths: string[] = process.env.PATH.split(/;/g).map(path => path.replace(/(;)$/, '').trim());
+    protected systemPaths: string[] = process.env.PATH.split(/;/g).map((path: string) =>
+        path.replace(/(;)$/, '').trim()
+    );
     protected extensions = ['.bat', '.exe', '.cmd', ''];
     protected separator: string = '\\';
 }
@@ -180,7 +184,7 @@ export class CachableFilesystem extends Filesystem {
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(super.findUp(search, cwd, basePath), find => this.cache.set(key, find));
+            : tap(super.findUp(search, cwd, basePath), (find: string) => this.cache.set(key, find));
     }
 
     find(search: string[] | string, cwd: string = process.cwd()): string {
@@ -188,7 +192,7 @@ export class CachableFilesystem extends Filesystem {
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(super.find(search, cwd), find => this.cache.set(key, find));
+            : tap(super.find(search, cwd), (find: string) => this.cache.set(key, find));
     }
 
     exists(search: string[] | string, cwd: string = process.cwd()): boolean {
@@ -196,7 +200,7 @@ export class CachableFilesystem extends Filesystem {
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(super.exists(search, cwd), find => this.cache.set(key, find));
+            : tap(super.exists(search, cwd), (find: string) => this.cache.set(key, find));
     }
 
     private key(search: string[] | string, opts: string[] = []) {

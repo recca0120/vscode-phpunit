@@ -17,6 +17,7 @@ const parserFactory = new ParserFactory(files, textLineFactory);
 const validator = new Validator(files);
 
 interface Singleton {
+    [key: string]: any;
     config: ConfigRepository;
     files: FilesystemInterface;
     processFactory: ProcessFactory;
@@ -47,10 +48,7 @@ export class Container {
         extensionPath: __dirname,
     };
 
-    basePath(editor?: TextEditor, workspace?: any): string {
-        editor = editor || this.window.activeTextEditor;
-        workspace = workspace || this.workspace;
-
+    basePath(editor: TextEditor = this.window.activeTextEditor, workspace: any = this.workspace): string {
         return this.workspaceFolder(workspace, editor);
     }
 
@@ -108,19 +106,19 @@ export class Container {
         return this.getSingleton('validator');
     }
 
-    get(key): any {
+    get(key: string): any {
         return this.getSingleton(key);
     }
 
-    set(key, object): Container {
+    set(key: string, object: any): Container {
         return this.setSingleton(key, object);
     }
 
-    protected getSingleton(key): any {
+    protected getSingleton(key: string): any {
         return this.singleton[key];
     }
 
-    protected setSingleton(key, object): Container {
+    protected setSingleton(key: string, object: any): Container {
         this.singleton[key] = object;
 
         return this;
