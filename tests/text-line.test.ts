@@ -5,7 +5,7 @@ import { resolve as pathResolve } from 'path';
 describe('TextLine Tests', () => {
     it('search File', async () => {
         const textlineFactory = new TextLineFactory();
-        const pattern = new RegExp(`public\\s+function\\s+.*\\s*\\(`);
+        const pattern = new RegExp(` *public\\s+function\\s+.*\\s*\\(.*`, 'g');
         const textLines: TextLine[] = await textlineFactory.searchFile(
             pathResolve(__dirname, 'fixtures/PHPUnitTest.php'),
             pattern

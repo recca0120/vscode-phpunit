@@ -1,6 +1,15 @@
 import { CachableFilesystem, FilesystemInterface } from './filesystem';
 import { normalizePath, tap } from './helpers';
 
+interface Line {
+    text: string;
+    lineNumber: number;
+}
+
+export interface Task {
+    (text: string, lineNumber: number, index: number, input: string): Line;
+}
+
 export interface Position {
     line: number;
     character: number;
@@ -54,51 +63,41 @@ export class TextLineFactory {
         this.cache = TextLineCache;
     }
 
-    search(
-        content: string,
-        pattern: RegExp,
-        mutiple: boolean = true,
-        callback: Function = this.callback
-    ): Promise<TextLine[]> {
+    search(content: string, pattern: RegExp, toTextLine: Task = this.toTextLine): Promise<TextLine[]> {
         return new Promise(resolve => {
-            const lines = content.split(/\r\n|\n/);
             const results: TextLine[] = [];
 
-            for (let i = 0; i < lines.length; i++) {
-                if (pattern.test(lines[i]) === true) {
-                    const { text, lineNumber } = callback(lines[i], i, lines);
-                    results.push(this.createTextLine(text, lineNumber));
-                    if (mutiple === false) {
-                        break;
-                    }
+            if (pattern.flags.indexOf('g') !== -1) {
+                let match: RegExpExecArray | null;
+                while ((match = pattern.exec(content)) !== null) {
+                    const { text, lineNumber, index, input } = this.parseRegExpExecArray(match as RegExpExecArray);
+                    results.push(this.createTextLine(toTextLine(text, lineNumber, index, input)));
                 }
+            } else {
+                const match: RegExpExecArray | null = pattern.exec(content);
+
+                if (match === null) {
+                    return resolve(results);
+                }
+
+                const { text, lineNumber, index, input } = this.parseRegExpExecArray(match as RegExpExecArray);
+                results.push(this.createTextLine(toTextLine(text, lineNumber, index, input)));
             }
 
-            resolve(results);
+            resolve(results.filter(item => item.lineNumber !== 0));
         });
     }
 
-    searchFile(
-        file: string,
-        pattern: RegExp,
-        mutiple: boolean = true,
-        callback: Function = this.callback
-    ): Promise<TextLine[]> {
-        return this.getContent(file).then((content: string) => this.search(content, pattern, mutiple, callback));
+    searchFile(file: string, pattern: RegExp, toTextLine: Task = this.toTextLine): Promise<TextLine[]> {
+        return this.getContent(file).then((content: string) => this.search(content, pattern, toTextLine));
     }
 
     dispose() {
         this.cache.clear();
     }
 
-    private callback(text: string, lineNumber: number) {
-        return {
-            lineNumber,
-            text,
-        };
-    }
-
-    private createTextLine(text: string, lineNumber: number): TextLine {
+    private createTextLine(line: Line): TextLine {
+        const { lineNumber, text } = line;
         const firstNonWhitespaceCharacterIndex = text.search(/\S|$/);
 
         return {
@@ -132,5 +131,26 @@ export class TextLineFactory {
                 })
             );
         });
+    }
+
+    private toTextLine(text: string, lineNumber: number): Line {
+        return {
+            lineNumber,
+            text,
+        };
+    }
+
+    private parseRegExpExecArray(match: RegExpExecArray) {
+        const text = match[0];
+        const index = match.index;
+        const input = match.input;
+        const lineNumber = input.substr(0, index).split(/\n/).length - 1;
+
+        return {
+            text,
+            lineNumber,
+            index,
+            input,
+        };
     }
 }

@@ -74,9 +74,9 @@ export class TeamCityParser extends Parser {
             }
         }
 
-        const pattern = new RegExp(`public\\s+function\\s+${name}\\s*\\(`);
+        const pattern = new RegExp(` *public\\s+function\\s+${name}\\s*\\(.*`);
 
-        return this.textLineFactory.searchFile(file, pattern, false).then((items: TextLine[]) => {
+        return this.textLineFactory.searchFile(file, pattern).then((items: TextLine[]) => {
             const textLine =
                 items.length > 0
                     ? items[0]
