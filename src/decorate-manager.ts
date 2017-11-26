@@ -184,7 +184,7 @@ export class DecorationStyle {
                 },
             },
             after: {
-                contentText: ' // ' + text,
+                contentText: text ? ` // ${text.replace(/\n/g, ' ')}` : '',
             },
         };
     }
