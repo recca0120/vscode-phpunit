@@ -3,7 +3,7 @@ import { TextLineFactory } from '../src/text-line';
 import { resolve as pathResolve } from 'path';
 
 describe('TextLine Tests', () => {
-    it('search', async () => {
+    it('search File', async () => {
         const textlineFactory = new TextLineFactory();
         const pattern = new RegExp(`public\\s+function\\s+.*\\s*\\(`);
         const textLines: TextLine[] = await textlineFactory.searchFile(

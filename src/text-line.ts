@@ -54,14 +54,20 @@ export class TextLineFactory {
         this.cache = TextLineCache;
     }
 
-    search(content: string, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
+    search(
+        content: string,
+        pattern: RegExp,
+        mutiple: boolean = true,
+        callback: Function = this.callback
+    ): Promise<TextLine[]> {
         return new Promise(resolve => {
             const lines = content.split(/\r\n|\n/);
             const results: TextLine[] = [];
 
             for (let i = 0; i < lines.length; i++) {
                 if (pattern.test(lines[i]) === true) {
-                    results.push(this.createTextLine(i, lines[i]));
+                    const { text, lineNumber } = callback(lines[i], i, lines);
+                    results.push(this.createTextLine(text, lineNumber));
                     if (mutiple === false) {
                         break;
                     }
@@ -72,15 +78,27 @@ export class TextLineFactory {
         });
     }
 
-    searchFile(file: string, pattern: RegExp, mutiple: boolean = true): Promise<TextLine[]> {
-        return this.getContent(file).then((content: string) => this.search(content, pattern, mutiple));
+    searchFile(
+        file: string,
+        pattern: RegExp,
+        mutiple: boolean = true,
+        callback: Function = this.callback
+    ): Promise<TextLine[]> {
+        return this.getContent(file).then((content: string) => this.search(content, pattern, mutiple, callback));
     }
 
     dispose() {
         this.cache.clear();
     }
 
-    private createTextLine(lineNumber: number, text: string): TextLine {
+    private callback(text: string, lineNumber: number) {
+        return {
+            lineNumber,
+            text,
+        };
+    }
+
+    private createTextLine(text: string, lineNumber: number): TextLine {
         const firstNonWhitespaceCharacterIndex = text.search(/\S|$/);
 
         return {
