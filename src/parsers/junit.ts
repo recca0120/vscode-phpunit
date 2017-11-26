@@ -1,80 +1,16 @@
 import { CachableFilesystem, FilesystemInterface } from '../filesystem';
 import { Detail, Parser, TestCase, Type } from './parser';
 
+import { IXmlParser } from './xml/interface';
 import { TextLineFactory } from '../text-line';
+import { FastXmlParser as XmlParser } from './xml/fast-xml-parser';
 import { tap } from '../helpers';
-
-interface XmlParser {
-    parse(content: string): Promise<any>;
-    map(testCaseNode: any): any;
-}
-
-export class FastXmlParser implements XmlParser {
-    parse(content: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            resolve(
-                require('fast-xml-parser').parse(content, {
-                    attrPrefix: '_',
-                    textNodeName: '__',
-                    ignoreNonTextNodeAttr: false,
-                    ignoreTextNodeAttr: false,
-                    ignoreNameSpace: false,
-                })
-            );
-        });
-    }
-
-    map(testCaseNode: any): any {
-        return testCaseNode;
-    }
-}
-
-export class Xml2jsParser implements XmlParser {
-    parse(content: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            require('xml2js').parseString(content, { trim: true, async: true }, (error: any, result: any) => {
-                error ? reject(error) : resolve(result);
-            });
-        });
-    }
-
-    map(testCaseNode: any): any {
-        const node: any = {
-            _name: testCaseNode.$.name,
-            _class: testCaseNode.$.class,
-            _classname: testCaseNode.$.classname,
-            _file: testCaseNode.$.file,
-            _line: testCaseNode.$.line,
-            _assertions: testCaseNode.$.assertions,
-            _time: testCaseNode.$.time,
-        };
-
-        const errorAttribute: string[] = Object.keys(testCaseNode).filter(key => key.indexOf('$') === -1);
-
-        if (errorAttribute.length > 0) {
-            node[errorAttribute[0]] = this.faultNode(testCaseNode[errorAttribute[0]]);
-        }
-
-        return node;
-    }
-
-    private faultNode(faultNode: any): any {
-        const node = faultNode[0];
-
-        return node === ''
-            ? ''
-            : {
-                  _type: node.$.type,
-                  __: node._,
-              };
-    }
-}
 
 export class JUnitParser extends Parser {
     constructor(
         protected files: FilesystemInterface = new CachableFilesystem(),
         protected textLineFactory: TextLineFactory = new TextLineFactory(),
-        private xmlParser: XmlParser = new Xml2jsParser()
+        private xmlParser: IXmlParser = new XmlParser()
     ) {
         super(files, textLineFactory);
     }
@@ -120,7 +56,7 @@ export class JUnitParser extends Parser {
             return Promise.resolve(testCase);
         }
 
-        const details: Detail[] = this.parseDetails(faultNode.__);
+        const details: Detail[] = this.parseDetails(faultNode.__text);
         const currentFile = this.currentFile(details, testCase);
         const message = this.parseMessage(faultNode, details);
 
@@ -161,7 +97,7 @@ export class JUnitParser extends Parser {
             return {
                 type: Type.SKIPPED,
                 _type: Type.SKIPPED,
-                __: '',
+                __text: '',
             };
         }
 
@@ -169,7 +105,7 @@ export class JUnitParser extends Parser {
             return {
                 type: Type.INCOMPLETE,
                 _type: Type.INCOMPLETE,
-                __: '',
+                __text: '',
             };
         }
 
@@ -180,7 +116,7 @@ export class JUnitParser extends Parser {
         const messages: string[] = details
             .reduce((result, detail) => {
                 return result.replace(`${detail.file}:${detail.line}`, '').trim();
-            }, this.normalize(faultNode.__))
+            }, this.normalize(faultNode.__text))
             .split(/\r\n|\n/);
 
         const message = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');

@@ -3,7 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "version": "0.5.11",
+    "version": "0.5.12",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
@@ -105,13 +105,14 @@
         "tslint": "^5.8.0",
         "tslint-config-prettier": "^1.6.0",
         "typescript": "^2.6.1",
-        "vscode": "^1.1.6"
+        "vscode": "^1.1.6",
+        "x2js": "^3.1.1",
+        "xml2js": "^0.4.19"
     },
     "dependencies": {
         "fast-xml-parser": "^2.7.4",
         "minimist": "^1.2.0",
-        "minimist-string": "^1.0.2",
-        "xml2js": "^0.4.19"
+        "minimist-string": "^1.0.2"
     },
     "jest": {
         "moduleFileExtensions": [

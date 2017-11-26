@@ -4,6 +4,9 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 Check [Keep a Changelog](http://keepachangelog.com/) for
 recommendations on how to structure this file.
 
+## 0.5.12
+- refactoring junit parser
+
 ## 0.5.11
 - refactoring TextLine
 

@@ -3,12 +3,13 @@ import { TestCase, Type } from '../../src/parsers/parser';
 import { Filesystem } from '../../src/filesystem';
 import { JUnitParser } from '../../src/parsers/junit';
 import { TextLineFactory } from '../../src/text-line';
+import { X2jsParser as XmlParser } from './../../src/parsers/xml/x2js';
 import { resolve as pathResolve } from 'path';
 
-describe('JUnitParser', () => {
+describe('JUnitParser with X2jsParser', () => {
     const files: Filesystem = new Filesystem();
     const textLineFactory: TextLineFactory = new TextLineFactory(files);
-    const parser: JUnitParser = new JUnitParser(files, textLineFactory);
+    const parser: JUnitParser = new JUnitParser(files, textLineFactory, new XmlParser());
 
     async function getTestCase(key: number): Promise<TestCase> {
         const testCases: TestCase[] = await parser.parse(pathResolve(__dirname, '../', 'fixtures/junit.xml'));
@@ -222,7 +223,7 @@ describe('JUnitParser', () => {
         });
     });
 
-    it('it should be skipped when testcase has skipped tag', async () => {
+    it('it should be skipped when testcase has incomplete tag', async () => {
         const testCase = await getTestCase(8);
 
         expect(testCase).toEqual({
