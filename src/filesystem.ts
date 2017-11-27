@@ -16,10 +16,6 @@ function existsSync(filePath: string) {
     return true;
 }
 
-function ensureArray(search: string[] | string): string[] {
-    return search instanceof Array ? search : [search];
-}
-
 export interface FilesystemInterface {
     find(search: string[] | string, opts?: {}): string;
     exists(search: string[] | string, opts?: {}): boolean;
@@ -68,6 +64,10 @@ export abstract class AbstractFilesystem {
     dirname(path: string): string {
         return dirname(path);
     }
+
+    protected ensureArray(search: string[] | string): string[] {
+        return search instanceof Array ? search : [search];
+    }
 }
 
 class POSIX extends AbstractFilesystem implements FilesystemInterface {
@@ -100,14 +100,14 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
     }
 
     find(search: string[] | string, opts: any = {}): string {
-        search = ensureArray(search);
+        search = this.ensureArray(search);
         const cwd = opts.cwd || process.cwd();
 
         return this.usePath(search, cwd) || this.useSystemPath(search);
     }
 
     exists(search: string[] | string, opts: any = {}): boolean {
-        search = ensureArray(search);
+        search = this.ensureArray(search);
         const cwd = opts.cwd || process.cwd();
 
         for (const file of search) {
@@ -123,7 +123,7 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
     }
 
     protected usePath(search: string[] | string, opts: any = {}): string {
-        search = ensureArray(search);
+        search = this.ensureArray(search);
         const cwd = opts.cwd || process.cwd();
 
         for (const file of search) {
@@ -142,7 +142,7 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
     }
 
     protected useSystemPath(search: string[] | string): string {
-        search = ensureArray(search);
+        search = this.ensureArray(search);
 
         for (const systemPath of this.systemPaths) {
             const find = this.usePath(search, {
@@ -219,7 +219,7 @@ export class CachableFilesystem extends Filesystem {
 
     private key(search: string[] | string, opts: string[] = []) {
         return JSON.stringify(
-            ensureArray(search)
+            this.ensureArray(search)
                 .concat(opts)
                 .join('-')
         );
