@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import { ParserFactory } from '../parsers/parser-factory';
 import { ProcessFactory } from './process';
 import { TestCase } from '../parsers/parser';
+import { dirname } from 'path';
 
 export enum State {
     PHPUNIT_GIT_FILE = 'phpunit_git_file',
@@ -40,11 +41,13 @@ export class PHPUnit {
                 args.put('--log-junit', this.files.tmpfile(`vscode-phpunit-junit-${new Date().getTime()}.xml`));
             }
 
+            const executable: string = this.getExecutable(execPath, cwd, basePath);
+
             if (args.has('-c') === false) {
-                args.put('-c', this.getConfiguration(cwd, basePath) || false);
+                args.put('-c', this.getConfiguration(dirname(executable), basePath) || false);
             }
 
-            const spawnOptions = [this.getExecutable(execPath, cwd, basePath)].concat(args.toArray()).concat([path]);
+            const spawnOptions = [executable].concat(args.toArray()).concat([path]);
 
             this.eventEmitter.emit('start', `${spawnOptions.join(' ')}\n\n`);
 
@@ -55,19 +58,19 @@ export class PHPUnit {
                 .spawn(spawnOptions, {
                     cwd: basePath,
                 })
-                .then(output => {
+                .then((output: string) => {
                     this.eventEmitter.emit('exit', output);
                     const parser = this.parserFactory.create(args.has('--teamcity') ? 'teamcity' : 'junit');
                     const content = args.has('--teamcity') ? output : args.get('--log-junit');
                     parser
                         .parse(content)
-                        .then(items => {
+                        .then((items: TestCase[]) => {
                             if (args.has('--log-junit')) {
                                 this.files.unlink(args.get('--log-junit'));
                             }
                             resolve(items);
                         })
-                        .catch(error => reject(error));
+                        .catch((error: string) => reject(error));
                 });
         });
     }

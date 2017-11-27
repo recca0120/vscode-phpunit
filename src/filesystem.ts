@@ -82,8 +82,7 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
         basePath = basePath === '' ? root : pathResolve(basePath);
 
         do {
-            const find = this.path(search, cwd);
-
+            const find = this.usePath(search, cwd);
             if (find) {
                 return find;
             }
@@ -91,13 +90,13 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
             cwd = pathResolve(cwd, '..');
         } while (root !== cwd);
 
-        return this.find(search, cwd);
+        return this.find(search, root);
     }
 
     find(search: string[] | string, cwd: string = process.cwd()): string {
         search = ensureArray(search);
 
-        return this.path(search, cwd) || this.systemPath(search);
+        return this.usePath(search, cwd) || this.useSystemPath(search);
     }
 
     exists(search: string[] | string, cwd: string = process.cwd()): boolean {
@@ -115,7 +114,7 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
         return false;
     }
 
-    protected path(search: string[] | string, cwd: string = process.cwd()): string {
+    protected usePath(search: string[] | string, cwd: string = process.cwd()): string {
         search = ensureArray(search);
 
         for (const file of search) {
@@ -123,7 +122,7 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
                 for (const extension of this.extensions) {
                     const path = `${pwd}${file}${extension}`;
 
-                    if (existsSync(path) === true) {
+                    if (existsSync(path) === true && this.isFile(path)) {
                         return pathResolve(path);
                     }
                 }
@@ -133,11 +132,11 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
         return '';
     }
 
-    protected systemPath(search: string[] | string): string {
+    protected useSystemPath(search: string[] | string): string {
         search = ensureArray(search);
 
         for (const systemPath of this.systemPaths) {
-            const find = this.path(search, systemPath);
+            const find = this.usePath(search, systemPath);
 
             if (find) {
                 return find;

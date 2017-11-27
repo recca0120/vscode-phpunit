@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 Check [Keep a Changelog](http://keepachangelog.com/) for
 recommendations on how to structure this file.
 
+## 0.5.13
+- findUp must be file
+- fix phpunit.xml location
+
 ## 0.5.12
 - refactoring junit parser
 
