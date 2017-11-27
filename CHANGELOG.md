@@ -6,6 +6,7 @@ recommendations on how to structure this file.
 
 ## 0.5.14
 - refactoring filesystem
+- config with namespace
 
 ## 0.5.13
 - findUp must be file
