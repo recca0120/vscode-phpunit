@@ -22,6 +22,10 @@ describe('Filesystem Tests', () => {
 
     it('find up', () => {
         const files = new CachableFilesystem();
-        expect(files.findUp('filesystem.test.ts', pathResolve(__dirname, 'fixtures'), __filename)).toEqual(__filename);
+        expect(
+            files.findUp('filesystem.test.ts', {
+                cwd: pathResolve(__dirname, 'fixtures'),
+            })
+        ).toEqual(__filename);
     });
 });

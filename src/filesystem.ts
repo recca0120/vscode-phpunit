@@ -21,9 +21,9 @@ function ensureArray(search: string[] | string): string[] {
 }
 
 export interface FilesystemInterface {
-    find(search: string[] | string, cwd?: string): string;
-    exists(search: string[] | string, cwd?: string): boolean;
-    findUp(search: string[] | string, cwd?: string, root?: string): string;
+    find(search: string[] | string, opts?: {}): string;
+    exists(search: string[] | string, opts?: {}): boolean;
+    findUp(search: string[] | string, opts?: {}): string;
     get(path: string): string;
     getAsync(path: string, encoding?: string): Promise<string>;
     unlink(file: string): void;
@@ -77,12 +77,16 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
     protected extensions = [''];
     protected separator: string = '/';
 
-    findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
+    findUp(search: string[] | string, opts: any = {}): string {
+        let cwd = opts.cwd || process.cwd();
         const root = pathParse(cwd).root;
-        basePath = basePath === '' ? root : pathResolve(basePath);
+        // const basePath = opts.basePath ? pathResolve(opts.basePath) : root;
 
         do {
-            const find = this.usePath(search, cwd);
+            const find = this.usePath(search, {
+                cwd: cwd,
+            });
+
             if (find) {
                 return find;
             }
@@ -90,17 +94,21 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
             cwd = pathResolve(cwd, '..');
         } while (root !== cwd);
 
-        return this.find(search, root);
+        return this.find(search, {
+            cwd: root,
+        });
     }
 
-    find(search: string[] | string, cwd: string = process.cwd()): string {
+    find(search: string[] | string, opts: any = {}): string {
         search = ensureArray(search);
+        const cwd = opts.cwd || process.cwd();
 
         return this.usePath(search, cwd) || this.useSystemPath(search);
     }
 
-    exists(search: string[] | string, cwd: string = process.cwd()): boolean {
+    exists(search: string[] | string, opts: any = {}): boolean {
         search = ensureArray(search);
+        const cwd = opts.cwd || process.cwd();
 
         for (const file of search) {
             if (
@@ -114,8 +122,9 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
         return false;
     }
 
-    protected usePath(search: string[] | string, cwd: string = process.cwd()): string {
+    protected usePath(search: string[] | string, opts: any = {}): string {
         search = ensureArray(search);
+        const cwd = opts.cwd || process.cwd();
 
         for (const file of search) {
             for (const pwd of [`${cwd}${this.separator}`, '']) {
@@ -136,7 +145,9 @@ class POSIX extends AbstractFilesystem implements FilesystemInterface {
         search = ensureArray(search);
 
         for (const systemPath of this.systemPaths) {
-            const find = this.usePath(search, systemPath);
+            const find = this.usePath(search, {
+                cwd: systemPath,
+            });
 
             if (find) {
                 return find;
@@ -160,16 +171,16 @@ export class Filesystem extends AbstractFilesystem implements FilesystemInterfac
         super();
     }
 
-    findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
-        return this.files.findUp(ensureArray(search), cwd, basePath);
+    findUp(search: string[] | string, opts: any = {}): string {
+        return this.files.findUp(search, opts);
     }
 
-    find(search: string[] | string, cwd: string = process.cwd()): string {
-        return this.files.find(ensureArray(search), cwd);
+    find(search: string[] | string, opts: any = {}): string {
+        return this.files.find(search, opts);
     }
 
-    exists(search: string[] | string, cwd: string = process.cwd()): boolean {
-        return this.files.exists(ensureArray(search), cwd);
+    exists(search: string[] | string, opts: any = {}): boolean {
+        return this.files.exists(search, opts);
     }
 }
 
@@ -178,15 +189,18 @@ const FilesystemCache = new Map<string, string>();
 export class CachableFilesystem extends Filesystem {
     private cache: Map<string, string> = FilesystemCache;
 
-    findUp(search: string[] | string, cwd: string = process.cwd(), basePath: string = ''): string {
+    findUp(search: string[] | string, opts: any = {}): string {
+        const cwd = opts.cwd || process.cwd();
+        const basePath = opts.basePath || '';
         const key = this.key(search, [cwd, basePath]);
 
         return this.cache.has(key) === true
             ? this.cache.get(key)
-            : tap(super.findUp(search, cwd, basePath), (find: string) => this.cache.set(key, find));
+            : tap(super.findUp(search, opts), (find: string) => this.cache.set(key, find));
     }
 
-    find(search: string[] | string, cwd: string = process.cwd()): string {
+    find(search: string[] | string, opts: any = {}): string {
+        const cwd = opts.cwd || process.cwd();
         const key = this.key(search, [cwd]);
 
         return this.cache.has(key) === true
@@ -194,7 +208,8 @@ export class CachableFilesystem extends Filesystem {
             : tap(super.find(search, cwd), (find: string) => this.cache.set(key, find));
     }
 
-    exists(search: string[] | string, cwd: string = process.cwd()): boolean {
+    exists(search: string[] | string, opts: any = {}): boolean {
+        const cwd = opts.cwd || process.cwd();
         const key = this.key(search, [cwd, 'exists']);
 
         return this.cache.has(key) === true

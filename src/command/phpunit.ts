@@ -82,14 +82,13 @@ export class PHPUnit {
     }
 
     private getConfiguration(cwd: string, basePath: string): string {
-        return this.files.findUp(['phpunit.xml', 'phpunit.xml.dist'], cwd, basePath);
+        return this.files.findUp(['phpunit.xml', 'phpunit.xml.dist'], { cwd, basePath });
     }
 
     private getExecutable(execPath: string, cwd: string, basePath: string): string {
         const path: string = this.files.findUp(
             [execPath, `vendor/bin/phpunit`, `phpunit.phar`, 'phpunit'].filter(path => path !== ''),
-            cwd,
-            basePath
+            { cwd, basePath }
         );
 
         if (!path) {
