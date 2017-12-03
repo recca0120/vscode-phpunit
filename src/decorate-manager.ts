@@ -1,10 +1,21 @@
 import { DecorationRenderOptions, OverviewRulerLane, Range, TextEditor, TextEditorDecorationType } from 'vscode';
-import { Fault, TestCase, Type, TypeMap } from './parsers/parser';
+import { Fault, TestCase, Type } from 'phpunit-editor-support';
 import { normalizePath, tap } from './helpers';
 
 import { Container } from './container';
 import { Store } from './store';
 import { resolve as pathResolve } from 'path';
+
+export const TypeMap = new Map<Type, Type>([
+    [Type.PASSED, Type.PASSED],
+    [Type.ERROR, Type.ERROR],
+    [Type.WARNING, Type.SKIPPED],
+    [Type.FAILURE, Type.ERROR],
+    [Type.INCOMPLETE, Type.INCOMPLETE],
+    [Type.RISKY, Type.RISKY],
+    [Type.SKIPPED, Type.SKIPPED],
+    [Type.FAILED, Type.ERROR],
+]);
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();

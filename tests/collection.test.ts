@@ -1,5 +1,5 @@
 import { Collection } from '../src/collection';
-import { Type } from '../src/parsers/parser';
+import { Type } from 'phpunit-editor-support';
 import { generateRandomTestCase } from './helpers';
 
 describe('Collection Test', () => {

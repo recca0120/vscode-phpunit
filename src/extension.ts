@@ -12,7 +12,7 @@ import {
 import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
-import { PHPUnit } from './command/phpunit';
+import { Runner } from 'phpunit-editor-support';
 import { StatusBar } from './status-bar';
 import { TestRunner } from './test-runner';
 import { container } from './container';
@@ -34,14 +34,12 @@ export function activate(context: ExtensionContext) {
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
-    const command: PHPUnit = tap(
-        new PHPUnit(container.parserFactory, container.processFactory, container.files),
-        (command: PHPUnit) =>
-            command
-                .on('start', () => channel.clear())
-                .on('start', (buffer: Buffer) => channel.append(buffer.toString()))
-                .on('stdout', (buffer: Buffer) => channel.append(buffer.toString()))
-                .on('exit', () => channel.append('\n\n'))
+    const command: Runner = tap(new Runner(), (command: Runner) =>
+        command
+            .on('start', () => channel.clear())
+            .on('start', (buffer: Buffer) => channel.append(buffer.toString()))
+            .on('stdout', (buffer: Buffer) => channel.append(buffer.toString()))
+            .on('exit', () => channel.append('\n\n'))
     );
 
     const statusBar = new StatusBar(window.createStatusBarItem(StatusBarAlignment.Right, 100), container);

@@ -1,27 +1,15 @@
-import { CachableFilesystem, FilesystemInterface } from './filesystem';
 import { ExtensionContext, TextEditor } from 'vscode';
 
 import { ConfigRepository } from './config';
-import { ParserFactory } from './parsers/parser-factory';
-import { ProcessFactory } from './command/process';
 import { Store } from './store';
-import { TextLineFactory } from './text-line';
 import { Validator } from './validator';
 
-const files = new CachableFilesystem();
-const processFactory = new ProcessFactory();
 const store = new Store();
-const textLineFactory = new TextLineFactory(files);
-const parserFactory = new ParserFactory(files, textLineFactory);
-const validator = new Validator(files);
+const validator = new Validator();
 
 interface Singleton {
     [key: string]: any;
-    files: FilesystemInterface;
-    processFactory: ProcessFactory;
     store: Store;
-    textLineFactory: TextLineFactory;
-    parserFactory: ParserFactory;
     validator: Validator;
     config?: ConfigRepository;
     window?: any;
@@ -34,11 +22,7 @@ export class Container {
     public name: string = 'PHPUnit';
 
     protected singleton: Singleton = {
-        files,
-        processFactory,
         store,
-        textLineFactory,
-        parserFactory,
         validator,
         workspace: {
             rootPath: __dirname,
@@ -80,24 +64,8 @@ export class Container {
         return this.getSingleton('context');
     }
 
-    get files(): FilesystemInterface {
-        return this.getSingleton('files');
-    }
-
-    get processFactory(): ProcessFactory {
-        return this.getSingleton('processFactory');
-    }
-
     get store(): Store {
         return this.getSingleton('store');
-    }
-
-    get textLineFactory(): TextLineFactory {
-        return this.getSingleton('textLineFactory');
-    }
-
-    get parserFactory(): ParserFactory {
-        return this.getSingleton('parserFactory');
     }
 
     get validator(): Validator {

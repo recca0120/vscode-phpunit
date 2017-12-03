@@ -1,6 +1,5 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
-import { PHPUnit, State } from './command/phpunit';
-import { TestCase, Type } from './parsers/parser';
+import { Runner, State, TestCase, Type } from 'phpunit-editor-support';
 
 import { ConfigRepository } from './config';
 import { Container } from './container';
@@ -14,7 +13,7 @@ import { tap } from './helpers';
 
 export interface TestRunnerOptions {
     container: Container;
-    command: PHPUnit;
+    command: Runner;
     statusBar: StatusBar;
     decorateManager: DecorateManager;
     diagnosticManager: DiagnosticManager;
@@ -29,7 +28,7 @@ export class TestRunner {
     private config: ConfigRepository;
 
     private container: Container;
-    private command: PHPUnit;
+    private command: Runner;
     private statusBar: StatusBar;
     private decorateManager: DecorateManager;
     private diagnosticManager: DiagnosticManager;
@@ -107,9 +106,9 @@ export class TestRunner {
         this.clearDecoratedGutter();
 
         return tap(
-            this.command.handle(path, this.config.get('args', []).concat(thisArgs), {
+            this.command.run(path, this.config.get('args', []).concat(thisArgs), {
                 execPath: this.config.get('execPath', ''),
-                basePath: this.container.basePath(this.window.activeTextEditor, this.workspace),
+                rootPath: this.container.basePath(this.window.activeTextEditor, this.workspace),
             }),
             (promise: Promise<TestCase[]>) => {
                 promise.then(this.onCompleted.bind(this));

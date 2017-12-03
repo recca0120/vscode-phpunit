@@ -1,4 +1,4 @@
-import { Filesystem } from '../src/filesystem';
+import { Filesystem } from 'phpunit-editor-support';
 import { Validator } from '../src/validator';
 
 describe('Validator Tests', () => {

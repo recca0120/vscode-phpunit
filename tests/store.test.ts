@@ -1,5 +1,5 @@
 import { Store } from '../src/store';
-import { Type } from '../src/parsers/parser';
+import { Type } from 'phpunit-editor-support';
 import { generateRandomTestCase } from './helpers';
 import { normalizePath } from '../src/helpers';
 

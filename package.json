@@ -3,7 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "version": "0.5.14",
+    "version": "0.5.15",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
@@ -23,7 +23,7 @@
         "Languages",
         "Other"
     ],
-    "main": "./out/extension",
+    "main": "./out/src/extension",
     "activationEvents": [
         "onLanguage:php",
         "onCommand:phpunit.TestFile",
@@ -102,18 +102,13 @@
         "jest": "^20.0.4",
         "lint-staged": "^4.3.0",
         "prettier": "^1.8.2",
-        "ts-jest": "^21.2.3",
         "tslint": "^5.8.0",
         "tslint-config-prettier": "^1.6.0",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "x2js": "^3.1.1",
-        "xml2js": "^0.4.19"
+        "typescript": "^2.6.2",
+        "vscode": "^1.1.9"
     },
     "dependencies": {
-        "fast-xml-parser": "^2.7.4",
-        "minimist": "^1.2.0",
-        "minimist-string": "^1.0.2"
+        "phpunit-editor-support": "git@github.com:recca0120/phpunit-editor-support.git"
     },
     "jest": {
         "moduleFileExtensions": [
@@ -125,7 +120,7 @@
             "^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
         },
         "testMatch": [
-            "**/tests/**/*.test.(ts|tsx|js)"
+            "<rootDir>/tests/**/*.test.(ts|tsx|js)"
         ]
     },
     "lint-staged": {

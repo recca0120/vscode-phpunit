@@ -1,4 +1,4 @@
-import { Detail, Fault, TestCase } from './parsers/parser';
+import { Detail, Fault, TestCase } from 'phpunit-editor-support';
 
 import { Collection } from './collection';
 import { normalizePath } from './helpers';

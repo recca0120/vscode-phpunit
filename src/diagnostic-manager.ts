@@ -9,7 +9,7 @@ import {
     TextLine,
     Uri,
 } from 'vscode';
-import { Fault, TestCase, Type } from './parsers/parser';
+import { Fault, TestCase, Type } from 'phpunit-editor-support';
 import { normalizePath, tap } from './helpers';
 
 import { Store } from './store';

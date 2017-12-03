@@ -1,4 +1,4 @@
-import { CachableFilesystem, FilesystemInterface } from './filesystem';
+import { Filesystem } from 'phpunit-editor-support';
 
 export class Validator {
     testCaseClass: string[] = [
@@ -8,7 +8,7 @@ export class Validator {
         'TestCase',
     ];
 
-    constructor(private files: FilesystemInterface = new CachableFilesystem()) {}
+    constructor(private files: Filesystem = new Filesystem()) {}
 
     isGitFile(path: string): boolean {
         return /(\.git\.(php|inc)|\.(php|inc)\.git)$/.test(path) === true;
