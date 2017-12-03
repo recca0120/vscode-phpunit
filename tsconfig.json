@@ -15,12 +15,10 @@
         "noUnusedLocals": true,
         "noUnusedParameters": false
     },
-    "include": [
-        "src/**/*.ts",
-    ],
     "exclude": [
         "node_modules",
         ".vscode-test",
-        "tests"
+        "tests",
+        "phpunit-editor-support"
     ]
 }
