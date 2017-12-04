@@ -45,30 +45,30 @@ export class DecorateManager {
                 return;
             }
 
-            gutters.groupBy('type').forEach((items, type) => {
+            gutters.groupBy('type').forEach((tests, type) => {
                 editor.setDecorations(
                     this.styles.get(type) as TextEditorDecorationType,
-                    items
-                        .map((item: TestCase) => ({
-                            range: new Range(item.line - 1, 0, item.line - 1, 1e3),
-                            hoverMessage: (item.fault as Fault).message,
+                    tests
+                        .map((test: TestCase) => ({
+                            range: new Range(test.line - 1, 0, test.line - 1, 1e3),
+                            hoverMessage: (test.fault as Fault).message,
                         }))
                         .values()
                 );
             });
 
             this.assertions = gutters
-                .filter((item: TestCase) => item.type !== Type.PASSED)
+                .filter((test: TestCase) => test.type !== Type.PASSED)
                 .values()
-                .map(item =>
+                .map(test =>
                     tap(
                         this.createTextEditorDecorationType(
-                            this.decorationStyle.create('assertion', (item.fault as Fault).message)
+                            this.decorationStyle.create('assertion', (test.fault as Fault).message)
                         ),
                         (assertion: TextEditorDecorationType) => {
                             editor.setDecorations(assertion, [
                                 {
-                                    range: new Range(item.line - 1, 0, item.line - 1, 1e3),
+                                    range: new Range(test.line - 1, 0, test.line - 1, 1e3),
                                 },
                             ]);
                         }

@@ -108,7 +108,7 @@
         "vscode": "^1.1.9"
     },
     "dependencies": {
-        "phpunit-editor-support": "git@github.com:recca0120/phpunit-editor-support.git"
+        "phpunit-editor-support": "git+ssh://git@github.com/recca0120/phpunit-editor-support.git"
     },
     "jest": {
         "moduleFileExtensions": [

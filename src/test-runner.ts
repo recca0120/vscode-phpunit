@@ -139,15 +139,15 @@ export class TestRunner {
             .catch(() => this.triggerRelationFile(document));
     }
 
-    private onCompleted(items: TestCase[]): Promise<TestCase[]> {
-        this.store.put(items);
+    private onCompleted(tests: TestCase[]): Promise<TestCase[]> {
+        this.store.put(tests);
 
         this.decoratedGutter();
         this.handleDiagnostic();
 
-        items.some(item => item.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
+        tests.some(item => item.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
 
-        return Promise.resolve(items);
+        return Promise.resolve(tests);
     }
 
     private onError(error: string): Promise<any> {
@@ -166,7 +166,7 @@ export class TestRunner {
     }
 
     private triggerRelationFile(document: TextDocument) {
-        this.store.whereTestCase(document.uri.fsPath).forEach((item: TestCase) => this.handle(item.file));
+        this.store.whereTestCase(document.uri.fsPath).forEach((test: TestCase) => this.handle(test.file));
     }
 
     private decoratedGutter() {

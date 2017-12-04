@@ -22,7 +22,7 @@ export class DiagnosticManager {
 
         const details = store
             .getDetails()
-            .filter((item: TestCase) => item.type !== Type.PASSED)
+            .filter((test: TestCase) => test.type !== Type.PASSED)
             .groupBy('key');
 
         editors.forEach((editor: TextEditor) => {
@@ -33,7 +33,7 @@ export class DiagnosticManager {
                 const promises: Promise<Diagnostic>[] = details
                     .get(key)
                     .values()
-                    .map((item: TestCase) => this.convertToDiagnostic(item, editor.document));
+                    .map((test: TestCase) => this.convertToDiagnostic(test, editor.document));
                 Promise.all(promises).then((diagnostics: Diagnostic[]) => {
                     this.diagnostics.set(Uri.file(file), diagnostics.filter(diagnostic => diagnostic !== null));
                 });
@@ -41,13 +41,13 @@ export class DiagnosticManager {
         });
     }
 
-    private convertToDiagnostic(item: TestCase, document?: TextDocument): Promise<Diagnostic> {
-        return this.convertToRange(item, document).then((range: Range) => {
+    private convertToDiagnostic(test: TestCase, document?: TextDocument): Promise<Diagnostic> {
+        return this.convertToRange(test, document).then((range: Range) => {
             return tap(
                 new Diagnostic(
                     range,
-                    (item.fault as Fault).message,
-                    [Type.INCOMPLETE, Type.SKIPPED].indexOf(item.type) !== -1
+                    (test.fault as Fault).message,
+                    [Type.INCOMPLETE, Type.SKIPPED].indexOf(test.type) !== -1
                         ? DiagnosticSeverity.Warning
                         : DiagnosticSeverity.Error
                 ),
@@ -58,13 +58,13 @@ export class DiagnosticManager {
         });
     }
 
-    private convertToRange(item: TestCase, document?: TextDocument): Promise<Range> {
+    private convertToRange(test: TestCase, document?: TextDocument): Promise<Range> {
         return new Promise(resolve => {
-            const line = item.line - 1;
+            const line = test.line - 1;
             let start = 0;
             let end = 1000;
 
-            if (document && document.uri && normalizePath(document.uri.fsPath) === normalizePath(item.file)) {
+            if (document && document.uri && normalizePath(document.uri.fsPath) === normalizePath(test.file)) {
                 const textLine: TextLine = document.lineAt(line);
 
                 start = textLine.firstNonWhitespaceCharacterIndex;

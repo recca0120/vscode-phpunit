@@ -4,18 +4,18 @@ import { Collection } from './collection';
 import { normalizePath } from './helpers';
 
 export class Store extends Collection<TestCase> {
-    constructor(items: TestCase[] = []) {
+    constructor(tests: TestCase[] = []) {
         super();
-        this.put(items);
+        this.put(tests);
     }
 
-    put(items: TestCase[]): this {
-        const files = items.map(item => this.generateKey(item.file));
+    put(tests: TestCase[]): this {
+        const files = tests.map(test => this.generateKey(test.file));
         this.items = this.items
-            .filter((item: TestCase) => {
-                return files.indexOf(this.generateKey(item.file)) === -1;
+            .filter((test: TestCase) => {
+                return files.indexOf(this.generateKey(test.file)) === -1;
             })
-            .concat(items);
+            .concat(tests);
 
         return this;
     }
@@ -31,28 +31,28 @@ export class Store extends Collection<TestCase> {
     }
 
     getDetails() {
-        return this.reduce((results: any[], item: TestCase) => {
+        return this.reduce((results: any[], test: TestCase) => {
             results.push({
-                key: this.generateKey(item.file),
-                type: item.type,
-                file: item.file,
-                line: item.line,
+                key: this.generateKey(test.file),
+                type: test.type,
+                file: test.file,
+                line: test.line,
                 fault: {
-                    message: item.fault ? item.fault.message : null,
+                    message: test.fault ? test.fault.message : null,
                 },
             });
 
-            return !item.fault
+            return !test.fault
                 ? results
                 : results.concat(
-                      (item.fault.details as Detail[]).map((detail: Detail) => {
+                      (test.fault.details as Detail[]).map((detail: Detail) => {
                           return {
                               key: this.generateKey(detail.file),
-                              type: item.type,
+                              type: test.type,
                               file: detail.file,
                               line: detail.line,
                               fault: {
-                                  message: (item.fault as Fault).message,
+                                  message: (test.fault as Fault).message,
                               },
                           };
                       })
@@ -61,12 +61,12 @@ export class Store extends Collection<TestCase> {
     }
 
     whereTestCase(path: string) {
-        return this.where((item: TestCase) => {
-            if (normalizePath(item.file) === normalizePath(path) || !item.fault) {
+        return this.where((test: TestCase) => {
+            if (normalizePath(test.file) === normalizePath(path) || !test.fault) {
                 return false;
             }
 
-            return (item.fault.details as Detail[]).filter(
+            return (test.fault.details as Detail[]).filter(
                 (detail: Detail) => normalizePath(detail.file) === normalizePath(path)
             );
         });
