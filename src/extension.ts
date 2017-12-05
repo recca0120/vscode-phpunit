@@ -34,10 +34,11 @@ export function activate(context: ExtensionContext) {
     const diagnostics: DiagnosticCollection = languages.createDiagnosticCollection(container.name);
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
+
     const command: Runner = tap(new Runner(), (command: Runner) =>
         command
             .on('start', () => channel.clear())
-            .on('start', (buffer: Buffer) => channel.append(buffer.toString()))
+            .on('start', (buffer: Buffer) => channel.append(`${buffer.toString()}\n\n`))
             .on('stdout', (buffer: Buffer) => channel.append(buffer.toString()))
             .on('exit', () => channel.append('\n\n'))
     );

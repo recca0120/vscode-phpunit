@@ -145,7 +145,7 @@ export class TestRunner {
         this.decoratedGutter();
         this.handleDiagnostic();
 
-        tests.some(item => item.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
+        tests.some(test => test.type !== Type.PASSED) ? this.statusBar.failed() : this.statusBar.success();
 
         return Promise.resolve(tests);
     }

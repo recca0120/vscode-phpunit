@@ -3,7 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "version": "0.5.16",
+    "version": "0.5.17",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
@@ -45,7 +45,10 @@
             "title": "PHPUnit Configuration",
             "properties": {
                 "phpunit.execPath": {
-                    "type": "string",
+                    "type": [
+                        "string",
+                        "array"
+                    ],
                     "default": "",
                     "description": "Path to phpunit executable (try to use composer if empty)."
                 },
