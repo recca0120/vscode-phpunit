@@ -12,7 +12,7 @@ import {
 import { ConfigRepository } from './config';
 import { DecorateManager } from './decorate-manager';
 import { DiagnosticManager } from './diagnostic-manager';
-import { Runner } from 'phpunit-editor-support';
+import { PHPUnit } from 'phpunit-editor-support';
 import { StatusBar } from './status-bar';
 import { TestRunner } from './test-runner';
 import { container } from './container';
@@ -35,7 +35,7 @@ export function activate(context: ExtensionContext) {
     const decorateManager = new DecorateManager(container);
     const diagnosticManager = new DiagnosticManager(diagnostics);
 
-    const command: Runner = tap(new Runner(), (command: Runner) =>
+    const command: PHPUnit = tap(new PHPUnit(), (command: PHPUnit) =>
         command
             .on('start', () => channel.clear())
             .on('start', (buffer: Buffer) => channel.append(`${buffer.toString()}\n\n`))

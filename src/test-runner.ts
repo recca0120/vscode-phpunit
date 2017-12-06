@@ -1,5 +1,5 @@
 import { Disposable, TextDocument, TextDocumentWillSaveEvent, TextEditor } from 'vscode';
-import { Runner, State, TestCase, Type } from 'phpunit-editor-support';
+import { PHPUnit, State, TestCase, Type } from 'phpunit-editor-support';
 
 import { ConfigRepository } from './config';
 import { Container } from './container';
@@ -13,7 +13,7 @@ import { tap } from './helpers';
 
 export interface TestRunnerOptions {
     container: Container;
-    command: Runner;
+    command: PHPUnit;
     statusBar: StatusBar;
     decorateManager: DecorateManager;
     diagnosticManager: DiagnosticManager;
@@ -28,7 +28,7 @@ export class TestRunner {
     private config: ConfigRepository;
 
     private container: Container;
-    private command: Runner;
+    private command: PHPUnit;
     private statusBar: StatusBar;
     private decorateManager: DecorateManager;
     private diagnosticManager: DiagnosticManager;

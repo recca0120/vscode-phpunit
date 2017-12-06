@@ -3,7 +3,7 @@
     "displayName": "VSCode-PHPUnit",
     "description": "Run PHPUnit tests from VSCode.",
     "icon": "images/icon.png",
-    "version": "0.5.17",
+    "version": "0.5.18",
     "author": "Recca Tsai",
     "publisher": "recca0120",
     "license": "MIT",
@@ -96,19 +96,19 @@
         "php"
     ],
     "devDependencies": {
-        "@types/faker": "^4.1.1",
-        "@types/jest": "^20.0.8",
-        "@types/node": "^7.0.43",
+        "@types/faker": "^4.1.2",
+        "@types/jest": "^21.1.8",
+        "@types/node": "^8.0.55",
         "faker": "^4.1.0",
-        "fs-extra": "^4.0.2",
+        "fs-extra": "^4.0.3",
         "husky": "^0.14.3",
-        "jest": "^20.0.4",
-        "lint-staged": "^4.3.0",
-        "prettier": "^1.8.2",
+        "jest": "^21.2.1",
+        "lint-staged": "^6.0.0",
+        "prettier": "^1.9.1",
         "tslint": "^5.8.0",
         "tslint-config-prettier": "^1.6.0",
         "typescript": "^2.6.2",
-        "vscode": "^1.1.9"
+        "vscode": "^1.1.10"
     },
     "dependencies": {
         "phpunit-editor-support": "git+ssh://git@github.com/recca0120/phpunit-editor-support.git"

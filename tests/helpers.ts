@@ -1,10 +1,10 @@
 import * as faker from 'faker';
 
-import { TestCase } from '../src/parsers/parser';
-import { Type } from '../src/parsers/parser';
+import { TestCase, Type } from 'phpunit-editor-support';
+
 import { resolve as pathResolve } from 'path';
 
-export function generateRandomTestCase(num = null, options: any = {}): TestCase[] {
+export function generateRandomTestCase(num?: number, options: any = {}): TestCase[] {
     num = num || Math.floor(Math.random() * 50) + 1;
 
     const items: TestCase[] = [];
