@@ -19,6 +19,7 @@ import {
     TextDocumentPositionParams,
     TextDocuments,
     createConnection,
+    ExecuteCommandParams,
 } from 'vscode-languageserver';
 
 import { CodeLensProvider } from './CodeLensProvider';
@@ -48,6 +49,9 @@ connection.onInitialize((_params): InitializeResult => {
             },
             codeLensProvider: {
                 resolveProvider: true,
+            },
+            executeCommandProvider: {
+                commands: ['phpunit.test.file', 'phpunit.test.cursor'],
             },
         },
     };
@@ -102,7 +106,7 @@ function validateTextDocument(textDocument: TextDocument): void {
         }
     }
     // Send the computed diagnostics to VSCode.
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    // connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -132,11 +136,12 @@ connection.onCompletion((_textDocumentPosition: TextDocumentPositionParams): Com
 // This handler resolve additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-    if (item.data === 1) {
-        (item.detail = 'TypeScript details'), (item.documentation = 'TypeScript documentation');
-    } else if (item.data === 2) {
-        (item.detail = 'JavaScript details'), (item.documentation = 'JavaScript documentation');
-    }
+    // if (item.data === 1) {
+    //     (item.detail = 'TypeScript details'), (item.documentation = 'TypeScript documentation');
+    // } else if (item.data === 2) {
+    //     (item.detail = 'JavaScript details'), (item.documentation = 'JavaScript documentation');
+    // }
+
     return item;
 });
 
@@ -145,6 +150,9 @@ connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
 });
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
+connection.onExecuteCommand((params: ExecuteCommandParams) => {
+    connection.window.showInformationMessage(`command: ${params.command}, params: ${params.arguments.join(', ')}`);
+});
 /*
 connection.onDidOpenTextDocument((params) => {
 	// A text document got opened in VSCode.

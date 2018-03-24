@@ -1,9 +1,9 @@
 import { Block, Node, Program } from 'php-parser';
-import { CodeLens, Range, TextDocument } from 'vscode-languageserver';
+import { CodeLens, Range, TextDocument, Command } from 'vscode-languageserver';
 
 import Engine from 'php-parser';
 
-const parser = new Engine({
+const parser: Engine = new Engine({
     ast: {
         withPositions: true,
         withSource: false,
@@ -44,6 +44,25 @@ export class CodeLensProvider {
                 return codeLens.concat([classNode]).concat(classNode.body.filter(this.isTest.bind(this)));
             }, [])
             .map((node: any) => {
+                let command: Command;
+
+                switch (node.kind) {
+                    case 'class':
+                        command = {
+                            title: 'Run Test',
+                            command: 'phpunit.test.file',
+                            arguments: [data.textDocument.uri],
+                        };
+                        break;
+                    case 'method':
+                        command = {
+                            title: 'Run Test',
+                            command: 'phpunit.test.cursor',
+                            arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
+                        };
+                        break;
+                }
+
                 return {
                     range: Range.create(
                         node.loc.start.line - 1,
@@ -51,11 +70,7 @@ export class CodeLensProvider {
                         node.loc.start.line - 1,
                         node.loc.start.column
                     ),
-                    command: {
-                        title: 'Run Test',
-                        command: 'a',
-                        tooltip: 'Run Test',
-                    },
+                    command,
                     data,
                 };
             });
