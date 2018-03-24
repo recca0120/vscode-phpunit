@@ -6,7 +6,7 @@ import Engine from 'php-parser';
 const parser: Engine = new Engine({
     ast: {
         withPositions: true,
-        withSource: false,
+        withSource: true,
     },
     parser: {
         debug: false,
@@ -41,7 +41,9 @@ export class CodeLensProvider {
         return phpNode.children
             .filter(this.isTest.bind(this))
             .reduce((codeLens: Node[], classNode: any) => {
-                return codeLens.concat([classNode]).concat(classNode.body.filter(this.isTest.bind(this)));
+                const methods: any[] = classNode.body.filter(this.isTest.bind(this));
+
+                return methods.length === 0 ? codeLens : codeLens.concat([classNode]).concat(methods);
             }, [])
             .map((node: any) => {
                 let command: Command;
@@ -89,16 +91,13 @@ export class CodeLensProvider {
             return true;
         }
 
-        if (this.isTestMethod(node)) {
-            return true;
-        }
-
-        return false;
+        return this.isTestMethod(node) === true;
     }
 
     private isTestMethod(node: any): boolean {
         return (
             node.kind === 'method' &&
+            // /markTest(Skipped|Incomplete)/.test(node.body.loc.source) === false &&
             (/^test/.test(node.name) === true ||
                 (node.leadingComments &&
                     node.leadingComments.some((comment: any) => /@test/.test(comment.value)) === true))

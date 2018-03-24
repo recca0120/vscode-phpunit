@@ -5,7 +5,7 @@ export class POSIX {
     protected separator: string = '/';
 
     normalizePath(path: string) {
-        return path.replace(/^file:\/\//, '');
+        return path.replace(/^file:\/\//, '').replace(/ /g, '\\ ');
     }
 }
 
@@ -16,7 +16,8 @@ export class WINDOWS {
         return path
             .replace(/^file:\/\//, '')
             .replace(/^\/(\w)%3A/, '$1:')
-            .replace(/\//g, this.separator);
+            .replace(/\//g, this.separator)
+            .replace(/ /g, '\\ ');
     }
 }
 

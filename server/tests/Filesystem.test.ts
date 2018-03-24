@@ -6,13 +6,13 @@ describe('Filesystem Test', () => {
     it('it should get content from file', () => {
         const files: Filesystem = new Filesystem();
         const path = resolve(__dirname, 'fixtures/PHPUnitTest.php');
-
         expect(files.get(path)).toEqual(readFileSync(path).toString('utf8'));
     });
 
     it('it should normalize path when os is posix', () => {
         const files: POSIX = new POSIX();
         expect(files.normalizePath('file:///foo/bar')).toEqual('/foo/bar');
+        expect(files.normalizePath('file:///foo/ba r')).toEqual('/foo/ba\\ r');
     });
 
     it('it should normalize path when os is windows', () => {
@@ -20,6 +20,7 @@ describe('Filesystem Test', () => {
         expect(files.normalizePath('file:///c%3A/foo/bar')).toEqual('c:\\foo\\bar');
         expect(files.normalizePath('c:\\foo\\bar')).toEqual('c:\\foo\\bar');
         expect(files.normalizePath('c:/foo/bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('file:///c%3A/foo/ba r')).toEqual('c:\\foo\\ba\\ r');
     });
 
     it('it should normalize path', () => {
