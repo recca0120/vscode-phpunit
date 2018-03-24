@@ -1,0 +1,96 @@
+PHPUnit 6.4.2 by Sebastian Bergmann and contributors.
+
+
+##teamcity[testCount count='11' flowId='11960']
+
+##teamcity[testSuiteStarted name='tests/fixtures/' flowId='11960']
+
+##teamcity[testSuiteStarted name='PHPUnit2Test' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php::\PHPUnit2Test' flowId='11960']
+
+##teamcity[testStarted name='testPassed' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php::\PHPUnit2Test::testPassed' flowId='11960']
+
+##teamcity[testFinished name='testPassed' duration='20' flowId='11960']
+
+##teamcity[testStarted name='testFailed' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php::\PHPUnit2Test::testFailed' flowId='11960']
+
+##teamcity[testFailed name='testFailed' message='Failed asserting that false is true.' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php:20|n ' flowId='11960']
+
+##teamcity[testFinished name='testFailed' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testSkipped' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php::\PHPUnit2Test::testSkipped' flowId='11960']
+
+##teamcity[testIgnored name='testSkipped' message='The MySQLi extension is not available.' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php:25|n ' flowId='11960']
+
+##teamcity[testFinished name='testSkipped' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testIncomplete' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php::\PHPUnit2Test::testIncomplete' flowId='11960']
+
+##teamcity[testIgnored name='testIncomplete' message='This test has not been implemented yet.' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php:30|n ' flowId='11960']
+
+##teamcity[testFinished name='testIncomplete' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testNoAssertions' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnit2Test.php::\PHPUnit2Test::testNoAssertions' flowId='11960']
+
+##teamcity[testFailed name='testNoAssertions' message='This test did not perform any assertions' details=' ' flowId='11960']
+
+##teamcity[testFinished name='testNoAssertions' duration='0' flowId='11960']
+
+##teamcity[testSuiteFinished name='PHPUnit2Test' flowId='11960']
+
+##teamcity[testSuiteStarted name='PHPUnitTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest' flowId='11960']
+
+##teamcity[testStarted name='testPassed' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest::testPassed' flowId='11960']
+
+##teamcity[testFinished name='testPassed' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testFailed' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest::testFailed' flowId='11960']
+
+##teamcity[testFailed name='testFailed' message='Failed asserting that false is true.' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php:20|n ' flowId='11960']
+
+##teamcity[testFinished name='testFailed' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testSkipped' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest::testSkipped' flowId='11960']
+
+##teamcity[testIgnored name='testSkipped' message='The MySQLi extension is not available.' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php:25|n ' flowId='11960']
+
+##teamcity[testFinished name='testSkipped' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testIncomplete' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest::testIncomplete' flowId='11960']
+
+##teamcity[testIgnored name='testIncomplete' message='This test has not been implemented yet.' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php:30|n ' flowId='11960']
+
+##teamcity[testFinished name='testIncomplete' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testNoAssertions' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest::testNoAssertions' flowId='11960']
+
+##teamcity[testFailed name='testNoAssertions' message='This test did not perform any assertions' details=' ' flowId='11960']
+
+##teamcity[testFinished name='testNoAssertions' duration='0' flowId='11960']
+
+##teamcity[testStarted name='testAssertNotEquals' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::\PHPUnitTest::testAssertNotEquals' flowId='11960']
+
+##teamcity[testFailed name='testAssertNotEquals' message='Failed asserting that Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n) is identical to Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n).' details=' C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php:39|n ' flowId='11960']
+
+##teamcity[testFinished name='testAssertNotEquals' duration='0' flowId='11960']
+
+##teamcity[testSuiteFinished name='PHPUnitTest' flowId='11960']
+
+##teamcity[testSuiteFinished name='tests/fixtures/' flowId='11960']
+
+##teamcity[testCount count='1' flowId='18584']
+
+##teamcity[testSuiteStarted name='tests/fixtures/' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::PHPUnitTest' flowId='18584']
+
+##teamcity[testStarted name='testDetailsHasCurrentFile' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php::PHPUnitTest::testDetailsHasCurrentFile' flowId='18584']
+
+##teamcity[testFailed name='testDetailsHasCurrentFile' message='Invalid JSON was returned from the route.' details=' C:\Users\recca\Desktop\vscode-phpunit\vendor\laravel\framework\src\Illuminate\Foundation\Testing\TestResponse.php:434|n C:\Users\recca\Desktop\vscode-phpunit\vendor\laravel\framework\src\Illuminate\Foundation\Testing\TestResponse.php:290|n C:\Users\recca\Desktop\vscode-phpunit\tests\fixtures\PHPUnitTest.php:31|n ' flowId='18584']
+
+##teamcity[testFinished name='testDetailsHasCurrentFile' duration='990' flowId='18584']
+
+##teamcity[testSuiteFinished name='tests/fixtures/' flowId='18584']
+
+Time: 224 ms, Memory: 4.00MB
+
+
+FAILURES!
+Tests: 11, Assertions: 5, Failures: 3, Skipped: 2, Incomplete: 2, Risky: 2.

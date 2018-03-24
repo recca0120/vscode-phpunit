@@ -1,0 +1,57 @@
+{
+	"name": "lsp--sample",
+	"description": "A language server example",
+	"author": "Microsoft Corporation",
+	"license": "MIT",
+	"version": "0.0.1",
+	"publisher": "vscode",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-extension-samples"
+	},
+	"scripts": {
+		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
+		"compile": "tsc -p client/tsconfig.json && cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"compile:client": "tsc -p client/tsconfig.json",
+		"watch:client": "tsc -w -p client/tsconfig.json",
+		"compile:server": "cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"watch:server": "cd server && npm run installServer && cd .. && tsc -w -p server/tsconfig.json",
+		"test": "npm run compile && jest",
+		"watch:test": "jest --watchAll",
+		"precommit": "lint-staged",
+		"prettier": "prettier",
+		"prettier-write": "npm run prettier -- --single-quote --trailing-comma es5 --write --print-width 120 --tab-width 4",
+		"prettier-project": "npm run prettier-write -- {client,server}/{test,tests,src}/**/*.ts"
+	},
+	"devDependencies": {
+		"@types/jest": "^22.2.2",
+		"@types/node": "^6.0.101",
+		"faker": "^4.1.0",
+		"husky": "^0.14.3",
+		"jest": "^22.4.3",
+		"lint-staged": "^7.0.0",
+		"prettier": "^1.11.1",
+		"typescript": "^2.7.2"
+	},
+	"jest": {
+		"moduleFileExtensions": [
+			"ts",
+			"tsx",
+			"js"
+		],
+		"transform": {
+			"^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
+		},
+		"testMatch": [
+			"<rootDir>/**/*.test.(ts|tsx|js)"
+		]
+	},
+	"lint-staged": {
+		"linters": {
+			"{src,tests}/**/*.{ts,js}": [
+				"npm run prettier-write --",
+				"git add"
+			]
+		}
+	}
+}
