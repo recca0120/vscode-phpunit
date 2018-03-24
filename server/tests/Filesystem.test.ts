@@ -18,6 +18,8 @@ describe('Filesystem Test', () => {
     it('it should normalize path when os is windows', () => {
         const files: WINDOWS = new WINDOWS();
         expect(files.normalizePath('file:///c%3A/foo/bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('c:\\foo\\bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('c:/foo/bar')).toEqual('c:\\foo\\bar');
     });
 
     it('it should normalize path', () => {

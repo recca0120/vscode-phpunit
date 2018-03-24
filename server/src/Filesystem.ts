@@ -31,3 +31,6 @@ export class Filesystem {
         return this.instance.normalizePath(path);
     }
 }
+
+export const files = new Filesystem();
+export default files;
