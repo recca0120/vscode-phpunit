@@ -106,7 +106,7 @@ function validateTextDocument(textDocument: TextDocument): void {
         }
     }
     // Send the computed diagnostics to VSCode.
-    // connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -151,7 +151,9 @@ connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
 connection.onExecuteCommand((params: ExecuteCommandParams) => {
-    connection.window.showInformationMessage(`command: ${params.command}, params: ${params.arguments.join(', ')}`);
+    const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
+    connection.window.showInformationMessage(debugText);
+    connection.console.log(debugText);
 });
 /*
 connection.onDidOpenTextDocument((params) => {
@@ -175,3 +177,5 @@ connection.onDidCloseTextDocument((params) => {
 
 // Listen on the connection
 connection.listen();
+
+connection.console;

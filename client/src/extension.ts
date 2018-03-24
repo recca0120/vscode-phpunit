@@ -6,7 +6,7 @@
 
 import * as path from 'path';
 
-import { ExtensionContext, workspace } from 'vscode';
+import { ExtensionContext, workspace, window } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: ExtensionContext) {
@@ -32,6 +32,7 @@ export function activate(context: ExtensionContext) {
             // Notify the server about file changes to '.clientrc files contain in the workspace
             fileEvents: workspace.createFileSystemWatcher('**/.clientrc'),
         },
+        outputChannel: window.createOutputChannel('phpunit'),
     };
 
     // Create the language client and start the client.
