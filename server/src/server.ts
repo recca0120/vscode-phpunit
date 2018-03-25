@@ -22,7 +22,7 @@ import {
     ExecuteCommandParams,
 } from 'vscode-languageserver';
 
-import { CodeLensProvider } from './CodeLensProvider';
+import { CodeLensProvider } from './codelens-provider';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 

@@ -1,7 +1,7 @@
 import { CodeLens, TextDocument } from 'vscode-languageserver';
 
-import { CodeLensProvider } from './../src/CodeLensProvider';
-import { Filesystem } from './../src/Filesystem';
+import { CodeLensProvider } from './../src/codelens-provider';
+import { Filesystem } from './../src/filesystem';
 import { resolve } from 'path';
 
 describe('CodeLensProvider Test', () => {
