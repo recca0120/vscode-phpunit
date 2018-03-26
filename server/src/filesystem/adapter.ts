@@ -6,6 +6,10 @@ import { WINDOWS } from './windows';
 export class Filesystem implements FilesystemContract {
     constructor(private instance: FilesystemContract = isWindows() ? new WINDOWS() : new POSIX()) {}
 
+    exists(path: string): boolean {
+        return this.instance.exists(path);
+    }
+
     get(path: string): string {
         return this.instance.get(path);
     }

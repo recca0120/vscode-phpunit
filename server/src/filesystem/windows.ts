@@ -10,4 +10,8 @@ export class WINDOWS extends POSIX {
             .replace(/\//g, this.separator)
             .replace(/ /g, '\\ ');
     }
+
+    protected splitSystemPaths(systemPaths: string): string[] {
+        return systemPaths.split(/:|;/g).map((path: string) => path.replace(/(:|;)$/, '').trim());
+    }
 }
