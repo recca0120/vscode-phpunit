@@ -22,9 +22,20 @@ describe('Filesystem Test', () => {
     });
 
     it('check file exists', () => {
-        const files: FilesystemContract = new Filesystem(new FilesystemStub());
+        const files: FilesystemContract = new Filesystem();
+
         expect(files.exists(join(__dirname, '../fixtures/bin/ls'))).toBeTruthy();
         expect(files.exists(join(__dirname, '../fixtures/bin/cmd.exe'))).toBeTruthy();
         expect(files.exists(join(__dirname, '../fixtures/bin/cmd'))).toBeFalsy();
+
+        function toFileUrl(path: string): string {
+            return path.replace(/\\/g, '/').replace(/^(\w):/i, (m) => {
+                return `file:///${m[0].toLowerCase()}%3A`;
+            });
+        }
+
+        expect(files.exists(toFileUrl(join(__dirname, '../fixtures/bin/ls')))).toBeTruthy();
+        expect(files.exists(toFileUrl(join(__dirname, '../fixtures/bin/cmd.exe')))).toBeTruthy();
+        expect(files.exists(toFileUrl(join(__dirname, '../fixtures/bin/cmd')))).toBeFalsy();
     });
 });

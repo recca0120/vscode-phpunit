@@ -9,7 +9,7 @@ export function isWindows(): boolean {
 export abstract class Common implements FilesystemContract {
     exists(path: string): boolean {
         try {
-            statSync(path);
+            statSync(this.normalizePath(path));
         } catch (err) {
             if (err.code === 'ENOENT') {
                 return false;
