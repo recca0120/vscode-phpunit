@@ -1,6 +1,5 @@
-import { Filesystem, POSIX, WINDOWS, FilesystemContract } from '../../src/filesystem';
+import { Filesystem, POSIX, FilesystemContract } from '../../src/filesystem';
 import { readFileSync } from 'fs';
-import { join } from 'path';
 
 describe('POSIX Filesystem Test', () => {
     it('it should normalize path', () => {
