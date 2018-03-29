@@ -28,7 +28,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 0,
+                    character: 8,
                     line: 5,
                 },
                 start: {
@@ -53,7 +53,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 12,
                 },
                 start: {
@@ -78,7 +78,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 17,
                 },
                 start: {
@@ -103,7 +103,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 22,
                 },
                 start: {
@@ -128,7 +128,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 27,
                 },
                 start: {
@@ -153,7 +153,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 32,
                 },
                 start: {
@@ -178,7 +178,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 37,
                 },
                 start: {
@@ -203,7 +203,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
+                    character: 19,
                     line: 46,
                 },
                 start: {

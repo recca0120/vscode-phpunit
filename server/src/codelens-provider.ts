@@ -65,12 +65,14 @@ export class CodeLensProvider {
                         break;
                 }
 
+                const { start } = node.loc;
+
                 return {
                     range: Range.create(
-                        node.loc.start.line - 1,
-                        node.loc.start.column,
-                        node.loc.start.line - 1,
-                        node.loc.start.column
+                        start.line - 1,
+                        start.column,
+                        start.line - 1,
+                        start.column + command.title.length
                     ),
                     command,
                     data,
