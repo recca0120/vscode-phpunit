@@ -1,5 +1,5 @@
 import { FilesystemContract } from './contract';
-import { OS, os} from '../helpers';
+import { OS, os } from '../helpers';
 import { POSIX } from './posix';
 import { WINDOWS } from './windows';
 
@@ -16,6 +16,16 @@ export class Filesystem implements FilesystemContract {
 
     normalizePath(path: string): string {
         return this.instance.normalizePath(path);
+    }
+
+    setSystemPaths(systemPaths: string): FilesystemContract {
+        this.instance.setSystemPaths(systemPaths);
+
+        return this;
+    }
+
+    getSystemPaths(): string[] {
+        throw this.instance.getSystemPaths();
     }
 }
 

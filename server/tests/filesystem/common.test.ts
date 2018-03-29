@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 function toFileUrl(path: string): string {
-    return path.replace(/\\/g, '/').replace(/^(\w):/i, (m) => {
+    return path.replace(/\\/g, '/').replace(/^(\w):/i, m => {
         return `file:///${m[0].toLowerCase()}%3A`;
     });
 }

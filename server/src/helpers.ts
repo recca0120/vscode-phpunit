@@ -6,5 +6,5 @@ export enum OS {
 }
 
 export function os(): OS {
-    return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(process.platform) ? OS.WIN : OS.POSIX ;
+    return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(process.platform) ? OS.WIN : OS.POSIX;
 }
