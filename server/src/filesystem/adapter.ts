@@ -22,6 +22,10 @@ export class Adapter implements FilesystemContract {
         return this.instance.which(search, cwd);
     }
 
+    findUp(search: string, cwd: string = process.cwd(), root?: string): string {
+        return this.instance.findUp(search, cwd, root);
+    }
+
     normalizePath(path: string): string {
         return this.instance.normalizePath(path);
     }

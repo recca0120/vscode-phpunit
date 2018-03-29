@@ -159,6 +159,17 @@ connection.onExecuteCommand((params: ExecuteCommandParams) => {
     const output: string = spawnSync(phpUnitBinary, params.arguments).stdout.toString();
 
     connection.console.log(output);
+    const lines: string[] = output.split(/\r?\n/g);
+
+    const problemMatchers = /^\d+\)\s.*$/;
+
+    for (var i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        if (problemMatchers.test(line) === true) {
+
+        }
+    }
+    // console.dir(output.match(/^\d+\)\s.*$/g));
 });
 /*
 connection.onDidOpenTextDocument((params) => {

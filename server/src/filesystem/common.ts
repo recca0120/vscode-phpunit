@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from 'fs';
 import { FilesystemContract } from './contract';
-import { resolve } from 'path';
+import { resolve, parse } from 'path';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
@@ -48,6 +48,18 @@ export abstract class Common implements FilesystemContract {
 
     which(search: string, cwd: string = process.cwd()): string {
         return this.where(search, cwd);
+    }
+
+    findUp(search: string, cwd: string = process.cwd(), root?: string): string {
+        root = !root ? parse(cwd).root : root;
+
+        if (cwd === root) {
+            return '';
+        }
+
+        const file = resolve(cwd, search);
+
+        return this.exists(file) === true ? file : this.findUp(search, resolve(cwd, '..'), root);
     }
 
     abstract setSystemPaths(systemPaths: string): FilesystemContract;

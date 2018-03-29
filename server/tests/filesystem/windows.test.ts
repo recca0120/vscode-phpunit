@@ -42,4 +42,13 @@ describe('Windows Filesystem Test', () => {
         expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
         expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
     });
+
+    it('it should find up path', () => {
+        const files: FilesystemContract = new WINDOWS();
+        expect(
+            files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))
+        ).toEqual(
+            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        );
+    });
 });

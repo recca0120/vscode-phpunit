@@ -38,4 +38,13 @@ describe('POSIX Filesystem Test', () => {
         expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd'));
         expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
     });
+
+    it('it should find up path', () => {
+        const files: FilesystemContract = new POSIX();
+        expect(
+            files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))
+        ).toEqual(
+            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        );
+    });
 });
