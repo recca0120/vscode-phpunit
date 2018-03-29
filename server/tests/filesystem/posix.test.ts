@@ -33,7 +33,7 @@ describe('POSIX Filesystem Test', () => {
         const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
 
-        expect(files.where('common.test.ts', __dirname)).toEqual(resolve(__dirname, 'common.test.ts'));
+        expect(files.where('posix.test.ts', __dirname)).toEqual(resolve(__dirname, 'posix.test.ts'));
         expect(files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
         expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd'));
         expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
@@ -41,9 +41,7 @@ describe('POSIX Filesystem Test', () => {
 
     it('it should find up path', () => {
         const files: FilesystemContract = new POSIX();
-        expect(
-            files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))
-        ).toEqual(
+        expect(files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
             resolve(__dirname, '../fixtures/vendor/bin/phpunit')
         );
     });

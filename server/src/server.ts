@@ -166,7 +166,6 @@ connection.onExecuteCommand((params: ExecuteCommandParams) => {
     for (var i = 0; i < lines.length; i++) {
         let line = lines[i];
         if (problemMatchers.test(line) === true) {
-
         }
     }
     // console.dir(output.match(/^\d+\)\s.*$/g));
