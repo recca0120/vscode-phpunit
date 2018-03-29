@@ -33,7 +33,7 @@ describe('Windows Filesystem Test', () => {
         const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
 
-        expect(files.where('ThirdPartyNotices.txt')).toEqual(resolve(__dirname, '../../../ThirdPartyNotices.txt'));
+        expect(files.where('common.test.ts', __dirname)).toEqual(resolve(__dirname, 'common.test.ts'));
         expect(files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
         expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
         expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));

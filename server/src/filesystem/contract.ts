@@ -4,6 +4,6 @@ export interface FilesystemContract {
     normalizePath(path: string): string;
     setSystemPaths(systemPaths: string): FilesystemContract;
     getSystemPaths(): string[];
-    where(search: string): string;
-    which(search: string): string;
+    where(search: string, cwd?: string): string;
+    which(search: string, cwd?: string): string;
 }

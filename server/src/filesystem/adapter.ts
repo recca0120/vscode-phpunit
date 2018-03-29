@@ -14,12 +14,12 @@ export class Filesystem implements FilesystemContract {
         return this.instance.get(path);
     }
 
-    where(search: string): string {
-        return this.instance.where(search);
+    where(search: string, cwd: string = process.cwd()): string {
+        return this.instance.where(search, cwd);
     }
 
-    which(search: string): string {
-        return this.instance.which(search);
+    which(search: string, cwd: string = process.cwd()): string {
+        return this.instance.which(search, cwd);
     }
 
     normalizePath(path: string): string {

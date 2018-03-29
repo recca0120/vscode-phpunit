@@ -30,8 +30,8 @@ export abstract class Common implements FilesystemContract {
         return this.systemPaths;
     }
 
-    where(search: string): string {
-        const paths: string[] = [process.cwd()].concat(this.getSystemPaths());
+    where(search: string, cwd: string = process.cwd()): string {
+        const paths: string[] = [cwd].concat(this.getSystemPaths());
         const extensions = this.extensions;
 
         for (const path of paths) {
@@ -46,7 +46,7 @@ export abstract class Common implements FilesystemContract {
         return '';
     }
 
-    which(search: string): string {
+    which(search: string, cwd: string = process.cwd()): string {
         return this.where(search);
     }
 
