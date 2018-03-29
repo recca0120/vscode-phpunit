@@ -1,13 +1,13 @@
 {
-	"name": "lsp--sample",
-	"description": "A language server example",
-	"author": "Microsoft Corporation",
+	"name": "lsp-phpunit",
+	"description": "language server for phpunit",
+	"author": "recca0120",
 	"license": "MIT",
 	"version": "0.0.1",
 	"publisher": "vscode",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-extension-samples"
+		"url": "https://github.com/recca0120/lsp-phpunit"
 	},
 	"scripts": {
 		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
