@@ -4,8 +4,8 @@ export * from './posix';
 export * from './windows';
 export * from './adapter';
 
-import {FilesystemContract} from './contract';
-import {Adapter} from './adapter';
+import { FilesystemContract } from './contract';
+import { Adapter } from './adapter';
 
 export class Filesystem extends Adapter {}
 

@@ -23,6 +23,8 @@ import {
 } from 'vscode-languageserver';
 
 import { CodeLensProvider } from './codelens-provider';
+import { spawnSync } from 'child_process';
+import { files } from './filesystem';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 
@@ -151,9 +153,12 @@ connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
 connection.onExecuteCommand((params: ExecuteCommandParams) => {
-    const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
-    connection.window.showInformationMessage(debugText);
-    connection.console.log(debugText);
+    params.arguments[0] = files.normalizePath(params.arguments[0]);
+    // const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
+    const phpUnitBinary: string = files.where('phpunit');
+    const output: string = spawnSync(phpUnitBinary, params.arguments).stdout.toString();
+
+    connection.console.log(output);
 });
 /*
 connection.onDidOpenTextDocument((params) => {

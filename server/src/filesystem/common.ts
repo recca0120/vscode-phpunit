@@ -47,7 +47,7 @@ export abstract class Common implements FilesystemContract {
     }
 
     which(search: string, cwd: string = process.cwd()): string {
-        return this.where(search);
+        return this.where(search, cwd);
     }
 
     abstract setSystemPaths(systemPaths: string): FilesystemContract;
