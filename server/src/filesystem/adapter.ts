@@ -1,10 +1,10 @@
 import { FilesystemContract } from './contract';
-import { isWindows } from './common';
+import { OS, os} from '../helpers';
 import { POSIX } from './posix';
 import { WINDOWS } from './windows';
 
 export class Filesystem implements FilesystemContract {
-    constructor(private instance: FilesystemContract = isWindows() ? new WINDOWS() : new POSIX()) {}
+    constructor(private instance: FilesystemContract = os() === OS.WIN ? new WINDOWS() : new POSIX()) {}
 
     exists(path: string): boolean {
         return this.instance.exists(path);
@@ -16,10 +16,6 @@ export class Filesystem implements FilesystemContract {
 
     normalizePath(path: string): string {
         return this.instance.normalizePath(path);
-    }
-
-    isWindows(): boolean {
-        return this.instance.isWindows();
     }
 }
 
