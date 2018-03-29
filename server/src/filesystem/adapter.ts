@@ -3,7 +3,7 @@ import { OS, os } from '../helpers';
 import { POSIX } from './posix';
 import { WINDOWS } from './windows';
 
-export class Filesystem implements FilesystemContract {
+export class Adapter implements FilesystemContract {
     constructor(private instance: FilesystemContract = os() === OS.WIN ? new WINDOWS() : new POSIX()) {}
 
     exists(path: string): boolean {
@@ -36,6 +36,3 @@ export class Filesystem implements FilesystemContract {
         throw this.instance.getSystemPaths();
     }
 }
-
-export const files: FilesystemContract = new Filesystem();
-export default files;
