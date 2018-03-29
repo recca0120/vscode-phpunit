@@ -26,7 +26,7 @@ describe('Filesystem Test', () => {
 
         expect(files.exists(resolve(__dirname, '../fixtures/bin/ls'))).toBeTruthy();
         expect(files.exists(resolve(__dirname, '../fixtures/bin/cmd.exe'))).toBeTruthy();
-        expect(files.exists(resolve(__dirname, '../fixtures/bin/cmd'))).toBeFalsy();
+        expect(files.exists(resolve(__dirname, '../fixtures/bin/pwd'))).toBeFalsy();
     });
 
     it('check file url exists', () => {
@@ -34,6 +34,6 @@ describe('Filesystem Test', () => {
 
         expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/ls')))).toBeTruthy();
         expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/cmd.exe')))).toBeTruthy();
-        expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/cmd')))).toBeFalsy();
+        expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/pwd')))).toBeFalsy();
     });
 });

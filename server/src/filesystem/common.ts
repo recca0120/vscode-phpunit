@@ -1,9 +1,10 @@
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { FilesystemContract } from './contract';
-import { statSync } from 'fs';
+import { resolve } from 'path';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
+    protected extensions: string[] = [''];
 
     constructor() {
         this.setSystemPaths(process.env.PATH as string);
@@ -27,6 +28,26 @@ export abstract class Common implements FilesystemContract {
 
     getSystemPaths(): string[] {
         return this.systemPaths;
+    }
+
+    where(search: string): string {
+        const paths: string[] = [process.cwd()].concat(this.getSystemPaths());
+        const extensions = this.extensions;
+
+        for (const path of paths) {
+            for (const ext of extensions) {
+                const file = resolve(path, `${search}${ext}`);
+                if (this.exists(file) === true) {
+                    return file;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    which(search: string): string {
+        return this.where(search);
     }
 
     abstract setSystemPaths(systemPaths: string): FilesystemContract;

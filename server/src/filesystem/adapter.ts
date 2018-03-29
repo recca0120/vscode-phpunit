@@ -14,6 +14,14 @@ export class Filesystem implements FilesystemContract {
         return this.instance.get(path);
     }
 
+    where(search: string): string {
+        return this.instance.where(search);
+    }
+
+    which(search: string): string {
+        return this.instance.which(search);
+    }
+
     normalizePath(path: string): string {
         return this.instance.normalizePath(path);
     }

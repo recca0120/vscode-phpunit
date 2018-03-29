@@ -1,5 +1,6 @@
 import { WINDOWS, FilesystemContract, Filesystem } from '../../src/filesystem';
 import { OS, os } from '../../src/helpers';
+import { resolve } from 'path';
 
 describe('Windows Filesystem Test', () => {
     it('it should normalize path', () => {
@@ -25,5 +26,16 @@ describe('Windows Filesystem Test', () => {
 
         files.setSystemPaths(systemPaths.join(';'));
         expect(files.getSystemPaths()).toEqual(systemPaths);
+    });
+
+    it('it should find path when path not include path', () => {
+        const files: FilesystemContract = new WINDOWS();
+        const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
+        files.setSystemPaths(systemPaths.join(';'));
+
+        expect(files.where('ThirdPartyNotices.txt')).toEqual(resolve(__dirname, '../../../ThirdPartyNotices.txt'));
+        expect(files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+        expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+        expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
     });
 });

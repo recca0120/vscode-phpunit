@@ -3,6 +3,7 @@ import { FilesystemContract } from '.';
 
 export class WINDOWS extends POSIX {
     protected separator: string = '\\';
+    protected extensions = ['.bat', '.exe', '.cmd', ''];
 
     normalizePath(path: string): string {
         return path

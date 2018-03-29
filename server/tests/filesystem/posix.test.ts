@@ -1,6 +1,8 @@
 import { Filesystem, POSIX, FilesystemContract } from '../../src/filesystem';
 import { readFileSync } from 'fs';
 import { OS, os } from '../../src/helpers';
+import { resolve, join } from 'path';
+import { spawnSync } from 'child_process';
 
 describe('POSIX Filesystem Test', () => {
     it('it should normalize path', () => {
@@ -24,5 +26,16 @@ describe('POSIX Filesystem Test', () => {
 
         files.setSystemPaths(systemPaths.join(':'));
         expect(files.getSystemPaths()).toEqual(systemPaths);
+    });
+
+    it('it should find path when path not include path', () => {
+        const files: FilesystemContract = new POSIX();
+        const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
+        files.setSystemPaths(systemPaths.join(';'));
+
+        expect(files.where('ThirdPartyNotices.txt')).toEqual(resolve(__dirname, '../../../ThirdPartyNotices.txt'));
+        expect(files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+        expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd'));
+        expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
     });
 });
