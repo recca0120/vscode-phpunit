@@ -1,6 +1,6 @@
 import { readFile, stat } from 'fs';
 import { FilesystemContract } from './contract';
-import { resolve as pathResolve, parse } from 'path';
+import { resolve as pathResolve, parse, dirname } from 'path';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
@@ -47,18 +47,21 @@ export abstract class Common implements FilesystemContract {
     }
 
     async findUp(search: string, cwd: string = process.cwd(), root?: string): Promise<string> {
-        root = !root ? parse(cwd).root : root;
+        let file: string;
+        root = pathResolve(!root ? parse(cwd).root : root);
         cwd = pathResolve(cwd);
 
         do {
-            const file = pathResolve(cwd, search);
+            file = pathResolve(cwd, search);
             if ((await this.exists(file)) === true) {
                 return file;
             }
             cwd = pathResolve(cwd, '..');
         } while (cwd !== root);
 
-        return '';
+        file = pathResolve(cwd, search);
+
+        return (await this.exists(file)) === true ? file : '';
     }
 
     setSystemPaths(systemPaths: string): FilesystemContract {
@@ -68,6 +71,10 @@ export abstract class Common implements FilesystemContract {
             .map((path: string) => path.replace(new RegExp(`${delimiter}$`, 'g'), '').trim());
 
         return this;
+    }
+
+    dirname(path: string): string {
+        return dirname(path);
     }
 
     abstract normalizePath(path: string): string;

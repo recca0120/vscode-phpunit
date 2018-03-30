@@ -59,11 +59,12 @@ describe('Filesystem Test', () => {
 
     it('it should find up path', async () => {
         const files: FilesystemContract = new Filesystem();
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
+        const root: string = resolve(__dirname, '../fixtures');
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'), root)).toEqual(
             resolve(__dirname, '../fixtures/vendor/bin/phpunit')
         );
 
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures'))).toEqual(
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures'), root)).toEqual(
             resolve(__dirname, '../fixtures/vendor/bin/phpunit')
         );
     });
