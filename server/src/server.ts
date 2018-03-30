@@ -28,8 +28,10 @@ import { CodeLensProvider } from './codelens-provider';
 import { spawnSync } from 'child_process';
 import { files } from './filesystem';
 import { os, OS } from './helpers';
+import { DocumentSymbolProvider } from './document-symbol-provider';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
+const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
@@ -55,7 +57,7 @@ connection.onInitialize((_params): InitializeResult => {
             codeLensProvider: {
                 resolveProvider: true,
             },
-            documentSymbolProvider: true,
+            documentSymbolProvider: false,
             executeCommandProvider: {
                 commands: ['phpunit.test.file', 'phpunit.test.cursor'],
             },
@@ -167,9 +169,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {
-    console.log(params.textDocument.uri);
-    console.dir(params);
-    return [];
+    return documentSymbolProvider.provideDocumentSymbols(documents.get(params.textDocument.uri));
 });
 /*
 connection.onDidOpenTextDocument((params) => {

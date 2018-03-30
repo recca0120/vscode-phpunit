@@ -42,7 +42,7 @@ export class CodeLensProvider {
             const { start } = node.loc;
 
             return {
-                range: Range.create(start.line - 1, start.column, start.line - 1, start.column + command.title.length),
+                range: Range.create(start.line - 1, start.column, start.line - 1, start.column + node.name.length),
                 command,
                 data,
             };

@@ -29,7 +29,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 8,
+                    character: 11,
                     line: 5,
                 },
                 start: {
@@ -54,7 +54,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 21,
                     line: 12,
                 },
                 start: {
@@ -79,7 +79,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 21,
                     line: 17,
                 },
                 start: {
@@ -104,7 +104,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 22,
                     line: 22,
                 },
                 start: {
@@ -129,7 +129,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 25,
                     line: 27,
                 },
                 start: {
@@ -154,7 +154,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 27,
                     line: 32,
                 },
                 start: {
@@ -179,7 +179,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 30,
                     line: 37,
                 },
                 start: {
@@ -204,7 +204,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 19,
+                    character: 33,
                     line: 46,
                 },
                 start: {
@@ -234,7 +234,7 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 8,
+                    character: 12,
                     line: 7,
                 },
                 start: {
