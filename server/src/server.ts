@@ -155,7 +155,7 @@ connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvi
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     params.arguments[0] = files.normalizePath(params.arguments[0]);
     // const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
-    const phpUnitBinary: string = (await files.findUp('vendor/bin/phpunit')) || (await files.where('phpunit'));
+    const phpUnitBinary: string = (await files.findUp('vendor/bin/phpunit')) || (await files.which('phpunit'));
     const output: string = spawnSync(phpUnitBinary, params.arguments).stdout.toString();
 
     connection.console.log(output);
