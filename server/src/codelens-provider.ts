@@ -1,4 +1,4 @@
-import { Block, Node, Program } from 'php-parser';
+import { Block, Program } from 'php-parser';
 import { CodeLens, Range, TextDocument, Command } from 'vscode-languageserver';
 
 import Engine from 'php-parser';
@@ -39,8 +39,16 @@ export class CodeLensProvider {
 
     private convertToCodeLens(phpNode: Block, data: any = {}): CodeLens[] {
         return phpNode.children
+            .reduce(
+                (childrens: any[], children: any) => {
+                    return children.kind === 'namespace'
+                        ? childrens.concat(children.children)
+                        : childrens.concat(children);
+                },
+                [] as any
+            )
             .filter(this.isTest.bind(this))
-            .reduce((codeLens: Node[], classNode: any) => {
+            .reduce((codeLens: any[], classNode: any) => {
                 const methods: any[] = classNode.body.filter(this.isTest.bind(this));
 
                 return methods.length === 0 ? codeLens : codeLens.concat([classNode]).concat(methods);

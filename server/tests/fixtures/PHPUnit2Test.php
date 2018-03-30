@@ -1,5 +1,7 @@
 <?php
 
+namespace Test;
+
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
@@ -32,6 +34,19 @@ class PHPUnit2Test extends TestCase
 
     public function testNoAssertions()
     {
+
+    }
+
+    public function testAssertNotEquals() {
+        $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
+    public function it_should_be_test_case() {
 
     }
 }
