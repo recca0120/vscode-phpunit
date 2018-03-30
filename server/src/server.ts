@@ -182,5 +182,3 @@ connection.onDidCloseTextDocument((params) => {
 
 // Listen on the connection
 connection.listen();
-
-connection.console;

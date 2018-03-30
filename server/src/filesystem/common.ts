@@ -7,10 +7,6 @@ export abstract class Common implements FilesystemContract {
     protected delimiter: string;
     protected extensions: string[];
 
-    constructor() {
-        this.setSystemPaths(process.env.PATH as string);
-    }
-
     exists(path: string): Promise<boolean> {
         return new Promise(resolve => {
             stat(this.normalizePath(path), err => {
@@ -66,7 +62,10 @@ export abstract class Common implements FilesystemContract {
     }
 
     setSystemPaths(systemPaths: string): FilesystemContract {
-        this.systemPaths = systemPaths.split(this.delimiter).map((path: string) => path.trim());
+        const delimiter = this.delimiter;
+        this.systemPaths = systemPaths
+            .split(new RegExp(delimiter, 'g'))
+            .map((path: string) => path.replace(new RegExp(`${delimiter}$`, 'g'), '').trim());
 
         return this;
     }

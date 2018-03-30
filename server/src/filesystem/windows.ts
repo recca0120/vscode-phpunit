@@ -5,6 +5,11 @@ export class WINDOWS extends POSIX {
     protected delimiter: string = ';';
     protected extensions = ['.bat', '.exe', '.cmd', ''];
 
+    constructor() {
+        super();
+        this.setSystemPaths(process.env.PATH as string);
+    }
+
     normalizePath(path: string): string {
         return path
             .replace(/^file:\/\//, '')
