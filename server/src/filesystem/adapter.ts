@@ -39,4 +39,8 @@ export class Adapter implements FilesystemContract {
     getSystemPaths(): string[] {
         throw this.instance.getSystemPaths();
     }
+
+    dirname(path: string): string {
+        return this.instance.dirname(path);
+    }
 }

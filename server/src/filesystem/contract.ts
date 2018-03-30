@@ -7,4 +7,5 @@ export interface FilesystemContract {
     where(search: string, cwd?: string): Promise<string>;
     which(search: string, cwd?: string): Promise<string>;
     findUp(search: string, cwd?: string, root?: string): Promise<string>;
+    dirname(path: string): string;
 }
