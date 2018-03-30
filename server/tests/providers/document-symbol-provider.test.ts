@@ -196,7 +196,7 @@ describe('DocumentSymbolProvider Test', () => {
                 },
                 uri: path,
             },
-            "name": "PHPUnit2Test"
+            name: 'PHPUnit2Test',
         });
     });
 });
