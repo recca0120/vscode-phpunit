@@ -20,11 +20,14 @@ import {
     TextDocuments,
     createConnection,
     ExecuteCommandParams,
+    DocumentSymbolParams,
+    SymbolInformation,
 } from 'vscode-languageserver';
 
 import { CodeLensProvider } from './codelens-provider';
 import { spawnSync } from 'child_process';
 import { files } from './filesystem';
+import { os, OS } from './helpers';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 
@@ -52,6 +55,7 @@ connection.onInitialize((_params): InitializeResult => {
             codeLensProvider: {
                 resolveProvider: true,
             },
+            documentSymbolProvider: true,
             executeCommandProvider: {
                 commands: ['phpunit.test.file', 'phpunit.test.cursor'],
             },
@@ -155,10 +159,17 @@ connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvi
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     params.arguments[0] = files.normalizePath(params.arguments[0]);
     // const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
-    const phpUnitBinary: string = (await files.findUp('vendor/bin/phpunit')) || (await files.which('phpunit'));
+    const phpUnitBinary: string =
+        (await files.findUp(`vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`)) || (await files.which('phpunit'));
     const output: string = spawnSync(phpUnitBinary, params.arguments).stdout.toString();
 
     connection.console.log(output);
+});
+
+connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {
+    console.log(params.textDocument.uri);
+    console.dir(params);
+    return [];
 });
 /*
 connection.onDidOpenTextDocument((params) => {
