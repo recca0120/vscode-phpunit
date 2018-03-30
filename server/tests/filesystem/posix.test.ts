@@ -31,7 +31,7 @@ describe('POSIX Filesystem Test', () => {
     it('it should find path when path not include path', async () => {
         const files: FilesystemContract = new POSIX();
         const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
-        files.setSystemPaths(systemPaths.join(';'));
+        files.setSystemPaths(systemPaths.join(':'));
 
         expect(await files.where('posix.test.ts', __dirname)).toEqual(resolve(__dirname, 'posix.test.ts'));
         expect(await files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));

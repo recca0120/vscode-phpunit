@@ -1,8 +1,8 @@
 import { POSIX } from './posix';
-import { FilesystemContract } from '.';
 
 export class WINDOWS extends POSIX {
     protected separator: string = '\\';
+    protected delimiter: string = ';';
     protected extensions = ['.bat', '.exe', '.cmd', ''];
 
     normalizePath(path: string): string {
@@ -11,11 +11,5 @@ export class WINDOWS extends POSIX {
             .replace(/^\/(\w)%3A/, '$1:')
             .replace(/\//g, this.separator)
             .replace(/ /g, '\\ ');
-    }
-
-    setSystemPaths(systemPaths: string): FilesystemContract {
-        this.systemPaths = systemPaths.split(/;/g).map((path: string) => path.replace(/(;)$/, '').trim());
-
-        return this;
     }
 }

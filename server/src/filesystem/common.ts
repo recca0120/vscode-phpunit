@@ -4,7 +4,8 @@ import { resolve as pathResolve, parse } from 'path';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
-    protected extensions: string[] = [''];
+    protected delimiter: string;
+    protected extensions: string[];
 
     constructor() {
         this.setSystemPaths(process.env.PATH as string);
@@ -64,7 +65,11 @@ export abstract class Common implements FilesystemContract {
         return '';
     }
 
-    abstract setSystemPaths(systemPaths: string): FilesystemContract;
+    setSystemPaths(systemPaths: string): FilesystemContract {
+        this.systemPaths = systemPaths.split(this.delimiter).map((path: string) => path.trim());
+
+        return this;
+    }
 
     abstract normalizePath(path: string): string;
 }
