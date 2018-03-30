@@ -29,10 +29,6 @@ describe('Windows Filesystem Test', () => {
     });
 
     it('it should find path when path not include path', async () => {
-        if (os() !== OS.WIN) {
-            return;
-        }
-
         const files: FilesystemContract = new WINDOWS();
         const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
