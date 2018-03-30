@@ -68,4 +68,10 @@ describe('Filesystem Test', () => {
             resolve(__dirname, '../fixtures/vendor/bin/phpunit')
         );
     });
+
+    it('it should find up path', async () => {
+        const files: FilesystemContract = new Filesystem();
+        const root: string = resolve(__dirname, '../fixtures/usr');
+        expect(files.dirname(root)).toEqual(resolve(__dirname, '../fixtures'))
+    });
 });
