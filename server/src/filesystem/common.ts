@@ -52,14 +52,17 @@ export abstract class Common implements FilesystemContract {
 
     async findUp(search: string, cwd: string = process.cwd(), root?: string): Promise<string> {
         root = !root ? parse(cwd).root : root;
+        cwd = pathResolve(cwd);
 
-        if (cwd === root) {
-            return '';
-        }
+        do {
+            const file = pathResolve(cwd, search);
+            if (await this.exists(file) === true) {
+                return file;
+            }
+            cwd = pathResolve(cwd, '..');
+        } while(cwd !== root)
 
-        const file = pathResolve(cwd, search);
-
-        return (await this.exists(file)) === true ? file : await this.findUp(search, pathResolve(cwd, '..'), root);
+        return '';
     }
 
     abstract setSystemPaths(systemPaths: string): FilesystemContract;
