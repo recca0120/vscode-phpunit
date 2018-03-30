@@ -1,11 +1,11 @@
-import { PhpunitParser } from '../phpunit-parser';
+import { PhpUnitParser } from '../phpunit-parser';
 import { CodeLens, Range, TextDocument, Command } from 'vscode-languageserver';
 
 export class CodeLensProvider {
-    constructor(private phpunitParser = new PhpunitParser()) {}
+    constructor(private phpUnitParser = new PhpUnitParser()) {}
 
     provideCodeLenses(textDocument: TextDocument): CodeLens[] {
-        return this.convertToCodeLens(this.phpunitParser.parseCode(textDocument.getText()), {
+        return this.convertToCodeLens(this.phpUnitParser.parseCode(textDocument.getText()), {
             textDocument: {
                 uri: textDocument.uri,
             },

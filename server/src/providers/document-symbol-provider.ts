@@ -1,11 +1,11 @@
-import { PhpunitParser } from '../phpunit-parser';
+import { PhpUnitParser } from '../phpunit-parser';
 import { SymbolInformation, TextDocument, SymbolKind, Range } from 'vscode-languageserver';
 
 export class DocumentSymbolProvider {
-    constructor(private phpunitParser = new PhpunitParser()) {}
+    constructor(private phpUnitParser = new PhpUnitParser()) {}
 
     provideDocumentSymbols(textDocument: TextDocument): SymbolInformation[] {
-        return this.convertToDocumentSymbol(this.phpunitParser.parseCode(textDocument.getText()), textDocument.uri);
+        return this.convertToDocumentSymbol(this.phpUnitParser.parseCode(textDocument.getText()), textDocument.uri);
     }
 
     protected convertToDocumentSymbol(nodes: any, uri: string): SymbolInformation[] {

@@ -20,7 +20,7 @@ const parser: Engine = new Engine({
     },
 });
 
-export class PhpunitParser {
+export class PhpUnitParser {
     parseCode(code: string): any {
         return this.getNodes(parser.parseCode(code));
     }
