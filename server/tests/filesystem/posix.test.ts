@@ -28,20 +28,24 @@ describe('POSIX Filesystem Test', () => {
         expect(files.getSystemPaths()).toEqual(systemPaths);
     });
 
-    it('it should find path when path not include path', () => {
+    it('it should find path when path not include path', async () => {
         const files: FilesystemContract = new POSIX();
         const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
 
-        expect(files.where('posix.test.ts', __dirname)).toEqual(resolve(__dirname, 'posix.test.ts'));
-        expect(files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
-        expect(files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd'));
-        expect(files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
+        expect(await files.where('posix.test.ts', __dirname)).toEqual(resolve(__dirname, 'posix.test.ts'));
+        expect(await files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+        expect(await files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd'));
+        expect(await files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
     });
 
-    it('it should find up path', () => {
+    it('it should find up path', async () => {
         const files: FilesystemContract = new POSIX();
-        expect(files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
+            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        );
+
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures'))).toEqual(
             resolve(__dirname, '../fixtures/vendor/bin/phpunit')
         );
     });

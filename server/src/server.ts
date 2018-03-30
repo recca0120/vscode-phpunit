@@ -152,23 +152,13 @@ connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
 });
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
-connection.onExecuteCommand((params: ExecuteCommandParams) => {
+connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     params.arguments[0] = files.normalizePath(params.arguments[0]);
     // const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
-    const phpUnitBinary: string = files.where('phpunit');
+    const phpUnitBinary: string = (await files.findUp('vendor/bin/phpunit')) || (await files.where('phpunit'));
     const output: string = spawnSync(phpUnitBinary, params.arguments).stdout.toString();
 
     connection.console.log(output);
-    const lines: string[] = output.split(/\r?\n/g);
-
-    const problemMatchers = /^\d+\)\s.*$/;
-
-    for (var i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        if (problemMatchers.test(line) === true) {
-        }
-    }
-    // console.dir(output.match(/^\d+\)\s.*$/g));
 });
 /*
 connection.onDidOpenTextDocument((params) => {

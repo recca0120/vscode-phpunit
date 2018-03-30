@@ -1,6 +1,6 @@
-import { readFileSync, statSync } from 'fs';
+import { readFile, stat } from 'fs';
 import { FilesystemContract } from './contract';
-import { resolve, parse } from 'path';
+import { resolve as pathResolve, parse } from 'path';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
@@ -10,34 +10,34 @@ export abstract class Common implements FilesystemContract {
         this.setSystemPaths(process.env.PATH as string);
     }
 
-    exists(path: string): boolean {
-        try {
-            statSync(this.normalizePath(path));
-        } catch (err) {
-            if (err.code === 'ENOENT') {
-                return false;
-            }
-        }
-
-        return true;
+    exists(path: string): Promise<boolean> {
+        return new Promise(resolve => {
+            stat(this.normalizePath(path), err => {
+                resolve(err && err.code === 'ENOENT' ? false : true);
+            });
+        });
     }
 
-    get(path: string): string {
-        return readFileSync(this.normalizePath(path)).toString('utf8');
+    get(path: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            return readFile(this.normalizePath(path), (err, buffer) => {
+                err ? reject(err) : resolve(buffer.toString('utf8'));
+            });
+        });
     }
 
     getSystemPaths(): string[] {
         return this.systemPaths;
     }
 
-    where(search: string, cwd: string = process.cwd()): string {
+    async where(search: string, cwd: string = process.cwd()): Promise<string> {
         const paths: string[] = [cwd].concat(this.getSystemPaths());
         const extensions = this.extensions;
 
         for (const path of paths) {
             for (const ext of extensions) {
-                const file = resolve(path, `${search}${ext}`);
-                if (this.exists(file) === true) {
+                const file = pathResolve(path, `${search}${ext}`);
+                if ((await this.exists(file)) === true) {
                     return file;
                 }
             }
@@ -46,20 +46,20 @@ export abstract class Common implements FilesystemContract {
         return '';
     }
 
-    which(search: string, cwd: string = process.cwd()): string {
+    async which(search: string, cwd: string = process.cwd()): Promise<string> {
         return this.where(search, cwd);
     }
 
-    findUp(search: string, cwd: string = process.cwd(), root?: string): string {
+    async findUp(search: string, cwd: string = process.cwd(), root?: string): Promise<string> {
         root = !root ? parse(cwd).root : root;
 
         if (cwd === root) {
             return '';
         }
 
-        const file = resolve(cwd, search);
+        const file = pathResolve(cwd, search);
 
-        return this.exists(file) === true ? file : this.findUp(search, resolve(cwd, '..'), root);
+        return (await this.exists(file)) === true ? file : await this.findUp(search, pathResolve(cwd, '..'), root);
     }
 
     abstract setSystemPaths(systemPaths: string): FilesystemContract;

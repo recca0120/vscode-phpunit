@@ -9,31 +9,31 @@ function toFileUrl(path: string): string {
 }
 
 describe('Filesystem Test', () => {
-    it('it should get content from file', () => {
+    it('it should get content from file', async () => {
         const files: FilesystemContract = new Filesystem();
         const path = resolve(__dirname, '../fixtures/PHPUnitTest.php');
-        expect(files.get(path)).toEqual(readFileSync(path).toString('utf8'));
+        expect(await files.get(path)).toEqual(readFileSync(path).toString('utf8'));
     });
 
-    it('it should get content from file url', () => {
+    it('it should get content from file url', async () => {
         const files: FilesystemContract = new Filesystem();
         const path = resolve(__dirname, '../fixtures/PHPUnitTest.php');
-        expect(files.get(toFileUrl(path))).toEqual(readFileSync(path).toString('utf8'));
+        expect(await files.get(toFileUrl(path))).toEqual(readFileSync(path).toString('utf8'));
     });
 
-    it('check file exists', () => {
+    it('check file exists', async () => {
         const files: FilesystemContract = new Filesystem();
 
-        expect(files.exists(resolve(__dirname, '../fixtures/bin/ls'))).toBeTruthy();
-        expect(files.exists(resolve(__dirname, '../fixtures/bin/cmd.exe'))).toBeTruthy();
-        expect(files.exists(resolve(__dirname, '../fixtures/bin/pwd'))).toBeFalsy();
+        expect(await files.exists(resolve(__dirname, '../fixtures/bin/ls'))).toBeTruthy();
+        expect(await files.exists(resolve(__dirname, '../fixtures/bin/cmd.exe'))).toBeTruthy();
+        expect(await files.exists(resolve(__dirname, '../fixtures/bin/pwd'))).toBeFalsy();
     });
 
-    it('check file url exists', () => {
+    it('check file url exists', async () => {
         const files: FilesystemContract = new Filesystem();
 
-        expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/ls')))).toBeTruthy();
-        expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/cmd.exe')))).toBeTruthy();
-        expect(files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/pwd')))).toBeFalsy();
+        expect(await files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/ls')))).toBeTruthy();
+        expect(await files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/cmd.exe')))).toBeTruthy();
+        expect(await files.exists(toFileUrl(resolve(__dirname, '../fixtures/bin/pwd')))).toBeFalsy();
     });
 });

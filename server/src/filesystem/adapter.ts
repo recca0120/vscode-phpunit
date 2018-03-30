@@ -6,23 +6,23 @@ import { WINDOWS } from './windows';
 export class Adapter implements FilesystemContract {
     constructor(private instance: FilesystemContract = os() === OS.WIN ? new WINDOWS() : new POSIX()) {}
 
-    exists(path: string): boolean {
+    exists(path: string): Promise<boolean> {
         return this.instance.exists(path);
     }
 
-    get(path: string): string {
+    get(path: string): Promise<string> {
         return this.instance.get(path);
     }
 
-    where(search: string, cwd: string = process.cwd()): string {
+    where(search: string, cwd: string = process.cwd()): Promise<string> {
         return this.instance.where(search, cwd);
     }
 
-    which(search: string, cwd: string = process.cwd()): string {
+    which(search: string, cwd: string = process.cwd()): Promise<string> {
         return this.instance.which(search, cwd);
     }
 
-    findUp(search: string, cwd: string = process.cwd(), root?: string): string {
+    findUp(search: string, cwd: string = process.cwd(), root?: string): Promise<string> {
         return this.instance.findUp(search, cwd, root);
     }
 

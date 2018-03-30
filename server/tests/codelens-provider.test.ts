@@ -3,14 +3,15 @@ import { CodeLens, TextDocument } from 'vscode-languageserver';
 import { CodeLensProvider } from './../src/codelens-provider';
 import { Filesystem } from './../src/filesystem';
 import { resolve } from 'path';
+import { readFileSync } from 'fs';
 
 describe('CodeLensProvider Test', () => {
     const path = resolve(__dirname, 'fixtures/PHPUnitTest.php');
     let codeLens: CodeLens[] = [];
 
-    beforeEach(() => {
+    beforeEach(async () => {
         const codeLensProvider: CodeLensProvider = new CodeLensProvider();
-        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, new Filesystem().get(path));
+        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
         codeLens = codeLensProvider.provideCodeLenses(textDocument);
     });
 
