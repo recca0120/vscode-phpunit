@@ -33,7 +33,6 @@ export abstract class Common implements FilesystemContract {
     async where(search: string, cwd: string = process.cwd()): Promise<string> {
         const paths: string[] = [cwd].concat(this.getSystemPaths());
         const extensions = this.extensions;
-
         for (const path of paths) {
             for (const ext of extensions) {
                 const file = pathResolve(path, `${search}${ext}`);
@@ -56,11 +55,11 @@ export abstract class Common implements FilesystemContract {
 
         do {
             const file = pathResolve(cwd, search);
-            if (await this.exists(file) === true) {
+            if ((await this.exists(file)) === true) {
                 return file;
             }
             cwd = pathResolve(cwd, '..');
-        } while(cwd !== root)
+        } while (cwd !== root);
 
         return '';
     }

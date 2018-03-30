@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"doc-parser": "^0.4.8",
-		"php-parser": "https://github.com/glayzzle/php-parser/tarball/master",
+		"php-parser": "git+https://github.com/glayzzle/php-parser.git",
 		"vscode-languageserver": "^3.5.0"
 	},
 	"scripts": {

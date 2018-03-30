@@ -29,6 +29,10 @@ describe('Windows Filesystem Test', () => {
     });
 
     it('it should find path when path not include path', async () => {
+        if (os() !== OS.WIN) {
+            return;
+        }
+
         const files: FilesystemContract = new WINDOWS();
         const systemPaths = [resolve(__dirname, '../fixtures/bin'), resolve(__dirname, '../fixtures/usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
@@ -40,6 +44,10 @@ describe('Windows Filesystem Test', () => {
     });
 
     it('it should find up path', async () => {
+        if (os() !== OS.WIN) {
+            return;
+        }
+
         const files: FilesystemContract = new WINDOWS();
         expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
             resolve(__dirname, '../fixtures/vendor/bin/phpunit')
