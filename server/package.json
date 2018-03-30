@@ -1,6 +1,6 @@
 {
-	"name": "lsp-phpunit-server",
-	"description": "lsp server for phpunit",
+	"name": "phpunit-lsp",
+	"description": "phpunit lsp",
 	"version": "0.0.1",
 	"author": "recca0120",
 	"license": "MIT",
@@ -9,7 +9,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/recca0120/lsp-phpunit/server"
+		"url": "https://github.com/recca0120/vscode-phpunit/server"
 	},
 	"dependencies": {
 		"doc-parser": "^0.4.8",
