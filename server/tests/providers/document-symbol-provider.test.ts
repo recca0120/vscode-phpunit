@@ -1,12 +1,12 @@
 import { SymbolInformation, TextDocument, SymbolKind } from 'vscode-languageserver';
 
-import { DocumentSymbolProvider } from './../src/document-symbol-provider';
-import { Filesystem } from './../src/filesystem';
+import { DocumentSymbolProvider } from '../../src/providers';
+import { Filesystem } from '../../src/filesystem';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
 
 describe('DocumentSymbolProvider Test', () => {
-    const path: string = resolve(__dirname, 'fixtures/PHPUnitTest.php');
+    const path: string = resolve(__dirname, '../fixtures/PHPUnitTest.php');
     let symbolInformations: SymbolInformation[] = [];
 
     beforeEach(async () => {
@@ -175,33 +175,28 @@ describe('DocumentSymbolProvider Test', () => {
         });
     });
 
-    // it('it should resolve class PHPUnitTest2 with namespace symbolInformations', () => {
-    //     const path = resolve(__dirname, 'fixtures/PHPUnit2Test.php');
-    //     const documentSymbolProvider: documentSymbolProvider = new documentSymbolProvider();
-    //     const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
-    //     symbolInformations = documentSymbolProvider.providesymbolInformationses(textDocument);
+    it('it should resolve class PHPUnitTest2 with namespace symbolInformations', () => {
+        const path = resolve(__dirname, '../fixtures/PHPUnit2Test.php');
+        const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
+        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
+        symbolInformations = documentSymbolProvider.provideDocumentSymbols(textDocument);
 
-    //     expect(symbolInformations[0]).toEqual({
-    //         command: {
-    //             arguments: [path],
-    //             command: 'phpunit.test.file',
-    //             title: 'Run Test',
-    //         },
-    //         data: {
-    //             textDocument: {
-    //                 uri: path,
-    //             },
-    //         },
-    //         range: {
-    //             end: {
-    //                 character: 8,
-    //                 line: 7,
-    //             },
-    //             start: {
-    //                 character: 0,
-    //                 line: 7,
-    //             },
-    //         },
-    //     });
-    // });
+        expect(symbolInformations[0]).toEqual({
+            kind: SymbolKind.Class,
+            location: {
+                range: {
+                    end: {
+                        character: 12,
+                        line: 7,
+                    },
+                    start: {
+                        character: 0,
+                        line: 7,
+                    },
+                },
+                uri: path,
+            },
+            "name": "PHPUnit2Test"
+        });
+    });
 });

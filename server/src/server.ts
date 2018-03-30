@@ -24,11 +24,10 @@ import {
     SymbolInformation,
 } from 'vscode-languageserver';
 
-import { CodeLensProvider } from './codelens-provider';
+import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { spawnSync } from 'child_process';
 import { files } from './filesystem';
 import { os, OS } from './helpers';
-import { DocumentSymbolProvider } from './document-symbol-provider';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();

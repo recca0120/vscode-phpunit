@@ -1,12 +1,12 @@
 import { CodeLens, TextDocument } from 'vscode-languageserver';
 
-import { CodeLensProvider } from './../src/codelens-provider';
-import { Filesystem } from './../src/filesystem';
+import { CodeLensProvider } from '../../src/providers';
+import { Filesystem } from '../../src/filesystem';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
 
 describe('CodeLensProvider Test', () => {
-    const path: string = resolve(__dirname, 'fixtures/PHPUnitTest.php');
+    const path: string = resolve(__dirname, '../fixtures/PHPUnitTest.php');
     let codeLens: CodeLens[] = [];
 
     beforeEach(async () => {
@@ -216,7 +216,7 @@ describe('CodeLensProvider Test', () => {
     });
 
     it('it should resolve class PHPUnitTest2 with namespace codelens', () => {
-        const path = resolve(__dirname, 'fixtures/PHPUnit2Test.php');
+        const path = resolve(__dirname, '../fixtures/PHPUnit2Test.php');
         const codeLensProvider: CodeLensProvider = new CodeLensProvider();
         const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
         codeLens = codeLensProvider.provideCodeLenses(textDocument);
