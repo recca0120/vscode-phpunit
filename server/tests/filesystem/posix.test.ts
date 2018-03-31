@@ -41,12 +41,12 @@ describe('POSIX Filesystem Test', () => {
 
     it('it should find up path', async () => {
         const files: FilesystemContract = new POSIX();
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
-            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project/tests'))).toEqual(
+            resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
 
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures'))).toEqual(
-            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project'))).toEqual(
+            resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
     });
 });

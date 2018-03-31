@@ -12,13 +12,13 @@ function toFileUrl(path: string): string {
 describe('Filesystem Test', () => {
     it('it should get content from file', async () => {
         const files: FilesystemContract = new Filesystem();
-        const path = resolve(__dirname, '../fixtures/PHPUnitTest.php');
+        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
         expect(await files.get(path)).toEqual(readFileSync(path).toString('utf8'));
     });
 
     it('it should get content from file url', async () => {
         const files: FilesystemContract = new Filesystem();
-        const path = resolve(__dirname, '../fixtures/PHPUnitTest.php');
+        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
         expect(await files.get(toFileUrl(path))).toEqual(readFileSync(path).toString('utf8'));
     });
 
@@ -60,18 +60,12 @@ describe('Filesystem Test', () => {
     it('it should find up path', async () => {
         const files: FilesystemContract = new Filesystem();
         const root: string = resolve(__dirname, '../fixtures');
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'), root)).toEqual(
-            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project/tests'), root)).toEqual(
+            resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
 
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures'), root)).toEqual(
-            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project'), root)).toEqual(
+            resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
-    });
-
-    it('it should find up path', async () => {
-        const files: FilesystemContract = new Filesystem();
-        const root: string = resolve(__dirname, '../fixtures/usr');
-        expect(files.dirname(root)).toEqual(resolve(__dirname, '../fixtures'))
     });
 });

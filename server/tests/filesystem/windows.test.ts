@@ -49,12 +49,12 @@ describe('Windows Filesystem Test', () => {
         }
 
         const files: FilesystemContract = new WINDOWS();
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/usr/bin'))).toEqual(
-            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project/tests'))).toEqual(
+            resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
 
-        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures'))).toEqual(
-            resolve(__dirname, '../fixtures/vendor/bin/phpunit')
+        expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project'))).toEqual(
+            resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
     });
 });
