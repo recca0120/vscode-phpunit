@@ -21,7 +21,7 @@ export class PhpUnit {
 
         const phpUnitDotXml: string = await this.getPhpUnitDotXml(cwd, root);
         if (phpUnitDotXml) {
-            command.arguments = command.arguments.concat(['-c', phpUnitDotXml])
+            command.arguments = command.arguments.concat(['-c', phpUnitDotXml]);
         }
 
         return await this.process.spawn(command);
@@ -34,6 +34,9 @@ export class PhpUnit {
     }
 
     private async getPhpUnitDotXml(cwd: string, root: string): Promise<string> {
-        return (await this.files.findUp('phpunit.xml', cwd, root)) || (await this.files.findUp('phpunit.xml.dist', cwd, root));
+        return (
+            (await this.files.findUp('phpunit.xml', cwd, root)) ||
+            (await this.files.findUp('phpunit.xml.dist', cwd, root))
+        );
     }
 }

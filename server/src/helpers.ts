@@ -9,7 +9,7 @@ export function os(): OS {
     return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(process.platform) ? OS.WIN : OS.POSIX;
 }
 
-export function tap<T>(value:T,  callback: Function): T {
+export function tap<T>(value: T, callback: Function): T {
     callback(value);
 
     return value;
