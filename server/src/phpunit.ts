@@ -1,6 +1,6 @@
 import { FilesystemContract, files as fileSystem } from './filesystem';
 import { os, OS } from './helpers';
-import { Process } from './process/process';
+import { Process } from './process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
 
 export class PhpUnit {

@@ -1,7 +1,7 @@
 import { PhpUnit } from './../src/phpunit';
 import { resolve } from 'path';
 import { Filesystem, FilesystemContract } from '../../server/src/filesystem';
-import { Process } from '../src/process/process';
+import { Process } from '../src/process';
 import { os, OS } from '../src/helpers';
 
 describe('PhpUnit Test', () => {

@@ -1,6 +1,6 @@
 import { Command } from 'vscode-languageserver';
 
-import { Process } from './../../src/process/process';
+import { Process } from './../src/process';
 
 describe('Process Test', () => {
     it('echo hello world', async () => {
