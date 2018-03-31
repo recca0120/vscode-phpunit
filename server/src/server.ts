@@ -25,12 +25,11 @@ import {
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
-import { spawnSync } from 'child_process';
-import { files } from './filesystem';
-import { os, OS } from './helpers';
+import { PhpUnit } from './phpunit';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
+const phpUnit: PhpUnit = new PhpUnit();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
@@ -158,12 +157,7 @@ connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    params.arguments[0] = files.normalizePath(params.arguments[0]);
-    // const debugText: string = `command: ${params.command}, params: ${params.arguments.join(', ')}`;
-    const phpUnitBinary: string =
-        (await files.findUp(`vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`)) || (await files.which('phpunit'));
-    const output: string = spawnSync(phpUnitBinary, params.arguments).stdout.toString();
-
+    const output: string = await phpUnit.run(params);
     connection.console.log(output);
 });
 
