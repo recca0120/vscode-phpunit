@@ -43,4 +43,8 @@ export class Adapter implements FilesystemContract {
     dirname(path: string): string {
         return this.instance.dirname(path);
     }
+
+    tmpfile(extension: string = 'tmp', prefix?: string): string {
+        return this.instance.tmpfile(extension, prefix);
+    }
 }

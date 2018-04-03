@@ -2,6 +2,7 @@ import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { OS, os } from '../../src/helpers';
+import { tmpdir } from 'os';
 
 function toFileUrl(path: string): string {
     return path.replace(/\\/g, '/').replace(/^(\w):/i, m => {
@@ -66,6 +67,14 @@ describe('Filesystem Test', () => {
 
         expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project'), root)).toEqual(
             resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
+        );
+    });
+
+    it('it should return random file name with extension', () => {
+        const files: FilesystemContract = new Filesystem();
+        const dir: string = tmpdir();
+        expect(files.tmpfile('php', 'test')).toMatch(
+            new RegExp(`${resolve(dir, 'test-').replace(/\\/g, '\\\\')}\\d+\.php$`)
         );
     });
 });

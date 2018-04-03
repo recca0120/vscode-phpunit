@@ -8,4 +8,5 @@ export interface FilesystemContract {
     which(search: string, cwd?: string): Promise<string>;
     findUp(search: string, cwd?: string, root?: string): Promise<string>;
     dirname(path: string): string;
+    tmpfile(extension?: string, prefix?: string): string;
 }

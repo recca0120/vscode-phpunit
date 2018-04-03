@@ -1,6 +1,7 @@
 import { readFile, stat } from 'fs';
 import { FilesystemContract } from './contract';
 import { resolve as pathResolve, parse, dirname } from 'path';
+import { tmpdir } from 'os';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
@@ -75,6 +76,12 @@ export abstract class Common implements FilesystemContract {
 
     dirname(path: string): string {
         return dirname(path);
+    }
+
+    tmpfile(extension: string = 'tmp', prefix?: string): string {
+        prefix = prefix ? `${prefix}-` : '';
+
+        return pathResolve(tmpdir(), `${prefix}${new Date().getTime()}.${extension}`);
     }
 
     abstract normalizePath(path: string): string;
