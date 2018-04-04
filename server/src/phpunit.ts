@@ -4,19 +4,19 @@ import { Process } from './process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
 
 export class PhpUnit {
-    protected phpUnitBinary: string;
-    protected phpUnitArgs: string[] = [];
+    protected binary: string;
+    protected args: string[] = [];
 
     constructor(private files: FilesystemContract = fileSystem, private process: Process = new Process()) {}
 
-    setPhpUnitBinary(phpUnitBinary: string): PhpUnit {
-        this.phpUnitBinary = phpUnitBinary;
+    setBinary(binary: string): PhpUnit {
+        this.binary = binary;
 
         return this;
     }
 
-    setPhpUnitArgs(phpUnitArgs: string[]): PhpUnit {
-        this.phpUnitArgs = phpUnitArgs;
+    setArgs(args: string[]): PhpUnit {
+        this.args = args;
 
         return this;
     }
@@ -26,12 +26,9 @@ export class PhpUnit {
         const cwd: string = this.files.dirname(path);
         const root: string = await this.getRoot(cwd);
 
-        const cmd: string = await this.getPhpUnitBinary(cwd, root);
-        const args: string[] = this.phpUnitArgs.concat(params.arguments as string[]);
-
         const command: Command = {
-            command: cmd,
-            arguments: args,
+            command: await this.getBinary(cwd, root),
+            arguments: this.args.concat(params.arguments as string[]),
             title: '',
         };
 
@@ -49,14 +46,14 @@ export class PhpUnit {
         return composerPath ? this.files.dirname(composerPath) : cwd;
     }
 
-    private async getPhpUnitBinary(cwd: string, root: string): Promise<string> {
-        if (this.phpUnitBinary) {
-            return this.phpUnitBinary;
+    private async getBinary(cwd: string, root: string): Promise<string> {
+        if (this.binary) {
+            return this.binary;
         }
 
-        const phpUnitBinary: string = `vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`;
+        const binary: string = `vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`;
 
-        return (await this.files.findUp(phpUnitBinary, cwd, root)) || (await this.files.which('phpunit'));
+        return (await this.files.findUp(binary, cwd, root)) || (await this.files.which('phpunit'));
     }
 
     private async getPhpUnitDotXml(cwd: string, root: string): Promise<string> {

@@ -95,7 +95,7 @@ describe('PhpUnit Test', () => {
 
         spyOn(process, 'spawn').and.returnValue('output');
 
-        phpUnit.setPhpUnitBinary(command).setPhpUnitArgs(args);
+        phpUnit.setBinary(command).setArgs(args);
 
         const output: string = await phpUnit.run({
             command: '',

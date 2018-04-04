@@ -86,8 +86,7 @@ interface PhpUnitSettings {
 // as well.
 connection.onDidChangeConfiguration(change => {
     let settings = <Settings>change.settings;
-    phpUnit.setPhpUnitBinary(settings.phpunit.execPath);
-    phpUnit.setPhpUnitArgs(settings.phpunit.args);
+    phpUnit.setBinary(settings.phpunit.execPath).setArgs(settings.phpunit.args);
 });
 
 // function validateTextDocument(textDocument: TextDocument): void {
