@@ -39,11 +39,13 @@ export class PhpUnit {
             .setCwd(cwd)
             .setRoot(root);
 
-        const output: string = await this.process.spawn({
+        const command: Command = {
             command: await this.getBinary(cwd, root),
             arguments: await this.phpUnitArguments.getArguments(),
             title: '',
-        } as Command);
+        };
+
+        const output: string = await this.process.spawn(command);
 
         return output;
     }
