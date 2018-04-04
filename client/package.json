@@ -31,10 +31,10 @@
 					"description": "Path to phpunit executable (if empty it tries to use composer installation)."
 				},
 				"phpunit.args": {
-                    "type": "array",
-                    "default": [],
-                    "description": "Any phpunit args (phpunit --help)"
-                }
+					"type": "array",
+					"default": [],
+					"description": "Any phpunit args (phpunit --help)"
+				}
 			}
 		}
 	},

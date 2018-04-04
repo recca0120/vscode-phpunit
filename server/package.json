@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"doc-parser": "^0.4.8",
+		"fast-xml-parser": "^3.3.6",
 		"php-parser": "git+https://github.com/glayzzle/php-parser.git",
 		"vscode-languageserver": "^3.5.0"
 	},
