@@ -29,12 +29,7 @@ export class PhpUnit {
         let args = this.args.concat(params.arguments as string[]);
 
         const phpUnitDotXml: string = await this.getPhpUnitDotXml(cwd, root);
-
-        console.log(path)
-        // console.log(cwd)
-        // console.log(root)
-
-        if (phpUnitDotXml) {
+        if (phpUnitDotXml && args.some((arg: string) => arg === '-c' || arg === '--configuration') === false) {
             args = args.concat(['-c', phpUnitDotXml]);
         }
 
