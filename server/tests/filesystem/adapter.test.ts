@@ -68,6 +68,8 @@ describe('Filesystem Test', () => {
         expect(await files.findUp('vendor/bin/phpunit', resolve(__dirname, '../fixtures/project'), root)).toEqual(
             resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
+
+        expect(await files.findUp('vendor/bin/phpunit1', resolve(__dirname, '../fixtures/project'), root)).toEqual('');
     });
 
     it('it should return random file name with extension', () => {

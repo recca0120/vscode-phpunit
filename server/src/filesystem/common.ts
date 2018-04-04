@@ -57,8 +57,13 @@ export abstract class Common implements FilesystemContract {
             if ((await this.exists(file)) === true) {
                 return file;
             }
+
+            if(cwd === root) {
+                break;
+            }
+
             cwd = pathResolve(cwd, '..');
-        } while (cwd !== root);
+        } while(cwd !== root)
 
         file = pathResolve(cwd, search);
 
