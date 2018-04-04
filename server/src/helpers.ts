@@ -14,3 +14,7 @@ export function tap<T>(value: T, callback: Function): T {
 
     return value;
 }
+
+export function value<T>(value: T, callback: Function): T {
+    return callback(value);
+}
