@@ -1,4 +1,4 @@
-import { PhpUnitParser } from '../phpunit-parser';
+import { PhpUnitParser } from '../phpunit';
 import { CodeLens, Range, TextDocument, Command } from 'vscode-languageserver';
 
 export class CodeLensProvider {

@@ -1,5 +1,5 @@
-import { FilesystemContract } from './filesystem';
-import { tap } from './helpers';
+import { FilesystemContract } from '../filesystem';
+import { tap } from '../helpers';
 
 export class PhpUnitArguments {
     private arguments: string[];

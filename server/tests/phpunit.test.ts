@@ -1,9 +1,8 @@
-import { PhpUnit } from './../src/phpunit';
 import { resolve } from 'path';
 import { Filesystem, FilesystemContract } from '../../server/src/filesystem';
 import { Process } from '../src/process';
 import { os, OS } from '../src/helpers';
-import { PhpUnitArguments } from './../src/phpunit-arguments';
+import { PhpUnitArguments, PhpUnit } from './../src/phpunit';
 
 describe('PhpUnit Test', () => {
     it('it should execute phpunit', async () => {

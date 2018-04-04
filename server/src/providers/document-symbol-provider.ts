@@ -1,4 +1,4 @@
-import { PhpUnitParser } from '../phpunit-parser';
+import { PhpUnitParser } from '../phpunit';
 import { SymbolInformation, TextDocument, SymbolKind, Range } from 'vscode-languageserver';
 
 export class DocumentSymbolProvider {

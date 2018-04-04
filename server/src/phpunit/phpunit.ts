@@ -1,6 +1,6 @@
-import { FilesystemContract, files as filesystem } from './filesystem';
-import { os, OS, tap, value } from './helpers';
-import { Process } from './process';
+import { FilesystemContract, files as filesystem } from '../filesystem';
+import { os, OS, tap, value } from '../helpers';
+import { Process } from '../process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
 import { PhpUnitArguments } from './phpunit-arguments';
 
