@@ -1,4 +1,4 @@
-import { FilesystemContract, files as fileSystem } from './filesystem';
+import { FilesystemContract, files as filesystem } from './filesystem';
 import { os, OS, tap, value } from './helpers';
 import { Process } from './process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
@@ -7,15 +7,12 @@ import { PhpUnitArguments } from './phpunit-arguments';
 export class PhpUnit {
     protected binary: string;
     protected arguments: string[] = [];
-    private phpUnitArguments: PhpUnitArguments;
 
     constructor(
-        private files: FilesystemContract = fileSystem,
+        private files: FilesystemContract = filesystem,
         private process: Process = new Process(),
-        phpUnitArguments?: PhpUnitArguments
-    ) {
-        this.phpUnitArguments = phpUnitArguments || new PhpUnitArguments(files);
-    }
+        private phpUnitArguments = new PhpUnitArguments(filesystem)
+    ) {}
 
     setBinary(binary: string): PhpUnit {
         return tap(this, (phpUnit: PhpUnit) => {
@@ -30,8 +27,8 @@ export class PhpUnit {
     }
 
     async run(params: ExecuteCommandParams): Promise<string> {
-        const path: string = (params.arguments[0] = this.files.normalizePath(params.arguments[0]));
-        const cwd: string = this.files.dirname(path);
+        params.arguments[0] = this.files.normalizePath(params.arguments[0])
+        const cwd: string = this.files.dirname(params.arguments[0]);
         const root: string = await this.getRoot(cwd);
 
         this.phpUnitArguments
@@ -46,6 +43,13 @@ export class PhpUnit {
         };
 
         const output: string = await this.process.spawn(command);
+
+        const jUnitDotXml = this.phpUnitArguments.getJUnitDotXml();
+        if (jUnitDotXml && (await this.files.exists(jUnitDotXml))) {
+            this.files.unlink(jUnitDotXml);
+        }
+
+        console.log(JSON.stringify(command));
 
         return output;
     }

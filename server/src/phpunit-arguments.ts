@@ -5,7 +5,7 @@ export class PhpUnitArguments {
     private arguments: string[];
     private cwd: string;
     private root: string;
-    private jUnitDotXml: string;
+    private jUnitDotXml: string = '';
 
     constructor(private files: FilesystemContract) {}
 
@@ -43,6 +43,10 @@ export class PhpUnitArguments {
         }
 
         return this.arguments;
+    }
+
+    getJUnitDotXml(): string {
+        return this.jUnitDotXml;
     }
 
     private existsProperty(properties: string[]): boolean {
