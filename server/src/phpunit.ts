@@ -23,7 +23,7 @@ export class PhpUnit {
         });
     }
 
-    setArgs(args: string[]): PhpUnit {
+    setArguments(args: string[]): PhpUnit {
         return tap(this, (phpUnit: PhpUnit) => {
             phpUnit.arguments = args;
         });
