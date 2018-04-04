@@ -1,4 +1,4 @@
-import { readFile, stat } from 'fs';
+import { readFile, stat, unlink } from 'fs';
 import { FilesystemContract } from './contract';
 import { resolve as pathResolve, parse, dirname } from 'path';
 import { tmpdir } from 'os';
@@ -86,6 +86,10 @@ export abstract class Common implements FilesystemContract {
         prefix = prefix ? `${prefix}-` : '';
 
         return pathResolve(tmpdir(), `${prefix}${new Date().getTime()}.${extension}`);
+    }
+
+    unlink(path: string): Promise<boolean> {
+        return new Promise(resolve => unlink(path, (error: NodeJS.ErrnoException) => resolve(error ? false : true)));
     }
 
     abstract normalizePath(path: string): string;

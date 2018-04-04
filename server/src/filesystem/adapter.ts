@@ -47,4 +47,8 @@ export class Adapter implements FilesystemContract {
     tmpfile(extension: string = 'tmp', prefix?: string): string {
         return this.instance.tmpfile(extension, prefix);
     }
+
+    unlink(path: string): Promise<boolean> {
+        return this.instance.unlink(path);
+    }
 }

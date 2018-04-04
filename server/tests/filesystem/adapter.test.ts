@@ -1,5 +1,5 @@
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { OS, os } from '../../src/helpers';
 import { tmpdir } from 'os';
@@ -78,5 +78,15 @@ describe('Filesystem Test', () => {
         expect(files.tmpfile('php', 'test')).toMatch(
             new RegExp(`${resolve(dir, 'test-').replace(/\\/g, '\\\\')}\\d+\.php$`)
         );
+    });
+
+    it('it should delete file', async () => {
+        const files: FilesystemContract = new Filesystem();
+        const path = resolve(__dirname, 'unlink.txt');
+        writeFileSync(path, 'unlink');
+
+        expect(await files.exists(path)).toBeTruthy();
+        await files.unlink(path);
+        expect(await files.exists(path)).toBeFalsy();
     });
 });

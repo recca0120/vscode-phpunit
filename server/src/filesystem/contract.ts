@@ -9,4 +9,5 @@ export interface FilesystemContract {
     findUp(search: string, cwd?: string, root?: string): Promise<string>;
     dirname(path: string): string;
     tmpfile(extension?: string, prefix?: string): string;
+    unlink(path: string): Promise<boolean>;
 }
