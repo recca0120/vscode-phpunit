@@ -78,6 +78,7 @@ interface Settings {
 // file
 interface PhpUnitSettings {
     execPath: string;
+    args: string[];
 }
 
 // hold the maxNumberOfProblems setting
@@ -86,6 +87,7 @@ interface PhpUnitSettings {
 connection.onDidChangeConfiguration(change => {
     let settings = <Settings>change.settings;
     phpUnit.setPhpUnitBinary(settings.phpunit.execPath);
+    phpUnit.setPhpUnitArgs(settings.phpunit.args);
 });
 
 // function validateTextDocument(textDocument: TextDocument): void {

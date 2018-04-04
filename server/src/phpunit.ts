@@ -5,6 +5,7 @@ import { ExecuteCommandParams, Command } from 'vscode-languageserver';
 
 export class PhpUnit {
     protected phpUnitBinary: string;
+    protected phpUnitArgs: string[] = [];
 
     constructor(private files: FilesystemContract = fileSystem, private process: Process = new Process()) {}
 
@@ -14,13 +15,19 @@ export class PhpUnit {
         return this;
     }
 
+    setPhpUnitArgs(phpUnitArgs: string[]): PhpUnit {
+        this.phpUnitArgs = phpUnitArgs;
+
+        return this;
+    }
+
     async run(params: ExecuteCommandParams): Promise<string> {
         const path: string = (params.arguments[0] = this.files.normalizePath(params.arguments[0]));
         const cwd: string = this.files.dirname(path);
-        const root: string = await this.getRoot(cwd);;
+        const root: string = await this.getRoot(cwd);
 
         const cmd: string = await this.getPhpUnitBinary(cwd, root);
-        const args: string[] = params.arguments as string[];
+        const args: string[] = this.phpUnitArgs.concat(params.arguments as string[]);
 
         const command: Command = {
             command: cmd,

@@ -85,18 +85,21 @@ describe('PhpUnit Test', () => {
         expect(output).toEqual('output');
     });
 
-    it('it should execute phpunit use customize phpunit binary path', async () => {
+    it('it should execute phpunit use customize phpunit binary path and arguments', async () => {
         const path = resolve(__dirname, 'fixtures/project/tests/PHPUnitTest.php');
-        const command = resolve(__dirname, 'fixtures/bin/phpunit');
+        const command = resolve(__dirname, 'bin/php');
+        const args = [resolve(__dirname, 'fixtures/bin/phpunit')];
         const files: FilesystemContract = new Filesystem();
         const process: Process = new Process();
         const phpUnit = new PhpUnit(files, process);
 
         spyOn(process, 'spawn').and.returnValue('output');
 
-        const output: string = await phpUnit.setPhpUnitBinary(command).run({
+        phpUnit.setPhpUnitBinary(command).setPhpUnitArgs(args);
+
+        const output: string = await phpUnit.run({
             command: '',
-            arguments: [path],
+            arguments: args.concat([path]),
         });
 
         expect((process.spawn as jasmine.Spy).calls.argsFor(0)[0].command).toEqual(command);

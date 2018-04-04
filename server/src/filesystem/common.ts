@@ -58,12 +58,12 @@ export abstract class Common implements FilesystemContract {
                 return file;
             }
 
-            if(cwd === root) {
+            if (cwd === root) {
                 break;
             }
 
             cwd = pathResolve(cwd, '..');
-        } while(cwd !== root)
+        } while (cwd !== root);
 
         file = pathResolve(cwd, search);
 

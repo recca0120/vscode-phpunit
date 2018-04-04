@@ -3,7 +3,7 @@
 	"description": "phpunit lsp client",
 	"author": "recca0120",
 	"license": "MIT",
-	"version": "0.6.2",
+	"version": "0.6.3",
 	"publisher": "recca0120",
 	"repository": {
 		"type": "git",
@@ -29,7 +29,12 @@
 					"type": "string",
 					"default": "",
 					"description": "Path to phpunit executable (if empty it tries to use composer installation)."
-				}
+				},
+				"phpunit.args": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Any phpunit args (phpunit --help)"
+                }
 			}
 		}
 	},
