@@ -1,5 +1,5 @@
 import { FilesystemContract, files as fileSystem } from './filesystem';
-import { os, OS } from './helpers';
+import { os, OS, tap } from './helpers';
 import { Process } from './process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
 
@@ -10,15 +10,15 @@ export class PhpUnit {
     constructor(private files: FilesystemContract = fileSystem, private process: Process = new Process()) {}
 
     setBinary(binary: string): PhpUnit {
-        this.binary = binary;
-
-        return this;
+        return tap(this, (phpUnit: PhpUnit) => {
+            phpUnit.binary = binary;
+        });
     }
 
     setArgs(args: string[]): PhpUnit {
-        this.args = args;
-
-        return this;
+        return tap(this, (phpUnit: PhpUnit) => {
+            phpUnit.args = args;
+        });
     }
 
     async run(params: ExecuteCommandParams): Promise<string> {
