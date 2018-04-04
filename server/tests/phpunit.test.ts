@@ -99,10 +99,15 @@ describe('PhpUnit Test', () => {
 
         const output: string = await phpUnit.run({
             command: '',
-            arguments: args.concat([path]),
+            arguments: [path],
         });
 
         expect((process.spawn as jasmine.Spy).calls.argsFor(0)[0].command).toEqual(command);
+        expect((process.spawn as jasmine.Spy).calls.argsFor(0)[0].arguments).toEqual(args.concat([
+            path,
+            '-c',
+            resolve(__dirname, 'fixtures/project/phpunit.xml.dist')
+        ]));
 
         expect(output).toEqual('output');
     });

@@ -26,18 +26,23 @@ export class PhpUnit {
         const cwd: string = this.files.dirname(path);
         const root: string = await this.getRoot(cwd);
 
-        const command: Command = {
-            command: await this.getBinary(cwd, root),
-            arguments: this.args.concat(params.arguments as string[]),
-            title: '',
-        };
+        let args = this.args.concat(params.arguments as string[]);
 
         const phpUnitDotXml: string = await this.getPhpUnitDotXml(cwd, root);
+
+        console.log(path)
+        // console.log(cwd)
+        // console.log(root)
+
         if (phpUnitDotXml) {
-            command.arguments = command.arguments.concat(['-c', phpUnitDotXml]);
+            args = args.concat(['-c', phpUnitDotXml]);
         }
 
-        return await this.process.spawn(command);
+        return await this.process.spawn({
+            command: await this.getBinary(cwd, root),
+            arguments: args,
+            title: '',
+        } as Command);
     }
 
     private async getRoot(cwd: string) {

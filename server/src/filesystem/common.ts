@@ -71,10 +71,9 @@ export abstract class Common implements FilesystemContract {
     }
 
     setSystemPaths(systemPaths: string): FilesystemContract {
-        const delimiter = this.delimiter;
         this.systemPaths = systemPaths
-            .split(new RegExp(delimiter, 'g'))
-            .map((path: string) => path.replace(new RegExp(`${delimiter}$`, 'g'), '').trim());
+            .split(new RegExp(this.delimiter, 'g'))
+            .map((path: string) => path.replace(new RegExp(`${this.delimiter}$`, 'g'), '').trim());
 
         return this;
     }
