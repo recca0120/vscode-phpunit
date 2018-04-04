@@ -5,6 +5,7 @@ export class PhpUnitArguments {
     private arguments: string[];
     private cwd: string;
     private root: string;
+    private jUnitDotXml: string;
 
     constructor(private files: FilesystemContract) {}
 
@@ -30,17 +31,21 @@ export class PhpUnitArguments {
         let phpUnitDotXml: string;
 
         if (
-            this.checkArguments(['-c', '--configuration']) === false &&
+            this.existsProperty(['-c', '--configuration']) === false &&
             (phpUnitDotXml = await this.getPhpUnitDotXml())
         ) {
-            this.arguments.push('-c');
-            this.arguments.push(phpUnitDotXml);
+            this.arguments = this.arguments.concat(['-c', phpUnitDotXml]);
+        }
+
+        if (this.existsProperty(['--log-junit']) === false) {
+            this.jUnitDotXml = this.files.tmpfile('xml', 'phpunit-lsp');
+            this.arguments = this.arguments.concat(['--log-junit', this.jUnitDotXml]);
         }
 
         return this.arguments;
     }
 
-    private checkArguments(properties: string[]): boolean {
+    private existsProperty(properties: string[]): boolean {
         return this.arguments.some((arg: string) => properties.indexOf(arg) !== -1);
     }
 
