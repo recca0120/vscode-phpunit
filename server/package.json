@@ -12,8 +12,10 @@
 		"url": "https://github.com/recca0120/phpunit-lsp"
 	},
 	"dependencies": {
+		"@types/he": "^0.5.29",
 		"doc-parser": "^0.4.8",
 		"fast-xml-parser": "^3.3.6",
+		"he": "^1.1.1",
 		"php-parser": "git+https://github.com/glayzzle/php-parser.git",
 		"vscode-languageserver": "^3.5.0"
 	},
