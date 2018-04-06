@@ -3,7 +3,8 @@
 	"description": "phpunit lsp client",
 	"author": "recca0120",
 	"license": "MIT",
-	"version": "0.6.3",
+	"icon": "images/icon.png",
+	"version": "0.6.4",
 	"publisher": "recca0120",
 	"repository": {
 		"type": "git",
@@ -13,7 +14,15 @@
 		"vscode": "^1.16.0"
 	},
 	"categories": [
+		"Languages",
 		"Other"
+	],
+	"keywords": [
+		"phpunit",
+		"phpunit-lsp",
+        "test",
+		"php",
+		"language server protocol"
 	],
 	"activationEvents": [
 		"onLanguage:php"

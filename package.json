@@ -53,6 +53,5 @@
 				"git add"
 			]
 		}
-	},
-	"dependencies": {}
+	}
 }
