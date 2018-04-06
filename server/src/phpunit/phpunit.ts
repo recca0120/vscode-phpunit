@@ -45,7 +45,6 @@ export class PhpUnit {
         const output: string = await this.process.spawn(command);
 
         const jUnitDotXml = this.phpUnitArguments.get('--log-junit');
-        console.log(jUnitDotXml);
         if (jUnitDotXml && (await this.files.exists(jUnitDotXml))) {
             this.files.unlink(jUnitDotXml);
         }

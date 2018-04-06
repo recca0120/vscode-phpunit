@@ -67,6 +67,27 @@ export class Ast {
     }
 }
 
+export enum Type {
+    PASSED = 'passed',
+    ERROR = 'error',
+    WARNING = 'warning',
+    FAILURE = 'failure',
+    INCOMPLETE = 'incomplete',
+    RISKY = 'risky',
+    SKIPPED = 'skipped',
+    FAILED = 'failed',
+}
+
+export interface Test {
+    name: string;
+    class: string,
+    classname: string,
+    file: string,
+    line: number,
+    time: number,
+    type: Type,
+}
+
 export class JUnit {
     parse(code: string) {
         return this.getTests(
@@ -94,8 +115,17 @@ export class JUnit {
         }, []).map(this.parseTest.bind(this));
     }
 
-    private parseTest(test: any): any {
-        // console.log(test)
+    private parseTest(node: any): any {
+        const test: any = {
+            name: node._name || null,
+            class: node._class,
+            classname: node._classname || null,
+            file: node._file,
+            line: parseInt(node._line || 1, 10),
+            time: parseFloat(node._time || 0),
+            type: Type.PASSED,
+        }
+
         return test;
     }
 }
