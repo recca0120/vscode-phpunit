@@ -8,24 +8,23 @@ import {
     CodeLens,
     CodeLensParams,
     CompletionItem,
-    // CompletionItemKind,
-    // Diagnostic,
-    // DiagnosticSeverity,
     IConnection,
     IPCMessageReader,
     IPCMessageWriter,
     InitializeResult,
-    // TextDocument,
-    // TextDocumentPositionParams,
+    TextDocument,
     TextDocuments,
     createConnection,
     ExecuteCommandParams,
     DocumentSymbolParams,
     SymbolInformation,
+    Diagnostic,
+    DiagnosticSeverity,
+    DidChangeConfigurationParams,
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
-import { PhpUnit } from './phpunit';
+import { PhpUnit, Test, Type } from './phpunit';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
@@ -43,7 +42,8 @@ documents.listen(connection);
 
 // After the server has started the client sends an initialize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilities.
-connection.onInitialize((_params): InitializeResult => {
+// connection.onInitialize((params: InitializeParams): InitializeResult => {
+connection.onInitialize((): InitializeResult => {
     return {
         capabilities: {
             // Tell the client that the server works in FULL text document sync mode
@@ -84,9 +84,9 @@ interface PhpUnitSettings {
 // hold the maxNumberOfProblems setting
 // The settings have changed. Is send on server activation
 // as well.
-connection.onDidChangeConfiguration(change => {
+connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
     let settings = <Settings>change.settings;
-    phpUnit.setBinary(settings.phpunit.execPath).setArguments(settings.phpunit.args);
+    phpUnit.setBinary(settings.phpunit.execPath).setDefault(settings.phpunit.args);
 });
 
 // function validateTextDocument(textDocument: TextDocument): void {
@@ -113,10 +113,10 @@ connection.onDidChangeConfiguration(change => {
 //     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 // }
 
-connection.onDidChangeWatchedFiles(_change => {
-    // Monitored files have change in VSCode
-    connection.console.log('We received an file change event');
-});
+// connection.onDidChangeWatchedFiles((change: DidChangeWatchedFilesParams) => {
+//     // Monitored files have change in VSCode
+//     connection.console.log('We received an file change event');
+// });
 
 // This handler provides the initial list of the completion items.
 // connection.onCompletion((_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
@@ -156,8 +156,29 @@ connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvi
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     // connection.console.log(JSON.stringify(params));
-    const output: string = await phpUnit.run(params);
+    const { output, tests } = await phpUnit.run(params);
     connection.console.log(output);
+
+    const textDocument: TextDocument = documents.get(params.arguments[0]);
+    const lines: string[] = textDocument.getText().split(/\r?\n/);
+    const diagnostics: Diagnostic[] = tests
+        .filter((test: Test) => [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY].indexOf(test.type) !== -1)
+        .map((test: Test) => {
+            const line = lines[test.line - 1];
+            const firstNonWhitespaceCharacterIndex = line.search(/\S|$/);
+
+            return {
+                severity: test.type === Type.RISKY ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
+                range: {
+                    start: { line: test.line - 1, character: firstNonWhitespaceCharacterIndex },
+                    end: { line: test.line - 1, character: line.length },
+                },
+                message: test.fault.message,
+                source: 'phpunit',
+            };
+        });
+
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {
