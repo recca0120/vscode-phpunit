@@ -1,6 +1,6 @@
 import { tap } from '../helpers';
 import { decode } from 'he';
-const fastXmlParser = require('fast-xml-parser');
+import { parse } from 'fast-xml-parser';
 
 export enum Type {
     PASSED = 'passed',
@@ -38,7 +38,7 @@ export interface Test {
 export class JUnit {
     parse(code: string): Test[] {
         return this.getTests(
-            fastXmlParser.parse(code, {
+            parse(code, {
                 attributeNamePrefix: '_',
                 ignoreAttributes: false,
                 ignoreNameSpace: false,
