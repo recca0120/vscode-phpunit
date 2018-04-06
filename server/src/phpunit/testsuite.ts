@@ -20,8 +20,8 @@ const parser: Engine = new Engine({
     },
 });
 
-export class PhpUnitParser {
-    parseCode(code: string): any {
+export class Ast {
+    parse(code: string): any {
         return this.getNodes(parser.parseCode(code));
     }
 
@@ -63,5 +63,13 @@ export class PhpUnitParser {
                 (node.leadingComments &&
                     node.leadingComments.some((comment: any) => /@test/.test(comment.value)) === true))
         );
+    }
+}
+
+export class Testsuite {
+    constructor(private ast: Ast = new Ast()) {}
+
+    parseAst(code: string): any {
+        return this.ast.parse(code);
     }
 }

@@ -27,7 +27,7 @@ export class PhpUnit {
     }
 
     async run(params: ExecuteCommandParams): Promise<string> {
-        params.arguments[0] = this.files.normalizePath(params.arguments[0])
+        params.arguments[0] = this.files.normalizePath(params.arguments[0]);
         const cwd: string = this.files.dirname(params.arguments[0]);
         const root: string = await this.getRoot(cwd);
 
