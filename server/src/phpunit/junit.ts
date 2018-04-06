@@ -1,6 +1,6 @@
-import { tap } from '../helpers';
+import { tap, value } from '../helpers';
 import { decode } from 'he';
-import { parse } from 'fast-xml-parser';
+const parse = require('fast-xml-parser').parse;
 
 export enum Type {
     PASSED = 'passed',
@@ -51,9 +51,9 @@ export class JUnit {
     }
 
     private getSuites(node: any): any[] {
-        const testsuites: any = node.testsuites;
-
-        return testsuites.testsuite instanceof Array ? [].concat(testsuites.testsuite) : [testsuites.testsuite];
+        return value(node.testsuites, (testsuites: any): any => {
+            return testsuites.testsuite instanceof Array ? [].concat(testsuites.testsuite) : [testsuites.testsuite];
+        });
     }
 
     private getTests(node: any): Test[] {
@@ -87,15 +87,15 @@ export class JUnit {
         }
 
         const details: Detail[] = this.parseDetails(fault);
-        const currentDetail: Detail = this.currentDetail(details, test);
+        const current: Detail = this.current(details, test);
         const message: string = this.parseMessage(fault, details);
 
-        return Object.assign(test, currentDetail, {
+        return Object.assign(test, current, {
             type: fault.type,
             fault: {
                 type: fault._type || '',
                 message: message,
-                details: this.filterDetails(details, currentDetail),
+                details: this.filterDetails(details, current),
             },
         });
     }
@@ -161,11 +161,11 @@ export class JUnit {
             });
     }
 
-    private currentDetail(details: Detail[], node: any): Detail {
+    private current(details: Detail[], test: Test): Detail {
         return (
-            details.find(detail => node.file === detail.file && node.line !== detail.line) || {
-                file: node.file,
-                line: node.line,
+            details.find(detail => test.file === detail.file && test.line !== detail.line) || {
+                file: test.file,
+                line: test.line,
             }
         );
     }

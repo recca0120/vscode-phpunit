@@ -7,7 +7,6 @@
 import {
     CodeLens,
     CodeLensParams,
-    CompletionItem,
     IConnection,
     IPCMessageReader,
     IPCMessageWriter,

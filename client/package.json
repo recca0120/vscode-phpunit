@@ -20,7 +20,7 @@
 	"keywords": [
 		"phpunit",
 		"phpunit-lsp",
-        "test",
+		"test",
 		"php",
 		"language server protocol"
 	],
