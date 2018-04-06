@@ -179,7 +179,7 @@ export class JUnit {
 
         const message: string = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');
 
-        return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`, 'g'), '').trim() : message.trim());
+        return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`), '') : message).trim();
     }
 
     private filterDetails(details: Detail[], current: Detail): Detail[] {
