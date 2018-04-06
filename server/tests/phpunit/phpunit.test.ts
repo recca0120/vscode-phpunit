@@ -1,13 +1,13 @@
 import { resolve } from 'path';
-import { Filesystem, FilesystemContract } from '../../server/src/filesystem';
-import { Process } from '../src/process';
-import { os, OS } from '../src/helpers';
-import { PhpUnitArguments, PhpUnit } from './../src/phpunit';
+import { Filesystem, FilesystemContract } from '../../../server/src/filesystem';
+import { Process } from '../../src/process';
+import { os, OS } from '../../src/helpers';
+import { PhpUnitArguments, PhpUnit } from '../../src/phpunit';
 
 describe('PhpUnit Test', () => {
     it('it should execute phpunit', async () => {
-        const path = resolve(__dirname, 'fixtures/project/tests/PHPUnitTest.php');
-        const command = resolve(__dirname, `fixtures/project/vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`);
+        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
+        const command = resolve(__dirname, `../fixtures/project/vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`);
         const files: FilesystemContract = new Filesystem();
         const process: Process = new Process();
         const phpUnitArguments: PhpUnitArguments = new PhpUnitArguments(files);
@@ -33,8 +33,8 @@ describe('PhpUnit Test', () => {
     });
 
     it('it should execute phpunit with customize binary and arguments', async () => {
-        const path = resolve(__dirname, 'fixtures/project/tests/PHPUnitTest.php');
-        const command = resolve(__dirname, 'fixtures/project/vendor/bin/unittest');
+        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
+        const command = resolve(__dirname, '../fixtures/project/vendor/bin/unittest');
         const files: FilesystemContract = new Filesystem();
         const process: Process = new Process();
         const phpUnitArguments: PhpUnitArguments = new PhpUnitArguments(files);
