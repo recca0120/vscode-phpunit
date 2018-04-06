@@ -35,14 +35,20 @@ export class PhpUnit {
     }
 
     async run(params: ExecuteCommandParams): Promise<Result> {
-        params.arguments[0] = this.files.normalizePath(params.arguments[0]);
-        const cwd: string = this.files.dirname(params.arguments[0]);
+        const path = this.files.normalizePath(params.arguments[0]);
+        const cwd: string = this.files.dirname(path);
         const root: string = await this.getRoot(cwd);
 
         this.phpUnitArguments
             .setCwd(cwd)
             .setRoot(root)
-            .set(this.arguments.concat(params.arguments as string[]));
+            .set(
+                this.arguments.concat(
+                    tap((params.arguments as string[]).slice(), (args: string[]) => {
+                        args[0] = this.files.normalizePath(args[0]);
+                    })
+                )
+            );
 
         const command: Command = {
             command: await this.getBinary(cwd, root),
