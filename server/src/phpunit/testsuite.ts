@@ -4,7 +4,7 @@ const fastXmlParser = require('fast-xml-parser');
 
 export class Ast {
     parse(code: string): any[] {
-        return this.getNodes(
+        return this.getClassMethods(
             Engine.parseCode(code, {
                 ast: {
                     withPositions: true,
@@ -26,22 +26,22 @@ export class Ast {
         );
     }
 
-    private getNodes(node: Program): any[] {
-        return node.children
-            .reduce(
-                (childrens: any[], children: any) => {
-                    return children.kind === 'namespace'
-                        ? childrens.concat(children.children)
-                        : childrens.concat(children);
-                },
-                [] as any
-            )
-            .filter(this.isTest.bind(this))
-            .reduce((codeLens: any[], classNode: any) => {
-                const methods: any[] = classNode.body.filter(this.isTest.bind(this));
+    private getClassMethods(node: Program): any[] {
+        return this.getClasses(node)
+            .reduce((codeLens: any[], node: any) => {
+                const methods: any[] = node.body.filter(this.isTest.bind(this));
 
-                return methods.length === 0 ? codeLens : codeLens.concat([classNode]).concat(methods);
+                return methods.length === 0 ? codeLens : codeLens.concat([node]).concat(methods);
             }, []);
+    }
+
+    private getClasses(node: any) {
+        return node.children.reduce((classes: any[], namespaceOrClass: any) => {
+            return namespaceOrClass.kind === 'namespace'
+                ? classes.concat(namespaceOrClass.children)
+                : classes.concat(namespaceOrClass)
+        }, [])
+        .filter(this.isTest.bind(this));
     }
 
     private isTest(node: any): boolean {
@@ -69,7 +69,7 @@ export class Ast {
 
 export class JUnit {
     parse(code: string) {
-        return this.getNode(
+        return this.getTests(
             fastXmlParser.parse(code, {
                 attributeNamePrefix: '_',
                 ignoreAttributes: false,
@@ -82,8 +82,21 @@ export class JUnit {
         );
     }
 
-    private getNode(node: any) {
-        console.log(node);
+    private getSuites(node: any): any[] {
+        const testsuites: any = node.testsuites;
+
+        return testsuites.testsuite instanceof Array ? [].concat(testsuites.testsuite) : testsuites.testsuite;
+    }
+
+    private getTests(node: any) {
+        return this.getSuites(node).reduce((tests: any[], suite: any) => {
+            return tests.concat(suite.testcase);
+        }, []).map(this.parseTest.bind(this));
+    }
+
+    private parseTest(test: any): any {
+        // console.log(test)
+        return test;
     }
 }
 
