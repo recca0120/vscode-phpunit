@@ -155,12 +155,13 @@ connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvi
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     // connection.console.log(JSON.stringify(params));
-    const { output, tests } = await phpUnit.run(params);
-    connection.console.log(output);
+    await phpUnit.run(params);
+    connection.console.log(phpUnit.getOutput());
 
     const textDocument: TextDocument = documents.get(params.arguments[0]);
     const lines: string[] = textDocument.getText().split(/\r?\n/);
-    const diagnostics: Diagnostic[] = tests
+    const diagnostics: Diagnostic[] = phpUnit
+        .getTests()
         .filter((test: Test) => [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY].indexOf(test.type) !== -1)
         .map((test: Test) => {
             const line = lines[test.line - 1];

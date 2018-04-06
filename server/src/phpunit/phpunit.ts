@@ -6,14 +6,11 @@ import { Parameters } from './parameters';
 import { Test } from './junit';
 import { Testsuite } from './testsuite';
 
-export interface Result {
-    output: string;
-    tests: Test[];
-}
-
 export class PhpUnit {
-    protected binary: string;
-    protected defaults: string[] = [];
+    private binary: string;
+    private defaults: string[] = [];
+    private output: string;
+    private tests: Test[];
 
     constructor(
         private files: FilesystemContract = filesystem,
@@ -34,7 +31,7 @@ export class PhpUnit {
         });
     }
 
-    async run(params: ExecuteCommandParams): Promise<Result> {
+    async run(params: ExecuteCommandParams): Promise<number> {
         const path = this.files.normalizePath(params.arguments[0]);
         const cwd: string = this.files.dirname(path);
         const root: string = await this.getRoot(cwd);
@@ -55,15 +52,21 @@ export class PhpUnit {
                 .all(),
         };
 
-        return {
-            output: await this.process.spawn(command),
-            tests: await this.getTests(),
-        };
+        this.output = await this.process.spawn(command);
+        this.tests = await this.parseTests(this.parameters.get('--log-junit'));
+
+        return 0;
     }
 
-    private async getTests(): Promise<Test[]> {
-        const jUnitDotXml = this.parameters.get('--log-junit');
+    getOutput(): string {
+        return this.output;
+    }
 
+    getTests(): Test[] {
+        return this.tests;
+    }
+
+    private async parseTests(jUnitDotXml: string): Promise<Test[]> {
         return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
             ? this.testSuite.parseJUnit(await this.files.get(jUnitDotXml))
             : [];
