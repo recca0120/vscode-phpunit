@@ -1,5 +1,5 @@
 export * from './ast';
 export * from './junit';
-export * from './phpunit-arguments';
+export * from './parameters';
 export * from './phpunit';
 export * from './testsuite';

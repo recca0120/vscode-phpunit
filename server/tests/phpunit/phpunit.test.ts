@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { Filesystem, FilesystemContract } from '../../../server/src/filesystem';
 import { Process } from '../../src/process';
 import { os, OS } from '../../src/helpers';
-import { PhpUnitArguments, PhpUnit, Result } from '../../src/phpunit';
+import { Parameters, PhpUnit, Result } from '../../src/phpunit';
 
 describe('PhpUnit Test', () => {
     it('it should execute phpunit', async () => {
@@ -10,10 +10,10 @@ describe('PhpUnit Test', () => {
         const command = resolve(__dirname, `../fixtures/project/vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`);
         const files: FilesystemContract = new Filesystem();
         const process: Process = new Process();
-        const phpUnitArguments: PhpUnitArguments = new PhpUnitArguments(files);
-        const phpUnit = new PhpUnit(files, process, phpUnitArguments);
+        const parameters: Parameters = new Parameters(files);
+        const phpUnit = new PhpUnit(files, process, parameters);
 
-        spyOn(phpUnitArguments, 'all').and.returnValue([path]);
+        spyOn(parameters, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
         const output: Result = await phpUnit.run({
@@ -40,22 +40,22 @@ describe('PhpUnit Test', () => {
         const command = resolve(__dirname, '../fixtures/project/vendor/bin/unittest');
         const files: FilesystemContract = new Filesystem();
         const process: Process = new Process();
-        const phpUnitArguments: PhpUnitArguments = new PhpUnitArguments(files);
-        const phpUnit = new PhpUnit(files, process, phpUnitArguments);
+        const parameters: Parameters = new Parameters(files);
+        const phpUnit = new PhpUnit(files, process, parameters);
 
-        spyOn(phpUnitArguments, 'set').and.callThrough();
-        spyOn(phpUnitArguments, 'all').and.returnValue([path]);
+        spyOn(parameters, 'set').and.callThrough();
+        spyOn(parameters, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
         const output: Result = await phpUnit
             .setBinary(command)
-            .setArguments(['foo', 'bar'])
+            .setDefault(['foo', 'bar'])
             .run({
                 command: '',
                 arguments: [path],
             });
 
-        expect((phpUnitArguments.set as jasmine.Spy).calls.argsFor(0)).toEqual([['foo', 'bar', path]]);
+        expect((parameters.set as jasmine.Spy).calls.argsFor(0)).toEqual([['foo', 'bar', path]]);
 
         expect((process.spawn as jasmine.Spy).calls.argsFor(0)).toEqual([
             {

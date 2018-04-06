@@ -2,7 +2,7 @@ import { FilesystemContract, files as filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
-import { PhpUnitArguments } from './phpunit-arguments';
+import { Parameters } from './parameters';
 import { Test } from './junit';
 import { Testsuite } from './testsuite';
 
@@ -13,12 +13,12 @@ export interface Result {
 
 export class PhpUnit {
     protected binary: string;
-    protected arguments: string[] = [];
+    protected defaults: string[] = [];
 
     constructor(
         private files: FilesystemContract = filesystem,
         private process: Process = new Process(),
-        private phpUnitArguments = new PhpUnitArguments(filesystem),
+        private parameters = new Parameters(filesystem),
         private testSuite: Testsuite = new Testsuite()
     ) {}
 
@@ -28,9 +28,9 @@ export class PhpUnit {
         });
     }
 
-    setArguments(args: string[]): PhpUnit {
+    setDefault(args: string[]): PhpUnit {
         return tap(this, (phpUnit: PhpUnit) => {
-            phpUnit.arguments = args;
+            phpUnit.defaults = args;
         });
     }
 
@@ -39,21 +39,20 @@ export class PhpUnit {
         const cwd: string = this.files.dirname(path);
         const root: string = await this.getRoot(cwd);
 
-        this.phpUnitArguments
-            .setCwd(cwd)
-            .setRoot(root)
-            .set(
-                this.arguments.concat(
-                    tap((params.arguments as string[]).slice(), (args: string[]) => {
-                        args[0] = this.files.normalizePath(args[0]);
-                    })
-                )
-            );
-
         const command: Command = {
-            command: await this.getBinary(cwd, root),
-            arguments: await this.phpUnitArguments.all(),
             title: '',
+            command: await this.getBinary(cwd, root),
+            arguments: await this.parameters
+                .setCwd(cwd)
+                .setRoot(root)
+                .set(
+                    this.defaults.concat(
+                        tap((params.arguments as string[]).slice(), (parameters: string[]) => {
+                            parameters[0] = this.files.normalizePath(parameters[0]);
+                        })
+                    )
+                )
+                .all(),
         };
 
         return {
@@ -63,7 +62,7 @@ export class PhpUnit {
     }
 
     private async getTests(): Promise<Test[]> {
-        const jUnitDotXml = this.phpUnitArguments.get('--log-junit');
+        const jUnitDotXml = this.parameters.get('--log-junit');
 
         return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
             ? this.testSuite.parseJUnit(await this.files.get(jUnitDotXml))

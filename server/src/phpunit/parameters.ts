@@ -1,7 +1,7 @@
 import { FilesystemContract } from '../filesystem';
 import { tap } from '../helpers';
 
-export class PhpUnitArguments {
+export class Parameters {
     private arguments: string[];
     private cwd: string;
     private root: string;
@@ -9,8 +9,8 @@ export class PhpUnitArguments {
 
     constructor(private files: FilesystemContract) {}
 
-    set(args: string[] | string): PhpUnitArguments {
-        return tap(this, (phpUnitArguments: PhpUnitArguments) => {
+    set(args: string[] | string): Parameters {
+        return tap(this, (phpUnitArguments: Parameters) => {
             phpUnitArguments.arguments = args instanceof Array ? args : [args];
         });
     }
@@ -28,14 +28,14 @@ export class PhpUnitArguments {
         return this.arguments.some((arg: string) => property === arg);
     }
 
-    setCwd(cwd: string): PhpUnitArguments {
-        return tap(this, (phpUnitArguments: PhpUnitArguments) => {
+    setCwd(cwd: string): Parameters {
+        return tap(this, (phpUnitArguments: Parameters) => {
             phpUnitArguments.cwd = cwd;
         });
     }
 
-    setRoot(root: string): PhpUnitArguments {
-        return tap(this, (phpUnitArguments: PhpUnitArguments) => {
+    setRoot(root: string): Parameters {
+        return tap(this, (phpUnitArguments: Parameters) => {
             phpUnitArguments.root = root;
         });
     }
