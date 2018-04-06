@@ -32,19 +32,20 @@ export class PhpUnit {
         const root: string = await this.getRoot(cwd);
 
         this.phpUnitArguments
-            .setArguments(this.arguments.concat(params.arguments as string[]))
             .setCwd(cwd)
-            .setRoot(root);
+            .setRoot(root)
+            .set(this.arguments.concat(params.arguments as string[]));
 
         const command: Command = {
             command: await this.getBinary(cwd, root),
-            arguments: await this.phpUnitArguments.getArguments(),
+            arguments: await this.phpUnitArguments.all(),
             title: '',
         };
 
         const output: string = await this.process.spawn(command);
 
-        const jUnitDotXml = this.phpUnitArguments.getJUnitDotXml();
+        const jUnitDotXml = this.phpUnitArguments.get('--log-junit');
+        console.log(jUnitDotXml);
         if (jUnitDotXml && (await this.files.exists(jUnitDotXml))) {
             this.files.unlink(jUnitDotXml);
         }

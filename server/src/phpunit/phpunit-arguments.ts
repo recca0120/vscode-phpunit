@@ -9,10 +9,23 @@ export class PhpUnitArguments {
 
     constructor(private files: FilesystemContract) {}
 
-    setArguments(args: string[]): PhpUnitArguments {
+    set(args: string[] | string): PhpUnitArguments {
         return tap(this, (phpUnitArguments: PhpUnitArguments) => {
-            phpUnitArguments.arguments = args;
+            phpUnitArguments.arguments = args instanceof Array ? args : [args];
         });
+    }
+
+    get(property: string): string {
+        let index: number;
+        if ((index = this.arguments.indexOf(property)) !== -1) {
+            return this.arguments[index + 1];
+        }
+
+        return '';
+    }
+
+    exists(property: string): boolean {
+        return this.arguments.some((arg: string) => property === arg);
     }
 
     setCwd(cwd: string): PhpUnitArguments {
@@ -27,17 +40,18 @@ export class PhpUnitArguments {
         });
     }
 
-    async getArguments(): Promise<string[]> {
+    async all(): Promise<string[]> {
         let phpUnitDotXml: string;
 
         if (
-            this.existsProperty(['-c', '--configuration']) === false &&
-            (phpUnitDotXml = await this.getPhpUnitDotXml())
+            this.exists('-c') === false &&
+            this.exists('--configuration') === false &&
+            (phpUnitDotXml = await this.findPhpUnitDotXml())
         ) {
             this.arguments = this.arguments.concat(['-c', phpUnitDotXml]);
         }
 
-        if (this.existsProperty(['--log-junit']) === false) {
+        if (this.exists('--log-junit') === false) {
             this.jUnitDotXml = this.files.tmpfile('xml', 'phpunit-lsp');
             this.arguments = this.arguments.concat(['--log-junit', this.jUnitDotXml]);
         }
@@ -45,15 +59,7 @@ export class PhpUnitArguments {
         return this.arguments;
     }
 
-    getJUnitDotXml(): string {
-        return this.jUnitDotXml;
-    }
-
-    private existsProperty(properties: string[]): boolean {
-        return this.arguments.some((arg: string) => properties.indexOf(arg) !== -1);
-    }
-
-    private async getPhpUnitDotXml(): Promise<string> {
+    private async findPhpUnitDotXml(): Promise<string> {
         return (
             (await this.files.findUp('phpunit.xml', this.cwd, this.root)) ||
             (await this.files.findUp('phpunit.xml.dist', this.cwd, this.root))

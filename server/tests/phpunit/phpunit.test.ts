@@ -13,7 +13,7 @@ describe('PhpUnit Test', () => {
         const phpUnitArguments: PhpUnitArguments = new PhpUnitArguments(files);
         const phpUnit = new PhpUnit(files, process, phpUnitArguments);
 
-        spyOn(phpUnitArguments, 'getArguments').and.returnValue([path]);
+        spyOn(phpUnitArguments, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
         const output: string = await phpUnit.run({
@@ -40,8 +40,8 @@ describe('PhpUnit Test', () => {
         const phpUnitArguments: PhpUnitArguments = new PhpUnitArguments(files);
         const phpUnit = new PhpUnit(files, process, phpUnitArguments);
 
-        spyOn(phpUnitArguments, 'setArguments').and.callThrough();
-        spyOn(phpUnitArguments, 'getArguments').and.returnValue([path]);
+        spyOn(phpUnitArguments, 'set').and.callThrough();
+        spyOn(phpUnitArguments, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
         const output: string = await phpUnit
@@ -52,7 +52,7 @@ describe('PhpUnit Test', () => {
                 arguments: [path],
             });
 
-        expect((phpUnitArguments.setArguments as jasmine.Spy).calls.argsFor(0)).toEqual([['foo', 'bar', path]]);
+        expect((phpUnitArguments.set as jasmine.Spy).calls.argsFor(0)).toEqual([['foo', 'bar', path]]);
 
         expect((process.spawn as jasmine.Spy).calls.argsFor(0)).toEqual([
             {

@@ -4,24 +4,26 @@ const fastXmlParser = require('fast-xml-parser');
 
 export class Ast {
     parse(code: string): any[] {
-        return this.getNodes(Engine.parseCode(code, {
-            ast: {
-                withPositions: true,
-                withSource: true,
-            },
-            parser: {
-                debug: false,
-                extractDoc: true,
-                suppressErrors: true,
-            },
-            lexer: {
-                all_tokens: true,
-                comment_tokens: true,
-                mode_eval: true,
-                asp_tags: true,
-                short_tags: true,
-            },
-        }));
+        return this.getNodes(
+            Engine.parseCode(code, {
+                ast: {
+                    withPositions: true,
+                    withSource: true,
+                },
+                parser: {
+                    debug: false,
+                    extractDoc: true,
+                    suppressErrors: true,
+                },
+                lexer: {
+                    all_tokens: true,
+                    comment_tokens: true,
+                    mode_eval: true,
+                    asp_tags: true,
+                    short_tags: true,
+                },
+            })
+        );
     }
 
     private getNodes(node: Program): any[] {
@@ -67,19 +69,21 @@ export class Ast {
 
 export class JUnit {
     parse(code: string) {
-        return this.getNode(fastXmlParser.parse(code, {
-            attributeNamePrefix: '_',
-            ignoreAttributes: false,
-            ignoreNameSpace: false,
-            parseNodeValue : true,
-            parseAttributeValue: true,
-            trimValues: true,
-            textNodeName: '__text',
-        }));
+        return this.getNode(
+            fastXmlParser.parse(code, {
+                attributeNamePrefix: '_',
+                ignoreAttributes: false,
+                ignoreNameSpace: false,
+                parseNodeValue: true,
+                parseAttributeValue: true,
+                trimValues: true,
+                textNodeName: '__text',
+            })
+        );
     }
 
     private getNode(node: any) {
-        console.log(node)
+        console.log(node);
     }
 }
 
