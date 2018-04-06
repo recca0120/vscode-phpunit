@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { Filesystem, FilesystemContract } from '../../../server/src/filesystem';
 import { Process } from '../../src/process';
 import { os, OS } from '../../src/helpers';
-import { PhpUnitArguments, PhpUnit } from '../../src/phpunit';
+import { PhpUnitArguments, PhpUnit, Result } from '../../src/phpunit';
 
 describe('PhpUnit Test', () => {
     it('it should execute phpunit', async () => {
@@ -16,7 +16,7 @@ describe('PhpUnit Test', () => {
         spyOn(phpUnitArguments, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
-        const output: string = await phpUnit.run({
+        const output: Result = await phpUnit.run({
             command: '',
             arguments: [path],
         });
@@ -29,7 +29,10 @@ describe('PhpUnit Test', () => {
             },
         ]);
 
-        expect(output).toEqual('output');
+        expect(output).toEqual({
+            output: 'output',
+            tests: [],
+        });
     });
 
     it('it should execute phpunit with customize binary and arguments', async () => {
@@ -44,7 +47,7 @@ describe('PhpUnit Test', () => {
         spyOn(phpUnitArguments, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
-        const output: string = await phpUnit
+        const output: Result = await phpUnit
             .setBinary(command)
             .setArguments(['foo', 'bar'])
             .run({
@@ -62,6 +65,9 @@ describe('PhpUnit Test', () => {
             },
         ]);
 
-        expect(output).toEqual('output');
+        expect(output).toEqual({
+            output: 'output',
+            tests: [],
+        });
     });
 });

@@ -3,6 +3,13 @@ import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
 import { ExecuteCommandParams, Command } from 'vscode-languageserver';
 import { PhpUnitArguments } from './phpunit-arguments';
+import { Test } from './junit';
+import { Testsuite } from './testsuite';
+
+export interface Result {
+    output: string;
+    tests: Test[];
+}
 
 export class PhpUnit {
     protected binary: string;
@@ -11,7 +18,8 @@ export class PhpUnit {
     constructor(
         private files: FilesystemContract = filesystem,
         private process: Process = new Process(),
-        private phpUnitArguments = new PhpUnitArguments(filesystem)
+        private phpUnitArguments = new PhpUnitArguments(filesystem),
+        private testSuite: Testsuite = new Testsuite()
     ) {}
 
     setBinary(binary: string): PhpUnit {
@@ -26,7 +34,7 @@ export class PhpUnit {
         });
     }
 
-    async run(params: ExecuteCommandParams): Promise<string> {
+    async run(params: ExecuteCommandParams): Promise<Result> {
         params.arguments[0] = this.files.normalizePath(params.arguments[0]);
         const cwd: string = this.files.dirname(params.arguments[0]);
         const root: string = await this.getRoot(cwd);
@@ -42,16 +50,18 @@ export class PhpUnit {
             title: '',
         };
 
-        const output: string = await this.process.spawn(command);
+        return {
+            output: await this.process.spawn(command),
+            tests: await this.getTests(),
+        };
+    }
 
+    private async getTests(): Promise<Test[]> {
         const jUnitDotXml = this.phpUnitArguments.get('--log-junit');
-        if (jUnitDotXml && (await this.files.exists(jUnitDotXml))) {
-            this.files.unlink(jUnitDotXml);
-        }
 
-        console.log(JSON.stringify(command));
-
-        return output;
+        return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
+            ? this.testSuite.parseJUnit(await this.files.get(jUnitDotXml))
+            : [];
     }
 
     private async getRoot(cwd: string): Promise<string> {
