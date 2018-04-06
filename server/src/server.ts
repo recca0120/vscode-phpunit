@@ -49,9 +49,9 @@ connection.onInitialize((): InitializeResult => {
             // Tell the client that the server works in FULL text document sync mode
             textDocumentSync: documents.syncKind,
             // Tell the client that the server support code complete
-            completionProvider: {
-                resolveProvider: true,
-            },
+            // completionProvider: {
+            //     resolveProvider: true,
+            // },
             codeLensProvider: {
                 resolveProvider: true,
             },
@@ -139,15 +139,15 @@ connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
 
 // This handler resolve additional information for the item selected in
 // the completion list.
-connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-    // if (item.data === 1) {
-    //     (item.detail = 'TypeScript details'), (item.documentation = 'TypeScript documentation');
-    // } else if (item.data === 2) {
-    //     (item.detail = 'JavaScript details'), (item.documentation = 'JavaScript documentation');
-    // }
+// connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
+//     if (item.data === 1) {
+//         (item.detail = 'TypeScript details'), (item.documentation = 'TypeScript documentation');
+//     } else if (item.data === 2) {
+//         (item.detail = 'JavaScript details'), (item.documentation = 'JavaScript documentation');
+//     }
 
-    return item;
-});
+//     return item;
+// });
 
 connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
     return codeLensProvider.provideCodeLenses(documents.get(params.textDocument.uri));
