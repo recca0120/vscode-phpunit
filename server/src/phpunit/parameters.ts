@@ -1,4 +1,4 @@
-import { FilesystemContract } from '../filesystem';
+import { FilesystemContract, files as fileSystem } from '../filesystem';
 import { tap } from '../helpers';
 
 export class Parameters {
@@ -7,21 +7,28 @@ export class Parameters {
     private root: string;
     private jUnitDotXml: string = '';
 
-    constructor(private files: FilesystemContract) {}
+    constructor(private files: FilesystemContract = fileSystem) {}
 
-    set(args: string[] | string): Parameters {
-        return tap(this, (phpUnitArguments: Parameters) => {
-            phpUnitArguments.arguments = args instanceof Array ? args : [args];
+    set(args: string[]): Parameters {
+        return tap(this, (self: Parameters) => {
+            self.arguments = args;
         });
     }
 
-    get(property: string): string {
-        let index: number;
-        if ((index = this.arguments.indexOf(property)) !== -1) {
-            return this.arguments[index + 1];
+    get(property: string): any {
+        const index: number = this.arguments.indexOf(property);
+
+        if (index !== -1) {
+            if (index === this.arguments.length - 1) {
+                return true;
+            }
+
+            const value: string = this.arguments[index + 1];
+
+            return value.indexOf('-') === 0 ? true : value;
         }
 
-        return '';
+        return false;
     }
 
     exists(property: string): boolean {
@@ -29,14 +36,14 @@ export class Parameters {
     }
 
     setCwd(cwd: string): Parameters {
-        return tap(this, (phpUnitArguments: Parameters) => {
-            phpUnitArguments.cwd = cwd;
+        return tap(this, (self: Parameters) => {
+            self.cwd = cwd;
         });
     }
 
     setRoot(root: string): Parameters {
-        return tap(this, (phpUnitArguments: Parameters) => {
-            phpUnitArguments.root = root;
+        return tap(this, (self: Parameters) => {
+            self.root = root;
         });
     }
 
