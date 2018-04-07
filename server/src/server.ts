@@ -27,7 +27,7 @@ import { DiagnosticProvider } from './providers/diagnostic-provider';
 
 const collect: Collection = new Collection();
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
-const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
+const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(collect);
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 const phpUnit: PhpUnit = new PhpUnit();
 
@@ -136,22 +136,17 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     await phpUnit.run(params);
     const tests: Test[] = phpUnit.getTests();
     connection.console.log(phpUnit.getOutput());
+    collect.set(tests);
 
-    collect
-        .set(tests)
-        .all()
-        .forEach((tests, uri) => {
-            connection.sendDiagnostics({
-                uri,
-                diagnostics: diagnosticProvider.provideDiagnostics(documents.get(uri), tests),
-            });
-        });
+    diagnosticProvider.sendDiagnostics(connection, documents);
 
     const textDocument: TextDocument = documents.get(params.arguments[0]);
     connection.sendNotification('tests', {
         uri: textDocument.uri,
         tests,
     });
+
+    // diagnosticProvider.provideDiagnostics(documents.get(uri), tests),
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {

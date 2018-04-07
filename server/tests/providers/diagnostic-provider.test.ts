@@ -146,7 +146,7 @@ describe('DiagnosticProvider Test', () => {
             },
         ]);
 
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(collect);
 
         expect(diagnosticProvider.provideDiagnostics(textDocument, collect.get(textDocument.uri))).toEqual([
             {
