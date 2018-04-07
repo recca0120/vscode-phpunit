@@ -1,7 +1,10 @@
 import { Test } from './phpunit';
+import { FilesystemContract, files as fileSystem } from './filesystem';
 
 export class Collection {
     private items: Map<string, Test[]> = new Map<string, Test[]>();
+
+    constructor(private files: FilesystemContract = fileSystem) {}
 
     set(tests: Test[]): Collection {
         const groups: Map<string, Test[]> = this.groupBy(tests);
@@ -15,20 +18,21 @@ export class Collection {
     }
 
     get(file: string): Test[] {
-        return this.items.get(file) || [];
+        return this.items.get(this.normalizePath(file)) || [];
     }
 
     private groupBy(tests: Test[]): Map<string, Test[]> {
         return tests.reduce((groups: Map<string, Test[]>, test: Test) => {
-            const group: Test[] = groups.get(test.file) || [];
+            const key: string = this.normalizePath(test.file);
+            const group: Test[] = groups.get(key) || [];
             group.push(test);
-            groups.set(test.file, group);
+            groups.set(key, group);
 
             return groups;
         }, new Map<string, Test[]>());
     }
 
-    private merge(oldTests: Test[], newTests: Test[]) {
+    private merge(oldTests: Test[], newTests: Test[]): Test[] {
         const merged: Test[] = oldTests
             .filter((oldTest: Test) => {
                 for (const newTest of newTests) {
@@ -46,5 +50,9 @@ export class Collection {
         });
 
         return merged;
+    }
+
+    private normalizePath(path: string): string {
+        return this.files.normalizePath(path).toLowerCase();
     }
 }
