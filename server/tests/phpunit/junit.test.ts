@@ -5,235 +5,230 @@ import { resolve } from 'path';
 
 describe('JUnit Test', () => {
     const jUnit: JUnit = new JUnit();
+    const path =
+        'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\tests\\AssertionsTest.php';
+    const path2 =
+        'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\tests\\CalculatorTest.php';
     let tests: Test[] = [];
+
     beforeEach(async () => {
-        const content: string = await files.get(resolve(__dirname, '../fixtures/junit.xml'));
+        const content: string = await files.get(resolve(__dirname, '../fixtures/project/junit.xml'));
         tests = jUnit.parse(content);
     });
 
-    it('passed', () => {
+    it('test_passed', () => {
         expect(tests[0]).toEqual({
-            name: 'testPassed',
-            class: 'PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 13,
-            time: 0.006241,
+            name: 'test_passed',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 9,
+            time: 0.007537,
             type: Type.PASSED,
         });
     });
 
-    it('failed', () => {
+    it('test_error', () => {
         expect(tests[1]).toEqual({
-            name: 'testFailed',
-            class: 'PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 20,
-            time: 0.001918,
+            name: 'test_error',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 16,
+            time: 0.001508,
             type: Type.FAILURE,
             fault: {
-                type: 'PHPUnit_Framework_ExpectationFailedException',
+                type: 'PHPUnit\\Framework\\ExpectationFailedException',
                 message: 'Failed asserting that false is true.',
                 details: [],
             },
         });
     });
 
-    it('error', () => {
+    it('test_assertion_isnt_same', () => {
         expect(tests[2]).toEqual({
-            name: 'testError',
-            class: 'PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 25,
-            time: 0.001087,
-            type: Type.ERROR,
+            name: 'test_assertion_isnt_same',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 21,
+            time: 0.001332,
+            type: Type.FAILURE,
             fault: {
-                type: 'PHPUnit_Framework_Exception',
+                type: 'PHPUnit\\Framework\\ExpectationFailedException',
                 message:
-                    'Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name',
+                    "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n Array &0 (\n-    'a' => 'b'\n-    'c' => 'd'\n+    'e' => 'f'\n+    0 => 'g'\n+    1 => 'h'\n )",
                 details: [],
             },
         });
     });
 
-    it('skipped', () => {
+    it('test_risky', () => {
         expect(tests[3]).toEqual({
-            name: 'testSkipped',
-            class: 'PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 30,
-            time: 0.001138,
-            type: Type.SKIPPED,
-            fault: {
-                type: 'PHPUnit_Framework_SkippedTestError',
-                message: 'Skipped Test',
-                details: [],
-            },
-        });
-    });
-
-    it('incomplete', () => {
-        expect(tests[4]).toEqual({
-            name: 'testIncomplete',
-            class: 'PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 35,
-            time: 0.001081,
-            type: Type.INCOMPLETE,
-            fault: {
-                type: 'PHPUnit_Framework_IncompleteTestError',
-                message: 'Incomplete Test',
-                details: [],
-            },
-        });
-    });
-
-    it('exception', () => {
-        expect(tests[5]).toEqual({
-            name: 'testReceive',
-            class: 'PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 45,
-            time: 0.164687,
-            type: Type.ERROR,
-            fault: {
-                type: 'BadMethodCallException',
-                message:
-                    'Method Mockery_1_Symfony_Component_HttpFoundation_File_UploadedFile::getClientOriginalName() does not exist on this mock object',
-                details: [
-                    {
-                        file: 'C:\\Users\\recca\\github\\tester-phpunit\\src\\Receiver.php',
-                        line: 85,
-                    },
-                    {
-                        file: 'C:\\Users\\recca\\github\\tester-phpunit\\src\\Receiver.php',
-                        line: 68,
-                    },
-                ],
-            },
-        });
-    });
-
-    it('current mockery call', () => {
-        expect(tests[6]).toEqual({
-            name: 'testCleanDirectory',
-            class: 'Recca0120\\Upload\\Tests\\PHPUnitTest',
-            classname: null,
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 13,
-            time: 0.008761,
-            type: Type.ERROR,
-            fault: {
-                type: 'Mockery\\Exception\\InvalidCountException',
-                message: [
-                    'Mockery\\Exception\\InvalidCountException: Method delete("C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php") from Mockery_1_Recca0120_Upload_Filesystem should be called',
-                    ' exactly 1 times but called 0 times.',
-                ].join('\n'),
-                details: [
-                    {
-                        file:
-                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
-                        line: 37,
-                    },
-                    {
-                        file:
-                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
-                        line: 298,
-                    },
-                    {
-                        file:
-                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
-                        line: 120,
-                    },
-                    {
-                        file:
-                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
-                        line: 297,
-                    },
-                    {
-                        file:
-                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
-                        line: 282,
-                    },
-                    {
-                        file:
-                            'C:\\Users\\recca\\UniServerZ\\www\\driways\\laravel\\vendor\\mockery\\mockery\\library\\Mockery.php',
-                        line: 152,
-                    },
-                    {
-                        file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
-                        line: 188,
-                    },
-                    {
-                        file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
-                        line: 118,
-                    },
-                ],
-            },
-        });
-    });
-
-    it('testcase has skipped tag', () => {
-        expect(tests[7]).toEqual({
-            name: 'testSkipped',
-            class: 'PHPUnitTest',
-            classname: 'PHPUnitTest',
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 23,
-            time: 0.001352,
-            type: Type.SKIPPED,
-            fault: {
-                type: 'skipped',
-                message: '',
-                details: [],
-            },
-        });
-    });
-
-    it('testcase has incomplete tag', () => {
-        expect(tests[8]).toEqual({
-            name: 'testIncomplete',
-            class: 'PHPUnitTest',
-            classname: 'PHPUnitTest',
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 28,
-            time: 0.000954,
-            type: Type.SKIPPED,
-            fault: {
-                type: 'skipped',
-                message: '',
-                details: [],
-            },
-        });
-    });
-
-    it('risky', () => {
-        expect(tests[9]).toEqual({
-            name: 'testRisky',
-            class: 'PHPUnitTest',
-            classname: 'PHPUnitTest',
-            file: 'C:\\Users\\recca\\github\\tester-phpunit\\tests\\PHPUnitTest.php',
-            line: 35,
-            time: 0.205927,
+            name: 'test_risky',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 24,
+            time: 0.000079,
             type: Type.RISKY,
             fault: {
                 type: 'PHPUnit\\Framework\\RiskyTestError',
                 message: 'Risky Test',
+                details: [],
+            },
+        });
+    });
+
+    it('it_should_be_annotation_test', () => {
+        expect(tests[4]).toEqual({
+            name: 'it_should_be_annotation_test',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 32,
+            time: 0.000063,
+            type: Type.PASSED,
+        });
+    });
+
+    it('test_skipped', () => {
+        expect(tests[5]).toEqual({
+            name: 'test_skipped',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 37,
+            time: 0.000664,
+            type: Type.SKIPPED,
+            fault: {
+                details: [],
+                message: '',
+                type: 'skipped',
+            },
+        });
+    });
+
+    it('test_incomplete', () => {
+        expect(tests[6]).toEqual({
+            name: 'test_incomplete',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 42,
+            time: 0.000693,
+            type: Type.SKIPPED,
+            fault: {
+                details: [],
+                message: '',
+                type: 'skipped',
+            },
+        });
+    });
+
+    it('test_no_assertion', () => {
+        expect(tests[7]).toEqual({
+            name: 'test_no_assertion',
+            class: 'Tests\\AssertionsTest',
+            classname: 'Tests.AssertionsTest',
+            file: path,
+            line: 47,
+            time: 0.000047,
+            type: Type.RISKY,
+            fault: {
+                details: [],
+                message: 'Risky Test',
+                type: 'PHPUnit\\Framework\\RiskyTestError',
+            },
+        });
+    });
+
+    it('test_sum', () => {
+        expect(tests[8]).toEqual({
+            name: 'test_sum',
+            class: 'Tests\\CalculatorTest',
+            classname: 'Tests.CalculatorTest',
+            file: path2,
+            line: 18,
+            time: 0.00197,
+            type: Type.PASSED,
+        });
+    });
+
+    it('test_sum_fail', () => {
+        expect(tests[9]).toEqual({
+            name: 'test_sum_fail',
+            class: 'Tests\\CalculatorTest',
+            classname: 'Tests.CalculatorTest',
+            file: path2,
+            line: 29,
+            time: 0.000132,
+            type: Type.FAILURE,
+            fault: {
+                details: [],
+                message: 'Failed asserting that 4 is identical to 3.',
+                type: 'PHPUnit\\Framework\\ExpectationFailedException',
+            },
+        });
+    });
+
+    it('test_sum_item', () => {
+        expect(tests[10]).toEqual({
+            name: 'test_sum_item',
+            class: 'Tests\\CalculatorTest',
+            classname: 'Tests.CalculatorTest',
+            file: path2,
+            line: 32,
+            time: 0.000608,
+            type: Type.PASSED,
+        });
+    });
+
+    it('test_sum_item_method_not_call', () => {
+        expect(tests[11]).toEqual({
+            name: 'test_sum_item_method_not_call',
+            class: 'Tests\\CalculatorTest',
+            classname: 'Tests.CalculatorTest',
+            file: path2,
+            line: 15,
+            time: 0.027106,
+            type: Type.ERROR,
+            fault: {
                 details: [
                     {
-                        file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
-                        line: 195,
+                        file:
+                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
+                        line: 38,
                     },
                     {
-                        file: 'C:\\ProgramData\\ComposerSetup\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
-                        line: 148,
+                        file:
+                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
+                        line: 309,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
+                        line: 119,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        line: 301,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        line: 286,
+                    },
+                    {
+                        file:
+                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery.php',
+                        line: 165,
                     },
                 ],
+                message:
+                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                type: 'Mockery\\Exception\\InvalidCountException',
             },
         });
     });

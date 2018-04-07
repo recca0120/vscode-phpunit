@@ -51,9 +51,13 @@ export class JUnit {
     }
 
     private getSuites(node: any): any[] {
-        return value(node.testsuites, (testsuites: any): any => {
-            return testsuites.testsuite instanceof Array ? [].concat(testsuites.testsuite) : [testsuites.testsuite];
-        });
+        let testsuite: any = node.testsuites.testsuite;
+
+        while (testsuite.testsuite) {
+            testsuite = testsuite.testsuite;
+        }
+
+        return testsuite instanceof Array ? [].concat(testsuite) : [testsuite];
     }
 
     private getTests(node: any): Test[] {

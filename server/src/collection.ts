@@ -48,7 +48,7 @@ export class Collection {
                         });
                     }
                 });
-            })
+            });
         });
 
         return gutters;
@@ -59,7 +59,7 @@ export class Collection {
 
         this.forEach((tests: Test[], uri: string) => {
             items.push(callback(tests, uri));
-        })
+        });
 
         return items;
     }
