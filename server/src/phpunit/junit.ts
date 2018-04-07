@@ -1,5 +1,7 @@
 import { tap } from '../helpers';
 import { decode } from 'he';
+import { Range } from 'vscode-languageserver';
+
 const parse = require('fast-xml-parser').parse;
 
 export enum Type {
@@ -16,6 +18,7 @@ export enum Type {
 export interface Detail {
     file: string;
     line: number;
+    range?: Range;
 }
 
 export interface Fault {
@@ -30,13 +33,14 @@ export interface Test {
     classname: string;
     file: string;
     line: number;
+    range?: Range;
     time: number;
     type: Type;
     fault?: Fault;
 }
 
 export class JUnit {
-    parse(code: string): Test[] {
+    parse(code: string): Promise<Test[]> {
         return this.getTests(
             parse(code, {
                 attributeNamePrefix: '_',
@@ -60,15 +64,15 @@ export class JUnit {
         return testsuite instanceof Array ? [].concat(testsuite) : [testsuite];
     }
 
-    private getTests(node: any): Test[] {
-        return this.getSuites(node)
+    private getTests(node: any): Promise<Test[]> {
+        return Promise.all([].concat(this.getSuites(node)
             .reduce((tests: any[], suite: any) => {
                 return tests.concat(suite.testcase);
             }, [])
-            .map(this.parseTest.bind(this));
+            .map(this.parseTest.bind(this))));
     }
 
-    private parseTest(node: any): Test {
+    private async parseTest(node: any): Promise<Test> {
         return this.parseFault(
             {
                 name: node._name || null,

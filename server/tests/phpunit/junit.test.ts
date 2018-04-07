@@ -12,7 +12,7 @@ describe('JUnit Test', () => {
 
     beforeEach(async () => {
         const content: string = await files.get(projectPath('junit.xml'));
-        tests = jUnit.parse(
+        tests = await jUnit.parse(
             content.replace(
                 /C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\(.+\.php)?/g,
                 (...m) => {
