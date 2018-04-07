@@ -143,6 +143,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         uri: textDocument.uri,
         diagnostics: diagnosticProvider.provideDiagnostics(textDocument, tests),
     });
+
     connection.sendNotification('tests', {
         uri: textDocument.uri,
         tests,

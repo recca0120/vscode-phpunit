@@ -17,7 +17,8 @@
 		"fast-xml-parser": "^3.3.6",
 		"he": "^1.1.1",
 		"php-parser": "git+https://github.com/glayzzle/php-parser.git",
-		"vscode-languageserver": "^3.5.1"
+		"vscode-languageserver": "^3.5.1",
+		"vscode-uri": "^1.0.3"
 	},
 	"scripts": {
 		"installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json",

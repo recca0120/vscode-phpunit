@@ -1,10 +1,8 @@
 import { Test } from './phpunit';
-import { FilesystemContract, files as fileSystem } from './filesystem';
+import Uri from 'vscode-uri'
 
 export class Collection {
     private items: Map<string, Test[]> = new Map<string, Test[]>();
-
-    constructor(private files: FilesystemContract = fileSystem) {}
 
     set(tests: Test[]): Collection {
         const groups: Map<string, Test[]> = this.groupBy(tests);
@@ -16,15 +14,16 @@ export class Collection {
         return this;
     }
 
-    get(file: string): Test[] {
-        return this.items.get(this.files.normalizePath(file)) || [];
+    get(uri: string): Test[] {
+        return this.items.get(this.toUri(uri)) || [];
     }
 
     private groupBy(tests: Test[]): Map<string, Test[]> {
         return tests.reduce((groups: Map<string, Test[]>, test: Test) => {
-            const group: Test[] = groups.get(test.file) || [];
+            const uri: string = this.toUri(test.file);
+            const group: Test[] = groups.get(uri) || [];
             group.push(test);
-            groups.set(test.file, group);
+            groups.set(uri, group);
 
             return groups;
         }, new Map<string, Test[]>());
@@ -48,5 +47,13 @@ export class Collection {
         });
 
         return merged;
+    }
+
+    private toUri(path: string): string {
+        return this.isUri(path) === true ? path : Uri.file(path).toString();
+    }
+
+    private isUri(uri: string): boolean {
+        return /^file:\/\//.test(uri);
     }
 }
