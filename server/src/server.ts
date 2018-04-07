@@ -24,9 +24,11 @@ import {
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit, Test, Type } from './phpunit';
+import { Collection } from './collection';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
+const collect: Collection = new Collection;
 const phpUnit: PhpUnit = new PhpUnit();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
@@ -157,8 +159,13 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     // connection.console.log(JSON.stringify(params));
     await phpUnit.run(params);
     connection.console.log(phpUnit.getOutput());
-    const tests: Test[] = phpUnit.getTests();
+
     const textDocument: TextDocument = documents.get(params.arguments[0]);
+    const tests: Test[] = collect.set(phpUnit.getTests()).get(textDocument.uri);
+
+    console.log(textDocument.uri);
+    console.log(tests);
+
     const lines: string[] = textDocument.getText().split(/\r?\n/);
     const diagnostics: Diagnostic[] = tests
         .filter((test: Test) => [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY].indexOf(test.type) !== -1)
