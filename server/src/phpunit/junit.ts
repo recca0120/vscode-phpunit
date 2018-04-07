@@ -28,16 +28,19 @@ export interface Fault {
     details?: Detail[];
 }
 
-export interface Test {
+interface Test0 {
     name: string;
     class: string;
     classname: string;
     file: string;
     line: number;
-    range?: Range;
     time: number;
     type: Type;
     fault?: Fault;
+}
+
+export interface Test extends Test0 {
+    range: Range;
 }
 
 export class JUnit {
@@ -94,7 +97,7 @@ export class JUnit {
         );
     }
 
-    private parseFault(test: Test, node: any) {
+    private parseFault(test: Test0, node: any): Promise<Test> {
         const fault: any = this.getFaultNode(node);
 
         if (!fault) {
@@ -178,7 +181,7 @@ export class JUnit {
             });
     }
 
-    private current(details: Detail[], test: Test): Detail {
+    private current(details: Detail[], test: Test0): Detail {
         return (
             details.find(detail => test.file === detail.file && test.line !== detail.line) || {
                 file: test.file,
@@ -203,7 +206,7 @@ export class JUnit {
         return details.filter(detail => detail.file !== current.file && detail.line !== current.line);
     }
 
-    private async createRange(test: Test): Promise<Test> {
+    private async createRange(test: Test0): Promise<Test> {
         return Object.assign(test, {
             range: await this.rangeFinder.line(test.file, test.line - 1),
         });
