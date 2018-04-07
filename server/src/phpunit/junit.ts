@@ -46,8 +46,8 @@ export interface Test extends Test0 {
 export class JUnit {
     constructor(private rangeFinder: RangeFinder = new RangeFinder()) {}
 
-    parse(code: string): Promise<Test[]> {
-        return this.getTests(
+    async parse(code: string): Promise<Test[]> {
+        const tests: Test[] = await this.getTests(
             parse(code, {
                 attributeNamePrefix: '_',
                 ignoreAttributes: false,
@@ -58,6 +58,10 @@ export class JUnit {
                 textNodeName: '__text',
             })
         );
+
+        this.rangeFinder.clear();
+
+        return tests;
     }
 
     private getSuites(node: any): any[] {
