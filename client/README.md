@@ -1,5 +1,5 @@
-# VSCode-PHPUnit
+# VSCode PHPUnit
 
 Visual PHPUnit for VSCode
 
-![vscode-phpunit](preview.gif)
+![vscode-phpunit](https://raw.githubusercontent.com/recca0120/vscode-phpunit/master/client/preview.gif)
