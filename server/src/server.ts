@@ -143,7 +143,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const textDocument: TextDocument = documents.get(params.arguments[0]);
     connection.sendNotification('phpunit.test', {
         uri: textDocument.uri,
-        tests,
+        gutters: collect.getGutters(textDocument.uri),
     });
 });
 

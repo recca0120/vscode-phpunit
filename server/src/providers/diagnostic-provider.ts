@@ -13,7 +13,7 @@ export class DiagnosticProvider {
     constructor(private collect: Collection) {}
 
     sendDiagnostics(connection: IConnection, documents: TextDocuments): void {
-        this.collect.all().forEach((tests: Test[], uri: string) => {
+        this.collect.forEach((tests: Test[], uri: string) => {
             connection.sendDiagnostics({
                 uri,
                 diagnostics: this.provideDiagnostics(documents.get(uri), tests),

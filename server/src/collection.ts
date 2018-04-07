@@ -1,4 +1,4 @@
-import { Test } from './phpunit';
+import { Test, Detail } from './phpunit';
 import { FilesystemContract, files as fileSystem } from './filesystem';
 
 export class Collection {
@@ -18,6 +18,58 @@ export class Collection {
 
     get(uri: string): Test[] {
         return this.items.get(this.files.uri(uri)) || [];
+    }
+
+    getGutters(uri: string) {
+        uri = this.files.uri(uri);
+
+        const gutters: any[] = [];
+        this.forEach((tests: Test[], key: string) => {
+            tests.forEach((test: Test) => {
+                const message = test.fault ? test.fault.message : null;
+                const details = test.fault ? test.fault.details : [];
+
+                if (key === uri) {
+                    gutters.push({
+                        file: test.file,
+                        line: test.line,
+                        type: test.type,
+                        message: message,
+                    });
+                }
+
+                details.forEach((detail: Detail) => {
+                    if (this.files.uri(detail.file) === uri) {
+                        gutters.push({
+                            file: detail.file,
+                            line: detail.line,
+                            type: test.type,
+                            message: message,
+                        });
+                    }
+                });
+            })
+        });
+
+        return gutters;
+    }
+
+    map(callback: Function): any[] {
+        const items: any[] = [];
+
+        this.forEach((tests: Test[], uri: string) => {
+            items.push(callback(tests, uri));
+        })
+
+        return items;
+    }
+
+    forEach(callback: Function): Collection {
+        this.items.forEach((tests: Test[], uri: string) => {
+            callback(tests, uri);
+        });
+
+        return this;
     }
 
     all(): Map<string, Test[]> {
