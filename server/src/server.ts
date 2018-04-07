@@ -141,12 +141,10 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     diagnosticProvider.sendDiagnostics(connection, documents);
 
     const textDocument: TextDocument = documents.get(params.arguments[0]);
-    connection.sendNotification('tests', {
+    connection.sendNotification('phpunit.test', {
         uri: textDocument.uri,
         tests,
     });
-
-    // diagnosticProvider.provideDiagnostics(documents.get(uri), tests),
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {

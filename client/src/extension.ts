@@ -38,7 +38,7 @@ export function activate(context: ExtensionContext) {
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
 
     client.onReady().then(() => {
-        client.onNotification('tests', (params: any) => {
+        client.onNotification('phpunit.test', (params: any) => {
             console.log(params);
         });
     });
