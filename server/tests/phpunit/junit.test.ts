@@ -5,15 +5,21 @@ import { resolve } from 'path';
 
 describe('JUnit Test', () => {
     const jUnit: JUnit = new JUnit();
-    const path =
-        'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\tests\\AssertionsTest.php';
-    const path2 =
-        'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\tests\\CalculatorTest.php';
+    const projectPath = (p: string) => resolve(__dirname, '../fixtures/project', p.replace(/\\/g, '/'));
+    const path = projectPath('tests/AssertionsTest.php');
+    const path2 = projectPath('tests/CalculatorTest.php');
     let tests: Test[] = [];
 
     beforeEach(async () => {
-        const content: string = await files.get(resolve(__dirname, '../fixtures/project/junit.xml'));
-        tests = jUnit.parse(content);
+        const content: string = await files.get(projectPath('junit.xml'));
+        tests = jUnit.parse(
+            content.replace(
+                /C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\(.+\.php)?/g,
+                (...m) => {
+                    return projectPath(m[1]);
+                }
+            )
+        );
     });
 
     it('test_passed', () => {
@@ -196,33 +202,27 @@ describe('JUnit Test', () => {
             fault: {
                 details: [
                     {
-                        file:
-                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
+                        file: projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php'),
                         line: 38,
                     },
                     {
-                        file:
-                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
+                        file: projectPath('vendor/mockery/mockery/library/Mockery/Expectation.php'),
                         line: 309,
                     },
                     {
-                        file:
-                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
+                        file: projectPath('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php'),
                         line: 119,
                     },
                     {
-                        file:
-                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        file: projectPath('vendor/mockery/mockery/library/Mockery/Container.php'),
                         line: 301,
                     },
                     {
-                        file:
-                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        file: projectPath('vendor/mockery/mockery/library/Mockery/Container.php'),
                         line: 286,
                     },
                     {
-                        file:
-                            'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\vendor\\mockery\\mockery\\library\\Mockery.php',
+                        file: projectPath('vendor/mockery/mockery/library/Mockery.php'),
                         line: 165,
                     },
                 ],
