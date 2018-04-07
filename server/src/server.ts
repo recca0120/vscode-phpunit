@@ -30,11 +30,11 @@ const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvide
 const phpUnit: PhpUnit = new PhpUnit();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
+const connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
-let documents: TextDocuments = new TextDocuments();
+const documents: TextDocuments = new TextDocuments();
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);
@@ -84,7 +84,7 @@ interface PhpUnitSettings {
 // The settings have changed. Is send on server activation
 // as well.
 connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
-    let settings = <Settings>change.settings;
+    const settings = <Settings>change.settings;
     phpUnit.setBinary(settings.phpunit.execPath).setDefault(settings.phpunit.args);
 });
 
@@ -112,10 +112,10 @@ connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
 //     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 // }
 
-// connection.onDidChangeWatchedFiles((change: DidChangeWatchedFilesParams) => {
-//     // Monitored files have change in VSCode
-//     connection.console.log('We received an file change event');
-// });
+connection.onDidChangeWatchedFiles(() => {
+    // Monitored files have change in VSCode
+    connection.console.log('We received an file change event');
+});
 
 // This handler provides the initial list of the completion items.
 // connection.onCompletion((_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
@@ -157,11 +157,10 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     // connection.console.log(JSON.stringify(params));
     await phpUnit.run(params);
     connection.console.log(phpUnit.getOutput());
-
+    const tests: Test[] = phpUnit.getTests();
     const textDocument: TextDocument = documents.get(params.arguments[0]);
     const lines: string[] = textDocument.getText().split(/\r?\n/);
-    const diagnostics: Diagnostic[] = phpUnit
-        .getTests()
+    const diagnostics: Diagnostic[] = tests
         .filter((test: Test) => [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY].indexOf(test.type) !== -1)
         .map((test: Test) => {
             const line = lines[test.line - 1];
@@ -179,6 +178,10 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         });
 
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    connection.sendNotification('tests', {
+        uri: textDocument.uri,
+        tests,
+    });
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {

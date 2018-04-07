@@ -11,19 +11,19 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 
 export function activate(context: ExtensionContext) {
     // The server is implemented in node
-    let serverModule = context.asAbsolutePath(path.join('server', 'server.js'));
+    const serverModule = context.asAbsolutePath(path.join('server', 'server.js'));
     // The debug options for the server
-    let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+    const debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
     // If the extension is launched in debug mode then the debug server options are used
     // Otherwise the run options are used
-    let serverOptions: ServerOptions = {
+    const serverOptions: ServerOptions = {
         run: { module: serverModule, transport: TransportKind.ipc },
         debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions },
     };
 
     // Options to control the language client
-    let clientOptions: LanguageClientOptions = {
+    const clientOptions: LanguageClientOptions = {
         // Register the server for plain text documents
         documentSelector: [{ scheme: 'file', language: 'php' }],
         synchronize: {
@@ -35,8 +35,16 @@ export function activate(context: ExtensionContext) {
         outputChannel: window.createOutputChannel('PHPUnit'),
     };
 
+    const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
+
+    client.onReady().then(() => {
+        client.onNotification('tests', (params: any) => {
+            console.log(JSON.stringify(params));
+        });
+    });
+
     // Create the language client and start the client.
-    let disposable = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions).start();
+    const disposable = client.start();
 
     // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
