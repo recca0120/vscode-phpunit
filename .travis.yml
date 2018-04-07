@@ -1,4 +1,4 @@
-language: php
+language: node_js
 
 node_js:
   - 6
@@ -18,12 +18,9 @@ os:
 cache:
   directories:
     - $HOME/.composer/cache
-    - "node_modules"
+    - node_modules
 
 before_install:
-  - travis_retry composer self-update
-  - sudo rm -rf ~/.nvm - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-  - sudo apt-get install -y nodejs
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
       export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
       sh -e /etc/init.d/xvfb start;
@@ -31,7 +28,6 @@ before_install:
     fi
 
 install:
-  - cd server/tests/fixtures/project;composer install --no-interaction --prefer-dist --no-suggest;
   - npm install
 
 script:
