@@ -1,4 +1,4 @@
-language: node_js
+language: php
 
 node_js:
   - 6
@@ -7,7 +7,7 @@ node_js:
   - 9
 
 php:
-  - 7.0
+  - 7
 
 sudo: false
 
@@ -18,9 +18,12 @@ os:
 cache:
   directories:
     - $HOME/.composer/cache
+    - "node_modules"
 
 before_install:
   - travis_retry composer self-update
+  - sudo rm -rf ~/.nvm - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+  - sudo apt-get install -y nodejs
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
       export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
       sh -e /etc/init.d/xvfb start;
