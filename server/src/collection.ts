@@ -10,7 +10,6 @@ export class Collection {
         const groups: Map<string, Test[]> = this.groupBy(tests);
 
         for (const key of groups.keys()) {
-            // console.log(this.items.get(key))
             this.items.set(key, this.merge(this.items.get(key) || [], groups.get(key)));
         }
 
@@ -18,15 +17,14 @@ export class Collection {
     }
 
     get(file: string): Test[] {
-        return this.items.get(this.normalizePath(file)) || [];
+        return this.items.get(this.files.normalizePath(file)) || [];
     }
 
     private groupBy(tests: Test[]): Map<string, Test[]> {
         return tests.reduce((groups: Map<string, Test[]>, test: Test) => {
-            const key: string = this.normalizePath(test.file);
-            const group: Test[] = groups.get(key) || [];
+            const group: Test[] = groups.get(test.file) || [];
             group.push(test);
-            groups.set(key, group);
+            groups.set(test.file, group);
 
             return groups;
         }, new Map<string, Test[]>());
@@ -50,9 +48,5 @@ export class Collection {
         });
 
         return merged;
-    }
-
-    private normalizePath(path: string): string {
-        return this.files.normalizePath(path).toLowerCase();
     }
 }
