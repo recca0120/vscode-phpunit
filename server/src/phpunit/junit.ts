@@ -1,4 +1,4 @@
-import { tap, value } from '../helpers';
+import { tap } from '../helpers';
 import { decode } from 'he';
 const parse = require('fast-xml-parser').parse;
 
