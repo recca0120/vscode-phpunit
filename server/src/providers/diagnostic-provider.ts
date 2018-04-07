@@ -1,43 +1,27 @@
-import {
-    TextDocuments,
-    Diagnostic,
-    DiagnosticSeverity,
-    PublishDiagnosticsParams,
-    TextDocument,
-    IConnection,
-} from 'vscode-languageserver';
+import { Diagnostic, DiagnosticSeverity, PublishDiagnosticsParams, IConnection } from 'vscode-languageserver';
 import { Test, Type } from '../phpunit';
 import { Collection } from '../collection';
 
 export class DiagnosticProvider {
     constructor(private collect: Collection) {}
 
-    sendDiagnostics(connection: IConnection, documents: TextDocuments): void {
+    sendDiagnostics(connection: IConnection): void {
         this.collect.forEach((tests: Test[], uri: string) => {
             connection.sendDiagnostics({
                 uri,
-                diagnostics: this.provideDiagnostics(documents.get(uri), tests),
+                diagnostics: this.provideDiagnostics(tests),
             } as PublishDiagnosticsParams);
         });
     }
 
-    provideDiagnostics(textDocument: TextDocument, tests: Test[]): Diagnostic[] {
-        const lines: string[] = textDocument.getText().split(/\r?\n/);
-
-        return tests.filter(this.filterByType.bind(this)).map((test: Test) => this.convertToDiagonstic(test, lines));
+    provideDiagnostics(tests: Test[]): Diagnostic[] {
+        return tests.filter(this.filterByType.bind(this)).map((test: Test) => this.convertToDiagonstic(test));
     }
 
-    private convertToDiagonstic(test: Test, lines: string[]): Diagnostic {
-        const lineIndex = test.line - 1;
-        const line = lines[lineIndex];
-        const firstNonWhitespaceCharacterIndex = line.search(/\S|$/);
-
+    private convertToDiagonstic(test: Test): Diagnostic {
         return {
             severity: DiagnosticSeverity.Error,
-            range: {
-                start: { line: lineIndex, character: firstNonWhitespaceCharacterIndex },
-                end: { line: lineIndex, character: line.trim().length + firstNonWhitespaceCharacterIndex },
-            },
+            range: test.range,
             message: test.fault.message,
             source: 'phpunit',
         };
