@@ -8,7 +8,7 @@ export class Testsuite {
         return this.ast.parse(code);
     }
 
-    parseJUnit(code: string): Test[] {
+    parseJUnit(code: string): Promise<Test[]> {
         return this.jUnit.parse(code);
     }
 }

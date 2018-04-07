@@ -1,6 +1,7 @@
 import { tap } from '../helpers';
 import { decode } from 'he';
 import { Range } from 'vscode-languageserver';
+import { RangeFinder } from './range-finder';
 
 const parse = require('fast-xml-parser').parse;
 
@@ -40,6 +41,8 @@ export interface Test {
 }
 
 export class JUnit {
+    constructor(private rangeFinder: RangeFinder = new RangeFinder()) {}
+
     parse(code: string): Promise<Test[]> {
         return this.getTests(
             parse(code, {
@@ -65,11 +68,15 @@ export class JUnit {
     }
 
     private getTests(node: any): Promise<Test[]> {
-        return Promise.all([].concat(this.getSuites(node)
-            .reduce((tests: any[], suite: any) => {
-                return tests.concat(suite.testcase);
-            }, [])
-            .map(this.parseTest.bind(this))));
+        return Promise.all(
+            [].concat(
+                this.getSuites(node)
+                    .reduce((tests: any[], suite: any) => {
+                        return tests.concat(suite.testcase);
+                    }, [])
+                    .map(this.parseTest.bind(this))
+            )
+        );
     }
 
     private async parseTest(node: any): Promise<Test> {
@@ -91,21 +98,23 @@ export class JUnit {
         const fault: any = this.getFaultNode(node);
 
         if (!fault) {
-            return test;
+            return this.createRange(test);
         }
 
         const details: Detail[] = this.parseDetails(fault);
         const current: Detail = this.current(details, test);
         const message: string = this.parseMessage(fault, details);
 
-        return Object.assign(test, current, {
-            type: fault.type,
-            fault: {
-                type: fault._type || '',
-                message: message,
-                details: this.filterDetails(details, current),
-            },
-        });
+        return this.createRange(
+            Object.assign(test, current, {
+                type: fault.type,
+                fault: {
+                    type: fault._type || '',
+                    message: message,
+                    details: this.filterDetails(details, current),
+                },
+            })
+        );
     }
 
     private getFaultNode(node: any): any {
@@ -192,5 +201,11 @@ export class JUnit {
 
     private filterDetails(details: Detail[], current: Detail): Detail[] {
         return details.filter(detail => detail.file !== current.file && detail.line !== current.line);
+    }
+
+    private async createRange(test: Test): Promise<Test> {
+        return Object.assign(test, {
+            range: await this.rangeFinder.line(test.file, test.line - 1),
+        });
     }
 }

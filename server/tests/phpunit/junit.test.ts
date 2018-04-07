@@ -29,6 +29,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 9,
+            range: {
+                end: {
+                    character: 33,
+                    line: 8,
+                },
+                start: {
+                    character: 4,
+                    line: 8,
+                },
+            },
             time: 0.007537,
             type: Type.PASSED,
         });
@@ -41,6 +51,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 16,
+            range: {
+                end: {
+                    character: 33,
+                    line: 15,
+                },
+                start: {
+                    character: 8,
+                    line: 15,
+                },
+            },
             time: 0.001508,
             type: Type.FAILURE,
             fault: {
@@ -58,6 +78,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 21,
+            range: {
+                end: {
+                    character: 76,
+                    line: 20,
+                },
+                start: {
+                    character: 8,
+                    line: 20,
+                },
+            },
             time: 0.001332,
             type: Type.FAILURE,
             fault: {
@@ -76,6 +106,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 24,
+            range: {
+                end: {
+                    character: 32,
+                    line: 23,
+                },
+                start: {
+                    character: 4,
+                    line: 23,
+                },
+            },
             time: 0.000079,
             type: Type.RISKY,
             fault: {
@@ -93,6 +133,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 32,
+            range: {
+                end: {
+                    character: 50,
+                    line: 31,
+                },
+                start: {
+                    character: 4,
+                    line: 31,
+                },
+            },
             time: 0.000063,
             type: Type.PASSED,
         });
@@ -105,6 +155,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 37,
+            range: {
+                end: {
+                    character: 34,
+                    line: 36,
+                },
+                start: {
+                    character: 4,
+                    line: 36,
+                },
+            },
             time: 0.000664,
             type: Type.SKIPPED,
             fault: {
@@ -122,6 +182,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 42,
+            range: {
+                end: {
+                    character: 37,
+                    line: 41,
+                },
+                start: {
+                    character: 4,
+                    line: 41,
+                },
+            },
             time: 0.000693,
             type: Type.SKIPPED,
             fault: {
@@ -139,6 +209,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.AssertionsTest',
             file: path,
             line: 47,
+            range: {
+                end: {
+                    character: 39,
+                    line: 46,
+                },
+                start: {
+                    character: 4,
+                    line: 46,
+                },
+            },
             time: 0.000047,
             type: Type.RISKY,
             fault: {
@@ -156,6 +236,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.CalculatorTest',
             file: path2,
             line: 18,
+            range: {
+                end: {
+                    character: 30,
+                    line: 17,
+                },
+                start: {
+                    character: 4,
+                    line: 17,
+                },
+            },
             time: 0.00197,
             type: Type.PASSED,
         });
@@ -168,6 +258,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.CalculatorTest',
             file: path2,
             line: 29,
+            range: {
+                end: {
+                    character: 53,
+                    line: 28,
+                },
+                start: {
+                    character: 8,
+                    line: 28,
+                },
+            },
             time: 0.000132,
             type: Type.FAILURE,
             fault: {
@@ -185,6 +285,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.CalculatorTest',
             file: path2,
             line: 32,
+            range: {
+                end: {
+                    character: 35,
+                    line: 31,
+                },
+                start: {
+                    character: 4,
+                    line: 31,
+                },
+            },
             time: 0.000608,
             type: Type.PASSED,
         });
@@ -197,6 +307,16 @@ describe('JUnit Test', () => {
             classname: 'Tests.CalculatorTest',
             file: path2,
             line: 15,
+            range: {
+                end: {
+                    character: 19,
+                    line: 14,
+                },
+                start: {
+                    character: 8,
+                    line: 14,
+                },
+            },
             time: 0.027106,
             type: Type.ERROR,
             fault: {
