@@ -6,7 +6,7 @@ import { resolve } from 'path';
 import { readFileSync } from 'fs';
 
 describe('DocumentSymbolProvider Test', () => {
-    const path: string = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
+    const path: string = resolve(__dirname, '../fixtures/project/tests/AssertionsTest.php');
     let symbolInformations: SymbolInformation[] = [];
 
     beforeEach(async () => {
@@ -15,153 +15,173 @@ describe('DocumentSymbolProvider Test', () => {
         symbolInformations = documentSymbolProvider.provideDocumentSymbols(textDocument);
     });
 
-    it('it should resolve class PHPUnitTest symbolInformations', () => {
+    it('it should resolve class AssertionsTest', () => {
         expect(symbolInformations[0]).toEqual({
             kind: SymbolKind.Class,
             location: {
                 range: {
                     end: {
-                        character: 11,
-                        line: 5,
+                        character: 14,
+                        line: 6,
                     },
                     start: {
                         character: 0,
-                        line: 5,
+                        line: 6,
                     },
                 },
                 uri: path,
             },
-            name: 'PHPUnitTest',
+            name: 'AssertionsTest',
         });
     });
 
-    it('it should resolve method testPassed symbolInformations', () => {
+    it('it should resolve method test_passed', () => {
         expect(symbolInformations[1]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
-                        character: 21,
-                        line: 12,
+                        character: 22,
+                        line: 8,
                     },
                     start: {
                         character: 11,
-                        line: 12,
+                        line: 8,
                     },
                 },
                 uri: path,
             },
-            name: 'testPassed',
+            name: 'test_passed',
         });
     });
 
-    it('it should resolve method testFailed symbolInformations', () => {
+    it('it should resolve method test_error', () => {
         expect(symbolInformations[2]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
                         character: 21,
-                        line: 17,
+                        line: 13,
                     },
                     start: {
                         character: 11,
-                        line: 17,
+                        line: 13,
                     },
                 },
                 uri: path,
             },
-            name: 'testFailed',
+            name: 'test_error',
         });
     });
 
-    it('it should resolve method testSkipped symbolInformations', () => {
+    it('it should resolve method test_assertion_isnt_same', () => {
         expect(symbolInformations[3]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
-                        character: 22,
-                        line: 22,
+                        character: 35,
+                        line: 18,
                     },
                     start: {
                         character: 11,
-                        line: 22,
+                        line: 18,
                     },
                 },
                 uri: path,
             },
-            name: 'testSkipped',
+            name: 'test_assertion_isnt_same',
         });
     });
 
-    it('it should resolve method testIncomplete symbolInformations', () => {
+    it('it should resolve method test_risky', () => {
         expect(symbolInformations[4]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
-                        character: 25,
-                        line: 27,
+                        character: 21,
+                        line: 23,
                     },
                     start: {
                         character: 11,
-                        line: 27,
+                        line: 23,
                     },
                 },
                 uri: path,
             },
-            name: 'testIncomplete',
+            name: 'test_risky',
         });
     });
 
-    it('it should resolve method testNoAssertions symbolInformations', () => {
+    it('it should resolve method it_should_be_annotation_test', () => {
         expect(symbolInformations[5]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
-                        character: 27,
-                        line: 32,
+                        character: 39,
+                        line: 31,
                     },
                     start: {
                         character: 11,
-                        line: 32,
+                        line: 31,
                     },
                 },
                 uri: path,
             },
-            name: 'testNoAssertions',
+            name: 'it_should_be_annotation_test',
         });
     });
 
-    it('it should resolve method testAssertNotEquals symbolInformations', () => {
+    it('it should resolve method test_skipped', () => {
         expect(symbolInformations[6]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
-                        character: 30,
-                        line: 37,
+                        character: 23,
+                        line: 36,
                     },
                     start: {
                         character: 11,
-                        line: 37,
+                        line: 36,
                     },
                 },
                 uri: path,
             },
-            name: 'testAssertNotEquals',
+            name: 'test_skipped',
         });
     });
 
-    it('it should resolve method it_should_be_test_case symbolInformations', () => {
+    it('it should resolve method test_incomplete', () => {
         expect(symbolInformations[7]).toEqual({
             kind: SymbolKind.Method,
             location: {
                 range: {
                     end: {
-                        character: 33,
+                        character: 26,
+                        line: 41,
+                    },
+                    start: {
+                        character: 11,
+                        line: 41,
+                    },
+                },
+                uri: path,
+            },
+            name: 'test_incomplete',
+        });
+    });
+
+    it('it should resolve method test_no_assertion', () => {
+        expect(symbolInformations[8]).toEqual({
+            kind: SymbolKind.Method,
+            location: {
+                range: {
+                    end: {
+                        character: 28,
                         line: 46,
                     },
                     start: {
@@ -171,32 +191,7 @@ describe('DocumentSymbolProvider Test', () => {
                 },
                 uri: path,
             },
-            name: 'it_should_be_test_case',
-        });
-    });
-
-    it('it should resolve class PHPUnitTest2 with namespace symbolInformations', () => {
-        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnit2Test.php');
-        const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
-        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
-        symbolInformations = documentSymbolProvider.provideDocumentSymbols(textDocument);
-
-        expect(symbolInformations[0]).toEqual({
-            kind: SymbolKind.Class,
-            location: {
-                range: {
-                    end: {
-                        character: 12,
-                        line: 7,
-                    },
-                    start: {
-                        character: 0,
-                        line: 7,
-                    },
-                },
-                uri: path,
-            },
-            name: 'PHPUnit2Test',
+            name: 'test_no_assertion',
         });
     });
 });

@@ -13,13 +13,13 @@ function toFileUrl(path: string): string {
 describe('Filesystem Test', () => {
     it('it should get content from file', async () => {
         const files: FilesystemContract = new Filesystem();
-        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
+        const path = resolve(__dirname, '../fixtures/project/tests/AssertionsTest.php');
         expect(await files.get(path)).toEqual(readFileSync(path).toString('utf8'));
     });
 
     it('it should get content from file url', async () => {
         const files: FilesystemContract = new Filesystem();
-        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
+        const path = resolve(__dirname, '../fixtures/project/tests/AssertionsTest.php');
         expect(await files.get(toFileUrl(path))).toEqual(readFileSync(path).toString('utf8'));
     });
 

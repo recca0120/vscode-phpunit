@@ -6,7 +6,7 @@ import { resolve } from 'path';
 import { readFileSync } from 'fs';
 
 describe('CodeLensProvider Test', () => {
-    const path: string = resolve(__dirname, '../fixtures/project/tests/PHPUnitTest.php');
+    const path: string = resolve(__dirname, '../fixtures/project/tests/AssertionsTest.php');
     let codeLens: CodeLens[] = [];
 
     beforeEach(async () => {
@@ -15,7 +15,7 @@ describe('CodeLensProvider Test', () => {
         codeLens = codeLensProvider.provideCodeLenses(textDocument);
     });
 
-    it('it should resolve class PHPUnitTest codelens', () => {
+    it('it should resolve class AssertionsTest', () => {
         expect(codeLens[0]).toEqual({
             command: {
                 arguments: [path],
@@ -29,12 +29,12 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 11,
-                    line: 5,
+                    character: 14,
+                    line: 6,
                 },
                 start: {
                     character: 0,
-                    line: 5,
+                    line: 6,
                 },
             },
         });
@@ -43,57 +43,7 @@ describe('CodeLensProvider Test', () => {
     it('it should resolve method testPassed codelens', () => {
         expect(codeLens[1]).toEqual({
             command: {
-                arguments: [path, '--filter', '^.*::testPassed$'],
-                command: 'phpunit.test.cursor',
-                title: 'Run Test',
-            },
-            data: {
-                textDocument: {
-                    uri: path,
-                },
-            },
-            range: {
-                end: {
-                    character: 21,
-                    line: 12,
-                },
-                start: {
-                    character: 11,
-                    line: 12,
-                },
-            },
-        });
-    });
-
-    it('it should resolve method testFailed codelens', () => {
-        expect(codeLens[2]).toEqual({
-            command: {
-                arguments: [path, '--filter', '^.*::testFailed$'],
-                command: 'phpunit.test.cursor',
-                title: 'Run Test',
-            },
-            data: {
-                textDocument: {
-                    uri: path,
-                },
-            },
-            range: {
-                end: {
-                    character: 21,
-                    line: 17,
-                },
-                start: {
-                    character: 11,
-                    line: 17,
-                },
-            },
-        });
-    });
-
-    it('it should resolve method testSkipped codelens', () => {
-        expect(codeLens[3]).toEqual({
-            command: {
-                arguments: [path, '--filter', '^.*::testSkipped$'],
+                arguments: [path, '--filter', '^.*::test_passed$'],
                 command: 'phpunit.test.cursor',
                 title: 'Run Test',
             },
@@ -105,20 +55,70 @@ describe('CodeLensProvider Test', () => {
             range: {
                 end: {
                     character: 22,
-                    line: 22,
+                    line: 8,
                 },
                 start: {
                     character: 11,
-                    line: 22,
+                    line: 8,
                 },
             },
         });
     });
 
-    it('it should resolve method testIncomplete codelens', () => {
+    it('it should resolve method test_error', () => {
+        expect(codeLens[2]).toEqual({
+            command: {
+                arguments: [path, '--filter', '^.*::test_error$'],
+                command: 'phpunit.test.cursor',
+                title: 'Run Test',
+            },
+            data: {
+                textDocument: {
+                    uri: path,
+                },
+            },
+            range: {
+                end: {
+                    character: 21,
+                    line: 13,
+                },
+                start: {
+                    character: 11,
+                    line: 13,
+                },
+            },
+        });
+    });
+
+    it('it should resolve method test_assertion_isnt_same', () => {
+        expect(codeLens[3]).toEqual({
+            command: {
+                arguments: [path, '--filter', '^.*::test_assertion_isnt_same$'],
+                command: 'phpunit.test.cursor',
+                title: 'Run Test',
+            },
+            data: {
+                textDocument: {
+                    uri: path,
+                },
+            },
+            range: {
+                end: {
+                    character: 35,
+                    line: 18,
+                },
+                start: {
+                    character: 11,
+                    line: 18,
+                },
+            },
+        });
+    });
+
+    it('it should resolve method test_risky', () => {
         expect(codeLens[4]).toEqual({
             command: {
-                arguments: [path, '--filter', '^.*::testIncomplete$'],
+                arguments: [path, '--filter', '^.*::test_risky$'],
                 command: 'phpunit.test.cursor',
                 title: 'Run Test',
             },
@@ -129,21 +129,21 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 25,
-                    line: 27,
+                    character: 21,
+                    line: 23,
                 },
                 start: {
                     character: 11,
-                    line: 27,
+                    line: 23,
                 },
             },
         });
     });
 
-    it('it should resolve method testNoAssertions codelens', () => {
+    it('it should resolve method it_should_be_annotation_test', () => {
         expect(codeLens[5]).toEqual({
             command: {
-                arguments: [path, '--filter', '^.*::testNoAssertions$'],
+                arguments: [path, '--filter', '^.*::it_should_be_annotation_test$'],
                 command: 'phpunit.test.cursor',
                 title: 'Run Test',
             },
@@ -154,21 +154,21 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 27,
-                    line: 32,
+                    character: 39,
+                    line: 31,
                 },
                 start: {
                     character: 11,
-                    line: 32,
+                    line: 31,
                 },
             },
         });
     });
 
-    it('it should resolve method testAssertNotEquals codelens', () => {
+    it('it should resolve method test_skipped', () => {
         expect(codeLens[6]).toEqual({
             command: {
-                arguments: [path, '--filter', '^.*::testAssertNotEquals$'],
+                arguments: [path, '--filter', '^.*::test_skipped$'],
                 command: 'phpunit.test.cursor',
                 title: 'Run Test',
             },
@@ -179,21 +179,21 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 30,
-                    line: 37,
+                    character: 23,
+                    line: 36,
                 },
                 start: {
                     character: 11,
-                    line: 37,
+                    line: 36,
                 },
             },
         });
     });
 
-    it('it should resolve method it_should_be_test_case codelens', () => {
+    it('it should resolve method test_incomplete', () => {
         expect(codeLens[7]).toEqual({
             command: {
-                arguments: [path, '--filter', '^.*::it_should_be_test_case$'],
+                arguments: [path, '--filter', '^.*::test_incomplete$'],
                 command: 'phpunit.test.cursor',
                 title: 'Run Test',
             },
@@ -204,27 +204,22 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 33,
-                    line: 46,
+                    character: 26,
+                    line: 41,
                 },
                 start: {
                     character: 11,
-                    line: 46,
+                    line: 41,
                 },
             },
         });
     });
 
-    it('it should resolve class PHPUnitTest2 with namespace codelens', () => {
-        const path = resolve(__dirname, '../fixtures/project/tests/PHPUnit2Test.php');
-        const codeLensProvider: CodeLensProvider = new CodeLensProvider();
-        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
-        codeLens = codeLensProvider.provideCodeLenses(textDocument);
-
-        expect(codeLens[0]).toEqual({
+    it('it should resolve method test_no_assertion', () => {
+        expect(codeLens[8]).toEqual({
             command: {
-                arguments: [path],
-                command: 'phpunit.test.file',
+                arguments: [path, '--filter', '^.*::test_no_assertion$'],
+                command: 'phpunit.test.cursor',
                 title: 'Run Test',
             },
             data: {
@@ -234,12 +229,12 @@ describe('CodeLensProvider Test', () => {
             },
             range: {
                 end: {
-                    character: 12,
-                    line: 7,
+                    character: 28,
+                    line: 46,
                 },
                 start: {
-                    character: 0,
-                    line: 7,
+                    character: 11,
+                    line: 46,
                 },
             },
         });
