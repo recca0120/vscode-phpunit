@@ -11,11 +11,13 @@ export class WINDOWS extends POSIX {
     }
 
     normalizePath(path: string): string {
-        return path
-            .replace(/^file:\/\//, '')
-            .replace(/^\/(\w)%3A/, '$1:')
-            // .replace(/^\w:/, m => m.toUpperCase())
-            .replace(/\//g, this.separator)
-            .replace(/ /g, '\\ ');
+        return (
+            path
+                .replace(/^file:\/\//, '')
+                .replace(/^\/(\w)%3A/, '$1:')
+                // .replace(/^\w:/, m => m.toUpperCase())
+                .replace(/\//g, this.separator)
+                .replace(/ /g, '\\ ')
+        );
     }
 }

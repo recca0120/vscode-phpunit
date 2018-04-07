@@ -10,4 +10,5 @@ export interface FilesystemContract {
     dirname(path: string): string;
     tmpfile(extension?: string, prefix?: string): string;
     unlink(path: string): Promise<boolean>;
+    uri(path: string): string;
 }

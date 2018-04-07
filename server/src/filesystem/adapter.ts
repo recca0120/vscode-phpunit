@@ -51,4 +51,8 @@ export class Adapter implements FilesystemContract {
     unlink(path: string): Promise<boolean> {
         return this.instance.unlink(path);
     }
+
+    uri(path: string): string {
+        return this.instance.uri(path);
+    }
 }

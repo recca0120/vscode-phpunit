@@ -2,6 +2,7 @@ import { readFile, stat, unlink } from 'fs';
 import { FilesystemContract } from './contract';
 import { resolve as pathResolve, parse, dirname } from 'path';
 import { tmpdir } from 'os';
+import Uri from 'vscode-uri';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[];
@@ -90,6 +91,14 @@ export abstract class Common implements FilesystemContract {
 
     unlink(path: string): Promise<boolean> {
         return new Promise(resolve => unlink(path, (error: NodeJS.ErrnoException) => resolve(error ? false : true)));
+    }
+
+    uri(path: string): string {
+        return this.isUri(path) === true ? path : Uri.file(path).toString();
+    }
+
+    private isUri(uri: string): boolean {
+        return /^file:\/\//.test(uri);
     }
 
     abstract normalizePath(path: string): string;
