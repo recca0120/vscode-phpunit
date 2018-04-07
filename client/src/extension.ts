@@ -39,7 +39,7 @@ export function activate(context: ExtensionContext) {
 
     client.onReady().then(() => {
         client.onNotification('tests', (params: any) => {
-            console.log(JSON.stringify(params));
+            console.log(params);
         });
     });
 

@@ -17,18 +17,18 @@ import {
     ExecuteCommandParams,
     DocumentSymbolParams,
     SymbolInformation,
-    Diagnostic,
-    DiagnosticSeverity,
     DidChangeConfigurationParams,
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit, Test, Type } from './phpunit';
 import { Collection } from './collection';
+import { DiagnosticProvider } from './providers/diagnostic-provider';
 
+const collect: Collection = new Collection();
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
+const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
-const collect: Collection = new Collection;
 const phpUnit: PhpUnit = new PhpUnit();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
@@ -163,28 +163,10 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const textDocument: TextDocument = documents.get(params.arguments[0]);
     const tests: Test[] = collect.set(phpUnit.getTests()).get(textDocument.uri);
 
-    console.log(textDocument.uri);
-    console.log(tests);
-
-    const lines: string[] = textDocument.getText().split(/\r?\n/);
-    const diagnostics: Diagnostic[] = tests
-        .filter((test: Test) => [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY].indexOf(test.type) !== -1)
-        .map((test: Test) => {
-            const line = lines[test.line - 1];
-            const firstNonWhitespaceCharacterIndex = line.search(/\S|$/);
-
-            return {
-                severity: test.type === Type.RISKY ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
-                range: {
-                    start: { line: test.line - 1, character: firstNonWhitespaceCharacterIndex },
-                    end: { line: test.line - 1, character: line.length },
-                },
-                message: test.fault.message,
-                source: 'phpunit',
-            };
-        });
-
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    connection.sendDiagnostics({
+        uri: textDocument.uri,
+        diagnostics: diagnosticProvider.provideDiagnostics(textDocument, tests),
+    });
     connection.sendNotification('tests', {
         uri: textDocument.uri,
         tests,

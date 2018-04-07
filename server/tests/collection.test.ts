@@ -1,5 +1,8 @@
 import { Collection } from './../src/collection';
 import { Test, Type } from '../src/phpunit';
+import { TextDocument, DiagnosticSeverity } from 'vscode-languageserver';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
 describe('Collection Test', () => {
     it('it should set tests and remove same tests', () => {
