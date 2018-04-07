@@ -1,6 +1,5 @@
-import { Test, Type } from './phpunit';
+import { Test } from './phpunit';
 import { FilesystemContract, files as fileSystem } from './filesystem';
-import { TextDocument, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
 
 export class Collection {
     private items: Map<string, Test[]> = new Map<string, Test[]>();

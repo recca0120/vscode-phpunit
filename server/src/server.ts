@@ -21,7 +21,7 @@ import {
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
-import { PhpUnit, Test, Type } from './phpunit';
+import { PhpUnit, Test } from './phpunit';
 import { Collection } from './collection';
 import { DiagnosticProvider } from './providers/diagnostic-provider';
 
@@ -89,30 +89,6 @@ connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
     const settings = <Settings>change.settings;
     phpUnit.setBinary(settings.phpunit.execPath).setDefault(settings.phpunit.args);
 });
-
-// function validateTextDocument(textDocument: TextDocument): void {
-//     let diagnostics: Diagnostic[] = [];
-//     let lines = textDocument.getText().split(/\r?\n/g);
-//     let problems = 0;
-//     for (var i = 0; i < lines.length && problems < maxNumberOfProblems; i++) {
-//         let line = lines[i];
-//         let index = line.indexOf('typescript');
-//         if (index >= 0) {
-//             problems++;
-//             diagnostics.push({
-//                 severity: DiagnosticSeverity.Warning,
-//                 range: {
-//                     start: { line: i, character: index },
-//                     end: { line: i, character: index + 10 },
-//                 },
-//                 message: `${line.substr(index, 10)} should be spelled TypeScript`,
-//                 source: 'ex',
-//             });
-//         }
-//     }
-//     // Send the computed diagnostics to VSCode.
-//     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-// }
 
 connection.onDidChangeWatchedFiles(() => {
     // Monitored files have change in VSCode

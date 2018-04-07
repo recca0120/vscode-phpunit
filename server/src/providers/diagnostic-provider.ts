@@ -1,5 +1,3 @@
-import { Collection } from './../collection';
-
 import { TextDocument, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
 import { Test, Type } from '../phpunit';
 
