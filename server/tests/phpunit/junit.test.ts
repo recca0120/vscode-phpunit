@@ -2,10 +2,10 @@ import { parse } from 'fast-xml-parser';
 import { files } from '../../src/filesystem';
 import { JUnit, Test, Type } from '../../src/phpunit';
 import { resolve } from 'path';
+import { projectPath, pathPattern } from './../helpers';
 
 describe('JUnit Test', () => {
     const jUnit: JUnit = new JUnit();
-    const projectPath = (p: string) => resolve(__dirname, '../fixtures/project', p.replace(/\\/g, '/'));
     const path = projectPath('tests/AssertionsTest.php');
     const path2 = projectPath('tests/CalculatorTest.php');
     let tests: Test[] = [];
@@ -13,12 +13,9 @@ describe('JUnit Test', () => {
     beforeEach(async () => {
         const content: string = await files.get(projectPath('junit.xml'));
         tests = await jUnit.parse(
-            content.replace(
-                /C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\(.+\.php)?/g,
-                (...m) => {
-                    return projectPath(m[1]);
-                }
-            )
+            content.replace(pathPattern, (...m) => {
+                return projectPath(m[1]);
+            })
         );
     });
 
