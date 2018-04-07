@@ -11,13 +11,13 @@ import {
     IPCMessageReader,
     IPCMessageWriter,
     InitializeResult,
-    TextDocument,
     TextDocuments,
     createConnection,
     ExecuteCommandParams,
     DocumentSymbolParams,
     SymbolInformation,
     DidChangeConfigurationParams,
+    TextDocument,
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
@@ -134,16 +134,20 @@ connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvi
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     // connection.console.log(JSON.stringify(params));
     await phpUnit.run(params);
+    const tests: Test[] = phpUnit.getTests();
     connection.console.log(phpUnit.getOutput());
 
+    collect
+        .set(tests)
+        .all()
+        .forEach((tests, uri) => {
+            connection.sendDiagnostics({
+                uri,
+                diagnostics: diagnosticProvider.provideDiagnostics(documents.get(uri), tests),
+            });
+        });
+
     const textDocument: TextDocument = documents.get(params.arguments[0]);
-    const tests: Test[] = collect.set(phpUnit.getTests()).get(textDocument.uri);
-
-    connection.sendDiagnostics({
-        uri: textDocument.uri,
-        diagnostics: diagnosticProvider.provideDiagnostics(textDocument, tests),
-    });
-
     connection.sendNotification('tests', {
         uri: textDocument.uri,
         tests,

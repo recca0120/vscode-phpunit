@@ -20,6 +20,10 @@ export class Collection {
         return this.items.get(this.files.uri(uri)) || [];
     }
 
+    all(): Map<string, Test[]> {
+        return this.items;
+    }
+
     private groupBy(tests: Test[]): Map<string, Test[]> {
         return tests.reduce((groups: Map<string, Test[]>, test: Test) => {
             const uri: string = this.files.uri(test.file);
