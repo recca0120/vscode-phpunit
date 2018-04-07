@@ -89,10 +89,4 @@ describe('Filesystem Test', () => {
         await files.unlink(path);
         expect(await files.exists(path)).toBeFalsy();
     });
-
-    it('it should convert file to uri', () => {
-        const files: FilesystemContract = new Filesystem();
-        expect(files.uri('C:\\foo\\bar')).toEqual('file:///c%3A/foo/bar');
-        expect(files.uri('/foo/bar')).toEqual('file:///foo/bar');
-    });
 });

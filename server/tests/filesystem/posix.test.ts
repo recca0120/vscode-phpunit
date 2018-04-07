@@ -49,4 +49,13 @@ describe('POSIX Filesystem Test', () => {
             resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
     });
+
+    it('it should convert file to uri', () => {
+        if (os() === OS.WIN) {
+            return;
+        }
+
+        const files: FilesystemContract = new Filesystem();
+        expect(files.uri('/foo/bar')).toEqual('file:///foo/bar');
+    });
 });

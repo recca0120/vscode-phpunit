@@ -57,4 +57,14 @@ describe('Windows Filesystem Test', () => {
             resolve(__dirname, '../fixtures/project/vendor/bin/phpunit')
         );
     });
+
+    it('it should convert file to uri', () => {
+        if (os() !== OS.WIN) {
+            return;
+        }
+
+        const files: FilesystemContract = new Filesystem();
+        expect(files.uri('C:\\foo\\bar')).toEqual('file:///c%3A/foo/bar');
+        expect(files.uri('C:\\foo\\ba r')).toEqual('file:///c%3A/foo/ba%20r');
+    });
 });
