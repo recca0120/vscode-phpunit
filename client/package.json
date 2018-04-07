@@ -1,10 +1,11 @@
 {
 	"name": "vscode-phpunit",
+	"displayName": "VSCode PHPUnit",
 	"description": "phpunit lsp client",
 	"author": "recca0120",
 	"license": "MIT",
 	"icon": "images/icon.png",
-	"version": "0.6.5",
+	"version": "0.6.6",
 	"publisher": "recca0120",
 	"repository": {
 		"type": "git",
