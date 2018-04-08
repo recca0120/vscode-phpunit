@@ -1,10 +1,11 @@
 import { parse } from 'fast-xml-parser';
-import { files } from '../../src/filesystem';
+import { Filesystem } from '../../src/filesystem';
 import { JUnit, Test, Type } from '../../src/phpunit';
 import { resolve } from 'path';
 import { projectPath, pathPattern } from './../helpers';
 
 describe('JUnit Test', () => {
+    const files = new Filesystem();
     const jUnit: JUnit = new JUnit();
     const path = projectPath('tests/AssertionsTest.php');
     const path2 = projectPath('tests/CalculatorTest.php');

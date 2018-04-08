@@ -1,4 +1,4 @@
-import { FilesystemContract, files as filesystem } from '../filesystem';
+import { FilesystemContract, Filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
 import { ExecuteCommandParams, Command, IConnection } from 'vscode-languageserver';
@@ -13,9 +13,9 @@ export class PhpUnit {
     private tests: Test[];
 
     constructor(
-        private files: FilesystemContract = filesystem,
+        private files: FilesystemContract = new Filesystem(),
         private process: Process = new Process(),
-        private parameters = new Parameters(filesystem),
+        private parameters = new Parameters(files),
         private testsuite: Testsuite = new Testsuite()
     ) {}
 

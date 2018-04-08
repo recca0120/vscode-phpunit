@@ -1,10 +1,10 @@
 import { Test } from './phpunit';
-import { FilesystemContract, files as filesystem } from './filesystem';
+import { FilesystemContract, Filesystem } from './filesystem';
 
 export class Collection {
     private items: Map<string, Test[]> = new Map<string, Test[]>();
 
-    constructor(private files: FilesystemContract = filesystem) {}
+    constructor(private files: FilesystemContract = new Filesystem()) {}
 
     put(tests: Test[]): Collection {
         const groups: Map<string, Test[]> = this.groupBy(tests);
@@ -73,5 +73,3 @@ export class Collection {
         return merged;
     }
 }
-
-export const collect: Collection = new Collection();

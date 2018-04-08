@@ -1,10 +1,10 @@
-import { FilesystemContract, files as filesystem } from '../filesystem';
+import { FilesystemContract, Filesystem } from '../filesystem';
 import { Range } from 'vscode-languageserver';
 
 export class RangeFinder {
     private items: Map<string, string[]> = new Map<string, string[]>();
 
-    constructor(private files: FilesystemContract = filesystem) {}
+    constructor(private files: FilesystemContract = new Filesystem()) {}
 
     async line(file: string, lineAt: number): Promise<Range> {
         const lines: string[] = await this.getLines(file);

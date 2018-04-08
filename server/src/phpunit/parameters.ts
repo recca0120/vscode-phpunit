@@ -1,4 +1,4 @@
-import { FilesystemContract, files as filesystem } from '../filesystem';
+import { FilesystemContract, Filesystem } from '../filesystem';
 import { tap } from '../helpers';
 
 export class Parameters {
@@ -7,7 +7,7 @@ export class Parameters {
     private root: string;
     private jUnitDotXml: string = '';
 
-    constructor(private files: FilesystemContract = filesystem) {}
+    constructor(private files: FilesystemContract = new Filesystem()) {}
 
     set(args: string[]): Parameters {
         return tap(this, (self: Parameters) => {

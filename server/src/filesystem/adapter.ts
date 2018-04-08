@@ -56,3 +56,5 @@ export class Adapter implements FilesystemContract {
         return this.instance.uri(path);
     }
 }
+
+export class Filesystem extends Adapter {}
