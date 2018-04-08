@@ -18,6 +18,12 @@ export class DiagnosticProvider {
         return tests.filter(this.filterByType.bind(this)).map((test: Test) => this.convertToDiagonstic(test));
     }
 
+    put(tests: Test[]): DiagnosticProvider {
+        this.collect.put(tests);
+
+        return this;
+    }
+
     private convertToDiagonstic(test: Test): Diagnostic {
         return {
             severity: DiagnosticSeverity.Error,

@@ -26,9 +26,7 @@ describe('DiagnosticProvider Test', () => {
 
     it('it should get diagnostics from tests', () => {
         const collect: Collection = new Collection();
-        collect.set(tests);
-
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(collect);
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(collect).put(tests);
 
         expect(diagnosticProvider.provideDiagnostics(collect.get(path))).toEqual([
             {

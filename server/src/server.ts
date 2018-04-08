@@ -136,9 +136,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     await phpUnit.run(params);
     const tests: Test[] = phpUnit.getTests();
     connection.console.log(phpUnit.getOutput());
-    collect.set(tests);
-
-    diagnosticProvider.sendDiagnostics(connection);
+    diagnosticProvider.put(tests).sendDiagnostics(connection);
 
     const textDocument: TextDocument = documents.get(params.arguments[0]);
     connection.sendNotification('phpunit.test', {

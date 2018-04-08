@@ -6,7 +6,7 @@ export class Collection {
 
     constructor(private files: FilesystemContract = fileSystem) {}
 
-    set(tests: Test[]): Collection {
+    put(tests: Test[]): Collection {
         const groups: Map<string, Test[]> = this.groupBy(tests);
 
         for (const key of groups.keys()) {
