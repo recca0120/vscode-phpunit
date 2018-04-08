@@ -8,37 +8,7 @@ import {
     DecorationOptions,
 } from 'vscode';
 import { resolve as pathResolve } from 'path';
-
-enum Type {
-    PASSED = 'passed',
-    ERROR = 'error',
-    WARNING = 'warning',
-    FAILURE = 'failure',
-    INCOMPLETE = 'incomplete',
-    RISKY = 'risky',
-    SKIPPED = 'skipped',
-    FAILED = 'failed',
-}
-
-interface Detail {
-    file: string;
-    line: number;
-    range: Range;
-}
-
-interface Fault {
-    message: string;
-    type?: string;
-    details?: Detail[];
-}
-
-interface Assertion {
-    file: string;
-    line: number;
-    range: Range;
-    type: Type;
-    fault?: Fault;
-}
+import { Type, Assertion } from './phpunit';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType>;

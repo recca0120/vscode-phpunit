@@ -1,4 +1,5 @@
-import { JUnit, Test, Type, Assertion, Detail } from './junit';
+import { Test, Type, Assertion, Detail } from './interface';
+import { JUnit } from './junit';
 import { Ast } from './ast';
 import { Collection } from '../collection';
 import { tap } from '../helpers';
