@@ -67,6 +67,14 @@ C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\vendor\mocke
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php:15
 </error>
       </testcase>
+      <testcase name="test_throw_exception" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="54" assertions="0" time="0.000157">
+        <error type="Exception">Tests\CalculatorTest::test_throw_exception
+Exception:
+
+C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\src\Calculator.php:21
+C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php:57
+</error>
+      </testcase>
     </testsuite>
   </testsuite>
 </testsuites>

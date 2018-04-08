@@ -50,4 +50,10 @@ class CalculatorTest extends TestCase
 
         $this->assertSame($calculator->sumItem($a, $b), 3);
     }
+
+    public function test_throw_exception()
+    {
+        $calculator = new Calculator();
+        $calculator->throwException();
+    }
 }

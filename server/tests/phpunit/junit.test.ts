@@ -409,4 +409,46 @@ describe('JUnit Test', () => {
             },
         });
     });
+
+    it('test_sum_item', () => {
+        expect(tests[12]).toEqual({
+            name: 'test_throw_exception',
+            class: 'Tests\\CalculatorTest',
+            classname: 'Tests.CalculatorTest',
+            file: path2,
+            line: 57,
+            range: {
+                end: {
+                    character: 38,
+                    line: 56,
+                },
+                start: {
+                    character: 8,
+                    line: 56,
+                },
+            },
+            time: 0.000157,
+            type: Type.ERROR,
+            fault: {
+                details: [
+                    {
+                        file: projectPath('src/Calculator.php'),
+                        line: 21,
+                        range: {
+                            end: {
+                                character: 28,
+                                line: 20,
+                            },
+                            start: {
+                                character: 8,
+                                line: 20,
+                            },
+                        },
+                    },
+                ],
+                message: '',
+                type: 'Exception',
+            },
+        });
+    });
 });
