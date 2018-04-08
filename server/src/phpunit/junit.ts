@@ -1,4 +1,4 @@
-import { tap } from '../helpers';
+import { tap, value } from '../helpers';
 import { decode } from 'he';
 import { Range } from 'vscode-languageserver';
 import { RangeFinder } from './range-finder';
@@ -28,10 +28,7 @@ export interface Fault {
     details?: Detail[];
 }
 
-export interface Assertion {
-    file: string;
-    line: number;
-    range: Range;
+export interface Assertion extends Detail {
     type: Type;
     fault?: Fault;
 }
@@ -41,28 +38,26 @@ export interface Test extends Assertion {
     class: string;
     classname: string;
     time: number;
-    range: Range;
 }
 
 export class JUnit {
     constructor(private rangeFinder: RangeFinder = new RangeFinder()) {}
 
     async parse(code: string): Promise<Test[]> {
-        const tests: Test[] = await this.getTests(
-            parse(code, {
-                attributeNamePrefix: '_',
-                ignoreAttributes: false,
-                ignoreNameSpace: false,
-                parseNodeValue: true,
-                parseAttributeValue: true,
-                trimValues: true,
-                textNodeName: '__text',
-            })
+        return tap(
+            await this.getTests(
+                parse(code, {
+                    attributeNamePrefix: '_',
+                    ignoreAttributes: false,
+                    ignoreNameSpace: false,
+                    parseNodeValue: true,
+                    parseAttributeValue: true,
+                    trimValues: true,
+                    textNodeName: '__text',
+                })
+            ),
+            () => this.rangeFinder.clear()
         );
-
-        this.rangeFinder.clear();
-
-        return tests;
     }
 
     private getSuites(node: any): any[] {
@@ -88,29 +83,26 @@ export class JUnit {
     }
 
     private async parseTest(node: any): Promise<Test> {
-        return await this.parseFault(
-            {
-                name: node._name || null,
-                class: node._class,
-                classname: node._classname || null,
-                file: node._file,
-                line: parseInt(node._line || 1, 10),
-                time: parseFloat(node._time || 0),
-                type: Type.PASSED,
-            },
-            node
-        );
+        return this.createRange({
+            name: node._name || null,
+            class: node._class,
+            classname: node._classname || null,
+            file: node._file,
+            line: parseInt(node._line || 1, 10),
+            time: parseFloat(node._time || 0),
+            type: Type.PASSED,
+        }).then((test: Test) => this.parseFault(test, node));
     }
 
-    private async parseFault(test: any, node: any): Promise<Test> {
+    private async parseFault(test: Test, node: any): Promise<Test> {
         const fault: any = this.getFaultNode(node);
 
         if (!fault) {
-            return this.createRange(test);
+            return test;
         }
 
         const details: Detail[] = await this.parseDetails(fault);
-        const current: Detail = await this.current(details, test);
+        const current: Detail = this.current(details, test);
         const message: string = this.parseMessage(fault, details);
 
         return Object.assign(test, current, {
@@ -188,14 +180,8 @@ export class JUnit {
         );
     }
 
-    private async current(details: Detail[], test: any): Promise<Detail> {
-        return (
-            details.find(detail => test.file === detail.file && test.line !== detail.line) ||
-            (await this.createRange({
-                file: test.file,
-                line: test.line,
-            }))
-        );
+    private current(details: Detail[], test: Test): Detail {
+        return details.find(detail => test.file === detail.file && test.line !== detail.line) || test;
     }
 
     private parseMessage(fault: any, details: Detail[]) {
@@ -205,9 +191,9 @@ export class JUnit {
             }, fault.__text.replace(/\r?\n/g, '\n').replace(/&#13;/g, ''))
             .split(/\n/);
 
-        const message: string = messages.length === 1 ? messages[0] : messages.slice(1).join('\n');
-
-        return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`), '') : message).trim();
+        return value(messages.slice(messages.length === 1 ? 0 : 1).join('\n'), (message: string) => {
+            return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`), '') : message).trim();
+        });
     }
 
     private filterDetails(details: Detail[], current: Detail): Detail[] {
