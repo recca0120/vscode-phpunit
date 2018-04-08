@@ -1,7 +1,7 @@
 import { tap, value } from '../helpers';
 import { decode } from 'he';
 import { RangeFinder } from './range-finder';
-import { Test, Detail, Type } from './interface';
+import { Test, Detail, Type } from './common';
 
 const parse = require('fast-xml-parser').parse;
 

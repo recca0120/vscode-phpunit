@@ -3,7 +3,7 @@ import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
 import { ExecuteCommandParams, Command, IConnection } from 'vscode-languageserver';
 import { Parameters } from './parameters';
-import { Test } from './interface';
+import { Test } from './common';
 import { Testsuite } from './testsuite';
 
 export class PhpUnit {

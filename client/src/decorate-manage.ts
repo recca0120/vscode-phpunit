@@ -8,7 +8,7 @@ import {
     DecorationOptions,
 } from 'vscode';
 import { resolve as pathResolve } from 'path';
-import { Type, Assertion } from './phpunit';
+import { Type, Assertion } from './phpunit/common';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType>;
