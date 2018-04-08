@@ -24,22 +24,23 @@ export interface Detail {
 
 export interface Fault {
     message: string;
-    type: string;
-    details: Detail[];
+    type?: string;
+    details?: Detail[];
 }
 
-interface Test0 {
-    name: string;
-    class: string;
-    classname: string;
+export interface Assertion {
     file: string;
     line: number;
-    time: number;
+    range: Range;
     type: Type;
     fault?: Fault;
 }
 
-export interface Test extends Test0 {
+export interface Test extends Assertion {
+    name: string;
+    class: string;
+    classname: string;
+    time: number;
     range: Range;
 }
 
@@ -101,7 +102,7 @@ export class JUnit {
         );
     }
 
-    private async parseFault(test: Test0, node: any): Promise<Test> {
+    private async parseFault(test: any, node: any): Promise<Test> {
         const fault: any = this.getFaultNode(node);
 
         if (!fault) {
@@ -187,7 +188,7 @@ export class JUnit {
         );
     }
 
-    private async current(details: Detail[], test: Test0): Promise<Detail> {
+    private async current(details: Detail[], test: any): Promise<Detail> {
         return (
             details.find(detail => test.file === detail.file && test.line !== detail.line) ||
             (await this.createRange({

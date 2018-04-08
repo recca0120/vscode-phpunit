@@ -8,6 +8,7 @@ import * as path from 'path';
 
 import { ExtensionContext, workspace, window, TextEditor } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { DecorateManager } from './decorate-manage';
 
 export function activate(context: ExtensionContext) {
     // The server is implemented in node
@@ -37,9 +38,13 @@ export function activate(context: ExtensionContext) {
 
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
 
+    const decorateManager: DecorateManager = new DecorateManager(context, window);
     client.onReady().then(() => {
         client.onNotification('assertions', (params: any) => {
-            console.log(params);
+            const editor: TextEditor = window.activeTextEditor;
+            if (editor && editor.document.uri.toString() === params.uri) {
+                decorateManager.decoratedGutter(window.activeTextEditor, params.assertions);
+            }
         });
 
         window.onDidChangeActiveTextEditor((editor: TextEditor) => {

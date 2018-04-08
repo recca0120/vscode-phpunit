@@ -21,12 +21,11 @@ import {
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit, Test } from './phpunit';
-import { Collection } from './collection';
+import { collect } from './collection';
 import { DiagnosticProvider } from './providers/diagnostic-provider';
 
-const collect: Collection = new Collection();
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
-const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(collect);
+const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 const phpUnit: PhpUnit = new PhpUnit();
 
@@ -147,7 +146,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     sendAssertions(params.arguments[0]);
 });
 
-connection.onRequest('assertions', (params) => {
+connection.onRequest('assertions', params => {
     sendAssertions(params.uri);
 });
 
@@ -173,7 +172,6 @@ connection.onDidCloseTextDocument((params) => {
 	connection.console.log(`${params.textDocument.uri} closed.`);
 });
 */
-
 
 // Listen on the connection
 connection.listen();

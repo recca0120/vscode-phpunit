@@ -1,9 +1,9 @@
 import { Diagnostic, DiagnosticSeverity, PublishDiagnosticsParams, IConnection } from 'vscode-languageserver';
 import { Test, Type } from '../phpunit';
-import { Collection } from '../collection';
+import { Collection, collect as collection } from '../collection';
 
 export class DiagnosticProvider {
-    constructor(private collect: Collection) {}
+    constructor(private collect: Collection = collection) {}
 
     sendDiagnostics(connection: IConnection): void {
         this.collect.forEach((tests: Test[], uri: string) => {

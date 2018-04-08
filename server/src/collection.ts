@@ -1,4 +1,4 @@
-import { Test, Detail } from './phpunit';
+import { Detail, Test, Assertion } from './phpunit';
 import { FilesystemContract, files as filesystem } from './filesystem';
 
 export class Collection {
@@ -20,10 +20,10 @@ export class Collection {
         return this.items.get(this.files.uri(uri)) || [];
     }
 
-    getAssertions(uri: string) {
+    getAssertions(uri: string): Assertion[] {
         uri = this.files.uri(uri);
 
-        const assertions: any[] = [];
+        const assertions: Assertion[] = [];
         this.forEach((tests: Test[], key: string) => {
             tests.forEach((test: Test) => {
                 const message = test.fault ? test.fault.message : null;
@@ -35,7 +35,9 @@ export class Collection {
                         line: test.line,
                         range: test.range,
                         type: test.type,
-                        message: message,
+                        fault: {
+                            message: message,
+                        },
                     });
                 }
 
@@ -46,7 +48,9 @@ export class Collection {
                             line: detail.line,
                             range: detail.range,
                             type: test.type,
-                            message: message,
+                            fault: {
+                                message: message,
+                            },
                         });
                     }
                 });
@@ -109,3 +113,5 @@ export class Collection {
         return merged;
     }
 }
+
+export const collect: Collection = new Collection();
