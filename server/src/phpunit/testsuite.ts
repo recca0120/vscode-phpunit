@@ -1,14 +1,88 @@
-import { JUnit, Test } from './junit';
+import { JUnit, Test, Type, Assertion, Detail } from './junit';
 import { Ast } from './ast';
+import { Collection } from '../collection';
+import { tap } from '../helpers';
+import { IConnection, PublishDiagnosticsParams, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
+import { FilesystemContract } from './../filesystem/contract';
+import { Filesystem } from './../filesystem/index';
 
 export class Testsuite {
-    constructor(private ast: Ast = new Ast(), private jUnit: JUnit = new JUnit()) {}
+    constructor(
+        private ast: Ast = new Ast(),
+        private jUnit: JUnit = new JUnit(),
+        private collect: Collection = new Collection(),
+        private files: FilesystemContract = new Filesystem()
+    ) {}
 
     parseAst(code: string): any[] {
         return this.ast.parse(code);
     }
 
-    parseJUnit(code: string): Promise<Test[]> {
-        return this.jUnit.parse(code);
+    async parseJUnit(code: string): Promise<Test[]> {
+        return tap(await this.jUnit.parse(code), (tests: Test[]) => this.collect.put(tests));
+    }
+
+    sendDiagnostics(connection: IConnection): void {
+        this.collect.forEach((tests: Test[], uri: string) => {
+            connection.sendDiagnostics({
+                uri,
+                diagnostics: tests
+                    .filter(this.filterByType.bind(this))
+                    .map((test: Test) => this.convertToDiagonstic(test)),
+            } as PublishDiagnosticsParams);
+        });
+    }
+
+    getAssertions(uri: string): Assertion[] {
+        uri = this.files.uri(uri);
+
+        const assertions: Assertion[] = [];
+        this.collect.forEach((tests: Test[], key: string) => {
+            tests.forEach((test: Test) => {
+                const message = test.fault ? test.fault.message : null;
+                const details = test.fault ? test.fault.details : [];
+
+                if (key === uri) {
+                    assertions.push({
+                        file: test.file,
+                        line: test.line,
+                        range: test.range,
+                        type: test.type,
+                        fault: {
+                            message: message,
+                        },
+                    });
+                }
+
+                details.forEach((detail: Detail) => {
+                    if (this.files.uri(detail.file) === uri) {
+                        assertions.push({
+                            file: detail.file,
+                            line: detail.line,
+                            range: detail.range,
+                            type: test.type,
+                            fault: {
+                                message: message,
+                            },
+                        });
+                    }
+                });
+            });
+        });
+
+        return assertions;
+    }
+
+    private filterByType(test: Test): boolean {
+        return [Type.ERROR, Type.FAILED, Type.FAILURE].indexOf(test.type) !== -1;
+    }
+
+    private convertToDiagonstic(test: Test): Diagnostic {
+        return {
+            severity: DiagnosticSeverity.Error,
+            range: test.range,
+            message: test.fault.message,
+            source: 'phpunit',
+        };
     }
 }

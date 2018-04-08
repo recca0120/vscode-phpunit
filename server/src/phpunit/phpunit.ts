@@ -1,9 +1,9 @@
 import { FilesystemContract, files as filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
-import { ExecuteCommandParams, Command } from 'vscode-languageserver';
+import { ExecuteCommandParams, Command, IConnection } from 'vscode-languageserver';
 import { Parameters } from './parameters';
-import { Test } from './junit';
+import { Test, Assertion } from './junit';
 import { Testsuite } from './testsuite';
 
 export class PhpUnit {
@@ -16,7 +16,7 @@ export class PhpUnit {
         private files: FilesystemContract = filesystem,
         private process: Process = new Process(),
         private parameters = new Parameters(filesystem),
-        private testSuite: Testsuite = new Testsuite()
+        private testsuite: Testsuite = new Testsuite()
     ) {}
 
     setBinary(binary: string): PhpUnit {
@@ -66,9 +66,17 @@ export class PhpUnit {
         return this.tests;
     }
 
+    sendDiagnostics(connection: IConnection): void {
+        return this.testsuite.sendDiagnostics(connection);
+    }
+
+    getAssertions(uri: string): Assertion[] {
+        return this.testsuite.getAssertions(uri);
+    }
+
     private async parseTests(jUnitDotXml: string): Promise<Test[]> {
         return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
-            ? await this.testSuite.parseJUnit(await this.files.get(jUnitDotXml))
+            ? await this.testsuite.parseJUnit(await this.files.get(jUnitDotXml))
             : [];
     }
 

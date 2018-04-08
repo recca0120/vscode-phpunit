@@ -20,12 +20,9 @@ import {
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
-import { PhpUnit, Test } from './phpunit';
-import { collect } from './collection';
-import { DiagnosticProvider } from './providers/diagnostic-provider';
+import { PhpUnit } from './phpunit';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
-const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 const phpUnit: PhpUnit = new PhpUnit();
 
@@ -127,7 +124,7 @@ connection.onDidChangeWatchedFiles(() => {
 function sendAssertions(uri: string) {
     connection.sendNotification('assertions', {
         uri: uri,
-        assertions: collect.getAssertions(uri),
+        assertions: phpUnit.getAssertions(uri),
     });
 }
 
@@ -139,9 +136,9 @@ connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvi
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     // connection.console.log(JSON.stringify(params));
     await phpUnit.run(params);
-    const tests: Test[] = phpUnit.getTests();
+    phpUnit.sendDiagnostics(connection);
+
     connection.console.log(phpUnit.getOutput());
-    diagnosticProvider.put(tests).sendDiagnostics(connection);
 
     sendAssertions(params.arguments[0]);
 });

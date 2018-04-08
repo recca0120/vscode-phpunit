@@ -1,4 +1,4 @@
-import { Detail, Test, Assertion } from './phpunit';
+import { Test } from './phpunit';
 import { FilesystemContract, files as filesystem } from './filesystem';
 
 export class Collection {
@@ -18,46 +18,6 @@ export class Collection {
 
     get(uri: string): Test[] {
         return this.items.get(this.files.uri(uri)) || [];
-    }
-
-    getAssertions(uri: string): Assertion[] {
-        uri = this.files.uri(uri);
-
-        const assertions: Assertion[] = [];
-        this.forEach((tests: Test[], key: string) => {
-            tests.forEach((test: Test) => {
-                const message = test.fault ? test.fault.message : null;
-                const details = test.fault ? test.fault.details : [];
-
-                if (key === uri) {
-                    assertions.push({
-                        file: test.file,
-                        line: test.line,
-                        range: test.range,
-                        type: test.type,
-                        fault: {
-                            message: message,
-                        },
-                    });
-                }
-
-                details.forEach((detail: Detail) => {
-                    if (this.files.uri(detail.file) === uri) {
-                        assertions.push({
-                            file: detail.file,
-                            line: detail.line,
-                            range: detail.range,
-                            type: test.type,
-                            fault: {
-                                message: message,
-                            },
-                        });
-                    }
-                });
-            });
-        });
-
-        return assertions;
     }
 
     map(callback: Function): any[] {
