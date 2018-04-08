@@ -1,12 +1,12 @@
 import { tap, value } from '../helpers';
 import { decode } from 'he';
-import { RangeFinder } from './range-finder';
+import { TextlineRange } from './textline-range';
 import { Test, Detail, Type } from './common';
 
 const parse = require('fast-xml-parser').parse;
 
 export class JUnit {
-    constructor(private rangeFinder: RangeFinder = new RangeFinder()) {}
+    constructor(private rangeFinder: TextlineRange = new TextlineRange()) {}
 
     async parse(code: string): Promise<Test[]> {
         return tap(
@@ -167,7 +167,7 @@ export class JUnit {
 
     private async createRange(item: any): Promise<any> {
         return Object.assign(item, {
-            range: await this.rangeFinder.line(item.file, item.line - 1),
+            range: await this.rangeFinder.create(item.file, item.line - 1),
         });
     }
 }

@@ -1,12 +1,12 @@
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { Range } from 'vscode-languageserver';
 
-export class RangeFinder {
+export class TextlineRange {
     private items: Map<string, string[]> = new Map<string, string[]>();
 
     constructor(private files: FilesystemContract = new Filesystem()) {}
 
-    async line(file: string, lineAt: number): Promise<Range> {
+    async create(file: string, lineAt: number): Promise<Range> {
         const lines: string[] = await this.getLines(file);
         const line: string = lines[lineAt];
         const firstNonWhitespaceCharacterIndex: number = line.search(/\S|$/);
@@ -23,7 +23,7 @@ export class RangeFinder {
         );
     }
 
-    clear(): RangeFinder {
+    clear(): TextlineRange {
         this.items.clear();
 
         return this;
