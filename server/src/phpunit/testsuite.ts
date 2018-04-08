@@ -2,7 +2,7 @@ import { JUnit, Test, Type, Assertion, Detail } from './junit';
 import { Ast } from './ast';
 import { Collection } from '../collection';
 import { tap } from '../helpers';
-import { IConnection, PublishDiagnosticsParams, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
+import { PublishDiagnosticsParams, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
 import { FilesystemContract } from './../filesystem/contract';
 import { Filesystem } from './../filesystem/index';
 
@@ -22,14 +22,16 @@ export class Testsuite {
         return tap(await this.jUnit.parse(code), (tests: Test[]) => this.collect.put(tests));
     }
 
-    sendDiagnostics(connection: IConnection): void {
-        this.collect.forEach((tests: Test[], uri: string) => {
-            connection.sendDiagnostics({
-                uri,
-                diagnostics: tests
-                    .filter(this.filterByType.bind(this))
-                    .map((test: Test) => this.convertToDiagonstic(test)),
-            } as PublishDiagnosticsParams);
+    getDiagnostics(): Map<string, PublishDiagnosticsParams> {
+        return tap(new Map<string, PublishDiagnosticsParams>(), (map: Map<string, PublishDiagnosticsParams>) => {
+            this.collect.forEach((tests: Test[], uri: string) => {
+                map.set(uri, {
+                    uri,
+                    diagnostics: tests
+                        .filter(this.filterByType.bind(this))
+                        .map((test: Test) => this.convertToDiagonstic(test)),
+                } as PublishDiagnosticsParams);
+            });
         });
     }
 

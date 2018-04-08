@@ -121,30 +121,19 @@ connection.onDidChangeWatchedFiles(() => {
 //     return item;
 // });
 
-function sendAssertions(uri: string) {
-    connection.sendNotification('assertions', {
-        uri: uri,
-        assertions: phpUnit.getAssertions(uri),
-    });
-}
-
 connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
     return codeLensProvider.provideCodeLenses(documents.get(params.textDocument.uri));
 });
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    // connection.console.log(JSON.stringify(params));
     await phpUnit.run(params);
-    phpUnit.sendDiagnostics(connection);
-
+    phpUnit.sendDiagnostics(connection).sendNotification(connection, params.arguments[0]);
     connection.console.log(phpUnit.getOutput());
-
-    sendAssertions(params.arguments[0]);
 });
 
 connection.onRequest('assertions', params => {
-    sendAssertions(params.uri);
+    phpUnit.sendNotification(connection, params.uri);
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {

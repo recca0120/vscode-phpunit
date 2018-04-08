@@ -3,7 +3,7 @@ import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
 import { ExecuteCommandParams, Command, IConnection } from 'vscode-languageserver';
 import { Parameters } from './parameters';
-import { Test, Assertion } from './junit';
+import { Test } from './junit';
 import { Testsuite } from './testsuite';
 
 export class PhpUnit {
@@ -66,12 +66,21 @@ export class PhpUnit {
         return this.tests;
     }
 
-    sendDiagnostics(connection: IConnection): void {
-        return this.testsuite.sendDiagnostics(connection);
+    sendDiagnostics(connection: IConnection): PhpUnit {
+        return tap(this, () => {
+            for (const [, params] of this.testsuite.getDiagnostics()) {
+                connection.sendDiagnostics(params);
+            }
+        });
     }
 
-    getAssertions(uri: string): Assertion[] {
-        return this.testsuite.getAssertions(uri);
+    sendNotification(connection: IConnection, uri: string): PhpUnit {
+        return tap(this, () => {
+            connection.sendNotification('assertions', {
+                uri: uri,
+                assertions: this.testsuite.getAssertions(uri),
+            });
+        });
     }
 
     private async parseTests(jUnitDotXml: string): Promise<Test[]> {
