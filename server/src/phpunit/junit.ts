@@ -19,13 +19,13 @@ export enum Type {
 export interface Detail {
     file: string;
     line: number;
-    range?: Range;
+    range: Range;
 }
 
 export interface Fault {
     message: string;
-    type?: string;
-    details?: Detail[];
+    type: string;
+    details: Detail[];
 }
 
 interface Test0 {
@@ -87,7 +87,7 @@ export class JUnit {
     }
 
     private async parseTest(node: any): Promise<Test> {
-        return this.parseFault(
+        return await this.parseFault(
             {
                 name: node._name || null,
                 class: node._class,
@@ -101,27 +101,25 @@ export class JUnit {
         );
     }
 
-    private parseFault(test: Test0, node: any): Promise<Test> {
+    private async parseFault(test: Test0, node: any): Promise<Test> {
         const fault: any = this.getFaultNode(node);
 
         if (!fault) {
             return this.createRange(test);
         }
 
-        const details: Detail[] = this.parseDetails(fault);
-        const current: Detail = this.current(details, test);
+        const details: Detail[] = await this.parseDetails(fault);
+        const current: Detail = await this.current(details, test);
         const message: string = this.parseMessage(fault, details);
 
-        return this.createRange(
-            Object.assign(test, current, {
-                type: fault.type,
-                fault: {
-                    type: fault._type || '',
-                    message: message,
-                    details: this.filterDetails(details, current),
-                },
-            })
-        );
+        return Object.assign(test, current, {
+            type: fault.type,
+            fault: {
+                type: fault._type || '',
+                message: message,
+                details: this.filterDetails(details, current),
+            },
+        });
     }
 
     private getFaultNode(node: any): any {
@@ -168,29 +166,34 @@ export class JUnit {
         );
     }
 
-    private parseDetails(fault: any): Detail[] {
+    private async parseDetails(fault: any): Promise<Detail[]> {
         const pattern: RegExp = /(.*):(\d+)$/;
 
-        return fault.__text
-            .split(/\r?\n/)
-            .map((line: string) => line.trim())
-            .filter((line: string) => pattern.test(line))
-            .map((detail: string) => {
-                const [, file, line] = detail.match(pattern) as string[];
+        return Promise.all(
+            [].concat(
+                fault.__text
+                    .split(/\r?\n/)
+                    .map((line: string) => line.trim())
+                    .filter((line: string) => pattern.test(line))
+                    .map(async (detail: string) => {
+                        const [, file, line] = detail.match(pattern) as string[];
 
-                return {
-                    file: file.trim(),
-                    line: parseInt(line, 10),
-                };
-            });
+                        return await this.createRange({
+                            file: file.trim(),
+                            line: parseInt(line, 10),
+                        });
+                    })
+            )
+        );
     }
 
-    private current(details: Detail[], test: Test0): Detail {
+    private async current(details: Detail[], test: Test0): Promise<Detail> {
         return (
-            details.find(detail => test.file === detail.file && test.line !== detail.line) || {
+            details.find(detail => test.file === detail.file && test.line !== detail.line) ||
+            (await this.createRange({
                 file: test.file,
                 line: test.line,
-            }
+            }))
         );
     }
 
@@ -210,9 +213,9 @@ export class JUnit {
         return details.filter(detail => detail.file !== current.file && detail.line !== current.line);
     }
 
-    private async createRange(test: Test0): Promise<Test> {
-        return Object.assign(test, {
-            range: await this.rangeFinder.line(test.file, test.line - 1),
+    private async createRange(item: any): Promise<any> {
+        return Object.assign(item, {
+            range: await this.rangeFinder.line(item.file, item.line - 1),
         });
     }
 }

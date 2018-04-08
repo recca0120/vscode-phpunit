@@ -321,26 +321,86 @@ describe('JUnit Test', () => {
                     {
                         file: projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php'),
                         line: 38,
+                        range: {
+                            end: {
+                                character: 69,
+                                line: 37,
+                            },
+                            start: {
+                                character: 12,
+                                line: 37,
+                            },
+                        },
                     },
                     {
                         file: projectPath('vendor/mockery/mockery/library/Mockery/Expectation.php'),
                         line: 309,
+                        range: {
+                            end: {
+                                character: 54,
+                                line: 308,
+                            },
+                            start: {
+                                character: 12,
+                                line: 308,
+                            },
+                        },
                     },
                     {
                         file: projectPath('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php'),
                         line: 119,
+                        range: {
+                            end: {
+                                character: 31,
+                                line: 118,
+                            },
+                            start: {
+                                character: 16,
+                                line: 118,
+                            },
+                        },
                     },
                     {
                         file: projectPath('vendor/mockery/mockery/library/Mockery/Container.php'),
                         line: 301,
+                        range: {
+                            end: {
+                                character: 36,
+                                line: 300,
+                            },
+                            start: {
+                                character: 12,
+                                line: 300,
+                            },
+                        },
                     },
                     {
                         file: projectPath('vendor/mockery/mockery/library/Mockery/Container.php'),
                         line: 286,
+                        range: {
+                            end: {
+                                character: 36,
+                                line: 285,
+                            },
+                            start: {
+                                character: 12,
+                                line: 285,
+                            },
+                        },
                     },
                     {
                         file: projectPath('vendor/mockery/mockery/library/Mockery.php'),
                         line: 165,
+                        range: {
+                            end: {
+                                character: 39,
+                                line: 164,
+                            },
+                            start: {
+                                character: 8,
+                                line: 164,
+                            },
+                        },
                     },
                 ],
                 message:
