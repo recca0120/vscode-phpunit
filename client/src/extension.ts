@@ -6,7 +6,7 @@
 
 import * as path from 'path';
 
-import { ExtensionContext, workspace, window } from 'vscode';
+import { ExtensionContext, workspace, window, TextEditor } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: ExtensionContext) {
@@ -38,8 +38,14 @@ export function activate(context: ExtensionContext) {
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
 
     client.onReady().then(() => {
-        client.onNotification('phpunit.test', (params: any) => {
+        client.onNotification('assertions', (params: any) => {
             console.log(params);
+        });
+
+        window.onDidChangeActiveTextEditor((editor: TextEditor) => {
+            client.sendRequest('assertions', {
+                uri: editor.document.uri.toString(),
+            });
         });
     });
 

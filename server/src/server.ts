@@ -17,7 +17,6 @@ import {
     DocumentSymbolParams,
     SymbolInformation,
     DidChangeConfigurationParams,
-    TextDocument,
 } from 'vscode-languageserver';
 
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
@@ -126,6 +125,13 @@ connection.onDidChangeWatchedFiles(() => {
 //     return item;
 // });
 
+function sendAssertions(uri: string) {
+    connection.sendNotification('assertions', {
+        uri: uri,
+        assertions: collect.getAssertions(uri),
+    });
+}
+
 connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
     return codeLensProvider.provideCodeLenses(documents.get(params.textDocument.uri));
 });
@@ -138,11 +144,11 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     connection.console.log(phpUnit.getOutput());
     diagnosticProvider.put(tests).sendDiagnostics(connection);
 
-    const textDocument: TextDocument = documents.get(params.arguments[0]);
-    connection.sendNotification('phpunit.test', {
-        uri: textDocument.uri,
-        gutters: collect.getGutters(textDocument.uri),
-    });
+    sendAssertions(params.arguments[0]);
+});
+
+connection.onRequest('assertions', (params) => {
+    sendAssertions(params.uri);
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {
@@ -167,6 +173,7 @@ connection.onDidCloseTextDocument((params) => {
 	connection.console.log(`${params.textDocument.uri} closed.`);
 });
 */
+
 
 // Listen on the connection
 connection.listen();

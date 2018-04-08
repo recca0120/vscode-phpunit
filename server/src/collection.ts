@@ -20,19 +20,20 @@ export class Collection {
         return this.items.get(this.files.uri(uri)) || [];
     }
 
-    getGutters(uri: string) {
+    getAssertions(uri: string) {
         uri = this.files.uri(uri);
 
-        const gutters: any[] = [];
+        const assertions: any[] = [];
         this.forEach((tests: Test[], key: string) => {
             tests.forEach((test: Test) => {
                 const message = test.fault ? test.fault.message : null;
                 const details = test.fault ? test.fault.details : [];
 
                 if (key === uri) {
-                    gutters.push({
+                    assertions.push({
                         file: test.file,
                         line: test.line,
+                        range: test.range,
                         type: test.type,
                         message: message,
                     });
@@ -40,9 +41,10 @@ export class Collection {
 
                 details.forEach((detail: Detail) => {
                     if (this.files.uri(detail.file) === uri) {
-                        gutters.push({
+                        assertions.push({
                             file: detail.file,
                             line: detail.line,
+                            range: detail.range,
                             type: test.type,
                             message: message,
                         });
@@ -51,7 +53,7 @@ export class Collection {
             });
         });
 
-        return gutters;
+        return assertions;
     }
 
     map(callback: Function): any[] {
