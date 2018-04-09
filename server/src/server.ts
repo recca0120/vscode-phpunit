@@ -18,7 +18,7 @@ import {
     SymbolInformation,
     DidChangeConfigurationParams,
 } from 'vscode-languageserver';
-
+import { StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit } from './phpunit';
 
@@ -27,7 +27,9 @@ const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvide
 const phpUnit: PhpUnit = new PhpUnit();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-const connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
+const connection: IConnection = process.argv.some(arg => arg === '--stdio')
+    ? createConnection(new StreamMessageReader(process.stdin), new StreamMessageWriter(process.stdout))
+    : createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
@@ -145,6 +147,14 @@ connection.onRequest('assertions', params => {
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {
     return documentSymbolProvider.provideDocumentSymbols(documents.get(params.textDocument.uri));
 });
+
+// connection.onDidSaveTextDocument(async params => {
+//     const uri: string = params.textDocument.uri;
+//     await phpUnit.run(uri);
+//     phpUnit.sendDiagnostics(connection).sendNotification(connection, uri);
+//     connection.console.log(phpUnit.getOutput());
+// });
+
 /*
 connection.onDidOpenTextDocument((params) => {
 	// A text document got opened in VSCode.

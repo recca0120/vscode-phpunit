@@ -17,6 +17,7 @@
 		"fast-xml-parser": "^3.3.6",
 		"he": "^1.1.1",
 		"php-parser": "git+https://github.com/glayzzle/php-parser.git",
+		"vscode-jsonrpc": "^3.6.1",
 		"vscode-languageserver": "^3.5.1",
 		"vscode-uri": "^1.0.3"
 	},
