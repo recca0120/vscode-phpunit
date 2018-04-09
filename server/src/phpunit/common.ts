@@ -19,16 +19,18 @@ export interface Fault {
     details?: Detail[];
 }
 
-export interface Assertion extends Detail {
+interface Base extends Location {
     name: string;
     class: string;
     classname: string;
-    time?: number;
-    type?: Type;
+    time: number;
+    type: Type;
+}
+
+export interface Test extends Base {
     fault?: Fault;
 }
 
-export interface Test extends Assertion {
-    type: Type;
-    time: number;
+export interface Assertion extends Base {
+    fault: Fault;
 }
