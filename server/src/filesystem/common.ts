@@ -96,7 +96,7 @@ export abstract class Common implements FilesystemContract {
     }
 
     uri(path: string): string {
-        return this.isUri(path) === true ? path : Uri.file(path).toString();
+        return this.isUri(path) === true ? Uri.parse(path).toString() : Uri.file(path).toString();
     }
 
     private isUri(uri: string): boolean {

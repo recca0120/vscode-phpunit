@@ -42,40 +42,27 @@ export class Testsuite {
         const assertions: Assertion[] = [];
         this.collect.forEach((tests: Test[], key: string) => {
             tests.forEach((test: Test) => {
-                const message = test.fault ? test.fault.message : null;
+                const message = test.fault ? test.fault.message : '';
                 const details = test.fault && test.fault.details ? test.fault.details : [];
+                const fault: Fault = { message };
 
                 if (key === uri) {
-                    assertions.push({
-                        name: test.name,
-                        class: test.class,
-                        classname: test.classname,
-                        file: test.file,
-                        line: test.line,
-                        range: test.range,
-                        time: test.time,
-                        type: test.type,
-                        fault: {
-                            message: message,
-                        } as Fault,
-                    });
+                    assertions.push(
+                        Object.assign({}, test, {
+                            fault: fault,
+                        })
+                    );
                 }
 
                 details.forEach((detail: Detail) => {
-                    if (this.files.uri(detail.file) === uri) {
-                        assertions.push({
-                            name: test.name,
-                            class: test.class,
-                            classname: test.classname,
-                            file: detail.file,
-                            line: detail.line,
-                            range: detail.range,
-                            time: test.time,
-                            type: test.type,
-                            fault: {
-                                message: message,
-                            } as Fault,
-                        });
+                    if (detail.uri === uri) {
+                        assertions.push(
+                            Object.assign({}, test, {
+                                uri: detail.uri,
+                                range: detail.range,
+                                fault: fault,
+                            })
+                        );
                     }
                 });
             });

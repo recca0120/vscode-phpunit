@@ -120,14 +120,10 @@ describe('Testsuite Test', () => {
     it('it should get assertions', () => {
         expect(testsuite.getAssertions(files.uri(projectPath('tests/AssertionsTest.php')))).toEqual([
             {
+                name: 'test_passed',
                 class: 'Tests\\AssertionsTest',
                 classname: 'Tests.AssertionsTest',
-                fault: {
-                    message: null,
-                },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 9,
-                name: 'test_passed',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 33,
@@ -140,6 +136,9 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.007537,
                 type: 'passed',
+                fault: {
+                    message: '',
+                },
             },
             {
                 class: 'Tests\\AssertionsTest',
@@ -147,9 +146,8 @@ describe('Testsuite Test', () => {
                 fault: {
                     message: 'Failed asserting that false is true.',
                 },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 16,
                 name: 'test_error',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 33,
@@ -170,8 +168,6 @@ describe('Testsuite Test', () => {
                     message:
                         "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n Array &0 (\n-    'a' => 'b'\n-    'c' => 'd'\n+    'e' => 'f'\n+    0 => 'g'\n+    1 => 'h'\n )",
                 },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 21,
                 name: 'test_assertion_isnt_same',
                 range: {
                     end: {
@@ -185,16 +181,13 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.001332,
                 type: 'failure',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
             },
             {
+                name: 'test_risky',
                 class: 'Tests\\AssertionsTest',
                 classname: 'Tests.AssertionsTest',
-                fault: {
-                    message: 'Risky Test',
-                },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 24,
-                name: 'test_risky',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 32,
@@ -207,16 +200,15 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.000079,
                 type: 'risky',
+                fault: {
+                    message: 'Risky Test',
+                },
             },
             {
+                name: 'it_should_be_annotation_test',
                 class: 'Tests\\AssertionsTest',
                 classname: 'Tests.AssertionsTest',
-                fault: {
-                    message: null,
-                },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 32,
-                name: 'it_should_be_annotation_test',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 50,
@@ -229,16 +221,15 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.000063,
                 type: 'passed',
-            },
-            {
-                class: 'Tests\\AssertionsTest',
-                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: '',
                 },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 37,
+            },
+            {
                 name: 'test_skipped',
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 34,
@@ -251,16 +242,15 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.000664,
                 type: 'skipped',
-            },
-            {
-                class: 'Tests\\AssertionsTest',
-                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: '',
                 },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 42,
+            },
+            {
                 name: 'test_incomplete',
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 37,
@@ -273,16 +263,15 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.000693,
                 type: 'skipped',
+                fault: {
+                    message: '',
+                },
             },
             {
+                name: 'test_no_assertion',
                 class: 'Tests\\AssertionsTest',
                 classname: 'Tests.AssertionsTest',
-                fault: {
-                    message: 'Risky Test',
-                },
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 47,
-                name: 'test_no_assertion',
+                uri: files.uri(projectPath('tests/AssertionsTest.php')),
                 range: {
                     end: {
                         character: 39,
@@ -295,6 +284,9 @@ describe('Testsuite Test', () => {
                 },
                 time: 0.000047,
                 type: 'risky',
+                fault: {
+                    message: 'Risky Test',
+                },
             },
         ]);
     });

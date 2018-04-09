@@ -2,11 +2,15 @@ import { tap, value } from '../helpers';
 import { decode } from 'he';
 import { TextlineRange } from './textline-range';
 import { Test, Detail, Type } from './common';
+import { FilesystemContract, Filesystem } from '../filesystem';
 
 const parse = require('fast-xml-parser').parse;
 
 export class JUnit {
-    constructor(private rangeFinder: TextlineRange = new TextlineRange()) {}
+    constructor(
+        private rangeFinder: TextlineRange = new TextlineRange(),
+        private files: FilesystemContract = new Filesystem()
+    ) {}
 
     async parse(code: string): Promise<Test[]> {
         return tap(
@@ -48,15 +52,16 @@ export class JUnit {
     }
 
     private async parseTest(node: any): Promise<Test> {
-        return this.createRange({
-            name: node._name || null,
-            class: node._class,
-            classname: node._classname || null,
-            file: node._file,
-            line: parseInt(node._line || 1, 10),
-            time: parseFloat(node._time || 0),
-            type: Type.PASSED,
-        }).then((test: Test) => this.parseFault(test, node));
+        return this.parseFault(
+            Object.assign(await this.createLocation(node._file, parseInt(node._line || 1, 10)), {
+                name: node._name || null,
+                class: node._class,
+                classname: node._classname || null,
+                time: parseFloat(node._time || 0),
+                type: Type.PASSED,
+            }),
+            node
+        );
     }
 
     private async parseFault(test: Test, node: any): Promise<Test> {
@@ -68,7 +73,7 @@ export class JUnit {
 
         const details: Detail[] = await this.parseDetails(fault);
         const current: Detail = this.current(details, test);
-        const message: string = this.parseMessage(fault, details);
+        const message: string = this.parseMessage(fault);
 
         return Object.assign(test, current, {
             type: fault.type,
@@ -136,25 +141,26 @@ export class JUnit {
                     .map(async (detail: string) => {
                         const [, file, line] = detail.match(pattern) as string[];
 
-                        return await this.createRange({
-                            file: file.trim(),
-                            line: parseInt(line, 10),
-                        });
+                        return this.createLocation(file.trim(), parseInt(line, 10));
                     })
             )
         );
     }
 
     private current(details: Detail[], test: Test): Detail {
-        return details.find(detail => test.file === detail.file && test.line !== detail.line) || test;
+        return (
+            details.find(detail => test.uri === detail.uri && test.range.start.line !== detail.range.start.line) || test
+        );
     }
 
-    private parseMessage(fault: any, details: Detail[]) {
-        const messages: string[] = details
-            .reduce((message, detail: Detail) => {
-                return message.replace(`${detail.file}:${detail.line}`, '').trim();
-            }, fault.__text.replace(/\r?\n/g, '\n').replace(/&#13;/g, ''))
-            .split(/\n/);
+    private parseMessage(fault: any) {
+        const pattern: RegExp = /^(.*):(\d+)$/g;
+        const messages: string[] = fault.__text
+            .replace(/\r?\n/g, '\n')
+            .replace(/&#13;/g, '')
+            .replace(pattern, '')
+            .split('\n')
+            .map((line: string) => line.replace(pattern, ''));
 
         return value(messages.slice(messages.length === 1 ? 0 : 1).join('\n'), (message: string) => {
             return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`), '') : message).trim();
@@ -162,12 +168,15 @@ export class JUnit {
     }
 
     private filterDetails(details: Detail[], current: Detail): Detail[] {
-        return details.filter(detail => detail.file !== current.file && detail.line !== current.line);
+        return details.filter(
+            detail => detail.uri !== current.uri && detail.range.start.line !== current.range.start.line
+        );
     }
 
-    private async createRange(item: any): Promise<any> {
-        return Object.assign(item, {
-            range: await this.rangeFinder.create(item.file, item.line - 1),
-        });
+    private async createLocation(file: string, line: number): Promise<Detail> {
+        return {
+            uri: this.files.uri(file),
+            range: await this.rangeFinder.create(file, line - 1),
+        };
     }
 }

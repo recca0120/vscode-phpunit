@@ -1,4 +1,4 @@
-import { Range } from 'vscode';
+import { Location } from 'vscode';
 
 export enum Type {
     PASSED = 'passed',
@@ -11,11 +11,7 @@ export enum Type {
     FAILED = 'failed',
 }
 
-export interface Detail {
-    file: string;
-    line: number;
-    range: Range;
-}
+export interface Detail extends Location {}
 
 export interface Fault {
     message: string;

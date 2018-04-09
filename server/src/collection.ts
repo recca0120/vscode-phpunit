@@ -44,10 +44,9 @@ export class Collection {
 
     private groupBy(tests: Test[]): Map<string, Test[]> {
         return tests.reduce((groups: Map<string, Test[]>, test: Test) => {
-            const uri: string = this.files.uri(test.file);
-            const group: Test[] = groups.get(uri) || [];
+            const group: Test[] = groups.get(test.uri) || [];
             group.push(test);
-            groups.set(uri, group);
+            groups.set(test.uri, group);
 
             return groups;
         }, new Map<string, Test[]>());
@@ -57,7 +56,7 @@ export class Collection {
         const merged: Test[] = oldTests
             .filter((oldTest: Test) => {
                 for (const newTest of newTests) {
-                    if (oldTest.file === newTest.file && oldTest.name === newTest.name) {
+                    if (oldTest.uri === newTest.uri && oldTest.name === newTest.name) {
                         return false;
                     }
                 }
@@ -67,7 +66,7 @@ export class Collection {
             .concat(newTests);
 
         merged.sort((a: Test, b: Test) => {
-            return a.line > b.line ? 1 : -1;
+            return a.range.start.line > b.range.start.line ? 1 : -1;
         });
 
         return merged;

@@ -4,7 +4,7 @@ import { JUnit, Test, Type } from '../../src/phpunit';
 import { resolve } from 'path';
 import { projectPath, pathPattern } from './../helpers';
 
-describe('JUnit Test', () => {
+describe('JUnit Test', async () => {
     const files = new Filesystem();
     const jUnit: JUnit = new JUnit();
     const path = projectPath('tests/AssertionsTest.php');
@@ -25,8 +25,7 @@ describe('JUnit Test', () => {
             name: 'test_passed',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 9,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 33,
@@ -47,8 +46,7 @@ describe('JUnit Test', () => {
             name: 'test_error',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 16,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 33,
@@ -74,8 +72,7 @@ describe('JUnit Test', () => {
             name: 'test_assertion_isnt_same',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 21,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 76,
@@ -102,8 +99,7 @@ describe('JUnit Test', () => {
             name: 'test_risky',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 24,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 32,
@@ -129,8 +125,7 @@ describe('JUnit Test', () => {
             name: 'it_should_be_annotation_test',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 32,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 50,
@@ -151,8 +146,7 @@ describe('JUnit Test', () => {
             name: 'test_skipped',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 37,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 34,
@@ -178,8 +172,7 @@ describe('JUnit Test', () => {
             name: 'test_incomplete',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 42,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 37,
@@ -205,8 +198,7 @@ describe('JUnit Test', () => {
             name: 'test_no_assertion',
             class: 'Tests\\AssertionsTest',
             classname: 'Tests.AssertionsTest',
-            file: path,
-            line: 47,
+            uri: files.uri(path),
             range: {
                 end: {
                     character: 39,
@@ -232,8 +224,7 @@ describe('JUnit Test', () => {
             name: 'test_sum',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            file: path2,
-            line: 18,
+            uri: files.uri(path2),
             range: {
                 end: {
                     character: 30,
@@ -254,8 +245,7 @@ describe('JUnit Test', () => {
             name: 'test_sum_fail',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            file: path2,
-            line: 29,
+            uri: files.uri(path2),
             range: {
                 end: {
                     character: 53,
@@ -281,8 +271,7 @@ describe('JUnit Test', () => {
             name: 'test_sum_item',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            file: path2,
-            line: 32,
+            uri: files.uri(path2),
             range: {
                 end: {
                     character: 35,
@@ -303,8 +292,7 @@ describe('JUnit Test', () => {
             name: 'test_sum_item_method_not_call',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            file: path2,
-            line: 15,
+            uri: files.uri(projectPath(path2)),
             range: {
                 end: {
                     character: 19,
@@ -320,8 +308,7 @@ describe('JUnit Test', () => {
             fault: {
                 details: [
                     {
-                        file: projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php'),
-                        line: 38,
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php')),
                         range: {
                             end: {
                                 character: 69,
@@ -334,8 +321,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        file: projectPath('vendor/mockery/mockery/library/Mockery/Expectation.php'),
-                        line: 309,
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Expectation.php')),
                         range: {
                             end: {
                                 character: 54,
@@ -348,8 +334,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        file: projectPath('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php'),
-                        line: 119,
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php')),
                         range: {
                             end: {
                                 character: 31,
@@ -362,8 +347,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        file: projectPath('vendor/mockery/mockery/library/Mockery/Container.php'),
-                        line: 301,
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Container.php')),
                         range: {
                             end: {
                                 character: 36,
@@ -376,8 +360,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        file: projectPath('vendor/mockery/mockery/library/Mockery/Container.php'),
-                        line: 286,
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Container.php')),
                         range: {
                             end: {
                                 character: 36,
@@ -390,8 +373,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        file: projectPath('vendor/mockery/mockery/library/Mockery.php'),
-                        line: 165,
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery.php')),
                         range: {
                             end: {
                                 character: 39,
@@ -416,8 +398,7 @@ describe('JUnit Test', () => {
             name: 'test_throw_exception',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            file: path2,
-            line: 57,
+            uri: files.uri(projectPath(path2)),
             range: {
                 end: {
                     character: 38,
@@ -433,8 +414,7 @@ describe('JUnit Test', () => {
             fault: {
                 details: [
                     {
-                        file: projectPath('src/Calculator.php'),
-                        line: 21,
+                        uri: files.uri(projectPath('src/Calculator.php')),
                         range: {
                             end: {
                                 character: 28,
