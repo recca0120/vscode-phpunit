@@ -9,6 +9,7 @@ import {
 } from 'vscode';
 import { resolve as pathResolve } from 'path';
 import { Type, Test } from './phpunit/common';
+import { when } from './helpers';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType>;
@@ -26,20 +27,24 @@ export class DecorateManager {
         ]);
     }
 
-    decoratedGutter(editor: TextEditor, tests: Test[]) {
-        for (const [type] of this.styles) {
-            const style: TextEditorDecorationType|undefined = this.styles.get(type);
-            if (style) {
-                editor.setDecorations(style, []);
-            }
+    decoratedGutter(editor: TextEditor, tests: Test[]): DecorateManager {
+        for (const [type, decorationOptions] of this.groupBy(tests)) {
+            when(this.styles.get(type), (style: TextEditorDecorationType) => {
+                editor.setDecorations(style, decorationOptions);
+            })
         }
 
-        for (const [type, decorationOptions] of this.groupBy(tests)) {
-            const style: TextEditorDecorationType|undefined = this.styles.get(type);
-            if (style) {
-                editor.setDecorations(style, decorationOptions);
-            }
+        return this;
+    }
+
+    clearDecoratedGutter(editor: TextEditor): DecorateManager {
+        for (const [type] of this.styles) {
+            when(this.styles.get(type), (style: TextEditorDecorationType) => {
+                editor.setDecorations(style, []);
+            })
         }
+
+        return this;
     }
 
     private groupBy(tests: Test[]): Map<Type, DecorationOptions[]> {

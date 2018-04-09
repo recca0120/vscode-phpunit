@@ -9,6 +9,7 @@ import * as path from 'path';
 import { ExtensionContext, workspace, window, TextEditor } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 import { DecorateManager } from './decorate-manage';
+import { when } from './helpers';
 
 export function activate(context: ExtensionContext) {
     // The server is implemented in node
@@ -41,11 +42,11 @@ export function activate(context: ExtensionContext) {
     const decorateManager: DecorateManager = new DecorateManager(context, window);
     client.onReady().then(() => {
         client.onNotification('assertions', (params: any) => {
-            const editor: TextEditor|undefined = window.activeTextEditor;
-
-            if (editor && editor.document.uri.toString() === params.uri) {
-                decorateManager.decoratedGutter(editor, params.assertions);
-            }
+            when(window.activeTextEditor, (editor: TextEditor) => {
+                if (editor.document.uri.toString() === params.uri) {
+                    decorateManager.decoratedGutter(editor, params.assertions);
+                }
+            })
         });
 
         window.onDidChangeActiveTextEditor((editor: TextEditor) => {

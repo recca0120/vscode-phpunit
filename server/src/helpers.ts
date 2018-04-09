@@ -18,3 +18,13 @@ export function tap<T>(value: T, callback: Function): T {
 export function value<T>(value: T, callback: Function): T {
     return callback(value);
 }
+
+export function when<T>(value: T, success: Function, fail?: Function): any {
+    if (value) {
+        return success(value);
+    } else if(fail) {
+        return fail(value);
+    }
+
+    return '';
+}
