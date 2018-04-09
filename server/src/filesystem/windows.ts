@@ -14,7 +14,7 @@ export class WINDOWS extends POSIX {
         return (
             path
                 .replace(/^file:\/\//, '')
-                .replace(/^\/(\w)%3A/, '$1:')
+                .replace(/^\/(\w)(%3A|:)/, '$1:')
                 // .replace(/^\w:/, m => m.toUpperCase())
                 .replace(/\//g, this.separator)
                 .replace(/ /g, '\\ ')
