@@ -7,8 +7,9 @@
             "es6"
         ],
         "sourceMap": true,
-		"rootDir": ".",
+		"rootDir": "src",
 		"strict": true,
+		"moduleResolution": "node",
 		"noUnusedLocals": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,

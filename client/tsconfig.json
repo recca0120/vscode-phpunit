@@ -7,7 +7,7 @@
             "es6"
         ],
         "sourceMap": true,
-		"rootDir": ".",
+		"rootDir": "src",
 		"strict": true,
 		"noUnusedLocals": true,
         "noImplicitReturns": true,
@@ -15,6 +15,9 @@
         "noUnusedParameters": true
 	},
 	"exclude": [
-		"node_modules"
+		"node_modules",
+		"server",
+		".vscode-test",
+		"tests"
 	]
 }
