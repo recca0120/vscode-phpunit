@@ -1,4 +1,4 @@
-import { Test, Type, Assertion, Detail } from './common';
+import { Test, Type, Assertion, Detail, Fault } from './common';
 import { JUnit } from './junit';
 import { Ast } from './ast';
 import { Collection } from '../collection';
@@ -43,7 +43,7 @@ export class Testsuite {
         this.collect.forEach((tests: Test[], key: string) => {
             tests.forEach((test: Test) => {
                 const message = test.fault ? test.fault.message : null;
-                const details = test.fault ? test.fault.details : [];
+                const details = test.fault && test.fault.details ? test.fault.details : [];
 
                 if (key === uri) {
                     assertions.push({
@@ -57,7 +57,7 @@ export class Testsuite {
                         type: test.type,
                         fault: {
                             message: message,
-                        },
+                        } as Fault,
                     });
                 }
 
@@ -74,7 +74,7 @@ export class Testsuite {
                             type: test.type,
                             fault: {
                                 message: message,
-                            },
+                            } as Fault,
                         });
                     }
                 });
@@ -92,7 +92,7 @@ export class Testsuite {
         return {
             severity: DiagnosticSeverity.Error,
             range: test.range,
-            message: test.fault.message,
+            message: test.fault ? test.fault.message : '',
             source: 'phpunit',
         };
     }

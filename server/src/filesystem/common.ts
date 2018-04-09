@@ -5,9 +5,9 @@ import { tmpdir } from 'os';
 import Uri from 'vscode-uri';
 
 export abstract class Common implements FilesystemContract {
-    protected systemPaths: string[];
-    protected delimiter: string;
-    protected extensions: string[];
+    protected systemPaths: string[] = [];
+    protected delimiter: string = '/';
+    protected extensions: string[] = [];
 
     exists(path: string): Promise<boolean> {
         return new Promise(resolve => {
@@ -90,7 +90,9 @@ export abstract class Common implements FilesystemContract {
     }
 
     unlink(path: string): Promise<boolean> {
-        return new Promise(resolve => unlink(path, (error: NodeJS.ErrnoException) => resolve(error ? false : true)));
+        return new Promise(resolve =>
+            unlink(path, (error: NodeJS.ErrnoException | undefined) => resolve(error ? false : true))
+        );
     }
 
     uri(path: string): string {

@@ -32,7 +32,7 @@ export class JUnit {
             testsuite = testsuite.testsuite;
         }
 
-        return testsuite instanceof Array ? [].concat(testsuite) : [testsuite];
+        return testsuite instanceof Array ? testsuite : [testsuite];
     }
 
     private getTests(node: any): Promise<Test[]> {

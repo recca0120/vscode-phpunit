@@ -7,10 +7,10 @@ import { Test } from './common';
 import { Testsuite } from './testsuite';
 
 export class PhpUnit {
-    private binary: string;
+    private binary: string = '';
     private defaults: string[] = [];
-    private output: string;
-    private tests: Test[];
+    private output: string = '';
+    private tests: Test[] = [];
 
     constructor(
         private files: FilesystemContract = new Filesystem(),

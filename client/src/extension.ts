@@ -41,9 +41,10 @@ export function activate(context: ExtensionContext) {
     const decorateManager: DecorateManager = new DecorateManager(context, window);
     client.onReady().then(() => {
         client.onNotification('assertions', (params: any) => {
-            const editor: TextEditor = window.activeTextEditor;
+            const editor: TextEditor|undefined = window.activeTextEditor;
+
             if (editor && editor.document.uri.toString() === params.uri) {
-                decorateManager.decoratedGutter(window.activeTextEditor, params.assertions);
+                decorateManager.decoratedGutter(editor, params.assertions);
             }
         });
 

@@ -20,7 +20,10 @@ export class CodeLensProvider {
 
     private convertToCodeLens(nodes: any, data: any = {}): CodeLens[] {
         return nodes.map((node: any) => {
-            let command: Command;
+            let command: Command = {
+                title: '',
+                command: '',
+            };
 
             switch (node.kind) {
                 case 'class':

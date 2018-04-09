@@ -28,11 +28,17 @@ export class DecorateManager {
 
     decoratedGutter(editor: TextEditor, tests: Test[]) {
         for (const [type] of this.styles) {
-            editor.setDecorations(this.styles.get(type), []);
+            const style: TextEditorDecorationType|undefined = this.styles.get(type);
+            if (style) {
+                editor.setDecorations(style, []);
+            }
         }
 
         for (const [type, decorationOptions] of this.groupBy(tests)) {
-            editor.setDecorations(this.styles.get(type), decorationOptions);
+            const style: TextEditorDecorationType|undefined = this.styles.get(type);
+            if (style) {
+                editor.setDecorations(style, decorationOptions);
+            }
         }
     }
 
@@ -42,7 +48,7 @@ export class DecorateManager {
             const { start, end } = assertion.range;
             group.push({
                 range: new Range(start.line, start.character, end.line, end.character),
-                hoverMessage: assertion.fault.message,
+                hoverMessage: assertion.fault ? assertion.fault.message : '',
             });
             groups.set(assertion.type, group);
 

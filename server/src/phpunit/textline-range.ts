@@ -37,6 +37,6 @@ export class TextlineRange {
             this.items.set(uri, content.split(/\r?\n/g));
         }
 
-        return this.items.get(uri);
+        return this.items.get(uri) || [];
     }
 }

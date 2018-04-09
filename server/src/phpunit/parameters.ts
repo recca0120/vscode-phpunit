@@ -2,9 +2,9 @@ import { FilesystemContract, Filesystem } from '../filesystem';
 import { tap } from '../helpers';
 
 export class Parameters {
-    private arguments: string[];
-    private cwd: string;
-    private root: string;
+    private arguments: string[] = [];
+    private cwd: string = '';
+    private root: string = '';
     private jUnitDotXml: string = '';
 
     constructor(private files: FilesystemContract = new Filesystem()) {}

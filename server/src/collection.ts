@@ -10,7 +10,7 @@ export class Collection {
         const groups: Map<string, Test[]> = this.groupBy(tests);
 
         for (const key of groups.keys()) {
-            this.items.set(key, this.merge(this.items.get(key) || [], groups.get(key)));
+            this.items.set(key, this.merge(this.items.get(key) || [], groups.get(key) || []));
         }
 
         return this;
