@@ -32,3 +32,4 @@ export interface Test extends Assertion {
     type: Type;
     time: number;
 }
+
