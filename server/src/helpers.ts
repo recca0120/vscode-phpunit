@@ -22,7 +22,7 @@ export function value<T>(value: T, callback: Function): T {
 export function when<T>(value: T, success: Function, fail?: Function): any {
     if (value) {
         return success(value);
-    } else if(fail) {
+    } else if (fail) {
         return fail(value);
     }
 

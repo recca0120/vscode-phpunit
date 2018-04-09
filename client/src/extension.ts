@@ -46,7 +46,7 @@ export function activate(context: ExtensionContext) {
                 if (editor.document.uri.toString() === params.uri) {
                     decorateManager.decoratedGutter(editor, params.assertions);
                 }
-            })
+            });
         });
 
         window.onDidChangeActiveTextEditor((editor: TextEditor) => {

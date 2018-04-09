@@ -31,7 +31,7 @@ export class DecorateManager {
         for (const [type, decorationOptions] of this.groupBy(tests)) {
             when(this.styles.get(type), (style: TextEditorDecorationType) => {
                 editor.setDecorations(style, decorationOptions);
-            })
+            });
         }
 
         return this;
@@ -41,7 +41,7 @@ export class DecorateManager {
         for (const [type] of this.styles) {
             when(this.styles.get(type), (style: TextEditorDecorationType) => {
                 editor.setDecorations(style, []);
-            })
+            });
         }
 
         return this;
