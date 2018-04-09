@@ -6,8 +6,8 @@ export class TextlineRange {
 
     constructor(private files: FilesystemContract = new Filesystem()) {}
 
-    async create(file: string, lineAt: number): Promise<Range> {
-        const lines: string[] = await this.getLines(file);
+    async create(uri: string, lineAt: number): Promise<Range> {
+        const lines: string[] = await this.getLines(uri);
         const line: string = lines[lineAt];
         const firstNonWhitespaceCharacterIndex: number = line.search(/\S|$/);
 
@@ -29,11 +29,9 @@ export class TextlineRange {
         return this;
     }
 
-    private async getLines(file: string): Promise<string[]> {
-        const uri: string = this.files.uri(file);
-
+    private async getLines(uri: string): Promise<string[]> {
         if (this.items.has(uri) === false) {
-            const content: string = await this.files.get(file);
+            const content: string = await this.files.get(uri);
             this.items.set(uri, content.split(/\r?\n/g));
         }
 

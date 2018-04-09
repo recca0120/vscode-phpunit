@@ -8,7 +8,7 @@ const parse = require('fast-xml-parser').parse;
 
 export class JUnit {
     constructor(
-        private rangeFinder: TextlineRange = new TextlineRange(),
+        private textLineRange: TextlineRange = new TextlineRange(),
         private files: FilesystemContract = new Filesystem()
     ) {}
 
@@ -25,7 +25,7 @@ export class JUnit {
                     textNodeName: '__text',
                 })
             ),
-            () => this.rangeFinder.clear()
+            () => this.textLineRange.clear()
         );
     }
 
@@ -174,9 +174,11 @@ export class JUnit {
     }
 
     private async createLocation(file: string, line: number): Promise<Detail> {
+        const uri = this.files.uri(file);
+
         return {
-            uri: this.files.uri(file),
-            range: await this.rangeFinder.create(file, line - 1),
+            uri: uri,
+            range: await this.textLineRange.create(uri, line - 1),
         };
     }
 }
