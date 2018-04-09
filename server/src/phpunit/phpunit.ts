@@ -1,7 +1,7 @@
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
-import { ExecuteCommandParams, Command, IConnection } from 'vscode-languageserver';
+import { Command, IConnection } from 'vscode-languageserver';
 import { Parameters } from './parameters';
 import { Test } from './common';
 import { Testsuite } from './testsuite';
@@ -31,8 +31,8 @@ export class PhpUnit {
         });
     }
 
-    async run(params: ExecuteCommandParams): Promise<number> {
-        const path = this.files.normalizePath(params.arguments[0]);
+    async run(path: string, params: string[] = []): Promise<number> {
+        path = this.files.normalizePath(path);
         const cwd: string = this.files.dirname(path);
         const root: string = await this.getRoot(cwd);
 
@@ -42,13 +42,7 @@ export class PhpUnit {
             arguments: await this.parameters
                 .setCwd(cwd)
                 .setRoot(root)
-                .set(
-                    this.defaults.concat(
-                        tap((params.arguments as string[]).slice(), (parameters: string[]) => {
-                            parameters[0] = this.files.normalizePath(parameters[0]);
-                        })
-                    )
-                )
+                .set(this.defaults.concat(params.concat([path]).filter((item: string) => !!item)))
                 .all(),
         };
 

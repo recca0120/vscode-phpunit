@@ -16,12 +16,7 @@ describe('PhpUnit Test', () => {
         spyOn(parameters, 'all').and.returnValue([path]);
         spyOn(process, 'spawn').and.returnValue('output');
 
-        expect(
-            await phpUnit.run({
-                command: '',
-                arguments: [path],
-            })
-        ).toEqual(0);
+        expect(await phpUnit.run(path)).toEqual(0);
 
         expect(phpUnit.getOutput()).toEqual('output');
         expect(phpUnit.getTests()).toEqual([]);
@@ -51,16 +46,13 @@ describe('PhpUnit Test', () => {
             await phpUnit
                 .setBinary(command)
                 .setDefault(['foo', 'bar'])
-                .run({
-                    command: '',
-                    arguments: [path],
-                })
+                .run(path, ['-c', 'bootstrap.php'])
         ).toEqual(0);
 
         expect(phpUnit.getOutput()).toEqual('output');
         expect(phpUnit.getTests()).toEqual([]);
 
-        expect((parameters.set as jasmine.Spy).calls.argsFor(0)).toEqual([['foo', 'bar', path]]);
+        expect((parameters.set as jasmine.Spy).calls.argsFor(0)).toEqual([['foo', 'bar', '-c', 'bootstrap.php', path]]);
 
         expect((process.spawn as jasmine.Spy).calls.argsFor(0)).toEqual([
             {

@@ -127,9 +127,15 @@ connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
 connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    await phpUnit.run(params);
-    phpUnit.sendDiagnostics(connection).sendNotification(connection, params.arguments[0]);
-    connection.console.log(phpUnit.getOutput());
+    switch (params.command) {
+        case 'phpunit.test.file':
+        case 'phpunit.test.method':
+            const uri = params.arguments[0];
+            await phpUnit.run(uri, params.arguments.slice(1));
+            phpUnit.sendDiagnostics(connection).sendNotification(connection, uri);
+            connection.console.log(phpUnit.getOutput());
+            break;
+    }
 });
 
 connection.onRequest('assertions', params => {

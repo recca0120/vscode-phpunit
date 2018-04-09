@@ -33,7 +33,7 @@ export class CodeLensProvider {
                 case 'method':
                     command = {
                         title: 'Run Test',
-                        command: 'phpunit.test.cursor',
+                        command: 'phpunit.test.method',
                         arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
                     };
                     break;
