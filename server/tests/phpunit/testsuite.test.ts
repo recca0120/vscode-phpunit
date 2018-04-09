@@ -120,11 +120,14 @@ describe('Testsuite Test', () => {
     it('it should get assertions', () => {
         expect(testsuite.getAssertions(files.uri(projectPath('tests/AssertionsTest.php')))).toEqual([
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: null,
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 9,
+                name: 'test_passed',
                 range: {
                     end: {
                         character: 33,
@@ -135,14 +138,18 @@ describe('Testsuite Test', () => {
                         line: 8,
                     },
                 },
+                time: 0.007537,
                 type: 'passed',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: 'Failed asserting that false is true.',
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 16,
+                name: 'test_error',
                 range: {
                     end: {
                         character: 33,
@@ -153,15 +160,19 @@ describe('Testsuite Test', () => {
                         line: 15,
                     },
                 },
+                time: 0.001508,
                 type: 'failure',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message:
                         "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n Array &0 (\n-    'a' => 'b'\n-    'c' => 'd'\n+    'e' => 'f'\n+    0 => 'g'\n+    1 => 'h'\n )",
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 21,
+                name: 'test_assertion_isnt_same',
                 range: {
                     end: {
                         character: 76,
@@ -172,14 +183,18 @@ describe('Testsuite Test', () => {
                         line: 20,
                     },
                 },
+                time: 0.001332,
                 type: 'failure',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: 'Risky Test',
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 24,
+                name: 'test_risky',
                 range: {
                     end: {
                         character: 32,
@@ -190,14 +205,18 @@ describe('Testsuite Test', () => {
                         line: 23,
                     },
                 },
+                time: 0.000079,
                 type: 'risky',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: null,
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 32,
+                name: 'it_should_be_annotation_test',
                 range: {
                     end: {
                         character: 50,
@@ -208,14 +227,18 @@ describe('Testsuite Test', () => {
                         line: 31,
                     },
                 },
+                time: 0.000063,
                 type: 'passed',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: '',
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 37,
+                name: 'test_skipped',
                 range: {
                     end: {
                         character: 34,
@@ -226,14 +249,18 @@ describe('Testsuite Test', () => {
                         line: 36,
                     },
                 },
+                time: 0.000664,
                 type: 'skipped',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: '',
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 42,
+                name: 'test_incomplete',
                 range: {
                     end: {
                         character: 37,
@@ -244,14 +271,18 @@ describe('Testsuite Test', () => {
                         line: 41,
                     },
                 },
+                time: 0.000693,
                 type: 'skipped',
             },
             {
+                class: 'Tests\\AssertionsTest',
+                classname: 'Tests.AssertionsTest',
                 fault: {
                     message: 'Risky Test',
                 },
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 47,
+                name: 'test_no_assertion',
                 range: {
                     end: {
                         character: 39,
@@ -262,6 +293,7 @@ describe('Testsuite Test', () => {
                         line: 46,
                     },
                 },
+                time: 0.000047,
                 type: 'risky',
             },
         ]);

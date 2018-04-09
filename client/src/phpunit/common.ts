@@ -24,13 +24,14 @@ export interface Fault {
 }
 
 export interface Assertion extends Detail {
+    name: string;
+    class: string;
+    classname: string;
+    time?: number;
     type: Type;
     fault?: Fault;
 }
 
 export interface Test extends Assertion {
-    name: string;
-    class: string;
-    classname: string;
     time: number;
 }

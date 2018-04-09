@@ -47,9 +47,13 @@ export class Testsuite {
 
                 if (key === uri) {
                     assertions.push({
+                        name: test.name,
+                        class: test.class,
+                        classname: test.classname,
                         file: test.file,
                         line: test.line,
                         range: test.range,
+                        time: test.time,
                         type: test.type,
                         fault: {
                             message: message,
@@ -60,9 +64,13 @@ export class Testsuite {
                 details.forEach((detail: Detail) => {
                     if (this.files.uri(detail.file) === uri) {
                         assertions.push({
+                            name: test.name,
+                            class: test.class,
+                            classname: test.classname,
                             file: detail.file,
                             line: detail.line,
                             range: detail.range,
+                            time: test.time,
                             type: test.type,
                             fault: {
                                 message: message,

@@ -8,7 +8,7 @@ import {
     DecorationOptions,
 } from 'vscode';
 import { resolve as pathResolve } from 'path';
-import { Type, Assertion } from './phpunit/common';
+import { Type, Test } from './phpunit/common';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType>;
@@ -26,18 +26,18 @@ export class DecorateManager {
         ]);
     }
 
-    decoratedGutter(editor: TextEditor, assertions: Assertion[]) {
+    decoratedGutter(editor: TextEditor, tests: Test[]) {
         for (const [type] of this.styles) {
             editor.setDecorations(this.styles.get(type), []);
         }
 
-        for (const [type, decorationOptions] of this.groupBy(assertions)) {
+        for (const [type, decorationOptions] of this.groupBy(tests)) {
             editor.setDecorations(this.styles.get(type), decorationOptions);
         }
     }
 
-    private groupBy(assertions: Assertion[]): Map<Type, DecorationOptions[]> {
-        return assertions.reduce((groups: Map<Type, DecorationOptions[]>, assertion: Assertion) => {
+    private groupBy(tests: Test[]): Map<Type, DecorationOptions[]> {
+        return tests.reduce((groups: Map<Type, DecorationOptions[]>, assertion: Test) => {
             const group: DecorationOptions[] = groups.get(assertion.type) || [];
             group.push({
                 range: new Range(assertion.range.start.line, 0, assertion.range.start.line, 1e3),
