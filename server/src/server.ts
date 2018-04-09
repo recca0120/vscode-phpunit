@@ -55,7 +55,7 @@ connection.onInitialize((): InitializeResult => {
             },
             documentSymbolProvider: false,
             executeCommandProvider: {
-                commands: ['phpunit.test.file', 'phpunit.test.cursor'],
+                commands: ['phpunit.test.file', 'phpunit.test.method'],
             },
         },
     };
