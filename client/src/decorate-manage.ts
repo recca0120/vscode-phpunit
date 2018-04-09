@@ -39,8 +39,9 @@ export class DecorateManager {
     private groupBy(tests: Test[]): Map<Type, DecorationOptions[]> {
         return tests.reduce((groups: Map<Type, DecorationOptions[]>, assertion: Test) => {
             const group: DecorationOptions[] = groups.get(assertion.type) || [];
+            const {start, end} = assertion.range;
             group.push({
-                range: new Range(assertion.range.start.line, 0, assertion.range.start.line, 1e3),
+                range: new Range(start.line, start.character, end.line, end.character),
                 hoverMessage: assertion.fault.message,
             });
             groups.set(assertion.type, group);
