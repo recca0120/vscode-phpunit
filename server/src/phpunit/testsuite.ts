@@ -42,9 +42,13 @@ export class Testsuite {
         const assertions: Assertion[] = [];
         this.collect.forEach((tests: Test[], key: string) => {
             tests.forEach((test: Test) => {
-                const message = test.fault ? test.fault.message : '';
-                const details = test.fault && test.fault.details ? test.fault.details : [];
-                const fault: Fault = { message };
+                const message: string = test.fault ? test.fault.message : '';
+                const details: Detail[] = test.fault && test.fault.details ? test.fault.details : [];
+                const type: string = test.fault && test.fault.type ? test.fault.type : '';
+                const fault: Fault = {
+                    type,
+                    message,
+                };
 
                 if (key === uri) {
                     assertions.push(
@@ -60,7 +64,14 @@ export class Testsuite {
                             Object.assign({}, test, {
                                 uri: detail.uri,
                                 range: detail.range,
-                                fault: fault,
+                                fault: Object.assign({}, fault, {
+                                    details: [
+                                        {
+                                            uri: test.uri,
+                                            range: test.range,
+                                        },
+                                    ],
+                                }),
                             })
                         );
                     }

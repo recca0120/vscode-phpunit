@@ -15,7 +15,7 @@ export interface Detail extends Location {}
 
 export interface Fault {
     message: string;
-    type?: string;
+    type: string;
     details?: Detail[];
 }
 
