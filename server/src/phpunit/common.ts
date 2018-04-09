@@ -27,6 +27,7 @@ export interface Assertion extends Detail {
     name: string;
     class: string;
     classname: string;
+    time?: number;
     type?: Type;
     fault?: Fault;
 }
