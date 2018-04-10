@@ -19,11 +19,11 @@ export function value<T>(value: T, callback: Function): T {
     return callback(value);
 }
 
-export function when<T>(value: T, success: Function, fail?: Function): any {
+export function when<T>(value: T, success: any, fail?: any): any {
     if (value) {
-        return success(value);
+        return success instanceof Function ? success(value) : success;
     } else if (fail) {
-        return fail(value);
+        return fail instanceof Function ? fail(value) : fail;
     }
 
     return '';
