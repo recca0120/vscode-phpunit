@@ -1,5 +1,26 @@
 import { Location } from 'vscode-languageserver';
 
+export interface FaultNode {
+    type: string;
+    _type: Type;
+    __text: string;
+}
+
+export interface Node {
+    _name: string;
+    _class: string;
+    _classname: string;
+    _file: string;
+    _line: string;
+    _assertions: string;
+    _time: string;
+    error?: FaultNode;
+    warning?: FaultNode;
+    failure?: FaultNode;
+    skipped?: string;
+    incomplete?: string;
+}
+
 export enum Type {
     PASSED = 'passed',
     ERROR = 'error',

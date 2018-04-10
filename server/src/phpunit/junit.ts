@@ -1,12 +1,14 @@
 import { tap, value } from '../helpers';
 import { decode } from 'he';
 import { TextlineRange } from './textline-range';
-import { Test, Detail, Type } from './common';
+import { Test, Detail, Type, Node, FaultNode } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
 
 const parse = require('fast-xml-parser').parse;
 
 export class JUnit {
+    private pathPattern: RegExp = /(.*):(\d+)$/;
+
     constructor(
         private textLineRange: TextlineRange = new TextlineRange(),
         private files: FilesystemContract = new Filesystem()
@@ -15,15 +17,17 @@ export class JUnit {
     async parse(code: string): Promise<Test[]> {
         return tap(
             await this.getTests(
-                parse(code, {
-                    attributeNamePrefix: '_',
-                    ignoreAttributes: false,
-                    ignoreNameSpace: false,
-                    parseNodeValue: true,
-                    parseAttributeValue: true,
-                    trimValues: true,
-                    textNodeName: '__text',
-                })
+                this.getNodes(
+                    parse(code, {
+                        attributeNamePrefix: '_',
+                        ignoreAttributes: false,
+                        ignoreNameSpace: false,
+                        parseNodeValue: true,
+                        parseAttributeValue: true,
+                        trimValues: true,
+                        textNodeName: '__text',
+                    })
+                )
             ),
             () => this.textLineRange.clear()
         );
@@ -39,32 +43,30 @@ export class JUnit {
         return testsuite instanceof Array ? testsuite : [testsuite];
     }
 
-    private getTests(node: any): Promise<Test[]> {
-        return Promise.all(
-            [].concat(
-                this.getSuites(node)
-                    .reduce((tests: any[], suite: any) => {
-                        return tests.concat(suite.testcase);
-                    }, [])
-                    .map(this.parseTest.bind(this))
-            )
-        );
+    private getNodes(node: any): Node[] {
+        return this.getSuites(node).reduce((tests: any[], suite: any) => {
+            return tests.concat(suite.testcase);
+        }, []);
     }
 
-    private async parseTest(node: any): Promise<Test> {
+    private getTests(nodes: Node[]): Promise<Test[]> {
+        return Promise.all(nodes.map(this.parseTest.bind(this)) as Promise<Test>[]);
+    }
+
+    private async parseTest(node: Node): Promise<Test> {
         return this.parseFault(
-            Object.assign(await this.createLocation(node._file, parseInt(node._line || 1, 10)), {
-                name: node._name || null,
+            Object.assign(await this.createLocation(node._file, parseInt(node._line, 10) || 1), {
+                name: node._name || '',
                 class: node._class,
-                classname: node._classname || null,
-                time: parseFloat(node._time || 0),
+                classname: node._classname || '',
+                time: parseFloat(node._time) || 0,
                 type: Type.PASSED,
             }),
             node
         );
     }
 
-    private async parseFault(test: Test, node: any): Promise<Test> {
+    private async parseFault(test: Test, node: Node): Promise<Test> {
         const fault: any = this.getFaultNode(node);
 
         if (!fault) {
@@ -85,19 +87,19 @@ export class JUnit {
         });
     }
 
-    private getFaultNode(node: any): any {
+    private getFaultNode(node: Node): FaultNode | undefined {
         const keys: string[] = Object.keys(node);
 
         if (keys.indexOf('error') !== -1) {
-            return tap(node.error, (fault: any) => (fault.type = this.parseErrorType(fault)));
+            return tap(node.error, (fault: FaultNode) => (fault.type = this.parseErrorType(fault)));
         }
 
         if (keys.indexOf('warning') !== -1) {
-            return tap(node.warning, (fault: any) => (fault.type = Type.WARNING));
+            return tap(node.warning, (fault: FaultNode) => (fault.type = Type.WARNING));
         }
 
         if (keys.indexOf('failure') !== -1) {
-            return tap(node.failure, (fault: any) => (fault.type = Type.FAILURE));
+            return tap(node.failure, (fault: FaultNode) => (fault.type = Type.FAILURE));
         }
 
         if (keys.indexOf('skipped') !== -1) {
@@ -116,11 +118,11 @@ export class JUnit {
             };
         }
 
-        return null;
+        return;
     }
 
-    private parseErrorType(node: any): Type {
-        const type = node._type.toLowerCase();
+    private parseErrorType(fault: FaultNode): Type {
+        const type = fault._type.toLowerCase();
 
         return (
             [Type.WARNING, Type.FAILURE, Type.INCOMPLETE, Type.RISKY, Type.SKIPPED, Type.FAILED].find(
@@ -129,22 +131,16 @@ export class JUnit {
         );
     }
 
-    private async parseDetails(fault: any): Promise<Detail[]> {
-        const pattern: RegExp = /(.*):(\d+)$/;
+    private async parseDetails(fault: FaultNode): Promise<Detail[]> {
+        return Promise.all(fault.__text
+            .split(/\r?\n/)
+            .map((line: string) => line.trim())
+            .filter((line: string) => this.pathPattern.test(line))
+            .map(async (detail: string) => {
+                const [, file, line] = detail.match(this.pathPattern) as string[];
 
-        return Promise.all(
-            [].concat(
-                fault.__text
-                    .split(/\r?\n/)
-                    .map((line: string) => line.trim())
-                    .filter((line: string) => pattern.test(line))
-                    .map(async (detail: string) => {
-                        const [, file, line] = detail.match(pattern) as string[];
-
-                        return this.createLocation(file.trim(), parseInt(line, 10));
-                    })
-            )
-        );
+                return this.createLocation(file.trim(), parseInt(line, 10));
+            }) as Promise<Detail>[]);
     }
 
     private current(details: Detail[], test: Test): Detail {
@@ -154,13 +150,11 @@ export class JUnit {
     }
 
     private parseMessage(fault: any) {
-        const pattern: RegExp = /^(.*):(\d+)$/g;
         const messages: string[] = fault.__text
             .replace(/\r?\n/g, '\n')
             .replace(/&#13;/g, '')
-            .replace(pattern, '')
             .split('\n')
-            .map((line: string) => line.replace(pattern, ''));
+            .map((line: string) => line.replace(this.pathPattern, ''));
 
         return value(messages.slice(messages.length === 1 ? 0 : 1).join('\n'), (message: string) => {
             return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`), '') : message).trim();
