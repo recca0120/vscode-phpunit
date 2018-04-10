@@ -6,7 +6,7 @@ export class DocumentSymbolProvider {
 
     provideDocumentSymbols(textDocument: TextDocument): SymbolInformation[] {
         return this.convertToDocumentSymbol(
-            this.testsuite.parseAst(textDocument.getText(), textDocument.uri),
+            this.testsuite.getTestNodes(textDocument.getText(), textDocument.uri),
             textDocument.uri
         );
     }

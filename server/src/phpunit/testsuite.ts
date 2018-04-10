@@ -1,4 +1,4 @@
-import { Test, Type, Assertion } from './common';
+import { Test, Type, Assertion, TestNode } from './common';
 import { JUnit } from './junit';
 import { Ast } from './ast';
 import { Collection } from '../collection';
@@ -15,8 +15,8 @@ export class Testsuite {
         private files: FilesystemContract = new Filesystem()
     ) {}
 
-    parseAst(code: string, uri: string): any[] {
-        return this.ast.parse(code, uri);
+    getTestNodes(code: string, uri: string): TestNode[] {
+        return this.ast.parse(code, this.files.uri(uri));
     }
 
     async parseJUnit(code: string): Promise<Test[]> {

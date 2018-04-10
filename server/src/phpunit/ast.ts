@@ -2,11 +2,8 @@ import { Program } from 'php-parser';
 import Engine from 'php-parser';
 import { Range } from 'vscode-languageserver';
 import { TestNode } from './common';
-import { FilesystemContract, Filesystem } from '../filesystem';
 
 export class Ast {
-    constructor(private files: FilesystemContract = new Filesystem) {}
-
     parse(code: string, uri: string): any[] {
         return this.getToTestNodes(
             Engine.parseCode(code, {
@@ -27,17 +24,15 @@ export class Ast {
                     short_tags: true,
                 },
             }),
-            this.files.uri(uri)
+            uri
         );
     }
 
     getToTestNodes(node: Program, uri: string): TestNode[] {
-        return node.children.reduce((classes: any[], namespaceOrClass: any) => {
-            const namespace: string = namespaceOrClass.kind === 'namespace' ? namespaceOrClass.name : '';
-            return (namespaceOrClass.kind === 'namespace'
-                ? classes.concat(namespaceOrClass.children)
-                : classes.concat(namespaceOrClass)
-            )
+        return node.children.reduce((classes: any[], nsOrClass: any) => {
+            const namespace: string = nsOrClass.kind === 'namespace' ? nsOrClass.name : '';
+
+            return (nsOrClass.kind === 'namespace' ? classes.concat(nsOrClass.children) : classes.concat(nsOrClass))
                 .filter((o: any) => this.isClass(o))
                 .reduce((c: TestNode[], o: any) => c.concat(this.convertToTestNodes(o, uri, namespace)), []);
         }, []);
@@ -47,11 +42,11 @@ export class Ast {
         const oClass: string = namespace ? `${namespace}\\${node.name}` : node.name;
         const classname: string = oClass.replace(/\\/g, '.');
 
-        return [this.convertToTestNode(node, uri, oClass, classname)].concat(
-            node.body
-                .filter((method: any) => this.isTestMethod(method))
-                .map((method: any) => this.convertToTestNode(method, uri, oClass, classname))
-        );
+        const methods: TestNode[] = node.body
+            .filter((method: any) => this.isTestMethod(method))
+            .map((method: any) => this.convertToTestNode(method, uri, oClass, classname));
+
+        return methods.length === 0 ? [] : [this.convertToTestNode(node, uri, oClass, classname)].concat(methods);
     }
 
     private convertToTestNode(node: any, uri: string, oClass: string, classname: string) {

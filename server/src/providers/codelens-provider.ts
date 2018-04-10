@@ -1,11 +1,12 @@
 import { Testsuite, TestNode } from '../phpunit';
-import { CodeLens, TextDocument, Command } from 'vscode-languageserver';
+import { CodeLens, TextDocument } from 'vscode-languageserver';
+import { when } from '../helpers';
 
 export class CodeLensProvider {
     constructor(private testsuite = new Testsuite()) {}
 
     provideCodeLenses(textDocument: TextDocument): CodeLens[] {
-        return this.convertToCodeLens(this.testsuite.parseAst(textDocument.getText(), textDocument.uri), {
+        return this.convertToCodeLens(this.testsuite.getTestNodes(textDocument.getText(), textDocument.uri), {
             textDocument: {
                 uri: textDocument.uri,
             },
@@ -20,26 +21,26 @@ export class CodeLensProvider {
 
     private convertToCodeLens(nodes: TestNode[], data: any = {}): CodeLens[] {
         return nodes.map((node: TestNode) => {
-            let command: Command = {
-                title: 'Run Test',
-                command: '',
-            };
-            if (node.class === node.name) {
-                Object.assign(command, {
-                    command: 'phpunit.test.file',
-                    arguments: [data.textDocument.uri],
-                });
-            } else {
-                Object.assign(command, {
-                    command: 'phpunit.test.method',
-                    arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
-                });
-            }
-
             return {
-                range: node.range,
-                command,
                 data,
+                range: node.range,
+                command: when(
+                    node.class === node.name,
+                    () => {
+                        return {
+                            title: 'Run Test',
+                            command: 'phpunit.test.file',
+                            arguments: [data.textDocument.uri],
+                        };
+                    },
+                    () => {
+                        return {
+                            title: 'Run Test',
+                            command: 'phpunit.test.method',
+                            arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
+                        };
+                    }
+                ),
             };
         });
     }
