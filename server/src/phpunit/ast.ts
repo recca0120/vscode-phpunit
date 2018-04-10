@@ -1,9 +1,12 @@
 import { Program } from 'php-parser';
 import Engine from 'php-parser';
 import { Range } from 'vscode-languageserver';
-import { TestNode } from '.';
+import { TestNode } from './common';
+import { FilesystemContract, Filesystem } from '../filesystem';
 
 export class Ast {
+    constructor(private files: FilesystemContract = new Filesystem) {}
+
     parse(code: string, uri: string): any[] {
         return this.getToTestNodes(
             Engine.parseCode(code, {
@@ -24,7 +27,7 @@ export class Ast {
                     short_tags: true,
                 },
             }),
-            uri
+            this.files.uri(uri)
         );
     }
 
