@@ -48,13 +48,9 @@ export class Parameters {
     }
 
     async all(): Promise<string[]> {
-        let phpUnitDotXml: string;
+        const phpUnitDotXml: string = await this.findPhpUnitDotXml();
 
-        if (
-            this.exists('-c') === false &&
-            this.exists('--configuration') === false &&
-            (phpUnitDotXml = await this.findPhpUnitDotXml())
-        ) {
+        if (phpUnitDotXml) {
             this.arguments = this.arguments.concat(['-c', phpUnitDotXml]);
         }
 
@@ -67,6 +63,10 @@ export class Parameters {
     }
 
     private async findPhpUnitDotXml(): Promise<string> {
+        if (this.exists('-c') === true || this.exists('--configuration') === true) {
+            return '';
+        }
+
         return (
             (await this.files.findUp('phpunit.xml', this.cwd, this.root)) ||
             (await this.files.findUp('phpunit.xml.dist', this.cwd, this.root))
