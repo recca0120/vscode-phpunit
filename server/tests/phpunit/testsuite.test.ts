@@ -37,7 +37,7 @@ describe('Testsuite Test', () => {
                                     },
                                 },
                                 severity: 1,
-                                source: 'phpunit',
+                                source: 'PHPUnit',
                             },
                             {
                                 message:
@@ -53,7 +53,7 @@ describe('Testsuite Test', () => {
                                     },
                                 },
                                 severity: 1,
-                                source: 'phpunit',
+                                source: 'PHPUnit',
                             },
                         ],
                         uri: files.uri(projectPath('tests/AssertionsTest.php')),
@@ -65,7 +65,7 @@ describe('Testsuite Test', () => {
                         diagnostics: [
                             {
                                 message:
-                                    'Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
                                 range: {
                                     end: {
                                         character: 19,
@@ -77,7 +77,7 @@ describe('Testsuite Test', () => {
                                     },
                                 },
                                 severity: 1,
-                                source: 'phpunit',
+                                source: 'PHPUnit',
                             },
                             {
                                 message: 'Failed asserting that 4 is identical to 3.',
@@ -92,10 +92,10 @@ describe('Testsuite Test', () => {
                                     },
                                 },
                                 severity: 1,
-                                source: 'phpunit',
+                                source: 'PHPUnit',
                             },
                             {
-                                message: 'Exception',
+                                message: 'Exception:',
                                 range: {
                                     end: {
                                         character: 38,
@@ -107,7 +107,7 @@ describe('Testsuite Test', () => {
                                     },
                                 },
                                 severity: 1,
-                                source: 'phpunit',
+                                source: 'PHPUnit',
                             },
                         ],
                         uri: files.uri(projectPath('tests/CalculatorTest.php')),
@@ -327,7 +327,7 @@ describe('Testsuite Test', () => {
             fault: {
                 type: 'Mockery\\Exception\\InvalidCountException',
                 message:
-                    'Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
             },
         });
 
@@ -419,7 +419,7 @@ describe('Testsuite Test', () => {
             type: 'error',
             fault: {
                 type: 'Exception',
-                message: 'Exception',
+                message: 'Exception:',
             },
         });
 
@@ -443,7 +443,7 @@ describe('Testsuite Test', () => {
             type: 'error',
             fault: {
                 type: 'Exception',
-                message: 'Exception',
+                message: 'Exception:',
                 details: [
                     {
                         uri: files.uri(projectPath('tests/CalculatorTest.php')),

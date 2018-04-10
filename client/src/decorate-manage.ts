@@ -99,6 +99,6 @@ export class DecorateManager {
             dark: {
                 gutterIconPath: this.gutterIconPath(image),
             },
-        })
+        });
     }
 }

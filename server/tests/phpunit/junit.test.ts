@@ -212,9 +212,9 @@ describe('JUnit Test', async () => {
             time: 0.000047,
             type: Type.RISKY,
             fault: {
-                details: [],
-                message: 'Risky Test',
                 type: 'PHPUnit\\Framework\\RiskyTestError',
+                message: 'Risky Test',
+                details: [],
             },
         });
     });
@@ -306,6 +306,9 @@ describe('JUnit Test', async () => {
             time: 0.027106,
             type: Type.ERROR,
             fault: {
+                type: 'Mockery\\Exception\\InvalidCountException',
+                message:
+                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
                 details: [
                     {
                         uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php')),
@@ -386,9 +389,6 @@ describe('JUnit Test', async () => {
                         },
                     },
                 ],
-                message:
-                    'Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
-                type: 'Mockery\\Exception\\InvalidCountException',
             },
         });
     });
@@ -413,7 +413,7 @@ describe('JUnit Test', async () => {
             type: Type.ERROR,
             fault: {
                 type: 'Exception',
-                message: 'Exception',
+                message: 'Exception:',
                 details: [
                     {
                         uri: files.uri(projectPath('src/Calculator.php')),

@@ -162,7 +162,11 @@ export class JUnit {
 
             return (
                 this.htmlEntities
-                    .decode(type ? message.replace(new RegExp(`^${type.replace(/\\/g, '\\\\')}:`), '') : message)
+                    .decode(
+                        /phpunit/i.test(type)
+                            ? message.replace(new RegExp(`^${type.replace(/\\/g, '\\\\')}:`), '')
+                            : message
+                    )
                     .trim() || type
             );
         });

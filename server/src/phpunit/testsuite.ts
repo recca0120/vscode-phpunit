@@ -49,7 +49,7 @@ export class Testsuite {
             severity: DiagnosticSeverity.Error,
             range: test.range,
             message: test.fault ? test.fault.message : '',
-            source: 'phpunit',
+            source: 'PHPUnit',
         };
     }
 }
