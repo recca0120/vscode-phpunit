@@ -28,6 +28,8 @@ export class DecorateManager {
     }
 
     decoratedGutter(editor: TextEditor, tests: Test[]): DecorateManager {
+        this.clearDecoratedGutter(editor);
+
         for (const [type, decorationOptions] of this.groupBy(tests)) {
             when(this.styles.get(type), (style: TextEditorDecorationType) => {
                 editor.setDecorations(style, decorationOptions);
