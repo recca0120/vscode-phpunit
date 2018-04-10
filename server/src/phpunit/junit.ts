@@ -1,4 +1,4 @@
-import { tap, value } from '../helpers';
+import { tap, value, when } from '../helpers';
 import { decode } from 'he';
 import { TextlineRange } from './textline-range';
 import { Test, Detail, Type, Node, FaultNode } from './common';
@@ -66,25 +66,25 @@ export class JUnit {
         );
     }
 
-    private async parseFault(test: Test, node: Node): Promise<Test> {
-        const fault: any = this.getFaultNode(node);
+    private parseFault(test: Test, node: Node): Promise<Test> {
+        return when(
+            this.getFaultNode(node),
+            async (fault: FaultNode) => {
+                const details: Detail[] = await this.parseDetails(fault);
+                const current: Detail = this.current(details, test);
+                const message: string = this.parseMessage(fault);
 
-        if (!fault) {
-            return test;
-        }
-
-        const details: Detail[] = await this.parseDetails(fault);
-        const current: Detail = this.current(details, test);
-        const message: string = this.parseMessage(fault);
-
-        return Object.assign(test, current, {
-            type: fault.type,
-            fault: {
-                type: fault._type || '',
-                message: message,
-                details: this.filterDetails(details, current),
+                return Object.assign(test, current, {
+                    type: fault.type,
+                    fault: {
+                        type: fault._type || '',
+                        message: message,
+                        details: this.filterDetails(details, current),
+                    },
+                });
             },
-        });
+            () => test
+        );
     }
 
     private getFaultNode(node: Node): FaultNode | undefined {
