@@ -12,19 +12,23 @@ import { Type, Test } from './phpunit/common';
 import { when } from './helpers';
 
 export class DecorateManager {
-    private styles: Map<Type, TextEditorDecorationType>;
+    private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
 
     constructor(private context: ExtensionContext, private win = window) {
-        this.styles = new Map<Type, TextEditorDecorationType>([
-            [Type.PASSED, this.passed()],
-            [Type.ERROR, this.error()],
-            [Type.WARNING, this.skipped()],
-            [Type.FAILURE, this.error()],
-            [Type.INCOMPLETE, this.incomplete()],
-            [Type.RISKY, this.risky()],
-            [Type.SKIPPED, this.skipped()],
-            [Type.FAILED, this.error()],
-        ]);
+        const passed: TextEditorDecorationType = this.passed();
+        const error: TextEditorDecorationType = this.error();
+        const skipped: TextEditorDecorationType = this.skipped();
+        const incomplete: TextEditorDecorationType = this.incomplete();
+        const risky: TextEditorDecorationType = this.risky();
+
+        this.styles.set(Type.PASSED, passed);
+        this.styles.set(Type.ERROR, error);
+        this.styles.set(Type.WARNING, skipped);
+        this.styles.set(Type.FAILURE, error);
+        this.styles.set(Type.INCOMPLETE, incomplete);
+        this.styles.set(Type.RISKY, risky);
+        this.styles.set(Type.SKIPPED, skipped);
+        this.styles.set(Type.FAILED, error);
     }
 
     decoratedGutter(editor: TextEditor, tests: Test[]): DecorateManager {
@@ -62,55 +66,19 @@ export class DecorateManager {
     }
 
     private passed(): TextEditorDecorationType {
-        return this.win.createTextEditorDecorationType({
-            overviewRulerColor: 'green',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                gutterIconPath: this.gutterIconPath('success.svg'),
-            },
-            dark: {
-                gutterIconPath: this.gutterIconPath('success.svg'),
-            },
-        });
+        return this.createTextEditorDecorationType('green', 'success.svg');
     }
 
     private error(): TextEditorDecorationType {
-        return this.win.createTextEditorDecorationType({
-            overviewRulerColor: 'red',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                gutterIconPath: this.gutterIconPath('danger.svg'),
-            },
-            dark: {
-                gutterIconPath: this.gutterIconPath('danger.svg'),
-            },
-        });
+        return this.createTextEditorDecorationType('red', 'danger.svg');
     }
 
     private risky(): TextEditorDecorationType {
-        return this.win.createTextEditorDecorationType({
-            overviewRulerColor: '#ffa0a0',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                gutterIconPath: this.gutterIconPath('danger-light.svg'),
-            },
-            dark: {
-                gutterIconPath: this.gutterIconPath('danger-light.svg'),
-            },
-        });
+        return this.createTextEditorDecorationType('#ffa0a0', 'danger-light.svg');
     }
 
     private skipped(): TextEditorDecorationType {
-        return this.win.createTextEditorDecorationType({
-            overviewRulerColor: '#d2a032',
-            overviewRulerLane: OverviewRulerLane.Left,
-            light: {
-                gutterIconPath: this.gutterIconPath('warning.svg'),
-            },
-            dark: {
-                gutterIconPath: this.gutterIconPath('warning.svg'),
-            },
-        });
+        return this.createTextEditorDecorationType('#d2a032', 'warning.svg');
     }
 
     private incomplete(): TextEditorDecorationType {
@@ -119,5 +87,18 @@ export class DecorateManager {
 
     private gutterIconPath(img: string) {
         return pathResolve(this.context.extensionPath, 'images', img);
+    }
+
+    private createTextEditorDecorationType(color: string, image: string) {
+        return this.win.createTextEditorDecorationType({
+            overviewRulerColor: color,
+            overviewRulerLane: OverviewRulerLane.Left,
+            light: {
+                gutterIconPath: this.gutterIconPath(image),
+            },
+            dark: {
+                gutterIconPath: this.gutterIconPath(image),
+            },
+        })
     }
 }
