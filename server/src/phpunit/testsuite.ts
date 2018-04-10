@@ -1,4 +1,4 @@
-import { Test, Type, Assertion, Detail, Fault } from './common';
+import { Test, Type, Assertion } from './common';
 import { JUnit } from './junit';
 import { Ast } from './ast';
 import { Collection } from '../collection';

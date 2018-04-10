@@ -1,8 +1,8 @@
 import { Location } from 'vscode-languageserver';
 
 export interface FaultNode {
-    type: string;
-    _type: Type;
+    type: Type;
+    _type: string;
     __text: string;
 }
 

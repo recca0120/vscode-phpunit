@@ -65,7 +65,7 @@ describe('Testsuite Test', () => {
                         diagnostics: [
                             {
                                 message:
-                                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                                    'Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
                                 range: {
                                     end: {
                                         character: 19,
@@ -95,7 +95,7 @@ describe('Testsuite Test', () => {
                                 source: 'phpunit',
                             },
                             {
-                                message: '',
+                                message: 'Exception',
                                 range: {
                                     end: {
                                         character: 38,
@@ -254,8 +254,8 @@ describe('Testsuite Test', () => {
             time: 0.000664,
             type: 'skipped',
             fault: {
-                type: 'skipped',
-                message: '',
+                type: 'PHPUnit\\Framework\\SkippedTestError',
+                message: 'Skipped Test',
             },
         });
 
@@ -277,8 +277,8 @@ describe('Testsuite Test', () => {
             time: 0.000693,
             type: 'skipped',
             fault: {
-                type: 'skipped',
-                message: '',
+                type: 'PHPUnit\\Framework\\SkippedTestError',
+                message: 'Skipped Test',
             },
         });
 
@@ -327,7 +327,7 @@ describe('Testsuite Test', () => {
             fault: {
                 type: 'Mockery\\Exception\\InvalidCountException',
                 message:
-                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    'Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
             },
         });
 
@@ -419,7 +419,7 @@ describe('Testsuite Test', () => {
             type: 'error',
             fault: {
                 type: 'Exception',
-                message: '',
+                message: 'Exception',
             },
         });
 
@@ -443,7 +443,7 @@ describe('Testsuite Test', () => {
             type: 'error',
             fault: {
                 type: 'Exception',
-                message: '',
+                message: 'Exception',
                 details: [
                     {
                         uri: files.uri(projectPath('tests/CalculatorTest.php')),

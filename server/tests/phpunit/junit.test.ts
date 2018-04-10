@@ -160,9 +160,9 @@ describe('JUnit Test', async () => {
             time: 0.000664,
             type: Type.SKIPPED,
             fault: {
+                type: 'PHPUnit\\Framework\\SkippedTestError',
+                message: 'Skipped Test',
                 details: [],
-                message: '',
-                type: 'skipped',
             },
         });
     });
@@ -186,9 +186,9 @@ describe('JUnit Test', async () => {
             time: 0.000693,
             type: Type.SKIPPED,
             fault: {
+                type: 'PHPUnit\\Framework\\SkippedTestError',
+                message: 'Skipped Test',
                 details: [],
-                message: '',
-                type: 'skipped',
             },
         });
     });
@@ -259,9 +259,9 @@ describe('JUnit Test', async () => {
             time: 0.000132,
             type: Type.FAILURE,
             fault: {
-                details: [],
-                message: 'Failed asserting that 4 is identical to 3.',
                 type: 'PHPUnit\\Framework\\ExpectationFailedException',
+                message: 'Failed asserting that 4 is identical to 3.',
+                details: [],
             },
         });
     });
@@ -387,7 +387,7 @@ describe('JUnit Test', async () => {
                     },
                 ],
                 message:
-                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    'Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
                 type: 'Mockery\\Exception\\InvalidCountException',
             },
         });
@@ -412,6 +412,8 @@ describe('JUnit Test', async () => {
             time: 0.000157,
             type: Type.ERROR,
             fault: {
+                type: 'Exception',
+                message: 'Exception',
                 details: [
                     {
                         uri: files.uri(projectPath('src/Calculator.php')),
@@ -427,8 +429,6 @@ describe('JUnit Test', async () => {
                         },
                     },
                 ],
-                message: '',
-                type: 'Exception',
             },
         });
     });

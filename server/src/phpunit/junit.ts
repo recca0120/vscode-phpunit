@@ -1,5 +1,5 @@
 import { tap, value, when } from '../helpers';
-import { decode } from 'he';
+import { HtmlEntities } from './html-entities';
 import { TextlineRange } from './textline-range';
 import { Test, Detail, Type, Node, FaultNode } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
@@ -11,7 +11,8 @@ export class JUnit {
 
     constructor(
         private textLineRange: TextlineRange = new TextlineRange(),
-        private files: FilesystemContract = new Filesystem()
+        private files: FilesystemContract = new Filesystem(),
+        private htmlEntities: HtmlEntities = new HtmlEntities()
     ) {}
 
     async parse(code: string): Promise<Test[]> {
@@ -105,16 +106,16 @@ export class JUnit {
         if (keys.indexOf('skipped') !== -1) {
             return {
                 type: Type.SKIPPED,
-                _type: Type.SKIPPED,
-                __text: '',
+                _type: 'PHPUnit\\Framework\\SkippedTestError',
+                __text: 'Skipped Test',
             };
         }
 
         if (keys.indexOf('incomplete') !== -1) {
             return {
                 type: Type.INCOMPLETE,
-                _type: Type.INCOMPLETE,
-                __text: '',
+                _type: 'PHPUnit\\Framework\\IncompleteTestError',
+                __text: 'Incomplete Test',
             };
         }
 
@@ -157,7 +158,13 @@ export class JUnit {
             .map((line: string) => line.replace(this.pathPattern, ''));
 
         return value(messages.slice(messages.length === 1 ? 0 : 1).join('\n'), (message: string) => {
-            return decode(fault._type ? message.replace(new RegExp(`^${fault._type}:`), '') : message).trim();
+            const type: string = fault._type || '';
+
+            return (
+                this.htmlEntities
+                    .decode(type ? message.replace(new RegExp(`^${type.replace(/\\/g, '\\\\')}:`), '') : message)
+                    .trim() || type
+            );
         });
     }
 
