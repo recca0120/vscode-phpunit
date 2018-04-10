@@ -35,13 +35,18 @@ export class JUnit {
     }
 
     private getSuites(node: any): any[] {
-        let testsuite: any = node.testsuites.testsuite;
+        return when(
+            node.testsuites,
+            (testsuites: any) => {
+                let testsuite: any = testsuites.testsuite;
+                while (testsuite.testsuite) {
+                    testsuite = testsuite.testsuite;
+                }
 
-        while (testsuite.testsuite) {
-            testsuite = testsuite.testsuite;
-        }
-
-        return testsuite instanceof Array ? testsuite : [testsuite];
+                return testsuite instanceof Array ? testsuite : [testsuite];
+            },
+            []
+        );
     }
 
     private getNodes(node: any): Node[] {
@@ -84,7 +89,7 @@ export class JUnit {
                     },
                 });
             },
-            () => test
+            test
         );
     }
 
