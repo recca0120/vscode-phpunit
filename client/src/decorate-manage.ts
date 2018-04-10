@@ -53,7 +53,7 @@ export class DecorateManager {
             const { start, end } = assertion.range;
             group.push({
                 range: new Range(start.line, start.character, end.line, end.character),
-                hoverMessage: assertion.fault ? assertion.fault.message : '',
+                // hoverMessage: assertion.fault ? assertion.fault.type : '',
             });
             groups.set(assertion.type, group);
 
