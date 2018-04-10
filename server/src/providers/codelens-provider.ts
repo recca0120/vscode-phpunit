@@ -1,11 +1,11 @@
-import { Testsuite } from '../phpunit';
-import { CodeLens, Range, TextDocument, Command } from 'vscode-languageserver';
+import { Testsuite, TestNode } from '../phpunit';
+import { CodeLens, TextDocument, Command } from 'vscode-languageserver';
 
 export class CodeLensProvider {
     constructor(private testsuite = new Testsuite()) {}
 
     provideCodeLenses(textDocument: TextDocument): CodeLens[] {
-        return this.convertToCodeLens(this.testsuite.parseAst(textDocument.getText()), {
+        return this.convertToCodeLens(this.testsuite.parseAst(textDocument.getText(), textDocument.uri), {
             textDocument: {
                 uri: textDocument.uri,
             },
@@ -18,34 +18,26 @@ export class CodeLensProvider {
         });
     }
 
-    private convertToCodeLens(nodes: any, data: any = {}): CodeLens[] {
-        return nodes.map((node: any) => {
+    private convertToCodeLens(nodes: TestNode[], data: any = {}): CodeLens[] {
+        return nodes.map((node: TestNode) => {
             let command: Command = {
-                title: '',
+                title: 'Run Test',
                 command: '',
             };
-
-            switch (node.kind) {
-                case 'class':
-                    command = {
-                        title: 'Run Test',
-                        command: 'phpunit.test.file',
-                        arguments: [data.textDocument.uri],
-                    };
-                    break;
-                case 'method':
-                    command = {
-                        title: 'Run Test',
-                        command: 'phpunit.test.method',
-                        arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
-                    };
-                    break;
+            if (node.class === node.name) {
+                Object.assign(command, {
+                    command: 'phpunit.test.file',
+                    arguments: [data.textDocument.uri],
+                });
+            } else {
+                Object.assign(command, {
+                    command: 'phpunit.test.method',
+                    arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
+                });
             }
 
-            const { start } = node.loc;
-
             return {
-                range: Range.create(start.line - 1, start.column, start.line - 1, start.column + node.name.length),
+                range: node.range,
                 command,
                 data,
             };

@@ -1,9 +1,11 @@
 import { Program } from 'php-parser';
 import Engine from 'php-parser';
+import { Range } from 'vscode-languageserver';
+import { TestNode } from '.';
 
 export class Ast {
-    parse(code: string): any[] {
-        return this.getClassMethods(
+    parse(code: string, uri: string): any[] {
+        return this.getToTestNodes(
             Engine.parseCode(code, {
                 ast: {
                     withPositions: true,
@@ -21,42 +23,53 @@ export class Ast {
                     asp_tags: true,
                     short_tags: true,
                 },
-            })
+            }),
+            uri
         );
     }
 
-    private getClassMethods(node: Program): any[] {
-        return this.getClasses(node).reduce((codeLens: any[], node: any) => {
-            const methods: any[] = node.body.filter(this.isTest.bind(this));
-
-            return methods.length === 0 ? codeLens : codeLens.concat([node]).concat(methods);
+    getToTestNodes(node: Program, uri: string): TestNode[] {
+        return node.children.reduce((classes: any[], namespaceOrClass: any) => {
+            const namespace: string = namespaceOrClass.kind === 'namespace' ? namespaceOrClass.name : '';
+            return (namespaceOrClass.kind === 'namespace'
+                ? classes.concat(namespaceOrClass.children)
+                : classes.concat(namespaceOrClass)
+            )
+                .filter((o: any) => this.isClass(o))
+                .reduce((c: TestNode[], o: any) => c.concat(this.convertToTestNodes(o, uri, namespace)), []);
         }, []);
     }
 
-    private getClasses(node: any) {
-        return node.children
-            .reduce((classes: any[], namespaceOrClass: any) => {
-                return namespaceOrClass.kind === 'namespace'
-                    ? classes.concat(namespaceOrClass.children)
-                    : classes.concat(namespaceOrClass);
-            }, [])
-            .filter(this.isTest.bind(this));
+    private convertToTestNodes(node: any, uri: string, namespace: string): TestNode[] {
+        const oClass: string = namespace ? `${namespace}\\${node.name}` : node.name;
+        const classname: string = oClass.replace(/\\/g, '.');
+
+        return [this.convertToTestNode(node, uri, oClass, classname)].concat(
+            node.body
+                .filter((method: any) => this.isTestMethod(method))
+                .map((method: any) => this.convertToTestNode(method, uri, oClass, classname))
+        );
     }
 
-    private isTest(node: any): boolean {
-        if (node.isAbstract === true) {
-            return false;
-        }
+    private convertToTestNode(node: any, uri: string, oClass: string, classname: string) {
+        const { start } = node.loc;
 
-        if (node.kind === 'class') {
-            return true;
-        }
+        return {
+            class: oClass,
+            classname: classname,
+            name: node.kind === 'method' ? node.name : oClass,
+            uri: uri,
+            range: Range.create(start.line - 1, start.column, start.line - 1, start.column + node.name.length),
+        };
+    }
 
-        return this.isTestMethod(node) === true;
+    private isClass(node: any): boolean {
+        return node.kind === 'class' && node.isAbstract === false;
     }
 
     private isTestMethod(node: any): boolean {
         return (
+            node.isAbstract === false &&
             node.kind === 'method' &&
             // /markTest(Skipped|Incomplete)/.test(node.body.loc.source) === false &&
             (/^test/.test(node.name) === true ||

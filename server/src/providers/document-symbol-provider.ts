@@ -1,21 +1,22 @@
-import { Testsuite } from '../phpunit';
-import { SymbolInformation, TextDocument, SymbolKind, Range } from 'vscode-languageserver';
+import { Testsuite, TestNode } from '../phpunit';
+import { SymbolInformation, TextDocument, SymbolKind } from 'vscode-languageserver';
 
 export class DocumentSymbolProvider {
     constructor(private testsuite = new Testsuite()) {}
 
     provideDocumentSymbols(textDocument: TextDocument): SymbolInformation[] {
-        return this.convertToDocumentSymbol(this.testsuite.parseAst(textDocument.getText()), textDocument.uri);
+        return this.convertToDocumentSymbol(
+            this.testsuite.parseAst(textDocument.getText(), textDocument.uri),
+            textDocument.uri
+        );
     }
 
-    protected convertToDocumentSymbol(nodes: any, uri: string): SymbolInformation[] {
+    protected convertToDocumentSymbol(nodes: TestNode[], uri: string): SymbolInformation[] {
         return nodes.map((node: any) => {
-            const { start } = node.loc;
-
             return SymbolInformation.create(
-                node.name,
-                node.kind === 'class' ? SymbolKind.Class : SymbolKind.Method,
-                Range.create(start.line - 1, start.column, start.line - 1, start.column + node.name.length),
+                node.name.replace(/.*\\/g, ''),
+                node.class === node.name ? SymbolKind.Class : SymbolKind.Method,
+                node.range,
                 uri
             );
         });

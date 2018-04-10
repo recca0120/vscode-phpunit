@@ -15,8 +15,8 @@ export class Testsuite {
         private files: FilesystemContract = new Filesystem()
     ) {}
 
-    parseAst(code: string): any[] {
-        return this.ast.parse(code);
+    parseAst(code: string, uri: string): any[] {
+        return this.ast.parse(code, uri);
     }
 
     async parseJUnit(code: string): Promise<Test[]> {

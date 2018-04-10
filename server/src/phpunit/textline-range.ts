@@ -7,7 +7,16 @@ export class TextlineRange {
     constructor(private files: FilesystemContract = new Filesystem()) {}
 
     async create(uri: string, lineAt: number): Promise<Range> {
-        const lines: string[] = await this.getLines(uri);
+        return this.createRange(await this.getLines(uri), lineAt);
+    }
+
+    clear(): TextlineRange {
+        this.items.clear();
+
+        return this;
+    }
+
+    private createRange(lines: string[], lineAt: number): Range {
         const line: string = lines[lineAt];
         const firstNonWhitespaceCharacterIndex: number = line.search(/\S|$/);
 
@@ -21,12 +30,6 @@ export class TextlineRange {
                 character: firstNonWhitespaceCharacterIndex + line.trim().length,
             }
         );
-    }
-
-    clear(): TextlineRange {
-        this.items.clear();
-
-        return this;
     }
 
     private async getLines(uri: string): Promise<string[]> {
