@@ -31,6 +31,6 @@ export interface Test extends Base {
     fault?: Fault;
 }
 
-export interface Assertion extends Base {
+export interface Assertion extends Test {
     fault: Fault;
 }
