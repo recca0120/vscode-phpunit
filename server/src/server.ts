@@ -8,8 +8,6 @@ import {
     CodeLens,
     CodeLensParams,
     IConnection,
-    IPCMessageReader,
-    IPCMessageWriter,
     InitializeResult,
     TextDocuments,
     createConnection,
@@ -17,8 +15,8 @@ import {
     DocumentSymbolParams,
     SymbolInformation,
     DidChangeConfigurationParams,
+    ProposedFeatures
 } from 'vscode-languageserver';
-import { StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit } from './phpunit';
 
@@ -26,10 +24,9 @@ const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 const phpUnit: PhpUnit = new PhpUnit();
 
-// Create a connection for the server. The connection uses Node's IPC as a transport
-const connection: IConnection = process.argv.some(arg => arg === '--stdio')
-    ? createConnection(new StreamMessageReader(process.stdin), new StreamMessageWriter(process.stdout))
-    : createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
+// Create a connection for the server. The connection uses Node's IPC as a transport.
+// Also include all preview / proposed LSP features.
+const connection: IConnection = createConnection(ProposedFeatures.all);
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
