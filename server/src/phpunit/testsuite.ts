@@ -37,49 +37,7 @@ export class Testsuite {
     }
 
     getAssertions(uri: string): Assertion[] {
-        uri = this.files.uri(uri);
-
-        const assertions: Assertion[] = [];
-        this.collect.forEach((tests: Test[], key: string) => {
-            tests.forEach((test: Test) => {
-                const message: string = test.fault ? test.fault.message : '';
-                const details: Detail[] = test.fault && test.fault.details ? test.fault.details : [];
-                const type: string = test.fault && test.fault.type ? test.fault.type : '';
-                const fault: Fault = {
-                    type,
-                    message,
-                };
-
-                if (key === uri) {
-                    assertions.push(
-                        Object.assign({}, test, {
-                            fault: fault,
-                        })
-                    );
-                }
-
-                details.forEach((detail: Detail) => {
-                    if (detail.uri === uri) {
-                        assertions.push(
-                            Object.assign({}, test, {
-                                uri: detail.uri,
-                                range: detail.range,
-                                fault: Object.assign({}, fault, {
-                                    details: [
-                                        {
-                                            uri: test.uri,
-                                            range: test.range,
-                                        },
-                                    ],
-                                }),
-                            })
-                        );
-                    }
-                });
-            });
-        });
-
-        return assertions;
+        return this.collect.getAssertions().get(this.files.uri(uri)) || [];
     }
 
     private filterByType(test: Test): boolean {

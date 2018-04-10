@@ -1,5 +1,6 @@
-import { Test } from './phpunit';
+import { Test, Assertion, Detail, Fault } from './phpunit';
 import { FilesystemContract, Filesystem } from './filesystem';
+import { groupBy } from './helpers';
 
 export class Collection {
     private items: Map<string, Test[]> = new Map<string, Test[]>();
@@ -7,7 +8,7 @@ export class Collection {
     constructor(private files: FilesystemContract = new Filesystem()) {}
 
     put(tests: Test[]): Collection {
-        const groups: Map<string, Test[]> = this.groupBy(tests);
+        const groups: Map<string, Test[]> = groupBy(tests, 'uri');
 
         for (const key of groups.keys()) {
             this.items.set(key, this.merge(this.items.get(key) || [], groups.get(key) || []));
@@ -42,14 +43,44 @@ export class Collection {
         return this.items;
     }
 
-    private groupBy(tests: Test[]): Map<string, Test[]> {
-        return tests.reduce((groups: Map<string, Test[]>, test: Test) => {
-            const group: Test[] = groups.get(test.uri) || [];
-            group.push(test);
-            groups.set(test.uri, group);
+    getAssertions(): Map<string, Assertion[]> {
+        const assertions: Assertion[] = [];
+        this.forEach((tests: Test[]) => {
+            tests.forEach((test: Test) => {
+                const message: string = test.fault ? test.fault.message : '';
+                const details: Detail[] = test.fault && test.fault.details ? test.fault.details : [];
+                const type: string = test.fault && test.fault.type ? test.fault.type : '';
+                const fault: Fault = {
+                    type,
+                    message,
+                };
 
-            return groups;
-        }, new Map<string, Test[]>());
+                assertions.push(
+                    Object.assign({}, test, {
+                        fault: fault,
+                    })
+                );
+
+                details.forEach((detail: Detail) => {
+                    assertions.push(
+                        Object.assign({}, test, {
+                            uri: detail.uri,
+                            range: detail.range,
+                            fault: Object.assign({}, fault, {
+                                details: [
+                                    {
+                                        uri: test.uri,
+                                        range: test.range,
+                                    },
+                                ],
+                            }),
+                        })
+                    );
+                });
+            });
+        });
+
+        return groupBy(assertions, 'uri');
     }
 
     private merge(oldTests: Test[], newTests: Test[]): Test[] {
