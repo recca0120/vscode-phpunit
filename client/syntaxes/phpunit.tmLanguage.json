@@ -1,0 +1,78 @@
+{
+	"scopeName": "source.php.phpunit",
+	"name": "PHPUnit",
+	"fileTypes": [
+		"log"
+	],
+	"patterns": [
+		{
+			"match": "\\b(?i:(([a-z]|[0-9]|[_|-])*(\\.([a-z]|[0-9]|[_|-])*)+))\\b",
+			"name": "support.type"
+		},
+		{
+			"match": "\\b(?i:(local))(\\:|\\b)",
+			"name": "support.function"
+		},
+		{
+			"match": "\\b(?i:([a-z]|[0-9])+\\:((\\/\\/)|((\\/\\/)?(\\S)))+)",
+			"name": "storage"
+		},
+		{
+			"include": "source.diff"
+		},
+		{
+			"begin": "^(?=(\\.|E|F|I|R|S)+\\s+)",
+			"end": "\\s+(\\d+\\s+\\/\\s+\\d+\\s+\\(\\s*\\d+\\%\\))?$",
+			"patterns": [
+				{
+					"match": "\\.",
+					"name": "strong"
+				},
+				{
+					"match": "E",
+					"name": "markup.deleted"
+				},
+				{
+					"match": "F",
+					"name": "markup.deleted"
+				},
+				{
+					"match": "I",
+					"name": "markup.changed"
+				},
+				{
+					"match": "R",
+					"name": "markup.changed"
+				},
+				{
+					"match": "S",
+					"name": "markup.changed"
+				}
+			]
+		},
+		{
+			"match": "^(?:\\e\\[[0-9;]+m)?No tests executed\\!(?:\\e\\[[0-9;]+m)?$",
+			"name": "markup.changed"
+		},
+		{
+			"match": "^(?:\\e\\[[0-9;]+m)?OK \\(\\d+ test(?:s)?, \\d+ assertion(?:s)?\\)(?:\\e\\[[0-9;]+m)?$",
+			"name": "markup.inserted"
+		},
+		{
+			"match": "^(?:\\e\\[[0-9;]+m)?OK, but incomplete, skipped, or risky tests\\!(?:\\e\\[[0-9;]+m)?$",
+			"name": "markup.changed"
+		},
+		{
+			"match": "^(?:\\e\\[[0-9;]+m)?Tests\\: \\d+, Assertions\\: \\d+(?:, (?:Incomplete|Skipped|Risky)\\: \\d+)+\\.(?:\\e\\[[0-9;]+m)?$",
+			"name": "markup.changed"
+		},
+		{
+			"match": "^(?:\\e\\[[0-9;]+m)?FAILURES\\!(?:\\e\\[[0-9;]+m\\s*)?$",
+			"name": "markup.deleted"
+		},
+		{
+			"match": "^(?:\\e\\[[0-9;]+m)?Tests\\: \\d+, Assertions\\: \\d+(?:, (?:Errors|Failures|Skipped|Incomplete|Risky)\\: \\d+)+\\.(?:\\e\\[[0-9;]+m)?$",
+			"name": "markup.deleted"
+		}
+	]
+}

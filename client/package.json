@@ -5,7 +5,7 @@
 	"author": "recca0120",
 	"license": "MIT",
 	"icon": "images/icon.png",
-	"version": "0.7.14",
+	"version": "0.7.15",
 	"publisher": "recca0120",
 	"repository": {
 		"type": "git",
@@ -46,7 +46,24 @@
 					"description": "Any phpunit args (phpunit --help)"
 				}
 			}
-		}
+		},
+		"languages": [{
+            "id": "phpunit",
+            "aliases": ["log"],
+            "extensions": [".log"],
+            "mimetypes": [
+                "log",
+                "text/log",
+                "text/x-log",
+                "text/x-code-output",
+                "x-code-output"
+            ]
+        }],
+        "grammars": [{
+            "language": "phpunit",
+            "scopeName": "source.php.phpunit",
+            "path": "./syntaxes/phpunit.tmLanguage.json"
+        }]
 	},
 	"scripts": {
 		"vscode:prepublish": "tsc -p ./",
