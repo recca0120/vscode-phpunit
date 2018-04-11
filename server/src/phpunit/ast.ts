@@ -5,7 +5,7 @@ import { TestNode } from './common';
 
 export class Ast {
     parse(code: string, uri: string): TestNode[] {
-        return this.getToTestNodes(
+        return this.getTestNodes(
             Engine.parseCode(code, {
                 ast: {
                     withPositions: true,
@@ -28,7 +28,7 @@ export class Ast {
         );
     }
 
-    getToTestNodes(node: Program, uri: string): TestNode[] {
+    getTestNodes(node: Program, uri: string): TestNode[] {
         return node.children.reduce((classes: any[], nsOrClass: any) => {
             const namespace: string = nsOrClass.kind === 'namespace' ? nsOrClass.name : '';
 
