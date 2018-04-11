@@ -4,7 +4,7 @@ import { Range } from 'vscode-languageserver';
 import { TestNode } from './common';
 
 export class Ast {
-    parse(code: string, uri: string): any[] {
+    parse(code: string, uri: string): TestNode[] {
         return this.getToTestNodes(
             Engine.parseCode(code, {
                 ast: {
