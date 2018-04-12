@@ -1,5 +1,5 @@
 import { Test, Type, Testsuite, Assertion } from '../../src/phpunit';
-import { TextDocument, DiagnosticSeverity, Range } from 'vscode-languageserver';
+import { TextDocument, DiagnosticSeverity, Range, Diagnostic, PublishDiagnosticsParams } from 'vscode-languageserver';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { projectPath, pathPattern } from '../helpers';
@@ -18,103 +18,220 @@ describe('Testsuite Test', () => {
     });
 
     it('it should get diagnostics', () => {
-        expect(testsuite.getDiagnostics()).toEqual(
-            new Map<string, any>([
-                [
-                    files.uri(projectPath('tests/AssertionsTest.php')),
-                    {
-                        diagnostics: [
-                            {
-                                message: 'Failed asserting that false is true.',
-                                range: {
-                                    end: {
-                                        character: 33,
-                                        line: 15,
-                                    },
-                                    start: {
-                                        character: 8,
-                                        line: 15,
-                                    },
-                                },
-                                severity: 1,
-                                source: 'PHPUnit',
-                            },
-                            {
-                                message:
-                                    "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n Array &0 (\n-    'a' => 'b'\n-    'c' => 'd'\n+    'e' => 'f'\n+    0 => 'g'\n+    1 => 'h'\n )",
-                                range: {
-                                    end: {
-                                        character: 76,
-                                        line: 20,
-                                    },
-                                    start: {
-                                        character: 8,
-                                        line: 20,
-                                    },
-                                },
-                                severity: 1,
-                                source: 'PHPUnit',
-                            },
-                        ],
-                        uri: files.uri(projectPath('tests/AssertionsTest.php')),
-                    },
-                ],
-                [
-                    files.uri(projectPath('tests/CalculatorTest.php')),
-                    {
-                        diagnostics: [
-                            {
-                                message:
-                                    'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
-                                range: {
-                                    end: {
-                                        character: 19,
-                                        line: 14,
-                                    },
-                                    start: {
-                                        character: 8,
-                                        line: 14,
-                                    },
-                                },
-                                severity: 1,
-                                source: 'PHPUnit',
-                            },
-                            {
-                                message: 'Failed asserting that 4 is identical to 3.',
-                                range: {
-                                    end: {
-                                        character: 53,
-                                        line: 28,
-                                    },
-                                    start: {
-                                        character: 8,
-                                        line: 28,
-                                    },
-                                },
-                                severity: 1,
-                                source: 'PHPUnit',
-                            },
-                            {
-                                message: 'Exception:',
-                                range: {
-                                    end: {
-                                        character: 38,
-                                        line: 56,
-                                    },
-                                    start: {
-                                        character: 8,
-                                        line: 56,
-                                    },
-                                },
-                                severity: 1,
-                                source: 'PHPUnit',
-                            },
-                        ],
-                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
-                    },
-                ],
-            ])
+        const diagnostics: Map<string, PublishDiagnosticsParams> = testsuite.getDiagnostics();
+        let publishDiagnosticsParams: PublishDiagnosticsParams = diagnostics.get(
+            files.uri(projectPath('tests/AssertionsTest.php'))
         );
+        expect(publishDiagnosticsParams.uri).toEqual(files.uri(projectPath('tests/AssertionsTest.php')));
+        expect(publishDiagnosticsParams.diagnostics[0]).toEqual({
+            severity: 1,
+            source: 'PHPUnit',
+            message: 'Failed asserting that false is true.',
+            range: {
+                end: {
+                    character: 33,
+                    line: 15,
+                },
+                start: {
+                    character: 8,
+                    line: 15,
+                },
+            },
+            relatedInformation: [],
+        });
+
+        expect(publishDiagnosticsParams.diagnostics[1]).toEqual({
+            severity: 1,
+            source: 'PHPUnit',
+            message:
+                "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n Array &0 (\n-    'a' => 'b'\n-    'c' => 'd'\n+    'e' => 'f'\n+    0 => 'g'\n+    1 => 'h'\n )",
+            range: {
+                end: {
+                    character: 76,
+                    line: 20,
+                },
+                start: {
+                    character: 8,
+                    line: 20,
+                },
+            },
+            relatedInformation: [],
+        });
+
+        publishDiagnosticsParams = diagnostics.get(files.uri(projectPath('tests/CalculatorTest.php')));
+        expect(publishDiagnosticsParams.uri).toEqual(files.uri(projectPath('tests/CalculatorTest.php')));
+        expect(publishDiagnosticsParams.diagnostics[0]).toEqual({
+            severity: 1,
+            source: 'PHPUnit',
+            message:
+                'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+            range: {
+                end: {
+                    character: 19,
+                    line: 14,
+                },
+                start: {
+                    character: 8,
+                    line: 14,
+                },
+            },
+            relatedInformation: [
+                {
+                    message:
+                        'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    location: {
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php')),
+                        range: {
+                            end: {
+                                character: 69,
+                                line: 37,
+                            },
+                            start: {
+                                character: 12,
+                                line: 37,
+                            },
+                        },
+                    },
+                },
+                {
+                    message:
+                        'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    location: {
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Expectation.php')),
+                        range: {
+                            end: {
+                                character: 54,
+                                line: 308,
+                            },
+                            start: {
+                                character: 12,
+                                line: 308,
+                            },
+                        },
+                    },
+                },
+                {
+                    message:
+                        'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    location: {
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php')),
+                        range: {
+                            end: {
+                                character: 31,
+                                line: 118,
+                            },
+                            start: {
+                                character: 16,
+                                line: 118,
+                            },
+                        },
+                    },
+                },
+                {
+                    message:
+                        'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    location: {
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Container.php')),
+                        range: {
+                            end: {
+                                character: 36,
+                                line: 300,
+                            },
+                            start: {
+                                character: 12,
+                                line: 300,
+                            },
+                        },
+                    },
+                },
+                {
+                    message:
+                        'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+                    location: {
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Container.php')),
+                        range: {
+                            end: {
+                                character: 36,
+                                line: 285,
+                            },
+                            start: {
+                                character: 12,
+                                line: 285,
+                            },
+                        },
+                    },
+                },
+                {
+                    message:
+                        'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
+
+                    location: {
+                        range: {
+                            end: {
+                                character: 39,
+                                line: 164,
+                            },
+                            start: {
+                                character: 8,
+                                line: 164,
+                            },
+                        },
+                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery.php')),
+                    },
+                },
+            ],
+        });
+
+        expect(publishDiagnosticsParams.diagnostics[1]).toEqual({
+            severity: 1,
+            source: 'PHPUnit',
+            message: 'Failed asserting that 4 is identical to 3.',
+            range: {
+                end: {
+                    character: 53,
+                    line: 28,
+                },
+                start: {
+                    character: 8,
+                    line: 28,
+                },
+            },
+            relatedInformation: [],
+        });
+
+        expect(publishDiagnosticsParams.diagnostics[2]).toEqual({
+            severity: 1,
+            source: 'PHPUnit',
+            message: 'Exception:',
+            range: {
+                end: {
+                    character: 38,
+                    line: 56,
+                },
+                start: {
+                    character: 8,
+                    line: 56,
+                },
+            },
+            relatedInformation: [
+                {
+                    message: 'Exception:',
+                    location: {
+                        uri: files.uri(projectPath('src/Calculator.php')),
+                        range: {
+                            end: {
+                                character: 28,
+                                line: 20,
+                            },
+                            start: {
+                                character: 8,
+                                line: 20,
+                            },
+                        },
+                    },
+                },
+            ],
+        });
     });
 
     it('it should get assertions', () => {
