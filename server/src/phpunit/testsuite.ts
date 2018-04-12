@@ -1,9 +1,14 @@
-import { Test, Type, Assertion, TestNode } from './common';
+import { Test, Type, Assertion, TestNode, Detail } from './common';
 import { JUnit } from './junit';
 import { Ast } from './ast';
 import { Collection } from '../collection';
 import { tap } from '../helpers';
-import { PublishDiagnosticsParams, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
+import {
+    PublishDiagnosticsParams,
+    Diagnostic,
+    DiagnosticSeverity,
+    DiagnosticRelatedInformation,
+} from 'vscode-languageserver';
 import { FilesystemContract } from './../filesystem/contract';
 import { Filesystem } from './../filesystem/index';
 
@@ -30,7 +35,7 @@ export class Testsuite {
                     uri,
                     diagnostics: tests
                         .filter(this.filterByType.bind(this))
-                        .map((test: Test) => this.convertToDiagonstic(test)),
+                        .map((test: Test) => this.transformToDiagonstic(test)),
                 } as PublishDiagnosticsParams);
             });
         });
@@ -44,12 +49,27 @@ export class Testsuite {
         return [Type.ERROR, Type.FAILED, Type.FAILURE].indexOf(test.type) !== -1;
     }
 
-    private convertToDiagonstic(test: Test): Diagnostic {
+    private transformToDiagonstic(test: Test): Diagnostic {
         return {
             severity: DiagnosticSeverity.Error,
             range: test.range,
             message: test.fault ? test.fault.message : '',
+            relatedInformation: this.convertToRelatedInformation(test),
             source: 'PHPUnit',
         };
+    }
+
+    private convertToRelatedInformation(test: Test): DiagnosticRelatedInformation[] {
+        if (!test.fault || !test.fault.details) {
+            return [];
+        }
+        const message: string = test.fault.message;
+
+        return test.fault.details.map((detail: Detail) => {
+            return {
+                location: detail,
+                message: message,
+            };
+        });
     }
 }

@@ -15,7 +15,7 @@ import {
     DocumentSymbolParams,
     SymbolInformation,
     DidChangeConfigurationParams,
-    ProposedFeatures
+    ProposedFeatures,
 } from 'vscode-languageserver';
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit } from './phpunit';
