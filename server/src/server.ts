@@ -18,12 +18,11 @@ import {
     ProposedFeatures,
 } from 'vscode-languageserver';
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
-import { PhpUnit } from './phpunit';
 import { Runner } from './runner';
 
-const codeLensProvider: CodeLensProvider = new CodeLensProvider();
-const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 const runner: Runner = new Runner;
+const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
+const codeLensProvider: CodeLensProvider = new CodeLensProvider(runner);
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

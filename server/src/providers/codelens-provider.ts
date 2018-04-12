@@ -1,12 +1,13 @@
-import { Testsuite, TestNode } from '../phpunit';
+import { TestNode } from '../phpunit';
 import { CodeLens, TextDocument } from 'vscode-languageserver';
 import { when } from '../helpers';
+import { Runner } from '../runner';
 
 export class CodeLensProvider {
-    constructor(private testsuite = new Testsuite()) {}
+    constructor(private runner: Runner) {}
 
     provideCodeLenses(textDocument: TextDocument): CodeLens[] {
-        return this.convertToCodeLens(this.testsuite.getTestNodes(textDocument.getText(), textDocument.uri), {
+        return this.convertToCodeLens(this.runner.getTestNodes(textDocument.getText(), textDocument.uri), {
             textDocument: {
                 uri: textDocument.uri,
             },
