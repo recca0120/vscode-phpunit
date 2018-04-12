@@ -16,7 +16,7 @@
 		"doc-parser": "^0.4.8",
 		"fast-xml-parser": "^3.3.6",
 		"he": "^1.1.1",
-		"php-parser": "git+https://github.com/glayzzle/php-parser.git#3.0.0-alpha",
+		"php-parser": "^3.0.0-alpha1",
 		"vscode-languageserver": "^4.1.1",
 		"vscode-uri": "^1.0.3"
 	},
