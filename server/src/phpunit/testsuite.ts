@@ -13,6 +13,8 @@ import { FilesystemContract } from './../filesystem/contract';
 import { Filesystem } from './../filesystem/index';
 
 export class Testsuite {
+    private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];
+
     constructor(
         private ast: Ast = new Ast(),
         private jUnit: JUnit = new JUnit(),
@@ -45,13 +47,9 @@ export class Testsuite {
         return this.collect.getAssertions().get(this.files.uri(uri)) || [];
     }
 
-    private filterByType(test: Test): boolean {
-        return [Type.ERROR, Type.FAILED, Type.FAILURE].indexOf(test.type) !== -1;
-    }
-
     private transformToDiagonstic(test: Test): Diagnostic {
         return {
-            severity: DiagnosticSeverity.Error,
+            severity: test.type === Type.RISKY ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
             range: test.range,
             message: test.fault ? test.fault.message : '',
             relatedInformation: this.transformToRelatedInformation(test),
@@ -71,5 +69,9 @@ export class Testsuite {
                 message: message,
             };
         });
+    }
+
+    private filterByType(test: Test): boolean {
+        return this.errorTypes.indexOf(test.type) !== -1;
     }
 }

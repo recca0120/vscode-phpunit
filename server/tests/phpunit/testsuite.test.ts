@@ -22,6 +22,7 @@ describe('Testsuite Test', () => {
         let publishDiagnosticsParams: PublishDiagnosticsParams = diagnostics.get(
             files.uri(projectPath('tests/AssertionsTest.php'))
         );
+
         expect(publishDiagnosticsParams.uri).toEqual(files.uri(projectPath('tests/AssertionsTest.php')));
         expect(publishDiagnosticsParams.diagnostics[0]).toEqual({
             severity: 1,
@@ -53,6 +54,42 @@ describe('Testsuite Test', () => {
                 start: {
                     character: 8,
                     line: 20,
+                },
+            },
+            relatedInformation: [],
+        });
+
+        expect(publishDiagnosticsParams.diagnostics[2]).toEqual({
+            severity: 2,
+            source: 'PHPUnit',
+            message:
+                "Risky Test",
+            range: {
+                end: {
+                    character: 32,
+                    line: 23,
+                },
+                start: {
+                    character: 4,
+                    line: 23,
+                },
+            },
+            relatedInformation: [],
+        });
+
+        expect(publishDiagnosticsParams.diagnostics[3]).toEqual({
+            severity: 2,
+            source: 'PHPUnit',
+            message:
+                "Risky Test",
+            range: {
+                end: {
+                    character: 39,
+                    line: 46,
+                },
+                start: {
+                    character: 4,
+                    line: 46,
                 },
             },
             relatedInformation: [],
