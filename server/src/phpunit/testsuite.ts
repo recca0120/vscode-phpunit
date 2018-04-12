@@ -1,5 +1,4 @@
-import { TestNode } from './common';
-import { Ast } from './ast';
+import { TestNode, Ast } from '.';
 import { FilesystemContract } from './../filesystem/contract';
 import { Filesystem } from './../filesystem/index';
 

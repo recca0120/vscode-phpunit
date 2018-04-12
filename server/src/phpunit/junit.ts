@@ -1,6 +1,5 @@
 import { tap, value, when } from '../helpers';
-import { TextlineRange } from './textline-range';
-import { Test, Detail, Type, Node, FaultNode } from './common';
+import { Test, Detail, Type, Node, FaultNode, TextlineRange } from '.';
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { decode } from 'he';
 

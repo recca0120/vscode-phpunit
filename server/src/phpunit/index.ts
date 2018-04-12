@@ -1,4 +1,5 @@
 export * from './ast';
+export * from './collection';
 export * from './common';
 export * from './junit';
 export * from './parameters';

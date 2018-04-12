@@ -1,6 +1,6 @@
 import { Program, default as Engine } from 'php-parser';
 import { Range } from 'vscode-languageserver';
-import { TestNode } from './common';
+import { TestNode } from '.';
 
 export class Ast {
     parse(code: string, uri: string): TestNode[] {

@@ -1,9 +1,7 @@
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
-import { Parameters } from './parameters';
-import { Test } from './common';
-import { JUnit } from './junit';
+import { Parameters, Test, JUnit } from '.';
 import { Command } from 'vscode-languageserver';
 
 export class PhpUnit {

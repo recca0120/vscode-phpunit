@@ -1,11 +1,7 @@
-import { Collection } from './../src/collection';
-import { Test, Type, Assertion } from '../src/phpunit';
+import { Test, Type, Assertion, Collection, JUnit } from '../../src/phpunit';
 import { TextDocument, DiagnosticSeverity, Range, PublishDiagnosticsParams } from 'vscode-languageserver';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
-import { Filesystem, FilesystemContract } from '../src/filesystem';
-import { JUnit } from './../src/phpunit/junit';
-import { projectPath, pathPattern } from './helpers';
+import { Filesystem, FilesystemContract } from '../../src/filesystem';
+import { projectPath, pathPattern } from '../helpers';
 
 const jUnit: JUnit = new JUnit();
 const files: FilesystemContract = new Filesystem();

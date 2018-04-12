@@ -1,6 +1,6 @@
-import { Test, Assertion, Detail, Fault, Type } from './phpunit';
-import { FilesystemContract, Filesystem } from './filesystem';
-import { groupBy, tap } from './helpers';
+import { Test, Assertion, Detail, Fault, Type } from '.';
+import { FilesystemContract, Filesystem } from '../filesystem';
+import { groupBy, tap } from '../helpers';
 import {
     PublishDiagnosticsParams,
     Diagnostic,
