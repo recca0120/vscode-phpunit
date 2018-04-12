@@ -1,11 +1,11 @@
-import { PhpUnit, Ast, TestNode, Collection } from './phpunit';
+import { PhpUnit as Cli, Ast, TestNode, Collection } from './phpunit';
 import { tap } from './helpers';
 import { IConnection, PublishDiagnosticsParams } from 'vscode-languageserver/lib/main';
 import { FilesystemContract, Filesystem } from './filesystem';
 
 export class Runner {
     constructor(
-        private phpUnit: PhpUnit = new PhpUnit(),
+        private cli: Cli = new Cli(),
         private collect: Collection = new Collection(),
         private ast: Ast = new Ast(),
         private files: FilesystemContract = new Filesystem()
@@ -17,21 +17,21 @@ export class Runner {
 
     setBinary(binary: string): Runner {
         return tap(this, () => {
-            this.phpUnit.setBinary(binary);
+            this.cli.setBinary(binary);
         });
     }
 
     setDefault(args: string[]): Runner {
         return tap(this, () => {
-            this.phpUnit.setDefault(args);
+            this.cli.setDefault(args);
         });
     }
 
     async run(path: string, params: string[] = []): Promise<string> {
-        await this.phpUnit.run(path, params);
-        this.collect.put(this.phpUnit.getTests());
+        await this.cli.run(path, params);
+        this.collect.put(this.cli.getTests());
 
-        return this.phpUnit.getOutput();
+        return this.cli.getOutput();
     }
 
     sendDiagnostics(connection: IConnection): Runner {
