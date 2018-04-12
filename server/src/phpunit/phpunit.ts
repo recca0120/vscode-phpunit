@@ -1,10 +1,10 @@
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
-import { Command, IConnection } from 'vscode-languageserver';
 import { Parameters } from './parameters';
 import { Test } from './common';
-import { Testsuite } from './testsuite';
+import { JUnit } from './junit';
+import { Command } from 'vscode-languageserver';
 
 export class PhpUnit {
     private binary: string = '';
@@ -16,7 +16,7 @@ export class PhpUnit {
         private files: FilesystemContract = new Filesystem(),
         private process: Process = new Process(),
         private parameters = new Parameters(files),
-        private testsuite: Testsuite = new Testsuite()
+        private jUnit: JUnit = new JUnit()
     ) {}
 
     setBinary(binary: string): PhpUnit {
@@ -60,26 +60,26 @@ export class PhpUnit {
         return this.tests;
     }
 
-    sendDiagnostics(connection: IConnection): PhpUnit {
-        return tap(this, () => {
-            for (const [, params] of this.testsuite.getDiagnostics()) {
-                connection.sendDiagnostics(params);
-            }
-        });
-    }
+    // sendDiagnostics(connection: IConnection): PhpUnit {
+    //     return tap(this, () => {
+    //         for (const [, params] of this.testsuite.getDiagnostics()) {
+    //             connection.sendDiagnostics(params);
+    //         }
+    //     });
+    // }
 
-    sendNotification(connection: IConnection, uri: string): PhpUnit {
-        return tap(this, () => {
-            connection.sendNotification('assertions', {
-                uri: uri,
-                assertions: this.testsuite.getAssertions(uri),
-            });
-        });
-    }
+    // sendNotification(connection: IConnection, uri: string): PhpUnit {
+    //     return tap(this, () => {
+    //         connection.sendNotification('assertions', {
+    //             uri: uri,
+    //             assertions: this.testsuite.getAssertions(uri),
+    //         });
+    //     });
+    // }
 
     private async parseTests(jUnitDotXml: string): Promise<Test[]> {
         return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
-            ? await this.testsuite.parseJUnit(await this.files.get(jUnitDotXml))
+            ? await this.jUnit.parse(await this.files.get(jUnitDotXml))
             : [];
     }
 

@@ -19,10 +19,11 @@ import {
 } from 'vscode-languageserver';
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { PhpUnit } from './phpunit';
+import { Runner } from './runner';
 
 const codeLensProvider: CodeLensProvider = new CodeLensProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
-const phpUnit: PhpUnit = new PhpUnit();
+const runner: Runner = new Runner;
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -81,7 +82,7 @@ interface PhpUnitSettings {
 // as well.
 connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
     const settings = <Settings>change.settings;
-    phpUnit.setBinary(settings.phpunit.execPath).setDefault(settings.phpunit.args);
+    runner.setBinary(settings.phpunit.execPath).setDefault(settings.phpunit.args);
 });
 
 connection.onDidChangeWatchedFiles(() => {
@@ -131,15 +132,16 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         case 'phpunit.test.method':
             const args = params.arguments || [];
             const uri = args[0] || '';
-            await phpUnit.run(uri, args.slice(1));
-            phpUnit.sendDiagnostics(connection).sendNotification(connection, uri);
-            connection.console.log(phpUnit.getOutput());
+            const output = await runner.run(uri, args.slice(1));
+            connection.console.log(output);
+            runner.sendDiagnostics(connection).sendNotification(connection, uri);
+
             break;
     }
 });
 
 connection.onRequest('assertions', params => {
-    phpUnit.sendNotification(connection, params.uri);
+    runner.sendNotification(connection, params.uri);
 });
 
 connection.onDocumentSymbol((params: DocumentSymbolParams): SymbolInformation[] => {

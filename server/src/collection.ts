@@ -1,8 +1,10 @@
-import { Test, Assertion, Detail, Fault } from './phpunit';
+import { Test, Assertion, Detail, Fault, Type } from './phpunit';
 import { FilesystemContract, Filesystem } from './filesystem';
-import { groupBy } from './helpers';
+import { groupBy, tap } from './helpers';
+import { PublishDiagnosticsParams, Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation } from 'vscode-languageserver';
 
 export class Collection {
+    private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];
     private items: Map<string, Test[]> = new Map<string, Test[]>();
 
     constructor(private files: FilesystemContract = new Filesystem()) {}
@@ -43,7 +45,20 @@ export class Collection {
         return this.items;
     }
 
-    getAssertions(): Map<string, Assertion[]> {
+    transformToDiagnoics() {
+        return tap(new Map<string, PublishDiagnosticsParams>(), (map: Map<string, PublishDiagnosticsParams>) => {
+            this.forEach((tests: Test[], uri: string) => {
+                map.set(uri, {
+                    uri,
+                    diagnostics: tests
+                        .filter(this.filterByType.bind(this))
+                        .map((test: Test) => this.transformToDiagonstic(test)),
+                } as PublishDiagnosticsParams);
+            });
+        });
+    }
+
+    transformToAssertions(): Map<string, Assertion[]> {
         const assertions: Assertion[] = [];
         this.forEach((tests: Test[]) => {
             tests.forEach((test: Test) => {
@@ -81,6 +96,34 @@ export class Collection {
         });
 
         return groupBy(assertions, 'uri');
+    }
+
+    private transformToDiagonstic(test: Test): Diagnostic {
+        return {
+            severity: test.type === Type.RISKY ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
+            range: test.range,
+            message: test.fault ? test.fault.message : '',
+            relatedInformation: this.transformToRelatedInformation(test),
+            source: 'PHPUnit',
+        };
+    }
+
+    private transformToRelatedInformation(test: Test): DiagnosticRelatedInformation[] {
+        if (!test.fault || !test.fault.details) {
+            return [];
+        }
+        const message: string = test.fault.message;
+
+        return test.fault.details.map((detail: Detail) => {
+            return {
+                location: detail,
+                message: message,
+            };
+        });
+    }
+
+    private filterByType(test: Test): boolean {
+        return this.errorTypes.indexOf(test.type) !== -1;
     }
 
     private merge(oldTests: Test[], newTests: Test[]): Test[] {
