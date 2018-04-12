@@ -21,6 +21,12 @@
 	"scripts": {
 		"installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json",
 		"compile": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p .",
-		"watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -w -p ."
+		"watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -w -p .",
+		"prepublishOnly": "tsc -p ./ --outDir dist/"
+	},
+	"main": "./dist/server.js",
+  	"types": "./dist/server.d.ts",
+	"bin": {
+		"phpunit-langserver": "./lib/server.js"
 	}
 }
