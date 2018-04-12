@@ -1,12 +1,13 @@
-import { Testsuite, TestNode } from '../phpunit';
+import { TestNode } from '../phpunit';
 import { SymbolInformation, TextDocument, SymbolKind } from 'vscode-languageserver';
+import { Runner } from '../runner';
 
 export class DocumentSymbolProvider {
-    constructor(private testsuite = new Testsuite()) {}
+    constructor(private runner = new Runner()) {}
 
     provideDocumentSymbols(textDocument: TextDocument): SymbolInformation[] {
         return this.convertToDocumentSymbol(
-            this.testsuite.getTestNodes(textDocument.getText(), textDocument.uri),
+            this.runner.getTestNodes(textDocument.getText(), textDocument.uri),
             textDocument.uri
         );
     }

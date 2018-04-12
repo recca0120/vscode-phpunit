@@ -1,17 +1,18 @@
 import { SymbolInformation, TextDocument, SymbolKind } from 'vscode-languageserver';
 
 import { DocumentSymbolProvider } from '../../src/providers';
-import { Filesystem } from '../../src/filesystem';
-import { resolve } from 'path';
-import { readFileSync } from 'fs';
+import { Filesystem, FilesystemContract } from '../../src/filesystem';
+import { projectPath } from '../helpers';
 
 describe('DocumentSymbolProvider Test', () => {
-    const path: string = resolve(__dirname, '../fixtures/project/tests/AssertionsTest.php');
+    const path: string = projectPath('tests/AssertionsTest.php');
+    const files: FilesystemContract = new Filesystem();
     let symbolInformations: SymbolInformation[] = [];
 
     beforeEach(async () => {
         const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
-        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
+        const content = await files.get(path);
+        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, content);
         symbolInformations = documentSymbolProvider.provideDocumentSymbols(textDocument);
     });
 

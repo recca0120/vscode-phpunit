@@ -21,7 +21,7 @@ import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { Runner } from './runner';
 
 const runner: Runner = new Runner();
-const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
+const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider(runner);
 const codeLensProvider: CodeLensProvider = new CodeLensProvider(runner);
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
