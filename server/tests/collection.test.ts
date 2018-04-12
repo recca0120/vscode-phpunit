@@ -7,7 +7,7 @@ import { Filesystem, FilesystemContract } from '../src/filesystem';
 import { JUnit } from './../src/phpunit/junit';
 import { projectPath, pathPattern } from './helpers';
 
-const jUnit: JUnit = new JUnit;
+const jUnit: JUnit = new JUnit();
 const files: FilesystemContract = new Filesystem();
 
 describe('Collection Test', () => {
@@ -135,9 +135,11 @@ describe('Collection Test', () => {
 
     it('it should get diagnostics', async () => {
         const content: string = await files.get(projectPath('junit.xml'));
-        const tests: Test[] = await jUnit.parse(content.replace(pathPattern, (...m) => {
-            return projectPath(m[1]);
-        }));
+        const tests: Test[] = await jUnit.parse(
+            content.replace(pathPattern, (...m) => {
+                return projectPath(m[1]);
+            })
+        );
         const collect: Collection = new Collection();
 
         const diagnostics: Map<string, PublishDiagnosticsParams> = collect.put(tests).transformToDiagnoics();
@@ -184,8 +186,7 @@ describe('Collection Test', () => {
         expect(publishDiagnosticsParams.diagnostics[2]).toEqual({
             severity: 2,
             source: 'PHPUnit',
-            message:
-                "Risky Test",
+            message: 'Risky Test',
             range: {
                 end: {
                     character: 32,
@@ -202,8 +203,7 @@ describe('Collection Test', () => {
         expect(publishDiagnosticsParams.diagnostics[3]).toEqual({
             severity: 2,
             source: 'PHPUnit',
-            message:
-                "Risky Test",
+            message: 'Risky Test',
             range: {
                 end: {
                     character: 39,
@@ -395,9 +395,11 @@ describe('Collection Test', () => {
 
     it('it should get assertions', async () => {
         const content: string = await files.get(projectPath('junit.xml'));
-        const tests: Test[] = await jUnit.parse(content.replace(pathPattern, (...m) => {
-            return projectPath(m[1]);
-        }));
+        const tests: Test[] = await jUnit.parse(
+            content.replace(pathPattern, (...m) => {
+                return projectPath(m[1]);
+            })
+        );
         const collect: Collection = new Collection();
         collect.put(tests);
 

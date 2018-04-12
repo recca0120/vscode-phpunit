@@ -11,7 +11,7 @@ describe('CodeLensProvider Test', () => {
     let codeLens: CodeLens[] = [];
 
     beforeEach(async () => {
-        const runner = new Runner;
+        const runner = new Runner();
         const codeLensProvider: CodeLensProvider = new CodeLensProvider(runner);
         const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
         codeLens = codeLensProvider.provideCodeLenses(textDocument);

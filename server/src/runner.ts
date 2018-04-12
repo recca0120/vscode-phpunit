@@ -6,10 +6,10 @@ import { FilesystemContract, Filesystem } from './filesystem';
 
 export class Runner {
     constructor(
-        private phpUnit: PhpUnit = new PhpUnit,
-        private collect: Collection = new Collection,
-        private ast: Ast = new Ast,
-        private files: FilesystemContract = new Filesystem
+        private phpUnit: PhpUnit = new PhpUnit(),
+        private collect: Collection = new Collection(),
+        private ast: Ast = new Ast(),
+        private files: FilesystemContract = new Filesystem()
     ) {}
 
     getTestNodes(code: string, uri: string): TestNode[] {

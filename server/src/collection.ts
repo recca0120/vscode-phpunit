@@ -1,7 +1,12 @@
 import { Test, Assertion, Detail, Fault, Type } from './phpunit';
 import { FilesystemContract, Filesystem } from './filesystem';
 import { groupBy, tap } from './helpers';
-import { PublishDiagnosticsParams, Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation } from 'vscode-languageserver';
+import {
+    PublishDiagnosticsParams,
+    Diagnostic,
+    DiagnosticSeverity,
+    DiagnosticRelatedInformation,
+} from 'vscode-languageserver';
 
 export class Collection {
     private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];

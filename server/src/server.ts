@@ -20,7 +20,7 @@ import {
 import { CodeLensProvider, DocumentSymbolProvider } from './providers';
 import { Runner } from './runner';
 
-const runner: Runner = new Runner;
+const runner: Runner = new Runner();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 const codeLensProvider: CodeLensProvider = new CodeLensProvider(runner);
 
