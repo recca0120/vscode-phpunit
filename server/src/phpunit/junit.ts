@@ -1,8 +1,8 @@
 import { tap, value, when } from '../helpers';
-import { HtmlEntities } from './html-entities';
 import { TextlineRange } from './textline-range';
 import { Test, Detail, Type, Node, FaultNode } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
+import { decode } from 'he';
 
 const parse = require('fast-xml-parser').parse;
 
@@ -11,8 +11,7 @@ export class JUnit {
 
     constructor(
         private textLineRange: TextlineRange = new TextlineRange(),
-        private files: FilesystemContract = new Filesystem(),
-        private htmlEntities: HtmlEntities = new HtmlEntities()
+        private files: FilesystemContract = new Filesystem()
     ) {}
 
     async parse(code: string): Promise<Test[]> {
@@ -166,13 +165,11 @@ export class JUnit {
             const type: string = fault._type || '';
 
             return (
-                this.htmlEntities
-                    .decode(
-                        /phpunit/i.test(type)
-                            ? message.replace(new RegExp(`^${type.replace(/\\/g, '\\\\')}:`), '')
-                            : message
-                    )
-                    .trim() || type
+                decode(
+                    /phpunit/i.test(type)
+                        ? message.replace(new RegExp(`^${type.replace(/\\/g, '\\\\')}:`), '')
+                        : message
+                ).trim() || type
             );
         });
     }
