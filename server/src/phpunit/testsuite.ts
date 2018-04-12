@@ -54,12 +54,12 @@ export class Testsuite {
             severity: DiagnosticSeverity.Error,
             range: test.range,
             message: test.fault ? test.fault.message : '',
-            relatedInformation: this.convertToRelatedInformation(test),
+            relatedInformation: this.transformToRelatedInformation(test),
             source: 'PHPUnit',
         };
     }
 
-    private convertToRelatedInformation(test: Test): DiagnosticRelatedInformation[] {
+    private transformToRelatedInformation(test: Test): DiagnosticRelatedInformation[] {
         if (!test.fault || !test.fault.details) {
             return [];
         }
