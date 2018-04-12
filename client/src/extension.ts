@@ -49,9 +49,11 @@ export function activate(context: ExtensionContext) {
             });
         });
 
-        window.onDidChangeActiveTextEditor((editor: TextEditor) => {
-            client.sendRequest('assertions', {
-                uri: editor.document.uri.toString(),
+        window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+            when(editor, (editor: TextEditor) => {
+                client.sendRequest('assertions', {
+                    uri: editor.document.uri.toString(),
+                });
             });
         });
     });

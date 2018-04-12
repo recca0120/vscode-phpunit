@@ -12,7 +12,7 @@
 		"url": "https://github.com/recca0120/vscode-phpunit/tree/master/client"
 	},
 	"engines": {
-		"vscode": "^1.16.0"
+		"vscode": "^1.19.0"
 	},
 	"categories": [
 		"Languages",
@@ -47,23 +47,31 @@
 				}
 			}
 		},
-		"languages": [{
-            "id": "phpunit",
-            "aliases": ["log"],
-            "extensions": [".log"],
-            "mimetypes": [
-                "log",
-                "text/log",
-                "text/x-log",
-                "text/x-code-output",
-                "x-code-output"
-            ]
-        }],
-        "grammars": [{
-            "language": "phpunit",
-            "scopeName": "source.php.phpunit",
-            "path": "./syntaxes/phpunit.tmLanguage.json"
-        }]
+		"languages": [
+			{
+				"id": "phpunit",
+				"aliases": [
+					"log"
+				],
+				"extensions": [
+					".log"
+				],
+				"mimetypes": [
+					"log",
+					"text/log",
+					"text/x-log",
+					"text/x-code-output",
+					"x-code-output"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "phpunit",
+				"scopeName": "source.php.phpunit",
+				"path": "./syntaxes/phpunit.tmLanguage.json"
+			}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "tsc -p ./",
