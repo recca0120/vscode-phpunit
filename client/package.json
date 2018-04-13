@@ -1,90 +1,69 @@
 {
-	"name": "vscode-phpunit",
-	"displayName": "VSCode PHPUnit",
-	"description": "phpunit lsp client",
-	"author": "recca0120",
-	"license": "MIT",
-	"icon": "images/icon.png",
-	"version": "0.7.17",
-	"publisher": "recca0120",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/recca0120/vscode-phpunit/tree/master/client"
-	},
-	"engines": {
-		"vscode": "^1.19.0"
-	},
-	"categories": [
-		"Languages",
-		"Other"
-	],
-	"keywords": [
-		"phpunit",
-		"phpunit-lsp",
-		"test",
-		"php",
-		"language server protocol"
-	],
-	"activationEvents": [
-		"onLanguage:php"
-	],
-	"preview": true,
-	"main": "./out/extension",
-	"contributes": {
-		"configuration": {
-			"type": "object",
-			"title": "phpunit configuration",
-			"properties": {
-				"phpunit.execPath": {
-					"type": "string",
-					"default": "",
-					"description": "Path to phpunit executable (if empty it tries to use composer installation)."
-				},
-				"phpunit.args": {
-					"type": "array",
-					"default": [],
-					"description": "Any phpunit args (phpunit --help)"
-				}
-			}
-		},
-		"languages": [
-			{
-				"id": "phpunit",
-				"aliases": [
-					"log"
-				],
-				"extensions": [
-					".log"
-				],
-				"mimetypes": [
-					"log",
-					"text/log",
-					"text/x-log",
-					"text/x-code-output",
-					"x-code-output"
-				]
-			}
-		],
-		"grammars": [
-			{
-				"language": "phpunit",
-				"scopeName": "source.php.phpunit",
-				"path": "./syntaxes/phpunit.tmLanguage.json"
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "tsc -p ./",
-		"compile": "tsc -p ./",
-		"watch": "tsc -w -p ./",
-		"update-vscode": "node ./node_modules/vscode/bin/install",
-		"postinstall": "node ./node_modules/vscode/bin/install"
-	},
-	"dependencies": {
-		"vscode-languageclient": "^4.1.3"
-	},
-	"devDependencies": {
-		"@types/node": "^9.6.4",
-		"vscode": "^1.1.14"
-	}
+    "name": "vscode-phpunit",
+    "displayName": "VSCode PHPUnit",
+    "description": "phpunit lsp client",
+    "author": "recca0120",
+    "license": "MIT",
+    "icon": "images/icon.png",
+    "version": "0.8.0",
+    "publisher": "recca0120",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/recca0120/vscode-phpunit/tree/master/client"
+    },
+    "engines": {
+        "vscode": "^1.19.0"
+    },
+    "categories": ["Languages", "Other"],
+    "keywords": ["phpunit", "phpunit-lsp", "test", "php", "language server protocol"],
+    "activationEvents": ["onLanguage:php"],
+    "preview": true,
+    "main": "./out/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "phpunit configuration",
+            "properties": {
+                "phpunit.execPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to phpunit executable (if empty it tries to use composer installation)."
+                },
+                "phpunit.args": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Any phpunit args (phpunit --help)"
+                }
+            }
+        },
+        "languages": [
+            {
+                "id": "phpunit",
+                "aliases": ["log"],
+                "extensions": [".log"],
+                "mimetypes": ["log", "text/log", "text/x-log", "text/x-code-output", "x-code-output"]
+            }
+        ],
+        "grammars": [
+            {
+                "language": "phpunit",
+                "scopeName": "source.php.phpunit",
+                "path": "./syntaxes/phpunit.tmLanguage.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -p ./",
+        "watch": "tsc -w -p ./",
+        "update-vscode": "node ./node_modules/vscode/bin/install",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^4.1.3"
+    },
+    "devDependencies": {
+        "@types/node": "^9.6.4",
+        "vscode": "^1.1.14"
+    }
 }

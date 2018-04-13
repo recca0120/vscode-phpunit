@@ -1,4 +1,4 @@
-import { PhpUnit, Ast, TestNode, Collection, Assertion, Test } from './phpunit';
+import { PhpUnit, Ast, TestNode, Collection } from './phpunit';
 import { tap } from './helpers';
 import { IConnection, PublishDiagnosticsParams } from 'vscode-languageserver/lib/main';
 import { FilesystemContract, Filesystem } from './filesystem';
