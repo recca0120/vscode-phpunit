@@ -6,7 +6,6 @@ import {
     TextEditor,
     Range,
     DecorationOptions,
-    DecorationRangeBehavior,
     ThemeColor,
 } from 'vscode';
 import { resolve as pathResolve } from 'path';
@@ -54,9 +53,10 @@ export class DecorateManager {
             const test: Test = assertion.related;
             const group: DecorationOptions[] = groups.get(test.type) || [];
             const { start, end } = assertion.range;
+            const related: Test = assertion.related;
             group.push({
                 range: new Range(start.line, start.character, end.line, end.character),
-                // hoverMessage: test.fault ? test.fault.message : '',
+                hoverMessage: related.fault ? related.fault.message : '',
             });
             groups.set(test.type, group);
 
@@ -65,31 +65,29 @@ export class DecorateManager {
     }
 
     private passed(): TextEditorDecorationType {
-        return this.createTextEditorDecorationType('success.svg');
+        return this.createTextEditorDecorationType('success.svg', '#62b455');
     }
 
     private error(): TextEditorDecorationType {
-        return this.createTextEditorDecorationType('danger.svg');
+        return this.createTextEditorDecorationType('danger.svg', '#fe536a');
     }
 
     private risky(): TextEditorDecorationType {
-        return this.createTextEditorDecorationType('danger-light.svg');
+        return this.createTextEditorDecorationType('danger-light.svg', '#ffa0a0');
     }
 
     private skipped(): TextEditorDecorationType {
-        return this.createTextEditorDecorationType('warning.svg');
+        return this.createTextEditorDecorationType('warning.svg', '#d2a032');
     }
 
     private incomplete(): TextEditorDecorationType {
         return this.skipped();
     }
 
-    private createTextEditorDecorationType(image: string, color?: string | ThemeColor) {
+    private createTextEditorDecorationType(image: string, color?: string | ThemeColor): TextEditorDecorationType {
         return this.win.createTextEditorDecorationType({
-            isWholeLine: true,
-            backgroundColor: color,
-            rangeBehavior: DecorationRangeBehavior.OpenClosed,
-            overviewRulerLane: OverviewRulerLane.Full,
+            overviewRulerColor: color,
+            overviewRulerLane: OverviewRulerLane.Left,
             gutterIconPath: this.gutterIconPath(image),
         });
     }

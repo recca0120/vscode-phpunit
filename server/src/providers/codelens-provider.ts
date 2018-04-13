@@ -22,6 +22,7 @@ export class CodeLensProvider {
     }
 
     private convertToCodeLens(nodes: TestNode[], data: any = {}): CodeLens[] {
+        const uri: string = data.textDocument.uri;
         return nodes.map((node: TestNode) => {
             return {
                 data,
@@ -32,14 +33,14 @@ export class CodeLensProvider {
                         return {
                             title: 'Run Test',
                             command: 'phpunit.test.file',
-                            arguments: [this.files.normalizePath(node.uri)],
+                            arguments: [uri, this.files.normalizePath(node.uri), []],
                         };
                     },
                     () => {
                         return {
                             title: 'Run Test',
                             command: 'phpunit.test.method',
-                            arguments: [this.files.normalizePath(node.uri), '--filter', `^.*::${node.name}$`],
+                            arguments: [uri, this.files.normalizePath(node.uri), ['--filter', `^.*::${node.name}$`]],
                         };
                     }
                 ),

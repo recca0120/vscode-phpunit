@@ -129,9 +129,11 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     switch (params.command) {
         case 'phpunit.test.file':
         case 'phpunit.test.method':
-            const args = params.arguments || [];
-            const uri = args[0] || '';
-            const output = await runner.run(uri, args.slice(1));
+            const p: any = params.arguments || [];
+            const uri: string = p[0] || '';
+            const path: string = p[1] || '';
+            const args: string[] = p[2] || [];
+            const output = await runner.run(path, args);
             connection.console.log(output);
             runner.sendDiagnostics(connection).sendNotification(connection, uri);
 
