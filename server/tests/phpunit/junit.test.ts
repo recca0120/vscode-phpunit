@@ -11,7 +11,7 @@ describe('JUnit Test', async () => {
     const path2 = projectPath('tests/CalculatorTest.php');
     let tests: Test[] = [];
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const content: string = await files.get(projectPath('junit.xml'));
         tests = await jUnit.parse(
             content.replace(pathPattern, (...m) => {

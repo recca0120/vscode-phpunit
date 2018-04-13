@@ -13,7 +13,7 @@ describe('CodeLensProvider Test', () => {
     const uri: string = files.uri(path);
     let codeLens: CodeLens[] = [];
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const runner = new Runner();
         const codeLensProvider: CodeLensProvider = new CodeLensProvider(runner);
         const content: string = await files.get(path);

@@ -9,7 +9,7 @@ describe('DocumentSymbolProvider Test', () => {
     const files: FilesystemContract = new Filesystem();
     let symbolInformations: SymbolInformation[] = [];
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
         const content = await files.get(path);
         const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, content);
