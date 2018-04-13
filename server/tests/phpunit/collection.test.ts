@@ -138,7 +138,7 @@ describe('Collection Test', () => {
         );
         const collect: Collection = new Collection();
 
-        const diagnostics: Map<string, PublishDiagnosticsParams> = collect.put(tests).transformToDiagnoics();
+        const diagnostics: Map<string, PublishDiagnosticsParams> = collect.put(tests).getDiagnoics();
         let publishDiagnosticsParams: PublishDiagnosticsParams = diagnostics.get(
             files.uri(projectPath('tests/AssertionsTest.php'))
         );
@@ -399,7 +399,7 @@ describe('Collection Test', () => {
         const collect: Collection = new Collection();
         collect.put(tests);
 
-        const assertionGroup: Map<string, Assertion[]> = collect.transformToAssertions();
+        const assertionGroup: Map<string, Assertion[]> = collect.getAssertions();
         let assertions: Assertion[] = assertionGroup.get(files.uri(projectPath('tests/AssertionsTest.php')));
 
         expect(assertions[1]).toEqual({

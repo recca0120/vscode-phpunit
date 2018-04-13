@@ -1,4 +1,4 @@
-import { PhpUnit, Ast, TestNode, Collection, Assertion } from './phpunit';
+import { PhpUnit, Ast, TestNode, Collection, Assertion, Test } from './phpunit';
 import { tap } from './helpers';
 import { IConnection, PublishDiagnosticsParams } from 'vscode-languageserver/lib/main';
 import { FilesystemContract, Filesystem } from './filesystem';
@@ -12,25 +12,18 @@ export class Runner {
     ) {}
 
     getTestNodes(code: string, uri: string): TestNode[] {
-        const assertions: Assertion[] = this.collect.transformToAssertions().get(uri) || [];
         const testNodes = this.ast.parse(code, this.files.uri(uri));
 
         return testNodes.concat(
-            assertions
-                .filter((assertion: Assertion) => {
-                    for (const node of testNodes) {
-                        if (node.uri === assertion.uri && assertion.range === assertion.range) {
-                            return false;
-                        }
+            this.collect.getTestNodes(uri).filter((testNode: TestNode) => {
+                for (const node of testNodes) {
+                    if (node.uri === testNode.uri && testNode.range === testNode.range) {
+                        return false;
                     }
+                }
 
-                    return true;
-                })
-                .map((assertion: Assertion) => {
-                    return Object.assign({}, assertion.related, {
-                        range: assertion.range,
-                    });
-                })
+                return true;
+            })
         );
     }
 
@@ -55,7 +48,7 @@ export class Runner {
 
     sendDiagnostics(connection: IConnection): Runner {
         return tap(this, () => {
-            this.collect.transformToDiagnoics().forEach((params: PublishDiagnosticsParams) => {
+            this.collect.getDiagnoics().forEach((params: PublishDiagnosticsParams) => {
                 connection.sendDiagnostics(params);
             });
         });
@@ -66,7 +59,7 @@ export class Runner {
             const uri: string = this.files.uri(pathOrUri);
             connection.sendNotification('assertions', {
                 uri: uri,
-                assertions: this.collect.transformToAssertions().get(uri) || [],
+                assertions: this.collect.getAssertions().get(uri) || [],
             });
         });
     }

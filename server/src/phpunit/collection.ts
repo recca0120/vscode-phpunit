@@ -1,4 +1,4 @@
-import { Test, Assertion, Detail, Type } from './common';
+import { Test, Assertion, Detail, Type, TestNode } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { groupBy, tap } from '../helpers';
 import {
@@ -50,7 +50,15 @@ export class Collection {
         return this.items;
     }
 
-    transformToDiagnoics() {
+    getTestNodes(uri: string): TestNode[] {
+        return (this.getAssertions().get(uri) || []).map((assertion: Assertion) => {
+            return Object.assign({}, this.cloneTest(assertion.related), {
+                range: assertion.range,
+            });
+        });
+    }
+
+    getDiagnoics() {
         return tap(new Map<string, PublishDiagnosticsParams>(), (map: Map<string, PublishDiagnosticsParams>) => {
             this.forEach((tests: Test[], uri: string) => {
                 map.set(uri, {
@@ -63,31 +71,12 @@ export class Collection {
         });
     }
 
-    transformToAssertions(): Map<string, Assertion[]> {
+    getAssertions(): Map<string, Assertion[]> {
         const assertions: Assertion[] = [];
         this.forEach((tests: Test[]) => {
             tests.forEach((test: Test) => {
                 const details: Detail[] = (test.fault && test.fault.details) || [];
-
-                const related: Test = tap(
-                    {
-                        name: test.name,
-                        class: test.class,
-                        classname: test.classname,
-                        uri: test.uri,
-                        range: test.range,
-                        time: test.time,
-                        type: test.type,
-                    },
-                    (related: Test) => {
-                        if (test.fault) {
-                            related.fault = {
-                                type: test.fault.type,
-                                message: test.fault.message,
-                            };
-                        }
-                    }
-                );
+                const related: Test = this.cloneTest(test);
 
                 assertions.push({
                     uri: test.uri,
@@ -123,8 +112,9 @@ export class Collection {
             return [];
         }
         const message: string = test.fault.message;
+        const details = test.fault && test.fault.details ? test.fault.details : [];
 
-        return test.fault.details.map((detail: Detail) => {
+        return details.map((detail: Detail) => {
             return {
                 location: detail,
                 message: message,
@@ -154,5 +144,27 @@ export class Collection {
         });
 
         return merged;
+    }
+
+    private cloneTest(test: any): Test {
+        return tap(
+            {
+                name: test.name,
+                class: test.class,
+                classname: test.classname,
+                uri: test.uri,
+                range: test.range,
+                time: test.time,
+                type: test.type,
+            },
+            (related: Test) => {
+                if (test.fault) {
+                    related.fault = {
+                        type: test.fault.type,
+                        message: test.fault.message,
+                    };
+                }
+            }
+        );
     }
 }
