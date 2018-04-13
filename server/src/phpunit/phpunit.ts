@@ -1,8 +1,10 @@
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { os, OS, tap, value } from '../helpers';
 import { Process } from '../process';
-import { Parameters, Test, JUnit } from '.';
+import { Test } from './common';
 import { Command } from 'vscode-languageserver';
+import { Parameters } from './parameters';
+import { JUnit } from './junit';
 
 export class PhpUnit {
     private binary: string = '';

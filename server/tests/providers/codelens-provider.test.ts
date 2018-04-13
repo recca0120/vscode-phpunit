@@ -1,19 +1,22 @@
+import { projectPath } from '../helpers';
 import { CodeLens, TextDocument } from 'vscode-languageserver';
 
 import { CodeLensProvider } from '../../src/providers';
-import { Filesystem } from '../../src/filesystem';
+import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
 import { Runner } from '../../src/runner';
 
 describe('CodeLensProvider Test', () => {
-    const path: string = resolve(__dirname, '../fixtures/project/tests/AssertionsTest.php');
+    const files: FilesystemContract = new Filesystem();
+    const path: string = projectPath('tests/AssertionsTest.php').replace(/^C:/, 'c:');
     let codeLens: CodeLens[] = [];
 
     beforeEach(async () => {
         const runner = new Runner();
         const codeLensProvider: CodeLensProvider = new CodeLensProvider(runner);
-        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, readFileSync(path).toString('utf8'));
+        const content: string = await files.get(path);
+        const textDocument: TextDocument = TextDocument.create(path, 'php', 0.1, content);
         codeLens = codeLensProvider.provideCodeLenses(textDocument);
     });
 

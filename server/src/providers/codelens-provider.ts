@@ -2,9 +2,10 @@ import { TestNode } from '../phpunit';
 import { CodeLens, TextDocument } from 'vscode-languageserver';
 import { when } from '../helpers';
 import { Runner } from '../runner';
+import { FilesystemContract, Filesystem } from './../filesystem';
 
 export class CodeLensProvider {
-    constructor(private runner: Runner) {}
+    constructor(private runner: Runner, private files: FilesystemContract = new Filesystem()) {}
 
     provideCodeLenses(textDocument: TextDocument): CodeLens[] {
         return this.convertToCodeLens(this.runner.getTestNodes(textDocument.getText(), textDocument.uri), {
@@ -31,14 +32,14 @@ export class CodeLensProvider {
                         return {
                             title: 'Run Test',
                             command: 'phpunit.test.file',
-                            arguments: [data.textDocument.uri],
+                            arguments: [this.files.normalizePath(node.uri)],
                         };
                     },
                     () => {
                         return {
                             title: 'Run Test',
                             command: 'phpunit.test.method',
-                            arguments: [data.textDocument.uri, '--filter', `^.*::${node.name}$`],
+                            arguments: [this.files.normalizePath(node.uri), '--filter', `^.*::${node.name}$`],
                         };
                     }
                 ),

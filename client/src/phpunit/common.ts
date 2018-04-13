@@ -19,18 +19,18 @@ export interface Fault {
     details?: Detail[];
 }
 
-interface Base extends Location {
+export interface TestNode extends Location {
     name: string;
     class: string;
     classname: string;
-    time: number;
-    type: Type;
 }
 
-export interface Test extends Base {
+export interface Test extends TestNode {
+    time: number;
+    type: Type;
     fault?: Fault;
 }
 
-export interface Assertion extends Test {
-    fault: Fault;
+export interface Assertion extends Detail {
+    related: Test;
 }

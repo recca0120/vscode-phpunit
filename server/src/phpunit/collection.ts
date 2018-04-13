@@ -1,4 +1,4 @@
-import { Test, Assertion, Detail, Fault, Type } from '.';
+import { Test, Assertion, Detail, Type } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { groupBy, tap } from '../helpers';
 import {
@@ -67,35 +67,40 @@ export class Collection {
         const assertions: Assertion[] = [];
         this.forEach((tests: Test[]) => {
             tests.forEach((test: Test) => {
-                const message: string = test.fault ? test.fault.message : '';
-                const details: Detail[] = test.fault && test.fault.details ? test.fault.details : [];
-                const type: string = test.fault && test.fault.type ? test.fault.type : '';
-                const fault: Fault = {
-                    type,
-                    message,
-                };
+                const details: Detail[] = (test.fault && test.fault.details) || [];
 
-                assertions.push(
-                    Object.assign({}, test, {
-                        fault: fault,
-                    })
+                const related: Test = tap(
+                    {
+                        name: test.name,
+                        class: test.class,
+                        classname: test.classname,
+                        uri: test.uri,
+                        range: test.range,
+                        time: test.time,
+                        type: test.type,
+                    },
+                    (related: Test) => {
+                        if (test.fault) {
+                            related.fault = {
+                                type: test.fault.type,
+                                message: test.fault.message,
+                            };
+                        }
+                    }
                 );
 
+                assertions.push({
+                    uri: test.uri,
+                    range: test.range,
+                    related: related,
+                });
+
                 details.forEach((detail: Detail) => {
-                    assertions.push(
-                        Object.assign({}, test, {
-                            uri: detail.uri,
-                            range: detail.range,
-                            fault: Object.assign({}, fault, {
-                                details: [
-                                    {
-                                        uri: test.uri,
-                                        range: test.range,
-                                    },
-                                ],
-                            }),
-                        })
-                    );
+                    assertions.push({
+                        uri: detail.uri,
+                        range: detail.range,
+                        related: related,
+                    });
                 });
             });
         });

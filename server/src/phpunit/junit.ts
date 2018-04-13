@@ -1,7 +1,8 @@
 import { tap, value, when } from '../helpers';
-import { Test, Detail, Type, Node, FaultNode, TextlineRange } from '.';
+import { Test, Detail, Type, Node, FaultNode } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { decode } from 'he';
+import { TextlineRange } from './textline-range';
 
 const parse = require('fast-xml-parser').parse;
 

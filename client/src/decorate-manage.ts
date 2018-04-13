@@ -10,7 +10,7 @@ import {
     ThemeColor,
 } from 'vscode';
 import { resolve as pathResolve } from 'path';
-import { Type, Test } from './phpunit/common';
+import { Type, Test, Assertion } from './phpunit/common';
 import { when } from './helpers';
 
 export class DecorateManager {
@@ -27,10 +27,10 @@ export class DecorateManager {
         this.styles.set(Type.FAILED, this.error());
     }
 
-    decoratedGutter(editor: TextEditor, tests: Test[]): DecorateManager {
+    decoratedGutter(editor: TextEditor, assertions: Assertion[]): DecorateManager {
         this.clearDecoratedGutter(editor);
 
-        for (const [type, decorationOptions] of this.groupBy(tests)) {
+        for (const [type, decorationOptions] of this.groupBy(assertions)) {
             when(this.styles.get(type), (style: TextEditorDecorationType) => {
                 editor.setDecorations(style, decorationOptions);
             });
@@ -49,15 +49,16 @@ export class DecorateManager {
         return this;
     }
 
-    private groupBy(tests: Test[]): Map<Type, DecorationOptions[]> {
-        return tests.reduce((groups: Map<Type, DecorationOptions[]>, assertion: Test) => {
-            const group: DecorationOptions[] = groups.get(assertion.type) || [];
+    private groupBy(assertions: Assertion[]): Map<Type, DecorationOptions[]> {
+        return assertions.reduce((groups: Map<Type, DecorationOptions[]>, assertion: Assertion) => {
+            const test: Test = assertion.related;
+            const group: DecorationOptions[] = groups.get(test.type) || [];
             const { start, end } = assertion.range;
             group.push({
                 range: new Range(start.line, start.character, end.line, end.character),
-                // hoverMessage: assertion.fault ? assertion.fault.message : '',
+                // hoverMessage: test.fault ? test.fault.message : '',
             });
-            groups.set(assertion.type, group);
+            groups.set(test.type, group);
 
             return groups;
         }, new Map<Type, DecorationOptions[]>());

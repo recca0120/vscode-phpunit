@@ -52,8 +52,6 @@ export interface Test extends TestNode {
     fault?: Fault;
 }
 
-export interface Assertion extends Test {
-    time: number;
-    type: Type;
-    fault: Fault;
+export interface Assertion extends Detail {
+    related: Test;
 }
