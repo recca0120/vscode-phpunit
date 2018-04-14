@@ -133,9 +133,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             const uri: string = p[0] || '';
             const path: string = p[1] || '';
             const args: string[] = p[2] || [];
-            const output: string = await runner.run(path, args);
-            connection.console.log(output);
-            runner.sendDiagnostics(connection).sendNotification(connection, uri);
+            await runner.run(connection, uri, path, args);
 
             break;
     }

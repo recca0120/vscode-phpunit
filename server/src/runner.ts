@@ -23,11 +23,13 @@ export class Runner {
         });
     }
 
-    async run(path: string, params: string[] = []): Promise<string> {
+    async run(connection: IConnection, uri: string, path: string, params: string[] = []): Promise<Runner> {
         await this.phpUnit.run(path, params);
         this.collect.put(this.phpUnit.getTests());
+        this.sendDiagnostics(connection).sendNotification(connection, uri);
+        connection.console.log(this.phpUnit.getOutput());
 
-        return this.phpUnit.getOutput();
+        return this;
     }
 
     getTestNodes(code: string, uri: string): TestNode[] {
