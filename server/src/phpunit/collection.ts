@@ -71,12 +71,12 @@ export class Collection {
         });
     }
 
-    getAssertions(): Map<string, Assertion[]> {
+    getAssertions(keepDetails: boolean = false): Map<string, Assertion[]> {
         const assertions: Assertion[] = [];
         this.forEach((tests: Test[]) => {
             tests.forEach((test: Test) => {
                 const details: Detail[] = (test.fault && test.fault.details) || [];
-                const related: Test = this.cloneTest(test);
+                const related: Test = this.cloneTest(test, keepDetails);
 
                 assertions.push({
                     uri: test.uri,
@@ -146,7 +146,7 @@ export class Collection {
         return merged;
     }
 
-    private cloneTest(test: any): Test {
+    private cloneTest(test: Test, keepDetails: boolean = false): Test {
         return tap(
             {
                 name: test.name,
@@ -158,11 +158,17 @@ export class Collection {
                 type: test.type,
             },
             (related: Test) => {
-                if (test.fault) {
-                    related.fault = {
-                        type: test.fault.type,
-                        message: test.fault.message,
-                    };
+                if (!test.fault) {
+                    return;
+                }
+
+                related.fault = {
+                    type: test.fault.type,
+                    message: test.fault.message,
+                };
+
+                if (keepDetails === true) {
+                    related.fault.details = test.fault.details;
                 }
             }
         );
