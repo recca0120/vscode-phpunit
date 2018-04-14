@@ -1,12 +1,7 @@
 import { Test, Assertion, Detail, Type, TestNode } from './common';
 import { FilesystemContract, Filesystem } from '../filesystem';
 import { groupBy, tap } from '../helpers';
-import {
-    PublishDiagnosticsParams,
-    Diagnostic,
-    DiagnosticSeverity,
-    DiagnosticRelatedInformation,
-} from 'vscode-languageserver';
+import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation } from 'vscode-languageserver';
 
 export class Collection {
     private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];
@@ -58,15 +53,13 @@ export class Collection {
         });
     }
 
-    getDiagnoics() {
-        return tap(new Map<string, PublishDiagnosticsParams>(), (map: Map<string, PublishDiagnosticsParams>) => {
+    getDiagnoics(): Map<string, Diagnostic[]> {
+        return tap(new Map<string, Diagnostic[]>(), (map: Map<string, Diagnostic[]>) => {
             this.forEach((tests: Test[], uri: string) => {
-                map.set(uri, {
+                map.set(
                     uri,
-                    diagnostics: tests
-                        .filter(this.filterByType.bind(this))
-                        .map((test: Test) => this.transformToDiagonstic(test)),
-                } as PublishDiagnosticsParams);
+                    tests.filter(this.filterByType.bind(this)).map((test: Test) => this.transformToDiagonstic(test))
+                );
             });
         });
     }

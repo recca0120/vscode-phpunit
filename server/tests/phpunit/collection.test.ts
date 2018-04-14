@@ -173,9 +173,9 @@ describe('Collection Test', () => {
         const collect: Collection = new Collection();
         collect.put(tests);
 
-        const diagnostics: Map<string, PublishDiagnosticsParams> = collect.getDiagnoics();
+        const diagnostics: Map<string, Diagnostic[]> = collect.getDiagnoics();
 
-        expect(diagnostics.get(uri).diagnostics[0]).toEqual({
+        expect(diagnostics.get(uri)[0]).toEqual({
             severity: 1,
             source: 'PHPUnit',
             message: 'Exception:',

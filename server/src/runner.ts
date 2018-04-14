@@ -1,6 +1,6 @@
 import { PhpUnit, Ast, TestNode, Collection } from './phpunit';
 import { tap } from './helpers';
-import { IConnection, PublishDiagnosticsParams } from 'vscode-languageserver/lib/main';
+import { IConnection, Diagnostic } from 'vscode-languageserver/lib/main';
 import { FilesystemContract, Filesystem } from './filesystem';
 
 export class Runner {
@@ -48,8 +48,11 @@ export class Runner {
 
     sendDiagnostics(connection: IConnection): Runner {
         return tap(this, () => {
-            this.collect.getDiagnoics().forEach((params: PublishDiagnosticsParams) => {
-                connection.sendDiagnostics(params);
+            this.collect.getDiagnoics().forEach((diagnostics: Diagnostic[], uri: string) => {
+                connection.sendDiagnostics({
+                    uri,
+                    diagnostics,
+                });
             });
         });
     }
