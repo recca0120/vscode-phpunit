@@ -42,6 +42,7 @@ export function activate(context: ExtensionContext) {
         },
         outputChannel: window.createOutputChannel('PHPUnit'),
         revealOutputChannelOn: RevealOutputChannelOn.Error,
+        diagnosticCollectionName: 'PHPUnit',
     };
 
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
