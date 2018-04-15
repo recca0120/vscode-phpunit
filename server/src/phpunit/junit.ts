@@ -10,9 +10,13 @@ export class JUnit {
     private pathPattern: RegExp = /(.*):(\d+)$/;
 
     constructor(
-        private textLineRange: TextlineRange = new TextlineRange(),
-        private files: FilesystemContract = new Filesystem()
+        private files: FilesystemContract = new Filesystem(),
+        private textLineRange: TextlineRange = new TextlineRange()
     ) {}
+
+    async parseFile(path: string): Promise<Test[]> {
+        return this.parse(await this.files.get(path));
+    }
 
     async parse(code: string): Promise<Test[]> {
         return tap(

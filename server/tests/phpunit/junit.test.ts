@@ -4,20 +4,22 @@ import { JUnit, Test, Type } from '../../src/phpunit';
 import { resolve } from 'path';
 import { projectPath, pathPattern } from './../helpers';
 
-describe('JUnit Test', async () => {
+describe('JUnit Test', () => {
     const files = new Filesystem();
-    const jUnit: JUnit = new JUnit();
+    const jUnit: JUnit = new JUnit(files);
     const path = projectPath('tests/AssertionsTest.php');
     const path2 = projectPath('tests/CalculatorTest.php');
+    let content: string = '';
     let tests: Test[] = [];
 
     beforeAll(async () => {
-        const content: string = await files.get(projectPath('junit.xml'));
-        tests = await jUnit.parse(
-            content.replace(pathPattern, (...m) => {
-                return projectPath(m[1]);
-            })
-        );
+        const jUnitFile: string = projectPath('junit.xml');
+        content = await files.get(jUnitFile);
+        content = content.replace(pathPattern, (...m) => {
+            return projectPath(m[1]);
+        });
+        spyOn(files, 'get').and.returnValue(content);
+        tests = await jUnit.parseFile(jUnitFile);
     });
 
     it('test_passed', () => {
