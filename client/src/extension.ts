@@ -7,7 +7,13 @@
 import * as path from 'path';
 
 import { ExtensionContext, workspace, window, TextEditor } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import {
+    LanguageClient,
+    LanguageClientOptions,
+    ServerOptions,
+    TransportKind,
+    RevealOutputChannelOn,
+} from 'vscode-languageclient';
 import { DecorateManager } from './decorate-manage';
 import { when } from './helpers';
 
@@ -35,6 +41,7 @@ export function activate(context: ExtensionContext) {
             fileEvents: workspace.createFileSystemWatcher('**/*.php'),
         },
         outputChannel: window.createOutputChannel('PHPUnit'),
+        revealOutputChannelOn: RevealOutputChannelOn.Error,
     };
 
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
