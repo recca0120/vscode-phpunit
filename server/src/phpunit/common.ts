@@ -1,4 +1,4 @@
-import { Location } from 'vscode-languageserver';
+import { Location } from 'vscode-languageserver-types';
 
 export interface FaultNode {
     type: Type;

@@ -1,5 +1,5 @@
 import { Assertion, Detail, Test, TestNode, Type } from './common';
-import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity } from 'vscode-languageserver';
+import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from '../filesystem';
 import { groupBy, tap } from '../helpers';
 

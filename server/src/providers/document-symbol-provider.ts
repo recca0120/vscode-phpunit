@@ -1,5 +1,5 @@
 import { Runner } from '../runner';
-import { SymbolInformation, SymbolKind, TextDocument } from 'vscode-languageserver';
+import { SymbolInformation, SymbolKind, TextDocument } from 'vscode-languageserver-types';
 import { TestNode } from '../phpunit';
 
 export class DocumentSymbolProvider {

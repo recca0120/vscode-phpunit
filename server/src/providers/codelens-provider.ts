@@ -1,4 +1,4 @@
-import { CodeLens, TextDocument } from 'vscode-languageserver';
+import { CodeLens, TextDocument } from 'vscode-languageserver-types';
 import { Runner } from '../runner';
 
 export class CodeLensProvider {

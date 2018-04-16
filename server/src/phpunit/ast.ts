@@ -1,5 +1,5 @@
 import { default as Engine, Program } from 'php-parser';
-import { Range } from 'vscode-languageserver';
+import { Range } from 'vscode-languageserver-types';
 import { TestNode } from './common';
 
 export class Ast {

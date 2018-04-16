@@ -1,5 +1,5 @@
 import { Filesystem, FilesystemContract } from '../filesystem';
-import { Range } from 'vscode-languageserver';
+import { Range } from 'vscode-languageserver-types';
 
 export class TextlineRange {
     private items: Map<string, string[]> = new Map<string, string[]>();

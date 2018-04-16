@@ -1,4 +1,4 @@
-import { Command } from 'vscode-languageserver';
+import { Command } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from '../filesystem';
 import { JUnit } from './junit';
 import { os, OS, tap, value } from '../helpers';
