@@ -38,22 +38,31 @@ export class JUnit {
     }
 
     private getSuites(node: any): any[] {
+        const suite: any = this.getSuite(node);
+
+        return suite instanceof Array
+            ? suite.reduce((suites: any[], suite: any) => {
+                  return suites.concat(this.getSuites(suite));
+              }, [])
+            : suite;
+    }
+
+    private getSuite(node: any): any {
         return when(
-            node.testsuites,
-            (testsuites: any) => {
-                let testsuite: any = testsuites.testsuite;
+            node.testsuite,
+            (testsuite: any) => {
                 while (testsuite.testsuite) {
                     testsuite = testsuite.testsuite;
                 }
 
-                return testsuite instanceof Array ? testsuite : [testsuite];
+                return testsuite;
             },
-            []
+            node
         );
     }
 
     private getNodes(node: any): Node[] {
-        return this.getSuites(node).reduce((tests: any[], suite: any) => {
+        return this.getSuites(node.testsuites).reduce((tests: any[], suite: any) => {
             return tests.concat(suite.testcase);
         }, []);
     }
