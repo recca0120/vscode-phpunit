@@ -31,9 +31,11 @@ export class PhpUnit {
         });
     }
 
-    async run(path: string, params: string[] = []): Promise<number> {
-        path = this.files.normalizePath(path);
-        const cwd: string = this.files.dirname(path);
+    async run(path: string, params: string[] = [], cwd: string = process.cwd()): Promise<number> {
+        if (path) {
+            path = this.files.normalizePath(path);
+            cwd = this.files.dirname(path);
+        }
         const root: string = await this.getRoot(cwd);
 
         const command: Command = {

@@ -44,7 +44,7 @@ export class JUnit {
             ? suite.reduce((suites: any[], suite: any) => {
                   return suites.concat(this.getSuites(suite));
               }, [])
-            : suite;
+            : [suite];
     }
 
     private getSuite(node: any): any {
