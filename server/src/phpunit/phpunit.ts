@@ -62,7 +62,9 @@ export class PhpUnit {
 
     private async parseTests(jUnitDotXml: string): Promise<Test[]> {
         return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
-            ? await this.jUnit.parseFile(jUnitDotXml)
+            ? tap(await this.jUnit.parseFile(jUnitDotXml), () => {
+                  this.files.unlink(jUnitDotXml);
+              })
             : [];
     }
 
