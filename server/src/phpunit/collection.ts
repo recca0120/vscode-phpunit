@@ -1,7 +1,7 @@
-import { Test, Assertion, Detail, Type, TestNode } from './common';
-import { FilesystemContract, Filesystem } from '../filesystem';
+import { Assertion, Detail, Test, TestNode, Type } from './common';
+import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity } from 'vscode-languageserver';
+import { Filesystem, FilesystemContract } from '../filesystem';
 import { groupBy, tap } from '../helpers';
-import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation } from 'vscode-languageserver';
 
 export class Collection {
     private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];

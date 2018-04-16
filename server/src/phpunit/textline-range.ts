@@ -1,4 +1,4 @@
-import { FilesystemContract, Filesystem } from '../filesystem';
+import { Filesystem, FilesystemContract } from '../filesystem';
 import { Range } from 'vscode-languageserver';
 
 export class TextlineRange {

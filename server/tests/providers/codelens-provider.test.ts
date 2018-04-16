@@ -1,10 +1,9 @@
-import { projectPath } from '../helpers';
 import { CodeLens, TextDocument } from 'vscode-languageserver';
-
 import { CodeLensProvider } from '../../src/providers';
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
-import { resolve } from 'path';
+import { projectPath } from '../helpers';
 import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { Runner } from '../../src/runner';
 
 describe('CodeLensProvider Test', () => {

@@ -1,10 +1,10 @@
-import { FilesystemContract, Filesystem } from '../filesystem';
+import { Command } from 'vscode-languageserver';
+import { Filesystem, FilesystemContract } from '../filesystem';
+import { JUnit } from './junit';
 import { os, OS, tap, value } from '../helpers';
+import { Parameters } from './parameters';
 import { Process } from '../process';
 import { Test } from './common';
-import { Command } from 'vscode-languageserver';
-import { Parameters } from './parameters';
-import { JUnit } from './junit';
 
 export class PhpUnit {
     private binary: string = '';
@@ -59,23 +59,6 @@ export class PhpUnit {
     getTests(): Test[] {
         return this.tests;
     }
-
-    // sendDiagnostics(connection: IConnection): PhpUnit {
-    //     return tap(this, () => {
-    //         for (const [, params] of this.testsuite.getDiagnostics()) {
-    //             connection.sendDiagnostics(params);
-    //         }
-    //     });
-    // }
-
-    // sendNotification(connection: IConnection, uri: string): PhpUnit {
-    //     return tap(this, () => {
-    //         connection.sendNotification('assertions', {
-    //             uri: uri,
-    //             assertions: this.testsuite.getAssertions(uri),
-    //         });
-    //     });
-    // }
 
     private async parseTests(jUnitDotXml: string): Promise<Test[]> {
         return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true

@@ -4,6 +4,8 @@
  * ------------------------------------------------------------------------------------------ */
 'use strict';
 
+import { CodeLensProvider, DocumentSymbolProvider } from './providers';
+import { Runner } from './runner';
 import {
     CodeLens,
     CodeLensParams,
@@ -17,8 +19,6 @@ import {
     DidChangeConfigurationParams,
     ProposedFeatures,
 } from 'vscode-languageserver';
-import { CodeLensProvider, DocumentSymbolProvider } from './providers';
-import { Runner } from './runner';
 
 const runner: Runner = new Runner();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider(runner);
@@ -80,7 +80,7 @@ interface PhpUnitSettings {
 // The settings have changed. Is send on server activation
 // as well.
 connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
-    const settings = <Settings>change.settings;
+    const settings = change.settings as Settings;
     runner.setBinary(settings.phpunit.execPath).setDefault(settings.phpunit.args);
 });
 

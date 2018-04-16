@@ -1,8 +1,7 @@
-import { SymbolInformation, TextDocument, SymbolKind } from 'vscode-languageserver';
-
 import { DocumentSymbolProvider } from '../../src/providers';
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { projectPath } from '../helpers';
+import { SymbolInformation, SymbolKind, TextDocument } from 'vscode-languageserver';
 
 describe('DocumentSymbolProvider Test', () => {
     const path: string = projectPath('tests/AssertionsTest.php');

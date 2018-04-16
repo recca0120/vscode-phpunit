@@ -1,5 +1,5 @@
-import { Test, Type, Assertion, Collection } from '../../src/phpunit';
-import { Range, PublishDiagnosticsParams, Diagnostic } from 'vscode-languageserver';
+import { Assertion, Collection, Test, Type } from '../../src/phpunit';
+import { Diagnostic, PublishDiagnosticsParams, Range } from 'vscode-languageserver';
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { projectPath } from '../helpers';
 
@@ -278,7 +278,6 @@ describe('Collection Test', () => {
                     message: 'Exception:',
                     type: 'Exception',
                 },
-
                 range: {
                     end: {
                         character: 38,

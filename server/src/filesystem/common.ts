@@ -2,7 +2,7 @@ import { readFile, stat, unlink } from 'fs';
 import { FilesystemContract } from './contract';
 import { resolve as pathResolve, parse, dirname } from 'path';
 import { tmpdir } from 'os';
-import Uri from 'vscode-uri';
+import { default as Uri } from 'vscode-uri';
 
 export abstract class Common implements FilesystemContract {
     protected systemPaths: string[] = [];

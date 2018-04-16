@@ -1,4 +1,4 @@
-import { FilesystemContract, Filesystem } from '../filesystem';
+import { Filesystem, FilesystemContract } from '../filesystem';
 import { tap } from '../helpers';
 
 export class Parameters {

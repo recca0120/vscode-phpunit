@@ -1,7 +1,7 @@
-import { PhpUnit, Ast, TestNode, Collection } from './phpunit';
+import { Ast, Collection, PhpUnit, TestNode } from './phpunit';
+import { CodeLens, Diagnostic, IConnection, TextDocument } from 'vscode-languageserver/lib/main';
+import { Filesystem, FilesystemContract } from './filesystem';
 import { tap, when } from './helpers';
-import { IConnection, Diagnostic, CodeLens, TextDocument } from 'vscode-languageserver/lib/main';
-import { FilesystemContract, Filesystem } from './filesystem';
 
 export class Runner {
     constructor(

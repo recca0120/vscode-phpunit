@@ -1,7 +1,7 @@
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
+import { OS, os } from '../../src/helpers';
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { OS, os } from '../../src/helpers';
 import { tmpdir } from 'os';
 
 function toFileUrl(path: string): string {

@@ -1,6 +1,6 @@
-import { TestNode } from '../phpunit';
-import { SymbolInformation, TextDocument, SymbolKind } from 'vscode-languageserver';
 import { Runner } from '../runner';
+import { SymbolInformation, SymbolKind, TextDocument } from 'vscode-languageserver';
+import { TestNode } from '../phpunit';
 
 export class DocumentSymbolProvider {
     constructor(private runner = new Runner()) {}

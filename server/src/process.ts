@@ -1,6 +1,5 @@
+import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import { Command } from 'vscode-languageserver';
-
-import { ChildProcess, SpawnOptions, spawn } from 'child_process';
 
 export class Process {
     spawn(command: Command, options?: SpawnOptions): Promise<string> {

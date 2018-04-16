@@ -1,5 +1,5 @@
-import { Parameters } from './../../src/phpunit';
 import { Filesystem } from './../../src/filesystem';
+import { Parameters } from './../../src/phpunit';
 import { resolve } from 'path';
 
 describe('Parameters Test', () => {

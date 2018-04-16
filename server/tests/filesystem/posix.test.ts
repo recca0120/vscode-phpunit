@@ -1,7 +1,7 @@
-import { Filesystem, POSIX, FilesystemContract } from '../../src/filesystem';
-import { readFileSync } from 'fs';
+import { Filesystem, FilesystemContract, POSIX } from '../../src/filesystem';
+import { join, resolve } from 'path';
 import { OS, os } from '../../src/helpers';
-import { resolve, join } from 'path';
+import { readFileSync } from 'fs';
 import { spawnSync } from 'child_process';
 
 describe('POSIX Filesystem Test', () => {

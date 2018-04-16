@@ -1,8 +1,8 @@
-import { parse } from 'fast-xml-parser';
 import { Filesystem } from '../../src/filesystem';
 import { JUnit, Test, Type } from '../../src/phpunit';
+import { parse } from 'fast-xml-parser';
+import { pathPattern, projectPath } from './../helpers';
 import { resolve } from 'path';
-import { projectPath, pathPattern } from './../helpers';
 
 describe('JUnit Test', () => {
     const files = new Filesystem();

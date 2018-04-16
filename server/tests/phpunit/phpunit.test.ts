@@ -1,9 +1,9 @@
-import { resolve } from 'path';
 import { Filesystem, FilesystemContract } from '../../../server/src/filesystem';
-import { Process } from '../../src/process';
 import { os, OS } from '../../src/helpers';
 import { Parameters, PhpUnit } from '../../src/phpunit';
+import { Process } from '../../src/process';
 import { projectPath } from '../helpers';
+import { resolve } from 'path';
 
 describe('PhpUnit Test', () => {
     it('it should execute phpunit', async () => {

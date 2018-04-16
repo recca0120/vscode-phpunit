@@ -1,5 +1,5 @@
 import { Ast } from '../../src/phpunit/ast';
-import { FilesystemContract, Filesystem } from '../../src/filesystem';
+import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { projectPath } from '../helpers';
 import { TestNode } from '../../src/phpunit';
 

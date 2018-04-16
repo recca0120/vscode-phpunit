@@ -1,4 +1,4 @@
-import { Program, default as Engine } from 'php-parser';
+import { default as Engine, Program } from 'php-parser';
 import { Range } from 'vscode-languageserver';
 import { TestNode } from './common';
 

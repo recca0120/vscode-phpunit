@@ -1,4 +1,4 @@
-import { WINDOWS, FilesystemContract, Filesystem } from '../../src/filesystem';
+import { Filesystem, FilesystemContract, WINDOWS } from '../../src/filesystem';
 import { OS, os } from '../../src/helpers';
 import { resolve } from 'path';
 
