@@ -14,7 +14,13 @@ These clients are available:
 Features
 --------------
 * Code lens (references)
+
+![CodeLens](screenshots/codelens.png)
+
 * Publish Diagnostics
+
+![Publish Diagnostics](screenshots/diagnostic.gif)
+
 
 Features planned
 --------------
