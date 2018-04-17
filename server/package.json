@@ -1,7 +1,7 @@
 {
     "name": "phpunit-language-server",
     "description": "phpunit language server",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "author": "recca0120",
     "license": "MIT",
     "engines": {
@@ -29,6 +29,6 @@
     "main": "./dist/server.js",
     "types": "./dist/server.d.ts",
     "bin": {
-        "phpunit-langserver": "./lib/server.js"
+        "phpunit-langserver": "./dist/server.js"
     }
 }
