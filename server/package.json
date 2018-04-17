@@ -30,5 +30,6 @@
     "types": "./dist/server.d.ts",
     "bin": {
         "phpunit-language-server": "./bin/server.js"
-    }
+    },
+    "keywords": ["language server protocol", "phpunit", "php", "test", "unittest"]
 }
