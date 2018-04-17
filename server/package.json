@@ -1,7 +1,7 @@
 {
     "name": "phpunit-language-server",
     "description": "phpunit language server",
-    "version": "0.0.1",
+    "version": "0.0.11",
     "author": "recca0120",
     "license": "MIT",
     "engines": {
@@ -14,7 +14,7 @@
     "dependencies": {
         "@types/he": "^0.5.29",
         "doc-parser": "^0.4.8",
-        "fast-xml-parser": "^3.3.7",
+        "fast-xml-parser": "^3.3.8",
         "he": "^1.1.1",
         "php-parser": "^3.0.0-alpha2",
         "vscode-languageserver": "^4.1.2",
