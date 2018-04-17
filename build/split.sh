@@ -29,4 +29,4 @@ split()
     popd
 }
 
-split server             server:git@github.com:recca0120/phpunit-lsp.git                       "master"
+split server             server:git@github.com:recca0120/phpunit-language-server.git                       "master"
