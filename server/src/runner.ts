@@ -35,16 +35,12 @@ export class Runner {
         return this;
     }
 
-    async runAtNearest(connection: IConnection, uri: string, path: string, params: string[] = []) {
-        return tap(
-            await this.run(
-                connection,
-                uri,
-                path,
-                this.getMethodFilter(await this.textlineRange.findMethod(path, parseInt(params[0], 10)))
-            ),
-            () => this.textlineRange.clear()
+    async runNearest(connection: IConnection, uri: string, path: string, params: string[] = []) {
+        const filter: string[] = this.getMethodFilter(
+            await this.textlineRange.findMethod(path, parseInt(params[0], 10))
         );
+
+        return tap(await this.run(connection, uri, path, filter), () => this.textlineRange.clear());
     }
 
     getTestNodes(code: string, uri: string): TestNode[] {

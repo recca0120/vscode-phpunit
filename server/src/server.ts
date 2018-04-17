@@ -145,7 +145,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             break;
 
         case 'phpunit.test.nearest':
-            await runner.runAtNearest(connection, uri, path, args);
+            await runner.runNearest(connection, uri, path, args);
             break;
     }
 });
