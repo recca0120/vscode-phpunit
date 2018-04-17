@@ -15,11 +15,11 @@ In the current implementation we support following language features.
 
 - [x] Code lens (references)
 
-![CodeLens](server/screenshots/codelens.png)
+![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/codelens.png)
 
 - [x] Publish Diagnostics
 
-![Publish Diagnostics](server/screenshots/diagnostic.gif)
+![Publish Diagnostics](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/diagnostic.gif)
 
 - [ ] Code completion
 
@@ -45,4 +45,4 @@ phpunit-language-server
 
 ## License
 
-MIT, See [LICENSE](LICENSE.txt) file.
+MIT, See [LICENSE](https://github.com/recca0120/vscode-phpunit/blob/master/License.txt) file.
