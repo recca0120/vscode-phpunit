@@ -49,7 +49,7 @@ export class PhpUnit {
         };
 
         this.output = await this.process.spawn(command);
-        this.tests = await this.parseTests(this.parameters.get('--log-junit'));
+        this.tests = await this.jUnit.parseFile(this.parameters.get('--log-junit'));
 
         return 0;
     }
@@ -60,14 +60,6 @@ export class PhpUnit {
 
     getTests(): Test[] {
         return this.tests;
-    }
-
-    private async parseTests(jUnitDotXml: string): Promise<Test[]> {
-        return jUnitDotXml && (await this.files.exists(jUnitDotXml)) === true
-            ? tap(await this.jUnit.parseFile(jUnitDotXml), () => {
-                  this.files.unlink(jUnitDotXml);
-              })
-            : [];
     }
 
     private async getRoot(cwd: string): Promise<string> {

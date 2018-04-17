@@ -19,6 +19,7 @@ describe('JUnit Test', () => {
             return projectPath(m[1]);
         });
         spyOn(files, 'get').and.returnValue(content);
+        spyOn(files, 'unlink').and.callFake(() => {});
         tests = await jUnit.parseFile(jUnitFile);
     });
 
