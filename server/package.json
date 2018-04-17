@@ -1,6 +1,6 @@
 {
-    "name": "phpunit-lsp",
-    "description": "phpunit lsp",
+    "name": "phpunit-language-server",
+    "description": "phpunit language server",
     "version": "0.0.1",
     "author": "recca0120",
     "license": "MIT",
@@ -9,7 +9,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/recca0120/phpunit-lsp"
+        "url": "https://github.com/recca0120/phpunit-language-server"
     },
     "dependencies": {
         "@types/he": "^0.5.29",
