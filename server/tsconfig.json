@@ -1,22 +1,17 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
+    "compilerOptions": {
+        "module": "commonjs",
         "target": "es6",
         "outDir": "../client/server",
-        "lib": [
-            "es6"
-        ],
+        "lib": ["es6"],
         "sourceMap": true,
-		"rootDir": "src",
-		"strict": true,
-		"moduleResolution": "node",
-		"noUnusedLocals": true,
+        "rootDir": "src",
+        "strict": true,
+        "moduleResolution": "node",
+        "noUnusedLocals": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedParameters": true
-	},
-	"exclude": [
-		"node_modules",
-		"tests"
-	]
+    },
+    "exclude": ["node_modules", "tests", "master"]
 }
