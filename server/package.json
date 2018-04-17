@@ -1,7 +1,7 @@
 {
     "name": "phpunit-language-server",
     "description": "phpunit language server",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "recca0120",
     "license": "MIT",
     "engines": {
