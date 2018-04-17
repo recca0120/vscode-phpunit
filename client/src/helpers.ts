@@ -1,3 +1,9 @@
+export function tap<T>(value: T, callback: Function): T {
+    callback(value);
+
+    return value;
+}
+
 export function when<T>(value: T, success: any, fail?: any): any {
     if (value) {
         return success instanceof Function ? success(value) : success;

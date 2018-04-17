@@ -1,7 +1,6 @@
-import { tap } from '../../server/src/helpers';
 import { ExecuteCommandRequest, LanguageClient, Command } from 'vscode-languageclient';
 import { commands, TextEditor } from 'vscode';
-import { when } from './helpers';
+import { when, tap } from './helpers';
 
 export class CommandRegister {
     private cmds: any;
