@@ -1,31 +1,46 @@
-phpunit-language-server
-=====================
+# phpunit-language-server
 
 phpunit-language-server is a server implementation that provides PHPUnit smartness.
 The server adheres to the [language server protocol](https://github.com/Microsoft/language-server-protocol)
 and can be used with any editor that supports the protocol. The server utilizes [PHPUnit](https://phpunit.de).
 
-Clients
+## Clients
 --------------
 
 These clients are available:
 * [VS Code](https://marketplace.visualstudio.com/items?temName=recca0120.vscode-phpunit)
 
-Features
+## Features
 --------------
-* Code lens (references)
+
+In the current implementation we support following language features.
+
+- [x] Code lens (references)
 
 ![CodeLens](screenshots/codelens.png)
 
-* Publish Diagnostics
+- [x] Publish Diagnostics
 
 ![Publish Diagnostics](screenshots/diagnostic.gif)
 
+- [ ] Code completion
 
-Features planned
+## Features planned
 --------------
-* As you type reporting of parsing and compilation errors
-* Code completion
+
+- As you type reporting of parsing and compilation errors
+
+## Installation
+
+```bash
+npm i -g phpunit-language-server
+```
+
+## Execute
+
+```bash
+phpunit-language-server
+```
 
 Feedback
 ---------
