@@ -1,6 +1,6 @@
 {
-    "name": "phpunit-lsp",
-    "description": "language server for phpunit",
+    "name": "phpunit-language-server",
+    "description": "phpunit language server",
     "author": "recca0120",
     "license": "MIT",
     "version": "0.0.1",

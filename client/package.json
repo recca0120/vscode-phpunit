@@ -5,11 +5,11 @@
     "author": "recca0120",
     "license": "MIT",
     "icon": "images/icon.png",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "publisher": "recca0120",
     "repository": {
         "type": "git",
-        "url": "https://github.com/recca0120/vscode-phpunit/tree/master/client"
+        "url": "https://github.com/recca0120/vscode-phpunit"
     },
     "engines": {
         "vscode": "^1.19.0"

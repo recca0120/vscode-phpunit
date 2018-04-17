@@ -5,13 +5,11 @@ The server adheres to the [language server protocol](https://github.com/Microsof
 and can be used with any editor that supports the protocol. The server utilizes [PHPUnit](https://phpunit.de).
 
 ## Clients
---------------
 
 These clients are available:
 * [VS Code](https://marketplace.visualstudio.com/items?temName=recca0120.vscode-phpunit)
 
 ## Features
---------------
 
 In the current implementation we support following language features.
 
@@ -26,7 +24,6 @@ In the current implementation we support following language features.
 - [ ] Code completion
 
 ## Features planned
---------------
 
 - As you type reporting of parsing and compilation errors
 
@@ -42,10 +39,10 @@ npm i -g phpunit-language-server
 phpunit-language-server
 ```
 
-Feedback
----------
+## Feedback
+
 * File a bug in [GitHub Issues](https://github.com/recca0120/phpunit-language-server/issues).
 
-License
--------
+## License
+
 MIT, See [LICENSE](LICENSE.txt) file.
