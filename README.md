@@ -1,21 +1,51 @@
-# README
-## This is the README for the "languageprovider-sample"
--------------------
+# phpunit-language-server
 
-This folder contains a sample VS code extension that demonstrates an extension that runs a language server
+phpunit-language-server is a server implementation that provides PHPUnit smartness.
+The server adheres to the [language server protocol](https://github.com/Microsoft/language-server-protocol)
+and can be used with any editor that supports the protocol. The server utilizes [PHPUnit](https://phpunit.de).
 
-The extension observes all 'plaintext' documents (documents from all editors not associated with a language)
-and uses the server to provide validation and completion proposals.
+## Clients
+--------------
 
-The code for the extension is in the 'client' folder. It uses the 'vscode-languageclient' node module to launch the language server.
+These clients are available:
+* [VS Code](https://marketplace.visualstudio.com/items?temName=recca0120.vscode-phpunit)
 
-The language server is located in the 'server' folder.
+## Features
+--------------
 
+In the current implementation we support following language features.
 
-# How to run locally
-* `npm install` to initialize the extension and the server
-* `npm run compile` to compile the extension and the server
-* open this folder in VS Code. In the Debug viewlet, run 'Launch Client' from drop-down to launch the extension and attach to the extension.
-* create a file `test.txt`, and type `typescript`. You should see a validation error.
-* to debug the server use the 'Attach to Server' launch config.
-* set breakpoints in the client or the server.
+- [x] Code lens (references)
+
+![CodeLens](server/screenshots/codelens.png)
+
+- [x] Publish Diagnostics
+
+![Publish Diagnostics](server/screenshots/diagnostic.gif)
+
+- [ ] Code completion
+
+## Features planned
+--------------
+
+- As you type reporting of parsing and compilation errors
+
+## Installation
+
+```bash
+npm i -g phpunit-language-server
+```
+
+## Execute
+
+```bash
+phpunit-language-server
+```
+
+Feedback
+---------
+* File a bug in [GitHub Issues](https://github.com/recca0120/phpunit-language-server/issues).
+
+License
+-------
+MIT, See [LICENSE](LICENSE.txt) file.
