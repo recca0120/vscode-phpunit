@@ -1,5 +1,9 @@
 #! /usr/bin/env node
 
-var PHPUnitLanguageServer = require('../dist/server');
-
 process.title = 'phpunit language server';
+
+if (process.argv.some(arg => ['--stdio', '--node-ipc'].indexOf(arg) !== -1) === false) {
+    process.argv.push('--stdio');
+}
+
+require('../dist/server');
