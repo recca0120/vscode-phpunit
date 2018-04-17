@@ -16,10 +16,40 @@
     },
     "categories": ["Languages", "Other"],
     "keywords": ["phpunit", "phpunit-lsp", "test", "php", "language server protocol"],
-    "activationEvents": ["onLanguage:php"],
+    "activationEvents": [
+        "onLanguage:php",
+        "onCommand:phpunit.client.test",
+        "onCommand:phpunit.client.test.file",
+        "onCommand:phpunit.client.test.suite",
+        "onCommand:phpunit.client.test.nearest"
+    ],
     "preview": true,
     "main": "./out/extension",
     "contributes": {
+        "commands": [
+            {
+                "command": "phpunit.client.test",
+                "title": "PHPUnit Test"
+            },
+            {
+                "command": "phpunit.client.test.file",
+                "title": "PHPUnit Test Current File"
+            },
+            {
+                "command": "phpunit.client.test.suite",
+                "title": "PHPUnit Test All Suite"
+            },
+            {
+                "command": "phpunit.client.test.nearest",
+                "title": "PHPUnit Test Nearest"
+            }
+        ],
+        "keybindings": [
+            {
+                "key": "cmd+k cmd+r",
+                "command": "phpunit.client.test"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "phpunit configuration",

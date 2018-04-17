@@ -10,6 +10,21 @@ export class TextlineRange {
         return this.createRange(await this.getLines(uri), lineAt);
     }
 
+    async findMethod(uri: string, lineAt: number): Promise<string> {
+        const lines: string[] = await this.getLines(uri);
+
+        while (lineAt > 0) {
+            const line: string = lines[lineAt];
+            const match = line.match(/^\s*(?:public|private|protected)?\s*function\s*(\w+)\s*\(.*$/);
+            if (match) {
+                return match[1];
+            }
+            lineAt = lineAt - 1;
+        }
+
+        return '';
+    }
+
     clear(): TextlineRange {
         this.items.clear();
 

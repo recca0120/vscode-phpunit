@@ -16,6 +16,7 @@ import {
 } from 'vscode-languageclient';
 import { DecorateManager } from './decorate-manage';
 import { when } from './helpers';
+import { CommandRegister } from './command-register';
 
 export function activate(context: ExtensionContext) {
     // The server is implemented in node
@@ -47,8 +48,9 @@ export function activate(context: ExtensionContext) {
 
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
 
-    const decorateManager: DecorateManager = new DecorateManager(context, window);
     client.onReady().then(() => {
+        const decorateManager: DecorateManager = new DecorateManager(context, window);
+
         client.onNotification('assertions', (params: any) => {
             when(window.activeTextEditor, (editor: TextEditor) => {
                 if (editor.document.uri.toString() === params.uri) {
@@ -64,6 +66,8 @@ export function activate(context: ExtensionContext) {
                 });
             });
         });
+
+        context.subscriptions.push(new CommandRegister(client).register(window).dispose());
     });
 
     // Create the language client and start the client.

@@ -3,13 +3,15 @@ import { CodeLens, Diagnostic, TextDocument } from 'vscode-languageserver-types'
 import { Filesystem, FilesystemContract } from './filesystem';
 import { IConnection } from 'vscode-languageserver';
 import { tap, when } from './helpers';
+import { TextlineRange } from './phpunit/textline-range';
 
 export class Runner {
     constructor(
         private phpUnit: PhpUnit = new PhpUnit(),
         private collect: Collection = new Collection(),
         private ast: Ast = new Ast(),
-        private files: FilesystemContract = new Filesystem()
+        private files: FilesystemContract = new Filesystem(),
+        private textlineRange: TextlineRange = new TextlineRange()
     ) {}
 
     setBinary(binary: string): Runner {
@@ -31,6 +33,18 @@ export class Runner {
         connection.console.log(this.phpUnit.getOutput());
 
         return this;
+    }
+
+    async runAtNearest(connection: IConnection, uri: string, path: string, params: string[] = []) {
+        return tap(
+            await this.run(
+                connection,
+                uri,
+                path,
+                this.getMethodFilter(await this.textlineRange.findMethod(path, parseInt(params[0], 10)))
+            ),
+            () => this.textlineRange.clear()
+        );
     }
 
     getTestNodes(code: string, uri: string): TestNode[] {
@@ -92,8 +106,8 @@ export class Runner {
                 () => {
                     return {
                         title: 'Run Test',
-                        command: 'phpunit.test.method',
-                        arguments: [uri, this.files.normalizePath(node.uri), ['--filter', `^.*::${node.name}$`]],
+                        command: 'phpunit.test',
+                        arguments: [uri, this.files.normalizePath(node.uri), this.getMethodFilter(node.name)],
                     };
                 }
             ),
@@ -103,5 +117,9 @@ export class Runner {
                 },
             },
         };
+    }
+
+    private getMethodFilter(method: string): string[] {
+        return method ? ['--filter', `^.*::${method}$`] : [];
     }
 }

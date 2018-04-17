@@ -49,7 +49,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[1]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_passed$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -74,7 +74,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[2]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_error$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -99,7 +99,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[3]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_assertion_isnt_same$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -124,7 +124,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[4]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_risky$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -149,7 +149,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[5]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::it_should_be_annotation_test$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -174,7 +174,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[6]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_skipped$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -199,7 +199,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[7]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_incomplete$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {
@@ -224,7 +224,7 @@ describe('CodeLensProvider Test', () => {
         expect(codeLens[8]).toEqual({
             command: {
                 arguments: [uri, path, ['--filter', '^.*::test_no_assertion$']],
-                command: 'phpunit.test.method',
+                command: 'phpunit.test',
                 title: 'Run Test',
             },
             data: {

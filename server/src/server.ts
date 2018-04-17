@@ -52,7 +52,7 @@ connection.onInitialize((): InitializeResult => {
             },
             documentSymbolProvider: false,
             executeCommandProvider: {
-                commands: ['phpunit.test.file', 'phpunit.test.method'],
+                commands: ['phpunit.test', 'phpunit.test.file', 'phpunit.test.suite', 'phpunit.test.nearest'],
             },
         },
     };
@@ -123,18 +123,29 @@ connection.onDidChangeWatchedFiles(() => {
 connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
     return codeLensProvider.provideCodeLenses(documents.get(params.textDocument.uri));
 });
-connection.onCodeLensResolve(codeLensProvider.resolveCodeLens.bind(codeLensProvider));
+
+connection.onCodeLensResolve((codeLens: CodeLens) => {
+    return codeLensProvider.resolveCodeLens(codeLens);
+});
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    switch (params.command) {
-        case 'phpunit.test.file':
-        case 'phpunit.test.method':
-            const p: any = params.arguments || [];
-            const uri: string = p[0] || '';
-            const path: string = p[1] || '';
-            const args: string[] = p[2] || [];
-            await runner.run(connection, uri, path, args);
+    const p: any = params.arguments || [];
+    const uri: string = p[0] || '';
+    const path: string = p[1] || '';
+    const args: string[] = p[2] || [];
 
+    switch (params.command) {
+        case 'phpunit.test':
+        case 'phpunit.test.file':
+            await runner.run(connection, uri, path, args);
+            break;
+
+        case 'phpunit.test.suite':
+            await runner.run(connection, '', path, args);
+            break;
+
+        case 'phpunit.test.nearest':
+            await runner.runAtNearest(connection, uri, path, args);
             break;
     }
 });
