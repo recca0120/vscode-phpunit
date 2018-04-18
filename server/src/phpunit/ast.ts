@@ -13,10 +13,10 @@ export class Ast {
                 parser: {
                     debug: false,
                     extractDoc: true,
-                    suppressErrors: true,
+                    suppressErrors: false,
                 },
                 lexer: {
-                    all_tokens: true,
+                    all_tokens: false,
                     comment_tokens: true,
                     mode_eval: true,
                     asp_tags: true,
