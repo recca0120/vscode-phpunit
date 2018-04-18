@@ -1,11 +1,21 @@
 import { Ast, Collection, PhpUnit, TestNode } from './phpunit';
-import { CodeLens, Diagnostic, TextDocument } from 'vscode-languageserver-types';
+import { CodeLens, Diagnostic, TextDocument, Command } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from './filesystem';
 import { IConnection } from 'vscode-languageserver';
 import { tap, when } from './helpers';
 import { TextlineRange } from './phpunit/textline-range';
 
+interface LastCommand {
+    path: string;
+    params: string[];
+}
+
 export class Runner {
+    private lastCommand: LastCommand = {
+        path: '',
+        params: [],
+    };
+
     constructor(
         private phpUnit: PhpUnit = new PhpUnit(),
         private collect: Collection = new Collection(),
@@ -27,6 +37,10 @@ export class Runner {
     }
 
     async run(connection: IConnection, uri: string, path: string, params: string[] = []): Promise<Runner> {
+        this.lastCommand = {
+            path,
+            params,
+        };
         await this.phpUnit.run(path, params);
         this.collect.put(this.phpUnit.getTests());
         this.sendDiagnostics(connection).sendNotification(connection, uri);
@@ -41,6 +55,15 @@ export class Runner {
         );
 
         return tap(await this.run(connection, uri, path, filter), () => this.textlineRange.clear());
+    }
+
+    async runLast(connection: IConnection, uri: string, path: string, params: string[] = []) {
+        if (this.lastCommand.path) {
+            path = this.lastCommand.path;
+            params = this.lastCommand.params;
+        }
+
+        return await this.run(connection, uri, path, params);
     }
 
     getTestNodes(code: string, uri: string): TestNode[] {

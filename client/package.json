@@ -21,7 +21,8 @@
         "onCommand:phpunit.client.test",
         "onCommand:phpunit.client.test.file",
         "onCommand:phpunit.client.test.suite",
-        "onCommand:phpunit.client.test.nearest"
+        "onCommand:phpunit.client.test.nearest",
+        "onCommand:phpunit.client.test.last"
     ],
     "preview": true,
     "main": "./out/extension",
@@ -42,6 +43,10 @@
             {
                 "command": "phpunit.client.test.nearest",
                 "title": "PHPUnit Test Nearest"
+            },
+            {
+                "command": "phpunit.client.test.last",
+                "title": "PHPUnit Run Last Test"
             }
         ],
         "keybindings": [

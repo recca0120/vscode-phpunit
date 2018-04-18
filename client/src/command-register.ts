@@ -31,6 +31,10 @@ export class CommandRegister {
                     this.execute({ command: command, arguments: [uri, uri, [editor.selection.active.line]] });
                 }
             );
+
+            this.registerCommand(window, 'phpunit.client.test.last', (command: string, uri: string) => {
+                this.execute({ command: command, arguments: [uri, uri, []] });
+            });
         });
     }
 

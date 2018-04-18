@@ -52,7 +52,13 @@ connection.onInitialize((): InitializeResult => {
             },
             documentSymbolProvider: false,
             executeCommandProvider: {
-                commands: ['phpunit.test', 'phpunit.test.file', 'phpunit.test.suite', 'phpunit.test.nearest'],
+                commands: [
+                    'phpunit.test',
+                    'phpunit.test.file',
+                    'phpunit.test.suite',
+                    'phpunit.test.nearest',
+                    'phpunit.test.last',
+                ],
             },
         },
     };
@@ -146,6 +152,10 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 
         case 'phpunit.test.nearest':
             await runner.runNearest(connection, uri, path, args);
+            break;
+
+        case 'phpunit.test.last':
+            await runner.runLast(connection, uri, path, args);
             break;
     }
 });
