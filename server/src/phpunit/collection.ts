@@ -58,7 +58,11 @@ export class Collection {
             this.forEach((tests: Test[], uri: string) => {
                 map.set(
                     uri,
-                    tests.filter(this.filterByType.bind(this)).map((test: Test) => this.transformToDiagonstic(test))
+                    tests
+                        .map((test: Test) => this.cloneTest(test, true))
+                        .filter((test: Test) => this.filterDetails(test))
+                        .filter(this.filterByType.bind(this))
+                        .map((test: Test) => this.transformToDiagonstic(test))
                 );
             });
         });
@@ -165,5 +169,27 @@ export class Collection {
                 }
             }
         );
+    }
+
+    private filterDetails(test: Test): Test {
+        return tap(test, (test: Test) => {
+            if (!test.fault || !test.fault.details) {
+                return;
+            }
+
+            const details: Detail[] = test.fault.details || [];
+            const current: Detail | undefined = details.find(
+                (detail: Detail) => detail.uri === test.uri && test.range.start.line !== detail.range.start.line
+            );
+
+            if (current) {
+                test.uri = current.uri;
+                test.range = current.range;
+                test.fault.details = details.filter(
+                    (detail: Detail) =>
+                        detail.uri !== current.uri && detail.range.start.line !== current.range.start.line
+                );
+            }
+        });
     }
 }

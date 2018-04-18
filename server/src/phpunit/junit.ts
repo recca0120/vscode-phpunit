@@ -93,15 +93,14 @@ export class JUnit {
             this.getFaultNode(node),
             async (fault: FaultNode) => {
                 const details: Detail[] = await this.parseDetails(fault);
-                const current: Detail = this.current(details, test);
                 const message: string = this.parseMessage(fault);
 
-                return Object.assign(test, current, {
+                return Object.assign(test, {
                     type: fault.type,
                     fault: {
                         type: fault._type || '',
                         message: message,
-                        details: this.filterDetails(details, current),
+                        details: details,
                     },
                 });
             },
@@ -165,12 +164,6 @@ export class JUnit {
             }) as Promise<Detail>[]);
     }
 
-    private current(details: Detail[], test: Test): Detail {
-        return (
-            details.find(detail => test.uri === detail.uri && test.range.start.line !== detail.range.start.line) || test
-        );
-    }
-
     private parseMessage(fault: any) {
         const messages: string[] = fault.__text
             .replace(/\r?\n/g, '\n')
@@ -189,12 +182,6 @@ export class JUnit {
                 ).trim() || type
             );
         });
-    }
-
-    private filterDetails(details: Detail[], current: Detail): Detail[] {
-        return details.filter(
-            detail => detail.uri !== current.uri && detail.range.start.line !== current.range.start.line
-        );
     }
 
     private async createLocation(file: string, line: number): Promise<Detail> {

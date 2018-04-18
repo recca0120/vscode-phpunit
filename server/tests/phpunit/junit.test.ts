@@ -52,12 +52,12 @@ describe('JUnit Test', () => {
             uri: files.uri(path),
             range: {
                 end: {
-                    character: 33,
-                    line: 15,
+                    character: 32,
+                    line: 13,
                 },
                 start: {
-                    character: 8,
-                    line: 15,
+                    character: 4,
+                    line: 13,
                 },
             },
             time: 0.001508,
@@ -65,7 +65,21 @@ describe('JUnit Test', () => {
             fault: {
                 type: 'PHPUnit\\Framework\\ExpectationFailedException',
                 message: 'Failed asserting that false is true.',
-                details: [],
+                details: [
+                    {
+                        range: {
+                            end: {
+                                character: 33,
+                                line: 15,
+                            },
+                            start: {
+                                character: 8,
+                                line: 15,
+                            },
+                        },
+                        uri: files.uri(projectPath('tests/AssertionsTest.php')),
+                    },
+                ],
             },
         });
     });
@@ -78,12 +92,12 @@ describe('JUnit Test', () => {
             uri: files.uri(path),
             range: {
                 end: {
-                    character: 76,
-                    line: 20,
+                    character: 46,
+                    line: 18,
                 },
                 start: {
-                    character: 8,
-                    line: 20,
+                    character: 4,
+                    line: 18,
                 },
             },
             time: 0.001332,
@@ -92,7 +106,21 @@ describe('JUnit Test', () => {
                 type: 'PHPUnit\\Framework\\ExpectationFailedException',
                 message:
                     "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n Array &0 (\n-    'a' => 'b'\n-    'c' => 'd'\n+    'e' => 'f'\n+    0 => 'g'\n+    1 => 'h'\n )",
-                details: [],
+                details: [
+                    {
+                        range: {
+                            end: {
+                                character: 76,
+                                line: 20,
+                            },
+                            start: {
+                                character: 8,
+                                line: 20,
+                            },
+                        },
+                        uri: files.uri(projectPath('tests/AssertionsTest.php')),
+                    },
+                ],
             },
         });
     });
@@ -251,12 +279,12 @@ describe('JUnit Test', () => {
             uri: files.uri(path2),
             range: {
                 end: {
-                    character: 53,
-                    line: 28,
+                    character: 35,
+                    line: 24,
                 },
                 start: {
-                    character: 8,
-                    line: 28,
+                    character: 4,
+                    line: 24,
                 },
             },
             time: 0.000132,
@@ -264,7 +292,21 @@ describe('JUnit Test', () => {
             fault: {
                 type: 'PHPUnit\\Framework\\ExpectationFailedException',
                 message: 'Failed asserting that 4 is identical to 3.',
-                details: [],
+                details: [
+                    {
+                        range: {
+                            end: {
+                                character: 53,
+                                line: 28,
+                            },
+                            start: {
+                                character: 8,
+                                line: 28,
+                            },
+                        },
+                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                    },
+                ],
             },
         });
     });
@@ -298,12 +340,12 @@ describe('JUnit Test', () => {
             uri: files.uri(projectPath(path2)),
             range: {
                 end: {
-                    character: 19,
-                    line: 14,
+                    character: 51,
+                    line: 41,
                 },
                 start: {
-                    character: 8,
-                    line: 14,
+                    character: 4,
+                    line: 41,
                 },
             },
             time: 0.027106,
@@ -391,6 +433,19 @@ describe('JUnit Test', () => {
                             },
                         },
                     },
+                    {
+                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        range: {
+                            end: {
+                                character: 19,
+                                line: 14,
+                            },
+                            start: {
+                                character: 8,
+                                line: 14,
+                            },
+                        },
+                    },
                 ],
             },
         });
@@ -404,12 +459,12 @@ describe('JUnit Test', () => {
             uri: files.uri(projectPath(path2)),
             range: {
                 end: {
-                    character: 38,
-                    line: 56,
+                    character: 42,
+                    line: 53,
                 },
                 start: {
-                    character: 8,
-                    line: 56,
+                    character: 4,
+                    line: 53,
                 },
             },
             time: 0.000157,
@@ -428,6 +483,19 @@ describe('JUnit Test', () => {
                             start: {
                                 character: 8,
                                 line: 20,
+                            },
+                        },
+                    },
+                    {
+                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        range: {
+                            end: {
+                                character: 38,
+                                line: 56,
+                            },
+                            start: {
+                                character: 8,
+                                line: 56,
                             },
                         },
                     },

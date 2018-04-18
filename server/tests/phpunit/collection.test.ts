@@ -6,7 +6,7 @@ import { projectPath } from '../helpers';
 describe('Collection Test', () => {
     const files: FilesystemContract = new Filesystem();
     const path: string = projectPath('junit.xml');
-    const uri: string = files.uri(path);
+    const uri: string = files.uri(projectPath('tests/CalculatorTest.php'));
     const tests: Test[] = [
         {
             uri: uri,
