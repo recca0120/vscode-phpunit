@@ -7,7 +7,7 @@ and can be used with any editor that supports the protocol. The server utilizes 
 ## Clients
 
 These clients are available:
-* [VS Code](https://marketplace.visualstudio.com/items?temName=recca0120.vscode-phpunit)
+* [VS Code](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 
 ## Features
 
