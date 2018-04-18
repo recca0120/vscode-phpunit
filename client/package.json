@@ -51,8 +51,12 @@
         ],
         "keybindings": [
             {
-                "key": "cmd+k cmd+r",
-                "command": "phpunit.client.test"
+                "key": "cmd+t",
+                "command": "phpunit.client.test.nearest"
+            },
+            {
+                "key": "shift+cmd+p",
+                "command": "phpunit.client.test.last"
             }
         ],
         "configuration": {
