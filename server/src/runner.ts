@@ -1,5 +1,5 @@
 import { Ast, Collection, PhpUnit, TestNode } from './phpunit';
-import { CodeLens, Diagnostic, TextDocument, Command } from 'vscode-languageserver-types';
+import { CodeLens, Diagnostic, TextDocument } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from './filesystem';
 import { IConnection } from 'vscode-languageserver';
 import { tap, when } from './helpers';
