@@ -5,7 +5,7 @@
     "author": "recca0120",
     "license": "MIT",
     "icon": "images/icon.png",
-    "version": "0.9.5",
+    "version": "0.9.6",
     "publisher": "recca0120",
     "repository": {
         "type": "git",
@@ -55,7 +55,7 @@
                 "command": "phpunit.client.test.nearest"
             },
             {
-                "key": "shift+cmd+p",
+                "key": "shift+cmd+t",
                 "command": "phpunit.client.test.last"
             }
         ],
