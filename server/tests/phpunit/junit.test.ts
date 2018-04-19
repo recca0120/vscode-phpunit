@@ -1,7 +1,7 @@
 import { Filesystem } from '../../src/filesystem';
 import { JUnit, Test, Type } from '../../src/phpunit';
 import { parse } from 'fast-xml-parser';
-import { pathPattern, projectPath } from './../helpers';
+import { pathPattern, projectPath, projectUri } from './../helpers';
 import { resolve } from 'path';
 
 describe('JUnit Test', () => {
@@ -77,7 +77,7 @@ describe('JUnit Test', () => {
                                 line: 15,
                             },
                         },
-                        uri: files.uri(projectPath('tests/AssertionsTest.php')),
+                        uri: projectUri('tests/AssertionsTest.php'),
                     },
                 ],
             },
@@ -118,7 +118,7 @@ describe('JUnit Test', () => {
                                 line: 20,
                             },
                         },
-                        uri: files.uri(projectPath('tests/AssertionsTest.php')),
+                        uri: projectUri('tests/AssertionsTest.php'),
                     },
                 ],
             },
@@ -304,7 +304,7 @@ describe('JUnit Test', () => {
                                 line: 28,
                             },
                         },
-                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        uri: projectUri('tests/CalculatorTest.php'),
                     },
                 ],
             },
@@ -337,7 +337,7 @@ describe('JUnit Test', () => {
             name: 'test_sum_item_method_not_call',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            uri: files.uri(projectPath(path2)),
+            uri: projectUri(path2),
             range: {
                 end: {
                     character: 51,
@@ -356,7 +356,7 @@ describe('JUnit Test', () => {
                     'Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called\n exactly 1 times but called 0 times.',
                 details: [
                     {
-                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php')),
+                        uri: projectUri('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php'),
                         range: {
                             end: {
                                 character: 69,
@@ -369,7 +369,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Expectation.php')),
+                        uri: projectUri('vendor/mockery/mockery/library/Mockery/Expectation.php'),
                         range: {
                             end: {
                                 character: 54,
@@ -382,7 +382,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php')),
+                        uri: projectUri('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php'),
                         range: {
                             end: {
                                 character: 31,
@@ -395,7 +395,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Container.php')),
+                        uri: projectUri('vendor/mockery/mockery/library/Mockery/Container.php'),
                         range: {
                             end: {
                                 character: 36,
@@ -408,7 +408,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery/Container.php')),
+                        uri: projectUri('vendor/mockery/mockery/library/Mockery/Container.php'),
                         range: {
                             end: {
                                 character: 36,
@@ -421,7 +421,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('vendor/mockery/mockery/library/Mockery.php')),
+                        uri: projectUri('vendor/mockery/mockery/library/Mockery.php'),
                         range: {
                             end: {
                                 character: 39,
@@ -434,7 +434,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        uri: projectUri('tests/CalculatorTest.php'),
                         range: {
                             end: {
                                 character: 19,
@@ -456,7 +456,7 @@ describe('JUnit Test', () => {
             name: 'test_throw_exception',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
-            uri: files.uri(projectPath(path2)),
+            uri: projectUri(path2),
             range: {
                 end: {
                     character: 42,
@@ -474,7 +474,7 @@ describe('JUnit Test', () => {
                 message: 'Exception:',
                 details: [
                     {
-                        uri: files.uri(projectPath('src/Calculator.php')),
+                        uri: projectUri('src/Calculator.php'),
                         range: {
                             end: {
                                 character: 28,
@@ -487,7 +487,7 @@ describe('JUnit Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        uri: projectUri('tests/CalculatorTest.php'),
                         range: {
                             end: {
                                 character: 38,

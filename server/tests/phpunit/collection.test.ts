@@ -1,12 +1,12 @@
 import { Assertion, Collection, Test, Type } from '../../src/phpunit';
 import { Diagnostic, PublishDiagnosticsParams, Range } from 'vscode-languageserver';
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
-import { projectPath } from '../helpers';
+import { projectPath, projectUri } from '../helpers';
 
 describe('Collection Test', () => {
     const files: FilesystemContract = new Filesystem();
     const path: string = projectPath('junit.xml');
-    const uri: string = files.uri(projectPath('tests/CalculatorTest.php'));
+    const uri: string = projectUri('tests/CalculatorTest.php');
     const tests: Test[] = [
         {
             uri: uri,
@@ -30,7 +30,7 @@ describe('Collection Test', () => {
                 message: 'Exception:',
                 details: [
                     {
-                        uri: files.uri(projectPath('src/Calculator.php')),
+                        uri: projectUri('src/Calculator.php'),
                         range: {
                             start: {
                                 line: 20,
@@ -43,7 +43,7 @@ describe('Collection Test', () => {
                         },
                     },
                     {
-                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        uri: projectUri('tests/CalculatorTest.php'),
                         range: {
                             start: {
                                 line: 10,
@@ -285,10 +285,10 @@ describe('Collection Test', () => {
             },
         });
 
-        assertions = assertionGroup.get(files.uri(projectPath('src/Calculator.php')));
+        assertions = assertionGroup.get(projectUri('src/Calculator.php'));
 
         expect(assertions[0]).toEqual({
-            uri: files.uri(projectPath('src/Calculator.php')),
+            uri: projectUri('src/Calculator.php'),
             range: {
                 end: {
                     character: 28,
