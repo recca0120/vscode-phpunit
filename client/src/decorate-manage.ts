@@ -1,3 +1,7 @@
+import { Assertion, Test, Type } from './phpunit/common';
+import { LanguageClient } from 'vscode-languageclient/lib/main';
+import { resolve as pathResolve } from 'path';
+import { when } from './helpers';
 import {
     window,
     TextEditorDecorationType,
@@ -8,14 +12,11 @@ import {
     DecorationOptions,
     ThemeColor,
 } from 'vscode';
-import { resolve as pathResolve } from 'path';
-import { Type, Test, Assertion } from './phpunit/common';
-import { when } from './helpers';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
 
-    constructor(private context: ExtensionContext, private win = window) {
+    constructor(private client: LanguageClient, private context: ExtensionContext, private win = window) {
         this.styles.set(Type.PASSED, this.passed());
         this.styles.set(Type.ERROR, this.error());
         this.styles.set(Type.WARNING, this.skipped());
@@ -46,6 +47,24 @@ export class DecorateManager {
         }
 
         return this;
+    }
+
+    listen() {
+        this.client.onNotification('assertions', (params: any) => {
+            when(this.win.activeTextEditor, (editor: TextEditor) => {
+                if (editor.document.uri.toString() === params.uri) {
+                    this.decoratedGutter(editor, params.assertions);
+                }
+            });
+        });
+
+        this.win.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+            when(editor, (editor: TextEditor) => {
+                this.client.sendRequest('assertions', {
+                    uri: editor.document.uri.toString(),
+                });
+            });
+        });
     }
 
     private groupBy(assertions: Assertion[]): Map<Type, DecorationOptions[]> {

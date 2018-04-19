@@ -5,8 +5,9 @@
 'use strict';
 
 import * as path from 'path';
-
-import { ExtensionContext, workspace, window, TextEditor } from 'vscode';
+import { CommandRegister } from './command-register';
+import { DecorateManager } from './decorate-manage';
+import { ExtensionContext, window, workspace } from 'vscode';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -14,9 +15,6 @@ import {
     TransportKind,
     RevealOutputChannelOn,
 } from 'vscode-languageclient';
-import { DecorateManager } from './decorate-manage';
-import { when } from './helpers';
-import { CommandRegister } from './command-register';
 
 export function activate(context: ExtensionContext) {
     // The server is implemented in node
@@ -47,27 +45,12 @@ export function activate(context: ExtensionContext) {
     };
 
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
-    const decorateManager: DecorateManager = new DecorateManager(context, window);
-    const commandRegister: CommandRegister = new CommandRegister(client).register(window);
+    const decorateManager: DecorateManager = new DecorateManager(client, context, window);
+    const commandRegister: CommandRegister = new CommandRegister(client, window).register();
 
     client.onReady().then(() => {
         commandRegister.ready();
-
-        client.onNotification('assertions', (params: any) => {
-            when(window.activeTextEditor, (editor: TextEditor) => {
-                if (editor.document.uri.toString() === params.uri) {
-                    decorateManager.decoratedGutter(editor, params.assertions);
-                }
-            });
-        });
-
-        window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
-            when(editor, (editor: TextEditor) => {
-                client.sendRequest('assertions', {
-                    uri: editor.document.uri.toString(),
-                });
-            });
-        });
+        decorateManager.listen();
     });
 
     // Create the language client and start the client.
