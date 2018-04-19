@@ -11,6 +11,8 @@ export class PhpUnit {
     private defaults: string[] = [];
     private output: string = '';
     private tests: Test[] = [];
+    private _onRunning: Function = () => {};
+    private _onDone: Function = () => {};
 
     constructor(
         private files: FilesystemContract = new Filesystem(),
@@ -48,8 +50,12 @@ export class PhpUnit {
                 .all(),
         };
 
+        this._onRunning(command);
+
         this.output = await this.process.spawn(command);
         this.tests = await this.jUnit.parseFile(this.parameters.get('--log-junit'));
+
+        this._onDone(this.output, this.tests);
 
         return 0;
     }
@@ -60,6 +66,18 @@ export class PhpUnit {
 
     getTests(): Test[] {
         return this.tests;
+    }
+
+    onRunning(cb: Function): PhpUnit {
+        return tap(this, () => {
+            this._onRunning = cb;
+        });
+    }
+
+    onDone(cb: Function): PhpUnit {
+        return tap(this, () => {
+            this._onDone = cb;
+        });
     }
 
     private async getRoot(cwd: string): Promise<string> {

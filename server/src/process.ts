@@ -16,13 +16,15 @@ export class Process {
             });
 
             process.on('exit', () => {
-                resolve(
-                    output
-                        .map(buffer => buffer.toString())
-                        .join('')
-                        .replace(/\r?\n$/, '')
-                );
+                resolve(this.output(output));
             });
         });
+    }
+
+    private output(buffer: Buffer[]) {
+        return buffer
+            .join('')
+            .toString()
+            .trim();
     }
 }

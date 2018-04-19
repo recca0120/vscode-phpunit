@@ -1,5 +1,5 @@
-import { Ast, Collection, PhpUnit, TestNode } from './phpunit';
-import { CodeLens, Diagnostic, TextDocument } from 'vscode-languageserver-types';
+import { Ast, Collection, PhpUnit, TestNode, Test } from './phpunit';
+import { CodeLens, Diagnostic, TextDocument, Command } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from './filesystem';
 import { IConnection } from 'vscode-languageserver';
 import { tap, when } from './helpers';
@@ -11,10 +11,7 @@ interface LastCommand {
 }
 
 export class Runner {
-    private lastCommand: LastCommand = {
-        path: '',
-        params: [],
-    };
+    private lastCommand: LastCommand | undefined = undefined;
 
     constructor(
         private phpUnit: PhpUnit = new PhpUnit(),
@@ -37,16 +34,22 @@ export class Runner {
     }
 
     async run(connection: IConnection, uri: string, path: string, params: string[] = []): Promise<Runner> {
-        this.lastCommand = {
-            path,
-            params,
-        };
-        await this.phpUnit.run(path, params);
-        this.collect.put(this.phpUnit.getTests());
-        this.sendDiagnostics(connection).sendNotification(connection, uri);
-        connection.console.log(this.phpUnit.getOutput());
+        this.phpUnit.onRunning((command: Command) => {
+            this.lastCommand = {
+                path,
+                params,
+            };
+            connection.sendNotification('running', command);
+        });
 
-        return this;
+        this.phpUnit.onDone((output: string, tests: Test[]) => {
+            this.collect.put(tests);
+            connection.console.log(output);
+            connection.sendNotification('done');
+            this.sendDiagnostics(connection).sendNotification(connection, uri);
+        });
+
+        return tap(this, async () => await this.phpUnit.run(path, params));
     }
 
     async runNearest(connection: IConnection, uri: string, path: string, params: string[] = []) {
@@ -58,7 +61,7 @@ export class Runner {
     }
 
     async runLast(connection: IConnection, uri: string, path: string, params: string[] = []) {
-        if (this.lastCommand.path) {
+        if (this.lastCommand) {
             path = this.lastCommand.path;
             params = this.lastCommand.params;
         }
