@@ -20,6 +20,7 @@
         "test": "npm run compile && jest",
         "test:watch": "jest --watch",
         "report": "jest --coverage",
+        "report:watch": "jest --coverage --watch",
         "precommit": "lint-staged",
         "prettier": "prettier",
         "prettier-write":
