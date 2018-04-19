@@ -42,6 +42,19 @@ describe('Collection Test', () => {
                             },
                         },
                     },
+                    {
+                        uri: files.uri(projectPath('tests/CalculatorTest.php')),
+                        range: {
+                            start: {
+                                line: 10,
+                                character: 8,
+                            },
+                            end: {
+                                line: 10,
+                                character: 28,
+                            },
+                        },
+                    },
                 ],
             },
         },
@@ -181,32 +194,15 @@ describe('Collection Test', () => {
             message: 'Exception:',
             range: {
                 end: {
-                    character: 38,
-                    line: 56,
+                    character: 28,
+                    line: 10,
                 },
                 start: {
                     character: 8,
-                    line: 56,
+                    line: 10,
                 },
             },
-            relatedInformation: [
-                {
-                    message: 'Exception:',
-                    location: {
-                        uri: files.uri(projectPath('src/Calculator.php')),
-                        range: {
-                            end: {
-                                character: 28,
-                                line: 20,
-                            },
-                            start: {
-                                character: 8,
-                                line: 20,
-                            },
-                        },
-                    },
-                },
-            ],
+            relatedInformation: [],
         });
     });
 
@@ -227,6 +223,42 @@ describe('Collection Test', () => {
                 start: {
                     character: 8,
                     line: 56,
+                },
+            },
+            related: {
+                class: 'Tests\\CalculatorTest',
+                classname: 'Tests.CalculatorTest',
+                name: 'test_throw_exception',
+                time: 0.000157,
+                type: 'error',
+                uri: uri,
+                fault: {
+                    message: 'Exception:',
+                    type: 'Exception',
+                },
+                range: {
+                    end: {
+                        character: 38,
+                        line: 56,
+                    },
+                    start: {
+                        character: 8,
+                        line: 56,
+                    },
+                },
+            },
+        });
+
+        expect(assertions[1]).toEqual({
+            uri: uri,
+            range: {
+                end: {
+                    character: 28,
+                    line: 10,
+                },
+                start: {
+                    character: 8,
+                    line: 10,
                 },
             },
             related: {

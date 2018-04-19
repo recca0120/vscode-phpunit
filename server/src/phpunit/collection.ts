@@ -1,7 +1,7 @@
-import { Assertion, Detail, Test, TestNode, Type } from './common';
+import { Assertion, Detail, Test, TestNode, Type, Fault } from './common';
 import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from '../filesystem';
-import { groupBy, tap } from '../helpers';
+import { groupBy, tap, when } from '../helpers';
 
 export class Collection {
     private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];
@@ -13,24 +13,14 @@ export class Collection {
         const groups: Map<string, Test[]> = groupBy(tests, 'uri');
 
         for (const key of groups.keys()) {
-            this.items.set(key, this.merge(this.items.get(key) || [], groups.get(key) || []));
+            this.items.set(key, this.merge(this.asArray(this.items.get(key)), this.asArray(groups.get(key))));
         }
 
         return this;
     }
 
     get(uri: string): Test[] {
-        return this.items.get(this.files.uri(uri)) || [];
-    }
-
-    map(callback: Function): any[] {
-        const items: any[] = [];
-
-        this.forEach((tests: Test[], uri: string) => {
-            items.push(callback(tests, uri));
-        });
-
-        return items;
+        return this.asArray(this.items.get(this.files.uri(uri)));
     }
 
     forEach(callback: Function): Collection {
@@ -41,12 +31,8 @@ export class Collection {
         return this;
     }
 
-    all(): Map<string, Test[]> {
-        return this.items;
-    }
-
     getTestNodes(uri: string): TestNode[] {
-        return (this.getAssertions().get(uri) || []).map((assertion: Assertion) => {
+        return this.asArray(this.getAssertions().get(uri)).map((assertion: Assertion) => {
             return Object.assign({}, this.cloneTest(assertion.related), {
                 range: assertion.range,
             });
@@ -72,7 +58,7 @@ export class Collection {
         const assertions: Assertion[] = [];
         this.forEach((tests: Test[]) => {
             tests.forEach((test: Test) => {
-                const details: Detail[] = (test.fault && test.fault.details) || [];
+                const details: Detail[] = this.getDetails(test.fault);
                 const related: Test = this.cloneTest(test, keepDetails);
 
                 assertions.push({
@@ -105,18 +91,15 @@ export class Collection {
     }
 
     private transformToRelatedInformation(test: Test): DiagnosticRelatedInformation[] {
-        if (!test.fault || !test.fault.details) {
-            return [];
-        }
-        const message: string = test.fault.message;
-        const details = test.fault && test.fault.details ? test.fault.details : [];
-
-        return details.map((detail: Detail) => {
-            return {
-                location: detail,
-                message: message,
-            };
-        });
+        return when(
+            test.fault,
+            (fault: Fault) =>
+                this.getDetails(fault).map((detail: Detail) => ({
+                    location: detail,
+                    message: fault.message,
+                })),
+            []
+        );
     }
 
     private filterByType(test: Test): boolean {
@@ -154,42 +137,46 @@ export class Collection {
                 time: test.time,
                 type: test.type,
             },
-            (related: Test) => {
-                if (!test.fault) {
-                    return;
-                }
+            (related: Test) =>
+                when(test.fault, (fault: Fault) => {
+                    related.fault = {
+                        type: fault.type,
+                        message: fault.message,
+                    };
 
-                related.fault = {
-                    type: test.fault.type,
-                    message: test.fault.message,
-                };
-
-                if (keepDetails === true) {
-                    related.fault.details = test.fault.details;
-                }
-            }
+                    if (keepDetails === true) {
+                        related.fault.details = fault.details;
+                    }
+                })
         );
     }
 
     private filterDetails(test: Test): Test {
         return tap(test, (test: Test) => {
-            if (!test.fault || !test.fault.details) {
-                return;
-            }
-
-            const details: Detail[] = test.fault.details || [];
-            const current: Detail | undefined = details.find(
-                (detail: Detail) => detail.uri === test.uri && test.range.start.line !== detail.range.start.line
-            );
-
-            if (current) {
-                test.uri = current.uri;
-                test.range = current.range;
-                test.fault.details = details.filter(
-                    (detail: Detail) =>
-                        detail.uri !== current.uri && detail.range.start.line !== current.range.start.line
+            when(test.fault, (fault: Fault) => {
+                const details: Detail[] = this.getDetails(fault);
+                const current: Detail = when(details, (details: Detail[]) =>
+                    details.find((detail: Detail) => this.isSameLine(detail, test))
                 );
-            }
+
+                when(current, (current: Detail) => {
+                    test.uri = current.uri;
+                    test.range = current.range;
+                    fault.details = details.filter((detail: Detail) => this.isSameLine(detail, current));
+                });
+            });
         });
+    }
+
+    private isSameLine(source: Detail, target: Detail) {
+        return source.uri === target.uri && target.range.start.line !== source.range.start.line;
+    }
+
+    private getDetails(fault: Fault | undefined): Detail[] {
+        return fault && fault.details ? fault.details : [];
+    }
+
+    private asArray(item: any): any[] {
+        return !item ? [] : item;
     }
 }

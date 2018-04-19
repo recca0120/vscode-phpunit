@@ -49,12 +49,26 @@ describe('Filesystem Test', () => {
             expect(await files.which('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
             expect(await files.which('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
             expect(await files.which('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
+            expect(await files.which('not_found')).toEqual('');
+
+            expect(await files.where('windows.test.ts', __dirname)).toEqual(resolve(__dirname, 'windows.test.ts'));
+            expect(await files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+            expect(await files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+            expect(await files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
+            expect(await files.where('not_found')).toEqual('');
         } else {
             files.setSystemPaths(systemPaths.join(':'));
             expect(await files.which('posix.test.ts', __dirname)).toEqual(resolve(__dirname, 'posix.test.ts'));
             expect(await files.which('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
             expect(await files.which('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd'));
             expect(await files.which('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
+            expect(await files.which('not_found')).toEqual('');
+
+            expect(await files.where('windows.test.ts', __dirname)).toEqual(resolve(__dirname, 'windows.test.ts'));
+            expect(await files.where('cmd.exe')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+            expect(await files.where('cmd')).toEqual(resolve(__dirname, '../fixtures/bin/cmd.exe'));
+            expect(await files.where('ls')).toEqual(resolve(__dirname, '../fixtures/bin/ls'));
+            expect(await files.where('not_found')).toEqual('');
         }
     });
 
