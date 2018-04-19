@@ -50,7 +50,7 @@ connection.onInitialize((): InitializeResult => {
             codeLensProvider: {
                 resolveProvider: true,
             },
-            documentSymbolProvider: false,
+            documentSymbolProvider: true,
             executeCommandProvider: {
                 commands: [
                     'phpunit.test',
