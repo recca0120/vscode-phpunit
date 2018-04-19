@@ -13,9 +13,13 @@ These clients are available:
 
 In the current implementation we support following language features.
 
-- [x] Code lens (references)
+- [x] Code lens
 
 ![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/codelens.png)
+
+- [x] Document Symbol
+
+![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/documentsymbol.gif)
 
 - [x] Publish Diagnostics
 
