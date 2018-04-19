@@ -5,7 +5,7 @@
     "author": "recca0120",
     "license": "MIT",
     "icon": "images/icon.png",
-    "version": "0.10.0",
+    "version": "0.10.1",
     "publisher": "recca0120",
     "repository": {
         "type": "git",
@@ -15,7 +15,7 @@
         "vscode": "^1.19.0"
     },
     "categories": ["Languages", "Other"],
-    "keywords": ["phpunit", "phpunit-lsp", "test", "php", "language server protocol"],
+    "keywords": ["phpunit-lsp", "unittest", "testing", "php", "language server protocol"],
     "activationEvents": [
         "onLanguage:php",
         "onCommand:phpunit.client.test",
