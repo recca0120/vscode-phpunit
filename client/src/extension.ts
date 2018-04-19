@@ -47,9 +47,11 @@ export function activate(context: ExtensionContext) {
     };
 
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
+    const decorateManager: DecorateManager = new DecorateManager(context, window);
+    const commandRegister: CommandRegister = new CommandRegister(client).register(window);
 
     client.onReady().then(() => {
-        const decorateManager: DecorateManager = new DecorateManager(context, window);
+        commandRegister.ready();
 
         client.onNotification('assertions', (params: any) => {
             when(window.activeTextEditor, (editor: TextEditor) => {
@@ -66,8 +68,6 @@ export function activate(context: ExtensionContext) {
                 });
             });
         });
-
-        context.subscriptions.push(new CommandRegister(client).register(window).dispose());
     });
 
     // Create the language client and start the client.
@@ -76,4 +76,5 @@ export function activate(context: ExtensionContext) {
     // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);
+    context.subscriptions.push(commandRegister.dispose());
 }

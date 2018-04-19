@@ -3,12 +3,10 @@ import { commands, TextEditor } from 'vscode';
 import { when, tap } from './helpers';
 
 export class CommandRegister {
-    private cmds: any;
     private disposables: any[] = [];
+    private isReady: boolean = false;
 
-    constructor(private client: LanguageClient, cmds: any = null) {
-        this.cmds = cmds || commands;
-    }
+    constructor(private client: LanguageClient, private cmds: any = commands) {}
 
     register(window: any): CommandRegister {
         return tap(this, () => {
@@ -38,6 +36,12 @@ export class CommandRegister {
         });
     }
 
+    ready(): CommandRegister {
+        this.isReady = true;
+
+        return this;
+    }
+
     dispose(): any {
         return this.disposables;
     }
@@ -53,6 +57,10 @@ export class CommandRegister {
     }
 
     private execute(command: any) {
+        if (this.isReady === false) {
+            return;
+        }
+
         this.client.sendRequest(ExecuteCommandRequest.type, Object.assign(
             {
                 title: '',

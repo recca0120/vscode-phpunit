@@ -52,11 +52,13 @@
         "keybindings": [
             {
                 "key": "cmd+t",
-                "command": "phpunit.client.test.nearest"
+                "command": "phpunit.client.test.nearest",
+                "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "shift+cmd+t",
-                "command": "phpunit.client.test.last"
+                "command": "phpunit.client.test.last",
+                "when": "editorTextFocus && editorLangId = php"
             }
         ],
         "configuration": {
