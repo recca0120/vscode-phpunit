@@ -23,6 +23,10 @@ export class Collection {
         return this.asArray(this.items.get(this.files.uri(uri)));
     }
 
+    all(): Map<string, Test[]> {
+        return this.items;
+    }
+
     forEach(callback: Function): Collection {
         this.items.forEach((tests: Test[], uri: string) => {
             callback(tests, uri);
