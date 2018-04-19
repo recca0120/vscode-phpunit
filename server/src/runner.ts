@@ -45,7 +45,7 @@ export class Runner {
         this.phpUnit.onDone((output: string, tests: Test[]) => {
             this.collect.put(tests);
             connection.console.log(output);
-            connection.sendNotification('done', Array.from(this.collect.all()));
+            connection.sendNotification('done', this.collect.toObject());
             this.sendDiagnostics(connection).sendNotification(connection, uri);
         });
 
