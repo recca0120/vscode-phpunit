@@ -8,6 +8,7 @@ import * as path from 'path';
 import { CommandRegister } from './command-register';
 import { DecorateManager } from './decorate-manage';
 import { ExtensionContext, window, workspace } from 'vscode';
+import { StatusBarManager } from './statusbar-manager';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -47,10 +48,12 @@ export function activate(context: ExtensionContext) {
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
     const decorateManager: DecorateManager = new DecorateManager(client, context, window);
     const commandRegister: CommandRegister = new CommandRegister(client, window).register();
+    const statusBarManager: StatusBarManager = new StatusBarManager(client);
 
     client.onReady().then(() => {
         commandRegister.ready();
         decorateManager.listen();
+        statusBarManager.listen();
     });
 
     // Create the language client and start the client.
