@@ -18,7 +18,8 @@
         "compile:server": "cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
         "watch:server": "cd server && npm run installServer && cd .. && tsc -w -p server/tsconfig.json",
         "test": "npm run compile && jest",
-        "watch:test": "jest --watchAll",
+        "test:watch": "jest --watch",
+        "report": "jest --coverage",
         "precommit": "lint-staged",
         "prettier": "prettier",
         "prettier-write":
@@ -32,15 +33,23 @@
         "jest": "^22.4.3",
         "lint-staged": "^7.0.4",
         "prettier": "^1.12.1",
+        "ts-jest": "^22.4.4",
         "tslint": "^5.9.1",
         "typescript": "^2.8.1"
     },
     "jest": {
-        "moduleFileExtensions": ["ts", "tsx", "js"],
-        "transform": {
-            "^.+\\.(ts|tsx)$": "<rootDir>/scripts/preprocessor.js"
+        "globals": {
+            "ts-jest": {
+                "tsConfigFile": "server/tsconfig.json"
+            }
         },
-        "testMatch": ["<rootDir>/**/*.test.(ts|tsx|js)"]
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+        "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+        "collectCoverage": true,
+        "coverageReporters": ["json", "html"]
     },
     "lint-staged": {
         "linters": {
