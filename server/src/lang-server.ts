@@ -43,7 +43,9 @@ export class LangServer {
         this.connection.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
         this.connection.onCodeLens(this.onCodeLens.bind(this));
         this.connection.onExecuteCommand(this.onExecuteCommand.bind(this));
-        this.connection.onRequest('assertions', (params: any) => this.sendNotification(params.uri));
+        this.connection.onRequest('assertions', (params: any) => {
+            this.sendAssertionNotification(params.uri);
+        });
         this.connection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
 
         return this;
@@ -97,7 +99,7 @@ export class LangServer {
         const args: string[] = p[2] || [];
 
         this.connection.sendNotification('running');
-        (await this.executeCommand(params.command, path, args)).sendDiagnostics().sendNotification(uri);
+        (await this.executeCommand(params.command, path, args)).sendDiagnostics().sendAssertionNotification(uri);
         this.connection.sendNotification('done', this.phpUnit.getState());
         this.connection.console.log(this.phpUnit.getOutput());
     }
@@ -108,7 +110,7 @@ export class LangServer {
         return this.phpUnit.getDocumentSymbols(textDocument.getText(), textDocument.uri);
     }
 
-    private sendNotification(pathOrUri: string): LangServer {
+    private sendAssertionNotification(pathOrUri: string): LangServer {
         return tap(this, () => {
             const uri: string = this.files.uri(pathOrUri);
             this.connection.sendNotification('assertions', {
