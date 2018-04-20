@@ -10,6 +10,8 @@ import {
     TextDocument,
     ExecuteCommandParams,
     Diagnostic,
+    DocumentSymbolParams,
+    SymbolInformation,
 } from 'vscode-languageserver';
 import { PhpUnit } from './phpunit';
 import { tap } from './helpers';
@@ -99,7 +101,9 @@ export class LangServer {
         this.connection.console.log(this.phpUnit.getOutput());
     }
 
-    private onDocumentSymbol(textDocument: TextDocument) {
+    private onDocumentSymbol(params: DocumentSymbolParams): SymbolInformation[] {
+        const textDocument: TextDocument = this.documents.get(params.textDocument.uri);
+
         return this.phpUnit.getDocumentSymbols(textDocument.getText(), textDocument.uri);
     }
 
