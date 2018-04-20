@@ -30,11 +30,17 @@ export function when<T>(value: T, success: any, fail?: any): any {
 }
 
 export function groupBy(items: any[], key: string): Map<string, any[]> {
-    return items.reduce((groups: Map<string, any[]>, item: any) => {
-        const group: any[] = groups.get(item[key]) || [];
-        group.push(item);
-        groups.set(item[key], group);
+    return when(
+        items,
+        () => {
+            return items.reduce((groups: Map<string, any[]>, item: any) => {
+                const group: any[] = groups.get(item[key]) || [];
+                group.push(item);
+                groups.set(item[key], group);
 
-        return groups;
-    }, new Map<string, any[]>());
+                return groups;
+            }, new Map<string, any[]>());
+        },
+        []
+    );
 }

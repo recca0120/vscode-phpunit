@@ -1,99 +1,173 @@
-import { Command } from 'vscode-languageserver-types';
-import { Filesystem, FilesystemContract } from '../filesystem';
-import { JUnit } from './junit';
-import { os, OS, tap, value } from '../helpers';
-import { Parameters } from './parameters';
-import { Process } from '../process';
-import { Test } from './common';
+import { Ast } from './ast';
+import { Cli } from './cli';
+import { CodeLens, Diagnostic, SymbolInformation, SymbolKind } from 'vscode-languageserver-types';
+import { Collection } from './collection';
+import { Filesystem, FilesystemContract } from './../filesystem';
+import { tap, when } from '../helpers';
+import { TestNode, Assertion, Test, Type } from './common';
+import { TextlineRange } from './textline-range';
+
+interface LastCommand {
+    path: string;
+    params: string[];
+}
+
+interface State {
+    failed: number;
+    warning: number;
+    passed: number;
+}
 
 export class PhpUnit {
-    private binary: string = '';
-    private defaults: string[] = [];
-    private output: string = '';
-    private tests: Test[] = [];
-    private _onRunning: Function = () => {};
-    private _onDone: Function = () => {};
+    private lastCommand: LastCommand = {
+        path: '',
+        params: [],
+    };
 
     constructor(
+        private cli: Cli = new Cli(),
+        private collect: Collection = new Collection(),
+        private ast: Ast = new Ast(),
         private files: FilesystemContract = new Filesystem(),
-        private process: Process = new Process(),
-        private parameters = new Parameters(files),
-        private jUnit: JUnit = new JUnit()
-    ) {}
+        private textlineRange: TextlineRange = new TextlineRange()
+    ) {
+        this.cli.on('running', (path: string, params: string[]) => (this.lastCommand = { path, params }));
+        this.cli.on('done', () => this.collect.put(this.cli.getTests()));
+    }
 
     setBinary(binary: string): PhpUnit {
-        return tap(this, (phpUnit: PhpUnit) => {
-            phpUnit.binary = binary;
+        return tap(this, () => {
+            this.cli.setBinary(binary);
         });
     }
 
     setDefault(args: string[]): PhpUnit {
-        return tap(this, (phpUnit: PhpUnit) => {
-            phpUnit.defaults = args;
+        return tap(this, () => {
+            this.cli.setDefault(args);
         });
     }
 
-    async run(path: string, params: string[] = [], cwd: string = process.cwd()): Promise<number> {
-        if (path) {
-            path = this.files.normalizePath(path);
-            cwd = this.files.dirname(path);
-        }
-        const root: string = await this.getRoot(cwd);
+    getTestNodes(code: string, uri: string): TestNode[] {
+        return this.ast.parse(code, this.files.uri(uri));
+    }
 
-        const command: Command = {
-            title: '',
-            command: await this.getBinary(cwd, root),
-            arguments: await this.parameters
-                .setCwd(cwd)
-                .setRoot(root)
-                .set(this.defaults.concat(params.concat([path]).filter((item: string) => !!item)))
-                .all(),
+    getCodeLens(code: string, uri: string): CodeLens[] {
+        const testNodes: TestNode[] = this.getTestNodes(code, uri);
+
+        return testNodes
+            .concat(
+                this.collect.getTestNodes(uri).filter((testNode: TestNode) => {
+                    for (const node of testNodes) {
+                        if (node.uri === testNode.uri && testNode.range === testNode.range) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                })
+            )
+            .map((node: TestNode) => this.asCodeLen(node, uri));
+    }
+
+    getDiagnoics(): Map<string, Diagnostic[]> {
+        return this.collect.getDiagnoics();
+    }
+
+    getAssertions(uri: string): Assertion[] {
+        return this.collect.getAssertions().get(uri) || [];
+    }
+
+    getDocumentSymbols(code: string, uri: string): SymbolInformation[] {
+        return this.getTestNodes(code, uri).map((node: TestNode) => this.asDocumentSymbol(node, uri));
+    }
+
+    getState(): State {
+        const state: State = {
+            failed: 0,
+            warning: 0,
+            passed: 0,
         };
 
-        this._onRunning(command);
+        this.collect.forEach((tests: Test[]) => {
+            tests.forEach((test: Test) => {
+                if ([Type.ERROR, Type.FAILURE, Type.FAILED].indexOf(test.type) !== -1) {
+                    state.failed++;
+                } else if ([Type.INCOMPLETE, Type.RISKY, Type.SKIPPED].indexOf(test.type) !== -1) {
+                    state.warning++;
+                } else {
+                    state.passed++;
+                }
+            });
+        });
 
-        this.output = await this.process.spawn(command);
-        this.tests = await this.jUnit.parseFile(this.parameters.get('--log-junit'));
-
-        this._onDone(this.output, this.tests);
-
-        return 0;
+        return state;
     }
 
     getOutput(): string {
-        return this.output;
+        return this.cli.getOutput();
     }
 
-    getTests(): Test[] {
-        return this.tests;
+    async run(path: string, params: string[]): Promise<PhpUnit> {
+        await this.cli.run(path, params);
+
+        return this;
     }
 
-    onRunning(cb: Function): PhpUnit {
-        return tap(this, () => {
-            this._onRunning = cb;
-        });
+    async runLast(path: string = '', params: string[] = []): Promise<PhpUnit> {
+        path = this.lastCommand.path || path;
+        params = this.lastCommand.params || params;
+
+        return await this.run(path, params);
     }
 
-    onDone(cb: Function): PhpUnit {
-        return tap(this, () => {
-            this._onDone = cb;
-        });
+    async runNearest(path: string, params: string[] = []): Promise<PhpUnit> {
+        return tap(
+            await this.run(
+                path,
+                this.asMethodFilter(await this.textlineRange.findMethod(path, parseInt(params[0], 10)))
+            ),
+            () => this.textlineRange.clear()
+        );
     }
 
-    private async getRoot(cwd: string): Promise<string> {
-        return value(await this.files.findUp('composer.json', cwd), (composerPath: string) => {
-            return composerPath ? this.files.dirname(composerPath) : cwd;
-        });
+    private asCodeLen(node: TestNode, uri: string) {
+        return {
+            range: node.range,
+            command: when(
+                node.class === node.name,
+                () => {
+                    return {
+                        title: 'Run Test',
+                        command: 'phpunit.test.file',
+                        arguments: [uri, this.files.normalizePath(node.uri), []],
+                    };
+                },
+                () => {
+                    return {
+                        title: 'Run Test',
+                        command: 'phpunit.test',
+                        arguments: [uri, this.files.normalizePath(node.uri), this.asMethodFilter(node.name)],
+                    };
+                }
+            ),
+            data: {
+                textDocument: {
+                    uri: uri,
+                },
+            },
+        };
     }
 
-    private async getBinary(cwd: string, root: string): Promise<string> {
-        if (this.binary) {
-            return this.binary;
-        }
+    private asMethodFilter(method: string): string[] {
+        return method ? ['--filter', `^.*::${method}$`] : [];
+    }
 
-        return (
-            (await this.files.findUp(`vendor/bin/phpunit${os() === OS.WIN ? '.bat' : ''}`, cwd, root)) ||
-            (await this.files.which('phpunit'))
+    private asDocumentSymbol(node: TestNode, uri: string): SymbolInformation {
+        return SymbolInformation.create(
+            node.name.replace(/.*\\/g, ''),
+            node.class === node.name ? SymbolKind.Class : SymbolKind.Method,
+            node.range,
+            uri
         );
     }
 }
