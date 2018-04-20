@@ -1,4 +1,4 @@
-import { PhpUnit, Cli } from '../../src/phpunit';
+import { PhpUnit, Cli, Parameters, JUnit } from '../../src/phpunit';
 import { Process } from './../../src/process';
 import { FilesystemContract, POSIX, Filesystem } from '../../src/filesystem';
 import { normalize } from 'path';
@@ -9,12 +9,15 @@ describe('PHPUnit Test', () => {
     it('it should execute phpunit', async () => {
         const files: FilesystemContract = new POSIX();
         const process: Process = new Process();
-        const cli: Cli = new Cli(files, process);
+        const parameters: Parameters = new Parameters();
+        const jUnit: JUnit = new JUnit();
+        const cli: Cli = new Cli(files, process, parameters, jUnit);
         const phpUnit: PhpUnit = new PhpUnit(cli);
 
-        spyOn(process, 'spawn').and.callFake(() => {});
         spyOn(cli, 'setBinary').and.callThrough();
         spyOn(cli, 'setDefault').and.callThrough();
+        spyOn(process, 'spawn').and.callFake(() => {});
+        spyOn(jUnit, 'parseFile').and.returnValue([[]]);
 
         await phpUnit
             .setBinary('path/to/phpunit')
@@ -30,7 +33,6 @@ describe('PHPUnit Test', () => {
         });
 
         await phpUnit.runLast();
-
         expect(process.spawn).toHaveBeenCalledTimes(2);
         expect(process.spawn).toHaveBeenLastCalledWith({
             title: '',

@@ -43,8 +43,9 @@ export class LangServer {
         this.connection.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
         this.connection.onCodeLens(this.onCodeLens.bind(this));
         this.connection.onExecuteCommand(this.onExecuteCommand.bind(this));
-        this.connection.onRequest('assertions', this.sendNotification.bind(this));
+        this.connection.onRequest('assertions', (params: any) => this.sendNotification(params.uri));
         this.connection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
+
         return this;
     }
 
@@ -130,21 +131,16 @@ export class LangServer {
 
     private async executeCommand(command: string, path: string, args: string[]): Promise<LangServer> {
         switch (command) {
-            case 'phpunit.test':
-            case 'phpunit.test.file':
-                await this.phpUnit.run(path, args);
-                break;
-
-            case 'phpunit.test.suite':
-                await this.phpUnit.run(path, args);
-                break;
-
             case 'phpunit.test.nearest':
                 await this.phpUnit.runNearest(path, args);
                 break;
 
             case 'phpunit.test.last':
                 await this.phpUnit.runLast(path, args);
+                break;
+
+            default:
+                await this.phpUnit.run(path, args);
                 break;
         }
 

@@ -19,6 +19,7 @@ interface State {
 }
 
 export class PhpUnit {
+    private output: string = '';
     private lastCommand: LastCommand = {
         path: '',
         params: [],
@@ -31,8 +32,13 @@ export class PhpUnit {
         private files: FilesystemContract = new Filesystem(),
         private textlineRange: TextlineRange = new TextlineRange()
     ) {
-        this.cli.on('running', (path: string, params: string[]) => (this.lastCommand = { path, params }));
-        this.cli.on('done', () => this.collect.put(this.cli.getTests()));
+        this.cli.on('done', (output: string, tests: Test[], path: string, params: string[]) => {
+            this.output = output;
+            if (tests.length > 0) {
+                this.collect.put(tests);
+                this.lastCommand = { path, params };
+            }
+        });
     }
 
     setBinary(binary: string): PhpUnit {
@@ -104,7 +110,7 @@ export class PhpUnit {
     }
 
     getOutput(): string {
-        return this.cli.getOutput();
+        return this.output;
     }
 
     async run(path: string, params: string[]): Promise<PhpUnit> {

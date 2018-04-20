@@ -16,7 +16,7 @@ export class Cli {
     constructor(
         private files: FilesystemContract = new Filesystem(),
         private process: Process = new Process(),
-        private parameters = new Parameters(files),
+        private parameters = new Parameters(),
         private jUnit: JUnit = new JUnit(),
         private dispatcher: EventEmitter = new EventEmitter()
     ) {}
@@ -50,7 +50,7 @@ export class Cli {
         this.dispatcher.emit('running', path, params, command);
         this.output = await this.process.spawn(command);
         this.tests = await this.jUnit.parseFile(this.parameters.get('--log-junit'));
-        this.dispatcher.emit('done', this.output, this.tests);
+        this.dispatcher.emit('done', this.output, this.tests, path, params, command);
 
         return 0;
     }
