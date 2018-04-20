@@ -126,6 +126,26 @@ describe('Server Test', () => {
         expect(documents.get).toBeCalledWith('/path/to/test.php');
     });
 
+    it('send assertions when get request assertion', () => {
+        const phpUnit: PhpUnit = new PhpUnit();
+        const langServer: LangServer = new LangServer(connection, documents, phpUnit);
+
+        spyOn(connection, 'sendNotification');
+        spyOn(connection, 'onRequest').and.callFake((name: string, cb) => {
+            cb({
+                uri: 'file:///document/uri',
+            });
+
+            expect(name).toEqual('assertions');
+            expect(connection.sendNotification).toBeCalledWith('assertions', {
+                assertions: [],
+                uri: 'file:///document/uri',
+            });
+        });
+
+        langServer.init();
+    });
+
     describe('ExecuteCommand Test', () => {
         const phpUnit: PhpUnit = new PhpUnit();
         const langServer: LangServer = new LangServer(connection, documents, phpUnit);
