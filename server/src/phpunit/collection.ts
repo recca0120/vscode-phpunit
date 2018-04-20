@@ -23,24 +23,6 @@ export class Collection {
         return this.asArray(this.items.get(this.files.uri(uri)));
     }
 
-    reduce(cb: Function, init: any[]): any {
-        this.items.forEach((tests: Test[], uri: string) => {
-            init = cb(init, tests, uri);
-        });
-
-        return init;
-    }
-
-    toObject(): any {
-        return this.reduce(
-            (results: any, tests: Test[], uri: string) =>
-                tap(results, (results: any) => {
-                    results[uri] = tests;
-                }),
-            {} as any
-        );
-    }
-
     forEach(callback: Function): Collection {
         this.items.forEach((tests: Test[], uri: string) => {
             callback(tests, uri);
