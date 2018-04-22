@@ -1,9 +1,9 @@
 import { ExecuteCommandRequest, LanguageClient, Command } from 'vscode-languageclient';
-import { window as win, commands as cmds, TextEditor } from 'vscode';
+import { window as win, commands as cmds, TextEditor, Disposable } from 'vscode';
 import { when, tap } from './helpers';
 
 export class CommandRegister {
-    private disposables: any[] = [];
+    private disposables: Disposable[] = [];
     private isReady: boolean = false;
 
     constructor(private client: LanguageClient, private window = win, private commands: any = cmds) {}
@@ -38,7 +38,7 @@ export class CommandRegister {
         return this;
     }
 
-    dispose(): any {
+    dispose(): Disposable[] {
         return this.disposables;
     }
 

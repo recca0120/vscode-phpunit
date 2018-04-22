@@ -5,7 +5,7 @@
     "author": "recca0120",
     "license": "MIT",
     "icon": "images/icon.png",
-    "version": "0.11.7",
+    "version": "0.12.0",
     "publisher": "recca0120",
     "repository": {
         "type": "git",
@@ -68,12 +68,14 @@
                 "phpunit.execPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to phpunit executable (if empty it tries to use composer installation)."
+                    "description": "Path to phpunit executable (if empty it tries to use composer installation).",
+                    "scope": "resource"
                 },
                 "phpunit.args": {
                     "type": "array",
                     "default": [],
-                    "description": "Any phpunit args (phpunit --help)"
+                    "description": "Any phpunit args (phpunit --help)",
+                    "scope": "resource"
                 }
             }
         },

@@ -16,6 +16,7 @@ import {
     TransportKind,
     RevealOutputChannelOn,
 } from 'vscode-languageclient';
+import { ConfigurationListener } from './configuration-listener';
 
 export function activate(context: ExtensionContext) {
     // The server is implemented in node
@@ -49,11 +50,13 @@ export function activate(context: ExtensionContext) {
     const decorateManager: DecorateManager = new DecorateManager(client, context, window);
     const commandRegister: CommandRegister = new CommandRegister(client, window).register();
     const statusBarManager: StatusBarManager = new StatusBarManager(client);
+    const configurationListener: ConfigurationListener = new ConfigurationListener(client);
 
     client.onReady().then(() => {
         commandRegister.ready();
         decorateManager.listen();
         statusBarManager.listen();
+        configurationListener.listen();
     });
 
     // Create the language client and start the client.
@@ -62,5 +65,6 @@ export function activate(context: ExtensionContext) {
     // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);
-    context.subscriptions.push(commandRegister.dispose());
+    context.subscriptions.push(...commandRegister.dispose());
+    // context.subscriptions.push(...configurationListener.dispose());
 }
