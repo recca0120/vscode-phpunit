@@ -1,5 +1,11 @@
 import { Location } from 'vscode-languageserver-types';
 
+export interface State {
+    failed: number;
+    warning: number;
+    passed: number;
+}
+
 export interface FaultNode {
     type: Type;
     _type: string;

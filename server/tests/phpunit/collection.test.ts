@@ -186,7 +186,7 @@ describe('Collection Test', () => {
         const collect: Collection = new Collection();
         collect.put(tests);
 
-        const diagnostics: Map<string, Diagnostic[]> = collect.getDiagnoics();
+        const diagnostics: Map<string, Diagnostic[]> = collect.asDiagnoics();
 
         expect(diagnostics.get(uri)[0]).toEqual({
             severity: 1,
@@ -210,7 +210,7 @@ describe('Collection Test', () => {
         const collect: Collection = new Collection();
         collect.put(tests);
 
-        const assertionGroup: Map<string, Assertion[]> = collect.getAssertions();
+        const assertionGroup: Map<string, Assertion[]> = collect.asAssertions();
         let assertions: Assertion[] = assertionGroup.get(uri);
 
         expect(assertions[0]).toEqual({
@@ -321,6 +321,63 @@ describe('Collection Test', () => {
                     },
                 },
             },
+        });
+    });
+
+    it('it should get state', () => {
+        const collect: Collection = new Collection();
+        collect.put([
+            {
+                name: 'method_1',
+                class: 'foo',
+                classname: 'string',
+                uri: files.uri('foo'),
+                range: Range.create(9, 1, 9, 1),
+                time: 2,
+                type: Type.PASSED,
+            },
+            {
+                name: 'method_3',
+                class: 'foo',
+                classname: 'string',
+                uri: files.uri('foo'),
+                range: Range.create(29, 1, 29, 1),
+                time: 1,
+                type: Type.PASSED,
+            },
+            {
+                name: 'method_1',
+                class: 'bar',
+                classname: 'string',
+                uri: files.uri('bar'),
+                range: Range.create(9, 1, 9, 1),
+                time: 2,
+                type: Type.PASSED,
+            },
+            {
+                name: 'method_1',
+                class: 'bar',
+                classname: 'string',
+                uri: files.uri('bar'),
+                range: Range.create(9, 1, 9, 1),
+                time: 2,
+                type: Type.WARNING,
+            },
+            {
+                name: 'method_1',
+                class: 'bar',
+                classname: 'string',
+                uri: files.uri('bar'),
+                range: Range.create(9, 1, 9, 1),
+                time: 2,
+                type: Type.FAILED,
+            },
+        ]);
+
+        expect(collect.asState()).toEqual({
+            failed: 1,
+            passed: 3,
+            warning: 1,
         });
     });
 });

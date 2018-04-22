@@ -1,4 +1,4 @@
-import { PhpUnit, Cli, Parameters, JUnit, Process } from '../../src/phpunit';
+import { PhpUnit, Cli, Parameters, JUnit, Process, Collection } from '../../src/phpunit';
 import { FilesystemContract, POSIX, Filesystem } from '../../src/filesystem';
 import { normalize } from 'path';
 import { projectPath } from '../helpers';
@@ -38,6 +38,21 @@ describe('PHPUnit Test', () => {
             command: 'path/to/phpunit',
             arguments: ['foo', 'bar', '--log-junit', 'junit.xml', 'path/to/test'],
         });
+    });
+
+    it('it should get result throuth collection', () => {
+        const collect: Collection = new Collection();
+        const cli: Cli = new Cli();
+        const phpUnit: PhpUnit = new PhpUnit(cli, collect);
+
+        spyOn(collect, 'asDiagnoics');
+        spyOn(collect, 'asState');
+
+        phpUnit.getDiagnoics();
+        phpUnit.getState();
+
+        expect(collect.asDiagnoics).toHaveBeenCalled();
+        expect(collect.asState).toHaveBeenCalled();
     });
 
     describe('CodeLen Test', () => {

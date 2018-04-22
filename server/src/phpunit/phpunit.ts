@@ -4,18 +4,12 @@ import { CodeLens, Diagnostic, SymbolInformation, SymbolKind } from 'vscode-lang
 import { Collection } from './collection';
 import { Filesystem, FilesystemContract } from './../filesystem';
 import { tap, when } from '../helpers';
-import { TestNode, Assertion, Test, Type } from './common';
+import { TestNode, Assertion, Test, State } from './common';
 import { TextlineRange } from './textline-range';
 
 interface LastCommand {
     path: string;
     params: string[];
-}
-
-interface State {
-    failed: number;
-    warning: number;
-    passed: number;
 }
 
 export class PhpUnit {
@@ -62,7 +56,7 @@ export class PhpUnit {
 
         return testNodes
             .concat(
-                this.collect.getTestNodes(uri).filter((testNode: TestNode) => {
+                this.collect.asTestNodes(uri).filter((testNode: TestNode) => {
                     for (const node of testNodes) {
                         if (node.uri === testNode.uri && testNode.range === testNode.range) {
                             return false;
@@ -76,11 +70,11 @@ export class PhpUnit {
     }
 
     getDiagnoics(): Map<string, Diagnostic[]> {
-        return this.collect.getDiagnoics();
+        return this.collect.asDiagnoics();
     }
 
     getAssertions(uri: string): Assertion[] {
-        return this.collect.getAssertions().get(uri) || [];
+        return this.collect.asAssertions().get(uri) || [];
     }
 
     getDocumentSymbols(code: string, uri: string): SymbolInformation[] {
@@ -88,25 +82,7 @@ export class PhpUnit {
     }
 
     getState(): State {
-        const state: State = {
-            failed: 0,
-            warning: 0,
-            passed: 0,
-        };
-
-        this.collect.forEach((tests: Test[]) => {
-            tests.forEach((test: Test) => {
-                if ([Type.ERROR, Type.FAILURE, Type.FAILED].indexOf(test.type) !== -1) {
-                    state.failed++;
-                } else if ([Type.INCOMPLETE, Type.RISKY, Type.SKIPPED].indexOf(test.type) !== -1) {
-                    state.warning++;
-                } else {
-                    state.passed++;
-                }
-            });
-        });
-
-        return state;
+        return this.collect.asState();
     }
 
     getOutput(): string {

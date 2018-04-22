@@ -1,4 +1,4 @@
-import { Assertion, Detail, Test, TestNode, Type, Fault } from './common';
+import { Assertion, Detail, Test, TestNode, Type, Fault, State } from './common';
 import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from '../filesystem';
 import { groupBy, tap, when } from '../helpers';
@@ -31,15 +31,15 @@ export class Collection {
         return this;
     }
 
-    getTestNodes(uri: string): TestNode[] {
-        return this.asArray(this.getAssertions().get(uri)).map((assertion: Assertion) => {
+    asTestNodes(uri: string): TestNode[] {
+        return this.asArray(this.asAssertions().get(uri)).map((assertion: Assertion) => {
             return Object.assign({}, this.cloneTest(assertion.related), {
                 range: assertion.range,
             });
         });
     }
 
-    getDiagnoics(): Map<string, Diagnostic[]> {
+    asDiagnoics(): Map<string, Diagnostic[]> {
         return tap(new Map<string, Diagnostic[]>(), (map: Map<string, Diagnostic[]>) => {
             this.forEach((tests: Test[], uri: string) => {
                 map.set(
@@ -54,7 +54,7 @@ export class Collection {
         });
     }
 
-    getAssertions(keepDetails: boolean = false): Map<string, Assertion[]> {
+    asAssertions(keepDetails: boolean = false): Map<string, Assertion[]> {
         const assertions: Assertion[] = [];
         this.forEach((tests: Test[]) => {
             tests.forEach((test: Test) => {
@@ -78,6 +78,28 @@ export class Collection {
         });
 
         return groupBy(assertions, 'uri');
+    }
+
+    asState() {
+        const state: State = {
+            failed: 0,
+            warning: 0,
+            passed: 0,
+        };
+
+        this.forEach((tests: Test[]) => {
+            tests.forEach((test: Test) => {
+                if ([Type.ERROR, Type.FAILURE, Type.FAILED].indexOf(test.type) !== -1) {
+                    state.failed++;
+                } else if ([Type.INCOMPLETE, Type.RISKY, Type.SKIPPED, Type.WARNING].indexOf(test.type) !== -1) {
+                    state.warning++;
+                } else {
+                    state.passed++;
+                }
+            });
+        });
+
+        return state;
     }
 
     private transformToDiagonstic(test: Test): Diagnostic {
