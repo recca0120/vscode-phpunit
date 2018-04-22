@@ -1,12 +1,12 @@
 import { ExecuteCommandRequest, LanguageClient, Command } from 'vscode-languageclient';
-import { window as win, commands, TextEditor } from 'vscode';
+import { window as win, commands as cmds, TextEditor } from 'vscode';
 import { when, tap } from './helpers';
 
 export class CommandRegister {
     private disposables: any[] = [];
     private isReady: boolean = false;
 
-    constructor(private client: LanguageClient, private window = win, private cmds: any = commands) {}
+    constructor(private client: LanguageClient, private window = win, private commands: any = cmds) {}
 
     register(): CommandRegister {
         return tap(this, () => {
@@ -44,7 +44,7 @@ export class CommandRegister {
 
     private registerCommand(command: string, cb: Function = () => {}) {
         this.disposables.push(
-            this.cmds.registerTextEditorCommand(command, () => {
+            this.commands.registerTextEditorCommand(command, () => {
                 when(this.window.activeTextEditor, (editor: TextEditor) => {
                     cb(command.replace(/^phpunit\.client/, 'phpunit'), editor.document.uri.toString(), editor);
                 });
