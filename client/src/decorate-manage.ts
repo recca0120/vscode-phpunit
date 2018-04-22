@@ -3,7 +3,7 @@ import { LanguageClient } from 'vscode-languageclient/lib/main';
 import { resolve as pathResolve } from 'path';
 import { when } from './helpers';
 import {
-    window,
+    window as win,
     TextEditorDecorationType,
     OverviewRulerLane,
     ExtensionContext,
@@ -16,7 +16,7 @@ import {
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
 
-    constructor(private client: LanguageClient, private context: ExtensionContext, private win = window) {
+    constructor(private client: LanguageClient, private context: ExtensionContext, private window = win) {
         this.styles.set(Type.PASSED, this.passed());
         this.styles.set(Type.ERROR, this.error());
         this.styles.set(Type.WARNING, this.skipped());
@@ -51,14 +51,14 @@ export class DecorateManager {
 
     listen() {
         this.client.onNotification('assertions', (params: any) => {
-            when(this.win.activeTextEditor, (editor: TextEditor) => {
+            when(this.window.activeTextEditor, (editor: TextEditor) => {
                 if (editor.document.uri.toString() === params.uri) {
                     this.decoratedGutter(editor, params.assertions);
                 }
             });
         });
 
-        this.win.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+        this.window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
             when(editor, (editor: TextEditor) => {
                 this.client.sendRequest('assertions', {
                     uri: editor.document.uri.toString(),
@@ -104,7 +104,7 @@ export class DecorateManager {
     }
 
     private createTextEditorDecorationType(image: string, color?: string | ThemeColor): TextEditorDecorationType {
-        return this.win.createTextEditorDecorationType({
+        return this.window.createTextEditorDecorationType({
             overviewRulerColor: color,
             overviewRulerLane: OverviewRulerLane.Left,
             gutterIconPath: this.gutterIconPath(image),
