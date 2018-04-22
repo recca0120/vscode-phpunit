@@ -1,7 +1,6 @@
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { os, OS } from '../../src/helpers';
-import { Parameters, Cli } from '../../src/phpunit';
-import { Process } from '../../src/process';
+import { Parameters, Cli, Process } from '../../src/phpunit';
 import { projectPath } from '../helpers';
 import { resolve } from 'path';
 

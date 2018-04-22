@@ -3,7 +3,7 @@ import { Filesystem, FilesystemContract } from '../filesystem';
 import { JUnit } from './junit';
 import { os, OS, tap, value } from '../helpers';
 import { Parameters } from './parameters';
-import { Process } from '../process';
+import { Process } from './process';
 import { Test } from './common';
 import { EventEmitter } from 'events';
 

@@ -1,5 +1,5 @@
 import { Command } from 'vscode-languageserver';
-import { Process } from './../src/process';
+import { Process } from '../../src/phpunit';
 
 describe('Process Test', () => {
     it('echo hello world', async () => {

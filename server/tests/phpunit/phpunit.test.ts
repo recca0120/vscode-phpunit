@@ -1,5 +1,4 @@
-import { PhpUnit, Cli, Parameters, JUnit } from '../../src/phpunit';
-import { Process } from './../../src/process';
+import { PhpUnit, Cli, Parameters, JUnit, Process } from '../../src/phpunit';
 import { FilesystemContract, POSIX, Filesystem } from '../../src/filesystem';
 import { normalize } from 'path';
 import { projectPath } from '../helpers';

@@ -25,11 +25,9 @@ export function when<T>(value: T, success: any, fail?: any): any {
     } else if (fail) {
         return fail instanceof Function ? fail(value) : fail;
     }
-
-    return '';
 }
 
-export function groupBy(items: any[], key: string): Map<string, any[]> {
+export function groupBy<T>(items: T[], key: string): Map<string, T[]> {
     return when(
         items,
         () => {

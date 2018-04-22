@@ -1,5 +1,5 @@
 {
-    "name": "phpunit-language-server",
+    "name": "phpunit-langserver",
     "description": "phpunit language server",
     "author": "recca0120",
     "license": "MIT",
