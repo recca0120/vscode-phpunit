@@ -47,4 +47,21 @@ class AssertionsTest extends TestCase
     public function test_no_assertion()
     {
     }
+
+    /**
+    * @dataProvider additionProvider
+    */
+    public function test_addition_provider($a, $b, $expected)
+    {
+        $this->assertEquals($expected, $a + $b);
+    }
+
+    public function additionProvider()
+    {
+        return [
+            [0, 0, 0],
+            [0, 1, 1],
+            [1, 0, 1],
+        ];
+    }
 }

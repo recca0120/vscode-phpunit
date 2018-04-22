@@ -80,7 +80,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method testPassed codelens', () => {
             expect(codeLens[1]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_passed$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_passed( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -105,7 +105,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method test_error', () => {
             expect(codeLens[2]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_error$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_error( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -130,7 +130,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method test_assertion_isnt_same', () => {
             expect(codeLens[3]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_assertion_isnt_same$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_assertion_isnt_same( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -155,7 +155,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method test_risky', () => {
             expect(codeLens[4]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_risky$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_risky( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -180,7 +180,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method it_should_be_annotation_test', () => {
             expect(codeLens[5]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::it_should_be_annotation_test$']],
+                    arguments: [uri, path, ['--filter', '^.*::it_should_be_annotation_test( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -205,7 +205,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method test_skipped', () => {
             expect(codeLens[6]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_skipped$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_skipped( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -230,7 +230,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method test_incomplete', () => {
             expect(codeLens[7]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_incomplete$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_incomplete( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },
@@ -255,7 +255,7 @@ describe('PHPUnit Test', () => {
         it('it should resolve method test_no_assertion', () => {
             expect(codeLens[8]).toEqual({
                 command: {
-                    arguments: [uri, path, ['--filter', '^.*::test_no_assertion$']],
+                    arguments: [uri, path, ['--filter', '^.*::test_no_assertion( with data set .*)?$']],
                     command: 'phpunit.test',
                     title: 'Run Test',
                 },

@@ -165,7 +165,7 @@ export class PhpUnit {
     }
 
     private asMethodFilter(method: string): string[] {
-        return method ? ['--filter', `^.*::${method}$`] : [];
+        return method ? ['--filter', `^.*::${method}( with data set .*)?$`] : [];
     }
 
     private asDocumentSymbol(node: TestNode, uri: string): SymbolInformation {
