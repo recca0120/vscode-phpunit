@@ -14,8 +14,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: name,
-            documentation: body,
+            detail: jasmine.any(String),
+            documentation: jasmine.any(String),
             insertText: body,
         });
     });
@@ -29,8 +29,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: name,
-            documentation: body,
+            detail: jasmine.any(String),
+            documentation: jasmine.any(String),
             insertText: body,
         });
     });
@@ -44,8 +44,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: name,
-            documentation: body,
+            detail: jasmine.any(String),
+            documentation: jasmine.any(String),
             insertText: body,
         });
     });
@@ -59,8 +59,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: name,
-            documentation: body,
+            detail: jasmine.any(String),
+            documentation: jasmine.any(String),
             insertText: body,
         });
     });
