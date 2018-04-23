@@ -68,6 +68,7 @@ export class Ast {
         return (
             node.isAbstract === false &&
             node.kind === 'method' &&
+            ['protected', 'private'].indexOf(node.visibility) === -1 &&
             // /markTest(Skipped|Incomplete)/.test(node.body.loc.source) === false &&
             (/^test/.test(node.name) === true ||
                 (node.leadingComments &&
