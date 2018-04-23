@@ -13,7 +13,16 @@ export interface Sinppets {
 export const snippets: Sinppets = {
     testcase: {
         prefix: 'testcase',
-        body: ['use PHPUnit\\Framework\\TestCase', 'class ${TM_FILENAME_BASE} extends TestCase', '{', '    $0', '}'],
+        body: [
+            '<?php',
+            '',
+            'use PHPUnit\\Framework\\TestCase;',
+            '',
+            'class ${TM_FILENAME_BASE} extends TestCase',
+            '{',
+            '    $0',
+            '}',
+        ],
         description: 'PHPUnit: test case declaration',
     },
     test: {
@@ -50,7 +59,11 @@ export class SnippetManager {
         }
     }
 
-    getCompletions(): CompletionItem[] {
+    onCompletion(): CompletionItem[] {
         return this.items;
+    }
+
+    onCompletionResolve(item: CompletionItem): CompletionItem {
+        return item;
     }
 }

@@ -9,7 +9,7 @@ import { CompletionItemKind, InsertTextFormat, CompletionItem } from 'vscode-lan
 
 describe('Snippet Manager Test', () => {
     const snippetManager: SnippetManager = new SnippetManager();
-    const completions: CompletionItem[] = snippetManager.getCompletions();
+    const completions: CompletionItem[] = snippetManager.onCompletion();
 
     it('it should get testcase completion item', async () => {
         const name = 'testcase';

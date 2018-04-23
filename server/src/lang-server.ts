@@ -49,7 +49,8 @@ export class LangServer {
             this.sendAssertionNotification(params.uri);
         });
         this.connection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
-        this.connection.onCompletion(this.snippetManager.getCompletions.bind(this.snippetManager));
+        this.connection.onCompletion(this.snippetManager.onCompletion.bind(this.snippetManager));
+        this.connection.onCompletionResolve(this.snippetManager.onCompletionResolve.bind(this.snippetManager));
 
         return this;
     }
