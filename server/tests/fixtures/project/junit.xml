@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="Package Test Suite" tests="12" assertions="8" errors="3" failures="3" skipped="2" time="0.041739">
-    <testsuite name="Tests\AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" tests="8" assertions="4" errors="2" failures="2" skipped="2" time="0.011923">
-      <testcase name="test_passed" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="9" assertions="1" time="0.007537"/>
-      <testcase name="test_error" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="14" assertions="1" time="0.001508">
+  <testsuite name="Package Test Suite" tests="16" assertions="11" errors="4" failures="4" skipped="2" time="0.039670">
+    <testsuite name="Tests\AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" tests="11" assertions="7" errors="2" failures="3" skipped="2" time="0.014088">
+      <testcase name="test_passed" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="9" assertions="1" time="0.007256"/>
+      <testcase name="test_error" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="14" assertions="1" time="0.001516">
         <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\AssertionsTest::test_error
 Failed asserting that false is true.
 
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php:16
 </failure>
       </testcase>
-      <testcase name="test_assertion_isnt_same" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="19" assertions="1" time="0.001332">
+      <testcase name="test_assertion_isnt_same" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="19" assertions="1" time="0.001419">
         <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\AssertionsTest::test_assertion_isnt_same
 Failed asserting that two arrays are identical.
 --- Expected
@@ -27,38 +27,44 @@ Failed asserting that two arrays are identical.
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php:21
 </failure>
       </testcase>
-      <testcase name="test_risky" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="24" assertions="0" time="0.000079">
+      <testcase name="test_risky" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="24" assertions="0" time="0.000067">
         <error type="PHPUnit\Framework\RiskyTestError">Risky Test
 </error>
       </testcase>
-      <testcase name="it_should_be_annotation_test" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="32" assertions="1" time="0.000063"/>
-      <testcase name="test_skipped" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="37" assertions="0" time="0.000664">
+      <testcase name="it_should_be_annotation_test" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="32" assertions="1" time="0.000081"/>
+      <testcase name="test_skipped" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="37" assertions="0" time="0.001519">
         <skipped/>
       </testcase>
-      <testcase name="test_incomplete" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="42" assertions="0" time="0.000693">
+      <testcase name="test_incomplete" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="42" assertions="0" time="0.001303">
         <skipped/>
       </testcase>
-      <testcase name="test_no_assertion" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="47" assertions="0" time="0.000047">
+      <testcase name="test_no_assertion" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="47" assertions="0" time="0.000086">
         <error type="PHPUnit\Framework\RiskyTestError">Risky Test
 </error>
       </testcase>
-      <testsuite name="Tests\AssertionsTest::test_addition_provider" tests="3" assertions="3" errors="0" failures="0" skipped="0" time="0.000620">
-        <testcase name="test_addition_provider with data set #0" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="54" assertions="1" time="0.000524"/>
-        <testcase name="test_addition_provider with data set #1" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="54" assertions="1" time="0.000046"/>
-        <testcase name="test_addition_provider with data set #2" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="54" assertions="1" time="0.000050"/>
+      <testsuite name="Tests\AssertionsTest::test_addition_provider" tests="3" assertions="3" errors="0" failures="1" skipped="0" time="0.000841">
+        <testcase name="test_addition_provider with data set #0" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="54" assertions="1" time="0.000639"/>
+        <testcase name="test_addition_provider with data set #1" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="54" assertions="1" time="0.000058"/>
+        <testcase name="test_addition_provider with data set #2" class="Tests\AssertionsTest" classname="Tests.AssertionsTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php" line="54" assertions="1" time="0.000144">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\AssertionsTest::test_addition_provider with data set #2 (1, 0, 2)
+Failed asserting that 1 matches expected 2.
+
+C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\AssertionsTest.php:56
+</failure>
+        </testcase>
       </testsuite>
     </testsuite>
-    <testsuite name="Tests\CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" tests="4" assertions="4" errors="1" failures="1" skipped="0" time="0.029816">
-      <testcase name="test_sum" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="18" assertions="1" time="0.001970"/>
-      <testcase name="test_sum_fail" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="25" assertions="1" time="0.000132">
+    <testsuite name="Tests\CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" tests="5" assertions="4" errors="2" failures="1" skipped="0" time="0.025581">
+      <testcase name="test_sum" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="18" assertions="1" time="0.002153"/>
+      <testcase name="test_sum_fail" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="25" assertions="1" time="0.000109">
         <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\CalculatorTest::test_sum_fail
 Failed asserting that 4 is identical to 3.
 
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php:29
 </failure>
       </testcase>
-      <testcase name="test_sum_item" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="32" assertions="1" time="0.000608"/>
-      <testcase name="test_sum_item_method_not_call" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="42" assertions="1" time="0.027106">
+      <testcase name="test_sum_item" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="32" assertions="1" time="0.000498"/>
+      <testcase name="test_sum_item_method_not_call" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="42" assertions="1" time="0.022667">
         <error type="Mockery\Exception\InvalidCountException">Tests\CalculatorTest::test_sum_item_method_not_call
 Mockery\Exception\InvalidCountException: Method test(&lt;Any Arguments&gt;) from Mockery_0_App_Item_App_Item should be called&#13;
  exactly 1 times but called 0 times.
@@ -72,9 +78,9 @@ C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\vendor\mocke
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php:15
 </error>
       </testcase>
-      <testcase name="test_throw_exception" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="54" assertions="0" time="0.000157">
+      <testcase name="test_throw_exception" class="Tests\CalculatorTest" classname="Tests.CalculatorTest" file="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php" line="54" assertions="0" time="0.000154">
         <error type="Exception">Tests\CalculatorTest::test_throw_exception
-Exception:
+Exception: 
 
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\src\Calculator.php:21
 C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\tests\CalculatorTest.php:57
