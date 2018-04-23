@@ -66,5 +66,5 @@ export function activate(context: ExtensionContext) {
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);
     context.subscriptions.push(...commandRegister.dispose());
-    // context.subscriptions.push(...configurationListener.dispose());
+    context.subscriptions.push(...configurationListener.dispose());
 }
