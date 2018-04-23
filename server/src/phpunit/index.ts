@@ -6,4 +6,5 @@ export * from './junit';
 export * from './parameters';
 export * from './phpunit';
 export * from './process';
+export * from './snippet-collection';
 export * from './textline-range';

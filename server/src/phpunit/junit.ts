@@ -17,7 +17,7 @@ export class JUnit {
     async parseFile(path: string): Promise<Test[]> {
         return path && (await this.files.exists(path))
             ? tap(await this.parse(await this.files.get(path)), () => {
-                  this.files.unlink(path);
+                  //   this.files.unlink(path);
               })
             : [];
     }

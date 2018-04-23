@@ -42,7 +42,7 @@ export const snippets: Sinppets = {
     },
 };
 
-export class SnippetManager {
+export class SnippetCollection {
     private items: CompletionItem[] = [];
 
     constructor() {
@@ -53,17 +53,14 @@ export class SnippetManager {
                 label: snippet.prefix,
                 kind: CompletionItemKind.Snippet,
                 insertTextFormat: InsertTextFormat.Snippet,
-                detail: body,
+                detail: name,
+                documentation: body,
                 insertText: body,
             });
         }
     }
 
-    onCompletion(): CompletionItem[] {
+    all(): CompletionItem[] {
         return this.items;
-    }
-
-    onCompletionResolve(item: CompletionItem): CompletionItem {
-        return item;
     }
 }

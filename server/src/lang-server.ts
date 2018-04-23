@@ -12,11 +12,11 @@ import {
     Diagnostic,
     DocumentSymbolParams,
     SymbolInformation,
+    CompletionItem,
 } from 'vscode-languageserver';
-import { PhpUnit } from './phpunit';
+import { PhpUnit, SnippetCollection } from './phpunit';
 import { tap } from './helpers';
 import { FilesystemContract, Filesystem } from './filesystem';
-import { SnippetManager } from './phpunit/snippet-manager';
 
 // The settings interface describe the server relevant settings part
 interface Settings {
@@ -36,7 +36,7 @@ export class LangServer {
         private documents: TextDocuments = new TextDocuments(),
         private phpUnit: PhpUnit = new PhpUnit(),
         private files: FilesystemContract = new Filesystem(),
-        private snippetManager: SnippetManager = new SnippetManager()
+        private snippetCollect: SnippetCollection = new SnippetCollection()
     ) {}
 
     init(): LangServer {
@@ -45,12 +45,10 @@ export class LangServer {
         this.connection.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
         this.connection.onCodeLens(this.onCodeLens.bind(this));
         this.connection.onExecuteCommand(this.onExecuteCommand.bind(this));
-        this.connection.onRequest('assertions', (params: any) => {
-            this.sendAssertionNotification(params.uri);
-        });
+        this.connection.onRequest('assertions', (params: any) => this.sendAssertionNotification(params.uri));
         this.connection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
-        this.connection.onCompletion(this.snippetManager.onCompletion.bind(this.snippetManager));
-        this.connection.onCompletionResolve(this.snippetManager.onCompletionResolve.bind(this.snippetManager));
+        this.connection.onCompletion(() => this.snippetCollect.all());
+        this.connection.onCompletionResolve(this.onCompletionResolve.bind(this));
 
         return this;
     }
@@ -103,9 +101,12 @@ export class LangServer {
         const args: string[] = p[2] || [];
 
         this.connection.sendNotification('running');
-        (await this.executeCommand(params.command, path, args)).sendDiagnostics().sendAssertionNotification(uri);
-        this.connection.sendNotification('done', this.phpUnit.getState());
-        this.connection.console.log(this.phpUnit.getOutput());
+        tap(await this.executeCommand(params.command, path, args), () => {
+            this.sendDiagnostics();
+            this.sendAssertionNotification(uri);
+            this.connection.sendNotification('done', this.phpUnit.getState());
+            this.connection.console.log(this.phpUnit.getOutput());
+        });
     }
 
     private onDocumentSymbol(params: DocumentSymbolParams): SymbolInformation[] {
@@ -114,28 +115,24 @@ export class LangServer {
         return this.phpUnit.getDocumentSymbols(textDocument.getText(), textDocument.uri);
     }
 
-    private sendAssertionNotification(pathOrUri: string): LangServer {
-        return tap(this, () => {
-            const uri: string = this.files.uri(pathOrUri);
-            this.connection.sendNotification('assertions', {
-                uri: uri,
-                assertions: this.phpUnit.getAssertions(uri),
+    private sendAssertionNotification(pathOrUri: string): void {
+        const uri: string = this.files.uri(pathOrUri);
+        this.connection.sendNotification('assertions', {
+            uri: uri,
+            assertions: this.phpUnit.getAssertions(uri),
+        });
+    }
+
+    private sendDiagnostics(): void {
+        this.phpUnit.getDiagnoics().forEach((diagnostics: Diagnostic[], uri: string) => {
+            this.connection.sendDiagnostics({
+                uri,
+                diagnostics,
             });
         });
     }
 
-    private sendDiagnostics(): LangServer {
-        return tap(this, () => {
-            this.phpUnit.getDiagnoics().forEach((diagnostics: Diagnostic[], uri: string) => {
-                this.connection.sendDiagnostics({
-                    uri,
-                    diagnostics,
-                });
-            });
-        });
-    }
-
-    private async executeCommand(command: string, path: string, args: string[]): Promise<LangServer> {
+    private async executeCommand(command: string, path: string, args: string[]): Promise<void> {
         switch (command) {
             case 'phpunit.test.nearest':
                 await this.phpUnit.runNearest(path, args);
@@ -149,7 +146,9 @@ export class LangServer {
                 await this.phpUnit.run(path, args);
                 break;
         }
+    }
 
-        return this;
+    private onCompletionResolve(item: CompletionItem): CompletionItem {
+        return item;
     }
 }

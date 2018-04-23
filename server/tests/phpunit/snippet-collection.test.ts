@@ -1,15 +1,9 @@
-import { Filesystem, FilesystemContract } from '../../../server/src/filesystem';
-import { os, OS } from '../../src/helpers';
-import { Parameters, PhpUnit } from '../../src/phpunit';
-import { projectUri } from '../helpers';
-import { resolve } from 'path';
-import { TextlineRange, Process } from './../../src/phpunit';
-import { SnippetManager, snippets, Snippet } from './../../src/phpunit/snippet-manager';
+import { SnippetCollection, Snippet, snippets } from '../../src/phpunit';
 import { CompletionItemKind, InsertTextFormat, CompletionItem } from 'vscode-languageserver-types';
 
 describe('Snippet Manager Test', () => {
-    const snippetManager: SnippetManager = new SnippetManager();
-    const completions: CompletionItem[] = snippetManager.onCompletion();
+    const snippetCollect: SnippetCollection = new SnippetCollection();
+    const completions: CompletionItem[] = snippetCollect.all();
 
     it('it should get testcase completion item', async () => {
         const name = 'testcase';
@@ -20,7 +14,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: body,
+            detail: name,
+            documentation: body,
             insertText: body,
         });
     });
@@ -34,7 +29,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: body,
+            detail: name,
+            documentation: body,
             insertText: body,
         });
     });
@@ -48,7 +44,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: body,
+            detail: name,
+            documentation: body,
             insertText: body,
         });
     });
@@ -62,7 +59,8 @@ describe('Snippet Manager Test', () => {
             label: snippet.prefix,
             kind: CompletionItemKind.Snippet,
             insertTextFormat: InsertTextFormat.Snippet,
-            detail: body,
+            detail: name,
+            documentation: body,
             insertText: body,
         });
     });

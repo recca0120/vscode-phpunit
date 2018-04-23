@@ -6,6 +6,10 @@ export class TextlineRange {
 
     constructor(private files: FilesystemContract = new Filesystem()) {}
 
+    createFromCode(code: string, lineAt: number): Range {
+        return this.createRange(this.stringToLines(code), lineAt);
+    }
+
     async create(uri: string, lineAt: number): Promise<Range> {
         return this.createRange(await this.getLines(uri), lineAt);
     }
@@ -50,9 +54,13 @@ export class TextlineRange {
     private async getLines(uri: string): Promise<string[]> {
         if (this.items.has(uri) === false) {
             const content: string = await this.files.get(uri);
-            this.items.set(uri, content.split(/\r?\n/g));
+            this.items.set(uri, this.stringToLines(content));
         }
 
         return this.items.get(uri) || [];
+    }
+
+    private stringToLines(content: string): string[] {
+        return content.split(/\r?\n/g);
     }
 }
