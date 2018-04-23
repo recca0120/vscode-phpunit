@@ -1,10 +1,9 @@
 import { Filesystem, FilesystemContract } from '../../../server/src/filesystem';
 import { os, OS } from '../../src/helpers';
 import { Parameters, PhpUnit } from '../../src/phpunit';
-import { Process } from '../../src/process';
 import { projectUri } from '../helpers';
 import { resolve } from 'path';
-import { TextlineRange } from './../../src/phpunit';
+import { TextlineRange, Process } from './../../src/phpunit';
 
 describe('Textline Range Test', () => {
     it('it should find method from line number', async () => {

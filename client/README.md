@@ -9,6 +9,12 @@ and can be used with any editor that supports the protocol. The server utilizes 
 These clients are available:
 * [VS Code](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 
+## VS Code Features
+
+- Keybindings
+    - cmd+t [Run Nearst Test]
+    - cmd+shif+t [Run Last Test]
+
 ## Features
 
 In the current implementation we support following language features.
@@ -25,7 +31,11 @@ In the current implementation we support following language features.
 
 ![Publish Diagnostics](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/diagnostic.gif)
 
-- [ ] Code completion
+- [x] Code completion
+    - testcase
+    - test
+    - setup
+    - teardown
 
 ## Features planned
 

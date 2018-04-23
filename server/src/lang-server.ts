@@ -16,6 +16,7 @@ import {
 import { PhpUnit } from './phpunit';
 import { tap } from './helpers';
 import { FilesystemContract, Filesystem } from './filesystem';
+import { SnippetManager } from './phpunit/snippet-manager';
 
 // The settings interface describe the server relevant settings part
 interface Settings {
@@ -34,7 +35,8 @@ export class LangServer {
         private connection: IConnection = createConnection(ProposedFeatures.all),
         private documents: TextDocuments = new TextDocuments(),
         private phpUnit: PhpUnit = new PhpUnit(),
-        private files: FilesystemContract = new Filesystem()
+        private files: FilesystemContract = new Filesystem(),
+        private snippetManager: SnippetManager = new SnippetManager()
     ) {}
 
     init(): LangServer {
@@ -47,6 +49,7 @@ export class LangServer {
             this.sendAssertionNotification(params.uri);
         });
         this.connection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
+        this.connection.onCompletion(this.snippetManager.getCompletions.bind(this.snippetManager));
 
         return this;
     }
@@ -61,9 +64,9 @@ export class LangServer {
                 // Tell the client that the server works in FULL text document sync mode
                 textDocumentSync: this.documents.syncKind,
                 // Tell the client that the server support code complete
-                // completionProvider: {
-                //     resolveProvider: true,
-                // },
+                completionProvider: {
+                    resolveProvider: true,
+                },
                 codeLensProvider: {
                     resolveProvider: true,
                 },

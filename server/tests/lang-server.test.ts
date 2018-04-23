@@ -15,6 +15,8 @@ describe('Server Test', () => {
         onDocumentSymbol: fn,
         sendNotification: fn,
         sendDiagnostics: fn,
+        onCompletion: fn,
+        onCompletionResolve: fn,
         console: {
             log: fn,
         },
@@ -61,6 +63,9 @@ describe('Server Test', () => {
             expect(cb()).toEqual({
                 capabilities: {
                     textDocumentSync: documents.syncKind,
+                    completionProvider: {
+                        resolveProvider: true,
+                    },
                     codeLensProvider: {
                         resolveProvider: true,
                     },
