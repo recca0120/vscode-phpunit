@@ -61,7 +61,7 @@ class AssertionsTest extends TestCase
         return [
             [0, 0, 0],
             [0, 1, 1],
-            [1, 0, 1],
+            [1, 0, 2],
         ];
     }
 }

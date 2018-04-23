@@ -17,7 +17,7 @@ export class JUnit {
     async parseFile(path: string): Promise<Test[]> {
         return path && (await this.files.exists(path))
             ? tap(await this.parse(await this.files.get(path)), () => {
-                  //   this.files.unlink(path);
+                  this.files.unlink(path);
               })
             : [];
     }
@@ -41,34 +41,26 @@ export class JUnit {
         );
     }
 
-    private getSuites(node: any): any[] {
-        const suite: any = this.getSuite(node);
-
-        return suite instanceof Array
-            ? suite.reduce((suites: any[], suite: any) => {
-                  return suites.concat(this.getSuites(suite));
-              }, [])
-            : [suite];
-    }
-
-    private getSuite(node: any): any {
-        return when(
-            node.testsuite,
-            (testsuite: any) => {
-                while (testsuite.testsuite) {
-                    testsuite = testsuite.testsuite;
-                }
-
-                return testsuite;
-            },
-            node
-        );
-    }
-
     private getNodes(node: any): Node[] {
-        return this.getSuites(node.testsuites).reduce((tests: any[], suite: any) => {
-            return tests.concat(suite.testcase);
-        }, []);
+        if (node.testsuites) {
+            return this.getNodes(node.testsuites);
+        }
+
+        const nodes: Node[] = [];
+
+        if (node.testcase) {
+            nodes.push(...this.ensureArray(node.testcase));
+        }
+
+        if (node.testsuite) {
+            nodes.push(
+                ...this.ensureArray(node.testsuite).reduce((nodes: Node[], testsuite: Node) => {
+                    return nodes.concat(this.getNodes(testsuite));
+                }, [])
+            );
+        }
+
+        return nodes;
     }
 
     private getTests(nodes: Node[]): Promise<Test[]> {
@@ -191,5 +183,9 @@ export class JUnit {
             uri: uri,
             range: await this.textLineRange.create(uri, line - 1),
         };
+    }
+
+    private ensureArray(nodes: any): any[] {
+        return nodes instanceof Array ? nodes : [nodes];
     }
 }

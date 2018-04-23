@@ -251,7 +251,7 @@ describe('JUnit Test', () => {
     });
 
     it('test_sum', () => {
-        expect(tests[8]).toEqual({
+        expect(tests[11]).toEqual({
             name: 'test_sum',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
@@ -272,7 +272,7 @@ describe('JUnit Test', () => {
     });
 
     it('test_sum_fail', () => {
-        expect(tests[9]).toEqual({
+        expect(tests[12]).toEqual({
             name: 'test_sum_fail',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
@@ -312,7 +312,7 @@ describe('JUnit Test', () => {
     });
 
     it('test_sum_item', () => {
-        expect(tests[10]).toEqual({
+        expect(tests[13]).toEqual({
             name: 'test_sum_item',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
@@ -333,7 +333,7 @@ describe('JUnit Test', () => {
     });
 
     it('test_sum_item_method_not_call', () => {
-        expect(tests[11]).toEqual({
+        expect(tests[14]).toEqual({
             name: 'test_sum_item_method_not_call',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
@@ -452,7 +452,7 @@ describe('JUnit Test', () => {
     });
 
     it('test_sum_item', () => {
-        expect(tests[12]).toEqual({
+        expect(tests[15]).toEqual({
             name: 'test_throw_exception',
             class: 'Tests\\CalculatorTest',
             classname: 'Tests.CalculatorTest',
