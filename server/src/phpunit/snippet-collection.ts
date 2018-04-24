@@ -29,19 +29,19 @@ export const snippets: Sinppets = {
     },
     test: {
         prefix: 'test',
-        body: ['/** @test */', 'public function ${1:test_name}()', '{', '    ${0:// assertions}', '}'],
+        body: ['/** @test */', 'public function ${1:test_name}()', '{', '    ${0:// assertions}', '}', ''],
         description: 'PHPUnit: test',
         scope: 'source.php',
     },
     setup: {
         prefix: 'setup',
-        body: ['protected function setUp()', '{', '    parent::setUp();', '    ${0:// }', '}'],
+        body: ['protected function setUp()', '{', '    parent::setUp();', '    ${0:// }', '}', ''],
         description: 'PHPUnit: setup method declaration',
         scope: 'source.php',
     },
     teardown: {
         prefix: 'teardown',
-        body: ['protected function tearDown()', '{', '    parent::tearDown();', '    ${0:// }', '}'],
+        body: ['protected function tearDown()', '{', '    parent::tearDown();', '    ${0:// }', '}', ''],
         description: 'PHPUnit: teardown method declaration',
         scope: 'source.php',
     },
