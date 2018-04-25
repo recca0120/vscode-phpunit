@@ -49,7 +49,7 @@ export function activate(context: ExtensionContext) {
     const client = new LanguageClient('phpunit', 'PHPUnit Language Server', serverOptions, clientOptions);
     const decorateManager: DecorateManager = new DecorateManager(client, context, window);
     const commandRegister: CommandRegister = new CommandRegister(client, window).register();
-    const statusBarManager: StatusBarManager = new StatusBarManager(client);
+    const statusBarManager: StatusBarManager = new StatusBarManager(client, decorateManager);
     const configurationListener: ConfigurationListener = new ConfigurationListener(client);
 
     client.onReady().then(() => {

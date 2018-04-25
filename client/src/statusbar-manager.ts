@@ -1,5 +1,7 @@
-import { window, StatusBarAlignment, StatusBarItem } from 'vscode';
+import { window as win, StatusBarAlignment, StatusBarItem, TextEditor } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
+import { DecorateManager } from './decorate-manage';
+import { when } from './helpers';
 
 class Spinner {
     private frames: string[] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -16,8 +18,13 @@ export class StatusBarManager {
     private statusKey: string = 'PHPUnit';
     private statusBarSpinner: any;
 
-    constructor(private client: LanguageClient, private win = window, private spinner: Spinner = new Spinner()) {
-        this.statusBarItem = this.win.createStatusBarItem(StatusBarAlignment.Left);
+    constructor(
+        private client: LanguageClient,
+        private decorateManager: DecorateManager,
+        private window = win,
+        private spinner: Spinner = new Spinner()
+    ) {
+        this.statusBarItem = this.window.createStatusBarItem(StatusBarAlignment.Left);
         this.initial();
     }
 
@@ -30,6 +37,10 @@ export class StatusBarManager {
 
     private onRunning(): void {
         this.client.outputChannel.clear();
+        when(this.window.activeTextEditor, (editor: TextEditor) => {
+            this.decorateManager.clearDecoratedGutter(editor);
+        });
+
         this.running();
     }
 
