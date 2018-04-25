@@ -29,6 +29,10 @@ export class CommandRegister {
             this.registerCommand('phpunit.client.test.last', (command: string, uri: string) => {
                 this.execute({ command: command, arguments: [uri, uri, []] });
             });
+
+            this.commands.registerCommand('show.outputchannel', () => {
+                this.client.outputChannel.show();
+            });
         });
     }
 

@@ -1,7 +1,7 @@
 import { window as win, StatusBarAlignment, StatusBarItem, TextEditor } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { DecorateManager } from './decorate-manage';
-import { when } from './helpers';
+import { when, tap } from './helpers';
 
 class Spinner {
     private frames: string[] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -24,7 +24,12 @@ export class StatusBarManager {
         private window = win,
         private spinner: Spinner = new Spinner()
     ) {
-        this.statusBarItem = this.window.createStatusBarItem(StatusBarAlignment.Left);
+        this.statusBarItem = tap(
+            this.window.createStatusBarItem(StatusBarAlignment.Left),
+            (statusBarItem: StatusBarItem) => {
+                statusBarItem.command = 'show.outputchannel';
+            }
+        );
         this.initial();
     }
 
