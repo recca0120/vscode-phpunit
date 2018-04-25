@@ -22,4 +22,8 @@
             <directory suffix=".php">./src</directory>
         </whitelist>
     </filter>
+    <logging>
+        <log type="coverage-clover" target="./build/coverage.xml"/>
+        <log type="coverage-php" target="./build/coverage.serialized"/>
+    </logging>
 </phpunit>

@@ -1,0 +1,77 @@
+<?php
+$coverage = new SebastianBergmann\CodeCoverage\CodeCoverage;
+$coverage->setData(array (
+  'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\src\\Item.php' => 
+  array (
+    11 => 
+    array (
+      0 => 'Tests\\CalculatorTest::test_sum_item',
+      1 => 'Tests\\CalculatorTest::test_sum_item_method_not_call',
+    ),
+    12 => 
+    array (
+      0 => 'Tests\\CalculatorTest::test_sum_item',
+      1 => 'Tests\\CalculatorTest::test_sum_item_method_not_call',
+    ),
+    16 => 
+    array (
+      0 => 'Tests\\CalculatorTest::test_sum_item',
+      1 => 'Tests\\CalculatorTest::test_sum_item_method_not_call',
+    ),
+    17 => NULL,
+  ),
+  'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\src\\Calculator.php' => 
+  array (
+    11 => 
+    array (
+      0 => 'Tests\\CalculatorTest::test_sum',
+      1 => 'Tests\\CalculatorTest::test_sum_fail',
+    ),
+    12 => NULL,
+    16 => 
+    array (
+      0 => 'Tests\\CalculatorTest::test_sum_item',
+      1 => 'Tests\\CalculatorTest::test_sum_item_method_not_call',
+    ),
+    17 => NULL,
+    21 => 
+    array (
+    ),
+    22 => NULL,
+  ),
+));
+$coverage->setTests(array (
+  'UNCOVERED_FILES_FROM_WHITELIST' => 
+  array (
+    'size' => 'unknown',
+    'status' => NULL,
+  ),
+  'Tests\\CalculatorTest::test_sum' => 
+  array (
+    'size' => 'unknown',
+    'status' => 0,
+  ),
+  'Tests\\CalculatorTest::test_sum_fail' => 
+  array (
+    'size' => 'unknown',
+    'status' => 3,
+  ),
+  'Tests\\CalculatorTest::test_sum_item' => 
+  array (
+    'size' => 'unknown',
+    'status' => 0,
+  ),
+  'Tests\\CalculatorTest::test_sum_item_method_not_call' => 
+  array (
+    'size' => 'unknown',
+    'status' => 4,
+  ),
+));
+
+$filter = $coverage->filter();
+$filter->setWhitelistedFiles(array (
+  'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\src\\Calculator.php' => true,
+  'C:\\Users\\recca\\Desktop\\vscode-phpunit\\server\\tests\\fixtures\\project\\src\\Item.php' => true,
+));
+
+return $coverage;

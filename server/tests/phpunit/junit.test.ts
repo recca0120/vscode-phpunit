@@ -13,7 +13,7 @@ describe('JUnit Test', () => {
     let tests: Test[] = [];
 
     beforeAll(async () => {
-        const jUnitFile: string = projectPath('junit.xml');
+        const jUnitFile: string = projectPath('build/testsuite.xml');
         content = await files.get(jUnitFile);
         content = content.replace(pathPattern, (...m) => {
             return projectPath(m[1]);

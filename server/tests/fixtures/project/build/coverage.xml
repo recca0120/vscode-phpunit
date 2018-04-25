@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1524675603">
+  <project timestamp="1524675603">
+    <package name="App">
+      <file name="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\src/Calculator.php">
+        <class name="App\Calculator" namespace="App">
+          <metrics complexity="3" methods="3" coveredmethods="2" conditionals="0" coveredconditionals="0" statements="3" coveredstatements="2" elements="6" coveredelements="4"/>
+        </class>
+        <line num="9" type="method" name="sum" visibility="public" complexity="1" crap="1" count="2"/>
+        <line num="11" type="stmt" count="2"/>
+        <line num="14" type="method" name="sumItem" visibility="public" complexity="1" crap="1" count="2"/>
+        <line num="16" type="stmt" count="2"/>
+        <line num="19" type="method" name="throwException" visibility="public" complexity="1" crap="2.00" count="0"/>
+        <line num="21" type="stmt" count="0"/>
+        <metrics loc="23" ncloc="23" classes="1" methods="3" coveredmethods="2" conditionals="0" coveredconditionals="0" statements="3" coveredstatements="2" elements="6" coveredelements="4"/>
+      </file>
+      <file name="C:\Users\recca\Desktop\vscode-phpunit\server\tests\fixtures\project\src/Item.php">
+        <class name="App\Item" namespace="App">
+          <metrics complexity="2" methods="2" coveredmethods="2" conditionals="0" coveredconditionals="0" statements="3" coveredstatements="3" elements="5" coveredelements="5"/>
+        </class>
+        <line num="9" type="method" name="__construct" visibility="public" complexity="1" crap="1" count="2"/>
+        <line num="11" type="stmt" count="2"/>
+        <line num="12" type="stmt" count="2"/>
+        <line num="14" type="method" name="value" visibility="public" complexity="1" crap="1" count="2"/>
+        <line num="16" type="stmt" count="2"/>
+        <metrics loc="18" ncloc="18" classes="1" methods="2" coveredmethods="2" conditionals="0" coveredconditionals="0" statements="3" coveredstatements="3" elements="5" coveredelements="5"/>
+      </file>
+    </package>
+    <metrics files="2" loc="41" ncloc="41" classes="2" methods="5" coveredmethods="4" conditionals="0" coveredconditionals="0" statements="6" coveredstatements="5" elements="11" coveredelements="9"/>
+  </project>
+</coverage>
