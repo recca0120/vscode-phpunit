@@ -3,8 +3,7 @@ import { Detail, FaultNode, Node, Test, Type } from './common';
 import { Filesystem, FilesystemContract } from '../filesystem';
 import { tap, value, when } from '../helpers';
 import { TextlineRange } from './textline-range';
-
-const parse = require('fast-xml-parser').parse;
+import { parse } from 'fast-xml-parser';
 
 export class JUnit {
     private pathPattern: RegExp = /(.*):(\d+)$/;
