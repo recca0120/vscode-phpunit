@@ -3,13 +3,13 @@ import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity } from 'vs
 import { Filesystem, FilesystemContract } from '../filesystem';
 import { groupBy, tap, when } from '../helpers';
 
-export class Collection {
+export class JUnitCollection {
     private errorTypes: Type[] = [Type.ERROR, Type.FAILED, Type.FAILURE, Type.RISKY];
     private items: Map<string, Test[]> = new Map<string, Test[]>();
 
     constructor(private files: FilesystemContract = new Filesystem()) {}
 
-    put(tests: Test[]): Collection {
+    put(tests: Test[]): JUnitCollection {
         const groups: Map<string, Test[]> = groupBy(tests, 'uri');
 
         for (const key of groups.keys()) {
@@ -23,7 +23,7 @@ export class Collection {
         return this.asArray(this.items.get(this.files.uri(uri)));
     }
 
-    forEach(callback: Function): Collection {
+    forEach(callback: Function): JUnitCollection {
         this.items.forEach((tests: Test[], uri: string) => {
             callback(tests, uri);
         });

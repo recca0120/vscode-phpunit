@@ -1,12 +1,12 @@
 import { Filesystem } from '../../src/filesystem';
-import { JUnit, Test, Type } from '../../src/phpunit';
+import { JUnitParser, Test, Type } from '../../src/phpunit';
 import { parse } from 'fast-xml-parser';
 import { pathPattern, projectPath, projectUri } from './../helpers';
 import { resolve } from 'path';
 
-describe('JUnit Test', () => {
+describe('JUnit Parser Test', () => {
     const files = new Filesystem();
-    const jUnit: JUnit = new JUnit(files);
+    const jUnit: JUnitParser = new JUnitParser(files);
     const path = projectPath('tests/AssertionsTest.php');
     const path2 = projectPath('tests/CalculatorTest.php');
     let content: string = '';

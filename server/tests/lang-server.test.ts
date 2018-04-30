@@ -1,6 +1,6 @@
 import { LangServer } from './../src/lang-server';
 import { IConnection, TextDocuments, createConnection } from 'vscode-languageserver';
-import { PhpUnit, Cli, Collection } from './../src/phpunit';
+import { PhpUnit, Cli, JUnitCollection } from './../src/phpunit';
 import { TextDocument, Diagnostic } from 'vscode-languageserver-types';
 
 const fn = () => {};
@@ -30,7 +30,7 @@ describe('Server Test', () => {
     } as any;
 
     const cli: Cli = new Cli();
-    const collect: Collection = new Collection();
+    const jUnits: JUnitCollection = new JUnitCollection();
 
     it('it should initial server', () => {
         const phpUnit: PhpUnit = new PhpUnit();

@@ -1,4 +1,4 @@
-import { PhpUnit, Cli, Parameters, JUnit, Process, Collection } from '../../src/phpunit';
+import { PhpUnit, Cli, Parameters, JUnitParser, Process, JUnitCollection } from '../../src/phpunit';
 import { FilesystemContract, POSIX, Filesystem } from '../../src/filesystem';
 import { normalize } from 'path';
 import { projectPath } from '../helpers';
@@ -9,7 +9,7 @@ describe('PHPUnit Test', () => {
         const files: FilesystemContract = new POSIX();
         const process: Process = new Process();
         const parameters: Parameters = new Parameters();
-        const jUnit: JUnit = new JUnit();
+        const jUnit: JUnitParser = new JUnitParser();
         const cli: Cli = new Cli(files, process, parameters, jUnit);
         const phpUnit: PhpUnit = new PhpUnit(cli);
 
@@ -40,19 +40,19 @@ describe('PHPUnit Test', () => {
         });
     });
 
-    it('it should get result throuth collection', () => {
-        const collect: Collection = new Collection();
+    it('it should get result throuth junit collection', () => {
+        const junits: JUnitCollection = new JUnitCollection();
         const cli: Cli = new Cli();
-        const phpUnit: PhpUnit = new PhpUnit(cli, collect);
+        const phpUnit: PhpUnit = new PhpUnit(cli, junits);
 
-        spyOn(collect, 'asDiagnoics');
-        spyOn(collect, 'asState');
+        spyOn(junits, 'asDiagnoics');
+        spyOn(junits, 'asState');
 
         phpUnit.getDiagnoics();
         phpUnit.getState();
 
-        expect(collect.asDiagnoics).toHaveBeenCalled();
-        expect(collect.asState).toHaveBeenCalled();
+        expect(junits.asDiagnoics).toHaveBeenCalled();
+        expect(junits.asState).toHaveBeenCalled();
     });
 
     describe('CodeLen Test', () => {

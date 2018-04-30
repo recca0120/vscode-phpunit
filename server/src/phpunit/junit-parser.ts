@@ -5,7 +5,7 @@ import { tap, value, when } from '../helpers';
 import { TextlineRange } from './textline-range';
 import { parse } from 'fast-xml-parser';
 
-export class JUnit {
+export class JUnitParser {
     private pathPattern: RegExp = /(.*):(\d+)$/;
 
     constructor(

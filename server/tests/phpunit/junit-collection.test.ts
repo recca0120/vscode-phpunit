@@ -1,9 +1,9 @@
-import { Assertion, Collection, Test, Type } from '../../src/phpunit';
+import { Assertion, JUnitCollection, Test, Type } from '../../src/phpunit';
 import { Diagnostic, PublishDiagnosticsParams, Range } from 'vscode-languageserver';
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { projectPath, projectUri } from '../helpers';
 
-describe('Collection Test', () => {
+describe('JUnit Collection Test', () => {
     const files: FilesystemContract = new Filesystem();
     const path: string = projectPath('junit.xml');
     const uri: string = projectUri('tests/CalculatorTest.php');
@@ -61,7 +61,7 @@ describe('Collection Test', () => {
     ];
 
     it('it should put tests and remove same tests', () => {
-        const collect: Collection = new Collection();
+        const junits: JUnitCollection = new JUnitCollection();
 
         const oldTests: Test[] = [
             {
@@ -84,9 +84,9 @@ describe('Collection Test', () => {
             },
         ];
 
-        collect.put(oldTests);
+        junits.put(oldTests);
 
-        expect(collect.get('foo')).toEqual([
+        expect(junits.get('foo')).toEqual([
             {
                 name: 'method_1',
                 class: 'foo',
@@ -137,9 +137,9 @@ describe('Collection Test', () => {
             },
         ];
 
-        collect.put(newTests);
+        junits.put(newTests);
 
-        expect(collect.get('foo')).toEqual([
+        expect(junits.get('foo')).toEqual([
             {
                 name: 'method_1',
                 class: 'foo',
@@ -169,7 +169,7 @@ describe('Collection Test', () => {
             },
         ]);
 
-        expect(collect.get('bar')).toEqual([
+        expect(junits.get('bar')).toEqual([
             {
                 name: 'method_1',
                 class: 'bar',
@@ -183,10 +183,10 @@ describe('Collection Test', () => {
     });
 
     it('it should get diagnostics', () => {
-        const collect: Collection = new Collection();
-        collect.put(tests);
+        const junits: JUnitCollection = new JUnitCollection();
+        junits.put(tests);
 
-        const diagnostics: Map<string, Diagnostic[]> = collect.asDiagnoics();
+        const diagnostics: Map<string, Diagnostic[]> = junits.asDiagnoics();
 
         expect(diagnostics.get(uri)[0]).toEqual({
             severity: 1,
@@ -207,10 +207,10 @@ describe('Collection Test', () => {
     });
 
     it('it should get assertions', async () => {
-        const collect: Collection = new Collection();
-        collect.put(tests);
+        const junits: JUnitCollection = new JUnitCollection();
+        junits.put(tests);
 
-        const assertionGroup: Map<string, Assertion[]> = collect.asAssertions();
+        const assertionGroup: Map<string, Assertion[]> = junits.asAssertions();
         let assertions: Assertion[] = assertionGroup.get(uri);
 
         expect(assertions[0]).toEqual({
@@ -325,8 +325,8 @@ describe('Collection Test', () => {
     });
 
     it('it should get state', () => {
-        const collect: Collection = new Collection();
-        collect.put([
+        const junits: JUnitCollection = new JUnitCollection();
+        junits.put([
             {
                 name: 'method_1',
                 class: 'foo',
@@ -374,7 +374,7 @@ describe('Collection Test', () => {
             },
         ]);
 
-        expect(collect.asState()).toEqual({
+        expect(junits.asState()).toEqual({
             failed: 1,
             passed: 3,
             warning: 1,

@@ -1,6 +1,6 @@
 import { Command } from 'vscode-languageserver-types';
 import { Filesystem, FilesystemContract } from '../filesystem';
-import { JUnit } from './junit';
+import { JUnitParser } from './junit-parser';
 import { os, OS, tap, value } from '../helpers';
 import { Parameters } from './parameters';
 import { Process } from './process';
@@ -17,7 +17,7 @@ export class Cli {
         private files: FilesystemContract = new Filesystem(),
         private process: Process = new Process(),
         private parameters = new Parameters(),
-        private jUnit: JUnit = new JUnit(),
+        private jUnit: JUnitParser = new JUnitParser(),
         private dispatcher: EventEmitter = new EventEmitter()
     ) {}
 
