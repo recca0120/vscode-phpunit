@@ -1,4 +1,4 @@
-import { Assertion, JUnitCollection, Test, Type } from '../../src/phpunit';
+import { Assertion, TestResult, Test, Type } from '../../src/phpunit';
 import { Diagnostic, PublishDiagnosticsParams, Range } from 'vscode-languageserver';
 import { Filesystem, FilesystemContract } from '../../src/filesystem';
 import { projectPath, projectUri } from '../helpers';
@@ -61,7 +61,7 @@ describe('JUnit Collection Test', () => {
     ];
 
     it('it should put tests and remove same tests', () => {
-        const junits: JUnitCollection = new JUnitCollection();
+        const junits: TestResult = new TestResult();
 
         const oldTests: Test[] = [
             {
@@ -183,7 +183,7 @@ describe('JUnit Collection Test', () => {
     });
 
     it('it should get diagnostics', () => {
-        const junits: JUnitCollection = new JUnitCollection();
+        const junits: TestResult = new TestResult();
         junits.put(tests);
 
         const diagnostics: Map<string, Diagnostic[]> = junits.asDiagnoics();
@@ -207,7 +207,7 @@ describe('JUnit Collection Test', () => {
     });
 
     it('it should get assertions', async () => {
-        const junits: JUnitCollection = new JUnitCollection();
+        const junits: TestResult = new TestResult();
         junits.put(tests);
 
         const assertionGroup: Map<string, Assertion[]> = junits.asAssertions();
@@ -325,8 +325,8 @@ describe('JUnit Collection Test', () => {
     });
 
     it('it should get state', () => {
-        const junits: JUnitCollection = new JUnitCollection();
-        junits.put([
+        const testResult: TestResult = new TestResult();
+        testResult.put([
             {
                 name: 'method_1',
                 class: 'foo',
@@ -374,7 +374,7 @@ describe('JUnit Collection Test', () => {
             },
         ]);
 
-        expect(junits.asState()).toEqual({
+        expect(testResult.asState()).toEqual({
             failed: 1,
             passed: 3,
             warning: 1,

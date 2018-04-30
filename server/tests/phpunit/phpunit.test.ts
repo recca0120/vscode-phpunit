@@ -1,4 +1,4 @@
-import { PhpUnit, Cli, Parameters, JUnitParser, Process, JUnitCollection } from '../../src/phpunit';
+import { PhpUnit, Cli, Parameters, JUnitParser, Process, TestResult } from '../../src/phpunit';
 import { FilesystemContract, POSIX, Filesystem } from '../../src/filesystem';
 import { normalize } from 'path';
 import { projectPath } from '../helpers';
@@ -41,18 +41,18 @@ describe('PHPUnit Test', () => {
     });
 
     it('it should get result throuth junit collection', () => {
-        const junits: JUnitCollection = new JUnitCollection();
+        const testResult: TestResult = new TestResult();
         const cli: Cli = new Cli();
-        const phpUnit: PhpUnit = new PhpUnit(cli, junits);
+        const phpUnit: PhpUnit = new PhpUnit(cli, testResult);
 
-        spyOn(junits, 'asDiagnoics');
-        spyOn(junits, 'asState');
+        spyOn(testResult, 'asDiagnoics');
+        spyOn(testResult, 'asState');
 
         phpUnit.getDiagnoics();
         phpUnit.getState();
 
-        expect(junits.asDiagnoics).toHaveBeenCalled();
-        expect(junits.asState).toHaveBeenCalled();
+        expect(testResult.asDiagnoics).toHaveBeenCalled();
+        expect(testResult.asState).toHaveBeenCalled();
     });
 
     describe('CodeLen Test', () => {

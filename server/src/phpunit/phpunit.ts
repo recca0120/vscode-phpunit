@@ -1,7 +1,7 @@
 import { Ast } from './ast';
 import { Cli } from './cli';
 import { CodeLens, Diagnostic, SymbolInformation, SymbolKind } from 'vscode-languageserver-types';
-import { JUnitCollection } from './junit-collection';
+import { TestResult } from './test-result';
 import { Filesystem, FilesystemContract } from './../filesystem';
 import { tap, when } from '../helpers';
 import { TestNode, Assertion, Test, State } from './common';
@@ -21,7 +21,7 @@ export class PhpUnit {
 
     constructor(
         private cli: Cli = new Cli(),
-        private junits: JUnitCollection = new JUnitCollection(),
+        private testResult: TestResult = new TestResult(),
         private ast: Ast = new Ast(),
         private files: FilesystemContract = new Filesystem(),
         private textlineRange: TextlineRange = new TextlineRange()
@@ -29,7 +29,7 @@ export class PhpUnit {
         this.cli.on('done', (output: string, tests: Test[], path: string, params: string[]) => {
             this.output = output;
             if (tests.length > 0) {
-                this.junits.put(tests);
+                this.testResult.put(tests);
                 this.lastCommand = { path, params };
             }
         });
@@ -56,7 +56,7 @@ export class PhpUnit {
 
         return testNodes
             .concat(
-                this.junits.asTestNodes(uri).filter((testNode: TestNode) => {
+                this.testResult.asTestNodes(uri).filter((testNode: TestNode) => {
                     for (const node of testNodes) {
                         if (node.uri === testNode.uri && testNode.range === testNode.range) {
                             return false;
@@ -70,11 +70,11 @@ export class PhpUnit {
     }
 
     getDiagnoics(): Map<string, Diagnostic[]> {
-        return this.junits.asDiagnoics();
+        return this.testResult.asDiagnoics();
     }
 
     getAssertions(uri: string): Assertion[] {
-        return this.junits.asAssertions().get(uri) || [];
+        return this.testResult.asAssertions().get(uri) || [];
     }
 
     getDocumentSymbols(code: string, uri: string): SymbolInformation[] {
@@ -82,7 +82,7 @@ export class PhpUnit {
     }
 
     getState(): State {
-        return this.junits.asState();
+        return this.testResult.asState();
     }
 
     getOutput(): string {
