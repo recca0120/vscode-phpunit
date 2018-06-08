@@ -1,0 +1,92 @@
+{
+	"name": "vscode-phpunit",
+	"description": "phpunit language server",
+	"author": "recca0120",
+	"license": "MIT",
+	"version": "1.0.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/recca0120/vscode-phpunit"
+	},
+	"publisher": "recca0120",
+	"categories": [
+		"Programming Languages"
+	],
+	"keywords": [
+		"PHPUnit"
+	],
+	"engines": {
+		"vscode": "^1.23.0"
+	},
+	"activationEvents": [
+		"onLanguage:php"
+	],
+	"main": "./client/out/extension",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "phpunit configuration",
+			"properties": {
+				"phpunit.execPath": {
+					"type": "string",
+					"default": "",
+					"description": "Path to phpunit executable (if empty it tries to use composer installation).",
+					"scope": "resource"
+				},
+				"phpunit.args": {
+					"type": "array",
+					"default": [],
+					"description": "Any phpunit args (phpunit --help)",
+					"scope": "resource"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+		"compile:client": "tsc -p ./client/tsconfig.json",
+		"compile:server": "tsc -p ./server/tsconfig.json",
+		"watch:client": "tsc -w -p ./client/tsconfig.json",
+		"watch:server": "tsc -w -p ./server/tsconfig.json",
+		"compile": "npm run compile:client && npm run compile:server",
+		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+		"test": "npm run compile && jest",
+        "test:watch": "jest --watch",
+        "report": "jest --coverage",
+        "report:watch": "jest --coverage --watch",
+        "precommit": "lint-staged",
+        "prettier": "prettier",
+        "prettier-write": "npm run prettier -- --single-quote --trailing-comma es5 --write --print-width 120 --tab-width 4",
+        "prettier-project": "npm run prettier-write -- {client,server}/{test,tests,src}/**/*.ts"
+	},
+	"devDependencies": {
+		"@types/jest": "^23.0.0",
+		"@types/node": "^8.0.0",
+		"husky": "^0.14.3",
+		"jest": "^23.1.0",
+		"lint-staged": "^7.1.3",
+		"prettier": "^1.13.4",
+		"ts-jest": "^22.4.6",
+		"tslint": "^5.10.0",
+		"typescript": "2.8.3"
+	},
+	"jest": {
+        "globals": {
+            "ts-jest": {
+                "tsConfigFile": "server/tsconfig.json"
+            }
+        },
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+        "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+        "collectCoverage": true,
+        "coverageReporters": ["json", "html"]
+	},
+	"lint-staged": {
+        "linters": {
+            "**/*.{ts,js,json}": ["npm run prettier-write --", "git add"]
+        }
+    }
+}

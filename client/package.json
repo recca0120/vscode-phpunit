@@ -1,0 +1,23 @@
+{
+	"name": "lsp-phpunit-client",
+	"description": "VSCode part of a language server",
+	"author": "recca0120",
+	"license": "MIT",
+	"version": "0.0.1",
+	"publisher": "recca0120",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/recca0120/vscode-phpunit"
+	},
+	"engines": {
+		"vscode": "^1.23.0"
+	},
+	"scripts": {
+		"update-vscode": "node ./node_modules/vscode/bin/install",
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"dependencies": {
+		"vscode": "^1.1.18",
+		"vscode-languageclient": "^4.1.4"
+	}
+}
