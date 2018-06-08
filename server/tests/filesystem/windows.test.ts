@@ -1,0 +1,50 @@
+import { Filesystem, WINDOWS, Factory } from '../../src/filesystem';
+import { resolve } from 'path';
+import { fileUrl, fixturePath } from '../helpers';
+
+describe('Filesystem WINDOWS Test', () => {
+    const factory = new Factory();
+
+    it('it should normalize path', () => {
+        const files: Filesystem = new WINDOWS();
+        expect(files.normalizePath('file:///c%3A/foo/bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('file:///c:/foo/bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('c:\\foo\\bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('c:/foo/bar')).toEqual('c:\\foo\\bar');
+        expect(files.normalizePath('file:///c%3A/foo/ba r')).toEqual('c:\\foo\\ba\\ r');
+    });
+
+    it('it should check file exists', async () => {
+        const files: Filesystem = factory.create();
+
+        expect(await files.exists(fixturePath('bin/ls'))).toBeTruthy();
+        expect(await files.exists(fixturePath('bin/cmd.exe'))).toBeTruthy();
+        expect(await files.exists(fixturePath('bin/pwd'))).toBeFalsy();
+    });
+
+    it('it should check file exists', async () => {
+        const files: Filesystem = factory.create();
+
+        expect(await files.exists(fixturePath('bin/ls'))).toBeTruthy();
+        expect(await files.exists(fixturePath('bin/cmd.exe'))).toBeTruthy();
+        expect(await files.exists(fixturePath('bin/pwd'))).toBeFalsy();
+    });
+
+    it('check file url exists', async () => {
+        const files: Filesystem = factory.create();
+
+        expect(await files.exists(fileUrl(fixturePath('bin/ls')))).toBeTruthy();
+        expect(await files.exists(fileUrl(fixturePath('bin/cmd.exe')))).toBeTruthy();
+        expect(await files.exists(fileUrl(fixturePath('bin/pwd')))).toBeFalsy();
+    });
+
+    it('it should find path from system path', async () => {
+        const files: Filesystem = new WINDOWS();
+        const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
+        files.setSystemPaths(systemPaths.join(';'));
+
+        expect(await files.which(__filename, __filename)).toEqual(resolve(__dirname, __filename));
+        expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.exe'));
+        expect(await files.which('fail')).toEqual('');
+    });
+});

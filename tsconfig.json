@@ -1,0 +1,23 @@
+{
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"target": "es6",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"outDir": "out",
+		"rootDir": "src",
+		"lib": [ "es6" ]
+	},
+	"include": [
+		"client/src",
+		"server/src"
+	],
+	"exclude": [
+		"coverage",
+		"client/node_modules",
+		"node_modules",
+		"server/node_modules",
+		"tests",
+	]
+}

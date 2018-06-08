@@ -71,18 +71,11 @@
 		"typescript": "2.8.3"
 	},
 	"jest": {
-        "globals": {
-            "ts-jest": {
-                "tsConfigFile": "server/tsconfig.json"
-            }
-        },
         "transform": {
             "^.+\\.tsx?$": "ts-jest"
         },
         "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-        "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-        "collectCoverage": true,
-        "coverageReporters": ["json", "html"]
+        "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "node"]
 	},
 	"lint-staged": {
         "linters": {
