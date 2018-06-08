@@ -1,5 +1,5 @@
 import { Filesystem } from './filesystem';
-import { resolve as pathResolve } from 'path';
+import { resolve as pathResolve, parse } from 'path';
 import { stat } from 'fs';
 
 export class POSIX implements Filesystem {
@@ -49,5 +49,30 @@ export class POSIX implements Filesystem {
                 resolve(err && err.code === 'ENOENT' ? false : true);
             });
         });
+    }
+
+    async findUp(search: string, cwd: string = process.cwd(), root?: string): Promise<string> {
+        let file: string;
+        root = pathResolve(!root ? parse(cwd).root : root);
+        cwd = pathResolve(cwd);
+
+        do {
+            for (const ext of this.extensions) {
+                file = pathResolve(cwd, `${search}${ext}`);
+                if ((await this.exists(file)) === true) {
+                    return file;
+                }
+            }
+
+            if (cwd === root) {
+                break;
+            }
+
+            cwd = pathResolve(cwd, '..');
+        } while (cwd !== root);
+
+        file = pathResolve(cwd, search);
+
+        return (await this.exists(file)) === true ? file : '';
     }
 }

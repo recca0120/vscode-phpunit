@@ -1,6 +1,7 @@
 import { Filesystem, WINDOWS, Factory } from '../../src/filesystem';
 import { resolve } from 'path';
-import { fileUrl, fixturePath } from '../helpers';
+import { fileUrl, fixturePath, projectPath } from '../helpers';
+import { tap } from 'lodash';
 
 describe('Filesystem WINDOWS Test', () => {
     const factory = new Factory();
@@ -46,5 +47,17 @@ describe('Filesystem WINDOWS Test', () => {
         expect(await files.which(__filename, __filename)).toEqual(resolve(__dirname, __filename));
         expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.exe'));
         expect(await files.which('fail')).toEqual('');
+    });
+
+    it('it should find up path', async () => {
+        const files: Filesystem = new WINDOWS();
+
+        tap(await files.findUp('vendor-stub/bin/phpunit', projectPath('tests')), (path: string) => {
+            expect(path).toEqual(projectPath('vendor-stub/bin/phpunit.bat'));
+        });
+
+        tap(await files.findUp('vendor-stub/bin/phpunit', projectPath()), (path: string) => {
+            expect(path).toEqual(projectPath('vendor-stub/bin/phpunit.bat'));
+        });
     });
 });

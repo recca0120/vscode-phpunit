@@ -1,6 +1,7 @@
 import { Filesystem, POSIX, Factory } from '../../src/filesystem';
 import { resolve } from 'path';
-import { fileUrl, fixturePath } from '../helpers';
+import { fileUrl, fixturePath, projectPath } from '../helpers';
+import { tap } from 'lodash';
 
 describe('Filesystem POSIX Test', () => {
     const factory = new Factory();
@@ -38,5 +39,17 @@ describe('Filesystem POSIX Test', () => {
         expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd'));
         expect(await files.which('ls')).toEqual(fixturePath('bin/ls'));
         expect(await files.which('fail')).toEqual('');
+    });
+
+    it('it should find up path', async () => {
+        const files: Filesystem = new POSIX();
+
+        tap(await files.findUp('vendor-stub/bin/phpunit', projectPath('tests')), (path: string) => {
+            expect(path).toEqual(projectPath('vendor-stub/bin/phpunit'));
+        });
+
+        tap(await files.findUp('vendor-stub/bin/phpunit', projectPath()), (path: string) => {
+            expect(path).toEqual(projectPath('vendor-stub/bin/phpunit'));
+        });
     });
 });
