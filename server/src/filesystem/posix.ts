@@ -26,13 +26,11 @@ export class POSIX implements Filesystem {
 
     async where(search: string, cwd: string = process.cwd()): Promise<string> {
         const paths: string[] = [cwd].concat(this.systemPaths);
-        const extensions = this.extensions;
+
         for (const path of paths) {
-            for (const ext of extensions) {
-                const file = pathResolve(path, `${search}${ext}`);
-                if ((await this.exists(file)) === true) {
-                    return file;
-                }
+            const file: string = await this.findFileByExtension(search, path);
+            if (file) {
+                return file;
             }
         }
 
@@ -57,11 +55,10 @@ export class POSIX implements Filesystem {
         cwd = pathResolve(cwd);
 
         do {
-            for (const ext of this.extensions) {
-                file = pathResolve(cwd, `${search}${ext}`);
-                if ((await this.exists(file)) === true) {
-                    return file;
-                }
+            file = await this.findFileByExtension(search, cwd);
+
+            if (file) {
+                return file;
             }
 
             if (cwd === root) {
@@ -74,5 +71,16 @@ export class POSIX implements Filesystem {
         file = pathResolve(cwd, search);
 
         return (await this.exists(file)) === true ? file : '';
+    }
+
+    private async findFileByExtension(search: string, cwd: string = process.cwd()): Promise<string> {
+        for (const ext of this.extensions) {
+            const file = pathResolve(cwd, `${search}${ext}`);
+            if ((await this.exists(file)) === true) {
+                return file;
+            }
+        }
+
+        return '';
     }
 }

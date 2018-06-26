@@ -1,10 +1,10 @@
 import { POSIX, WINDOWS, Factory } from '../../src/filesystem';
-import { tap } from '../../src/helpers';
+import { tap, isWindows } from '../../src/helpers';
 
 describe('Filesystem Factory Test', () => {
     it('it should create posix filesystem', () => {
         const factory: Factory = tap(new Factory(), (factory: Factory) => {
-            if (factory.isWin() === true) {
+            if (isWindows() === true) {
                 factory.platform = 'linux';
             }
         });
@@ -14,7 +14,7 @@ describe('Filesystem Factory Test', () => {
 
     it('it should create windows filesystem', () => {
         const factory: Factory = tap(new Factory(), (factory: Factory) => {
-            if (factory.isWin() === true) {
+            if (isWindows() === true) {
                 factory.platform = 'win32';
             }
         });

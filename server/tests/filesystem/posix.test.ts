@@ -51,5 +51,13 @@ describe('Filesystem POSIX Test', () => {
         tap(await files.findUp('vendor-stub/bin/phpunit', projectPath()), (path: string) => {
             expect(path).toEqual(projectPath('vendor-stub/bin/phpunit'));
         });
+
+        tap(await files.findUp('php-cs-fix', projectPath(), projectPath()), (path: string) => {
+            expect(path).toEqual('');
+        });
+
+        tap(await files.findUp('vendor-stub/bin/php-cs-fix', projectPath()), (path: string) => {
+            expect(path).toEqual('');
+        });
     });
 });
