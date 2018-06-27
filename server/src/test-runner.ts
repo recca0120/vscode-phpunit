@@ -44,9 +44,7 @@ export class TestRunner {
             arguments: await this.getArguments(args, path, currentDirectory, root),
         };
 
-        const output: string = await this.process.spawn(command);
-
-        return new TestResults(output, command, this.args);
+        return new TestResults(await this.process.spawn(command), this.args);
     }
 
     private async getRoot(currentDirectory: string): Promise<string> {

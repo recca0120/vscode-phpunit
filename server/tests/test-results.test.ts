@@ -7,12 +7,7 @@ describe('TestResults Test', () => {
     it('it should get tests', async () => {
         const output: string = 'output';
         const args: Argument = new Argument().set(['--log-junit', projectPath('junit.xml')]);
-        const command: Command = {
-            title: '',
-            command: 'foo',
-            arguments: await args.all(),
-        };
-        const testResults: TestResults = new TestResults(output, command, args);
+        const testResults: TestResults = new TestResults(output, args);
 
         await testResults.getTests();
     });
