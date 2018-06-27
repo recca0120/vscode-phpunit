@@ -7,4 +7,5 @@ export interface Filesystem {
     findUp(search: string, currentDirectory?: string, root?: string): Promise<string>;
     dirname(path: string): string;
     tmpfile(extension?: string, prefix?: string): string;
+    get(path: string): Promise<string>;
 }

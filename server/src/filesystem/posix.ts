@@ -1,6 +1,6 @@
 import { Filesystem } from './filesystem';
 import { resolve as pathResolve, parse, dirname } from 'path';
-import { stat } from 'fs';
+import { readFile, stat } from 'fs';
 import { tmpdir } from 'os';
 
 export class POSIX implements Filesystem {
@@ -82,6 +82,14 @@ export class POSIX implements Filesystem {
         prefix = prefix ? `${prefix}-` : '';
 
         return pathResolve(tmpdir(), `${prefix}${new Date().getTime()}.${extension}`);
+    }
+
+    get(path: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            return readFile(this.normalizePath(path), (err, buffer) => {
+                err ? reject(err) : resolve(buffer.toString('utf8'));
+            });
+        });
     }
 
     private async findFileByExtension(search: string, currentDirectory: string = process.cwd()): Promise<string> {

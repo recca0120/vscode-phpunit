@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { fileUrl, fixturePath, projectPath } from '../helpers';
 import { tap } from '../../src/helpers';
 import { tmpdir } from 'os';
+import { readFileSync } from 'fs';
 
 describe('Filesystem POSIX Test', () => {
     const factory = new Factory();
@@ -73,5 +74,11 @@ describe('Filesystem POSIX Test', () => {
         expect(files.tmpfile('php', 'test')).toMatch(
             new RegExp(`${resolve(dir, 'test-').replace(/\\/g, '\\\\')}\\d+\.php$`)
         );
+    });
+
+    it('it should get contents', async () => {
+        const files: Filesystem = new POSIX();
+
+        expect(await files.get(__filename)).toContain(readFileSync(__filename).toString('utf8'));
     });
 });
