@@ -1,8 +1,9 @@
 export interface Filesystem {
     normalizePath(path: string): string;
     setSystemPaths(systemPaths: string): Filesystem;
-    where(search: string, cwd: string): Promise<string>;
-    which(search: string, cwd?: string): Promise<string>;
+    where(search: string, currentDirectory?: string): Promise<string>;
+    which(search: string, currentDirectory?: string): Promise<string>;
     exists(path: string): Promise<boolean>;
-    findUp(search: string, cwd?: string, root?: string): Promise<string>;
+    findUp(search: string, currentDirectory?: string, root?: string): Promise<string>;
+    dirname(path: string): string;
 }

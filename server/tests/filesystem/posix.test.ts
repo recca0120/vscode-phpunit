@@ -60,4 +60,9 @@ describe('Filesystem POSIX Test', () => {
             expect(path).toEqual('');
         });
     });
+
+    it('it should return dirname', () => {
+        const files: Filesystem = new POSIX();
+        expect(files.dirname(__filename)).toBe(__dirname);
+    });
 });

@@ -1,5 +1,5 @@
 import { Filesystem } from './filesystem';
-import { resolve as pathResolve, parse } from 'path';
+import { resolve as pathResolve, parse, dirname } from 'path';
 import { stat } from 'fs';
 
 export class POSIX implements Filesystem {
@@ -24,8 +24,8 @@ export class POSIX implements Filesystem {
         return this;
     }
 
-    async where(search: string, cwd: string = process.cwd()): Promise<string> {
-        const paths: string[] = [cwd].concat(this.systemPaths);
+    async where(search: string, currentDirectory: string = process.cwd()): Promise<string> {
+        const paths: string[] = [currentDirectory].concat(this.systemPaths);
 
         for (const path of paths) {
             const file: string = await this.findFileByExtension(search, path);
@@ -37,8 +37,8 @@ export class POSIX implements Filesystem {
         return '';
     }
 
-    async which(search: string, cwd: string = process.cwd()): Promise<string> {
-        return this.where(search, cwd);
+    async which(search: string, currentDirectory: string = process.cwd()): Promise<string> {
+        return this.where(search, currentDirectory);
     }
 
     exists(path: string): Promise<boolean> {
@@ -49,38 +49,42 @@ export class POSIX implements Filesystem {
         });
     }
 
-    async findUp(search: string, cwd: string = process.cwd(), root?: string): Promise<string> {
+    async findUp(search: string, currentDirectory: string = process.cwd(), root?: string): Promise<string> {
         let file: string;
-        root = pathResolve(!root ? parse(cwd).root : root);
-        cwd = pathResolve(cwd);
+        root = pathResolve(!root ? parse(currentDirectory).root : root);
+        currentDirectory = pathResolve(currentDirectory);
 
         do {
-            file = await this.findFileByExtension(search, cwd);
+            file = await this.findFileByExtension(search, currentDirectory);
 
             if (file) {
                 return file;
             }
 
-            if (cwd === root) {
+            if (currentDirectory === root) {
                 break;
             }
 
-            cwd = pathResolve(cwd, '..');
-        } while (cwd !== root);
+            currentDirectory = pathResolve(currentDirectory, '..');
+        } while (currentDirectory !== root);
 
-        file = pathResolve(cwd, search);
+        file = pathResolve(currentDirectory, search);
 
         return (await this.exists(file)) === true ? file : '';
     }
 
-    private async findFileByExtension(search: string, cwd: string = process.cwd()): Promise<string> {
+    private async findFileByExtension(search: string, currentDirectory: string = process.cwd()): Promise<string> {
         for (const ext of this.extensions) {
-            const file = pathResolve(cwd, `${search}${ext}`);
+            const file = pathResolve(currentDirectory, `${search}${ext}`);
             if ((await this.exists(file)) === true) {
                 return file;
             }
         }
 
         return '';
+    }
+
+    public dirname(path: string) {
+        return dirname(path);
     }
 }
