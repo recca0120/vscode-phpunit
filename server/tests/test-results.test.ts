@@ -1,7 +1,7 @@
 import { TestResults } from '../src/test-results';
-import { Command } from 'vscode-languageserver/lib/main';
 import { projectPath } from './helpers';
 import { Argument } from '../src/argument';
+import { Test } from '../src/common';
 
 describe('TestResults Test', () => {
     it('it should get tests', async () => {
@@ -9,6 +9,7 @@ describe('TestResults Test', () => {
         const args: Argument = new Argument().set(['--log-junit', projectPath('junit.xml')]);
         const testResults: TestResults = new TestResults(output, args);
 
-        await testResults.getTests();
+        const tests: Test[] = await testResults.getTests();
+        tests.forEach((test: Test) => expect(test).toBeInstanceOf(Object));
     });
 });
