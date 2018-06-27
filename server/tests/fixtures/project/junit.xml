@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
+    <testcase name="testPassed" class="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="13" assertions="1" time="0.006241"/>
+    <testcase name="testFailed" class="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="18" assertions="1" time="0.001918">
+      <failure type="PHPUnit_Framework_ExpectationFailedException">PHPUnitTest::testFailed&#13;
+Failed asserting that false is true.
+&#13;
+C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php:20
+</failure>
+    </testcase>
+    <testcase name="testError" class="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="23" assertions="0" time="0.001087">
+      <error type="PHPUnit_Framework_Exception">PHPUnitTest::testError&#13;
+PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name
+&#13;
+C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php:25
+</error>
+    </testcase>
+    <testcase name="testSkipped" class="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="28" assertions="0" time="0.001138">
+      <error type="PHPUnit_Framework_SkippedTestError">Skipped Test
+C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php:30
+</error>
+    </testcase>
+    <testcase name="testIncomplete" class="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="33" assertions="0" time="0.001081">
+      <error type="PHPUnit_Framework_IncompleteTestError">Incomplete Test
+C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php:35
+</error>
+    </testcase>
+  </testsuite>
+  <testsuite name="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" tests="4" assertions="6" failures="0" errors="1" time="0.211106">
+    <testcase name="testReceive" class="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="18" assertions="0" time="0.164687">
+      <error type="BadMethodCallException">PHPUnitTest::testReceive&#13;
+BadMethodCallException: Method Mockery_1_Symfony_Component_HttpFoundation_File_UploadedFile::getClientOriginalName() does not exist on this mock object
+&#13;
+C:\Users\recca\github\tester-phpunit\src\Receiver.php:85
+C:\Users\recca\github\tester-phpunit\src\Receiver.php:68
+C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php:45
+</error>
+    </testcase>
+    <testcase name="testCleanDirectory" class="Recca0120\Upload\Tests\PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="78" assertions="0" time="0.008761">
+      <error type="Mockery\Exception\InvalidCountException">Recca0120\Upload\Tests\PHPUnitTest::testCleanDirectory&#13;
+Mockery\Exception\InvalidCountException: Method delete("C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php") from Mockery_1_Recca0120_Upload_Filesystem should be called&#13;
+ exactly 1 times but called 0 times.
+&#13;
+C:\Users\recca\UniServerZ\www\driways\laravel\vendor\mockery\mockery\library\Mockery\CountValidator\Exact.php:37
+C:\Users\recca\UniServerZ\www\driways\laravel\vendor\mockery\mockery\library\Mockery\Expectation.php:298
+C:\Users\recca\UniServerZ\www\driways\laravel\vendor\mockery\mockery\library\Mockery\ExpectationDirector.php:120
+C:\Users\recca\UniServerZ\www\driways\laravel\vendor\mockery\mockery\library\Mockery\Container.php:297
+C:\Users\recca\UniServerZ\www\driways\laravel\vendor\mockery\mockery\library\Mockery\Container.php:282
+C:\Users\recca\UniServerZ\www\driways\laravel\vendor\mockery\mockery\library\Mockery.php:152
+C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php:13
+C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:188
+C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:118
+</error>
+    </testcase>
+    <testcase name="testSkipped" class="PHPUnitTest" classname="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="23" assertions="0" time="0.001352">
+      <skipped/>
+    </testcase>
+    <testcase name="testIncomplete" class="PHPUnitTest" classname="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="28" assertions="0" time="0.000954">
+      <skipped/>
+    </testcase>
+  </testsuite>
+  <testsuite>
+      <testcase name="testRisky" class="PHPUnitTest" classname="PHPUnitTest" file="C:\Users\recca\github\tester-phpunit\tests\PHPUnitTest.php" line="35" assertions="0" time="0.205927">
+        <error type="PHPUnit\Framework\RiskyTestError">Risky Test
+  C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:195
+  C:\ProgramData\ComposerSetup\vendor\phpunit\phpunit\src\TextUI\Command.php:148
+  </error>
+      </testcase>
+  </testsuite>
+</testsuites>

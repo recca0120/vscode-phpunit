@@ -3,7 +3,7 @@ import { Filesystem, Factory as FilesystemFactory } from './filesystem';
 import { Command } from 'vscode-languageserver-types';
 import { isWindows } from './helpers';
 import { Argument } from './argument';
-import { TestResult } from './test-result';
+import { TestResults } from './test-results';
 
 export class TestRunner {
     private binary: string = '';
@@ -31,7 +31,7 @@ export class TestRunner {
         path: string = '',
         args: string[] = [],
         currentDirectory: string = process.cwd()
-    ): Promise<TestResult> {
+    ): Promise<TestResults> {
         if (path !== '') {
             path = this.files.normalizePath(path);
             currentDirectory = this.files.dirname(path);
@@ -46,7 +46,7 @@ export class TestRunner {
 
         const output: string = await this.process.spawn(command);
 
-        return new TestResult(output, command, this.args);
+        return new TestResults(output, command, this.args);
     }
 
     private async getRoot(currentDirectory: string): Promise<string> {
