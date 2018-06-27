@@ -1,6 +1,7 @@
 import { Filesystem } from './filesystem';
 import { resolve as pathResolve, parse, dirname } from 'path';
 import { stat } from 'fs';
+import { tmpdir } from 'os';
 
 export class POSIX implements Filesystem {
     protected systemPaths: string[] = [];
@@ -73,6 +74,16 @@ export class POSIX implements Filesystem {
         return (await this.exists(file)) === true ? file : '';
     }
 
+    dirname(path: string) {
+        return dirname(path);
+    }
+
+    tmpfile(extension: string = 'tmp', prefix?: string): string {
+        prefix = prefix ? `${prefix}-` : '';
+
+        return pathResolve(tmpdir(), `${prefix}${new Date().getTime()}.${extension}`);
+    }
+
     private async findFileByExtension(search: string, currentDirectory: string = process.cwd()): Promise<string> {
         for (const ext of this.extensions) {
             const file = pathResolve(currentDirectory, `${search}${ext}`);
@@ -82,9 +93,5 @@ export class POSIX implements Filesystem {
         }
 
         return '';
-    }
-
-    public dirname(path: string) {
-        return dirname(path);
     }
 }

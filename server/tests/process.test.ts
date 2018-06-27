@@ -1,4 +1,3 @@
-import { Command } from 'vscode-languageserver';
 import { Process } from '../src/process';
 
 describe('Process Test', () => {

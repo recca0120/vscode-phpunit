@@ -1,7 +1,8 @@
 import { Filesystem, POSIX, Factory } from '../../src/filesystem';
 import { resolve } from 'path';
 import { fileUrl, fixturePath, projectPath } from '../helpers';
-import { tap } from 'lodash';
+import { tap } from '../../src/helpers';
+import { tmpdir } from 'os';
 
 describe('Filesystem POSIX Test', () => {
     const factory = new Factory();
@@ -64,5 +65,13 @@ describe('Filesystem POSIX Test', () => {
     it('it should return dirname', () => {
         const files: Filesystem = new POSIX();
         expect(files.dirname(__filename)).toBe(__dirname);
+    });
+
+    it('it should return random file name with extension', () => {
+        const files: Filesystem = new POSIX();
+        const dir: string = tmpdir();
+        expect(files.tmpfile('php', 'test')).toMatch(
+            new RegExp(`${resolve(dir, 'test-').replace(/\\/g, '\\\\')}\\d+\.php$`)
+        );
     });
 });
