@@ -1,3 +1,5 @@
+import { Range } from 'vscode-languageserver-types';
+
 export enum Type {
     PASSED = 'passed',
     ERROR = 'error',
@@ -29,4 +31,11 @@ export interface Test {
     time: number;
     type: Type;
     fault?: Fault;
+}
+
+export interface Method {
+    kind: string;
+    name: string;
+    uri: string;
+    range: Range;
 }

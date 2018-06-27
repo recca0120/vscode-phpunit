@@ -16,7 +16,10 @@ import {
     CompletionItem,
     CompletionItemKind,
     TextDocumentPositionParams,
+    CodeLensParams,
 } from 'vscode-languageserver';
+import { TestSuite } from './test-suite';
+import { Method } from './common';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -47,6 +50,9 @@ connection.onInitialize((params: InitializeParams) => {
             textDocumentSync: documents.syncKind,
             // Tell the client that the server supports code completion
             completionProvider: {
+                resolveProvider: true,
+            },
+            codeLensProvider: {
                 resolveProvider: true,
             },
         },
@@ -219,6 +225,14 @@ connection.onDidCloseTextDocument((params) => {
 	connection.console.log(`${params.textDocument.uri} closed.`);
 });
 */
+
+connection.onCodeLens(
+    (params: CodeLensParams): CodeLens[] => {
+        const textDocument: TextDocument = this.documents.get(params.textDocument.uri);
+        const testSuite = new TestSuite();
+        const methods: Method[] = testSuite.parse(textDocument.getText(), textDocument.uri);
+    }
+);
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
