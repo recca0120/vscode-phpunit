@@ -16,4 +16,3 @@ The example uses proposed Language Server protocol. So the code demoed here migh
 
 - In the [Extension Development Host] instance of VSCode, open a document in 'plain text' language mode.
   Enter text content such as `AAA aaa BBB`. The extension will emit diagnostics for all words in all-uppercase.
-
