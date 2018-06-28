@@ -1,5 +1,4 @@
-// import { default as Engine } from 'php-parser';
-const Engine = require('php-parser');
+import { default as Engine } from 'php-parser';
 import { Range } from 'vscode-languageserver-types';
 import { Method } from './common';
 

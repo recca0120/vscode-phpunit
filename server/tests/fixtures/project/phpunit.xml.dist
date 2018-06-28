@@ -9,7 +9,6 @@
          processIsolation="false"
          stopOnError="false"
          stopOnFailure="false"
-         syntaxCheck="true"
          verbose="true"
 >
     <testsuites>
@@ -24,6 +23,7 @@
     </filter>
     <logging>
         <log type="coverage-clover" target="./build/coverage.xml"/>
-        <log type="coverage-php" target="./build/coverage.serialized"/>
+        <log type="json" target="./build/coverage.json"/>
+        <log type="junit" target="./build/coverage-junit.xml"/>
     </logging>
 </phpunit>
