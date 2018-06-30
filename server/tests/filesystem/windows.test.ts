@@ -19,7 +19,7 @@ describe('Filesystem WINDOWS Test', () => {
         const files: Filesystem = factory.create();
 
         expect(await files.exists(fixturePath('bin/ls'))).toBeTruthy();
-        expect(await files.exists(fixturePath('bin/cmd.exe'))).toBeTruthy();
+        expect(await files.exists(fixturePath('bin/cmd.bat'))).toBeTruthy();
         expect(await files.exists(fixturePath('bin/pwd'))).toBeFalsy();
     });
 
@@ -27,7 +27,7 @@ describe('Filesystem WINDOWS Test', () => {
         const files: Filesystem = factory.create();
 
         expect(await files.exists(fixturePath('bin/ls'))).toBeTruthy();
-        expect(await files.exists(fixturePath('bin/cmd.exe'))).toBeTruthy();
+        expect(await files.exists(fixturePath('bin/cmd.bat'))).toBeTruthy();
         expect(await files.exists(fixturePath('bin/pwd'))).toBeFalsy();
     });
 
@@ -35,7 +35,7 @@ describe('Filesystem WINDOWS Test', () => {
         const files: Filesystem = factory.create();
 
         expect(await files.exists(fileUrl(fixturePath('bin/ls')))).toBeTruthy();
-        expect(await files.exists(fileUrl(fixturePath('bin/cmd.exe')))).toBeTruthy();
+        expect(await files.exists(fileUrl(fixturePath('bin/cmd.bat')))).toBeTruthy();
         expect(await files.exists(fileUrl(fixturePath('bin/pwd')))).toBeFalsy();
     });
 
@@ -45,7 +45,7 @@ describe('Filesystem WINDOWS Test', () => {
         files.setSystemPaths(systemPaths.join(';'));
 
         expect(await files.which(__filename, __filename)).toEqual(resolve(__dirname, __filename));
-        expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.exe'));
+        expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.bat'));
         expect(await files.which('fail')).toEqual('');
     });
 
