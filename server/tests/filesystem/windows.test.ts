@@ -1,6 +1,6 @@
 import { Filesystem, WINDOWS, Factory } from '../../src/filesystem';
 import { resolve } from 'path';
-import { fileUrl, fixturePath, projectPath } from '../helpers';
+import { fileUrl, fixturePath, projectPath, letterDriveLowerCase } from '../helpers';
 import { tap } from 'lodash';
 
 describe('Filesystem WINDOWS Test', () => {
@@ -44,7 +44,7 @@ describe('Filesystem WINDOWS Test', () => {
         const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
 
-        expect(await files.which(__filename, __filename)).toEqual(resolve(__dirname, __filename));
+        expect(await files.which(__filename, __filename)).toEqual(letterDriveLowerCase(resolve(__dirname, __filename)));
         expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.bat'));
         expect(await files.which('fail')).toEqual('');
     });

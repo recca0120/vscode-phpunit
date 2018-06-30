@@ -11,6 +11,7 @@ export class WINDOWS extends POSIX {
                 .replace(/^file:\/\//, '')
                 .replace(/^\/(\w)(%3A|:)/, '$1:')
                 // .replace(/^\w:/, m => m.toUpperCase())
+                .replace(/^\w:/, m => m.toLowerCase())
                 .replace(/\//g, this.separator)
                 .replace(/ /g, '\\ ')
         );

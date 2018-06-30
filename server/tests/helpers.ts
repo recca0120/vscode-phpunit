@@ -6,10 +6,16 @@ export function fileUrl(path: string): string {
     });
 }
 
+export function letterDriveLowerCase(path: string) {
+    return path.replace(/^(\w):/i, m => {
+        return `${m[0].toLowerCase()}:`;
+    });
+}
+
 export function fixturePath(path: string = ''): string {
-    return resolve(__dirname, 'fixtures', path);
+    return letterDriveLowerCase(resolve(__dirname, 'fixtures', path));
 }
 
 export function projectPath(path: string = ''): string {
-    return resolve(__dirname, 'fixtures/project', path);
+    return letterDriveLowerCase(resolve(__dirname, 'fixtures/project', path));
 }

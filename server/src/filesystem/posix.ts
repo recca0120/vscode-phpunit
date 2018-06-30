@@ -31,7 +31,7 @@ export class POSIX implements Filesystem {
         for (const path of paths) {
             const file: string = await this.findFileByExtension(search, path);
             if (file) {
-                return file;
+                return this.normalizePath(file);
             }
         }
 
