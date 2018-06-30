@@ -14,7 +14,7 @@ describe('Filesystem Factory Test', () => {
 
     it('it should create windows filesystem', () => {
         const factory: Factory = tap(new Factory(), (factory: Factory) => {
-            if (isWindows() === true) {
+            if (isWindows() === false) {
                 factory.platform = 'win32';
             }
         });
