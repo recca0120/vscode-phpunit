@@ -1,5 +1,6 @@
 import { TestRunner } from '../src/test-runner';
 import { projectPath } from './helpers';
+import { isWindows } from '../src/helpers';
 import { Process } from '../src/process';
 import { Argument } from '../src/argument';
 
@@ -16,7 +17,7 @@ describe('TestRunner Test', () => {
         expect(new String(await testRunner.handle(path, [], projectPath('tests')))).toEqual('output');
         expect(process.spawn).toBeCalledWith({
             title: '',
-            command: projectPath('vendor/bin/phpunit.bat'),
+            command: `${projectPath('vendor/bin/phpunit')}${isWindows() ? '.bat' : ''}`,
             arguments: ['--foo'],
         });
     });

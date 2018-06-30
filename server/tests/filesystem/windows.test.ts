@@ -44,7 +44,7 @@ describe('Filesystem WINDOWS Test', () => {
         const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
 
-        expect(await files.which(__filename, __filename)).toEqual(letterDriveLowerCase(resolve(__dirname, __filename)));
+        expect(await files.which(__filename, __dirname)).toEqual(letterDriveLowerCase(resolve(__dirname, __filename)));
         expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.bat'));
         expect(await files.which('fail')).toEqual('');
     });

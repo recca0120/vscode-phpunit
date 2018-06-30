@@ -1,7 +1,6 @@
 import { Process } from './process';
 import { Filesystem, Factory as FilesystemFactory } from './filesystem';
 import { Command } from 'vscode-languageserver-types';
-import { isWindows } from './helpers';
 import { Argument } from './argument';
 import { TestResults } from './test-results';
 
@@ -59,11 +58,8 @@ export class TestRunner {
         }
 
         return (
-            (await this.files.findUp(
-                `vendor/bin/phpunit${isWindows() === true ? '.bat' : ''}`,
-                currentDirectory,
-                root
-            )) || (await this.files.which('phpunit'))
+            (await this.files.findUp(`vendor/bin/phpunit`, currentDirectory, root)) ||
+            (await this.files.which('phpunit'))
         );
     }
 
