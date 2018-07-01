@@ -69,9 +69,7 @@ export class POSIX implements Filesystem {
             currentDirectory = pathResolve(currentDirectory, '..');
         } while (currentDirectory !== root);
 
-        file = await this.findFileByExtension(search, currentDirectory);
-
-        return (await this.exists(file)) === true ? file : '';
+        return await this.findFileByExtension(search, currentDirectory);
     }
 
     dirname(path: string) {
@@ -96,7 +94,7 @@ export class POSIX implements Filesystem {
         for (const ext of this.extensions) {
             const file = pathResolve(currentDirectory, `${search}${ext}`);
             if ((await this.exists(file)) === true) {
-                return file;
+                return this.normalizePath(file);
             }
         }
 

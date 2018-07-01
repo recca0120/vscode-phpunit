@@ -1,6 +1,5 @@
 import { Filesystem, POSIX, Factory } from '../../src/filesystem';
-import { resolve } from 'path';
-import { fileUrl, fixturePath, projectPath } from '../helpers';
+import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
 import { tap } from '../../src/helpers';
 import { tmpdir } from 'os';
 import { readFileSync } from 'fs';
@@ -10,6 +9,7 @@ describe('Filesystem POSIX Test', () => {
 
     it('it should normalize path', () => {
         const files: Filesystem = new POSIX();
+
         expect(files.normalizePath('file:///foo/bar')).toEqual('/foo/bar');
         expect(files.normalizePath('file:///foo/ba r')).toEqual('/foo/ba\\ r');
     });
@@ -35,7 +35,7 @@ describe('Filesystem POSIX Test', () => {
         const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
         files.setSystemPaths(systemPaths.join(':'));
 
-        expect(await files.which(__filename, __filename)).toEqual(resolve(__dirname, __filename));
+        expect(await files.which(__filename, __dirname)).toEqual(pathResolve(__dirname, __filename));
 
         expect(await files.which('cmd.bat')).toEqual(fixturePath('bin/cmd.bat'));
         expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd'));
@@ -65,14 +65,16 @@ describe('Filesystem POSIX Test', () => {
 
     it('it should return dirname', () => {
         const files: Filesystem = new POSIX();
+
         expect(files.dirname(__filename)).toBe(__dirname);
     });
 
     it('it should return random file name with extension', () => {
         const files: Filesystem = new POSIX();
         const dir: string = tmpdir();
+
         expect(files.tmpfile('php', 'test')).toMatch(
-            new RegExp(`${resolve(dir, 'test-').replace(/\\/g, '\\\\')}\\d+\.php$`)
+            new RegExp(`${pathResolve(dir, 'test-').replace(/\\/g, '\\\\')}\\d+\.php$`, 'i')
         );
     });
 

@@ -19,3 +19,7 @@ export function fixturePath(path: string = ''): string {
 export function projectPath(path: string = ''): string {
     return letterDriveLowerCase(resolve(__dirname, 'fixtures/project', path));
 }
+
+export function pathResolve(...x) {
+    return letterDriveLowerCase(resolve(...x));
+}

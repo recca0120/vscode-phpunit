@@ -1,6 +1,5 @@
 import { Filesystem, WINDOWS, Factory } from '../../src/filesystem';
-import { resolve } from 'path';
-import { fileUrl, fixturePath, projectPath, letterDriveLowerCase } from '../helpers';
+import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
 import { tap } from 'lodash';
 
 describe('Filesystem WINDOWS Test', () => {
@@ -8,6 +7,7 @@ describe('Filesystem WINDOWS Test', () => {
 
     it('it should normalize path', () => {
         const files: Filesystem = new WINDOWS();
+
         expect(files.normalizePath('file:///c%3A/foo/bar')).toEqual('c:\\foo\\bar');
         expect(files.normalizePath('file:///c:/foo/bar')).toEqual('c:\\foo\\bar');
         expect(files.normalizePath('c:\\foo\\bar')).toEqual('c:\\foo\\bar');
@@ -44,7 +44,7 @@ describe('Filesystem WINDOWS Test', () => {
         const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
 
-        expect(await files.which(__filename, __dirname)).toEqual(letterDriveLowerCase(resolve(__dirname, __filename)));
+        expect(await files.which(__filename, __dirname)).toEqual(pathResolve(__dirname, __filename));
         expect(await files.which('cmd')).toEqual(fixturePath('bin/cmd.bat'));
         expect(await files.which('fail')).toEqual('');
     });
