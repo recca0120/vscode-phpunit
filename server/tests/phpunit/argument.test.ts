@@ -1,6 +1,6 @@
-import { Argument } from '../src/argument';
-import { Filesystem, Factory as FilesystemFactory } from '../src/filesystem';
-import { projectPath } from './helpers';
+import { Argument } from '../../src/phpunit/argument';
+import { Filesystem, Factory as FilesystemFactory } from '../../src/filesystem';
+import { projectPath } from '../helpers';
 
 describe('Arguments Test', () => {
     it('it should get configuration and junit', async () => {

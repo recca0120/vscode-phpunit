@@ -20,10 +20,10 @@ import {
     CodeLens,
     ExecuteCommandParams,
 } from 'vscode-languageserver';
-import { TestSuite } from './test-suite';
-import { Method } from './common';
-import { TestRunner } from './test-runner';
-import { TestResults } from './test-results';
+import { TestSuite } from './phpunit/test-suite';
+import { Method } from './phpunit/common';
+import { TestRunner } from './phpunit/test-runner';
+import { TestResults } from './phpunit/test-results';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

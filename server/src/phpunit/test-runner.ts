@@ -1,5 +1,5 @@
-import { Process } from './process';
-import { Filesystem, Factory as FilesystemFactory } from './filesystem';
+import { Process } from '../support/process';
+import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 import { Command } from 'vscode-languageserver-types';
 import { Argument } from './argument';
 import { TestResults } from './test-results';

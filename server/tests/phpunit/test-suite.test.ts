@@ -1,4 +1,4 @@
-import { TestSuite } from '../src/test-suite';
+import { TestSuite } from '../../src/phpunit/test-suite';
 
 describe('TestSuite Test', () => {
     it('it should parse methods', async () => {

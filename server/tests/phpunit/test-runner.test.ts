@@ -1,8 +1,8 @@
-import { TestRunner } from '../src/test-runner';
-import { projectPath } from './helpers';
-import { isWindows } from '../src/helpers';
-import { Process } from '../src/process';
-import { Argument } from '../src/argument';
+import { TestRunner } from '../../src/phpunit/test-runner';
+import { projectPath } from '../helpers';
+import { isWindows } from '../../src/support/helpers';
+import { Process } from '../../src/support/process';
+import { Argument } from '../../src/phpunit/argument';
 
 describe('TestRunner Test', () => {
     it('it should execute phpunit', async () => {

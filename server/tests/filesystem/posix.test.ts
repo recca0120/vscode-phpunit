@@ -1,6 +1,6 @@
 import { Filesystem, POSIX, Factory } from '../../src/filesystem';
 import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
-import { tap, isWindows } from '../../src/helpers';
+import { tap, isWindows } from '../../src/support/helpers';
 import { tmpdir } from 'os';
 import { readFileSync, writeFileSync } from 'fs';
 

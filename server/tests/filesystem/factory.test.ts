@@ -1,5 +1,5 @@
 import { POSIX, WINDOWS, Factory } from '../../src/filesystem';
-import { tap, isWindows } from '../../src/helpers';
+import { tap, isWindows } from '../../src/support/helpers';
 
 describe('Filesystem Factory Test', () => {
     it('it should create posix filesystem', () => {

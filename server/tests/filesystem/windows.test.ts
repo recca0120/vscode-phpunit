@@ -1,7 +1,7 @@
 import { Filesystem, WINDOWS, Factory } from '../../src/filesystem';
 import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
 import { tap } from 'lodash';
-import { isWindows } from '../../src/helpers';
+import { isWindows } from '../../src/support/helpers';
 
 describe('Filesystem WINDOWS Test', () => {
     const factory = new Factory();

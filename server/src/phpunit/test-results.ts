@@ -1,8 +1,8 @@
 import { Argument } from './argument';
-import { Filesystem, Factory as FilesystemFactory } from './filesystem';
+import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 import { JUnitParser } from './junit-parser';
 import { Test } from './common';
-import { tap } from './helpers';
+import { tap } from '../support/helpers';
 
 export class TestResults {
     constructor(

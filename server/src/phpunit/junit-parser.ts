@@ -1,5 +1,5 @@
 import { parse } from 'fast-xml-parser';
-import { tap } from './helpers';
+import { tap } from '../support/helpers';
 import { Type, Test, Detail } from './common';
 
 export class JUnitParser {

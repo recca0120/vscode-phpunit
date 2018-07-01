@@ -1,4 +1,4 @@
-import { Filesystem, Factory as FilesystemFactory } from './filesystem';
+import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 
 export class Argument {
     private items: string[] = [];

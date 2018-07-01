@@ -1,6 +1,6 @@
-import { JUnitParser } from '../src/junit-parser';
-import { Factory as FilesystemFactory, Filesystem } from '../src/filesystem';
-import { Type, Test } from '../src/common';
+import { JUnitParser } from '../../src/phpunit/junit-parser';
+import { Factory as FilesystemFactory, Filesystem } from '../../src/filesystem';
+import { Type, Test } from '../../src/phpunit/common';
 
 describe('JUnitParser Test', () => {
     it('it should be passed', async () => {

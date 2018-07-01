@@ -1,9 +1,9 @@
-import { TestResults } from '../src/test-results';
-import { projectPath } from './helpers';
-import { Argument } from '../src/argument';
-import { Test, Type } from '../src/common';
-import { Filesystem, Factory as FilesystemFactory } from '../src/filesystem';
-import { JUnitParser } from '../src/junit-parser';
+import { TestResults } from '../../src/phpunit/test-results';
+import { projectPath } from '../helpers';
+import { Argument } from '../../src/phpunit/argument';
+import { Test, Type } from '../../src/phpunit/common';
+import { Filesystem, Factory as FilesystemFactory } from '../../src/filesystem';
+import { JUnitParser } from '../../src/phpunit/junit-parser';
 
 describe('TestResults Test', () => {
     it('it should get tests', async () => {

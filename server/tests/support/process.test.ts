@@ -1,4 +1,4 @@
-import { Process } from '../src/process';
+import { Process } from '../../src/support/process';
 
 describe('Process Test', () => {
     it('echo hello world', async () => {

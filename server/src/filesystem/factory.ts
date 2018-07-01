@@ -1,5 +1,5 @@
 import { Filesystem, POSIX, WINDOWS } from './';
-import { isWindows } from '../helpers';
+import { isWindows } from '../support/helpers';
 
 export class Factory {
     public platform: string = process.platform;
