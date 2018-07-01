@@ -1,6 +1,6 @@
 import { Filesystem, POSIX, Factory } from '../../src/filesystem';
 import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
-import { tap } from '../../src/helpers';
+import { tap, isWindows } from '../../src/helpers';
 import { tmpdir } from 'os';
 import { readFileSync } from 'fs';
 
@@ -31,6 +31,10 @@ describe('Filesystem POSIX Test', () => {
     });
 
     it('it should find path from system path', async () => {
+        if (isWindows() === true) {
+            return;
+        }
+
         const files: Filesystem = new POSIX();
         const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
         files.setSystemPaths(systemPaths.join(':'));

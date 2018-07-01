@@ -1,6 +1,7 @@
 import { Filesystem, WINDOWS, Factory } from '../../src/filesystem';
 import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
 import { tap } from 'lodash';
+import { isWindows } from '../../src/helpers';
 
 describe('Filesystem WINDOWS Test', () => {
     const factory = new Factory();
@@ -40,6 +41,10 @@ describe('Filesystem WINDOWS Test', () => {
     });
 
     it('it should find path from system path', async () => {
+        if (isWindows() === false) {
+            return;
+        }
+
         const files: Filesystem = new WINDOWS();
         const systemPaths = [fixturePath('bin'), fixturePath('usr/bin')];
         files.setSystemPaths(systemPaths.join(';'));
@@ -50,6 +55,10 @@ describe('Filesystem WINDOWS Test', () => {
     });
 
     it('it should find up path', async () => {
+        if (isWindows() === false) {
+            return;
+        }
+
         const files: Filesystem = new WINDOWS();
 
         tap(await files.findUp('vendor-stub/bin/phpunit', projectPath('tests')), (path: string) => {
