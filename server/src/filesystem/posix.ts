@@ -69,7 +69,7 @@ export class POSIX implements Filesystem {
             currentDirectory = pathResolve(currentDirectory, '..');
         } while (currentDirectory !== root);
 
-        file = pathResolve(currentDirectory, search);
+        file = await this.findFileByExtension(search, currentDirectory);
 
         return (await this.exists(file)) === true ? file : '';
     }
