@@ -2,17 +2,23 @@ import { Argument } from './argument';
 import { Filesystem, Factory as FilesystemFactory } from './filesystem';
 import { JUnitParser } from './junit-parser';
 import { Test } from './common';
+import { tap } from './helpers';
 
 export class TestResults {
     constructor(
         private output: string,
         private args: Argument,
-        private parser: JUnitParser = new JUnitParser(),
-        private files: Filesystem = new FilesystemFactory().create()
+        private files: Filesystem = new FilesystemFactory().create(),
+        private parser: JUnitParser = new JUnitParser()
     ) {}
 
     async getTests(): Promise<Test[]> {
-        return this.parser.parse(await this.files.get(this.args.get('--log-junit')));
+        const file: string = this.args.get('--log-junit');
+        const content: string = await this.files.get(file);
+
+        return tap(this.parser.parse(content), () => {
+            this.files.unlink(file);
+        });
     }
 
     toString() {

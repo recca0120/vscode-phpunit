@@ -2,7 +2,7 @@ import { Filesystem, POSIX, Factory } from '../../src/filesystem';
 import { fileUrl, fixturePath, projectPath, pathResolve } from '../helpers';
 import { tap, isWindows } from '../../src/helpers';
 import { tmpdir } from 'os';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 describe('Filesystem POSIX Test', () => {
     const factory = new Factory();
@@ -86,5 +86,16 @@ describe('Filesystem POSIX Test', () => {
         const files: Filesystem = new POSIX();
 
         expect(await files.get(__filename)).toContain(readFileSync(__filename).toString('utf8'));
+    });
+
+    it('it should unlink file', async () => {
+        const files: Filesystem = new POSIX();
+
+        const file: string = files.tmpfile('php', 'test');
+        writeFileSync(file, '');
+
+        expect(await files.exists(file)).toBeTruthy();
+        expect(await files.unlink(file)).toBeTruthy();
+        expect(await files.exists(file)).toBeFalsy();
     });
 });

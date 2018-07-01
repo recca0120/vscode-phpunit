@@ -1,6 +1,6 @@
 import { Filesystem } from './filesystem';
 import { resolve as pathResolve, parse, dirname } from 'path';
-import { readFile, stat } from 'fs';
+import { readFile, stat, unlink } from 'fs';
 import { tmpdir } from 'os';
 
 export class POSIX implements Filesystem {
@@ -88,6 +88,12 @@ export class POSIX implements Filesystem {
                 err ? reject(err) : resolve(buffer.toString('utf8'));
             });
         });
+    }
+
+    unlink(path: string): Promise<boolean> {
+        return new Promise(resolve =>
+            unlink(path, (error: NodeJS.ErrnoException | undefined) => resolve(error ? false : true))
+        );
     }
 
     private async findFileByExtension(search: string, currentDirectory: string = process.cwd()): Promise<string> {
