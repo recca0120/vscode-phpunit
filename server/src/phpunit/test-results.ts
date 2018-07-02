@@ -1,24 +1,23 @@
-import { Argument } from './argument';
-import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
-import { JUnitParser } from './junit-parser';
 import { Test } from './common';
-import { tap } from '../support/helpers';
 
 export class TestResults {
-    constructor(
-        private output: string,
-        private args: Argument,
-        private files: Filesystem = new FilesystemFactory().create(),
-        private parser: JUnitParser = new JUnitParser()
-    ) {}
+    private tests: Test[];
+    private output: string;
 
-    async getTests(): Promise<Test[]> {
-        const file: string = this.args.get('--log-junit');
-        const content: string = await this.files.get(file);
+    setTests(tests: Test[]): TestResults {
+        this.tests = tests;
 
-        return tap(this.parser.parse(content), () => {
-            this.files.unlink(file);
-        });
+        return this;
+    }
+
+    setOutput(output: string): TestResults {
+        this.output = output;
+
+        return this;
+    }
+
+    getTests(): Test[] {
+        return this.tests;
     }
 
     toString() {

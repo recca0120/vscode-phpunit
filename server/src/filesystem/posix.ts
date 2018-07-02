@@ -2,6 +2,7 @@ import { Filesystem } from './filesystem';
 import { resolve as pathResolve, parse, dirname } from 'path';
 import { readFile, stat, unlink } from 'fs';
 import { tmpdir } from 'os';
+import { default as Uri } from 'vscode-uri';
 
 export class POSIX implements Filesystem {
     protected systemPaths: string[] = [];
@@ -94,6 +95,14 @@ export class POSIX implements Filesystem {
         return new Promise(resolve =>
             unlink(path, (error: NodeJS.ErrnoException | undefined) => resolve(error ? false : true))
         );
+    }
+
+    uri(path: string): string {
+        return this.isUri(path) === true ? Uri.parse(path).toString() : Uri.file(path).toString();
+    }
+
+    private isUri(uri: string): boolean {
+        return /^file:\/\//.test(uri);
     }
 
     private async findFileByExtension(search: string, currentDirectory: string = process.cwd()): Promise<string> {

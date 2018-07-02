@@ -9,4 +9,5 @@ export interface Filesystem {
     tmpfile(extension?: string, prefix?: string): string;
     get(path: string): Promise<string>;
     unlink(path: string): Promise<boolean>;
+    uri(path: string): string;
 }

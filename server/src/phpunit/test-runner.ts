@@ -3,6 +3,8 @@ import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 import { Command } from 'vscode-languageserver-types';
 import { Argument } from './argument';
 import { TestResults } from './test-results';
+import { JUnitParser } from './junit-parser';
+import { Test } from './common';
 
 export class TestRunner {
     private binary: string = '';
@@ -11,7 +13,8 @@ export class TestRunner {
     constructor(
         private process: Process = new Process(),
         private args: Argument = new Argument(),
-        private files: Filesystem = new FilesystemFactory().create()
+        private files: Filesystem = new FilesystemFactory().create(),
+        private parser: JUnitParser = new JUnitParser()
     ) {}
 
     setBinary(binary: string): TestRunner {
@@ -40,10 +43,16 @@ export class TestRunner {
         const command: Command = {
             title: '',
             command: await this.getBinary(currentDirectory, root),
-            arguments: await this.getArguments(args, path, currentDirectory, root),
+            arguments: await this.mergeArguments(args, path, currentDirectory, root),
         };
 
-        return new TestResults(await this.process.spawn(command), this.args);
+        const output: string = await this.process.spawn(command);
+
+        const junit: string = this.args.get('--log-junit');
+        const tests: Test[] = this.parser.parse(await this.files.get(junit));
+        this.files.unlink(junit);
+
+        return new TestResults().setTests(tests).setOutput(output);
     }
 
     private async getRoot(currentDirectory: string): Promise<string> {
@@ -63,7 +72,7 @@ export class TestRunner {
         );
     }
 
-    private async getArguments(
+    private async mergeArguments(
         args: string[],
         path: string,
         currentDirectory: string,

@@ -19,11 +19,17 @@ import {
     CodeLensParams,
     CodeLens,
     ExecuteCommandParams,
+    Range,
 } from 'vscode-languageserver';
-import { TestSuite } from './phpunit/test-suite';
-import { Method } from './phpunit/common';
 import { TestRunner } from './phpunit/test-runner';
 import { TestResults } from './phpunit/test-results';
+import { CodeLensProvider } from './codelens-provider';
+import { Test, Type } from './phpunit/common';
+import { CommandProvider } from './command-provider';
+import { Factory } from './filesystem';
+
+const commandProvider: CommandProvider = new CommandProvider();
+const codelensProvider: CodeLensProvider = new CodeLensProvider();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -60,7 +66,7 @@ connection.onInitialize((params: InitializeParams) => {
                 resolveProvider: true,
             },
             executeCommandProvider: {
-                commands: ['phpunit.test', 'phpunit.test.file'],
+                commands: commandProvider.commands,
             },
         },
     };
@@ -128,6 +134,7 @@ documents.onDidChangeContent(change => {
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+    return;
     // In this simple example we get the settings for every validate run.
     let settings = await getDocumentSettings(textDocument.uri);
 
@@ -215,46 +222,39 @@ connection.onCompletionResolve(
 
 connection.onCodeLens(
     (params: CodeLensParams): CodeLens[] => {
-        const textDocument = documents.get(params.textDocument.uri);
-        const testSuite = new TestSuite();
+        const textDocument: TextDocument = documents.get(params.textDocument.uri);
 
-        return testSuite.parse(textDocument.getText(), textDocument.uri).map((method: Method) => {
-            return {
-                range: method.range,
-                command: {
-                    title: 'Run Test',
-                    command: method.kind === 'class' ? 'phpunit.test' : 'phpunit.test.file',
-                    arguments:
-                        method.kind === 'class'
-                            ? [textDocument.uri]
-                            : [textDocument.uri, '--filter', `^.*::${method.name}( with data set .*)?$`],
-                },
-                data: {
-                    textDocument: {
-                        uri: textDocument.uri,
-                    },
-                },
-            };
-        });
+        return codelensProvider.formText(textDocument.getText(), textDocument.uri);
     }
 );
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    const command: string = params.command;
     const [uri, ...args] = params.arguments;
     const testRunner = new TestRunner();
-    let testResults: TestResults;
-    switch (command) {
-        case 'phpunit.test':
-            testResults = await testRunner.handle(uri);
-            break;
-        default:
-        case 'phpunit.test.file':
-            testResults = await testRunner.handle(uri, args);
-            break;
-    }
+    const testResults: TestResults = await testRunner.handle(uri, args || []);
+    const tests = testResults.getTests();
 
-    connection.console.log(JSON.stringify(await testResults.getTests()));
+    const files = new Factory().create();
+    tests
+        .filter((test: Test) => test.type !== Type.PASSED)
+        .reduce((diagnosticGroup: Map<string, Diagnostic[]>, test: Test): Map<string, Diagnostic[]> => {
+            const diagnostics: Diagnostic[] = diagnosticGroup.get(test.file) || [];
+            diagnostics.push({
+                severity: test.type === Type.RISKY ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
+                range: Range.create({ line: test.line - 1, character: 0 }, { line: test.line - 1, character: 0 }),
+                message: test.fault ? test.fault.message : '',
+                relatedInformation: [],
+                source: 'PHPUnit',
+            });
+
+            return diagnosticGroup.set(test.file, diagnostics);
+        }, new Map<string, Diagnostic[]>())
+        .forEach((diagnostics: Diagnostic[], uri: string) => {
+            connection.sendDiagnostics({
+                uri: files.uri(uri),
+                diagnostics,
+            });
+        });
 });
 
 /*
