@@ -1,6 +1,6 @@
 import { Filesystem, Factory as FilesystemFactory } from './filesystem';
 import { Test, Type, Detail, Fault } from './phpunit/common';
-import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation, Range } from 'vscode-languageserver-types';
+import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation } from 'vscode-languageserver-types';
 
 export class DiagnosticProvider {
     constructor(private files: Filesystem = new FilesystemFactory().create()) {}

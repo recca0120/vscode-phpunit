@@ -9,6 +9,8 @@ import * as path from 'path';
 import { workspace, ExtensionContext } from 'vscode';
 
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { DecorateManager } from './decorate-manager';
+import { Window } from './wrappers/window';
 
 let client: LanguageClient;
 
@@ -39,8 +41,9 @@ export function activate(context: ExtensionContext) {
     client = new LanguageClient('phpunitLanguageServer', 'PHPUnit Language Server', serverOptions, clientOptions);
 
     client.onReady().then(() => {
+        const decorateManager = new DecorateManager(context, new Window());
         client.onNotification('tests', (params: any) => {
-            console.log(params);
+            decorateManager.decoratedGutter(params.tests);
         });
     });
 
