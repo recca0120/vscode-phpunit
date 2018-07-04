@@ -37,7 +37,15 @@ export class TestSuite {
     private getTests(node: any, uri: string): any[] {
         return node.children
             .reduce((classes: any[], nsOrClass: any) => {
-                return nsOrClass.kind === 'namespace' ? classes.concat(nsOrClass.children) : classes.concat(nsOrClass);
+                return nsOrClass.kind === 'namespace'
+                    ? classes.concat(
+                          nsOrClass.children.map((classObject: any) => {
+                              classObject.namespace = nsOrClass.name;
+
+                              return classObject;
+                          })
+                      )
+                    : classes.concat(nsOrClass);
             }, [])
             .filter((classObject: any) => classObject.kind === 'class' && classObject.isAbstract === false)
             .reduce((methods: any[], classObject: any) => {
@@ -46,18 +54,21 @@ export class TestSuite {
     }
 
     private asMethods(classObject: any, uri: string): Method[] {
+        const namespace: string = classObject.namespace || '';
+
         const methods: any[] = classObject.body
             .filter(this.isTest.bind(this))
-            .map((node: any) => this.asMethod(node, uri));
+            .map((node: any) => this.asMethod(node, namespace, uri));
 
-        return methods.length === 0 ? [] : [].concat([this.asMethod(classObject, uri)], methods);
+        return methods.length === 0 ? [] : [].concat([this.asMethod(classObject, namespace, uri)], methods);
     }
 
-    private asMethod(node: any, uri: string): Method {
+    private asMethod(node: any, namespace: string, uri: string): Method {
         const { start, end } = node.loc;
 
         return {
             kind: node.kind,
+            namespace: namespace,
             name: node.name,
             uri,
             range: Range.create(start.line - 1, start.column, end.line - 1, end.column),

@@ -25,12 +25,14 @@ class AssertionsTest extends TestCase
         expect(methods).toEqual([
             {
                 kind: 'class',
+                namespace: '',
                 name: 'AssertionsTest',
                 range: { end: { character: 1, line: 10 }, start: { character: 0, line: 4 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
+                namespace: '',
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',
@@ -64,12 +66,14 @@ class AssertionsTest extends TestCase
         expect(methods).toEqual([
             {
                 kind: 'class',
+                namespace: 'Tests',
                 name: 'AssertionsTest',
                 range: { end: { character: 1, line: 14 }, start: { character: 0, line: 6 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
+                namespace: 'Tests',
                 name: 'test_method',
                 range: { end: { character: 5, line: 11 }, start: { character: 11, line: 8 } },
                 uri: 'PHPUnitTest.php',
@@ -105,12 +109,14 @@ class AssertionsTest extends TestCase
         expect(methods).toEqual([
             {
                 kind: 'class',
+                namespace: 'Tests',
                 name: 'AssertionsTest',
                 range: { end: { character: 1, line: 16 }, start: { character: 0, line: 6 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
+                namespace: 'Tests',
                 name: 'method',
                 range: { end: { character: 5, line: 12 }, start: { character: 11, line: 9 } },
                 uri: 'PHPUnitTest.php',
@@ -165,12 +171,14 @@ class AssertionsTest extends TestCase
         expect(methods).toEqual([
             {
                 kind: 'class',
+                namespace: '',
                 name: 'AssertionsTest',
                 range: { end: { character: 1, line: 10 }, start: { character: 0, line: 4 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
+                namespace: '',
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',

@@ -9,12 +9,14 @@ describe('CodeLensProvider Test', () => {
         spyOn(testSuite, 'parse').and.returnValue([
             {
                 kind: 'class',
+                namespace: 'Tests',
                 name: 'AssertionsTest',
                 range: { end: { character: 1, line: 10 }, start: { character: 0, line: 4 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
+                namespace: 'Tests',
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',
