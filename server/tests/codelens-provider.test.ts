@@ -16,7 +16,7 @@ describe('CodeLensProvider Test', () => {
             },
             {
                 kind: 'method',
-                namespace: 'Tests',
+                namespace: 'Tests\\AssertionsTest',
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',

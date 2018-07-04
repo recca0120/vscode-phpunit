@@ -32,7 +32,7 @@ class AssertionsTest extends TestCase
             },
             {
                 kind: 'method',
-                namespace: '',
+                namespace: 'AssertionsTest',
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',
@@ -73,7 +73,7 @@ class AssertionsTest extends TestCase
             },
             {
                 kind: 'method',
-                namespace: 'Tests',
+                namespace: 'Tests\\AssertionsTest',
                 name: 'test_method',
                 range: { end: { character: 5, line: 11 }, start: { character: 11, line: 8 } },
                 uri: 'PHPUnitTest.php',
@@ -116,7 +116,7 @@ class AssertionsTest extends TestCase
             },
             {
                 kind: 'method',
-                namespace: 'Tests',
+                namespace: 'Tests\\AssertionsTest',
                 name: 'method',
                 range: { end: { character: 5, line: 12 }, start: { character: 11, line: 9 } },
                 uri: 'PHPUnitTest.php',
@@ -178,7 +178,7 @@ class AssertionsTest extends TestCase
             },
             {
                 kind: 'method',
-                namespace: '',
+                namespace: 'AssertionsTest',
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',

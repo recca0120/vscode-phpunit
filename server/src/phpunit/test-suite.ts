@@ -58,9 +58,13 @@ export class TestSuite {
 
         const methods: any[] = classObject.body
             .filter(this.isTest.bind(this))
-            .map((node: any) => this.asMethod(node, namespace, uri));
+            .map((node: any) => this.asMethod(node, this.namespace(namespace, classObject.name), uri));
 
         return methods.length === 0 ? [] : [].concat([this.asMethod(classObject, namespace, uri)], methods);
+    }
+
+    private namespace(...name: string[]): string {
+        return name.filter(name => !!name).join('\\');
     }
 
     private asMethod(node: any, namespace: string, uri: string): Method {

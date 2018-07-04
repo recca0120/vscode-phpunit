@@ -37,7 +37,7 @@ export interface Test {
 
 export interface Method {
     kind: string;
-    namespace?: string;
+    namespace: string;
     name: string;
     uri: string;
     range: Range;
