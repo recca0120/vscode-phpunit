@@ -11,6 +11,7 @@ import {
 } from 'vscode';
 import { Type, Test } from './common';
 import { LanguageClient } from 'vscode-languageclient';
+import { StatusBarManager } from './statusbar-manager';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
@@ -18,6 +19,7 @@ export class DecorateManager {
     constructor(
         private client: LanguageClient,
         private context: ExtensionContext,
+        private statusBarManager: StatusBarManager,
         private window: Window = new Window()
     ) {
         this.styles.set(Type.PASSED, this.passed());
@@ -26,7 +28,7 @@ export class DecorateManager {
         this.styles.set(Type.SKIPPED, this.skipped());
     }
 
-    decoratedGutter(tests: Test[]) {
+    decoratedGutter(decorationOptionGroup: Map<Type, DecorationOptions[]>) {
         const editor: TextEditor = this.window.activeTextEditor;
 
         if (!editor) {
@@ -35,7 +37,7 @@ export class DecorateManager {
 
         this.clearDecoratedGutter();
 
-        this.groupBy(tests).forEach((decorationOptions: DecorationOptions[], type: Type) => {
+        decorationOptionGroup.forEach((decorationOptions: DecorationOptions[], type: Type) => {
             editor.setDecorations(this.styles.get(type), decorationOptions);
         });
     }
@@ -53,8 +55,39 @@ export class DecorateManager {
     }
 
     listen() {
+        this.statusBarManager.listen();
+
+        this.client.onNotification('running', () => {
+            this.clearDecoratedGutter();
+            this.statusBarManager.running();
+        });
+
         this.client.onNotification('tests', (params: any) => {
-            this.decoratedGutter(params.tests);
+            const decorationOptionGroup: Map<Type, DecorationOptions[]> = this.groupBy(params.tests);
+            this.decoratedGutter(decorationOptionGroup);
+
+            let decorationOptions: DecorationOptions[] = decorationOptionGroup.get(Type.ERROR) || [];
+            if (decorationOptions.length > 0) {
+                this.statusBarManager.failed();
+
+                return;
+            }
+
+            decorationOptions = decorationOptionGroup.get(Type.SKIPPED) || [];
+            if (decorationOptions.length > 0) {
+                this.statusBarManager.failed();
+
+                return;
+            }
+
+            decorationOptions = decorationOptionGroup.get(Type.PASSED) || [];
+            if (decorationOptions.length > 0) {
+                this.statusBarManager.success();
+
+                return;
+            }
+
+            this.statusBarManager.stopped();
         });
     }
 

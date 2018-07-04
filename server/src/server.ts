@@ -165,6 +165,8 @@ connection.onCodeLens(
 );
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
+    connection.sendNotification('running');
+
     const { uri, args } = params.arguments[0];
 
     commandProvider.settings(await getDocumentSettings(uri));
@@ -200,6 +202,8 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         uri,
         tests,
     });
+
+    connection.sendNotification('done');
 });
 
 connection.onDocumentSymbol(
