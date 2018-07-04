@@ -14,7 +14,8 @@ export class TestRunner {
         private process: Process = new Process(),
         private args: Argument = new Argument(),
         private files: Filesystem = new FilesystemFactory().create(),
-        private parser: JUnitParser = new JUnitParser()
+        private parser: JUnitParser = new JUnitParser(),
+        private testResults: TestResults = new TestResults()
     ) {}
 
     setBinary(binary: string): TestRunner {
@@ -52,7 +53,7 @@ export class TestRunner {
         const tests: Test[] = await this.parser.parse(await this.files.get(junit));
         this.files.unlink(junit);
 
-        return new TestResults().setTests(tests).setOutput(output);
+        return this.testResults.setTests(tests).setOutput(output);
     }
 
     private async getRoot(currentDirectory: string): Promise<string> {
