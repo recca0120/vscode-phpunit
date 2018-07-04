@@ -14,3 +14,5 @@ client/node_modules/**
 coverage/**
 screenshots/**
 scripts/**
+server/tests/**
+client/testFixture/**
