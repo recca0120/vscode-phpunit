@@ -18,7 +18,7 @@ export class StatusBarManager {
 
     constructor(private window = new Window(), private spinner: Spinner = new Spinner()) {
         this.statusBarItem = this.window.createStatusBarItem(StatusBarAlignment.Left);
-        // this.statusBarItem.command = 'show.outputchannel';
+        this.statusBarItem.command = 'show.outputchannel';
 
         this.initial();
     }

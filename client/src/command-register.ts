@@ -1,5 +1,5 @@
 import { Window } from './wrappers/window';
-import { Command } from './wrappers/command';
+import { Commands } from './wrappers/commands';
 import { Disposable, TextEditor } from 'vscode';
 import { LanguageClient, ExecuteCommandRequest } from 'vscode-languageclient';
 
@@ -10,7 +10,7 @@ export class CommandRegister {
     constructor(
         private client: LanguageClient,
         private window: Window = new Window(),
-        private commands: Command = new Command()
+        private commands: Commands = new Commands()
     ) {}
 
     register(): CommandRegister {
@@ -63,6 +63,10 @@ export class CommandRegister {
             });
         });
 
+        this.registerCommand('show.outputchannel', () => {
+            this.client.outputChannel.show();
+        });
+
         return this;
     }
 
@@ -72,6 +76,14 @@ export class CommandRegister {
 
     dispose(): Disposable[] {
         return this.disposables;
+    }
+
+    private registerCommand(command: string, callback: Function) {
+        this.disposables.push(
+            this.commands.registerCommand(command, () => {
+                callback(command.replace(/^phpunit\.client/, 'phpunit'));
+            })
+        );
     }
 
     private registerTextEditorCommand(command: string, callback: Function) {

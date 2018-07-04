@@ -28,18 +28,9 @@ export class DecorateManager {
         this.styles.set(Type.SKIPPED, this.skipped());
     }
 
-    decoratedGutter(decorationOptionGroup: Map<Type, DecorationOptions[]>) {
-        const editor: TextEditor = this.window.activeTextEditor;
-
-        if (!editor) {
-            return;
-        }
-
+    decoratedGutter(tests: Test[]) {
         this.clearDecoratedGutter();
-
-        decorationOptionGroup.forEach((decorationOptions: DecorationOptions[], type: Type) => {
-            editor.setDecorations(this.styles.get(type), decorationOptions);
-        });
+        this.setDecorations(this.groupBy(tests));
     }
 
     clearDecoratedGutter() {
@@ -64,30 +55,47 @@ export class DecorateManager {
 
         this.client.onNotification('tests', (params: any) => {
             const decorationOptionGroup: Map<Type, DecorationOptions[]> = this.groupBy(params.tests);
-            this.decoratedGutter(decorationOptionGroup);
 
-            let decorationOptions: DecorationOptions[] = decorationOptionGroup.get(Type.ERROR) || [];
-            if (decorationOptions.length > 0) {
+            this.setDecorations(decorationOptionGroup);
+
+            if (this.getDecorationOptions(decorationOptionGroup, Type.ERROR).length > 0) {
                 this.statusBarManager.failed();
 
                 return;
             }
 
-            decorationOptions = decorationOptionGroup.get(Type.SKIPPED) || [];
-            if (decorationOptions.length > 0) {
+            if (this.getDecorationOptions(decorationOptionGroup, Type.SKIPPED).length > 0) {
                 this.statusBarManager.failed();
 
                 return;
             }
 
-            decorationOptions = decorationOptionGroup.get(Type.PASSED) || [];
-            if (decorationOptions.length > 0) {
+            if (this.getDecorationOptions(decorationOptionGroup, Type.PASSED).length > 0) {
                 this.statusBarManager.success();
 
                 return;
             }
 
             this.statusBarManager.stopped();
+        });
+    }
+
+    private getDecorationOptions(
+        decorationOptionGroup: Map<Type, DecorationOptions[]>,
+        type: Type
+    ): DecorationOptions[] {
+        return decorationOptionGroup.get(type) || [];
+    }
+
+    private setDecorations(decorationOptionGroup: Map<Type, DecorationOptions[]>) {
+        const editor: TextEditor = this.window.activeTextEditor;
+
+        if (!editor) {
+            return;
+        }
+
+        decorationOptionGroup.forEach((decorationOptions: DecorationOptions[], type: Type) => {
+            editor.setDecorations(this.styles.get(type), decorationOptions);
         });
     }
 
