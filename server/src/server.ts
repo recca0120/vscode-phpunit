@@ -19,7 +19,6 @@ import {
     DocumentSymbolParams,
     SymbolInformation,
 } from 'vscode-languageserver';
-import { TestRunner } from './phpunit/test-runner';
 import { CodeLensProvider } from './codelens-provider';
 import { CommandProvider } from './command-provider';
 import { DiagnosticProvider } from './diagnostic-provider';
@@ -28,10 +27,9 @@ import { DocumentSymbolProvider } from './document-symbol-provider';
 import { Snippets } from './snippets';
 import { Test } from './phpunit/common';
 
-const testRunner = new TestRunner();
 const snippets: Snippets = new Snippets();
-const commandProvider: CommandProvider = new CommandProvider();
 const codelensProvider: CodeLensProvider = new CodeLensProvider();
+const commandProvider: CommandProvider = new CommandProvider(codelensProvider);
 const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
 const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 
@@ -169,20 +167,24 @@ connection.onCodeLens(
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const { uri, args } = params.arguments[0];
 
-    const settings: PHPUnitSettings = await getDocumentSettings(uri);
-    testRunner.setBinary(settings.execPath).setDefaults(settings.args);
+    commandProvider.settings(await getDocumentSettings(uri));
+
+    let testResults: TestResults;
 
     switch (params.command) {
+        case 'phpunit.test.last':
+            testResults = await commandProvider.handleLast();
+            connection.console.log(JSON.stringify(testResults));
+            break;
         case 'phpunit.test.nearest':
-            const codelens: CodeLens = await codelensProvider.fromLine(uri, params.arguments[1]);
-            Object.assign(args, codelens.command.arguments[0].args);
-
+            testResults = await commandProvider.handleNearest(uri, params.arguments[1]);
+            break;
+        default:
+            testResults = await commandProvider.handle(uri, args);
             break;
     }
 
-    const testResults: TestResults = await testRunner.handle(uri, args);
     const tests: Test[] = testResults.getTests();
-
     const diagnosticGroup: Map<string, Diagnostic[]> = diagnosticProvider.asDiagnosticGroup(tests);
 
     diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
