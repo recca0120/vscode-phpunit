@@ -9,7 +9,6 @@ import {
     TextDocuments,
     TextDocument,
     Diagnostic,
-    DiagnosticSeverity,
     ProposedFeatures,
     InitializeParams,
     DidChangeConfigurationNotification,
@@ -19,16 +18,21 @@ import {
     CodeLensParams,
     CodeLens,
     ExecuteCommandParams,
+    DocumentSymbolParams,
+    SymbolInformation,
 } from 'vscode-languageserver';
 import { TestRunner } from './phpunit/test-runner';
 import { CodeLensProvider } from './codelens-provider';
 import { CommandProvider } from './command-provider';
 import { DiagnosticProvider } from './diagnostic-provider';
 import { TestResults } from './phpunit/test-results';
+import { DocumentSymbolProvider } from './document-symbol-provider';
 
+const testRunner = new TestRunner();
 const commandProvider: CommandProvider = new CommandProvider();
 const codelensProvider: CodeLensProvider = new CodeLensProvider();
 const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
+const documentSymbolProvider: DocumentSymbolProvider = new DocumentSymbolProvider();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -40,7 +44,7 @@ let documents: TextDocuments = new TextDocuments();
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
-let hasDiagnosticRelatedInformationCapability: boolean = false;
+// let hasDiagnosticRelatedInformationCapability: boolean = false;
 
 connection.onInitialize((params: InitializeParams) => {
     let capabilities = params.capabilities;
@@ -49,10 +53,10 @@ connection.onInitialize((params: InitializeParams) => {
     // If not, we will fall back using global settings
     hasConfigurationCapability = capabilities.workspace && !!capabilities.workspace.configuration;
     hasWorkspaceFolderCapability = capabilities.workspace && !!capabilities.workspace.workspaceFolders;
-    hasDiagnosticRelatedInformationCapability =
-        capabilities.textDocument &&
-        capabilities.textDocument.publishDiagnostics &&
-        capabilities.textDocument.publishDiagnostics.relatedInformation;
+    // hasDiagnosticRelatedInformationCapability =
+    //     capabilities.textDocument &&
+    //     capabilities.textDocument.publishDiagnostics &&
+    //     capabilities.textDocument.publishDiagnostics.relatedInformation;
 
     return {
         capabilities: {
@@ -64,6 +68,7 @@ connection.onInitialize((params: InitializeParams) => {
             codeLensProvider: {
                 resolveProvider: true,
             },
+            documentSymbolProvider: true,
             executeCommandProvider: {
                 commands: commandProvider.commands,
             },
@@ -84,38 +89,39 @@ connection.onInitialized(() => {
 });
 
 // The example settings
-interface ExampleSettings {
-    maxNumberOfProblems: number;
+interface PHPUnitSettings {
+    execPath: string;
+    args: string[];
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: PHPUnitSettings = {
+    execPath: '',
+    args: [],
+};
+let globalSettings: PHPUnitSettings = defaultSettings;
 
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+let documentSettings: Map<string, Thenable<PHPUnitSettings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
         // Reset all cached document settings
         documentSettings.clear();
     } else {
-        globalSettings = <ExampleSettings>(change.settings.languageServerExample || defaultSettings);
+        globalSettings = <PHPUnitSettings>(change.settings.phpunit || defaultSettings);
     }
-
-    // Revalidate all open text documents
-    documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+function getDocumentSettings(resource: string): Thenable<PHPUnitSettings> {
     if (!hasConfigurationCapability) {
         return Promise.resolve(globalSettings);
     }
     let result = documentSettings.get(resource);
     if (!result) {
-        result = connection.workspace.getConfiguration({ scopeUri: resource, section: 'languageServerExample' });
+        result = connection.workspace.getConfiguration({ scopeUri: resource, section: 'phpunit' });
         documentSettings.set(resource, result);
     }
     return result;
@@ -128,57 +134,8 @@ documents.onDidClose(e => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
-    validateTextDocument(change.document);
-});
-
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-    return;
-    // In this simple example we get the settings for every validate run.
-    let settings = await getDocumentSettings(textDocument.uri);
-
-    // The validator creates diagnostics for all uppercase words length 2 and more
-    let text = textDocument.getText();
-    let pattern = /\b[A-Z]{2,}\b/g;
-    let m: RegExpExecArray;
-
-    let problems = 0;
-    let diagnostics: Diagnostic[] = [];
-    while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-        problems++;
-        let diagnosic: Diagnostic = {
-            severity: DiagnosticSeverity.Warning,
-            range: {
-                start: textDocument.positionAt(m.index),
-                end: textDocument.positionAt(m.index + m[0].length),
-            },
-            message: `${m[0]} is all uppercase.`,
-            source: 'ex',
-        };
-        if (hasDiagnosticRelatedInformationCapability) {
-            diagnosic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnosic.range),
-                    },
-                    message: 'Spelling matters',
-                },
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnosic.range),
-                    },
-                    message: 'Particularly for names',
-                },
-            ];
-        }
-        diagnostics.push(diagnosic);
-    }
-
-    // Send the computed diagnostics to VSCode.
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-}
+// documents.onDidChangeContent(change => {
+// });
 
 connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VSCode
@@ -229,7 +186,10 @@ connection.onCodeLens(
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const [uri, ...args] = params.arguments;
-    const testRunner = new TestRunner();
+
+    const settings: PHPUnitSettings = await getDocumentSettings(uri);
+    testRunner.setBinary(settings.execPath).setDefaults(settings.args);
+
     const testResults: TestResults = await testRunner.handle(uri, args || []);
     const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(
         testResults.getTests()
@@ -242,6 +202,14 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         });
     });
 });
+
+connection.onDocumentSymbol(
+    async (params: DocumentSymbolParams): Promise<SymbolInformation[]> => {
+        const textDocument: TextDocument = documents.get(params.textDocument.uri);
+
+        return documentSymbolProvider.formText(textDocument.getText(), textDocument.uri);
+    }
+);
 
 /*
 connection.onDidOpenTextDocument((params) => {
