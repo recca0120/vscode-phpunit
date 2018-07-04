@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemKind, InsertTextFormat } from 'vscode-languageserver-protocol';
+import { CompletionItem, CompletionItemKind, InsertTextFormat } from 'vscode-languageserver-types';
 
 export interface Snippet {
     prefix: string;

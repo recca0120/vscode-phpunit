@@ -1,6 +1,6 @@
 import { Method } from './phpunit/common';
 import { TestSuite } from './phpunit/test-suite';
-import { CodeLens } from 'vscode-languageserver-protocol';
+import { CodeLens } from 'vscode-languageserver-types';
 
 export class CodeLensProvider {
     constructor(private testSuite: TestSuite = new TestSuite()) {}

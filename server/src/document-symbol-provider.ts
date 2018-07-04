@@ -1,6 +1,6 @@
 import { TestSuite } from './phpunit/test-suite';
 import { Method } from './phpunit/common';
-import { SymbolInformation, SymbolKind } from 'vscode-languageserver-protocol';
+import { SymbolInformation, SymbolKind } from 'vscode-languageserver-types';
 
 export class DocumentSymbolProvider {
     constructor(private testSuite: TestSuite = new TestSuite()) {}

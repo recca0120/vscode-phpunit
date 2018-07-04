@@ -1,5 +1,5 @@
 import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
-import { Range } from 'vscode-languageserver-protocol';
+import { Range } from 'vscode-languageserver-types';
 
 export class Textline {
     constructor(private files: Filesystem = new FilesystemFactory().create()) {}

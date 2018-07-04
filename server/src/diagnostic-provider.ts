@@ -1,7 +1,7 @@
 import { Filesystem, Factory as FilesystemFactory } from './filesystem';
 import { Textline } from './support/textline';
 import { Test, Type, Detail, Fault } from './phpunit/common';
-import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation, Range } from 'vscode-languageserver-protocol';
+import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation, Range } from 'vscode-languageserver-types';
 
 export class DiagnosticProvider {
     constructor(
