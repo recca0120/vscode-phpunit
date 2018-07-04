@@ -26,6 +26,7 @@ import { DiagnosticProvider } from './diagnostic-provider';
 import { TestResults } from './phpunit/test-results';
 import { DocumentSymbolProvider } from './document-symbol-provider';
 import { Snippets } from './snippets';
+import { Test } from './phpunit/common';
 
 const testRunner = new TestRunner();
 const snippets: Snippets = new Snippets();
@@ -172,9 +173,9 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     testRunner.setBinary(settings.execPath).setDefaults(settings.args);
 
     const testResults: TestResults = await testRunner.handle(uri, args);
-    const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(
-        testResults.getTests()
-    );
+    const tests: Test[] = testResults.getTests();
+
+    const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(tests);
 
     diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
         connection.sendDiagnostics({
@@ -183,7 +184,12 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         });
     });
 
-    connection.console.info(testResults.toString());
+    connection.console.info(testResults.getOutput());
+
+    connection.sendNotification('tests', {
+        uri,
+        tests,
+    });
 });
 
 connection.onDocumentSymbol(
