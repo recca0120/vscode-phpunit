@@ -13,8 +13,6 @@ import {
     InitializeParams,
     DidChangeConfigurationNotification,
     CompletionItem,
-    CompletionItemKind,
-    TextDocumentPositionParams,
     CodeLensParams,
     CodeLens,
     ExecuteCommandParams,
@@ -168,12 +166,12 @@ connection.onCodeLens(
 );
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    const [uri, ...args] = params.arguments;
+    const { uri, args } = params.arguments[0];
 
     const settings: PHPUnitSettings = await getDocumentSettings(uri);
     testRunner.setBinary(settings.execPath).setDefaults(settings.args);
 
-    const testResults: TestResults = await testRunner.handle(uri, args || []);
+    const testResults: TestResults = await testRunner.handle(uri, args);
     const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(
         testResults.getTests()
     );

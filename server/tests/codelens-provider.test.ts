@@ -25,13 +25,19 @@ describe('CodeLensProvider Test', () => {
 
         expect(codelensProvider.formText('text', 'PHPUnitTest.php')).toEqual([
             {
-                command: { arguments: ['PHPUnitTest.php'], command: 'phpunit.test', title: 'Run Test' },
+                command: {
+                    arguments: [{ uri: 'PHPUnitTest.php', args: [] }],
+                    command: 'phpunit.test',
+                    title: 'Run Test',
+                },
                 data: { textDocument: { uri: 'PHPUnitTest.php' } },
                 range: { end: { character: 1, line: 10 }, start: { character: 0, line: 4 } },
             },
             {
                 command: {
-                    arguments: ['PHPUnitTest.php', '--filter', '^.*::test_method( with data set .*)?$'],
+                    arguments: [
+                        { uri: 'PHPUnitTest.php', args: ['--filter', '^.*::test_method( with data set .*)?$'] },
+                    ],
                     command: 'phpunit.test.file',
                     title: 'Run Test',
                 },

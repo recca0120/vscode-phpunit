@@ -12,7 +12,7 @@ export class CodeLensProvider {
                 command: {
                     title: 'Run Test',
                     command: this.getCommandName(method),
-                    arguments: this.getArguments(method, uri),
+                    arguments: [this.getArguments(method, uri)],
                 },
                 data: {
                     textDocument: {
@@ -27,7 +27,9 @@ export class CodeLensProvider {
         return method.kind === 'class' ? 'phpunit.test' : 'phpunit.test.file';
     }
 
-    private getArguments(method: Method, uri: string): string[] {
-        return method.kind === 'class' ? [uri] : [uri, '--filter', `^.*::${method.name}( with data set .*)?$`];
+    private getArguments(method: Method, uri: string): any {
+        return method.kind === 'class'
+            ? { uri, args: [] }
+            : { uri, args: ['--filter', `^.*::${method.name}( with data set .*)?$`] };
     }
 }
