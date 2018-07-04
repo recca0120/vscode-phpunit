@@ -1,28 +1,29 @@
 import { Test } from './common';
+import { Filesystem, Factory } from '../filesystem';
 
 export class TestResults {
-    private tests: Test[];
-    private uri: string = '';
+    private testGroup: Map<string, Test[]> = new Map<string, Test[]>();
     private output: string = '';
 
-    setUri(uri: string): TestResults {
-        this.uri = uri;
-
-        return this;
-    }
-
-    getUri(): string {
-        return this.uri;
-    }
+    constructor(private files: Filesystem = new Factory().create()) {}
 
     setTests(tests: Test[]): TestResults {
-        this.tests = tests;
+        this.testGroup = tests.reduce((testGroup: Map<string, Test[]>, test: Test): Map<string, Test[]> => {
+            const uri: string = this.files.uri(test.file);
+            const tests: Test[] = testGroup.get(uri) || [];
+
+            return testGroup.set(uri, tests.concat([test]));
+        }, this.testGroup);
 
         return this;
     }
 
-    getTests(): Test[] {
-        return this.tests;
+    getTests(uri: string): Test[] {
+        return this.testGroup.get(this.files.uri(uri)) || [];
+    }
+
+    getTestGroup(): Map<string, Test[]> {
+        return this.testGroup;
     }
 
     setOutput(output: string): TestResults {

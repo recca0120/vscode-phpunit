@@ -3,11 +3,15 @@ import { tap } from '../support/helpers';
 import { Type, Test, Detail, Fault } from './common';
 import { decode } from 'he';
 import { Textline } from '../support/textline';
+import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 
 export class JUnitParser {
     private pathPattern: RegExp = /(.*):(\d+)$/;
 
-    constructor(private textline: Textline = new Textline()) {}
+    constructor(
+        private textline: Textline = new Textline(),
+        private files: Filesystem = new FilesystemFactory().create()
+    ) {}
 
     async parse(contents: string): Promise<Test[]> {
         return await Promise.all(
@@ -61,7 +65,7 @@ export class JUnitParser {
                     time: parseFloat(node._time) || 0,
                     type: Type.PASSED,
                     line: node._line || 0,
-                    file: node._file || '',
+                    file: this.files.uri(node._file) || '',
                 },
                 node
             )
@@ -105,7 +109,10 @@ export class JUnitParser {
                     (detail: string): Promise<Detail> => {
                         const [, file, line] = detail.match(this.pathPattern) as string[];
 
-                        return this.createRange({ file, line: parseInt(line, 10) });
+                        return this.createRange({
+                            file: this.files.uri(file),
+                            line: parseInt(line, 10),
+                        });
                     }
                 )
         );

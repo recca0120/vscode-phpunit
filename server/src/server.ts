@@ -185,22 +185,24 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             break;
     }
 
-    const tests: Test[] = testResults.getTests();
-    const diagnosticGroup: Map<string, Diagnostic[]> = diagnosticProvider.asDiagnosticGroup(tests);
+    const testGroup: Map<string, Test[]> = testResults.getTestGroup();
 
-    diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
-        connection.sendDiagnostics({
-            uri,
-            diagnostics,
+    for (const [, tests] of testGroup) {
+        const diagnosticGroup: Map<string, Diagnostic[]> = diagnosticProvider.asDiagnosticGroup(tests);
+        diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
+            connection.sendDiagnostics({
+                uri,
+                diagnostics,
+            });
         });
-    });
+
+        connection.sendNotification('tests', {
+            uri,
+            tests,
+        });
+    }
 
     connection.console.log(testResults.getOutput());
-
-    connection.sendNotification('tests', {
-        uri,
-        tests,
-    });
 
     connection.sendNotification('done');
 });

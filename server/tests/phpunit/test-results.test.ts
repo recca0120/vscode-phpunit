@@ -5,7 +5,6 @@ import { Range } from 'vscode-languageserver-types';
 describe('TestResults Test', () => {
     it('it should get tests', async () => {
         const output: string = 'output';
-        const uri: string = 'uri';
 
         const expected: Test[] = [
             {
@@ -20,14 +19,11 @@ describe('TestResults Test', () => {
             },
         ];
 
-        const testResults: TestResults = new TestResults()
-            .setUri(uri)
-            .setTests(expected)
-            .setOutput(output);
-        const tests: Test[] = testResults.getTests();
+        const testResults: TestResults = new TestResults().setTests(expected).setOutput(output);
+
+        const tests: Test[] = testResults.getTests('foo');
 
         expect(tests).toEqual(expected);
-        expect(testResults.getUri()).toEqual(uri);
         expect(testResults.getOutput()).toEqual(output);
         expect(new String(testResults)).toEqual(output);
     });
