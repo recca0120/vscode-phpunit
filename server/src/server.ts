@@ -22,7 +22,7 @@ import {
 import { CodeLensProvider } from './codelens-provider';
 import { CommandProvider } from './command-provider';
 import { DiagnosticProvider } from './diagnostic-provider';
-import { TestResults } from './phpunit/test-results';
+import { TestResult } from './phpunit/test-result';
 import { DocumentSymbolProvider } from './document-symbol-provider';
 import { Snippets } from './snippets';
 import { Test } from './phpunit/common';
@@ -167,44 +167,40 @@ connection.onCodeLens(
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     connection.sendNotification('running');
 
-    const { uri, args } = params.arguments[0];
-
-    commandProvider.settings(await getDocumentSettings(uri));
-
-    let testResults: TestResults;
+    let testResult: TestResult;
 
     switch (params.command) {
         case 'phpunit.test.last':
-            testResults = await commandProvider.handleLast();
+            testResult = await commandProvider.handleLast();
             break;
         case 'phpunit.test.nearest':
-            testResults = await commandProvider.handleNearest(uri, params.arguments[1]);
+            commandProvider.settings(await getDocumentSettings(params.arguments[0].uri));
+            testResult = await commandProvider.handleNearest(params.arguments[0].uri, params.arguments[1]);
             break;
         default:
-            testResults = await commandProvider.handle(uri, args);
+            commandProvider.settings(await getDocumentSettings(params.arguments[0]));
+            testResult = await commandProvider.handle(params.arguments[0].uri, params.arguments[0].args);
             break;
     }
 
-    const testGroup: Map<string, Test[]> = testResults.getTestGroup();
+    const { uri } = commandProvider.getLastArgs();
 
-    for (const [, tests] of testGroup) {
-        const diagnosticGroup: Map<string, Diagnostic[]> = diagnosticProvider.asDiagnosticGroup(tests);
-        diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
-            connection.sendDiagnostics({
-                uri,
-                diagnostics,
-            });
-        });
+    connection.console.log(testResult.getOutput());
 
-        connection.sendNotification('tests', {
+    const tests: Test[] = testResult.getTests();
+
+    const diagnosticGroup: Map<string, Diagnostic[]> = diagnosticProvider.asDiagnosticGroup(tests);
+    diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
+        connection.sendDiagnostics({
             uri,
-            tests,
+            diagnostics,
         });
-    }
+    });
 
-    connection.console.log(testResults.getOutput());
-
-    connection.sendNotification('done');
+    connection.sendNotification('tests', {
+        uri,
+        tests,
+    });
 });
 
 connection.onDocumentSymbol(

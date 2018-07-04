@@ -1,5 +1,5 @@
 import { TestRunner } from '../../src/phpunit/test-runner';
-import { TestResults } from '../../src/phpunit/test-results';
+import { TestResult } from '../../src/phpunit/test-result';
 import { Filesystem, Factory as FilesystemFactory } from '../../src/filesystem';
 import { projectPath } from '../helpers';
 import { isWindows } from '../../src/support/helpers';
@@ -35,9 +35,9 @@ describe('TestRunner Test', () => {
         ]);
 
         const testRunner: TestRunner = new TestRunner(process, args, files, parser);
-        const testResults: TestResults = await testRunner.handle(projectPath('tests'), [], projectPath('src'));
+        const testResult: TestResult = await testRunner.handle(projectPath('tests'), [], projectPath('src'));
 
-        expect(new String(testResults)).toEqual('output');
+        expect(new String(testResult)).toEqual('output');
 
         expect(process.spawn).toBeCalledWith({
             title: '',
@@ -80,9 +80,9 @@ describe('TestRunner Test', () => {
         testRunner.setBinary('foo');
         testRunner.setDefaults(['--bar']);
 
-        const testResults: TestResults = await testRunner.handle('', [], projectPath('src'));
+        const testResult: TestResult = await testRunner.handle('', [], projectPath('src'));
 
-        expect(new String(testResults)).toEqual('output');
+        expect(new String(testResult)).toEqual('output');
 
         expect(process.spawn).toBeCalledWith({
             title: '',

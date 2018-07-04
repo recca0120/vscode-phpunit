@@ -2,7 +2,7 @@ import { Process } from '../support/process';
 import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 import { Command } from 'vscode-languageserver-types';
 import { Argument } from './argument';
-import { TestResults } from './test-results';
+import { TestResult } from './test-result';
 import { JUnitParser } from './junit-parser';
 import { Test } from './common';
 
@@ -14,8 +14,7 @@ export class TestRunner {
         private process: Process = new Process(),
         private args: Argument = new Argument(),
         private files: Filesystem = new FilesystemFactory().create(),
-        private parser: JUnitParser = new JUnitParser(),
-        private testResults: TestResults = new TestResults()
+        private parser: JUnitParser = new JUnitParser()
     ) {}
 
     setBinary(binary: string): TestRunner {
@@ -34,7 +33,7 @@ export class TestRunner {
         path: string = '',
         args: string[] = [],
         currentDirectory: string = process.cwd()
-    ): Promise<TestResults> {
+    ): Promise<TestResult> {
         if (path !== '') {
             path = this.files.normalizePath(path);
             currentDirectory = this.files.dirname(path);
@@ -53,7 +52,7 @@ export class TestRunner {
         const tests: Test[] = await this.parser.parse(await this.files.get(junit));
         this.files.unlink(junit);
 
-        return this.testResults.setTests(tests).setOutput(output);
+        return new TestResult().setTests(tests).setOutput(output);
     }
 
     private async getRoot(currentDirectory: string): Promise<string> {

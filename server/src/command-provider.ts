@@ -1,5 +1,5 @@
 import { TestRunner } from './phpunit/test-runner';
-import { TestResults } from './phpunit/test-results';
+import { TestResult } from './phpunit/test-result';
 import { CodeLens } from 'vscode-languageserver-types';
 import { CodeLensProvider } from './codelens-provider';
 
@@ -26,13 +26,13 @@ export class CommandProvider {
         this.testRunner.setBinary(settings.execPath).setDefaults(settings.args);
     }
 
-    async handle(uri: string, args: string[] = []): Promise<TestResults> {
+    async handle(uri: string, args: string[] = []): Promise<TestResult> {
         Object.assign(this.lastArgs, { uri, args });
 
         return await this.testRunner.handle(uri, args);
     }
 
-    async handleNearest(uri: string, lineAt: number): Promise<TestResults> {
+    async handleNearest(uri: string, lineAt: number): Promise<TestResult> {
         const codeLens: CodeLens = await this.codeLenProvider.fromLine(uri, lineAt);
 
         const { args } = codeLens.command.arguments[0];
@@ -40,7 +40,11 @@ export class CommandProvider {
         return await this.handle(uri, args);
     }
 
-    async handleLast(): Promise<TestResults> {
+    async handleLast(): Promise<TestResult> {
         return await this.handle(this.lastArgs.uri, this.lastArgs.args);
+    }
+
+    getLastArgs(): any {
+        return this.lastArgs;
     }
 }
