@@ -10,21 +10,6 @@ export class Textline {
         return this.createRange(lineAt, lines[lineAt]);
     }
 
-    async findMethod(uri: string, lineAt: number): Promise<string> {
-        const lines: string[] = await this.lines(uri);
-
-        while (lineAt > 0) {
-            const line: string = lines[lineAt];
-            const match = line.match(/^\s*(?:public|private|protected)?\s*function\s*(\w+)\s*\(.*$/);
-            if (match) {
-                return match[1];
-            }
-            lineAt = lineAt - 1;
-        }
-
-        return '';
-    }
-
     private createRange(lineAt: number, line: string) {
         const firstCharacter: number = line.search(/\S|$/);
 
