@@ -76,7 +76,7 @@ export class DecorateManager {
             }
 
             if (this.getDecorationOptions(decorationOptionGroup, Type.PASSED).length > 0) {
-                this.statusBarManager.success();
+                this.statusBarManager.passed();
 
                 return;
             }

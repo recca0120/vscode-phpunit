@@ -39,20 +39,21 @@ export class StatusBarManager {
         }, 100);
     }
 
-    public success(details?: string): void {
-        this.updateStatus('$(check)', details);
+    public passed(details?: string): void {
+        this.updateStatus('$(check)', details, '#62b455');
     }
 
     public failed(details?: string): void {
-        this.updateStatus('$(alert)', details);
+        this.updateStatus('$(alert)', details, '#ff9b9b');
     }
 
     public stopped(details?: string): void {
-        this.updateStatus('$(stopped)', details);
+        this.updateStatus('$(stopped)', details, 'inherit');
     }
 
-    public updateStatus(message: string, details?: string) {
+    public updateStatus(message: string, details?: string, color?: string) {
         clearInterval(this.statusBarSpinner);
         this.statusBarItem.text = `${this.statusKey} ${message} ${details || ''}`;
+        this.statusBarItem.color = color;
     }
 }
