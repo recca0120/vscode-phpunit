@@ -50,6 +50,7 @@ export class DecorateManager {
 
         this.client.onNotification('running', () => {
             this.clearDecoratedGutter();
+            this.client.outputChannel.clear();
             this.statusBarManager.running();
         });
 
