@@ -1,10 +1,12 @@
 import { TestSuite } from '../../src/phpunit/test-suite';
+import { Method } from '../../src/phpunit/common';
+import { Filesystem, Factory as FilesystemFactory } from '../../src/filesystem';
 
 describe('TestSuite Test', () => {
-    it('it should parse methods', async () => {
+    it('it should parse methods', () => {
         const testSuite: TestSuite = new TestSuite();
 
-        const methods: any[] = testSuite.parse(
+        const methods: Method[] = testSuite.parse(
             `
 <?php
 use PHPUnit\\Framework\\TestCase;
@@ -24,22 +26,22 @@ class AssertionsTest extends TestCase
             {
                 kind: 'class',
                 name: 'AssertionsTest',
-                range: { end: { character: 14, line: 4 }, start: { character: 0, line: 4 } },
+                range: { end: { character: 1, line: 10 }, start: { character: 0, line: 4 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
                 name: 'test_method',
-                range: { end: { character: 22, line: 6 }, start: { character: 11, line: 6 } },
+                range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',
             },
         ]);
     });
 
-    it('it should parse methods with namespace', async () => {
+    it('it should parse methods with namespace', () => {
         const testSuite: TestSuite = new TestSuite();
 
-        const methods: any[] = testSuite.parse(
+        const methods: Method[] = testSuite.parse(
             `
 <?php
 namespace Tests;
@@ -63,22 +65,22 @@ class AssertionsTest extends TestCase
             {
                 kind: 'class',
                 name: 'AssertionsTest',
-                range: { end: { character: 14, line: 6 }, start: { character: 0, line: 6 } },
+                range: { end: { character: 1, line: 14 }, start: { character: 0, line: 6 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
                 name: 'test_method',
-                range: { end: { character: 22, line: 8 }, start: { character: 11, line: 8 } },
+                range: { end: { character: 5, line: 11 }, start: { character: 11, line: 8 } },
                 uri: 'PHPUnitTest.php',
             },
         ]);
     });
 
-    it('it should parse methods with annotation', async () => {
+    it('it should parse methods with annotation', () => {
         const testSuite: TestSuite = new TestSuite();
 
-        const methods: any[] = testSuite.parse(
+        const methods: Method[] = testSuite.parse(
             `
 <?php
 namespace Tests;
@@ -104,22 +106,22 @@ class AssertionsTest extends TestCase
             {
                 kind: 'class',
                 name: 'AssertionsTest',
-                range: { end: { character: 14, line: 6 }, start: { character: 0, line: 6 } },
+                range: { end: { character: 1, line: 16 }, start: { character: 0, line: 6 } },
                 uri: 'PHPUnitTest.php',
             },
             {
                 kind: 'method',
                 name: 'method',
-                range: { end: { character: 17, line: 9 }, start: { character: 11, line: 9 } },
+                range: { end: { character: 5, line: 12 }, start: { character: 11, line: 9 } },
                 uri: 'PHPUnitTest.php',
             },
         ]);
     });
 
-    it('it should return no method when class is abstract', async () => {
+    it('it should return no method when class is abstract', () => {
         const testSuite: TestSuite = new TestSuite();
 
-        const methods: any[] = testSuite.parse(
+        const methods: Method[] = testSuite.parse(
             `
 <?php
 namespace Tests;
@@ -139,5 +141,40 @@ abstract class AssertionsTest extends TestCase
         );
 
         expect(methods).toEqual([]);
+    });
+
+    it('it should parse file', async () => {
+        const files: Filesystem = new FilesystemFactory().create();
+        const testSuite: TestSuite = new TestSuite(files);
+
+        spyOn(files, 'get').and.returnValue(`
+<?php
+use PHPUnit\\Framework\\TestCase;
+
+class AssertionsTest extends TestCase
+{
+    public function test_method()
+    {
+        $this->assertTrue(true);
+    }
+}
+        `);
+
+        const methods: Method[] = await testSuite.parseFile('PHPUnitTest.php');
+
+        expect(methods).toEqual([
+            {
+                kind: 'class',
+                name: 'AssertionsTest',
+                range: { end: { character: 1, line: 10 }, start: { character: 0, line: 4 } },
+                uri: 'PHPUnitTest.php',
+            },
+            {
+                kind: 'method',
+                name: 'test_method',
+                range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
+                uri: 'PHPUnitTest.php',
+            },
+        ]);
     });
 });

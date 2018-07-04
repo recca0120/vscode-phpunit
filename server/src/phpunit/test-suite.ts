@@ -1,9 +1,16 @@
 import { default as Engine } from 'php-parser';
 import { Range } from 'vscode-languageserver-types';
 import { Method } from './common';
+import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 
 export class TestSuite {
-    parse(code: string, uri: string) {
+    constructor(private files: Filesystem = new FilesystemFactory().create()) {}
+
+    async parseFile(uri: string): Promise<Method[]> {
+        return this.parse(await this.files.get(uri), uri);
+    }
+
+    parse(code: string, uri: string): Method[] {
         return this.getTests(
             Engine.parseCode(code, {
                 ast: {
@@ -47,13 +54,13 @@ export class TestSuite {
     }
 
     private asMethod(node: any, uri: string): Method {
-        const { start } = node.loc;
+        const { start, end } = node.loc;
 
         return {
             kind: node.kind,
             name: node.name,
             uri,
-            range: Range.create(start.line - 1, start.column, start.line - 1, start.column + node.name.length),
+            range: Range.create(start.line - 1, start.column, end.line - 1, end.column),
         };
     }
 
