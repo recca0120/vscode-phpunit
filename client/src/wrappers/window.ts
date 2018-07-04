@@ -5,6 +5,7 @@ import {
     TextEditor,
     StatusBarAlignment,
     StatusBarItem,
+    Disposable,
 } from 'vscode';
 
 export class Window {
@@ -18,5 +19,9 @@ export class Window {
 
     createStatusBarItem(alignment?: StatusBarAlignment, priority?: number): StatusBarItem {
         return window.createStatusBarItem(alignment, priority);
+    }
+
+    onDidChangeActiveTextEditor(params: any): Disposable {
+        return window.onDidChangeActiveTextEditor(params);
     }
 }

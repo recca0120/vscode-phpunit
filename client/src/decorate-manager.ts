@@ -13,6 +13,8 @@ import { Type, Test } from './common';
 import { LanguageClient } from 'vscode-languageclient';
 import { StatusBarManager } from './statusbar-manager';
 
+const decorations: Map<string, Test[]> = new Map();
+
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
 
@@ -55,6 +57,8 @@ export class DecorateManager {
         });
 
         this.client.onNotification('tests', (params: any) => {
+            decorations.set(params.uri, params.tests);
+
             const decorationOptionGroup: Map<Type, DecorationOptions[]> = this.groupBy(params.tests);
 
             this.setDecorations(decorationOptionGroup);
@@ -78,6 +82,14 @@ export class DecorateManager {
             }
 
             this.statusBarManager.stopped();
+        });
+
+        this.window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+            if (!editor) {
+                return;
+            }
+
+            this.decoratedGutter(decorations.get(editor.document.uri.toString()));
         });
     }
 
