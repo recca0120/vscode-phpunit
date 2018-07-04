@@ -23,7 +23,7 @@ describe('CodeLensProvider Test', () => {
             },
         ]);
 
-        expect(codelensProvider.formText('text', 'PHPUnitTest.php')).toEqual([
+        expect(codelensProvider.fromText('text', 'PHPUnitTest.php')).toEqual([
             {
                 command: {
                     arguments: [{ uri: 'PHPUnitTest.php', args: [] }],
