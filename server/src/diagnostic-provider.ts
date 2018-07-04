@@ -8,7 +8,7 @@ export class DiagnosticProvider {
 
     async asDiagnosticGroup(tests: Test[]): Promise<Map<string, Diagnostic[]>> {
         tests = await Promise.all(
-            tests.filter((test: Test) => test.type !== Type.PASSED).map(async (test: Test) => {
+            tests.map(async (test: Test) => {
                 test.range = await this.findRange(test);
 
                 if (!test.fault || !test.fault.details) {
@@ -34,6 +34,11 @@ export class DiagnosticProvider {
         return tests.reduce((diagnosticGroup: Map<string, Diagnostic[]>, test: Test): Map<string, Diagnostic[]> => {
             const uri = this.files.uri(test.file);
             const diagnostics: Diagnostic[] = diagnosticGroup.get(uri) || [];
+
+            if (test.type === Type.PASSED) {
+                return diagnosticGroup.set(uri, diagnostics);
+            }
+
             const fault: Fault = test.fault;
             const message: string = fault.message || '';
             const details: Detail[] = fault.details || [];

@@ -13,6 +13,16 @@ describe('DiagnosticProvider Test', () => {
             {
                 end: {
                     character: 11,
+                    line: 12,
+                },
+                start: {
+                    character: 5,
+                    line: 12,
+                },
+            },
+            {
+                end: {
+                    character: 11,
                     line: 22,
                 },
                 start: {
@@ -105,5 +115,36 @@ describe('DiagnosticProvider Test', () => {
                 ],
             ])
         );
+    });
+
+    it('it should return empty diagnostics when all pass', async () => {
+        const files: Filesystem = new FilesystemFactory().create();
+        const text: Text = new Text();
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(text, files);
+
+        spyOn(text, 'line').and.returnValues({
+            end: {
+                character: 11,
+                line: 12,
+            },
+            start: {
+                character: 5,
+                line: 12,
+            },
+        });
+
+        expect(
+            await diagnosticProvider.asDiagnosticGroup([
+                {
+                    name: 'passed',
+                    class: 'PHPUnitTest',
+                    classname: '',
+                    file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
+                    line: 13,
+                    time: 0.006241,
+                    type: Type.PASSED,
+                },
+            ])
+        ).toEqual(new Map<string, any[]>([['file:///c%3A/vscode-phpunit/tests/PHPUnitTest.php', []]]));
     });
 });
