@@ -1,10 +1,10 @@
-import { Text } from '../../src/support/text';
+import { Textline } from '../../src/support/textline';
 import { Filesystem, WINDOWS } from '../../src/filesystem';
 
-describe('Text Test', () => {
+describe('Textline Test', () => {
     it('it should get line range', async () => {
         const files: Filesystem = new WINDOWS();
-        const text: Text = new Text(files);
+        const textline: Textline = new Textline(files);
 
         spyOn(files, 'get').and.returnValue(`
 <?php
@@ -17,7 +17,7 @@ class Foo
 }
         `);
 
-        expect(await text.line('foo', 3)).toEqual({
+        expect(await textline.line('foo', 3)).toEqual({
             end: {
                 character: 9,
                 line: 3,

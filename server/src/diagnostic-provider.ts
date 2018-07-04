@@ -1,10 +1,13 @@
 import { Filesystem, Factory as FilesystemFactory } from './filesystem';
-import { Text } from './support/text';
+import { Textline } from './support/textline';
 import { Test, Type, Detail, Fault } from './phpunit/common';
 import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation, Range } from 'vscode-languageserver-protocol';
 
 export class DiagnosticProvider {
-    constructor(private text: Text = new Text(), private files: Filesystem = new FilesystemFactory().create()) {}
+    constructor(
+        private textline: Textline = new Textline(),
+        private files: Filesystem = new FilesystemFactory().create()
+    ) {}
 
     async asDiagnosticGroup(tests: Test[]): Promise<Map<string, Diagnostic[]>> {
         tests = await Promise.all(
@@ -68,6 +71,6 @@ export class DiagnosticProvider {
     }
 
     private async findRange(obj: Test | Detail): Promise<Range> {
-        return await this.text.line(obj.file, obj.line - 1);
+        return await this.textline.line(obj.file, obj.line - 1);
     }
 }

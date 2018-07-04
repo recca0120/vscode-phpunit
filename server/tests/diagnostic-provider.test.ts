@@ -1,15 +1,15 @@
 import { DiagnosticProvider } from '../src/diagnostic-provider';
-import { Text } from '../src/support/text';
+import { Textline } from '../src/support/textline';
 import { Filesystem, WINDOWS } from '../src/filesystem';
 import { Type } from '../src/phpunit/common';
 
 describe('DiagnosticProvider Test', () => {
     it('it should return diagnostic group', async () => {
         const files: Filesystem = new WINDOWS();
-        const text: Text = new Text();
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(text, files);
+        const textline: Textline = new Textline();
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(textline, files);
 
-        spyOn(text, 'line').and.returnValues(
+        spyOn(textline, 'line').and.returnValues(
             {
                 end: {
                     character: 11,
@@ -119,10 +119,10 @@ describe('DiagnosticProvider Test', () => {
 
     it('it should return empty diagnostics when all pass', async () => {
         const files: Filesystem = new WINDOWS();
-        const text: Text = new Text();
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(text, files);
+        const textline: Textline = new Textline();
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(textline, files);
 
-        spyOn(text, 'line').and.returnValues({
+        spyOn(textline, 'line').and.returnValues({
             end: {
                 character: 11,
                 line: 12,

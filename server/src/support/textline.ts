@@ -1,7 +1,7 @@
 import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
 import { Range } from 'vscode-languageserver-protocol';
 
-export class Text {
+export class Textline {
     constructor(private files: Filesystem = new FilesystemFactory().create()) {}
 
     async line(path: string, lineAt: number): Promise<Range> {
