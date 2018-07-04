@@ -24,6 +24,7 @@ import { TestRunner } from './phpunit/test-runner';
 import { CodeLensProvider } from './codelens-provider';
 import { CommandProvider } from './command-provider';
 import { DiagnosticProvider } from './diagnostic-provider';
+import { TestResults } from './phpunit/test-results';
 
 const commandProvider: CommandProvider = new CommandProvider();
 const codelensProvider: CodeLensProvider = new CodeLensProvider();
@@ -229,9 +230,9 @@ connection.onCodeLens(
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const [uri, ...args] = params.arguments;
     const testRunner = new TestRunner();
-
+    const testResults: TestResults = await testRunner.handle(uri, args || []);
     const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(
-        await testRunner.handle(uri, args || [])
+        testResults.getTests()
     );
 
     diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {

@@ -1,5 +1,6 @@
 import { CodeLensProvider } from '../src/codelens-provider';
 import { TestSuite } from '../src/phpunit/test-suite';
+
 describe('CodeLensProvider Test', () => {
     it('it should return codelens', async () => {
         const testSuite: TestSuite = new TestSuite();
