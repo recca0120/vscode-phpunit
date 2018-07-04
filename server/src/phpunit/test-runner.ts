@@ -49,7 +49,7 @@ export class TestRunner {
         const output: string = await this.process.spawn(command);
 
         const junit: string = this.args.get('--log-junit');
-        const tests: Test[] = this.parser.parse(await this.files.get(junit));
+        const tests: Test[] = await this.parser.parse(await this.files.get(junit));
         this.files.unlink(junit);
 
         return new TestResults().setTests(tests).setOutput(output);

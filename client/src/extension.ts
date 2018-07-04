@@ -38,6 +38,12 @@ export function activate(context: ExtensionContext) {
     // Create the language client and start the client.
     client = new LanguageClient('phpunitLanguageServer', 'PHPUnit Language Server', serverOptions, clientOptions);
 
+    client.onReady().then(() => {
+        client.onNotification('tests', (params: any) => {
+            console.log(params);
+        });
+    });
+
     // Start the client. This will also launch the server
     client.start();
 }

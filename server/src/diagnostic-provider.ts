@@ -1,35 +1,11 @@
 import { Filesystem, Factory as FilesystemFactory } from './filesystem';
-import { Textline } from './support/textline';
 import { Test, Type, Detail, Fault } from './phpunit/common';
 import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation, Range } from 'vscode-languageserver-types';
 
 export class DiagnosticProvider {
-    constructor(
-        private textline: Textline = new Textline(),
-        private files: Filesystem = new FilesystemFactory().create()
-    ) {}
+    constructor(private files: Filesystem = new FilesystemFactory().create()) {}
 
-    async asDiagnosticGroup(tests: Test[]): Promise<Map<string, Diagnostic[]>> {
-        tests = await Promise.all(
-            tests.map(async (test: Test) => {
-                test.range = await this.findRange(test);
-
-                if (!test.fault || !test.fault.details) {
-                    return test;
-                }
-
-                test.fault.details = await Promise.all(
-                    test.fault.details.map(async (detail: Detail) => {
-                        detail.range = await this.findRange(detail);
-
-                        return detail;
-                    })
-                );
-
-                return test;
-            })
-        );
-
+    asDiagnosticGroup(tests: Test[]): Map<string, Diagnostic[]> {
         return this.groupBy(tests);
     }
 
@@ -68,9 +44,5 @@ export class DiagnosticProvider {
                 message
             );
         });
-    }
-
-    private async findRange(obj: Test | Detail): Promise<Range> {
-        return await this.textline.line(obj.file, obj.line - 1);
     }
 }

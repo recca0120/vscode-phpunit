@@ -2,22 +2,30 @@ import { parse } from 'fast-xml-parser';
 import { tap } from '../support/helpers';
 import { Type, Test, Detail } from './common';
 import { decode } from 'he';
+import { Textline } from '../support/textline';
+import { Range } from 'vscode-languageserver-types';
 
 export class JUnitParser {
     private pathPattern: RegExp = /(.*):(\d+)$/;
 
-    parse(contents: string): Test[] {
-        return this.flatNodes(
-            parse(contents, {
-                attributeNamePrefix: '_',
-                ignoreAttributes: false,
-                ignoreNameSpace: false,
-                parseNodeValue: true,
-                parseAttributeValue: true,
-                trimValues: true,
-                textNodeName: '__text',
-            })
-        ).map(this.parseTest.bind(this));
+    constructor(private textline: Textline = new Textline()) {}
+
+    async parse(contents: string): Promise<Test[]> {
+        return await Promise.all(
+            this.flatNodes(
+                parse(contents, {
+                    attributeNamePrefix: '_',
+                    ignoreAttributes: false,
+                    ignoreNameSpace: false,
+                    parseNodeValue: true,
+                    parseAttributeValue: true,
+                    trimValues: true,
+                    textNodeName: '__text',
+                })
+            )
+                .map((test: any) => this.parseTest(test))
+                .map((test: any) => this.createRange(test))
+        );
     }
 
     private flatNodes(node: any): any[] {
@@ -46,7 +54,7 @@ export class JUnitParser {
         return nodes instanceof Array ? nodes : [nodes];
     }
 
-    private parseTest(node: any): Test {
+    private parseTest(node: any): any {
         return this.parseFault(
             {
                 name: node._name || '',
@@ -61,7 +69,7 @@ export class JUnitParser {
         );
     }
 
-    private parseFault(test: Test, node: any): Test {
+    private parseFault(test: any, node: any): any {
         const fault = this.getFault(node);
 
         if (!fault) {
@@ -88,7 +96,7 @@ export class JUnitParser {
         return decode(lines.join('\n').trim());
     }
 
-    private parseDetails(fault: any): Detail[] {
+    private parseDetails(fault: any): any[] {
         return fault.__text
             .split(/\r?\n/)
             .map((line: string) => line.trim())
@@ -142,5 +150,27 @@ export class JUnitParser {
                 errorType => type.indexOf(errorType) !== -1
             ) || Type.ERROR
         );
+    }
+
+    private async createRange(test: any): Promise<Test> {
+        test.range = await this.findRange(test);
+
+        if (!test.fault || !test.fault.details) {
+            return test;
+        }
+
+        test.fault.details = await Promise.all(
+            test.fault.details.map(async (detail: Detail) => {
+                detail.range = await this.findRange(detail);
+
+                return detail;
+            })
+        );
+
+        return test;
+    }
+
+    private async findRange(obj: any | Detail): Promise<Range> {
+        return await this.textline.line(obj.file, obj.line - 1);
     }
 }

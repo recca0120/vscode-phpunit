@@ -1,22 +1,26 @@
 import { JUnitParser } from '../../src/phpunit/junit-parser';
-import { Factory as FilesystemFactory, Filesystem } from '../../src/filesystem';
 import { Type, Test } from '../../src/phpunit/common';
+import { Textline } from '../../src/support/textline';
+import { Range } from 'vscode-languageserver-types';
 
 describe('JUnitParser Test', () => {
     it('it should be passed', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
         <testcase name="passed" class="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" line="13" assertions="1" time="0.006241"/>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'passed',
             class: 'PHPUnitTest',
             classname: '',
@@ -24,14 +28,18 @@ describe('JUnitParser Test', () => {
             line: 13,
             time: 0.006241,
             type: Type.PASSED,
+            range,
         });
     });
 
     it('it should be failed', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -44,9 +52,9 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:20
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'failed',
             class: 'PHPUnitTest',
             classname: '',
@@ -54,6 +62,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:20
             line: 18,
             time: 0.001918,
             type: Type.FAILURE,
+            range,
             fault: {
                 type: 'PHPUnit_Framework_ExpectationFailedException',
                 message: ['PHPUnitTest::failed', 'Failed asserting that false is true.'].join('\n'),
@@ -61,6 +70,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:20
                     {
                         file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
                         line: 20,
+                        range,
                     },
                 ],
             },
@@ -68,10 +78,13 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:20
     });
 
     it('it should be error', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -84,9 +97,9 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:25
       </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'error',
             class: 'PHPUnitTest',
             classname: '',
@@ -94,6 +107,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:25
             line: 23,
             time: 0.001087,
             type: Type.ERROR,
+            range,
             fault: {
                 type: 'PHPUnit_Framework_Exception',
                 message: [
@@ -104,6 +118,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:25
                     {
                         file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
                         line: 25,
+                        range,
                     },
                 ],
             },
@@ -111,10 +126,13 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:25
     });
 
     it('it should be skipped', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -125,9 +143,9 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:30
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'skipped',
             class: 'PHPUnitTest',
             classname: '',
@@ -135,6 +153,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:30
             line: 28,
             time: 0.001138,
             type: Type.SKIPPED,
+            range,
             fault: {
                 type: 'PHPUnit_Framework_SkippedTestError',
                 message: ['Skipped Test'].join('\n'),
@@ -142,6 +161,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:30
                     {
                         file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
                         line: 30,
+                        range,
                     },
                 ],
             },
@@ -149,10 +169,13 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:30
     });
 
     it('it should be incomplete', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -163,9 +186,9 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:35
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'incomplete',
             class: 'PHPUnitTest',
             classname: '',
@@ -173,6 +196,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:35
             line: 33,
             time: 0.001081,
             type: Type.INCOMPLETE,
+            range,
             fault: {
                 type: 'PHPUnit_Framework_IncompleteTestError',
                 message: ['Incomplete Test'].join('\n'),
@@ -180,6 +204,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:35
                     {
                         file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
                         line: 35,
+                        range,
                     },
                 ],
             },
@@ -187,10 +212,13 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:35
     });
 
     it('it should be error when bad method call exception', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -205,9 +233,9 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:45
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'bad_method_call_exception',
             class: 'PHPUnitTest',
             classname: '',
@@ -215,6 +243,7 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:45
             line: 18,
             time: 0.164687,
             type: Type.ERROR,
+            range,
             fault: {
                 type: 'BadMethodCallException',
                 message: [
@@ -225,14 +254,17 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:45
                     {
                         file: 'C:\\vscode-phpunit\\src\\Receiver.php',
                         line: 85,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\src\\Receiver.php',
                         line: 68,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
                         line: 45,
+                        range,
                     },
                 ],
             },
@@ -240,10 +272,13 @@ C:\\vscode-phpunit\\tests\\PHPUnitTest.php:45
     });
 
     it('it should be error when bad method call exception', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -265,9 +300,9 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'mockery_not_called',
             class: 'PHPUnitTest',
             classname: '',
@@ -275,6 +310,7 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
             line: 78,
             time: 0.008761,
             type: Type.ERROR,
+            range,
             fault: {
                 type: 'Mockery\\Exception\\InvalidCountException',
                 message: [
@@ -287,39 +323,48 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
                         file:
                             'C:\\vscode-phpunit\\tests\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
                         line: 37,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
                         line: 298,
+                        range,
                     },
                     {
                         file:
                             'C:\\vscode-phpunit\\tests\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
                         line: 120,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
                         line: 297,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
                         line: 282,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\mockery\\mockery\\library\\Mockery.php',
                         line: 152,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
                         line: 13,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
                         line: 188,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
                         line: 118,
+                        range,
                     },
                 ],
             },
@@ -327,10 +372,13 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
     });
 
     it('it should be incomplete when only has incomplete tag', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -339,9 +387,9 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'incomplete',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
@@ -349,6 +397,7 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
             line: 28,
             time: 0.000954,
             type: Type.INCOMPLETE,
+            range,
             fault: {
                 type: 'PHPUnit\\Framework\\IncompleteTestError',
                 message: ['Incomplete Test'].join('\n'),
@@ -358,10 +407,13 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
     });
 
     it('it should be skipped when only has skipped tag', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -370,9 +422,9 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'skipped',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
@@ -380,6 +432,7 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
             line: 23,
             time: 0.001352,
             type: Type.SKIPPED,
+            range,
             fault: {
                 type: 'PHPUnit\\Framework\\SkippedTestError',
                 message: ['Skipped Test'].join('\n'),
@@ -389,10 +442,13 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
     });
 
     it('it should be risky', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -401,9 +457,9 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'incomplete',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
@@ -411,6 +467,7 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
             line: 28,
             time: 0.000954,
             type: Type.INCOMPLETE,
+            range,
             fault: {
                 type: 'PHPUnit\\Framework\\IncompleteTestError',
                 message: ['Incomplete Test'].join('\n'),
@@ -420,10 +477,13 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:11
     });
 
     it('it should be incomplete when only has incomplete tag', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -435,9 +495,9 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'risky',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
@@ -445,6 +505,7 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
             line: 23,
             time: 0.001352,
             type: Type.RISKY,
+            range,
             fault: {
                 type: 'PHPUnit\\Framework\\RiskyTestError',
                 message: ['Risky Test'].join('\n'),
@@ -452,10 +513,12 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
                         line: 195,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
                         line: 148,
+                        range,
                     },
                 ],
             },
@@ -463,10 +526,13 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
     });
 
     it('it should be warning', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
-        const parser: JUnitParser = new JUnitParser();
+        const range: Range = Range.create(12, 5, 12, 10);
+        const textline: Textline = new Textline();
+        spyOn(textline, 'line').and.returnValue(range);
 
-        const test: Test = parser.parse(`
+        const parser: JUnitParser = new JUnitParser(textline);
+
+        const tests: Test[] = await parser.parse(`
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
     <testsuite name="PHPUnitTest" file="C:\\vscode-phpunit\\tests\\PHPUnitTest.php" tests="5" assertions="2" failures="1" errors="3" time="0.011465">
@@ -478,9 +544,9 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
         </testcase>
     </testsuite>
 </testsuites>
-        `)[0];
+        `);
 
-        expect(test).toEqual({
+        expect(tests[0]).toEqual({
             name: 'warning',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
@@ -488,6 +554,7 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
             line: 23,
             time: 0.001352,
             type: Type.WARNING,
+            range,
             fault: {
                 type: 'PHPUnit\\Framework\\RiskyTestError',
                 message: ['Risky Test'].join('\n'),
@@ -495,10 +562,12 @@ C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php:14
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
                         line: 195,
+                        range,
                     },
                     {
                         file: 'C:\\vscode-phpunit\\tests\\vendor\\phpunit\\phpunit\\src\\TextUI\\Command.php',
                         line: 148,
+                        range,
                     },
                 ],
             },

@@ -2,48 +2,16 @@ import { DiagnosticProvider } from '../src/diagnostic-provider';
 import { Textline } from '../src/support/textline';
 import { Filesystem, WINDOWS } from '../src/filesystem';
 import { Type } from '../src/phpunit/common';
+import { Range } from 'vscode-languageserver-types';
 
 describe('DiagnosticProvider Test', () => {
-    it('it should return diagnostic group', async () => {
+    it('it should return diagnostic group', () => {
         const files: Filesystem = new WINDOWS();
-        const textline: Textline = new Textline();
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(textline, files);
-
-        spyOn(textline, 'line').and.returnValues(
-            {
-                end: {
-                    character: 11,
-                    line: 12,
-                },
-                start: {
-                    character: 5,
-                    line: 12,
-                },
-            },
-            {
-                end: {
-                    character: 11,
-                    line: 22,
-                },
-                start: {
-                    character: 5,
-                    line: 22,
-                },
-            },
-            {
-                end: {
-                    character: 15,
-                    line: 24,
-                },
-                start: {
-                    character: 9,
-                    line: 24,
-                },
-            }
-        );
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(files);
+        const range: Range = Range.create(1, 1, 1, 1);
 
         expect(
-            await diagnosticProvider.asDiagnosticGroup([
+            diagnosticProvider.asDiagnosticGroup([
                 {
                     name: 'passed',
                     class: 'PHPUnitTest',
@@ -52,6 +20,7 @@ describe('DiagnosticProvider Test', () => {
                     line: 13,
                     time: 0.006241,
                     type: Type.PASSED,
+                    range,
                 },
                 {
                     name: 'error',
@@ -61,6 +30,7 @@ describe('DiagnosticProvider Test', () => {
                     line: 23,
                     time: 0.001087,
                     type: Type.ERROR,
+                    range,
                     fault: {
                         type: 'PHPUnit_Framework_Exception',
                         message: [
@@ -71,6 +41,7 @@ describe('DiagnosticProvider Test', () => {
                             {
                                 file: '/vscode-phpunit/tests/PHPUnitTest.php',
                                 line: 25,
+                                range,
                             },
                         ],
                     },
@@ -86,20 +57,11 @@ describe('DiagnosticProvider Test', () => {
                                 'PHPUnitTest::error',
                                 'PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert::assertInstanceOf() must be a class or interface name',
                             ].join('\n'),
-                            range: { end: { character: 11, line: 22 }, start: { character: 5, line: 22 } },
+                            range,
                             relatedInformation: [
                                 {
                                     location: {
-                                        range: {
-                                            end: {
-                                                character: 15,
-                                                line: 24,
-                                            },
-                                            start: {
-                                                character: 9,
-                                                line: 24,
-                                            },
-                                        },
+                                        range,
                                         uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                                     },
                                     message: [
@@ -117,24 +79,13 @@ describe('DiagnosticProvider Test', () => {
         );
     });
 
-    it('it should return empty diagnostics when all pass', async () => {
+    it('it should return empty diagnostics when all pass', () => {
         const files: Filesystem = new WINDOWS();
-        const textline: Textline = new Textline();
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(textline, files);
-
-        spyOn(textline, 'line').and.returnValues({
-            end: {
-                character: 11,
-                line: 12,
-            },
-            start: {
-                character: 5,
-                line: 12,
-            },
-        });
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(files);
+        const range: Range = Range.create(1, 1, 1, 1);
 
         expect(
-            await diagnosticProvider.asDiagnosticGroup([
+            diagnosticProvider.asDiagnosticGroup([
                 {
                     name: 'passed',
                     class: 'PHPUnitTest',
@@ -143,6 +94,7 @@ describe('DiagnosticProvider Test', () => {
                     line: 13,
                     time: 0.006241,
                     type: Type.PASSED,
+                    range,
                 },
             ])
         ).toEqual(new Map<string, any[]>([['file:///vscode-phpunit/tests/PHPUnitTest.php', []]]));

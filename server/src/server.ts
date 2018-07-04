@@ -175,7 +175,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const testResults: TestResults = await testRunner.handle(uri, args);
     const tests: Test[] = testResults.getTests();
 
-    const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(tests);
+    const diagnosticGroup: Map<string, Diagnostic[]> = diagnosticProvider.asDiagnosticGroup(tests);
 
     diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
         connection.sendDiagnostics({
