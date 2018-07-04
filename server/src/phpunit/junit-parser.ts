@@ -1,9 +1,8 @@
 import { parse } from 'fast-xml-parser';
 import { tap } from '../support/helpers';
-import { Type, Test, Detail } from './common';
+import { Type, Test, Detail, Fault } from './common';
 import { decode } from 'he';
 import { Textline } from '../support/textline';
-import { Range } from 'vscode-languageserver-types';
 
 export class JUnitParser {
     private pathPattern: RegExp = /(.*):(\d+)$/;
@@ -22,9 +21,7 @@ export class JUnitParser {
                     trimValues: true,
                     textNodeName: '__text',
                 })
-            )
-                .map((test: any) => this.parseTest(test))
-                .map((test: any) => this.createRange(test))
+            ).map((test: any) => this.parseTest(test))
         );
     }
 
@@ -54,22 +51,24 @@ export class JUnitParser {
         return nodes instanceof Array ? nodes : [nodes];
     }
 
-    private parseTest(node: any): any {
-        return this.parseFault(
-            {
-                name: node._name || '',
-                class: node._class,
-                classname: node._classname || '',
-                time: parseFloat(node._time) || 0,
-                type: Type.PASSED,
-                line: node._line || 0,
-                file: node._file || '',
-            },
-            node
+    private async parseTest(node: any): Promise<Test> {
+        return await this.createRange(
+            await this.parseFault(
+                {
+                    name: node._name || '',
+                    class: node._class,
+                    classname: node._classname || '',
+                    time: parseFloat(node._time) || 0,
+                    type: Type.PASSED,
+                    line: node._line || 0,
+                    file: node._file || '',
+                },
+                node
+            )
         );
     }
 
-    private parseFault(test: any, node: any): any {
+    private async parseFault(test: any, node: any): Promise<Fault> {
         const fault = this.getFault(node);
 
         if (!fault) {
@@ -81,7 +80,7 @@ export class JUnitParser {
             fault: {
                 type: fault._type || '',
                 message: this.parseMessage(fault),
-                details: this.parseDetails(fault),
+                details: await this.parseDetails(fault),
             },
         });
     }
@@ -96,16 +95,20 @@ export class JUnitParser {
         return decode(lines.join('\n').trim());
     }
 
-    private parseDetails(fault: any): any[] {
-        return fault.__text
-            .split(/\r?\n/)
-            .map((line: string) => line.trim())
-            .filter((line: string) => this.pathPattern.test(line))
-            .map((detail: string) => {
-                const [, file, line] = detail.match(this.pathPattern) as string[];
+    private async parseDetails(fault: any): Promise<any[]> {
+        return await Promise.all(
+            fault.__text
+                .split(/\r?\n/)
+                .map((line: string) => line.trim())
+                .filter((line: string) => this.pathPattern.test(line))
+                .map(
+                    (detail: string): Promise<Detail> => {
+                        const [, file, line] = detail.match(this.pathPattern) as string[];
 
-                return { file, line: parseInt(line, 10) };
-            });
+                        return this.createRange({ file, line: parseInt(line, 10) });
+                    }
+                )
+        );
     }
 
     private getFault(node: any): any {
@@ -152,25 +155,9 @@ export class JUnitParser {
         );
     }
 
-    private async createRange(test: any): Promise<Test> {
-        test.range = await this.findRange(test);
+    private async createRange(obj: any): Promise<any | Detail> {
+        obj.range = await this.textline.line(obj.file, obj.line - 1);
 
-        if (!test.fault || !test.fault.details) {
-            return test;
-        }
-
-        test.fault.details = await Promise.all(
-            test.fault.details.map(async (detail: Detail) => {
-                detail.range = await this.findRange(detail);
-
-                return detail;
-            })
-        );
-
-        return test;
-    }
-
-    private async findRange(obj: any | Detail): Promise<Range> {
-        return await this.textline.line(obj.file, obj.line - 1);
+        return obj;
     }
 }
