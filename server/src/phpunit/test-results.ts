@@ -2,7 +2,18 @@ import { Test } from './common';
 
 export class TestResults {
     private tests: Test[];
-    private output: string;
+    private uri: string = '';
+    private output: string = '';
+
+    setUri(uri: string): TestResults {
+        this.uri = uri;
+
+        return this;
+    }
+
+    getUri(): string {
+        return this.uri;
+    }
 
     setTests(tests: Test[]): TestResults {
         this.tests = tests;

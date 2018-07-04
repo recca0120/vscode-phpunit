@@ -52,7 +52,10 @@ export class TestRunner {
         const tests: Test[] = await this.parser.parse(await this.files.get(junit));
         this.files.unlink(junit);
 
-        return new TestResults().setTests(tests).setOutput(output);
+        return new TestResults()
+            .setUri(this.files.uri(path))
+            .setTests(tests)
+            .setOutput(output);
     }
 
     private async getRoot(currentDirectory: string): Promise<string> {
