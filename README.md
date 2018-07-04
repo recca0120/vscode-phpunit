@@ -1,18 +1,59 @@
-# LSP Multi Root Example
+# phpunit-language-server
 
-A language server example that demonstrates how to handle configuration settings in a workspace that uses multi root folders. Since settings in VS Code in this setup are typically scoped to a resource, the example reads the resource settings from the client using the new proposed API getConfiguration. This is analogous to reading settings in a multi-root folder setup directly in the extension host.
+phpunit-language-server is a server implementation that provides PHPUnit smartness.
+The server adheres to the [language server protocol](https://github.com/Microsoft/language-server-protocol)
+and can be used with any editor that supports the protocol. The server utilizes [PHPUnit](https://phpunit.de).
 
-The example uses proposed Language Server protocol. So the code demoed here might change when the final version of the configuration and workspace folder protocol is released.
+## Clients
 
-## Compile and Run
+These clients are available:
+* [VS Code](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 
-- run `npm install` in this folder. This installs all necessary npm modules in both the client and server folder
-- open VS Code on this folder.
-- Press Ctrl+Shift+B to compile the client and server
-- Switch to the Debug viewlet
-- Select `Launch Client` from the drop down
-- Run the lauch config
-- If you want to debug the server as well use the launch configuration `Attach to Server`
+## VS Code Features
 
-- In the [Extension Development Host] instance of VSCode, open a document in 'plain text' language mode.
-  Enter text content such as `AAA aaa BBB`. The extension will emit diagnostics for all words in all-uppercase.
+## Features
+
+In the current implementation we support following language features.
+
+- [x] Code lens
+
+![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/codelens.png)
+
+- [x] Document Symbol
+
+![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/documentsymbol.gif)
+
+- [x] Publish Diagnostics
+
+![Publish Diagnostics](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/diagnostic.gif)
+
+- [x] Code completion
+    - testcase
+    - test
+    - setup
+    - teardown
+    - more...
+
+## Features planned
+
+- As you type reporting of parsing and compilation errors
+
+## Installation
+
+```bash
+npm i -g phpunit-language-server
+```
+
+## Execute
+
+```bash
+phpunit-language-server
+```
+
+## Feedback
+
+* File a bug in [GitHub Issues](https://github.com/recca0120/phpunit-language-server/issues).
+
+## License
+
+MIT, See [LICENSE](https://github.com/recca0120/vscode-phpunit/blob/master/License.txt) file.
