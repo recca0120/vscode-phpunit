@@ -182,6 +182,8 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             diagnostics,
         });
     });
+
+    connection.console.info(testResults.toString());
 });
 
 connection.onDocumentSymbol(
