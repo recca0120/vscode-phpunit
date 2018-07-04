@@ -10,11 +10,16 @@ import {
     Range,
 } from 'vscode';
 import { Type, Test } from './common';
+import { LanguageClient } from 'vscode-languageclient';
 
 export class DecorateManager {
     private styles: Map<Type, TextEditorDecorationType> = new Map<Type, TextEditorDecorationType>();
 
-    constructor(private context: ExtensionContext, private window: Window = new Window()) {
+    constructor(
+        private client: LanguageClient,
+        private context: ExtensionContext,
+        private window: Window = new Window()
+    ) {
         this.styles.set(Type.PASSED, this.passed());
         this.styles.set(Type.ERROR, this.error());
         this.styles.set(Type.RISKY, this.risky());
@@ -45,6 +50,12 @@ export class DecorateManager {
         for (const [type] of this.styles) {
             editor.setDecorations(this.styles.get(type), []);
         }
+    }
+
+    listen() {
+        this.client.onNotification('tests', (params: any) => {
+            this.decoratedGutter(params.tests);
+        });
     }
 
     private groupBy(tests: Test[]): Map<Type, DecorationOptions[]> {

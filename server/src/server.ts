@@ -162,7 +162,7 @@ connection.onCodeLens(
     (params: CodeLensParams): CodeLens[] => {
         const textDocument: TextDocument = documents.get(params.textDocument.uri);
 
-        return codelensProvider.formText(textDocument.getText(), textDocument.uri);
+        return codelensProvider.fromText(textDocument.getText(), textDocument.uri);
     }
 );
 
@@ -171,6 +171,14 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 
     const settings: PHPUnitSettings = await getDocumentSettings(uri);
     testRunner.setBinary(settings.execPath).setDefaults(settings.args);
+
+    switch (params.command) {
+        case 'phpunit.test.nearest':
+            const codelens: CodeLens = await codelensProvider.fromLine(uri, params.arguments[1]);
+            Object.assign(args, codelens.command.arguments[0].args);
+
+            break;
+    }
 
     const testResults: TestResults = await testRunner.handle(uri, args);
     const tests: Test[] = testResults.getTests();

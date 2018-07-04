@@ -19,10 +19,44 @@
         "vscode": "^1.23.0"
     },
     "activationEvents": [
-        "onLanguage:php"
+        "onLanguage:php",
+        "onCommand:phpunit.client.test.suite",
+        "onCommand:phpunit.client.test.file",
+        "onCommand:phpunit.client.test.nearest",
+        "onCommand:phpunit.client.test.last"
     ],
     "main": "./client/out/extension",
     "contributes": {
+        "commands": [
+            {
+                "command": "phpunit.client.test.suite",
+                "title": "PHPUnit Test All Suite"
+            },
+            {
+                "command": "phpunit.client.test.file",
+                "title": "PHPUnit Test Current File"
+            },
+            {
+                "command": "phpunit.client.test.nearest",
+                "title": "PHPUnit Test Nearest"
+            },
+            {
+                "command": "phpunit.client.test.last",
+                "title": "PHPUnit Run Last Test"
+            }
+        ],
+        "keybindings": [
+            {
+                "key": "cmd+t",
+                "command": "phpunit.client.test.nearest",
+                "when": "editorTextFocus && editorLangId = php"
+            },
+            {
+                "key": "shift+cmd+t",
+                "command": "phpunit.client.test.last",
+                "when": "editorTextFocus && editorLangId = php"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "phpunit configuration",

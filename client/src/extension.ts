@@ -10,7 +10,7 @@ import { workspace, ExtensionContext } from 'vscode';
 
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 import { DecorateManager } from './decorate-manager';
-import { Window } from './wrappers/window';
+import { CommandRegister } from './command-register';
 
 let client: LanguageClient;
 
@@ -40,15 +40,18 @@ export function activate(context: ExtensionContext) {
     // Create the language client and start the client.
     client = new LanguageClient('phpunitLanguageServer', 'PHPUnit Language Server', serverOptions, clientOptions);
 
+    const decorateManager = new DecorateManager(client, context);
+    const commandRegister = new CommandRegister(client).register();
+
     client.onReady().then(() => {
-        const decorateManager = new DecorateManager(context, new Window());
-        client.onNotification('tests', (params: any) => {
-            decorateManager.decoratedGutter(params.tests);
-        });
+        decorateManager.listen();
+        commandRegister.listen();
     });
 
     // Start the client. This will also launch the server
     client.start();
+
+    context.subscriptions.push(...commandRegister.dispose());
 }
 
 export function deactivate(): Thenable<void> {
