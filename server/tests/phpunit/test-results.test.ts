@@ -11,7 +11,7 @@ describe('TestResults Test', () => {
                 name: 'foo',
                 class: 'foo',
                 classname: 'foo',
-                file: 'foo',
+                file: 'file:///foo',
                 line: 0,
                 time: 0,
                 type: Type.PASSED,

@@ -1,13 +1,10 @@
 import { DiagnosticProvider } from '../src/diagnostic-provider';
-import { Textline } from '../src/support/textline';
-import { Filesystem, WINDOWS } from '../src/filesystem';
 import { Type } from '../src/phpunit/common';
 import { Range } from 'vscode-languageserver-types';
 
 describe('DiagnosticProvider Test', () => {
     it('it should return diagnostic group', () => {
-        const files: Filesystem = new WINDOWS();
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(files);
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
         const range: Range = Range.create(1, 1, 1, 1);
 
         expect(
@@ -16,7 +13,7 @@ describe('DiagnosticProvider Test', () => {
                     name: 'passed',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: '/vscode-phpunit/tests/PHPUnitTest.php',
+                    file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                     line: 13,
                     time: 0.006241,
                     type: Type.PASSED,
@@ -26,7 +23,7 @@ describe('DiagnosticProvider Test', () => {
                     name: 'error',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: '/vscode-phpunit/tests/PHPUnitTest.php',
+                    file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                     line: 23,
                     time: 0.001087,
                     type: Type.ERROR,
@@ -39,7 +36,7 @@ describe('DiagnosticProvider Test', () => {
                         ].join('\n'),
                         details: [
                             {
-                                file: '/vscode-phpunit/tests/PHPUnitTest.php',
+                                file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                                 line: 25,
                                 range,
                             },
@@ -80,8 +77,7 @@ describe('DiagnosticProvider Test', () => {
     });
 
     it('it should return empty diagnostics when all pass', () => {
-        const files: Filesystem = new WINDOWS();
-        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(files);
+        const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
         const range: Range = Range.create(1, 1, 1, 1);
 
         expect(
@@ -90,7 +86,7 @@ describe('DiagnosticProvider Test', () => {
                     name: 'passed',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: '/vscode-phpunit/tests/PHPUnitTest.php',
+                    file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                     line: 13,
                     time: 0.006241,
                     type: Type.PASSED,

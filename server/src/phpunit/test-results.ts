@@ -9,10 +9,9 @@ export class TestResults {
 
     setTests(tests: Test[]): TestResults {
         this.testGroup = tests.reduce((testGroup: Map<string, Test[]>, test: Test): Map<string, Test[]> => {
-            const uri: string = this.files.uri(test.file);
-            const tests: Test[] = testGroup.get(uri) || [];
+            const tests: Test[] = testGroup.get(test.file) || [];
 
-            return testGroup.set(uri, tests.concat([test]));
+            return testGroup.set(test.file, tests.concat([test]));
         }, this.testGroup);
 
         return this;

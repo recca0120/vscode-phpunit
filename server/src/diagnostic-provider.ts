@@ -1,21 +1,17 @@
-import { Filesystem, Factory as FilesystemFactory } from './filesystem';
 import { Test, Type, Detail, Fault } from './phpunit/common';
 import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation } from 'vscode-languageserver-types';
 
 export class DiagnosticProvider {
-    constructor(private files: Filesystem = new FilesystemFactory().create()) {}
-
     asDiagnosticGroup(tests: Test[]): Map<string, Diagnostic[]> {
         return this.groupBy(tests);
     }
 
     private groupBy(tests: Test[]): Map<string, Diagnostic[]> {
         return tests.reduce((diagnosticGroup: Map<string, Diagnostic[]>, test: Test): Map<string, Diagnostic[]> => {
-            const uri = this.files.uri(test.file);
-            const diagnostics: Diagnostic[] = diagnosticGroup.get(uri) || [];
+            const diagnostics: Diagnostic[] = diagnosticGroup.get(test.file) || [];
 
             if (test.type === Type.PASSED) {
-                return diagnosticGroup.set(uri, diagnostics);
+                return diagnosticGroup.set(test.file, diagnostics);
             }
 
             const fault: Fault = test.fault;
@@ -30,7 +26,7 @@ export class DiagnosticProvider {
                 source: 'PHPUnit',
             });
 
-            return diagnosticGroup.set(uri, diagnostics);
+            return diagnosticGroup.set(test.file, diagnostics);
         }, new Map<string, Diagnostic[]>());
     }
 
@@ -39,7 +35,7 @@ export class DiagnosticProvider {
             return DiagnosticRelatedInformation.create(
                 {
                     range: detail.range,
-                    uri: this.files.uri(detail.file),
+                    uri: detail.file,
                 },
                 message
             );
