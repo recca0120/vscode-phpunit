@@ -1,6 +1,7 @@
 import { parse } from 'fast-xml-parser';
 import { tap } from '../support/helpers';
 import { Type, Test, Detail } from './common';
+import { decode } from 'he';
 
 export class JUnitParser {
     private pathPattern: RegExp = /(.*):(\d+)$/;
@@ -84,7 +85,7 @@ export class JUnitParser {
             .split('\n')
             .map((line: string) => line.replace(this.pathPattern, ''));
 
-        return lines.join('\n').trim();
+        return decode(lines.join('\n').trim());
     }
 
     private parseDetails(fault: any): Detail[] {

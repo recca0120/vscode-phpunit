@@ -112,5 +112,9 @@
                 "git add"
             ]
         }
+    },
+    "dependencies": {
+        "@types/he": "^1.1.0",
+        "he": "^1.1.1"
     }
 }
