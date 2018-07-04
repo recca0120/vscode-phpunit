@@ -8,10 +8,10 @@ export class DiagnosticProvider {
 
     private groupBy(tests: Test[]): Map<string, Diagnostic[]> {
         return tests.reduce((diagnosticGroup: Map<string, Diagnostic[]>, test: Test): Map<string, Diagnostic[]> => {
-            const diagnostics: Diagnostic[] = diagnosticGroup.get(test.file) || [];
+            const diagnostics: Diagnostic[] = diagnosticGroup.get(test.uri) || [];
 
             if (test.type === Type.PASSED) {
-                return diagnosticGroup.set(test.file, diagnostics);
+                return diagnosticGroup.set(test.uri, diagnostics);
             }
 
             const fault: Fault = test.fault;
@@ -26,7 +26,7 @@ export class DiagnosticProvider {
                 source: 'PHPUnit',
             });
 
-            return diagnosticGroup.set(test.file, diagnostics);
+            return diagnosticGroup.set(test.uri, diagnostics);
         }, new Map<string, Diagnostic[]>());
     }
 
@@ -35,7 +35,7 @@ export class DiagnosticProvider {
             return DiagnosticRelatedInformation.create(
                 {
                     range: detail.range,
-                    uri: detail.file,
+                    uri: detail.uri,
                 },
                 message
             );

@@ -24,11 +24,10 @@ describe('JUnitParser Test', () => {
             name: 'passed',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 13,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.006241,
             type: Type.PASSED,
-            range,
         });
     });
 
@@ -58,18 +57,16 @@ Failed asserting that false is true.
             name: 'failed',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 18,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001918,
             type: Type.FAILURE,
-            range,
             fault: {
                 type: 'PHPUnit_Framework_ExpectationFailedException',
                 message: ['PHPUnitTest::failed', 'Failed asserting that false is true.'].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                        line: 20,
+                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                         range,
                     },
                 ],
@@ -103,11 +100,10 @@ PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert:
             name: 'error',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 23,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001087,
             type: Type.ERROR,
-            range,
             fault: {
                 type: 'PHPUnit_Framework_Exception',
                 message: [
@@ -116,8 +112,7 @@ PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert:
                 ].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                        line: 25,
+                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                         range,
                     },
                 ],
@@ -149,18 +144,16 @@ PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert:
             name: 'skipped',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 28,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001138,
             type: Type.SKIPPED,
-            range,
             fault: {
                 type: 'PHPUnit_Framework_SkippedTestError',
                 message: ['Skipped Test'].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                        line: 30,
+                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                         range,
                     },
                 ],
@@ -192,18 +185,16 @@ PHPUnit_Framework_Exception: Argument #1 (No Value) of PHPUnit_Framework_Assert:
             name: 'incomplete',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 33,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001081,
             type: Type.INCOMPLETE,
-            range,
             fault: {
                 type: 'PHPUnit_Framework_IncompleteTestError',
                 message: ['Incomplete Test'].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                        line: 35,
+                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                         range,
                     },
                 ],
@@ -239,11 +230,10 @@ BadMethodCallException: Method Mockery_1_Symfony_Component_HttpFoundation_File_U
             name: 'bad_method_call_exception',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 18,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.164687,
             type: Type.ERROR,
-            range,
             fault: {
                 type: 'BadMethodCallException',
                 message: [
@@ -252,18 +242,15 @@ BadMethodCallException: Method Mockery_1_Symfony_Component_HttpFoundation_File_U
                 ].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/src/Receiver.php',
-                        line: 85,
+                        uri: 'file:///vscode-phpunit/src/Receiver.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/src/Receiver.php',
-                        line: 68,
+                        uri: 'file:///vscode-phpunit/src/Receiver.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                        line: 45,
+                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                         range,
                     },
                 ],
@@ -306,11 +293,10 @@ exactly 1 times but called 0 times.
             name: 'mockery_not_called',
             class: 'PHPUnitTest',
             classname: '',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 78,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.008761,
             type: Type.ERROR,
-            range,
             fault: {
                 type: 'Mockery\\Exception\\InvalidCountException',
                 message: [
@@ -320,50 +306,41 @@ exactly 1 times but called 0 times.
                 ].join('\n'),
                 details: [
                     {
-                        file:
+                        uri:
                             'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php',
-                        line: 37,
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/Expectation.php',
-                        line: 298,
+                        uri: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/Expectation.php',
                         range,
                     },
                     {
-                        file:
+                        uri:
                             'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/ExpectationDirector.php',
-                        line: 120,
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/Container.php',
-                        line: 297,
+                        uri: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/Container.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/Container.php',
-                        line: 282,
+                        uri: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery/Container.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery.php',
-                        line: 152,
+                        uri: 'file:///vscode-phpunit/tests/vendor/mockery/mockery/library/Mockery.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                        line: 13,
+                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
-                        line: 188,
+                        uri: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
-                        line: 118,
+                        uri: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
                         range,
                     },
                 ],
@@ -393,11 +370,10 @@ exactly 1 times but called 0 times.
             name: 'incomplete',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 28,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.000954,
             type: Type.INCOMPLETE,
-            range,
             fault: {
                 type: 'PHPUnit\\Framework\\IncompleteTestError',
                 message: ['Incomplete Test'].join('\n'),
@@ -428,11 +404,10 @@ exactly 1 times but called 0 times.
             name: 'skipped',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 23,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001352,
             type: Type.SKIPPED,
-            range,
             fault: {
                 type: 'PHPUnit\\Framework\\SkippedTestError',
                 message: ['Skipped Test'].join('\n'),
@@ -463,11 +438,10 @@ exactly 1 times but called 0 times.
             name: 'incomplete',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 28,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.000954,
             type: Type.INCOMPLETE,
-            range,
             fault: {
                 type: 'PHPUnit\\Framework\\IncompleteTestError',
                 message: ['Incomplete Test'].join('\n'),
@@ -501,23 +475,20 @@ exactly 1 times but called 0 times.
             name: 'risky',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 23,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001352,
             type: Type.RISKY,
-            range,
             fault: {
                 type: 'PHPUnit\\Framework\\RiskyTestError',
                 message: ['Risky Test'].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
-                        line: 195,
+                        uri: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
-                        line: 148,
+                        uri: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
                         range,
                     },
                 ],
@@ -550,23 +521,20 @@ exactly 1 times but called 0 times.
             name: 'warning',
             class: 'PHPUnitTest',
             classname: 'PHPUnitTest',
-            file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-            line: 23,
+            uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+            range,
             time: 0.001352,
             type: Type.WARNING,
-            range,
             fault: {
                 type: 'PHPUnit\\Framework\\RiskyTestError',
                 message: ['Risky Test'].join('\n'),
                 details: [
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
-                        line: 195,
+                        uri: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
                         range,
                     },
                     {
-                        file: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
-                        line: 148,
+                        uri: 'file:///vscode-phpunit/tests/vendor/phpunit/phpunit/src/TextUI/Command.php',
                         range,
                     },
                 ],

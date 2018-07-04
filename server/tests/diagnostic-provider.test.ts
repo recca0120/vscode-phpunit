@@ -13,21 +13,19 @@ describe('DiagnosticProvider Test', () => {
                     name: 'passed',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                    line: 13,
+                    uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+                    range,
                     time: 0.006241,
                     type: Type.PASSED,
-                    range,
                 },
                 {
                     name: 'error',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                    line: 23,
+                    uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+                    range,
                     time: 0.001087,
                     type: Type.ERROR,
-                    range,
                     fault: {
                         type: 'PHPUnit_Framework_Exception',
                         message: [
@@ -36,8 +34,7 @@ describe('DiagnosticProvider Test', () => {
                         ].join('\n'),
                         details: [
                             {
-                                file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                                line: 25,
+                                uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                                 range,
                             },
                         ],
@@ -58,8 +55,8 @@ describe('DiagnosticProvider Test', () => {
                             relatedInformation: [
                                 {
                                     location: {
-                                        range,
                                         uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+                                        range,
                                     },
                                     message: [
                                         'PHPUnitTest::error',
@@ -86,11 +83,10 @@ describe('DiagnosticProvider Test', () => {
                     name: 'passed',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
-                    line: 13,
+                    uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
+                    range,
                     time: 0.006241,
                     type: Type.PASSED,
-                    range,
                 },
             ])
         ).toEqual(new Map<string, any[]>([['file:///vscode-phpunit/tests/PHPUnitTest.php', []]]));

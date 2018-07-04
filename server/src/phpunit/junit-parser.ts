@@ -1,9 +1,10 @@
 import { parse } from 'fast-xml-parser';
 import { tap } from '../support/helpers';
-import { Type, Test, Detail, Fault } from './common';
+import { Type, Test, Fault } from './common';
 import { decode } from 'he';
 import { Textline } from '../support/textline';
 import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
+import { Range } from 'vscode-languageserver-types';
 
 export class JUnitParser {
     private pathPattern: RegExp = /(.*):(\d+)$/;
@@ -56,20 +57,21 @@ export class JUnitParser {
     }
 
     private async parseTest(node: any): Promise<Test> {
-        return await this.createRange(
-            await this.parseFault(
-                {
-                    name: node._name || '',
-                    class: node._class,
-                    classname: node._classname || '',
-                    time: parseFloat(node._time) || 0,
-                    type: Type.PASSED,
-                    line: node._line || 0,
-                    file: this.files.uri(node._file) || '',
-                },
-                node
-            )
+        const test: any = await this.parseFault(
+            {
+                name: node._name || '',
+                class: node._class,
+                classname: node._classname || '',
+                time: parseFloat(node._time) || 0,
+                type: Type.PASSED,
+                uri: this.files.uri(node._file) || '',
+            },
+            node
         );
+
+        test.range = await this.createRange(this.files.uri(node._file), node._line || 1);
+
+        return test;
     }
 
     private async parseFault(test: any, node: any): Promise<Fault> {
@@ -105,16 +107,15 @@ export class JUnitParser {
                 .split(/\r?\n/)
                 .map((line: string) => line.trim())
                 .filter((line: string) => this.pathPattern.test(line))
-                .map(
-                    (detail: string): Promise<Detail> => {
-                        const [, file, line] = detail.match(this.pathPattern) as string[];
+                .map(async (detail: string) => {
+                    const [, file, line] = detail.match(this.pathPattern) as string[];
+                    const uri: string = this.files.uri(file);
 
-                        return this.createRange({
-                            file: this.files.uri(file),
-                            line: parseInt(line, 10),
-                        });
-                    }
-                )
+                    return {
+                        uri: uri,
+                        range: await this.createRange(uri, parseInt(line, 10)),
+                    };
+                })
         );
     }
 
@@ -162,9 +163,7 @@ export class JUnitParser {
         );
     }
 
-    private async createRange(obj: any): Promise<any | Detail> {
-        obj.range = await this.textline.line(obj.file, obj.line - 1);
-
-        return obj;
+    private async createRange(uri: string, lineAt: number): Promise<Range> {
+        return await this.textline.line(uri, lineAt - 1);
     }
 }

@@ -1,4 +1,4 @@
-import { Range } from 'vscode-languageserver-types';
+import { Range, Location } from 'vscode-languageserver-types';
 
 export enum Type {
     PASSED = 'passed',
@@ -11,11 +11,7 @@ export enum Type {
     FAILED = 'failed',
 }
 
-export interface Detail {
-    file: string;
-    line: number;
-    range: Range;
-}
+export interface Detail extends Location {}
 
 export interface Fault {
     type: string;
@@ -23,13 +19,10 @@ export interface Fault {
     details?: Detail[];
 }
 
-export interface Test {
+export interface Test extends Location {
     name: string;
     class: string;
     classname: string;
-    file: string;
-    line: number;
-    range: Range;
     time: number;
     type: Type;
     fault?: Fault;

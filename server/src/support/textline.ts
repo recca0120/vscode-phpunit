@@ -10,7 +10,7 @@ export class Textline {
         return this.createRange(lineAt, lines[lineAt]);
     }
 
-    private createRange(lineAt: number, line: string) {
+    private createRange(lineAt: number, line: string): Range {
         const firstCharacter: number = line.search(/\S|$/);
 
         return Range.create(

@@ -11,11 +11,10 @@ describe('TestResults Test', () => {
                 name: 'foo',
                 class: 'foo',
                 classname: 'foo',
-                file: 'file:///foo',
-                line: 0,
+                uri: 'file:///foo',
+                range: Range.create(1, 1, 1, 1),
                 time: 0,
                 type: Type.PASSED,
-                range: Range.create(1, 1, 1, 1),
             },
         ];
 
