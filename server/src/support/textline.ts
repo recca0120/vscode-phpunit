@@ -5,9 +5,12 @@ export class Textline {
     constructor(private files: Filesystem = new FilesystemFactory().create()) {}
 
     async line(path: string, lineAt: number): Promise<Range> {
-        const contents: string = await this.files.get(path);
-        const lines: string[] = contents.split(/\r?\n/g);
-        const line = lines[lineAt];
+        const lines: string[] = await this.lines(path);
+
+        return this.createRange(lineAt, lines[lineAt]);
+    }
+
+    private createRange(lineAt: number, line: string) {
         const firstCharacter: number = line.search(/\S|$/);
 
         return Range.create(
@@ -20,5 +23,11 @@ export class Textline {
                 character: firstCharacter + line.trim().length,
             }
         );
+    }
+
+    async lines(path: string): Promise<string[]> {
+        const contents: string = await this.files.get(path);
+
+        return contents.split(/\r?\n/g);
     }
 }
