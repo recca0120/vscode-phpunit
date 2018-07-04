@@ -1,11 +1,11 @@
 import { DiagnosticProvider } from '../src/diagnostic-provider';
 import { Text } from '../src/support/text';
-import { Filesystem, Factory as FilesystemFactory } from '../src/filesystem';
+import { Filesystem, WINDOWS } from '../src/filesystem';
 import { Type } from '../src/phpunit/common';
 
 describe('DiagnosticProvider Test', () => {
     it('it should return diagnostic group', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
+        const files: Filesystem = new WINDOWS();
         const text: Text = new Text();
         const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(text, files);
 
@@ -48,7 +48,7 @@ describe('DiagnosticProvider Test', () => {
                     name: 'passed',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
+                    file: '/vscode-phpunit/tests/PHPUnitTest.php',
                     line: 13,
                     time: 0.006241,
                     type: Type.PASSED,
@@ -57,7 +57,7 @@ describe('DiagnosticProvider Test', () => {
                     name: 'error',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
+                    file: '/vscode-phpunit/tests/PHPUnitTest.php',
                     line: 23,
                     time: 0.001087,
                     type: Type.ERROR,
@@ -69,7 +69,7 @@ describe('DiagnosticProvider Test', () => {
                         ].join('\n'),
                         details: [
                             {
-                                file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
+                                file: '/vscode-phpunit/tests/PHPUnitTest.php',
                                 line: 25,
                             },
                         ],
@@ -79,7 +79,7 @@ describe('DiagnosticProvider Test', () => {
         ).toEqual(
             new Map<string, any[]>([
                 [
-                    'file:///c%3A/vscode-phpunit/tests/PHPUnitTest.php',
+                    'file:///vscode-phpunit/tests/PHPUnitTest.php',
                     [
                         {
                             message: [
@@ -100,7 +100,7 @@ describe('DiagnosticProvider Test', () => {
                                                 line: 24,
                                             },
                                         },
-                                        uri: 'file:///c%3A/vscode-phpunit/tests/PHPUnitTest.php',
+                                        uri: 'file:///vscode-phpunit/tests/PHPUnitTest.php',
                                     },
                                     message: [
                                         'PHPUnitTest::error',
@@ -118,7 +118,7 @@ describe('DiagnosticProvider Test', () => {
     });
 
     it('it should return empty diagnostics when all pass', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
+        const files: Filesystem = new WINDOWS();
         const text: Text = new Text();
         const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider(text, files);
 
@@ -139,12 +139,12 @@ describe('DiagnosticProvider Test', () => {
                     name: 'passed',
                     class: 'PHPUnitTest',
                     classname: '',
-                    file: 'C:\\vscode-phpunit\\tests\\PHPUnitTest.php',
+                    file: '/vscode-phpunit/tests/PHPUnitTest.php',
                     line: 13,
                     time: 0.006241,
                     type: Type.PASSED,
                 },
             ])
-        ).toEqual(new Map<string, any[]>([['file:///c%3A/vscode-phpunit/tests/PHPUnitTest.php', []]]));
+        ).toEqual(new Map<string, any[]>([['file:///vscode-phpunit/tests/PHPUnitTest.php', []]]));
     });
 });

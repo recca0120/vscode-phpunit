@@ -1,9 +1,9 @@
 import { Text } from '../../src/support/text';
-import { Filesystem, Factory as FilesystemFactory } from '../../src/filesystem';
+import { Filesystem, WINDOWS } from '../../src/filesystem';
 
 describe('Text Test', () => {
     it('it should get line range', async () => {
-        const files: Filesystem = new FilesystemFactory().create();
+        const files: Filesystem = new WINDOWS();
         const text: Text = new Text(files);
 
         spyOn(files, 'get').and.returnValue(`
