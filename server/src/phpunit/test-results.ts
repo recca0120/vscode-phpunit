@@ -10,17 +10,21 @@ export class TestResults {
         return this;
     }
 
+    getTests(): Test[] {
+        return this.tests;
+    }
+
     setOutput(output: string): TestResults {
         this.output = output;
 
         return this;
     }
 
-    getTests(): Test[] {
-        return this.tests;
+    getOutput(): string {
+        return this.output;
     }
 
     toString() {
-        return this.output;
+        return this.getOutput();
     }
 }
