@@ -176,7 +176,6 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     switch (params.command) {
         case 'phpunit.test.last':
             testResults = await commandProvider.handleLast();
-            connection.console.log(JSON.stringify(testResults));
             break;
         case 'phpunit.test.nearest':
             testResults = await commandProvider.handleNearest(uri, params.arguments[1]);
@@ -196,7 +195,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         });
     });
 
-    connection.console.info(testResults.getOutput());
+    connection.console.log(testResults.getOutput());
 
     connection.sendNotification('tests', {
         uri,
