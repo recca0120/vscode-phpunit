@@ -14,6 +14,7 @@ export enum Type {
 export interface Detail {
     file: string;
     line: number;
+    range?: Range;
 }
 
 export interface Fault {
@@ -28,6 +29,7 @@ export interface Test {
     classname: string;
     file: string;
     line: number;
+    range?: Range;
     time: number;
     type: Type;
     fault?: Fault;

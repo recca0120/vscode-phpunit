@@ -19,17 +19,15 @@ import {
     CodeLensParams,
     CodeLens,
     ExecuteCommandParams,
-    Range,
 } from 'vscode-languageserver';
 import { TestRunner } from './phpunit/test-runner';
-import { TestResults } from './phpunit/test-results';
 import { CodeLensProvider } from './codelens-provider';
-import { Test, Type } from './phpunit/common';
 import { CommandProvider } from './command-provider';
-import { Factory } from './filesystem';
+import { DiagnosticProvider } from './diagnostic-provider';
 
 const commandProvider: CommandProvider = new CommandProvider();
 const codelensProvider: CodeLensProvider = new CodeLensProvider();
+const diagnosticProvider: DiagnosticProvider = new DiagnosticProvider();
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -231,30 +229,17 @@ connection.onCodeLens(
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const [uri, ...args] = params.arguments;
     const testRunner = new TestRunner();
-    const testResults: TestResults = await testRunner.handle(uri, args || []);
-    const tests = testResults.getTests();
 
-    const files = new Factory().create();
-    tests
-        .filter((test: Test) => test.type !== Type.PASSED)
-        .reduce((diagnosticGroup: Map<string, Diagnostic[]>, test: Test): Map<string, Diagnostic[]> => {
-            const diagnostics: Diagnostic[] = diagnosticGroup.get(test.file) || [];
-            diagnostics.push({
-                severity: test.type === Type.RISKY ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
-                range: Range.create({ line: test.line - 1, character: 0 }, { line: test.line - 1, character: 0 }),
-                message: test.fault ? test.fault.message : '',
-                relatedInformation: [],
-                source: 'PHPUnit',
-            });
+    const diagnosticGroup: Map<string, Diagnostic[]> = await diagnosticProvider.asDiagnosticGroup(
+        await testRunner.handle(uri, args || [])
+    );
 
-            return diagnosticGroup.set(test.file, diagnostics);
-        }, new Map<string, Diagnostic[]>())
-        .forEach((diagnostics: Diagnostic[], uri: string) => {
-            connection.sendDiagnostics({
-                uri: files.uri(uri),
-                diagnostics,
-            });
+    diagnosticGroup.forEach((diagnostics: Diagnostic[], uri: string) => {
+        connection.sendDiagnostics({
+            uri,
+            diagnostics,
         });
+    });
 });
 
 /*
