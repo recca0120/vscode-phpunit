@@ -149,6 +149,92 @@ abstract class AssertionsTest extends TestCase
         expect(methods).toEqual([]);
     });
 
+    it('it should parse methods with depends', () => {
+        const testSuite: TestSuite = new TestSuite();
+
+        const methods: Method[] = testSuite.parse(
+            `
+<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class AssertionsTest extends TestCase
+{
+    /** @test */
+    public function method()
+    {
+        $this->assertTrue(true);
+    }
+
+    /**
+     * @test
+     * @depends method
+     */
+    public function method2() {}
+
+    /**
+     * @test
+     * @depends method2
+     */
+    public function method3() {}
+
+    /**
+     * @test
+     * @depends method
+     * @depends method2
+     */
+    public function method4() {}
+}
+        `,
+            'PHPUnitTest.php'
+        );
+
+        expect(methods).toEqual([
+            {
+                kind: 'class',
+                name: 'AssertionsTest',
+                namespace: 'Tests',
+                range: { end: { character: 1, line: 32 }, start: { character: 0, line: 6 } },
+                uri: 'PHPUnitTest.php',
+            },
+            {
+                kind: 'method',
+                name: 'method',
+                namespace: 'Tests\\AssertionsTest',
+                range: { end: { character: 5, line: 12 }, start: { character: 11, line: 9 } },
+                uri: 'PHPUnitTest.php',
+            },
+            {
+                depends: ['method'],
+                kind: 'method',
+                name: 'method2',
+                namespace: 'Tests\\AssertionsTest',
+                range: { end: { character: 32, line: 18 }, start: { character: 11, line: 18 } },
+                uri: 'PHPUnitTest.php',
+            },
+            {
+                depends: ['method', 'method2'],
+                kind: 'method',
+                name: 'method3',
+                namespace: 'Tests\\AssertionsTest',
+                range: {
+                    end: { character: 32, line: 24 },
+                    start: { character: 11, line: 24 },
+                },
+                uri: 'PHPUnitTest.php',
+            },
+            {
+                depends: ['method', 'method2'],
+                kind: 'method',
+                name: 'method4',
+                namespace: 'Tests\\AssertionsTest',
+                range: { end: { character: 32, line: 31 }, start: { character: 11, line: 31 } },
+                uri: 'PHPUnitTest.php',
+            },
+        ]);
+    });
+
     it('it should parse file', async () => {
         const files: Filesystem = new FilesystemFactory().create();
         const testSuite: TestSuite = new TestSuite(files);

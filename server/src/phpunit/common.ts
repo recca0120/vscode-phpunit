@@ -34,4 +34,5 @@ export interface Method {
     name: string;
     uri: string;
     range: Range;
+    depends?: string[];
 }
