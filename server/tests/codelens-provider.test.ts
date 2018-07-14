@@ -20,6 +20,7 @@ describe('CodeLensProvider Test', () => {
                 name: 'test_method',
                 range: { end: { character: 5, line: 9 }, start: { character: 11, line: 6 } },
                 uri: 'PHPUnitTest.php',
+                depends: ['test_method2'],
             },
         ]);
 
@@ -36,7 +37,10 @@ describe('CodeLensProvider Test', () => {
             {
                 command: {
                     arguments: [
-                        { uri: 'PHPUnitTest.php', args: ['--filter', '^.*::test_method( with data set .*)?$'] },
+                        {
+                            uri: 'PHPUnitTest.php',
+                            args: ['--filter', '^.*::(test_method2|test_method)( with data set .*)?$'],
+                        },
                     ],
                     command: 'phpunit.test.file',
                     title: 'Run Test',

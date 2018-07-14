@@ -2,7 +2,6 @@ import { default as Engine } from 'php-parser';
 import { Range } from 'vscode-languageserver-types';
 import { Method } from './common';
 import { Filesystem, Factory as FilesystemFactory } from '../filesystem';
-import { tap } from '../support/helpers';
 
 export class TestSuite {
     constructor(private files: Filesystem = new FilesystemFactory().create()) {}

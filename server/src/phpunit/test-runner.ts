@@ -66,10 +66,13 @@ export class TestRunner {
             return this.binary;
         }
 
-        return (
-            (await this.files.findUp(`vendor/bin/phpunit`, currentDirectory, root)) ||
-            (await this.files.which('phpunit'))
-        );
+        const binary: string = await this.files.findUp(`vendor/bin/phpunit`, currentDirectory, root);
+
+        if (binary) {
+            return binary;
+        }
+
+        return await this.files.which('phpunit');
     }
 
     private async mergeArguments(

@@ -29,7 +29,12 @@ export class CodeLensProvider {
             command: {
                 title: 'Run Test',
                 command: this.getCommandName(method),
-                arguments: [this.getArguments(method, uri)],
+                arguments: [
+                    {
+                        uri,
+                        args: this.getArguments(method),
+                    },
+                ],
             },
             data: {
                 textDocument: {
@@ -43,9 +48,13 @@ export class CodeLensProvider {
         return method.kind === 'class' ? 'phpunit.test' : 'phpunit.test.file';
     }
 
-    private getArguments(method: Method, uri: string): any {
-        return method.kind === 'class'
-            ? { uri, args: [] }
-            : { uri, args: ['--filter', `^.*::${method.name}( with data set .*)?$`] };
+    private getArguments(method: Method): any {
+        if (method.kind === 'class') {
+            return [];
+        }
+
+        const depends: string[] = method.depends ? method.depends : [];
+
+        return ['--filter', `^.*::(${depends.concat([method.name]).join('|')})( with data set .*)?$`];
     }
 }
