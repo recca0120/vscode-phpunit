@@ -6,11 +6,12 @@ import { default as Uri } from 'vscode-uri';
 
 export class POSIX implements Filesystem {
     protected systemPaths: string[] = [];
-    protected separator: string = '/';
-    protected delimiter: string = ':';
-    protected extensions: string[] = [''];
 
-    constructor() {
+    constructor(
+        protected separator: string = '/',
+        protected delimiter: string = ':',
+        protected extensions: string[] = ['']
+    ) {
         this.setSystemPaths(process.env.PATH as string);
     }
 

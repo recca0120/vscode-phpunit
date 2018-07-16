@@ -1,9 +1,13 @@
 import { POSIX } from './posix';
 
 export class WINDOWS extends POSIX {
-    protected separator: string = '\\';
-    protected delimiter: string = ';';
-    protected extensions = ['.bat', '.exe', '.cmd', ''];
+    constructor(
+        protected separator: string = '\\',
+        protected delimiter: string = ';',
+        protected extensions: string[] = ['.bat', '.exe', '.cmd', '']
+    ) {
+        super(separator, delimiter, extensions);
+    }
 
     normalizePath(path: string): string {
         return (
