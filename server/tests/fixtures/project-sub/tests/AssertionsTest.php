@@ -3,26 +3,128 @@
 namespace Recca0120\VSCode\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 class AssertionsTest extends TestCase
 {
-    public function test_assert_true()
+    use MockeryPHPUnitIntegration;
+
+    public function test_passed()
     {
         $this->assertTrue(true);
     }
 
-    public function test_assert_true_is_fail()
+    public function test_failed()
     {
         $this->assertTrue(false);
     }
 
-    public function test_assert_false()
+    public function test_isnt_same()
     {
-        $this->assertFalse(false);
+        $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);
     }
 
-    public function test_assert_false_is_fail()
+    public function test_risky()
     {
-        $this->assertFalse(true);
+        $a = 1;
     }
+
+    /**
+     * @test
+     */
+    public function annotation_test()
+    {
+        $this->assertTrue(true);
+    }
+
+    public function test_skipped()
+    {
+        $this->markTestSkipped('The MySQLi extension is not available.');
+    }
+
+    public function test_incomplete()
+    {
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+    /**
+     * @test
+     * @dataProvider additionProvider
+     */
+    public function addition_provider($a, $b, $expected)
+    {
+        $this->assertEquals($expected, $a + $b);
+    }
+
+    public function additionProvider()
+    {
+        return [
+            [0, 0, 0],
+            [0, 1, 1],
+            [1, 0, 2],
+        ];
+    }
+}
+
+abstract class AbstractAssertionsTest extends TestCase
+{
+    public function test_passed()
+    {
+        $this->assertTrue(true);
+    }
+
+    public function test_failed()
+    {
+        $this->assertTrue(false);
+    }
+
+    public function test_isnt_same()
+    {
+        $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);
+    }
+
+    public function test_risky()
+    {
+        $a = 1;
+    }
+
+    /**
+     * @test
+     */
+    public function annotation_test()
+    {
+        $this->assertTrue(true);
+    }
+
+    public function test_skipped()
+    {
+        $this->markTestSkipped('The MySQLi extension is not available.');
+    }
+
+    public function test_incomplete()
+    {
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+    /**
+     * @test
+     * @dataProvider additionProvider
+     */
+    public function addition_provider($a, $b, $expected)
+    {
+        $this->assertEquals($expected, $a + $b);
+    }
+
+    public function additionProvider()
+    {
+        return [
+            [0, 0, 0],
+            [0, 1, 1],
+            [1, 0, 2],
+        ];
+    }
+}
+
+function test()
+{
 }

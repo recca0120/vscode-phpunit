@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { Process } from '../src/Process';
+import { Process } from '../src/process';
 
 describe('process test', () => {
     it('running phpunit', async () => {
@@ -9,12 +9,12 @@ describe('process test', () => {
             command: join(__dirname, 'fixtures/project-sub/vendor/bin/phpunit'),
             arguments: [
                 '--configuration',
-                join(__dirname, 'fixtures/project-sub/phpunit.xml')
-            ]
+                join(__dirname, 'fixtures/project-sub/phpunit.xml'),
+            ],
         };
 
         const response = await process.run(command);
 
-        expect(response).toContain('PHPUnit');
+        expect(response).toMatch('PHPUnit');
     });
 });

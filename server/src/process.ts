@@ -12,7 +12,7 @@ export class Process {
             process.stderr.on('data', data => {
                 buffers.push(data);
             });
-            process.on('close', code => {
+            process.on('close', () => {
                 resolve(
                     buffers.reduce((response, buffer) => {
                         return (response += buffer.toString());
