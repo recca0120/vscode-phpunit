@@ -50,7 +50,11 @@
         "compile": "tsc -b",
         "watch": "tsc -b -w",
         "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-        "test": "sh ./scripts/e2e.sh"
+        "test": "sh ./scripts/e2e.sh",
+        "jest": "npm run compile && jest",
+        "jest:watch": "jest --watch",
+        "report": "jest --coverage",
+        "report:watch": "jest --coverage --watch"
     },
     "devDependencies": {
         "@types/jest": "^24.0.11",
