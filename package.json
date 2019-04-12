@@ -1,0 +1,63 @@
+{
+    "name": "lsp-phpunit",
+    "description": "A language server example",
+    "author": "recca0120",
+    "license": "MIT",
+    "version": "2.0.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/recca0120/vscode-phpunit"
+    },
+    "publisher": "vscode-phpunit",
+    "categories": [],
+    "keywords": [
+        "multi-root ready"
+    ],
+    "engines": {
+        "vscode": "^1.23.0"
+    },
+    "activationEvents": [
+        "onLanguage:php"
+    ],
+    "main": "./client/out/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "PHPUnit configuration",
+            "properties": {
+                "languageServerPHPUnit.maxNumberOfProblems": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 100,
+                    "description": "Controls the maximum number of problems produced by the server."
+                },
+                "languageServerPHPUnit.trace.server": {
+                    "scope": "window",
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
+                    "default": "off",
+                    "description": "Traces the communication between VS Code and the language server."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+        "test": "sh ./scripts/e2e.sh"
+    },
+    "devDependencies": {
+        "@types/jest": "^24.0.11",
+        "@types/node": "^8.0.0",
+        "jest": "^24.7.1",
+        "ts-jest": "^24.0.2",
+        "tslint": "^5.11.0",
+        "typescript": "^3.1.3"
+    }
+}
