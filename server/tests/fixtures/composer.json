@@ -1,0 +1,19 @@
+{
+    "name": "recca0120/vscode-phpunit",
+    "autoload": {
+        "psr-4": {
+            "Recca0120\\VSCode\\": "src/",
+            "Recca0120\\VSCode\\Tests": "tests/"
+        }
+    },
+    "require": {
+        "phpunit/phpunit": "^8.1",
+        "mockery/mockery": "^1.2"
+    },
+    "authors": [
+        {
+            "name": "recca0120",
+            "email": "recca0120@gmail.com"
+        }
+    ]
+}
