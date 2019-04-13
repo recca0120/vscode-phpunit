@@ -40,7 +40,7 @@ class Test implements ITest {
         }, []);
     }
     get method(): string {
-        return this.node.name.name;
+        return this.node.kind === 'method' ? this.node.name.name : '';
     }
     get namespace(): string {
         return this.options.namespace;
@@ -85,12 +85,16 @@ class Test implements ITest {
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
     tests(): Test[] {
-        return this.node.body
+        let tests = this.node.body
             .map((node: any, index: number) => this.asTest(node, index))
             .filter((method: Test) => method.isTest());
+
+        return tests.length > 0
+            ? (tests = [this.asTest(this.node)].concat(tests))
+            : tests;
     }
-    private asTest(node: any, index: number) {
-        if (index !== 0) {
+    private asTest(node: any, index: number | null = null) {
+        if (index !== null && index !== 0) {
             const prev = this.node.body[index - 1];
             if (prev && prev.body && prev.body.trailingComments) {
                 node.body.leadingComments = prev.body.trailingComments;

@@ -7,10 +7,11 @@ describe('parse phpunit', () => {
         __dirname,
         'fixtures/project-sub/tests/AssertionsTest.php'
     );
+    let index = 0;
 
-    const getTest = async (index: number) => {
+    const getTest = async (key: number) => {
         const tests = await parser.parse(file);
-        const test = tests[index];
+        const test = tests[key];
 
         return {
             class: test.class,
@@ -22,12 +23,13 @@ describe('parse phpunit', () => {
         };
     };
 
-    const expectTest = async (index: number, actual: any) => {
-        expect(await getTest(index)).toEqual(
+    const expectTest = async (key: number, actual: any) => {
+        expect(await getTest(key)).toEqual(
             Object.assign(
                 {
                     class: 'AssertionsTest',
                     depends: [],
+                    method: '',
                     namespace: 'Recca0120\\VSCode\\Tests',
                     range: {
                         start: jasmine.objectContaining({
@@ -48,51 +50,55 @@ describe('parse phpunit', () => {
         );
     };
 
+    it('class', async () => {
+        await expectTest(index++, {});
+    });
+
     it('passed', async () => {
-        await expectTest(0, {
+        await expectTest(index++, {
             method: 'test_passed',
         });
     });
 
     it('failed', async () => {
-        await expectTest(1, {
+        await expectTest(index++, {
             method: 'test_failed',
             depends: ['test_passed'],
         });
     });
 
     it('test_isnt_same', async () => {
-        await expectTest(2, {
+        await expectTest(index++, {
             method: 'test_isnt_same',
         });
     });
 
     it('test_risky', async () => {
-        await expectTest(3, {
+        await expectTest(index++, {
             method: 'test_risky',
         });
     });
 
     it('annotation_test', async () => {
-        await expectTest(4, {
+        await expectTest(index++, {
             method: 'annotation_test',
         });
     });
 
     it('test_skipped', async () => {
-        await expectTest(5, {
+        await expectTest(index++, {
             method: 'test_skipped',
         });
     });
 
     it('test_incomplete', async () => {
-        await expectTest(6, {
+        await expectTest(index++, {
             method: 'test_incomplete',
         });
     });
 
     it('addition_provider', async () => {
-        await expectTest(7, {
+        await expectTest(index++, {
             method: 'addition_provider',
         });
     });
