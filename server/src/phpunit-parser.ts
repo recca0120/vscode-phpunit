@@ -5,14 +5,15 @@ import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
 
 interface TestOptions {
-    uri: URI;
-    namespace?: string;
     class?: string;
+    namespace?: string;
+    uri: URI;
 }
 
 interface ITest {
     class: string;
     depends: string[];
+    kind: string;
     method: string;
     namespace: string;
     range: Range;
@@ -39,8 +40,11 @@ class Test implements ITest {
                       .filter(depend => !!depend);
         }, []);
     }
+    get kind(): string {
+        return this.node.kind;
+    }
     get method(): string {
-        return this.node.kind === 'method' ? this.node.name.name : '';
+        return this.kind === 'method' ? this.node.name.name : '';
     }
     get namespace(): string {
         return this.options.namespace;

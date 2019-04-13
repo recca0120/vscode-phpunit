@@ -16,6 +16,7 @@ describe('parse phpunit', () => {
         return {
             class: test.class,
             depends: test.depends,
+            kind: test.kind,
             method: test.method,
             namespace: test.namespace,
             range: test.range,
@@ -29,6 +30,7 @@ describe('parse phpunit', () => {
                 {
                     class: 'AssertionsTest',
                     depends: [],
+                    kind: 'method',
                     method: '',
                     namespace: 'Recca0120\\VSCode\\Tests',
                     range: {
@@ -51,7 +53,9 @@ describe('parse phpunit', () => {
     };
 
     it('class', async () => {
-        await expectTest(index++, {});
+        await expectTest(index++, {
+            kind: 'class',
+        });
     });
 
     it('passed', async () => {
