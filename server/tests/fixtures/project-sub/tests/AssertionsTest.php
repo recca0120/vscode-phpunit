@@ -14,6 +14,9 @@ class AssertionsTest extends TestCase
         $this->assertTrue(true);
     }
 
+    /**
+     * @depends test_passed
+     */
     public function test_failed()
     {
         $this->assertTrue(false);

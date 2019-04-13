@@ -15,170 +15,85 @@ describe('parse phpunit', () => {
         return {
             class: test.class,
             depends: test.depends,
-            file: test.uri.fsPath,
             method: test.method,
             namespace: test.namespace,
             range: test.range,
+            uri: test.uri,
         };
     };
 
+    const expectTest = async (index: number, actual: any) => {
+        expect(await getTest(index)).toEqual(
+            Object.assign(
+                {
+                    class: 'AssertionsTest',
+                    depends: [],
+                    namespace: 'Recca0120\\VSCode\\Tests',
+                    range: {
+                        start: jasmine.objectContaining({
+                            line: jasmine.anything(),
+                            character: jasmine.anything(),
+                        }),
+                        end: jasmine.objectContaining({
+                            line: jasmine.anything(),
+                            character: jasmine.anything(),
+                        }),
+                    },
+                    uri: jasmine.objectContaining({
+                        fsPath: file,
+                    }),
+                },
+                actual
+            )
+        );
+    };
+
     it('passed', async () => {
-        expect(await getTest(0)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(0, {
             method: 'test_passed',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 
     it('failed', async () => {
-        expect(await getTest(1)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(1, {
             method: 'test_failed',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
+            depends: ['test_passed'],
         });
     });
 
     it('test_isnt_same', async () => {
-        expect(await getTest(2)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(2, {
             method: 'test_isnt_same',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 
     it('test_risky', async () => {
-        expect(await getTest(3)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(3, {
             method: 'test_risky',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 
     it('annotation_test', async () => {
-        expect(await getTest(4)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(4, {
             method: 'annotation_test',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 
     it('test_skipped', async () => {
-        expect(await getTest(5)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(5, {
             method: 'test_skipped',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 
     it('test_incomplete', async () => {
-        expect(await getTest(6)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(6, {
             method: 'test_incomplete',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 
     it('addition_provider', async () => {
-        expect(await getTest(7)).toEqual({
-            class: 'AssertionsTest',
-            depends: [],
-            file,
+        await expectTest(7, {
             method: 'addition_provider',
-            namespace: 'Recca0120\\VSCode\\Tests',
-            range: {
-                start: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-                end: jasmine.objectContaining({
-                    line: jasmine.anything(),
-                    character: jasmine.anything(),
-                }),
-            },
         });
     });
 });

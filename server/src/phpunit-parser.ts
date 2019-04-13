@@ -9,28 +9,20 @@ interface TestOptions {
     namespace?: string;
     class?: string;
 }
-class Test {
+
+interface ITest {
+    class: string;
+    depends: string[];
+    method: string;
+    namespace: string;
+    range: Range;
+    uri: URI;
+}
+
+class Test implements ITest {
     constructor(private node: any, private options?: TestOptions) {}
-    get uri(): URI {
-        return this.options.uri;
-    }
-    get namespace(): string {
-        return this.options.namespace;
-    }
     get class(): string {
         return this.options.class;
-    }
-    get name(): string {
-        return this.node.name.name;
-    }
-    get method(): string {
-        return this.name;
-    }
-    get range(): Range {
-        return {
-            start: this.asPosition(true),
-            end: this.asPosition(false),
-        };
     }
     get depends(): string[] {
         const comments: any[] = this.node.body.leadingComments || [];
@@ -47,26 +39,41 @@ class Test {
                       .filter(depend => !!depend);
         }, []);
     }
-    isTest() {
+    get method(): string {
+        return this.node.name.name;
+    }
+    get namespace(): string {
+        return this.options.namespace;
+    }
+    get range(): Range {
+        return {
+            start: this.asPosition(true),
+            end: this.asPosition(false),
+        };
+    }
+    get uri(): URI {
+        return this.options.uri;
+    }
+    isTest(): Boolean {
         return (
             this.acceptModifier() &&
             (this.acceptComments() || this.acceptMethodName())
         );
     }
-    private acceptModifier() {
+    private acceptModifier(): Boolean {
         return (
             this.node.isStatic === false &&
             ['', 'public'].indexOf(this.node.visibility) !== -1
         );
     }
-    private acceptComments() {
+    private acceptComments(): Boolean {
         const comments: any[] = this.node.body.leadingComments || [];
         return comments.some((comment: any) => /@test/.test(comment.value));
     }
-    private acceptMethodName() {
+    private acceptMethodName(): Boolean {
         return /^test/.test(this.node.name.name);
     }
-    private asPosition(start = true) {
+    private asPosition(start = true): Position {
         const position = start ? this.node.loc.start : this.node.loc.end;
         const character =
             this.node.visibility && start === true
@@ -77,7 +84,7 @@ class Test {
 }
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
-    tests() {
+    tests(): Test[] {
         return this.node.body
             .map((node: any, index: number) => this.asTest(node, index))
             .filter((method: Test) => method.isTest());
