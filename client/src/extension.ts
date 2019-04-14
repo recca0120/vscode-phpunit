@@ -4,18 +4,94 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import {
+    window,
+    workspace,
+    commands,
+    ExtensionContext,
+    OutputChannel,
+} from 'vscode';
+import * as WebSocket from 'ws';
 
 import {
     LanguageClient,
     LanguageClientOptions,
     ServerOptions,
-    TransportKind
+    TransportKind,
 } from 'vscode-languageclient';
 
 let client: LanguageClient;
 
+class SocketOutputChannel implements OutputChannel {
+    private log: string = '';
+
+    private socket?: WebSocket;
+
+    readonly name: string = '';
+
+    constructor(
+        private outputChannel: OutputChannel,
+        private socketPort = 7000
+    ) {
+        this.name = outputChannel.name;
+    }
+
+    startSocket(): this {
+        this.socket =
+            this.socket || new WebSocket(`ws://localhost:${this.socketPort}`);
+
+        return this;
+    }
+
+    setSocket(socket: WebSocket) {
+        this.socket = socket;
+    }
+
+    append(value: string): void {
+        this.log += value;
+
+        return this.outputChannel.append(value);
+    }
+
+    appendLine(value: string): void {
+        this.log += value;
+        // Don't send logs until WebSocket initialization
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(this.log);
+        }
+        this.log = '';
+
+        return this.outputChannel.appendLine(value);
+    }
+
+    clear(): void {
+        return this.outputChannel.clear();
+    }
+
+    show(...args: any[]): void {
+        return this.outputChannel.show(...args);
+    }
+
+    hide(): void {
+        return this.outputChannel.hide();
+    }
+
+    dispose(): void {
+        return this.outputChannel.dispose();
+    }
+}
+
 export function activate(context: ExtensionContext) {
+    const outputChannel: SocketOutputChannel = new SocketOutputChannel(
+        window.createOutputChannel('Language Server PHPUnit'),
+        workspace.getConfiguration('languageServerPHPUnit').get('port', 7000)
+    );
+
+    commands.registerCommand('languageServerPHPUnit.startStreaming', () => {
+        // Establish websocket connection
+        outputChannel.startSocket();
+    });
+
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(
         path.join('server', 'out', 'server.js')
@@ -31,8 +107,8 @@ export function activate(context: ExtensionContext) {
         debug: {
             module: serverModule,
             transport: TransportKind.ipc,
-            options: debugOptions
-        }
+            options: debugOptions,
+        },
     };
 
     // Options to control the language client
@@ -41,8 +117,11 @@ export function activate(context: ExtensionContext) {
         documentSelector: [{ scheme: 'file', language: 'php' }],
         synchronize: {
             // Notify the server about file changes to '.clientrc files contained in the workspace
-            fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-        }
+            fileEvents: workspace.createFileSystemWatcher('**/*.php'),
+        },
+        // Hijacks all LSP logs and redirect them to a specific port through WebSocket connection
+        // outputChannel: websocketOutputChannel,
+        outputChannel,
     };
 
     // Create the language client and start the client.

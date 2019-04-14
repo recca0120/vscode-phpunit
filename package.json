@@ -21,6 +21,12 @@
     ],
     "main": "./client/out/extension",
     "contributes": {
+        "commands": [
+            {
+                "command": "languageServerPHPUnit.startStreaming",
+                "title": "Start Stream Logs into languageServerPHPUnit.port"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "PHPUnit configuration",
@@ -31,16 +37,37 @@
                     "default": 100,
                     "description": "Controls the maximum number of problems produced by the server."
                 },
+                "languageServerPHPUnit.port": {
+                    "type": "number",
+                    "default": 7000,
+                    "scope": "window",
+                    "description": "The WebSocket port to stream LSP log data into."
+                },
                 "languageServerPHPUnit.trace.server": {
                     "scope": "window",
-                    "type": "string",
-                    "enum": [
-                        "off",
-                        "messages",
-                        "verbose"
-                    ],
-                    "default": "off",
-                    "description": "Traces the communication between VS Code and the language server."
+                    "type": "object",
+                    "description": "Traces the communication between VS Code and the language server.",
+                    "properties": {
+                        "verbosity": {
+                            "type": "string",
+                            "description": "Controls the verbosity of the trace.",
+                            "enum": [
+                                "off",
+                                "message",
+                                "verbose"
+                            ],
+                            "default": "off"
+                        },
+                        "format": {
+                            "type": "string",
+                            "description": "Controls the output format of the trace.",
+                            "enum": [
+                                "text",
+                                "json"
+                            ],
+                            "default": "text"
+                        }
+                    }
                 }
             }
         }
