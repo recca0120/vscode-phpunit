@@ -110,7 +110,7 @@ class Clazz {
         );
     }
 }
-export class PHPUnitParser {
+export default class Parser {
     constructor(
         private files = new Filesystem(),
         private engine = Engine.create({
