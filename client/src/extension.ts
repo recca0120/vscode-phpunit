@@ -36,7 +36,7 @@ class SocketOutputChannel implements OutputChannel {
         this.name = outputChannel.name;
     }
 
-    startSocket(): this {
+    listen(): this {
         this.socket =
             this.socket || new WebSocket(`ws://localhost:${this.socketPort}`);
 
@@ -89,7 +89,7 @@ export function activate(context: ExtensionContext) {
 
     commands.registerCommand('languageServerPHPUnit.startStreaming', () => {
         // Establish websocket connection
-        outputChannel.startSocket();
+        outputChannel.listen();
     });
 
     // The server is implemented in node

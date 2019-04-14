@@ -1,8 +1,9 @@
 import { join } from 'path';
-import { PHPUnitParser } from '../src/phpunit-parser';
+import Parser from '../src/phpunit-parser';
+import URI from 'vscode-uri';
 
 describe('parse phpunit', () => {
-    const parser = new PHPUnitParser();
+    const parser = new Parser();
     const file = join(
         __dirname,
         'fixtures/project-sub/tests/AssertionsTest.php'
@@ -105,5 +106,11 @@ describe('parse phpunit', () => {
         await expectTest(index++, {
             method: 'addition_provider',
         });
+    });
+
+    it('parse code error', () => {
+        const parser = new Parser();
+
+        expect(parser.parseCode('a"bcde', URI.parse('/usr/bin'))).toEqual([]);
     });
 });

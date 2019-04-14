@@ -1,5 +1,5 @@
 import { Filesystem } from './filesystem';
-import { Position, Range } from 'vscode-languageserver-types';
+import { Range } from 'vscode-languageserver-types';
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
@@ -50,10 +50,19 @@ class Test implements ITest {
         return this.options.namespace;
     }
     get range(): Range {
-        return {
-            start: this.asPosition(true),
-            end: this.asPosition(false),
-        };
+        const start = this.node.loc.start;
+        const startCharacter = this.node.visibility
+            ? start.column - this.node.visibility.length
+            : start.column;
+
+        const end = this.node.loc.end;
+
+        return Range.create(
+            start.line - 1,
+            startCharacter,
+            end.line - 1,
+            end.column
+        );
     }
     get uri(): URI {
         return this.options.uri;
@@ -76,14 +85,6 @@ class Test implements ITest {
     }
     private acceptMethodName(): Boolean {
         return /^test/.test(this.node.name.name);
-    }
-    private asPosition(start = true): Position {
-        const position = start ? this.node.loc.start : this.node.loc.end;
-        const character =
-            this.node.visibility && start === true
-                ? position.column - this.node.visibility.length
-                : position.column;
-        return Position.create(position.line - 1, character);
     }
 }
 class Clazz {
@@ -122,7 +123,6 @@ export default class Parser {
                 php7: true,
                 debug: false,
                 extractDoc: true,
-                extractTokens: true,
                 suppressErrors: true,
             },
             lexer: {
@@ -139,9 +139,7 @@ export default class Parser {
     }
     parseCode(code: string, uri: PathLike | URI): Test[] {
         const tree: any = this.engine.parseCode(code);
-        if (!tree || !tree.children) {
-            return [];
-        }
+
         return this.findClasses(this.files.asUri(uri), tree.children).reduce(
             (methods, clazz) => methods.concat(clazz.tests()),
             []
