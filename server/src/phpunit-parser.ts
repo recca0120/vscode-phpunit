@@ -28,16 +28,11 @@ class Test implements ITest {
     get depends(): string[] {
         const comments: any[] = this.node.body.leadingComments || [];
         return comments.reduce((depends: any[], comment: any) => {
-            const matches = comment.value.match(/@depends\s+[^\n\s]+/g);
-            return !matches
-                ? depends
-                : depends
-                      .concat(
-                          matches.map((depend: string) =>
-                              depend.replace('@depends', '').trim()
-                          )
-                      )
-                      .filter(depend => !!depend);
+            const matches = (comment.value.match(/@depends\s+[^\n\s]+/g) || [])
+                .map((depend: string) => depend.replace('@depends', '').trim())
+                .filter((depend: string) => !!depend);
+
+            return depends.concat(matches);
         }, []);
     }
     get kind(): string {

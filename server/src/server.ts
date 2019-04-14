@@ -14,7 +14,7 @@ import {
     DidChangeConfigurationNotification,
     CompletionItem,
     CompletionItemKind,
-    TextDocumentPositionParams
+    TextDocumentPositionParams,
 } from 'vscode-languageserver';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -51,9 +51,9 @@ connection.onInitialize((params: InitializeParams) => {
             textDocumentSync: documents.syncKind,
             // Tell the client that the server supports code completion
             completionProvider: {
-                resolveProvider: true
-            }
-        }
+                resolveProvider: true,
+            },
+        },
     };
 });
 
@@ -108,7 +108,7 @@ function getDocumentSettings(resource: string): Thenable<PHPUnitSettings> {
     if (!result) {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'languageServerPHPUnit'
+            section: 'languageServerPHPUnit',
         });
         documentSettings.set(resource, result);
     }
@@ -146,27 +146,27 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             severity: DiagnosticSeverity.Warning,
             range: {
                 start: textDocument.positionAt(m.index),
-                end: textDocument.positionAt(m.index + m[0].length)
+                end: textDocument.positionAt(m.index + m[0].length),
             },
             message: `${m[0]} is all uppercase.`,
-            source: 'ex'
+            source: 'ex',
         };
         if (hasDiagnosticRelatedInformationCapability) {
             diagnostic.relatedInformation = [
                 {
                     location: {
                         uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
+                        range: Object.assign({}, diagnostic.range),
                     },
-                    message: 'Spelling matters'
+                    message: 'Spelling matters',
                 },
                 {
                     location: {
                         uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
+                        range: Object.assign({}, diagnostic.range),
                     },
-                    message: 'Particularly for names'
-                }
+                    message: 'Particularly for names',
+                },
             ];
         }
         diagnostics.push(diagnostic);
@@ -178,6 +178,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VSCode
+    connection.console.log(JSON.stringify(_change));
     connection.console.log('We received an file change event');
 });
 
@@ -191,13 +192,13 @@ connection.onCompletion(
             {
                 label: 'TypeScript',
                 kind: CompletionItemKind.Text,
-                data: 1
+                data: 1,
             },
             {
                 label: 'JavaScript',
                 kind: CompletionItemKind.Text,
-                data: 2
-            }
+                data: 2,
+            },
         ];
     }
 );
