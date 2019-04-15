@@ -6,10 +6,17 @@ describe('process test', () => {
         const process = new Process();
         const command = {
             title: 'phpunit',
-            command: join(__dirname, 'fixtures/project-sub/vendor/bin/phpunit'),
+            command: join(
+                __dirname,
+                'fixtures',
+                'project-sub',
+                'vendor',
+                'bin',
+                'phpunit'
+            ),
             arguments: [
                 '--configuration',
-                join(__dirname, 'fixtures/project-sub/phpunit.xml'),
+                join(__dirname, 'fixtures', 'project-sub', 'phpunit.xml'),
             ],
         };
 
