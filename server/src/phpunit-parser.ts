@@ -141,7 +141,7 @@ class Clazz {
 }
 export default class Parser {
     constructor(
-        private files = new Filesystem(),
+        private files = Filesystem.create(),
         private engine = Engine.create({
             ast: {
                 withPositions: true,

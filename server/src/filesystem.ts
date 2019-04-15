@@ -16,4 +16,10 @@ export class Filesystem {
     asUri(uri: PathLike | URI) {
         return URI.isUri(uri) ? uri : URI.parse(uri as string);
     }
+
+    private static instance = new Filesystem();
+
+    static create() {
+        return Filesystem.instance;
+    }
 }
