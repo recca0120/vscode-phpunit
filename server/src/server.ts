@@ -240,7 +240,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     console.log(
         await process.run({
             title: '',
-            command: await files.which('vendor/bin/phpunit', 'phpunit'),
+            command: await files.which(['vendor/bin/phpunit', 'phpunit']),
             arguments: params.arguments,
         })
     );

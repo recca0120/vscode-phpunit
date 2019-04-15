@@ -51,7 +51,7 @@ describe('filesystem tests', () => {
             ['.cmd']
         );
         const files = new Filesystem(systemPath);
-        expect(await files.which(['cmd', 'ls'])).toBe(
+        expect(await files.which('cmd')).toBe(
             join(__dirname, 'fixtures', 'usr', 'local', 'bin', 'cmd.cmd')
         );
     });

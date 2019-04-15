@@ -74,28 +74,26 @@ export class Filesystem {
         cwd: string = process.cwd()
     ): Promise<string> {
         search = search instanceof Array ? search : [search];
-        const paths = [cwd].concat(this.paths);
 
-        for (let i = 0; i < paths.length; i++) {
-            const path = paths[i];
-            for (let j = 0; j < this.extensions.length; j++) {
-                for (let k = 0; k < search.length; k++) {
-                    const file = join(
-                        path,
-                        `${search[k]}${this.extensions[j]}`
-                    );
-                    const exists = await this.exists(file);
-
-                    if (exists) {
-                        return file;
-                    }
-                }
+        for (let file of this.searchFile(search, [cwd].concat(this.paths))) {
+            if (await this.exists(file)) {
+                return file;
             }
         }
     }
 
     asUri(uri: PathLike | URI) {
         return URI.isUri(uri) ? uri : URI.parse(uri as string);
+    }
+
+    private *searchFile(search: string[], paths: string[]) {
+        for (let path of paths) {
+            for (let extension of this.extensions) {
+                for (let value of search) {
+                    yield join(path, `${value}${extension}`);
+                }
+            }
+        }
     }
 }
 
