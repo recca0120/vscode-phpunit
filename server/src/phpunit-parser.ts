@@ -1,5 +1,10 @@
 import { Filesystem } from './filesystem';
-import { Range } from 'vscode-languageserver-types';
+import {
+    Range,
+    TextDocument,
+    CodeLens,
+    Command,
+} from 'vscode-languageserver-types';
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
@@ -20,7 +25,7 @@ interface ITest {
     uri: URI;
 }
 
-class Test implements ITest {
+export class Test implements ITest {
     constructor(private node: any, private options?: TestOptions) {}
     get class(): string {
         return this.options.class;
@@ -67,6 +72,34 @@ class Test implements ITest {
             this.acceptModifier() &&
             (this.acceptComments() || this.acceptMethodName())
         );
+    }
+    asCodeLens(): CodeLens {
+        const codeLens = CodeLens.create(this.range);
+        codeLens.command = this.asCommand();
+
+        return codeLens;
+    }
+    private asCommand(): Command {
+        return {
+            title: 'Run Test',
+            command:
+                this.kind === 'class' ? 'phpunit.Test' : 'phpunit.TestNearest',
+            arguments: this.asArguments(),
+        };
+    }
+    private asArguments(): string[] {
+        const args = [this.uri.fsPath];
+
+        if (!this.method) {
+            return args;
+        }
+
+        const depends = this.depends.concat(this.method).join('|');
+
+        return args.concat([
+            '--filter',
+            `^.*::(${depends})( with data set .*)?$`,
+        ]);
     }
     private acceptModifier(): Boolean {
         return (
@@ -129,9 +162,15 @@ export default class Parser {
             },
         })
     ) {}
+
     async parse(uri: PathLike | URI): Promise<Test[]> {
         return this.parseCode(await this.files.get(uri), uri);
     }
+
+    parseTextDocument(textDocument: TextDocument): Test[] {
+        return this.parseCode(textDocument.getText(), textDocument.uri);
+    }
+
     parseCode(code: string, uri: PathLike | URI): Test[] {
         const tree: any = this.engine.parseCode(code);
 
@@ -140,6 +179,7 @@ export default class Parser {
             []
         );
     }
+
     private findClasses(uri: URI, nodes: any[], namespace = ''): Clazz[] {
         return nodes.reduce((classes: any[], node: any) => {
             if (node.kind === 'namespace') {

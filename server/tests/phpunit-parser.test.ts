@@ -1,6 +1,8 @@
 import { join } from 'path';
-import Parser from '../src/phpunit-parser';
+import Parser, { Test } from '../src/phpunit-parser';
 import URI from 'vscode-uri';
+import { TextDocument } from 'vscode-languageserver-types';
+import { Filesystem } from '../src/filesystem';
 
 describe('parse phpunit', () => {
     const parser = new Parser();
@@ -12,9 +14,12 @@ describe('parse phpunit', () => {
 
     const getTest = async (key: number) => {
         const tests = await parser.parse(file);
-        const test = tests[key];
 
-        return {
+        return tests[key];
+    };
+
+    const expectTest = async (test: Test, actual: any) => {
+        const expectObj = {
             class: test.class,
             depends: test.depends,
             kind: test.kind,
@@ -23,10 +28,7 @@ describe('parse phpunit', () => {
             range: test.range,
             uri: test.uri,
         };
-    };
-
-    const expectTest = async (key: number, actual: any) => {
-        expect(await getTest(key)).toEqual(
+        expect(expectObj).toEqual(
             Object.assign(
                 {
                     class: 'AssertionsTest',
@@ -54,63 +56,108 @@ describe('parse phpunit', () => {
     };
 
     it('class', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             kind: 'class',
         });
     });
 
     it('passed', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'test_passed',
         });
     });
 
     it('failed', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'test_failed',
             depends: ['test_passed'],
         });
     });
 
     it('test_isnt_same', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'test_isnt_same',
         });
     });
 
     it('test_risky', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'test_risky',
         });
     });
 
     it('annotation_test', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'annotation_test',
         });
     });
 
     it('test_skipped', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'test_skipped',
         });
     });
 
     it('test_incomplete', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'test_incomplete',
         });
     });
 
     it('addition_provider', async () => {
-        await expectTest(index++, {
+        expectTest(await getTest(index++), {
             method: 'addition_provider',
         });
+    });
+
+    it('parse TextDocument', async () => {
+        const parser = new Parser();
+
+        const tests = parser.parseTextDocument(
+            TextDocument.create(
+                file,
+                'php',
+                1,
+                await new Filesystem().get(file)
+            )
+        );
+
+        expect(tests).toBeDefined();
     });
 
     it('parse code error', () => {
         const parser = new Parser();
 
         expect(parser.parseCode('a"bcde', URI.parse('/usr/bin'))).toEqual([]);
+    });
+
+    it('class as codelens', async () => {
+        const test = await getTest(0);
+
+        expect(test.asCodeLens()).toEqual({
+            range: test.range,
+            command: {
+                title: 'Run Test',
+                command: 'phpunit.Test',
+                arguments: [file],
+            },
+        });
+    });
+
+    it('method as codelens', async () => {
+        const test = await getTest(2);
+
+        expect(test.asCodeLens()).toEqual({
+            range: test.range,
+            command: {
+                title: 'Run Test',
+                command: 'phpunit.TestNearest',
+                arguments: [
+                    file,
+                    '--filter',
+                    '^.*::(test_passed|test_failed)( with data set .*)?$',
+                ],
+            },
+        });
     });
 });

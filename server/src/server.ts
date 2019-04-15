@@ -15,7 +15,11 @@ import {
     CompletionItem,
     CompletionItemKind,
     TextDocumentPositionParams,
+    CodeLensParams,
+    ExecuteCommandParams,
 } from 'vscode-languageserver';
+import Parser, { Test } from './phpunit-parser';
+import { Process } from './process';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -52,6 +56,12 @@ connection.onInitialize((params: InitializeParams) => {
             // Tell the client that the server supports code completion
             completionProvider: {
                 resolveProvider: true,
+            },
+            codeLensProvider: {
+                resolveProvider: true,
+            },
+            executeCommandProvider: {
+                commands: ['phpunit.Test', 'phpunit.TestNearest'],
             },
         },
     };
@@ -178,7 +188,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VSCode
-    connection.console.log(JSON.stringify(_change));
+    // connection.console.log(JSON.stringify(_change));
     connection.console.log('We received an file change event');
 });
 
@@ -218,6 +228,24 @@ connection.onCompletionResolve(
     }
 );
 
+connection.onCodeLens((params: CodeLensParams) => {
+    const parser = new Parser();
+
+    return parser
+        .parseTextDocument(documents.get(params.textDocument.uri))
+        .map((test: Test) => test.asCodeLens());
+});
+
+connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
+    const process = new Process();
+    console.log(
+        await process.run({
+            title: '',
+            command: 'vendor/bin/phpunit',
+            arguments: params.arguments,
+        })
+    );
+});
 /*
 connection.onDidOpenTextDocument((params) => {
 	// A text document got opened in VSCode.
