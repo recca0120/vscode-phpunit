@@ -141,7 +141,7 @@ class Clazz {
 }
 export default class Parser {
     constructor(
-        private files = Filesystem.create(),
+        private files = Filesystem.instance(),
         private engine = Engine.create({
             ast: {
                 withPositions: true,
@@ -194,5 +194,10 @@ export default class Parser {
     }
     private isTestClass(node: any): Boolean {
         return node.kind !== 'class' || node.isAbstract ? false : true;
+    }
+    private static _instance = new Parser();
+
+    static instance() {
+        return Parser._instance;
     }
 }

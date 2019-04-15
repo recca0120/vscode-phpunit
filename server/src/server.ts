@@ -229,9 +229,7 @@ connection.onCompletionResolve(
 );
 
 connection.onCodeLens((params: CodeLensParams) => {
-    const parser = new Parser();
-
-    return parser
+    return Parser.instance()
         .parseTextDocument(documents.get(params.textDocument.uri))
         .map((test: Test) => test.asCodeLens());
 });
