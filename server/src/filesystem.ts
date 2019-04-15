@@ -69,16 +69,26 @@ export class Filesystem {
         });
     }
 
-    async which(search: string, cwd: string = process.cwd()): Promise<string> {
+    async which(
+        search: string | string[],
+        cwd: string = process.cwd()
+    ): Promise<string> {
+        search = search instanceof Array ? search : [search];
         const paths = [cwd].concat(this.paths);
+
         for (let i = 0; i < paths.length; i++) {
             const path = paths[i];
             for (let j = 0; j < this.extensions.length; j++) {
-                const file = join(path, `${search}${this.extensions[j]}`);
-                const exists = await this.exists(file);
+                for (let k = 0; k < search.length; k++) {
+                    const file = join(
+                        path,
+                        `${search[k]}${this.extensions[j]}`
+                    );
+                    const exists = await this.exists(file);
 
-                if (exists) {
-                    return file;
+                    if (exists) {
+                        return file;
+                    }
                 }
             }
         }
@@ -88,3 +98,7 @@ export class Filesystem {
         return URI.isUri(uri) ? uri : URI.parse(uri as string);
     }
 }
+
+const files = new Filesystem();
+
+export default files;

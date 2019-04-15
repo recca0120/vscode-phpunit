@@ -1,4 +1,4 @@
-import { Filesystem } from './filesystem';
+import _files from './filesystem';
 import {
     Range,
     TextDocument,
@@ -141,7 +141,7 @@ class Clazz {
 }
 export default class Parser {
     constructor(
-        private files = new Filesystem(),
+        private files = _files,
         private engine = Engine.create({
             ast: {
                 withPositions: true,

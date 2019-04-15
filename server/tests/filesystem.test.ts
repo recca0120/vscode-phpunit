@@ -36,12 +36,12 @@ describe('filesystem tests', () => {
     });
 
     it('which ls', async () => {
-        expect(await files.which('ls')).toBe(
-            join(__dirname, 'fixtures', 'usr', 'local', 'bin', 'ls')
+        expect(await files.which(['ls.exe', 'ls'])).toBe(
+            join(__dirname, 'fixtures', 'bin', 'ls')
         );
     });
 
-    it('which ls.cmd', async () => {
+    it('which cmd.cmd', async () => {
         const systemPath = new Env(
             [
                 join(__dirname, 'fixtures', 'bin'),
@@ -51,8 +51,8 @@ describe('filesystem tests', () => {
             ['.cmd']
         );
         const files = new Filesystem(systemPath);
-        expect(await files.which('ls')).toBe(
-            join(__dirname, 'fixtures', 'bin', 'ls.cmd')
+        expect(await files.which(['cmd', 'ls'])).toBe(
+            join(__dirname, 'fixtures', 'usr', 'local', 'bin', 'cmd.cmd')
         );
     });
 });

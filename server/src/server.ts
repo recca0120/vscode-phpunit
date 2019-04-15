@@ -20,6 +20,7 @@ import {
 } from 'vscode-languageserver';
 import Parser, { Test } from './phpunit-parser';
 import { Process } from './process';
+import files from './filesystem';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -239,7 +240,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     console.log(
         await process.run({
             title: '',
-            command: 'vendor/bin/phpunit',
+            command: await files.which('vendor/bin/phpunit', 'phpunit'),
             arguments: params.arguments,
         })
     );
