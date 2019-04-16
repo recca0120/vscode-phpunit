@@ -55,4 +55,12 @@ describe('filesystem tests', () => {
             join(__dirname, 'fixtures', 'usr', 'local', 'bin', 'cmd.cmd')
         );
     });
+
+    it('findUp types/php-parser.d.ts', async () => {
+        const file = await files.findUp('types/php-parser.d.ts', __filename);
+
+        expect(file).toContain(
+            join(__dirname, '..', 'types', 'php-parser.d.ts')
+        );
+    });
 });

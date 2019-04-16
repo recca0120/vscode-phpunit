@@ -69,24 +69,46 @@ export class Filesystem {
         });
     }
 
-    async which(
+    async find(
         search: string | string[],
-        cwd: string = process.cwd()
+        paths: string[] = []
     ): Promise<string> {
-        search = search instanceof Array ? search : [search];
-
-        for (let file of this.searchFile(search, [cwd].concat(this.paths))) {
+        for (let file of this.searchFile(search, paths.concat(this.paths))) {
             if (await this.exists(file)) {
                 return file;
             }
         }
     }
 
+    async which(
+        search: string | string[],
+        cwd: string = process.cwd()
+    ): Promise<string> {
+        return await this.find(search, [cwd]);
+    }
+
+    async findUp(search: string | string[], cwd: string = process.cwd()) {
+        const paths = cwd
+            .split(/(\\|\/)/g)
+            .filter(segment => !!segment && !/(\\|\/)/.test(segment))
+            .reduce((paths, segment) => {
+                const prev = paths[paths.length - 1] || '';
+                paths[paths.length] = `${prev}/${segment}`;
+
+                return paths;
+            }, [])
+            .reverse();
+
+        return await this.find(search, [cwd].concat(paths));
+    }
+
     asUri(uri: PathLike | URI) {
         return URI.isUri(uri) ? uri : URI.parse(uri as string);
     }
 
-    private *searchFile(search: string[], paths: string[]) {
+    private *searchFile(search: string[] | string, paths: string[]) {
+        search = search instanceof Array ? search : [search];
+
         for (let path of paths) {
             for (let extension of this.extensions) {
                 for (let value of search) {
