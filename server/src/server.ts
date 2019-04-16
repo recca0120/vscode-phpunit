@@ -62,7 +62,7 @@ connection.onInitialize((params: InitializeParams) => {
                 resolveProvider: true,
             },
             executeCommandProvider: {
-                commands: ['phpunit.Test', 'phpunit.TestNearest'],
+                commands: ['lsp.phpunit.Test', 'lsp.phpunit.TestNearest'],
             },
         },
     };

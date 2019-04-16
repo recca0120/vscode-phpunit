@@ -15,7 +15,7 @@ interface TestOptions {
     uri: URI;
 }
 
-interface ITest {
+export interface Test {
     class: string;
     depends: string[];
     kind: string;
@@ -23,9 +23,10 @@ interface ITest {
     namespace: string;
     range: Range;
     uri: URI;
+    asCodeLens(): CodeLens;
 }
 
-export class Test implements ITest {
+class NodeTest implements Test {
     constructor(private node: any, private options?: TestOptions) {}
     get class(): string {
         return this.options.class;
@@ -67,7 +68,7 @@ export class Test implements ITest {
     get uri(): URI {
         return this.options.uri;
     }
-    isTest(): Boolean {
+    isTest(): boolean {
         return (
             this.acceptModifier() &&
             (this.acceptComments() || this.acceptMethodName())
@@ -83,7 +84,9 @@ export class Test implements ITest {
         return {
             title: 'Run Test',
             command:
-                this.kind === 'class' ? 'phpunit.Test' : 'phpunit.TestNearest',
+                this.kind === 'class'
+                    ? 'lsp.phpunit.Test'
+                    : 'lsp.phpunit.TestNearest',
             arguments: this.asArguments(),
         };
     }
@@ -101,17 +104,17 @@ export class Test implements ITest {
             `^.*::(${depends})( with data set .*)?$`,
         ]);
     }
-    private acceptModifier(): Boolean {
+    private acceptModifier(): boolean {
         return (
             this.node.isStatic === false &&
             ['', 'public'].indexOf(this.node.visibility) !== -1
         );
     }
-    private acceptComments(): Boolean {
+    private acceptComments(): boolean {
         const comments: any[] = this.node.body.leadingComments || [];
         return comments.some((comment: any) => /@test/.test(comment.value));
     }
-    private acceptMethodName(): Boolean {
+    private acceptMethodName(): boolean {
         return /^test/.test(this.node.name.name);
     }
 }
@@ -120,7 +123,7 @@ class Clazz {
     tests(): Test[] {
         let tests = this.node.body
             .map((node: any, index: number) => this.asTest(node, index))
-            .filter((method: Test) => method.isTest());
+            .filter((method: NodeTest) => method.isTest());
 
         return tests.length > 0
             ? (tests = [this.asTest(this.node)].concat(tests))
@@ -133,7 +136,7 @@ class Clazz {
                 node.body.leadingComments = prev.body.trailingComments;
             }
         }
-        return new Test(
+        return new NodeTest(
             node,
             Object.assign({ class: this.node.name.name }, this.options)
         );
@@ -192,7 +195,7 @@ export default class Parser {
                 : classes;
         }, []);
     }
-    private isTestClass(node: any): Boolean {
+    private isTestClass(node: any): boolean {
         return node.kind !== 'class' || node.isAbstract ? false : true;
     }
 }
