@@ -11,6 +11,7 @@ import {
     ExtensionContext,
     OutputChannel,
     TextEditor,
+    ProgressLocation,
 } from 'vscode';
 import * as WebSocket from 'ws';
 
@@ -20,6 +21,9 @@ import {
     ServerOptions,
     TransportKind,
     ExecuteCommandRequest,
+    WillSaveTextDocumentNotification,
+    DocumentColorRequest,
+    WillSaveTextDocumentParams,
 } from 'vscode-languageclient';
 
 let client: LanguageClient;
@@ -85,8 +89,8 @@ class SocketOutputChannel implements OutputChannel {
 
 export function activate(context: ExtensionContext) {
     const outputChannel: SocketOutputChannel = new SocketOutputChannel(
-        window.createOutputChannel('Language Server PHPUnit'),
-        workspace.getConfiguration('languageServerPHPUnit').get('port', 7000)
+        window.createOutputChannel('PHPUnit Language Server'),
+        workspace.getConfiguration('phpunit').get('port', 7000)
     );
 
     // The server is implemented in node
@@ -140,6 +144,12 @@ export function activate(context: ExtensionContext) {
     );
 
     client.onReady().then(() => {
+        client.onNotification(WillSaveTextDocumentNotification.type, () => {
+            if (window.activeTextEditor && window.activeTextEditor.document) {
+                window.activeTextEditor.document.save();
+            }
+        });
+
         context.subscriptions.push(
             commands.registerTextEditorCommand(
                 'phpunit.test',

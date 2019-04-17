@@ -18,6 +18,9 @@ import {
     CodeLensParams,
     ExecuteCommandParams,
     Position,
+    WillSaveTextDocumentNotification,
+    MessageType,
+    LogMessageNotification,
 } from 'vscode-languageserver';
 import Parser, { Test } from './phpunit-parser';
 import { Process } from './process';
@@ -243,6 +246,8 @@ connection.onCodeLens((params: CodeLensParams) => {
 
 const runner = new TestRunner();
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
+    connection.sendNotification(WillSaveTextDocumentNotification.type, {});
+
     const args = params.arguments;
     const textDocument: TextDocument = documents.get(args[0]);
 
@@ -266,7 +271,11 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             );
             break;
     }
-    console.log(response);
+
+    connection.sendNotification(LogMessageNotification.type, {
+        type: MessageType.Log,
+        message: response,
+    });
 });
 /*
 connection.onDidOpenTextDocument((params) => {
