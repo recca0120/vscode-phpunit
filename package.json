@@ -24,46 +24,42 @@
         "commands": [
             {
                 "command": "phpunit.startStreaming",
-                "title": "Start Stream Logs into languageServerPHPUnit.port"
+                "title": "Start Stream Logs into PHPUnit port"
             },
             {
-                "command": "phpunit.Test",
+                "command": "phpunit.test",
                 "title": "PHPUnit Test"
             },
             {
-                "command": "phpunit.TestNearest",
+                "command": "phpunit.testNearest",
                 "title": "PHPUnit Test Nearest"
             },
             {
-                "command": "phpunit.TestDirectory",
+                "command": "phpunit.testDirectory",
                 "title": "PHPUnit Test Directory"
             },
             {
-                "command": "phpunit.RerunLastTest",
+                "command": "phpunit.rerunLastTest",
                 "title": "PHPUnit Rerun last test"
-            },
-            {
-                "command": "phpunit.TestingStop",
-                "title": "PHPUnit Stop Running Test"
             }
         ],
         "configuration": {
             "type": "object",
             "title": "PHPUnit configuration",
             "properties": {
-                "languageServerPHPUnit.maxNumberOfProblems": {
+                "phpunit.maxNumberOfProblems": {
                     "scope": "resource",
                     "type": "number",
                     "default": 100,
                     "description": "Controls the maximum number of problems produced by the server."
                 },
-                "languageServerPHPUnit.port": {
+                "phpunit.port": {
                     "type": "number",
                     "default": 7000,
                     "scope": "window",
                     "description": "The WebSocket port to stream LSP log data into."
                 },
-                "languageServerPHPUnit.trace.server": {
+                "phpunit.trace.server": {
                     "scope": "window",
                     "type": "object",
                     "description": "Traces the communication between VS Code and the language server.",

@@ -109,7 +109,7 @@ connection.onDidChangeConfiguration(change => {
         documentSettings.clear();
     } else {
         globalSettings = <PHPUnitSettings>(
-            (change.settings.languageServerPHPUnit || defaultSettings)
+            (change.settings.phpunit || defaultSettings)
         );
     }
 
@@ -125,7 +125,7 @@ function getDocumentSettings(resource: string): Thenable<PHPUnitSettings> {
     if (!result) {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'languageServerPHPUnit',
+            section: 'phpunit',
         });
         documentSettings.set(resource, result);
     }
@@ -248,11 +248,11 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 
     let response: string;
     switch (params.command) {
-        case 'phpunit.lsp.Test':
+        case 'phpunit.lsp.test':
             response = await runner.runTest(textDocument);
 
             break;
-        case 'phpunit.lsp.RerunLastTest':
+        case 'phpunit.lsp.rerunLastTest':
             response = await runner.rerunLastTest(
                 textDocument,
                 args[1] as Position

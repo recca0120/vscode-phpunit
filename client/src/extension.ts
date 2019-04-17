@@ -123,8 +123,8 @@ export function activate(context: ExtensionContext) {
 
     // Create the language client and start the client.
     client = new LanguageClient(
-        'languageServerPHPUnit',
-        'Language Server PHPUnit',
+        'phpunit',
+        'PHPUnit Language Server',
         serverOptions,
         clientOptions
     );
@@ -142,11 +142,11 @@ export function activate(context: ExtensionContext) {
     client.onReady().then(() => {
         context.subscriptions.push(
             commands.registerTextEditorCommand(
-                'phpunit.Test',
+                'phpunit.test',
                 (textEditor: TextEditor) => {
                     const document = textEditor.document;
                     client.sendRequest(ExecuteCommandRequest.type, {
-                        command: 'phpunit.lsp.Test',
+                        command: 'phpunit.lsp.test',
                         arguments: [
                             document.uri.toString(),
                             textEditor.selection.active,
@@ -158,11 +158,11 @@ export function activate(context: ExtensionContext) {
 
         context.subscriptions.push(
             commands.registerTextEditorCommand(
-                'phpunit.TestNearest',
+                'phpunit.testNearest',
                 (textEditor: TextEditor) => {
                     const document = textEditor.document;
                     client.sendRequest(ExecuteCommandRequest.type, {
-                        command: 'phpunit.lsp.TestNearest',
+                        command: 'phpunit.lsp.testNearest',
                         arguments: [
                             document.uri.toString(),
                             textEditor.selection.active,
@@ -178,7 +178,7 @@ export function activate(context: ExtensionContext) {
                 (textEditor: TextEditor) => {
                     const document = textEditor.document;
                     client.sendRequest(ExecuteCommandRequest.type, {
-                        command: 'phpunit.lsp.RerunLastTest',
+                        command: 'phpunit.lsp.rerunLastTest',
                         arguments: [
                             document.uri.toString(),
                             textEditor.selection.active,
