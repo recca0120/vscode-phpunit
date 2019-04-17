@@ -10,6 +10,7 @@ import {
     commands,
     ExtensionContext,
     OutputChannel,
+    TextEditor,
 } from 'vscode';
 import * as WebSocket from 'ws';
 
@@ -18,6 +19,7 @@ import {
     LanguageClientOptions,
     ServerOptions,
     TransportKind,
+    ExecuteCommandRequest,
 } from 'vscode-languageclient';
 
 let client: LanguageClient;
@@ -87,11 +89,6 @@ export function activate(context: ExtensionContext) {
         workspace.getConfiguration('languageServerPHPUnit').get('port', 7000)
     );
 
-    commands.registerCommand('languageServerPHPUnit.startStreaming', () => {
-        // Establish websocket connection
-        outputChannel.listen();
-    });
-
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(
         path.join('server', 'out', 'server.js')
@@ -134,6 +131,63 @@ export function activate(context: ExtensionContext) {
 
     // Start the client. This will also launch the server
     client.start();
+
+    context.subscriptions.push(
+        commands.registerCommand('phpunit.startStreaming', () => {
+            // Establish websocket connection
+            outputChannel.listen();
+        })
+    );
+
+    client.onReady().then(() => {
+        context.subscriptions.push(
+            commands.registerTextEditorCommand(
+                'phpunit.Test',
+                (textEditor: TextEditor) => {
+                    const document = textEditor.document;
+                    client.sendRequest(ExecuteCommandRequest.type, {
+                        command: 'phpunit.lsp.Test',
+                        arguments: [
+                            document.uri.toString(),
+                            textEditor.selection.active,
+                        ],
+                    });
+                }
+            )
+        );
+
+        context.subscriptions.push(
+            commands.registerTextEditorCommand(
+                'phpunit.TestNearest',
+                (textEditor: TextEditor) => {
+                    const document = textEditor.document;
+                    client.sendRequest(ExecuteCommandRequest.type, {
+                        command: 'phpunit.lsp.TestNearest',
+                        arguments: [
+                            document.uri.toString(),
+                            textEditor.selection.active,
+                        ],
+                    });
+                }
+            )
+        );
+
+        context.subscriptions.push(
+            commands.registerTextEditorCommand(
+                'phpunit.RerunLastTest',
+                (textEditor: TextEditor) => {
+                    const document = textEditor.document;
+                    client.sendRequest(ExecuteCommandRequest.type, {
+                        command: 'phpunit.lsp.RerunLastTest',
+                        arguments: [
+                            document.uri.toString(),
+                            textEditor.selection.active,
+                        ],
+                    });
+                }
+            )
+        );
+    });
 }
 
 export function deactivate(): Thenable<void> | undefined {

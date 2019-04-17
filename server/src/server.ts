@@ -64,7 +64,11 @@ connection.onInitialize((params: InitializeParams) => {
                 resolveProvider: true,
             },
             executeCommandProvider: {
-                commands: ['phpunit.lsp.Test', 'phpunit.lsp.TestNearest'],
+                commands: [
+                    'phpunit.lsp.Test',
+                    'phpunit.lsp.TestNearest',
+                    'phpunit.lsp.ReturnLastTest',
+                ],
             },
         },
     };
@@ -240,10 +244,29 @@ connection.onCodeLens((params: CodeLensParams) => {
 const runner = new TestRunner();
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const args = params.arguments;
+    const textDocument: TextDocument = documents.get(args[0]);
 
-    console.log(
-        await runner.runTestNearest(documents.get(args[0]), args[1] as Position)
-    );
+    let response: string;
+    switch (params.command) {
+        case 'phpunit.lsp.Test':
+            response = await runner.runTest(textDocument);
+
+            break;
+        case 'phpunit.lsp.RerunLastTest':
+            response = await runner.rerunLastTest(
+                textDocument,
+                args[1] as Position
+            );
+            break;
+
+        default:
+            response = await runner.runTestNearest(
+                textDocument,
+                args[1] as Position
+            );
+            break;
+    }
+    console.log(response);
 });
 /*
 connection.onDidOpenTextDocument((params) => {
