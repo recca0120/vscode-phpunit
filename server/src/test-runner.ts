@@ -11,8 +11,12 @@ export class TestRunner {
         private parser = new Parser()
     ) {}
 
-    async runTest(textDocument: TextDocument, position?: Position) {
-        return await this.runTestNearest(textDocument, position);
+    async runTest(textDocument: TextDocument) {
+        const test: Test = this.parser
+            .parseTextDocument(textDocument)
+            .find(test => test.kind === 'class');
+
+        return test ? await this.run(test.asArguments()) : '';
     }
 
     async runTestNearest(textDocument: TextDocument, position?: Position) {
@@ -20,14 +24,14 @@ export class TestRunner {
         const line = position && position.line ? position.line : 0;
 
         let test = tests.find(test => {
-            return test.range.start.line >= line;
+            return test.kind !== 'class' && test.range.end.line >= line;
         });
 
         if (!test) {
             test = tests.find(test => test.kind === 'class');
         }
 
-        return await this.run(test.asArguments());
+        return test ? await this.run(test.asArguments()) : '';
     }
 
     async rerunLastTest(textDocument: TextDocument, position?: Position) {

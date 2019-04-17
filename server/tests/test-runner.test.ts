@@ -38,7 +38,7 @@ describe('test runner', () => {
         spyOn(files, 'findUp').and.returnValue('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.runTest(textDocument, position)).toEqual(
+        expect(await testRunner.runTestNearest(textDocument, position)).toEqual(
             'PHPUnit'
         );
         expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
@@ -48,17 +48,17 @@ describe('test runner', () => {
             arguments: [
                 uri.fsPath,
                 '--filter',
-                '^.*::(test_isnt_same)( with data set .*)?$',
+                '^.*::(test_passed|test_failed)( with data set .*)?$',
             ],
         });
     });
 
     it('run test nearest when not found', async () => {
-        const position = Position.create(0, 0);
+        const position = Position.create(5000, 0);
         spyOn(files, 'findUp').and.returnValue('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.runTest(textDocument, position)).toEqual(
+        expect(await testRunner.runTestNearest(textDocument, position)).toEqual(
             'PHPUnit'
         );
         expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
@@ -88,7 +88,7 @@ describe('test runner', () => {
             arguments: [
                 uri.fsPath,
                 '--filter',
-                '^.*::(test_isnt_same)( with data set .*)?$',
+                '^.*::(test_passed|test_failed)( with data set .*)?$',
             ],
         });
     });
