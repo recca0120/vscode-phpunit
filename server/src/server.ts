@@ -17,10 +17,12 @@ import {
     TextDocumentPositionParams,
     CodeLensParams,
     ExecuteCommandParams,
+    Position,
 } from 'vscode-languageserver';
 import Parser, { Test } from './phpunit-parser';
 import { Process } from './process';
 import files from './filesystem';
+import { TestRunner } from './test-runner';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -62,7 +64,7 @@ connection.onInitialize((params: InitializeParams) => {
                 resolveProvider: true,
             },
             executeCommandProvider: {
-                commands: ['lsp.phpunit.Test', 'lsp.phpunit.TestNearest'],
+                commands: ['phpunit.lsp.Test', 'phpunit.lsp.TestNearest'],
             },
         },
     };
@@ -235,14 +237,12 @@ connection.onCodeLens((params: CodeLensParams) => {
         .map((test: Test) => test.asCodeLens());
 });
 
+const runner = new TestRunner();
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    const process = new Process();
+    const args = params.arguments;
+
     console.log(
-        await process.run({
-            title: '',
-            command: await files.which(['vendor/bin/phpunit', 'phpunit']),
-            arguments: params.arguments,
-        })
+        await runner.runTestNearest(documents.get(args[0]), args[1] as Position)
     );
 });
 /*

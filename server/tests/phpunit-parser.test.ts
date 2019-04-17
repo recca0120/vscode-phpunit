@@ -138,8 +138,8 @@ describe('parse phpunit', () => {
             range: test.range,
             command: {
                 title: 'Run Test',
-                command: 'lsp.phpunit.Test',
-                arguments: [file],
+                command: 'phpunit.lsp.Test',
+                arguments: [file, test.range.start],
             },
         });
     });
@@ -151,13 +151,25 @@ describe('parse phpunit', () => {
             range: test.range,
             command: {
                 title: 'Run Test',
-                command: 'lsp.phpunit.TestNearest',
-                arguments: [
-                    file,
-                    '--filter',
-                    '^.*::(test_passed|test_failed)( with data set .*)?$',
-                ],
+                command: 'phpunit.lsp.TestNearest',
+                arguments: [file, test.range.start],
             },
         });
+    });
+
+    it('class as arguments', async () => {
+        const test = await getTest(0);
+
+        expect(test.asArguments()).toEqual([file]);
+    });
+
+    it('method as arguments', async () => {
+        const test = await getTest(2);
+
+        expect(test.asArguments()).toEqual([
+            file,
+            '--filter',
+            '^.*::(test_passed|test_failed)( with data set .*)?$',
+        ]);
     });
 });

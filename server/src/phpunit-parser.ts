@@ -24,6 +24,8 @@ export interface Test {
     range: Range;
     uri: URI;
     asCodeLens(): CodeLens;
+    asCommand(): Command;
+    asArguments(): string[];
 }
 
 class NodeTest implements Test {
@@ -80,17 +82,17 @@ class NodeTest implements Test {
 
         return codeLens;
     }
-    private asCommand(): Command {
+    asCommand(): Command {
         return {
             title: 'Run Test',
             command:
                 this.kind === 'class'
-                    ? 'lsp.phpunit.Test'
-                    : 'lsp.phpunit.TestNearest',
-            arguments: this.asArguments(),
+                    ? 'phpunit.lsp.Test'
+                    : 'phpunit.lsp.TestNearest',
+            arguments: [this.uri.toString(), this.range.start],
         };
     }
-    private asArguments(): string[] {
+    asArguments(): string[] {
         const args = [this.uri.fsPath];
 
         if (!this.method) {
