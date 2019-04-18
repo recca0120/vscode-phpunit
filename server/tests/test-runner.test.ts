@@ -1,19 +1,11 @@
 import { TextDocument, Position } from 'vscode-languageserver-types';
 import _files, { Filesystem } from '../src/filesystem';
-import { join } from 'path';
 import { TestRunner } from '../src/test-runner';
 import { Process } from '../src/process';
+import { projectPath } from './helpers';
 
 describe('test runner', () => {
-    const uri = _files.asUri(
-        join(
-            __dirname,
-            'fixtures',
-            'project-sub',
-            'tests',
-            'AssertionsTest.php'
-        )
-    );
+    const uri = _files.asUri(projectPath('tests/AssertionsTest.php'));
 
     let process: Process;
     let files: Filesystem;

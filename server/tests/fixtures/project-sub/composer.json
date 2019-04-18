@@ -3,7 +3,7 @@
     "autoload": {
         "psr-4": {
             "Recca0120\\VSCode\\": "src/",
-            "Recca0120\\VSCode\\Tests": "tests/"
+            "Recca0120\\VSCode\\Tests\\": "tests/"
         }
     },
     "require": {

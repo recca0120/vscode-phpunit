@@ -11,7 +11,6 @@ import {
     ExtensionContext,
     OutputChannel,
     TextEditor,
-    ProgressLocation,
 } from 'vscode';
 import * as WebSocket from 'ws';
 
@@ -22,8 +21,6 @@ import {
     TransportKind,
     ExecuteCommandRequest,
     WillSaveTextDocumentNotification,
-    DocumentColorRequest,
-    WillSaveTextDocumentParams,
 } from 'vscode-languageclient';
 
 let client: LanguageClient;

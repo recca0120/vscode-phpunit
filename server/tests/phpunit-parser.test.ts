@@ -1,15 +1,12 @@
-import { join } from 'path';
 import Parser, { Test } from '../src/phpunit-parser';
 import URI from 'vscode-uri';
 import { TextDocument } from 'vscode-languageserver-types';
 import { Filesystem } from '../src/filesystem';
+import { projectPath } from './helpers';
 
 describe('parse phpunit', () => {
     const parser = new Parser();
-    const file = join(
-        __dirname,
-        'fixtures/project-sub/tests/AssertionsTest.php'
-    );
+    const file = projectPath('tests/AssertionsTest.php');
     let index = 0;
 
     const getTest = async (key: number) => {
