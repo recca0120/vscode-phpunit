@@ -87,8 +87,8 @@ class NodeTest implements Test {
             title: 'Run Test',
             command:
                 this.kind === 'class'
-                    ? 'phpunit.lsp.Test'
-                    : 'phpunit.lsp.TestNearest',
+                    ? 'phpunit.lsp.test'
+                    : 'phpunit.lsp.testNearest',
             arguments: [this.uri.toString(), this.range.start],
         };
     }
