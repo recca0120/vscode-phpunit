@@ -24,12 +24,15 @@ export class TestRunner {
         const line = position && position.line ? position.line : 0;
 
         let test = tests.find(test => {
-            return test.kind !== 'class' && test.range.end.line >= line;
-        });
+            const start = test.range.start.line;
+            const end = test.range.end.line;
 
-        if (!test) {
-            test = tests.find(test => test.kind === 'class');
-        }
+            if (test.kind === 'class') {
+                return start >= line || end <= line;
+            }
+
+            return test.kind !== 'class' && end >= line;
+        });
 
         return test ? await this.run(test.asArguments()) : '';
     }

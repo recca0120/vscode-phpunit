@@ -46,7 +46,7 @@ describe('TestRunner', () => {
     });
 
     it('run test nearest when not found', async () => {
-        const position = Position.create(5000, 0);
+        const position = Position.create(7, 0);
         spyOn(files, 'findUp').and.returnValue('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 

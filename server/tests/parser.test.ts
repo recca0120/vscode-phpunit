@@ -135,7 +135,7 @@ describe('Parser', () => {
             range: test.range,
             command: {
                 title: 'Run Test',
-                command: 'phpunit.lsp.test',
+                command: 'phpunit.lsp.testNearest',
                 arguments: [file, test.range.start],
             },
         });
