@@ -23,8 +23,6 @@ import {
     LogMessageNotification,
 } from 'vscode-languageserver';
 import Parser, { Test } from './phpunit-parser';
-import { Process } from './process';
-import files from './filesystem';
 import { TestRunner } from './test-runner';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.

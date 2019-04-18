@@ -10,7 +10,6 @@ import {
     commands,
     ExtensionContext,
     OutputChannel,
-    TextEditor,
 } from 'vscode';
 import * as WebSocket from 'ws';
 
@@ -19,9 +18,9 @@ import {
     LanguageClientOptions,
     ServerOptions,
     TransportKind,
-    ExecuteCommandRequest,
     WillSaveTextDocumentNotification,
 } from 'vscode-languageclient';
+import { CommandRegister } from './command-register';
 
 let client: LanguageClient;
 
@@ -130,6 +129,11 @@ export function activate(context: ExtensionContext) {
         clientOptions
     );
 
+    const commandRegister = new CommandRegister(client, commands);
+    context.subscriptions.push(commandRegister.registerTest());
+    context.subscriptions.push(commandRegister.registerNearestTest());
+    context.subscriptions.push(commandRegister.registerRerunLastTest());
+
     // Start the client. This will also launch the server
     client.start();
 
@@ -143,57 +147,10 @@ export function activate(context: ExtensionContext) {
     client.onReady().then(() => {
         client.onNotification(WillSaveTextDocumentNotification.type, () => {
             if (window.activeTextEditor && window.activeTextEditor.document) {
+                outputChannel.show();
                 window.activeTextEditor.document.save();
             }
         });
-
-        context.subscriptions.push(
-            commands.registerTextEditorCommand(
-                'phpunit.test',
-                (textEditor: TextEditor) => {
-                    const document = textEditor.document;
-                    client.sendRequest(ExecuteCommandRequest.type, {
-                        command: 'phpunit.lsp.test',
-                        arguments: [
-                            document.uri.toString(),
-                            textEditor.selection.active,
-                        ],
-                    });
-                }
-            )
-        );
-
-        context.subscriptions.push(
-            commands.registerTextEditorCommand(
-                'phpunit.testNearest',
-                (textEditor: TextEditor) => {
-                    const document = textEditor.document;
-                    client.sendRequest(ExecuteCommandRequest.type, {
-                        command: 'phpunit.lsp.testNearest',
-                        arguments: [
-                            document.uri.toString(),
-                            textEditor.selection.active,
-                        ],
-                    });
-                }
-            )
-        );
-
-        context.subscriptions.push(
-            commands.registerTextEditorCommand(
-                'phpunit.RerunLastTest',
-                (textEditor: TextEditor) => {
-                    const document = textEditor.document;
-                    client.sendRequest(ExecuteCommandRequest.type, {
-                        command: 'phpunit.lsp.rerunLastTest',
-                        arguments: [
-                            document.uri.toString(),
-                            textEditor.selection.active,
-                        ],
-                    });
-                }
-            )
-        );
     });
 }
 

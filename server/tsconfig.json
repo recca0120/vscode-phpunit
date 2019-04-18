@@ -1,15 +1,16 @@
 {
-	"compilerOptions": {
+    "compilerOptions": {
         "baseUrl": ".",
         "paths": { "*": ["types/*"] },
-		"target": "es6",
-		"module": "commonjs",
-		"moduleResolution": "node",
-		"sourceMap": true,
-		"outDir": "out",
-		"rootDir": "src",
-		"lib": ["es6"]
-	},
-	"include": ["src"],
-	"exclude": ["node_modules", ".vscode-test"]
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outDir": "out",
+        "rootDir": "src",
+        "lib": ["es6"],
+        "composite": true
+    },
+    "include": ["src"],
+    "exclude": ["node_modules", ".vscode-test"]
 }
