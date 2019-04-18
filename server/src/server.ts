@@ -66,9 +66,9 @@ connection.onInitialize((params: InitializeParams) => {
             },
             executeCommandProvider: {
                 commands: [
-                    'phpunit.lsp.Test',
-                    'phpunit.lsp.TestNearest',
-                    'phpunit.lsp.ReturnLastTest',
+                    'phpunit.lsp.test',
+                    'phpunit.lsp.testNearest',
+                    'phpunit.lsp.returnLastTest',
                 ],
             },
         },
