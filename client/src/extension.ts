@@ -4,14 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
-import {
-    window,
-    workspace,
-    commands,
-    ExtensionContext,
-    OutputChannel,
-} from 'vscode';
-import * as WebSocket from 'ws';
+import { window, workspace, commands, ExtensionContext } from 'vscode';
 
 import {
     LanguageClient,
@@ -21,67 +14,9 @@ import {
     WillSaveTextDocumentNotification,
 } from 'vscode-languageclient';
 import { CommandRegister } from './command-register';
+import { SocketOutputChannel } from './socket-output-channel';
 
 let client: LanguageClient;
-
-class SocketOutputChannel implements OutputChannel {
-    private log: string = '';
-
-    private socket?: WebSocket;
-
-    readonly name: string = '';
-
-    constructor(
-        private outputChannel: OutputChannel,
-        private socketPort = 7000
-    ) {
-        this.name = outputChannel.name;
-    }
-
-    listen(): this {
-        this.socket =
-            this.socket || new WebSocket(`ws://localhost:${this.socketPort}`);
-
-        return this;
-    }
-
-    setSocket(socket: WebSocket) {
-        this.socket = socket;
-    }
-
-    append(value: string): void {
-        this.log += value;
-
-        return this.outputChannel.append(value);
-    }
-
-    appendLine(value: string): void {
-        this.log += value;
-        // Don't send logs until WebSocket initialization
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(this.log);
-        }
-        this.log = '';
-
-        return this.outputChannel.appendLine(value);
-    }
-
-    clear(): void {
-        return this.outputChannel.clear();
-    }
-
-    show(...args: any[]): void {
-        return this.outputChannel.show(...args);
-    }
-
-    hide(): void {
-        return this.outputChannel.hide();
-    }
-
-    dispose(): void {
-        return this.outputChannel.dispose();
-    }
-}
 
 export function activate(context: ExtensionContext) {
     const outputChannel: SocketOutputChannel = new SocketOutputChannel(
@@ -133,15 +68,8 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(commandRegister.registerTest());
     context.subscriptions.push(commandRegister.registerNearestTest());
     context.subscriptions.push(commandRegister.registerRerunLastTest());
-
-    // Start the client. This will also launch the server
-    client.start();
-
     context.subscriptions.push(
-        commands.registerCommand('phpunit.startStreaming', () => {
-            // Establish websocket connection
-            outputChannel.listen();
-        })
+        commandRegister.registerStartStraming(outputChannel)
     );
 
     client.onReady().then(() => {
@@ -152,6 +80,9 @@ export function activate(context: ExtensionContext) {
             }
         });
     });
+
+    // Start the client. This will also launch the server
+    client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {

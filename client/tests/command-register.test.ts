@@ -24,28 +24,17 @@ function givenCommands(uri: string, position: any) {
     };
 
     spyOn(commands, 'registerTextEditorCommand').and.callFake((command, cb) =>
-        cb(givenTextEditor(uri, position))
+        cb({
+            document: {
+                uri: uri,
+            },
+            selection: {
+                active: position,
+            },
+        })
     );
 
     return commands;
-}
-
-function givenTextEditor(uri: string, position: any): any {
-    return {
-        document: {
-            uri: uri,
-        },
-        selection: {
-            active: position,
-        },
-    };
-}
-
-function expectRegisterTextEditorCommand(commands: any, command: string) {
-    expect(commands.registerTextEditorCommand).toBeCalledWith(
-        command,
-        jasmine.any(Function)
-    );
 }
 
 function expectClientSendRequest(client: any, command: string, args: any[]) {
@@ -55,13 +44,16 @@ function expectClientSendRequest(client: any, command: string, args: any[]) {
     });
 }
 
-function expectRegisterCommand(callback: Function, expected: any) {
+function expectRegisterTextEditorCommand(callback: Function, expected: any) {
     const commands = givenCommands(expected.uri, expected.position);
     const client = givenClient();
 
     callback(client, commands);
 
-    expectRegisterTextEditorCommand(commands, expected.command);
+    expect(commands.registerTextEditorCommand).toBeCalledWith(
+        expected.command,
+        jasmine.any(Function)
+    );
     expectClientSendRequest(client, expected.command, [
         expected.uri,
         expected.position,
@@ -79,7 +71,7 @@ describe('commands', () => {
             },
         };
 
-        expectRegisterCommand((client: any, commands: any) => {
+        expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
             commandRegister.registerTest();
         }, expected);
@@ -95,7 +87,7 @@ describe('commands', () => {
             },
         };
 
-        expectRegisterCommand((client: any, commands: any) => {
+        expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
             commandRegister.registerNearestTest();
         }, expected);
@@ -103,7 +95,7 @@ describe('commands', () => {
 
     it('register rerun last test', () => {
         const expected = {
-            command: 'phpunit.RerunLastTest',
+            command: 'phpunit.rerunLastTest',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -111,9 +103,35 @@ describe('commands', () => {
             },
         };
 
-        expectRegisterCommand((client: any, commands: any) => {
+        expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
             commandRegister.registerRerunLastTest();
         }, expected);
+    });
+
+    it('register start streaming', () => {
+        const commands: any = {
+            registerCommand: () => {},
+        };
+        spyOn(commands, 'registerCommand').and.callFake(
+            (command: any, cb: any) => {
+                cb();
+            }
+        );
+
+        const outputChannel: any = {
+            listen: () => {},
+        };
+
+        spyOn(outputChannel, 'listen');
+
+        const commandRegister = new CommandRegister(givenClient(), commands);
+        commandRegister.registerStartStraming(outputChannel);
+
+        expect(commands.registerCommand).toBeCalledWith(
+            'phpunit.startStreaming',
+            jasmine.any(Function)
+        );
+        expect(outputChannel.listen).toBeCalled();
     });
 });
