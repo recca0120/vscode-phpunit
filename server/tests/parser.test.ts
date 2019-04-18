@@ -1,10 +1,10 @@
-import Parser, { Test } from '../src/phpunit-parser';
+import Parser, { Test } from '../src/Parser';
 import URI from 'vscode-uri';
 import { TextDocument } from 'vscode-languageserver-types';
-import { Filesystem } from '../src/filesystem';
+import { Filesystem } from '../src/Filesystem';
 import { projectPath } from './helpers';
 
-describe('parse phpunit', () => {
+describe('Parser', () => {
     const parser = new Parser();
     const file = projectPath('tests/AssertionsTest.php');
     let index = 0;

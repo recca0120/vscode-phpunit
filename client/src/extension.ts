@@ -13,9 +13,9 @@ import {
     TransportKind,
     WillSaveTextDocumentNotification,
 } from 'vscode-languageclient';
-import { CommandRegister } from './command-register';
-import { SocketOutputChannel } from './socket-output-channel';
-import { Notify } from './Notify';
+import { CommandRegister } from './commandRegister';
+import { SocketOutputChannel } from './socketOutputChannel';
+import { Notify } from './notify';
 
 let client: LanguageClient;
 

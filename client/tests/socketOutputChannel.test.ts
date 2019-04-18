@@ -1,4 +1,4 @@
-import { SocketOutputChannel } from '../src/socket-output-channel';
+import { SocketOutputChannel } from '../src/socketOutputChannel';
 import * as WebSocket from 'ws';
 
 describe('socket output channel', () => {

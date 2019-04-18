@@ -22,8 +22,8 @@ import {
     MessageType,
     LogMessageNotification,
 } from 'vscode-languageserver';
-import Parser, { Test } from './phpunit-parser';
-import { TestRunner } from './test-runner';
+import Parser, { Test } from './parser';
+import { TestRunner } from './testRunner';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

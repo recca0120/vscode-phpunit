@@ -1,8 +1,8 @@
 import { readFileSync, unlinkSync } from 'fs';
-import { Filesystem, Env } from '../src/filesystem';
+import { Filesystem, Env } from '../src/Filesystem';
 import { fixturePath, projectPath } from './helpers';
 
-describe('filesystem tests', () => {
+describe('Filesystem', () => {
     const systemPath = new Env(
         [fixturePath('bin'), fixturePath('usr/local/bin')].join(':'),
         ':'

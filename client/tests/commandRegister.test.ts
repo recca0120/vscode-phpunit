@@ -1,4 +1,4 @@
-import { CommandRegister } from '../src/command-register';
+import { CommandRegister } from '../src/commandRegister';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 
 function givenClient() {

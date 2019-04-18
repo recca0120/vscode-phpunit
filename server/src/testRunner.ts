@@ -1,5 +1,5 @@
 import { TextDocument, Position } from 'vscode-languageserver-types';
-import Parser, { Test } from './phpunit-parser';
+import Parser, { Test } from './parser';
 import _files from './filesystem';
 import { Process } from './process';
 export class TestRunner {

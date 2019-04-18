@@ -1,7 +1,7 @@
-import { Process } from '../src/process';
+import { Process } from '../src/Process';
 import { projectPath } from './helpers';
 
-describe('process test', () => {
+describe('Process', () => {
     it('running phpunit', async () => {
         const process = new Process();
         const command = {

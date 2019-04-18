@@ -1,7 +1,7 @@
 import { TextEditor } from 'vscode';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
-import { SocketOutputChannel } from './socket-output-channel';
+import { SocketOutputChannel } from './socketOutputChannel';
 
 export class CommandRegister {
     private enabled = false;

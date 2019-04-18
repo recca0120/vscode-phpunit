@@ -1,4 +1,3 @@
-import { Progress, CancellationToken } from 'vscode';
 import { Notify } from '../src/notify';
 
 class StubNotify extends Notify {
