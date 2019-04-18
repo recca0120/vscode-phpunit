@@ -245,6 +245,7 @@ connection.onCodeLens((params: CodeLensParams) => {
 const runner = new TestRunner();
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     connection.sendNotification(WillSaveTextDocumentNotification.type, {});
+    connection.sendNotification('before');
 
     const args = params.arguments;
     const textDocument: TextDocument = documents.get(args[0]);
@@ -274,6 +275,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
         type: MessageType.Log,
         message: response,
     });
+    connection.sendNotification('after');
 });
 /*
 connection.onDidOpenTextDocument((params) => {

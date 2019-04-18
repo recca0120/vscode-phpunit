@@ -15,6 +15,7 @@ import {
 } from 'vscode-languageclient';
 import { CommandRegister } from './command-register';
 import { SocketOutputChannel } from './socket-output-channel';
+import { Notify } from './Notify';
 
 let client: LanguageClient;
 
@@ -75,9 +76,19 @@ export function activate(context: ExtensionContext) {
     client.onReady().then(() => {
         client.onNotification(WillSaveTextDocumentNotification.type, () => {
             if (window.activeTextEditor && window.activeTextEditor.document) {
+                outputChannel.clear();
                 outputChannel.show();
                 window.activeTextEditor.document.save();
             }
+        });
+
+        const notify = new Notify(window);
+        client.onNotification('before', () => {
+            notify.show('PHPUnit Running...');
+        });
+
+        client.onNotification('after', () => {
+            notify.hide();
         });
     });
 
