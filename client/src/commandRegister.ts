@@ -11,16 +11,20 @@ export class CommandRegister {
         });
     }
 
-    registerTest() {
-        return this.registerPHPUnitCommand('phpunit.test');
+    registerRunSuite() {
+        return this.registerPHPUnitCommand('phpunit.test.suite');
     }
 
-    registerNearestTest() {
-        return this.registerPHPUnitCommand('phpunit.testNearest');
+    registerRunFile() {
+        return this.registerPHPUnitCommand('phpunit.test.file');
     }
 
-    registerRerunLastTest() {
-        return this.registerPHPUnitCommand('phpunit.rerunLastTest');
+    registerRunNearest() {
+        return this.registerPHPUnitCommand('phpunit.test.nearest');
+    }
+
+    registerRunLast() {
+        return this.registerPHPUnitCommand('phpunit.test.last');
     }
 
     registerStartStraming(outputChannel: SocketOutputChannel) {

@@ -135,7 +135,7 @@ describe('Parser', () => {
             range: test.range,
             command: {
                 title: 'Run Test',
-                command: 'phpunit.lsp.testNearest',
+                command: 'phpunit.lsp.test.nearest',
                 arguments: [file, test.range.start],
             },
         });
@@ -148,7 +148,7 @@ describe('Parser', () => {
             range: test.range,
             command: {
                 title: 'Run Test',
-                command: 'phpunit.lsp.testNearest',
+                command: 'phpunit.lsp.test.nearest',
                 arguments: [file, test.range.start],
             },
         });

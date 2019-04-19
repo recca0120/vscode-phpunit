@@ -11,15 +11,15 @@ export class TestRunner {
         private parser = new Parser()
     ) {}
 
-    async runTest(textDocument: TextDocument) {
-        const test: Test = this.parser
-            .parseTextDocument(textDocument)
-            .find(test => test.kind === 'class');
-
-        return test ? await this.run(test.asArguments()) : '';
+    async runSuite() {
+        return await this.run();
     }
 
-    async runTestNearest(textDocument: TextDocument, position?: Position) {
+    async runFile(textDocument: TextDocument) {
+        return await this.run([this.files.asUri(textDocument.uri).fsPath]);
+    }
+
+    async runNearest(textDocument: TextDocument, position?: Position) {
         const tests: Test[] = this.parser.parseTextDocument(textDocument);
         const line = position && position.line ? position.line : 0;
 
@@ -27,25 +27,23 @@ export class TestRunner {
             const start = test.range.start.line;
             const end = test.range.end.line;
 
-            if (test.kind === 'class') {
-                return start >= line || end <= line;
-            }
-
-            return test.kind !== 'class' && end >= line;
+            return test.kind === 'class'
+                ? start >= line || end <= line
+                : test.kind !== 'class' && end >= line;
         });
 
         return test ? await this.run(test.asArguments()) : '';
     }
 
-    async rerunLastTest(textDocument: TextDocument, position?: Position) {
+    async runLast(textDocument: TextDocument, position?: Position) {
         if (this.lastArgs.length === 0) {
-            return await this.runTestNearest(textDocument, position);
+            return await this.runNearest(textDocument, position);
         }
 
         return await this.run(this.lastArgs);
     }
 
-    async run(args: string[]) {
+    async run(args?: string[]) {
         this.lastArgs = args;
 
         return await this.process.run({

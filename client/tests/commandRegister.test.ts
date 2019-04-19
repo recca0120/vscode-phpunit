@@ -61,9 +61,9 @@ function expectRegisterTextEditorCommand(callback: Function, expected: any) {
 }
 
 describe('commands', () => {
-    it('register test', () => {
+    it('register test suite', () => {
         const expected = {
-            command: 'phpunit.test',
+            command: 'phpunit.test.suite',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -73,13 +73,13 @@ describe('commands', () => {
 
         expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
-            commandRegister.registerTest();
+            commandRegister.registerRunSuite();
         }, expected);
     });
 
     it('register test nearest', () => {
         const expected = {
-            command: 'phpunit.testNearest',
+            command: 'phpunit.test.nearest',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -89,13 +89,13 @@ describe('commands', () => {
 
         expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
-            commandRegister.registerNearestTest();
+            commandRegister.registerRunNearest();
         }, expected);
     });
 
-    it('register rerun last test', () => {
+    it('register run last', () => {
         const expected = {
-            command: 'phpunit.rerunLastTest',
+            command: 'phpunit.test.last',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -105,7 +105,7 @@ describe('commands', () => {
 
         expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
-            commandRegister.registerRerunLastTest();
+            commandRegister.registerRunLast();
         }, expected);
     });
 

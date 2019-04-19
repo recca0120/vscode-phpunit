@@ -66,9 +66,10 @@ connection.onInitialize((params: InitializeParams) => {
             },
             executeCommandProvider: {
                 commands: [
-                    'phpunit.lsp.test',
-                    'phpunit.lsp.testNearest',
-                    'phpunit.lsp.returnLastTest',
+                    'phpunit.lsp.test.suite',
+                    'phpunit.lsp.test.file',
+                    'phpunit.lsp.test.nearest',
+                    'phpunit.lsp.test.last',
                 ],
             },
         },
@@ -249,25 +250,24 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 
     const args = params.arguments;
     const textDocument: TextDocument = documents.get(args[0]);
+    const position: Position = args[1];
 
     let response: string;
     switch (params.command) {
-        case 'phpunit.lsp.test':
-            response = await runner.runTest(textDocument);
+        case 'phpunit.lsp.test.suite':
+            response = await runner.runSuite();
 
             break;
-        case 'phpunit.lsp.rerunLastTest':
-            response = await runner.rerunLastTest(
-                textDocument,
-                args[1] as Position
-            );
+        case 'phpunit.lsp.test.file':
+            response = await runner.runFile(textDocument);
+
+            break;
+        case 'phpunit.lsp.test.last':
+            response = await runner.runLast(textDocument, position);
             break;
 
         default:
-            response = await runner.runTestNearest(
-                textDocument,
-                args[1] as Position
-            );
+            response = await runner.runNearest(textDocument, position);
             break;
     }
 

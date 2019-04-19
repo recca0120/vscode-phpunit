@@ -66,9 +66,10 @@ export function activate(context: ExtensionContext) {
     );
 
     const commandRegister = new CommandRegister(client, commands);
-    context.subscriptions.push(commandRegister.registerTest());
-    context.subscriptions.push(commandRegister.registerNearestTest());
-    context.subscriptions.push(commandRegister.registerRerunLastTest());
+    context.subscriptions.push(commandRegister.registerRunSuite());
+    context.subscriptions.push(commandRegister.registerRunFile());
+    context.subscriptions.push(commandRegister.registerRunNearest());
+    context.subscriptions.push(commandRegister.registerRunLast());
     context.subscriptions.push(
         commandRegister.registerStartStraming(outputChannel)
     );

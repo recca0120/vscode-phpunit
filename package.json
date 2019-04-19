@@ -27,20 +27,24 @@
                 "title": "Start Stream Logs into PHPUnit port"
             },
             {
-                "command": "phpunit.test",
-                "title": "PHPUnit Test"
+                "command": "phpunit.test.suite",
+                "title": "PHPUnit Test All Suite"
             },
             {
-                "command": "phpunit.testNearest",
+                "command": "phpunit.test.file",
+                "title": "PHPUnit Test Current File"
+            },
+            {
+                "command": "phpunit.test.nearest",
                 "title": "PHPUnit Test Nearest"
             },
             {
-                "command": "phpunit.testDirectory",
+                "command": "phpunit.test.directory",
                 "title": "PHPUnit Test Directory"
             },
             {
-                "command": "phpunit.rerunLastTest",
-                "title": "PHPUnit Rerun last test"
+                "command": "phpunit.test.last",
+                "title": "PHPUnit Run Last Test"
             }
         ],
         "configuration": {
