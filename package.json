@@ -56,20 +56,22 @@
             {
                 "key": "cmd+t cmd+f",
                 "command": "phpunit.test.file",
-                "when": "editorTextFocus"
+                "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+t",
                 "command": "phpunit.test.nearest",
-                "when": "editorTextFocus"
+                "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+l",
-                "command": "phpunit.test.last"
+                "command": "phpunit.test.last",
+                "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+d",
-                "command": "phpunit.test.directory"
+                "command": "phpunit.test.directory",
+                "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+s",
