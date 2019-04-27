@@ -1,6 +1,8 @@
-import { readFile, PathLike, writeFile, access } from 'fs';
+import { readFile, PathLike, writeFile, access, createReadStream } from 'fs';
 import { join, dirname } from 'path';
 import URI from 'vscode-uri';
+import { createInterface } from 'readline';
+import { Position, Range, Location } from 'vscode-languageserver-protocol';
 
 export class Env {
     constructor(
@@ -108,6 +110,54 @@ export class Filesystem {
 
     asUri(uri: PathLike | URI) {
         return URI.isUri(uri) ? uri : URI.parse(uri as string);
+    }
+
+    lineAt(uri: PathLike | URI, lineNumber: number): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const rl = createInterface({
+                input: createReadStream(this.asUri(uri).fsPath),
+                crlfDelay: Infinity,
+            });
+
+            let current = 0;
+            let found = false;
+            rl.on('line', line => {
+                if (lineNumber === current) {
+                    found = true;
+                    rl.close();
+                    resolve(line);
+                }
+
+                current++;
+            });
+
+            rl.on('close', () => {
+                if (found === false) {
+                    reject('');
+                }
+            });
+        });
+    }
+
+    async lineRange(uri: PathLike | URI, lineNumber: number): Promise<Range> {
+        const line = await this.lineAt(uri, lineNumber);
+
+        return Range.create(
+            Position.create(lineNumber, line.search(/\S|$/)),
+            Position.create(lineNumber, line.trimLeft().length)
+        );
+    }
+
+    async lineLocation(
+        uri: PathLike | URI,
+        lineNumber: number
+    ): Promise<Location> {
+        uri = this.asUri(uri);
+
+        return Location.create(
+            uri.toString(),
+            await this.lineRange(uri, lineNumber)
+        );
     }
 
     private *searchFile(search: string[] | string, paths: string[]) {

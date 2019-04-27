@@ -47,4 +47,37 @@ describe('Filesystem', () => {
 
         expect(file).toContain(fixturePath('../../types/php-parser.d.ts'));
     });
+
+    it('lineAt', async () => {
+        const uri = projectPath('tests/AssertionsTest.php');
+
+        const line = await files.lineAt(uri, 13);
+
+        expect(line).toContain('$this->assertTrue(true);');
+    });
+
+    it('lineRange', async () => {
+        const uri = projectPath('tests/AssertionsTest.php');
+
+        const range = await files.lineRange(uri, 13);
+
+        expect(range).toEqual({
+            start: { line: 13, character: 8 },
+            end: { line: 13, character: 24 },
+        });
+    });
+
+    it('lineLocation', async () => {
+        const uri = projectPath('tests/AssertionsTest.php');
+
+        const range = await files.lineLocation(uri, 13);
+
+        expect(range).toEqual({
+            uri: files.asUri(uri).toString(),
+            range: {
+                start: { line: 13, character: 8 },
+                end: { line: 13, character: 24 },
+            },
+        });
+    });
 });
