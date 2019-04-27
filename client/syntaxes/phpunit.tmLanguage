@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>scopeName</key>
+        <string>code.log</string>
+        <key>fileTypes</key>
+        <array>
+            <string>log</string>
+        </array>
+        <key>name</key>
+        <string>Phpunit file</string>
+        <key>patterns</key>
+        <array>
+            <dict>
+                <!-- Namespace -->
+                <key>match</key>
+                <string>\b(?i:(([a-z]|[0-9]|[_|-])*(\.([a-z]|[0-9]|[_|-])*)+))\b</string>
+                <key>name</key>
+                <string>support.type</string>
+            </dict>
+            <dict>
+                <key>match</key>
+                <string>\b(?i:(local))(\:|\b)</string>
+                <key>name</key>
+                <string>support.function</string>
+            </dict>
+            <dict>
+                <!-- Generic URI/URL -->
+                <key>match</key>
+                <string>\b(?i:([a-z]|[0-9])+\:((\/\/)|((\/\/)?(\S)))+)</string>
+                <key>name</key>
+                <string>storage</string>
+            </dict>
+
+            <!--
+                Failure diffs
+            -->
+            <dict>
+                <key>include</key>
+                <string>source.diff</string>
+            </dict>
+            <!--
+                Progress
+            -->
+            <dict>
+                <key>begin</key>
+                <string>^(?=(\.|E|F|I|R|S)+\s+)</string>
+                <key>end</key>
+                <string>\s+(\d+\s+\/\s+\d+\s+\(\s*\d+\%\))?$</string>
+                <key>patterns</key>
+                <array>
+                    <dict>
+                        <key>match</key>
+                        <string>\.</string>
+                        <key>name</key>
+                        <string>strong</string>
+                    </dict>
+                    <dict>
+                        <key>match</key>
+                        <string>E</string>
+                        <key>name</key>
+                        <string>markup.deleted</string>
+                    </dict>
+                    <dict>
+                        <key>match</key>
+                        <string>F</string>
+                        <key>name</key>
+                        <string>markup.deleted</string>
+                    </dict>
+                    <dict>
+                        <key>match</key>
+                        <string>I</string>
+                        <key>name</key>
+                        <string>markup.changed</string>
+                    </dict>
+                    <dict>
+                        <key>match</key>
+                        <string>R</string>
+                        <key>name</key>
+                        <string>markup.changed</string>
+                    </dict>
+                    <dict>
+                        <key>match</key>
+                        <string>S</string>
+                        <key>name</key>
+                        <string>markup.changed</string>
+                    </dict>
+                </array>
+            </dict>
+
+            <!--
+                No tests executed!
+            -->
+            <dict>
+                <key>match</key>
+                <string>^(?:\e\[[0-9;]+m)?No tests executed\!(?:\e\[[0-9;]+m)?$</string>
+                <key>name</key>
+                <string>markup.changed</string>
+            </dict>
+
+            <!--
+                OK
+            -->
+            <dict>
+                <key>match</key>
+                <string>^(?:\e\[[0-9;]+m)?OK \(\d+ test(?:s)?, \d+ assertion(?:s)?\)(?:\e\[[0-9;]+m)?$</string>
+                <key>name</key>
+                <string>markup.inserted</string>
+            </dict>
+
+            <!--
+                OK, but incomplete, skipped, or risky tests!
+            -->
+            <dict>
+                <key>match</key>
+                <string>^(?:\e\[[0-9;]+m)?OK, but incomplete, skipped, or risky tests\!(?:\e\[[0-9;]+m)?$</string>
+                <key>name</key>
+                <string>markup.changed</string>
+            </dict>
+            <dict>
+                <key>match</key>
+                <string>^(?:\e\[[0-9;]+m)?Tests\: \d+, Assertions\: \d+(?:, (?:Incomplete|Skipped|Risky)\: \d+)+\.(?:\e\[[0-9;]+m)?$</string>
+                <key>name</key>
+                <string>markup.changed</string>
+            </dict>
+
+            <!--
+                FAILURES!
+            -->
+            <dict>
+                <key>match</key>
+                <string>^(?:\e\[[0-9;]+m)?FAILURES\!(?:\e\[[0-9;]+m\s*)?$</string>
+                <key>name</key>
+                <string>markup.deleted</string>
+            </dict>
+            <dict>
+                <key>match</key>
+                <string>^(?:\e\[[0-9;]+m)?Tests\: \d+, Assertions\: \d+(?:, (?:Errors|Failures|Skipped|Incomplete|Risky)\: \d+)+\.(?:\e\[[0-9;]+m)?$</string>
+                <key>name</key>
+                <string>markup.deleted</string>
+            </dict>
+        </array>
+        <key>uuid</key>
+        <string>bceb84e7-6acb-408e-a937-1e2219695ade</string>
+    </dict>
+</plist>
