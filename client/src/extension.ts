@@ -13,9 +13,9 @@ import {
     TransportKind,
     WillSaveTextDocumentNotification,
 } from 'vscode-languageclient';
-import { CommandRegister } from './commandRegister';
-import { SocketOutputChannel } from './socketOutputChannel';
-import { Notify } from './notify';
+import { CommandRegister } from './CommandRegister';
+import { SocketOutputChannel } from './SocketOutputChannel';
+import { Notify } from './Notify';
 
 let client: LanguageClient;
 
@@ -67,6 +67,7 @@ export function activate(context: ExtensionContext) {
 
     const commandRegister = new CommandRegister(client, commands);
     context.subscriptions.push(commandRegister.registerRunSuite());
+    context.subscriptions.push(commandRegister.registerRunDirectory());
     context.subscriptions.push(commandRegister.registerRunFile());
     context.subscriptions.push(commandRegister.registerRunNearest());
     context.subscriptions.push(commandRegister.registerRunLast());
@@ -78,7 +79,7 @@ export function activate(context: ExtensionContext) {
         client.onNotification(WillSaveTextDocumentNotification.type, () => {
             if (window.activeTextEditor && window.activeTextEditor.document) {
                 outputChannel.clear();
-                outputChannel.show();
+                outputChannel.show(true);
                 window.activeTextEditor.document.save();
             }
         });

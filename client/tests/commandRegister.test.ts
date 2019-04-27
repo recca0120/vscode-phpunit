@@ -1,4 +1,4 @@
-import { CommandRegister } from '../src/commandRegister';
+import { CommandRegister } from '../src/CommandRegister';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 
 function givenClient() {
@@ -27,6 +27,7 @@ function givenCommands(uri: string, position: any) {
         cb({
             document: {
                 uri: uri,
+                languageId: 'php',
             },
             selection: {
                 active: position,

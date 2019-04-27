@@ -1,4 +1,4 @@
-import _files from './filesystem';
+import _files from './Filesystem';
 import {
     Range,
     TextDocument,
@@ -169,7 +169,10 @@ export default class Parser {
         return this.parseCode(await this.files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument): Test[] {
+    parseTextDocument(textDocument: TextDocument | null): Test[] {
+        if (!textDocument) {
+            return [];
+        }
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 

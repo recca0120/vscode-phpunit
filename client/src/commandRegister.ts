@@ -1,7 +1,7 @@
 import { TextEditor } from 'vscode';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
-import { SocketOutputChannel } from './socketOutputChannel';
+import { SocketOutputChannel } from './SocketOutputChannel';
 
 export class CommandRegister {
     private enabled = false;
@@ -13,6 +13,10 @@ export class CommandRegister {
 
     registerRunSuite() {
         return this.registerPHPUnitCommand('phpunit.test.suite');
+    }
+
+    registerRunDirectory() {
+        return this.registerPHPUnitCommand('phpunit.test.directory');
     }
 
     registerRunFile() {
@@ -38,11 +42,7 @@ export class CommandRegister {
         return this.commands.registerTextEditorCommand(
             command,
             (textEditor: TextEditor) => {
-                if (
-                    textEditor &&
-                    textEditor.document &&
-                    this.enabled === true
-                ) {
+                if (this.isValidTextEditor(textEditor)) {
                     const document = textEditor.document;
 
                     this.client.sendRequest(ExecuteCommandRequest.type, {
@@ -55,5 +55,13 @@ export class CommandRegister {
                 }
             }
         );
+    }
+
+    private isValidTextEditor(textEditor: TextEditor): boolean {
+        if (!this.enabled || !textEditor || !textEditor.document) {
+            return false;
+        }
+
+        return textEditor.document.languageId === 'php';
     }
 }

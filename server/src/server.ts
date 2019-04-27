@@ -22,8 +22,8 @@ import {
     MessageType,
     LogMessageNotification,
 } from 'vscode-languageserver';
-import Parser, { Test } from './parser';
-import { TestRunner } from './testRunner';
+import Parser, { Test } from './Parser';
+import { TestRunner } from './TestRunner';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -166,30 +166,22 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const textDocument: TextDocument = documents.get(args[0]);
     const position: Position = args[1];
 
-    let response: string;
-    switch (params.command) {
-        case 'phpunit.lsp.test.suite':
-            response = await runner.runSuite();
+    try {
+        const response = await runner.run(
+            params.command,
+            textDocument,
+            position
+        );
 
-            break;
-        case 'phpunit.lsp.test.file':
-            response = await runner.runFile(textDocument);
-
-            break;
-        case 'phpunit.lsp.test.last':
-            response = await runner.runLast(textDocument, position);
-            break;
-
-        default:
-            response = await runner.runNearest(textDocument, position);
-            break;
+        connection.sendNotification(LogMessageNotification.type, {
+            type: MessageType.Log,
+            message: response,
+        });
+    } catch (e) {
+        throw e;
+    } finally {
+        connection.sendNotification('after');
     }
-
-    connection.sendNotification(LogMessageNotification.type, {
-        type: MessageType.Log,
-        message: response,
-    });
-    connection.sendNotification('after');
 });
 /*
 connection.onDidOpenTextDocument((params) => {

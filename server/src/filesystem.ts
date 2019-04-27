@@ -1,5 +1,5 @@
 import { readFile, PathLike, writeFile, access } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import URI from 'vscode-uri';
 
 export class Env {
@@ -67,6 +67,10 @@ export class Filesystem {
                 resolve(err ? false : true)
             );
         });
+    }
+
+    dirname(uri: PathLike | URI): string {
+        return dirname(this.asUri(uri).fsPath);
     }
 
     async find(
