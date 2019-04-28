@@ -1,4 +1,4 @@
-import { TextDocument, Position } from 'vscode-languageserver-types';
+import { TextDocument, Position } from 'vscode-languageserver-protocol';
 import Parser, { Test } from './Parser';
 import _files from './Filesystem';
 import { Process } from './Process';

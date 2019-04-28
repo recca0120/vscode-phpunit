@@ -1,4 +1,4 @@
-import { Command } from 'vscode-languageserver-types';
+import { Command } from 'vscode-languageserver-protocol';
 import { spawn, SpawnOptions } from 'child_process';
 
 export class Process {

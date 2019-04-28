@@ -4,7 +4,7 @@ import {
     TextDocument,
     CodeLens,
     Command,
-} from 'vscode-languageserver-types';
+} from 'vscode-languageserver-protocol';
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
