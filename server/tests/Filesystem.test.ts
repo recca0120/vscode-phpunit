@@ -62,8 +62,8 @@ describe('Filesystem', () => {
         const range = await files.lineRange(uri, 13);
 
         expect(range).toEqual({
+            end: { line: 13, character: 32 },
             start: { line: 13, character: 8 },
-            end: { line: 13, character: 24 },
         });
     });
 
@@ -75,8 +75,8 @@ describe('Filesystem', () => {
         expect(range).toEqual({
             uri: files.asUri(uri).toString(),
             range: {
+                end: { line: 13, character: 32 },
                 start: { line: 13, character: 8 },
-                end: { line: 13, character: 24 },
             },
         });
     });

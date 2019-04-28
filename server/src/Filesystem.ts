@@ -144,7 +144,7 @@ export class Filesystem {
 
         return Range.create(
             Position.create(lineNumber, line.search(/\S|$/)),
-            Position.create(lineNumber, line.trimLeft().length)
+            Position.create(lineNumber, line.replace(/\s+$/, '').length)
         );
     }
 
