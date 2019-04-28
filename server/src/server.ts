@@ -24,6 +24,7 @@ import {
 } from 'vscode-languageserver';
 import Parser, { Test } from './Parser';
 import { TestRunner } from './TestRunner';
+import { ProblemMatcher, Problem } from './ProblemMatcher';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -177,6 +178,40 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             type: MessageType.Log,
             message: response,
         });
+
+        const problemMatcher = new ProblemMatcher();
+        const problems = await problemMatcher.parse(response);
+
+        problems
+            .reduce(
+                (
+                    diagnosticGroup: Map<string, Diagnostic[]>,
+                    problem: Problem
+                ) => {
+                    const file = problem.files[0];
+                    const diagnostics = diagnosticGroup.has(file.uri)
+                        ? diagnosticGroup.get(file.uri)
+                        : [];
+
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: file.range,
+                        message: problem.message,
+                        source: 'PHPUnit',
+                    });
+
+                    diagnosticGroup.set(file.uri, diagnostics);
+
+                    return diagnosticGroup;
+                },
+                new Map<string, Diagnostic[]>()
+            )
+            .forEach((diagnostics: Diagnostic[], uri: string) => {
+                connection.sendDiagnostics({
+                    uri,
+                    diagnostics,
+                });
+            });
     } catch (e) {
         throw e;
     } finally {
