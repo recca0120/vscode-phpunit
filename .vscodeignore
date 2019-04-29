@@ -11,3 +11,9 @@ client/node_modules/**
 !client/node_modules/vscode-languageclient/**
 !client/node_modules/vscode-languageserver-protocol/**
 !client/node_modules/vscode-languageserver-types/**
+
+!client/tests/**
+coverage/**
+!server/tests/**
+jest.config.js
+README.md
