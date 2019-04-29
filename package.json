@@ -1,17 +1,24 @@
 {
-    "name": "lsp-phpunit",
-    "description": "A language server example",
+    "name": "vscode-phpunit",
+    "description": "PHPUnit Language Server",
     "author": "recca0120",
     "license": "MIT",
+    "icon": "client/images/icon.png",
     "version": "2.0.0",
+    "preview": true,
     "repository": {
         "type": "git",
         "url": "https://github.com/recca0120/vscode-phpunit"
     },
-    "publisher": "vscode-phpunit",
-    "categories": [],
+    "publisher": "recca0120",
+    "categories": [
+        "Debuggers",
+        "Programming Languages",
+        "Other"
+    ],
     "keywords": [
-        "multi-root ready"
+        "language server protocol",
+        "phpunit"
     ],
     "engines": {
         "vscode": "^1.33.1"

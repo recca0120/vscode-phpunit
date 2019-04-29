@@ -1,38 +1,59 @@
-# LSP Example
+# phpunit-language-server
 
-Heavily documented sample code for https://code.visualstudio.com/api/language-extensions/language-server-extension-guide
+phpunit-language-server is a server implementation that provides PHPUnit smartness.
+The server adheres to the [language server protocol](https://github.com/Microsoft/language-server-protocol)
+and can be used with any editor that supports the protocol. The server utilizes [PHPUnit](https://phpunit.de).
 
-## Functionality
+## Clients
 
-This Language Server works for plain text file. It has the following language features:
-- Completions
-- Diagnostics regenerated on each file change or configuration change
+These clients are available:
+* [VS Code](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 
-It also includes an End-to-End test.
+## VS Code Features
 
-## Structure
+## Features
 
+In the current implementation we support following language features.
+
+- [x] Code lens
+
+![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/codelens.png)
+
+- [x] Document Symbol
+
+![CodeLens](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/documentsymbol.gif)
+
+- [x] Publish Diagnostics
+
+![Publish Diagnostics](https://github.com/recca0120/vscode-phpunit/raw/master/screenshots/diagnostic.gif)
+
+- [x] Code completion
+    - testcase
+    - test
+    - setup
+    - teardown
+    - more...
+
+## Features planned
+
+- As you type reporting of parsing and compilation errors
+
+## Installation
+
+```bash
+npm i -g phpunit-language-server
 ```
-.
-├── client // Language Client
-│   ├── src
-│   │   ├── test // End to End tests for Language Client / Server
-│   │   └── extension.ts // Language Client entry point
-├── package.json // The extension manifest.
-└── server // Language Server
-    └── src
-        └── server.ts // Language Server entry point
+
+## Execute
+
+```bash
+phpunit-language-server
 ```
 
-## Running the Sample
+## Feedback
 
-- Run `npm install` in this folder. This installs all necessary npm modules in both the client and server folder
-- Open VS Code on this folder.
-- Press Ctrl+Shift+B to compile the client and server.
-- Switch to the Debug viewlet.
-- Select `Launch Client` from the drop down.
-- Run the launch config.
-- If you want to debug the server as well use the launch configuration `Attach to Server`
-- In the [Extension Development Host] instance of VSCode, open a document in 'plain text' language mode.
-  - Type `j` or `t` to see `Javascript` and `TypeScript` completion.
-  - Enter text content such as `AAA aaa BBB`. The extension will emit diagnostics for all words in all-uppercase.
+* File a bug in [GitHub Issues](https://github.com/recca0120/phpunit-language-server/issues).
+
+## License
+
+MIT, See [LICENSE](https://github.com/recca0120/vscode-phpunit/blob/master/License.txt) file.
