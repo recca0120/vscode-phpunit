@@ -119,6 +119,24 @@
                             "default": "text"
                         }
                     }
+                },
+                "phpunit.php": {
+                    "type": "string",
+                    "description": "Absolute path to php. Fallback to global php if it exists on the command line."
+                },
+                "phpunit.phpunit": {
+                    "type": "string",
+                    "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line"
+                },
+                "phpunit.args": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist"
+                },
+                "phpunit.clearOutputOnRun": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "True will clear the output when we run a new test. False will leave the output after every test."
                 }
             }
         },

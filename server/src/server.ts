@@ -96,12 +96,20 @@ connection.onInitialized(() => {
 // The example settings
 interface PHPUnitSettings {
     maxNumberOfProblems: number;
+    php: string;
+    phpunit: string;
+    args: string[];
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: PHPUnitSettings = { maxNumberOfProblems: 1000 };
+const defaultSettings: PHPUnitSettings = {
+    maxNumberOfProblems: 1000,
+    php: '',
+    phpunit: '',
+    args: [],
+};
 let globalSettings: PHPUnitSettings = defaultSettings;
 
 // Cache the settings of all open documents
@@ -161,14 +169,20 @@ connection.onCodeLens((params: CodeLensParams) => {
 
 const runner = new TestRunner();
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    connection.sendNotification(WillSaveTextDocumentNotification.type, {});
-    connection.sendNotification('before');
-
     const args = params.arguments;
     const textDocument: TextDocument = documents.get(args[0]);
     const position: Position = args[1];
 
+    const settings = await getDocumentSettings(textDocument.uri);
+
+    connection.sendNotification(WillSaveTextDocumentNotification.type, {});
+    connection.sendNotification('before');
+
     try {
+        runner
+            .setPhpBinary(settings.php)
+            .setPhpUnitBinary(settings.phpunit)
+            .setArgs(settings.args);
         const response = await runner.run(
             params.command,
             textDocument,
