@@ -9,12 +9,16 @@ describe('ProblemMatcher', () => {
 
     let problems = [];
 
+    function getProblem(name: string) {
+        return problems.find(problem => problem.name.indexOf(name) !== -1);
+    }
+
     beforeEach(async () => {
         problems = await problemMatcher.parse(contents);
     });
 
     it('test_isnt_same', () => {
-        const problem = problems[0];
+        const problem = getProblem('AssertionsTest::test_isnt_same');
 
         expect(problem).toEqual({
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_isnt_same',
@@ -55,7 +59,7 @@ describe('ProblemMatcher', () => {
     });
 
     it('addition_provider', () => {
-        const problem = problems[1];
+        const problem = getProblem('AssertionsTest::addition_provider');
 
         expect(problem).toEqual({
             name:
@@ -87,7 +91,7 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_failed', () => {
-        const problem = problems[2];
+        const problem = getProblem('AssertionsTest::test_failed');
 
         expect(problem).toEqual({
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
@@ -118,7 +122,7 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_risky', () => {
-        const problem = problems[3];
+        const problem = getProblem('AssertionsTest::test_risky');
 
         expect(problem).toEqual({
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_risky',
@@ -149,7 +153,7 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_incomplete', () => {
-        const problem = problems[4];
+        const problem = getProblem('AssertionsTest::test_incomplete');
 
         expect(problem).toEqual({
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_incomplete',
@@ -180,7 +184,7 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_skipped', () => {
-        const problem = problems[5];
+        const problem = getProblem('AssertionsTest::test_skipped');
 
         expect(problem).toEqual({
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
@@ -208,5 +212,56 @@ describe('ProblemMatcher', () => {
         expect(problem.message).toContain(
             'The MySQLi extension is not available.'
         );
+    });
+
+    it('test_sum_item_method_not_call', () => {
+        const problem = getProblem(
+            'CalculatorTest::test_sum_item_method_not_call'
+        );
+
+        expect(problem).toEqual({
+            name:
+                'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call',
+            namespace: 'Recca0120\\VSCode\\Tests',
+            class: 'CalculatorTest',
+            method: 'test_sum_item_method_not_call',
+            status: PHPUnitStatus.FAILURE,
+            uri: projectPath(
+                'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php'
+            ),
+            range: {
+                end: { character: 45, line: 28 },
+                start: { character: 8, line: 28 },
+            },
+            message: jasmine.anything(),
+            files: jasmine.anything(),
+        });
+
+        expect(problem.message).toContain(
+            `Mockery\\Exception\\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called
+ exactly 1 times but called 0 times.`
+        );
+    });
+
+    it('test_throw_exception', () => {
+        const problem = getProblem('CalculatorTest::test_throw_exception');
+
+        expect(problem).toEqual({
+            name:
+                'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+            namespace: 'Recca0120\\VSCode\\Tests',
+            class: 'CalculatorTest',
+            method: 'test_throw_exception',
+            status: PHPUnitStatus.FAILURE,
+            uri: projectPath('tests/CalculatorTest.php'),
+            range: {
+                end: { character: 38, line: 53 },
+                start: { character: 8, line: 53 },
+            },
+            message: jasmine.anything(),
+            files: jasmine.anything(),
+        });
+
+        expect(problem.message).toContain('Exception:');
     });
 });

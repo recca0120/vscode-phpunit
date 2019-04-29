@@ -135,12 +135,18 @@ export class ProblemMatcher extends ProblemMatcherBase<Problem> {
         const problems = await super.parse(contents);
 
         return problems.map(problem => {
-            return Object.assign(
-                problem,
-                problem.files.reverse().find(file => {
-                    return !/vendor\//.test(file.uri);
-                })
-            );
+            let location = problem.files
+                .slice()
+                .reverse()
+                .find(file => {
+                    return new RegExp(`${problem.class}$`).test(file.uri);
+                });
+
+            if (!location) {
+                location = problem.files[problem.files.length - 1];
+            }
+
+            return Object.assign(problem, location);
         });
     }
 
