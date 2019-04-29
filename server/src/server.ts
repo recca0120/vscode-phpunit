@@ -195,20 +195,28 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
                         ? diagnosticGroup.get(problem.location.uri)
                         : [];
 
-                    diagnostics.push({
+                    const diagnostic: Diagnostic = {
                         severity: DiagnosticSeverity.Error,
                         range: problem.location.range,
                         message: problem.message.trim(),
-                        relatedInformation: problem.files.map(file => {
-                            return DiagnosticRelatedInformation.create(
-                                file,
-                                problem.message.trim()
-                            );
-                        }),
                         source: 'PHPUnit',
-                    });
+                    };
 
-                    diagnosticGroup.set(problem.location.uri, diagnostics);
+                    if (hasDiagnosticRelatedInformationCapability) {
+                        diagnostic.relatedInformation = problem.files.map(
+                            file => {
+                                return DiagnosticRelatedInformation.create(
+                                    file,
+                                    problem.message.trim()
+                                );
+                            }
+                        );
+                    }
+
+                    diagnosticGroup.set(
+                        problem.location.uri,
+                        diagnostics.concat([diagnostic])
+                    );
 
                     return diagnosticGroup;
                 },
