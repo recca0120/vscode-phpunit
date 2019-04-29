@@ -144,7 +144,7 @@ function getDocumentSettings(resource: string): Thenable<PHPUnitSettings> {
 // Only keep settings for open documents
 documents.onDidClose(e => {
     documentSettings.delete(e.document.uri);
-    connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
+    // connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 });
 
 // The content of a text document has changed. This event is emitted

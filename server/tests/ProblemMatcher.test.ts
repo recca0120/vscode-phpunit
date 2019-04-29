@@ -230,7 +230,7 @@ describe('ProblemMatcher', () => {
                 'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php'
             ),
             range: {
-                end: { character: 45, line: 28 },
+                end: { character: 35, line: 28 },
                 start: { character: 8, line: 28 },
             },
             message: jasmine.anything(),

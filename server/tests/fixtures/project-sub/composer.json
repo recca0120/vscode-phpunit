@@ -7,13 +7,15 @@
         }
     },
     "require": {
-        "phpunit/phpunit": "^8.1",
-        "mockery/mockery": "^1.2"
+        "phpunit/phpunit": "^8.1"
     },
     "authors": [
         {
             "name": "recca0120",
             "email": "recca0120@gmail.com"
         }
-    ]
+    ],
+    "require-dev": {
+        "mockery/mockery": "^1.2"
+    }
 }
