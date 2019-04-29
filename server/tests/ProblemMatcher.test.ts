@@ -22,12 +22,10 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_isnt_same',
             status: PHPUnitStatus.FAILURE,
-            location: {
-                uri: projectPath('tests/AssertionsTest.php'),
-                range: {
-                    end: { character: 76, line: 26 },
-                    start: { character: 8, line: 26 },
-                },
+            uri: projectPath('tests/AssertionsTest.php'),
+            range: {
+                end: { character: 76, line: 26 },
+                start: { character: 8, line: 26 },
             },
             message: jasmine.anything(),
             files: [
@@ -66,12 +64,10 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'addition_provider',
             status: PHPUnitStatus.FAILURE,
-            location: {
-                uri: projectPath('tests/AssertionsTest.php'),
-                range: {
-                    end: { character: 48, line: 58 },
-                    start: { character: 8, line: 58 },
-                },
+            uri: projectPath('tests/AssertionsTest.php'),
+            range: {
+                end: { character: 48, line: 58 },
+                start: { character: 8, line: 58 },
             },
             message: jasmine.anything(),
             files: [
@@ -99,12 +95,10 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_failed',
             status: PHPUnitStatus.FAILURE,
-            location: {
-                uri: projectPath('tests/AssertionsTest.php'),
-                range: {
-                    end: { character: 33, line: 21 },
-                    start: { character: 8, line: 21 },
-                },
+            uri: projectPath('tests/AssertionsTest.php'),
+            range: {
+                end: { character: 33, line: 21 },
+                start: { character: 8, line: 21 },
             },
             message: jasmine.anything(),
             files: [
@@ -132,12 +126,10 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_risky',
             status: PHPUnitStatus.RISKY,
-            location: {
-                uri: projectPath('tests/AssertionsTest.php'),
-                range: {
-                    end: { character: 32, line: 29 },
-                    start: { character: 4, line: 29 },
-                },
+            uri: projectPath('tests/AssertionsTest.php'),
+            range: {
+                end: { character: 32, line: 29 },
+                start: { character: 4, line: 29 },
             },
             message: jasmine.anything(),
             files: [
@@ -165,12 +157,10 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_incomplete',
             status: PHPUnitStatus.INCOMPLETE,
-            location: {
-                uri: projectPath('tests/AssertionsTest.php'),
-                range: {
-                    end: { character: 77, line: 49 },
-                    start: { character: 8, line: 49 },
-                },
+            uri: projectPath('tests/AssertionsTest.php'),
+            range: {
+                end: { character: 77, line: 49 },
+                start: { character: 8, line: 49 },
             },
             message: jasmine.anything(),
             files: [
@@ -198,12 +188,10 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_skipped',
             status: PHPUnitStatus.SKIPPED,
-            location: {
-                uri: projectPath('tests/AssertionsTest.php'),
-                range: {
-                    end: { character: 73, line: 44 },
-                    start: { character: 8, line: 44 },
-                },
+            uri: projectPath('tests/AssertionsTest.php'),
+            range: {
+                end: { character: 73, line: 44 },
+                start: { character: 8, line: 44 },
             },
             message: jasmine.anything(),
             files: [

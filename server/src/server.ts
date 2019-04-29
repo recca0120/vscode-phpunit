@@ -12,9 +12,6 @@ import {
     ProposedFeatures,
     InitializeParams,
     DidChangeConfigurationNotification,
-    CompletionItem,
-    CompletionItemKind,
-    TextDocumentPositionParams,
     CodeLensParams,
     ExecuteCommandParams,
     Position,
@@ -146,7 +143,8 @@ function getDocumentSettings(resource: string): Thenable<PHPUnitSettings> {
 
 // Only keep settings for open documents
 documents.onDidClose(e => {
-    // documentSettings.delete(e.document.uri);
+    documentSettings.delete(e.document.uri);
+    connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 });
 
 // The content of a text document has changed. This event is emitted
@@ -203,15 +201,13 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
                     diagnosticGroup: Map<string, Diagnostic[]>,
                     problem: Problem
                 ) => {
-                    const diagnostics = diagnosticGroup.has(
-                        problem.location.uri
-                    )
-                        ? diagnosticGroup.get(problem.location.uri)
+                    const diagnostics = diagnosticGroup.has(problem.uri)
+                        ? diagnosticGroup.get(problem.uri)
                         : [];
 
                     const diagnostic: Diagnostic = {
                         severity: DiagnosticSeverity.Error,
-                        range: problem.location.range,
+                        range: problem.range,
                         message: problem.message.trim(),
                         source: 'PHPUnit',
                     };
@@ -228,7 +224,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
                     }
 
                     diagnosticGroup.set(
-                        problem.location.uri,
+                        problem.uri,
                         diagnostics.concat([diagnostic])
                     );
 

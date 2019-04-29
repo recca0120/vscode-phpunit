@@ -96,7 +96,8 @@ export interface Problem {
     class: string;
     method: string;
     status: PHPUnitStatus;
-    location: Location;
+    uri: string;
+    range: Range;
     message: string;
     files: Location[];
 }
@@ -134,11 +135,12 @@ export class ProblemMatcher extends ProblemMatcherBase<Problem> {
         const problems = await super.parse(contents);
 
         return problems.map(problem => {
-            problem.location = problem.files.reverse().find(file => {
-                return !/vendor\//.test(file.uri);
-            });
-
-            return problem;
+            return Object.assign(
+                problem,
+                problem.files.reverse().find(file => {
+                    return !/vendor\//.test(file.uri);
+                })
+            );
         });
     }
 
@@ -156,7 +158,8 @@ export class ProblemMatcher extends ProblemMatcherBase<Problem> {
             class: '',
             method: '',
             status: this.currentStatus,
-            location: Location.create('', Range.create(0, 0, 0, 0)),
+            uri: '',
+            range: Range.create(0, 0, 0, 0),
             message: '',
             files: [],
         };
