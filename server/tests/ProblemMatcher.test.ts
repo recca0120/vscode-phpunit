@@ -1,16 +1,16 @@
 import { readFileSync } from 'fs';
+import { PHPUnitStatus, ProblemMatcher } from '../src/ProblemMatcher';
 import { fixturePath, projectPath } from './helpers';
-import { ProblemMatcher, ProblemStatus } from '../src/ProblemMatcher';
 
 describe('ProblemMatcher', () => {
     const file = fixturePath('test-result.txt');
-    const response: string = readFileSync(file).toString('UTF-8');
+    const contents: string = readFileSync(file).toString('UTF-8');
     const problemMatcher = new ProblemMatcher();
 
     let problems = [];
 
     beforeEach(async () => {
-        problems = await problemMatcher.parse(response);
+        problems = await problemMatcher.parse(contents);
     });
 
     it('test_isnt_same', () => {
@@ -21,7 +21,14 @@ describe('ProblemMatcher', () => {
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_isnt_same',
-            status: ProblemStatus.FAILURE,
+            status: PHPUnitStatus.FAILURE,
+            location: {
+                uri: projectPath('tests/AssertionsTest.php'),
+                range: {
+                    end: { character: 76, line: 26 },
+                    start: { character: 8, line: 26 },
+                },
+            },
             message: jasmine.anything(),
             files: [
                 {
@@ -58,7 +65,14 @@ describe('ProblemMatcher', () => {
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'addition_provider',
-            status: ProblemStatus.FAILURE,
+            status: PHPUnitStatus.FAILURE,
+            location: {
+                uri: projectPath('tests/AssertionsTest.php'),
+                range: {
+                    end: { character: 48, line: 58 },
+                    start: { character: 8, line: 58 },
+                },
+            },
             message: jasmine.anything(),
             files: [
                 {
@@ -84,7 +98,14 @@ describe('ProblemMatcher', () => {
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_failed',
-            status: ProblemStatus.FAILURE,
+            status: PHPUnitStatus.FAILURE,
+            location: {
+                uri: projectPath('tests/AssertionsTest.php'),
+                range: {
+                    end: { character: 33, line: 21 },
+                    start: { character: 8, line: 21 },
+                },
+            },
             message: jasmine.anything(),
             files: [
                 {
@@ -110,7 +131,14 @@ describe('ProblemMatcher', () => {
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_risky',
-            status: ProblemStatus.RISKY,
+            status: PHPUnitStatus.RISKY,
+            location: {
+                uri: projectPath('tests/AssertionsTest.php'),
+                range: {
+                    end: { character: 32, line: 29 },
+                    start: { character: 4, line: 29 },
+                },
+            },
             message: jasmine.anything(),
             files: [
                 {
@@ -136,7 +164,14 @@ describe('ProblemMatcher', () => {
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_incomplete',
-            status: ProblemStatus.INCOMPLETE,
+            status: PHPUnitStatus.INCOMPLETE,
+            location: {
+                uri: projectPath('tests/AssertionsTest.php'),
+                range: {
+                    end: { character: 77, line: 49 },
+                    start: { character: 8, line: 49 },
+                },
+            },
             message: jasmine.anything(),
             files: [
                 {
@@ -162,7 +197,14 @@ describe('ProblemMatcher', () => {
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_skipped',
-            status: ProblemStatus.SKIPPED,
+            status: PHPUnitStatus.SKIPPED,
+            location: {
+                uri: projectPath('tests/AssertionsTest.php'),
+                range: {
+                    end: { character: 73, line: 44 },
+                    start: { character: 8, line: 44 },
+                },
+            },
             message: jasmine.anything(),
             files: [
                 {

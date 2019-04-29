@@ -21,6 +21,7 @@ import {
     WillSaveTextDocumentNotification,
     MessageType,
     LogMessageNotification,
+    DiagnosticRelatedInformation,
 } from 'vscode-languageserver';
 import Parser, { Test } from './Parser';
 import { TestRunner } from './TestRunner';
@@ -188,19 +189,26 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
                     diagnosticGroup: Map<string, Diagnostic[]>,
                     problem: Problem
                 ) => {
-                    const file = problem.files[0];
-                    const diagnostics = diagnosticGroup.has(file.uri)
-                        ? diagnosticGroup.get(file.uri)
+                    const diagnostics = diagnosticGroup.has(
+                        problem.location.uri
+                    )
+                        ? diagnosticGroup.get(problem.location.uri)
                         : [];
 
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
-                        range: file.range,
-                        message: problem.message,
+                        range: problem.location.range,
+                        message: problem.message.trim(),
+                        relatedInformation: problem.files.map(file => {
+                            return DiagnosticRelatedInformation.create(
+                                file,
+                                problem.message.trim()
+                            );
+                        }),
                         source: 'PHPUnit',
                     });
 
-                    diagnosticGroup.set(file.uri, diagnostics);
+                    diagnosticGroup.set(problem.location.uri, diagnostics);
 
                     return diagnosticGroup;
                 },
