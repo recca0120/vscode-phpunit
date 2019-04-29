@@ -4,7 +4,7 @@
     "author": "recca0120",
     "license": "MIT",
     "icon": "client/images/icon.png",
-    "version": "2.0.0-alpha",
+    "version": "2.0.0",
     "preview": true,
     "repository": {
         "type": "git",
