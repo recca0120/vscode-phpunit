@@ -1,6 +1,6 @@
 {
     "name": "lsp-phpunit-server",
-    "description": "Example implementation of a language server in node.",
+    "description": "PHPUnit Language Server.",
     "version": "1.0.0",
     "author": "recca0120",
     "license": "MIT",
@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "php-parser": "^3.0.0-prerelease.8",
-        "vscode-languageserver": "^5.2.1"
+        "vscode-languageserver": "^4.1.3"
     },
     "scripts": {}
 }

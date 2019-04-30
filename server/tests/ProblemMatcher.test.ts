@@ -3,7 +3,8 @@ import { PHPUnitStatus, ProblemMatcher } from '../src/ProblemMatcher';
 import { fixturePath, projectPath } from './helpers';
 
 describe('ProblemMatcher', () => {
-    const file = fixturePath('test-result.txt');
+    const scheme = 'file';
+    const file = fixturePath('test-result.txt').fsPath;
     const contents: string = readFileSync(file).toString('UTF-8');
     const problemMatcher = new ProblemMatcher();
 
@@ -26,7 +27,9 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_isnt_same',
             status: PHPUnitStatus.FAILURE,
-            uri: projectPath('tests/AssertionsTest.php'),
+            uri: projectPath('tests/AssertionsTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 76, line: 26 },
                 start: { character: 8, line: 26 },
@@ -34,7 +37,9 @@ describe('ProblemMatcher', () => {
             message: jasmine.anything(),
             files: [
                 {
-                    uri: projectPath('tests/AssertionsTest.php'),
+                    uri: projectPath('tests/AssertionsTest.php')
+                        .with({ scheme })
+                        .toString(),
                     range: {
                         end: { character: 76, line: 26 },
                         start: { character: 8, line: 26 },
@@ -68,7 +73,9 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'addition_provider',
             status: PHPUnitStatus.FAILURE,
-            uri: projectPath('tests/AssertionsTest.php'),
+            uri: projectPath('tests/AssertionsTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 48, line: 58 },
                 start: { character: 8, line: 58 },
@@ -76,7 +83,9 @@ describe('ProblemMatcher', () => {
             message: jasmine.anything(),
             files: [
                 {
-                    uri: projectPath('tests/AssertionsTest.php'),
+                    uri: projectPath('tests/AssertionsTest.php')
+                        .with({ scheme })
+                        .toString(),
                     range: {
                         end: { character: 48, line: 58 },
                         start: { character: 8, line: 58 },
@@ -99,7 +108,9 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_failed',
             status: PHPUnitStatus.FAILURE,
-            uri: projectPath('tests/AssertionsTest.php'),
+            uri: projectPath('tests/AssertionsTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 33, line: 21 },
                 start: { character: 8, line: 21 },
@@ -107,7 +118,9 @@ describe('ProblemMatcher', () => {
             message: jasmine.anything(),
             files: [
                 {
-                    uri: projectPath('tests/AssertionsTest.php'),
+                    uri: projectPath('tests/AssertionsTest.php')
+                        .with({ scheme })
+                        .toString(),
                     range: {
                         end: { character: 33, line: 21 },
                         start: { character: 8, line: 21 },
@@ -130,7 +143,9 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_risky',
             status: PHPUnitStatus.RISKY,
-            uri: projectPath('tests/AssertionsTest.php'),
+            uri: projectPath('tests/AssertionsTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 32, line: 29 },
                 start: { character: 4, line: 29 },
@@ -138,7 +153,9 @@ describe('ProblemMatcher', () => {
             message: jasmine.anything(),
             files: [
                 {
-                    uri: projectPath('tests/AssertionsTest.php'),
+                    uri: projectPath('tests/AssertionsTest.php')
+                        .with({ scheme })
+                        .toString(),
                     range: {
                         end: { character: 32, line: 29 },
                         start: { character: 4, line: 29 },
@@ -161,7 +178,9 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_incomplete',
             status: PHPUnitStatus.INCOMPLETE,
-            uri: projectPath('tests/AssertionsTest.php'),
+            uri: projectPath('tests/AssertionsTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 77, line: 49 },
                 start: { character: 8, line: 49 },
@@ -169,7 +188,9 @@ describe('ProblemMatcher', () => {
             message: jasmine.anything(),
             files: [
                 {
-                    uri: projectPath('tests/AssertionsTest.php'),
+                    uri: projectPath('tests/AssertionsTest.php')
+                        .with({ scheme })
+                        .toString(),
                     range: {
                         end: { character: 77, line: 49 },
                         start: { character: 8, line: 49 },
@@ -192,7 +213,9 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_skipped',
             status: PHPUnitStatus.SKIPPED,
-            uri: projectPath('tests/AssertionsTest.php'),
+            uri: projectPath('tests/AssertionsTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 73, line: 44 },
                 start: { character: 8, line: 44 },
@@ -200,7 +223,9 @@ describe('ProblemMatcher', () => {
             message: jasmine.anything(),
             files: [
                 {
-                    uri: projectPath('tests/AssertionsTest.php'),
+                    uri: projectPath('tests/AssertionsTest.php')
+                        .with({ scheme })
+                        .toString(),
                     range: {
                         end: { character: 73, line: 44 },
                         start: { character: 8, line: 44 },
@@ -228,9 +253,11 @@ describe('ProblemMatcher', () => {
             status: PHPUnitStatus.FAILURE,
             uri: projectPath(
                 'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php'
-            ),
+            )
+                .with({ scheme })
+                .toString(),
             range: {
-                end: { character: 35, line: 28 },
+                end: { character: 45, line: 28 },
                 start: { character: 8, line: 28 },
             },
             message: jasmine.anything(),
@@ -253,7 +280,9 @@ describe('ProblemMatcher', () => {
             class: 'CalculatorTest',
             method: 'test_throw_exception',
             status: PHPUnitStatus.FAILURE,
-            uri: projectPath('tests/CalculatorTest.php'),
+            uri: projectPath('tests/CalculatorTest.php')
+                .with({ scheme })
+                .toString(),
             range: {
                 end: { character: 38, line: 53 },
                 start: { character: 8, line: 53 },

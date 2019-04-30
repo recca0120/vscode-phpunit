@@ -16,4 +16,4 @@ client/node_modules/**
 coverage/**
 !server/tests/**
 jest.config.js
-README.md
+*.vsix

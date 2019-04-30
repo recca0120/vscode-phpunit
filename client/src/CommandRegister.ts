@@ -1,7 +1,7 @@
 import { TextEditor } from 'vscode';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
-import { SocketOutputChannel } from './SocketOutputChannel';
+// import { SocketOutputChannel } from './SocketOutputChannel';
 
 export class CommandRegister {
     private enabled = false;
@@ -31,12 +31,12 @@ export class CommandRegister {
         return this.registerPHPUnitCommand('phpunit.test.last');
     }
 
-    registerStartStraming(outputChannel: SocketOutputChannel) {
-        return this.commands.registerCommand('phpunit.startStreaming', () => {
-            // Establish websocket connection
-            outputChannel.listen();
-        });
-    }
+    // registerStartStraming(outputChannel: SocketOutputChannel) {
+    //     return this.commands.registerCommand('phpunit.startStreaming', () => {
+    //         // Establish websocket connection
+    //         outputChannel.listen();
+    //     });
+    // }
 
     private registerPHPUnitCommand(command: string) {
         return this.commands.registerTextEditorCommand(

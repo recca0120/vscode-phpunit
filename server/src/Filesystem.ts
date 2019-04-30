@@ -152,7 +152,7 @@ export class Filesystem {
         uri: PathLike | URI,
         lineNumber: number
     ): Promise<Location> {
-        uri = this.asUri(uri);
+        uri = this.asUri(uri).with({ scheme: 'file' });
 
         return Location.create(
             uri.toString(),

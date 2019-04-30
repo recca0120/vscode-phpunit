@@ -6,7 +6,7 @@ import { projectPath } from './helpers';
 
 describe('Parser', () => {
     const parser = new Parser();
-    const file = projectPath('tests/AssertionsTest.php');
+    const file = projectPath('tests/AssertionsTest.php').fsPath;
     let index = 0;
 
     const getTest = async (key: number) => {

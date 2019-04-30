@@ -4,14 +4,16 @@ import { fixturePath, projectPath } from './helpers';
 
 describe('Filesystem', () => {
     const systemPath = new Env(
-        [fixturePath('bin'), fixturePath('usr/local/bin')].join(':'),
+        [fixturePath('bin').fsPath, fixturePath('usr/local/bin').fsPath].join(
+            ':'
+        ),
         ':'
     );
 
     const files = new Filesystem(systemPath);
 
     it('get content from file', async () => {
-        const uri = projectPath('tests/AssertionsTest.php');
+        const uri = projectPath('tests/AssertionsTest.php').fsPath;
 
         const contents = await files.get(uri);
 
@@ -19,7 +21,7 @@ describe('Filesystem', () => {
     });
 
     it('put content to file', async () => {
-        const uri = fixturePath('write-file.txt');
+        const uri = fixturePath('write-file.txt').fsPath;
 
         expect(await files.put(uri, 'write file')).toBeTruthy();
 
@@ -27,25 +29,32 @@ describe('Filesystem', () => {
     });
 
     it('which ls', async () => {
-        expect(await files.which(['ls.exe', 'ls'])).toBe(fixturePath('bin/ls'));
+        expect(await files.which(['ls.exe', 'ls'])).toBe(
+            fixturePath('bin/ls').fsPath
+        );
     });
 
     it('which cmd.cmd', async () => {
         const systemPath = new Env(
-            [fixturePath('bin'), fixturePath('usr/local/bin')].join(';'),
+            [
+                fixturePath('bin').fsPath,
+                fixturePath('usr/local/bin').fsPath,
+            ].join(';'),
             ';',
             ['.cmd']
         );
         const files = new Filesystem(systemPath);
         expect(await files.which('cmd')).toBe(
-            fixturePath('usr/local/bin/cmd.cmd')
+            fixturePath('usr/local/bin/cmd.cmd').fsPath
         );
     });
 
     it('findUp types/php-parser.d.ts', async () => {
         const file = await files.findUp('types/php-parser.d.ts', __filename);
 
-        expect(file).toContain(fixturePath('../../types/php-parser.d.ts'));
+        expect(file).toContain(
+            fixturePath('../../types/php-parser.d.ts').fsPath
+        );
     });
 
     it('lineAt', async () => {
@@ -57,7 +66,7 @@ describe('Filesystem', () => {
     });
 
     it('lineRange', async () => {
-        const uri = projectPath('tests/AssertionsTest.php');
+        const uri = projectPath('tests/AssertionsTest.php').fsPath;
 
         const range = await files.lineRange(uri, 13);
 
@@ -73,7 +82,7 @@ describe('Filesystem', () => {
         const range = await files.lineLocation(uri, 13);
 
         expect(range).toEqual({
-            uri: files.asUri(uri).toString(),
+            uri: uri.with({ scheme: 'file' }).toString(),
             range: {
                 end: { line: 13, character: 32 },
                 start: { line: 13, character: 8 },

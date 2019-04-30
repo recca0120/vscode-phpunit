@@ -110,29 +110,29 @@ describe('commands', () => {
         }, expected);
     });
 
-    it('register start streaming', () => {
-        const commands: any = {
-            registerCommand: () => {},
-        };
-        spyOn(commands, 'registerCommand').and.callFake(
-            (command: any, cb: any) => {
-                cb();
-            }
-        );
+    // it('register start streaming', () => {
+    //     const commands: any = {
+    //         registerCommand: () => {},
+    //     };
+    //     spyOn(commands, 'registerCommand').and.callFake(
+    //         (command: any, cb: any) => {
+    //             cb();
+    //         }
+    //     );
 
-        const outputChannel: any = {
-            listen: () => {},
-        };
+    //     const outputChannel: any = {
+    //         listen: () => {},
+    //     };
 
-        spyOn(outputChannel, 'listen');
+    //     spyOn(outputChannel, 'listen');
 
-        const commandRegister = new CommandRegister(givenClient(), commands);
-        commandRegister.registerStartStraming(outputChannel);
+    //     const commandRegister = new CommandRegister(givenClient(), commands);
+    //     commandRegister.registerStartStraming(outputChannel);
 
-        expect(commands.registerCommand).toBeCalledWith(
-            'phpunit.startStreaming',
-            jasmine.any(Function)
-        );
-        expect(outputChannel.listen).toBeCalled();
-    });
+    //     expect(commands.registerCommand).toBeCalledWith(
+    //         'phpunit.startStreaming',
+    //         jasmine.any(Function)
+    //     );
+    //     expect(outputChannel.listen).toBeCalled();
+    // });
 });

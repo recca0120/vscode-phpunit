@@ -14,16 +14,17 @@ import {
     WillSaveTextDocumentNotification,
 } from 'vscode-languageclient';
 import { CommandRegister } from './CommandRegister';
-import { SocketOutputChannel } from './SocketOutputChannel';
+// import { SocketOutputChannel } from './SocketOutputChannel';
 import { Notify } from './Notify';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-    const outputChannel: SocketOutputChannel = new SocketOutputChannel(
-        window.createOutputChannel('PHPUnit Language Server'),
-        workspace.getConfiguration('phpunit').get('port', 7000)
-    );
+    // const outputChannel: SocketOutputChannel = new SocketOutputChannel(
+    //     window.createOutputChannel('PHPUnit Language Server'),
+    //     workspace.getConfiguration('phpunit').get('port', 7000)
+    // );
+    const outputChannel = window.createOutputChannel('PHPUnit Language Server');
 
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(
@@ -71,9 +72,9 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(commandRegister.registerRunFile());
     context.subscriptions.push(commandRegister.registerRunNearest());
     context.subscriptions.push(commandRegister.registerRunLast());
-    context.subscriptions.push(
-        commandRegister.registerStartStraming(outputChannel)
-    );
+    // context.subscriptions.push(
+    //     commandRegister.registerStartStraming(outputChannel)
+    // );
 
     client.onReady().then(() => {
         client.onNotification(WillSaveTextDocumentNotification.type, () => {

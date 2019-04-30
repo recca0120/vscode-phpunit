@@ -6,7 +6,7 @@ describe('Process', () => {
         const process = new Process();
         const command = {
             title: 'phpunit',
-            command: projectPath('vendor', 'bin', 'phpunit'),
+            command: projectPath('vendor', 'bin', 'phpunit').fsPath,
             arguments: ['--configuration', projectPath('phpunit.xml')],
         };
 
