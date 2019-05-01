@@ -27,12 +27,12 @@ describe('TestRunner', () => {
     });
 
     it('test suite', async () => {
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(await testRunner.run('suite')).toEqual('PHPUnit');
-        expect(files.findUp).toBeCalledWith(['php']);
-        expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(files.findup).toBeCalledWith(['php']);
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
@@ -41,14 +41,14 @@ describe('TestRunner', () => {
     });
 
     it('test directory', async () => {
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(await testRunner.run('directory', textDocument)).toEqual(
             'PHPUnit'
         );
-        expect(files.findUp).toBeCalledWith(['php']);
-        expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(files.findup).toBeCalledWith(['php']);
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
@@ -57,12 +57,12 @@ describe('TestRunner', () => {
     });
 
     it('test file', async () => {
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(await testRunner.run('file', textDocument)).toEqual('PHPUnit');
-        expect(files.findUp).toBeCalledWith(['php']);
-        expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(files.findup).toBeCalledWith(['php']);
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
@@ -72,15 +72,15 @@ describe('TestRunner', () => {
 
     it('run test nearest method', async () => {
         const position = Position.create(20, 0);
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(await testRunner.run('nearest', textDocument, position)).toEqual(
             'PHPUnit'
         );
 
-        expect(files.findUp).toBeCalledWith(['php']);
-        expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(files.findup).toBeCalledWith(['php']);
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
@@ -95,14 +95,14 @@ describe('TestRunner', () => {
 
     it('run test nearest when not found', async () => {
         const position = Position.create(7, 0);
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(await testRunner.run('nearest', textDocument, position)).toEqual(
             'PHPUnit'
         );
-        expect(files.findUp).toBeCalledWith(['php']);
-        expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(files.findup).toBeCalledWith(['php']);
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
@@ -112,7 +112,7 @@ describe('TestRunner', () => {
 
     it('rerun last test', async () => {
         const position = Position.create(0, 0);
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(
@@ -122,8 +122,8 @@ describe('TestRunner', () => {
         expect(await testRunner.runLast(textDocument, position)).toEqual(
             'PHPUnit'
         );
-        expect(files.findUp).toBeCalledWith(['php']);
-        expect(files.findUp).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(files.findup).toBeCalledWith(['php']);
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
@@ -137,7 +137,7 @@ describe('TestRunner', () => {
     });
 
     it('custom php, phpunit, args', async () => {
-        spyOn(files, 'findUp').and.returnValues('php', 'phpunit');
+        spyOn(files, 'findup').and.returnValues('php', 'phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         testRunner
@@ -145,7 +145,7 @@ describe('TestRunner', () => {
             .setPhpUnitBinary('phpunit')
             .setArgs(['foo', 'bar']);
         expect(await testRunner.run('suite')).toEqual('PHPUnit');
-        expect(files.findUp).not.toBeCalled();
+        expect(files.findup).not.toBeCalled();
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',

@@ -93,17 +93,18 @@ export class Filesystem {
         return await this.find(search, [cwd]);
     }
 
-    async findUp(search: string | string[], cwd: string = process.cwd()) {
-        const paths = cwd
-            .split(/(\\|\/)/g)
-            .filter(segment => !!segment && !/(\\|\/)/.test(segment))
-            .reduce((paths, segment) => {
-                const prev = paths[paths.length - 1] || '';
-                paths[paths.length] = `${prev}/${segment}`;
+    async findup(search: string | string[], cwd: string = process.cwd()) {
+        const paths = [cwd];
 
-                return paths;
-            }, [])
-            .reverse();
+        do {
+            const current = paths[paths.length - 1];
+            const parent = this.dirname(current);
+
+            if (current === parent) {
+                break;
+            }
+            paths.push(parent);
+        } while (true);
 
         return await this.find(search, [cwd].concat(paths));
     }

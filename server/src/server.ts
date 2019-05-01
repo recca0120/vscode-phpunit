@@ -181,6 +181,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             .setPhpBinary(settings.php)
             .setPhpUnitBinary(settings.phpunit)
             .setArgs(settings.args);
+
         const response = await runner.run(
             params.command,
             textDocument,

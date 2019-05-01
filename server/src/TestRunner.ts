@@ -89,6 +89,7 @@ export class TestRunner {
         method = method
             .replace(/^phpunit\.lsp\.test\.(run)?/, '')
             .toLowerCase();
+
         method = map[method] || 'runNearest';
 
         return await this[method](textDocument, position);
@@ -118,7 +119,7 @@ export class TestRunner {
             return this.phpBinary;
         }
 
-        return await this.files.findUp(['php']);
+        return await this.files.findup(['php']);
     }
 
     private async getPhpUnitBinary(): Promise<string> {
@@ -126,6 +127,6 @@ export class TestRunner {
             return this.phpUnitBinary;
         }
 
-        return await this.files.findUp(['vendor/bin/phpunit', 'phpunit']);
+        return await this.files.findup(['vendor/bin/phpunit', 'phpunit']);
     }
 }
