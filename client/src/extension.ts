@@ -78,17 +78,19 @@ export function activate(context: ExtensionContext) {
 
     client.onReady().then(() => {
         client.onNotification(WillSaveTextDocumentNotification.type, () => {
-            if (window.activeTextEditor && window.activeTextEditor.document) {
-                if (
-                    workspace
-                        .getConfiguration('phpunit')
-                        .get('clearOutputOnRun', true)
-                ) {
-                    outputChannel.clear();
-                }
-                outputChannel.show(true);
-                window.activeTextEditor.document.save();
+            if (!window.activeTextEditor || !window.activeTextEditor.document) {
+                return;
             }
+            const clearOutpuOnRun = workspace
+                .getConfiguration('phpunit')
+                .get('clearOutputOnRun', true);
+
+            if (clearOutpuOnRun) {
+                outputChannel.clear();
+            }
+
+            outputChannel.show(true);
+            window.activeTextEditor.document.save();
         });
 
         const notify = new Notify(window);

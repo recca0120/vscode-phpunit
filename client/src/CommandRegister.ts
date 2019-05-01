@@ -42,17 +42,19 @@ export class CommandRegister {
         return this.commands.registerTextEditorCommand(
             command,
             (textEditor: TextEditor) => {
-                if (this.isValidTextEditor(textEditor)) {
-                    const document = textEditor.document;
-
-                    this.client.sendRequest(ExecuteCommandRequest.type, {
-                        command: command.replace(/^phpunit/, 'phpunit.lsp'),
-                        arguments: [
-                            document.uri.toString(),
-                            textEditor.selection.active,
-                        ],
-                    });
+                if (this.isValidTextEditor(textEditor) === false) {
+                    return;
                 }
+
+                const document = textEditor.document;
+
+                this.client.sendRequest(ExecuteCommandRequest.type, {
+                    command: command.replace(/^phpunit/, 'phpunit.lsp'),
+                    arguments: [
+                        document.uri.toString(),
+                        textEditor.selection.active,
+                    ],
+                });
             }
         );
     }
