@@ -97,15 +97,21 @@ export class TestRunner {
 
     async doRun(args: string[] = []) {
         this.lastArgs = args;
+        let command = [];
 
-        const [phpBinary, phpUnitBinary] = await Promise.all([
-            await this.getPhpBinary(),
-            await this.getPhpUnitBinary(),
-        ]);
+        const phpBinary = this.getPhpBinary();
 
-        const command = [phpBinary, phpUnitBinary]
-            .concat(this.args, args)
-            .filter(arg => !!arg);
+        if (phpBinary) {
+            command.push(phpBinary);
+        }
+
+        const phpUnitBinary = await this.getPhpUnitBinary();
+
+        if (phpUnitBinary) {
+            command.push(phpUnitBinary);
+        }
+
+        command = command.concat(this.args, args).filter(arg => !!arg);
 
         return await this.process.run({
             title: 'PHPUnit LSP',
@@ -114,12 +120,8 @@ export class TestRunner {
         });
     }
 
-    private async getPhpBinary(): Promise<string> {
-        if (this.phpBinary) {
-            return this.phpBinary;
-        }
-
-        return await this.files.findup(['php']);
+    private getPhpBinary(): string {
+        return this.phpBinary;
     }
 
     private async getPhpUnitBinary(): Promise<string> {

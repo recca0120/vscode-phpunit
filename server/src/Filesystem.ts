@@ -110,7 +110,13 @@ export class Filesystem {
     }
 
     asUri(uri: PathLike | URI) {
-        return URI.isUri(uri) ? uri : URI.parse(uri as string);
+        return URI.isUri(uri)
+            ? uri
+            : URI.parse(
+                  (uri as string).replace(/\\/g, '/').replace(/(\w):/i, m => {
+                      return `/${m[0].toLowerCase()}%3A`;
+                  })
+              );
     }
 
     lineAt(uri: PathLike | URI, lineNumber: number): Promise<string> {
