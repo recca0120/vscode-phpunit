@@ -1,0 +1,28 @@
+language: php
+
+php:
+    - 7.1
+    - 7.2
+
+node_js:
+    - 8
+    - 9
+    - 10
+
+sudo: false
+
+os:
+    - osx
+    - linux
+
+cache:
+    directories:
+        - $HOME/.composer/cache
+        - node_modules
+
+install:
+    - cd server/tests/fixtures/project-sub; composer install;
+    - npm install
+
+script:
+    - npm test --silent
