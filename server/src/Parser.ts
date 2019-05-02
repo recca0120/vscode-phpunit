@@ -96,7 +96,7 @@ class NodeTest implements Test {
         return {
             title: 'Run Test',
             command: 'phpunit.lsp.test.nearest',
-            arguments: [this.uri.fsPath, this.range.start],
+            arguments: [this.uri.toString(), this.range.start],
         };
     }
 

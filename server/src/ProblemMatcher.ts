@@ -139,11 +139,13 @@ export class ProblemMatcher extends ProblemMatcherBase<Problem> {
                 .slice()
                 .reverse()
                 .find(file => {
-                    return new RegExp(`${problem.class}$`).test(file.uri);
+                    return new RegExp(`${problem.class}.php$`).test(file.uri);
                 });
 
             if (!location) {
                 location = problem.files[problem.files.length - 1];
+            } else {
+                problem.files = problem.files.filter(l => l !== location);
             }
 
             return Object.assign(problem, location);

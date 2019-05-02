@@ -6,11 +6,11 @@ import { projectPath } from './helpers';
 
 describe('Parser', () => {
     const parser = new Parser();
-    const file = projectPath('tests/AssertionsTest.php').fsPath;
+    const file = projectPath('tests/AssertionsTest.php');
     let index = 0;
 
     const getTest = async (key: number) => {
-        const tests = await parser.parse(file);
+        const tests = await parser.parse(file.fsPath);
 
         return tests[key];
     };
@@ -25,6 +25,7 @@ describe('Parser', () => {
             range: test.range,
             uri: test.uri,
         };
+
         expect(expectObj).toEqual(
             Object.assign(
                 {
@@ -44,7 +45,7 @@ describe('Parser', () => {
                         }),
                     },
                     uri: jasmine.objectContaining({
-                        fsPath: file,
+                        fsPath: file.fsPath,
                     }),
                 },
                 actual
@@ -112,7 +113,7 @@ describe('Parser', () => {
 
         const tests = parser.parseTextDocument(
             TextDocument.create(
-                file,
+                file.fsPath,
                 'php',
                 1,
                 await new Filesystem().get(file)
@@ -136,7 +137,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.test.nearest',
-                arguments: [file, test.range.start],
+                arguments: [file.toString(), test.range.start],
             },
         });
     });
@@ -149,7 +150,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.test.nearest',
-                arguments: [file, test.range.start],
+                arguments: [file.toString(), test.range.start],
             },
         });
     });
@@ -157,14 +158,14 @@ describe('Parser', () => {
     it('class as arguments', async () => {
         const test = await getTest(0);
 
-        expect(test.asArguments()).toEqual([file]);
+        expect(test.asArguments()).toEqual([file.fsPath]);
     });
 
     it('method as arguments', async () => {
         const test = await getTest(2);
 
         expect(test.asArguments()).toEqual([
-            file,
+            file.fsPath,
             '--filter',
             '^.*::(test_passed|test_failed)( with data set .*)?$',
         ]);

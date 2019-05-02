@@ -1,10 +1,11 @@
 import { join } from 'path';
 import URI from 'vscode-uri';
+import files from '../src/Filesystem';
 
 export function fixturePath(...paths: string[]) {
-    return URI.parse(join(__dirname, 'fixtures', ...paths));
+    return files.asUri(join(__dirname, 'fixtures', ...paths));
 }
 
 export function projectPath(...paths: string[]) {
-    return URI.parse(fixturePath('project-sub', ...paths).fsPath);
+    return files.asUri(fixturePath('project-sub', ...paths).fsPath);
 }

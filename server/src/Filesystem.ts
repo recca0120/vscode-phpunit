@@ -113,7 +113,7 @@ export class Filesystem {
         return URI.isUri(uri)
             ? uri
             : URI.parse(
-                  (uri as string).replace(/\\/g, '/').replace(/(\w):/i, m => {
+                  (uri as string).replace(/\\/g, '/').replace(/^(\w):/i, m => {
                       return `/${m[0].toLowerCase()}%3A`;
                   })
               ).with({ scheme: 'file' });
