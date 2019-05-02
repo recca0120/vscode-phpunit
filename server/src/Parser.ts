@@ -30,9 +30,11 @@ export interface Test {
 
 class NodeTest implements Test {
     constructor(private node: any, private options?: TestOptions) {}
+
     get class(): string {
         return this.options.class;
     }
+
     get depends(): string[] {
         const comments: any[] = this.node.body.leadingComments || [];
         return comments.reduce((depends: any[], comment: any) => {
@@ -43,15 +45,19 @@ class NodeTest implements Test {
             return depends.concat(matches);
         }, []);
     }
+
     get kind(): string {
         return this.node.kind;
     }
+
     get method(): string {
         return this.kind === 'method' ? this.node.name.name : '';
     }
+
     get namespace(): string {
         return this.options.namespace;
     }
+
     get range(): Range {
         const start = this.node.loc.start;
         const startCharacter = this.node.visibility
@@ -67,28 +73,33 @@ class NodeTest implements Test {
             end.column
         );
     }
+
     get uri(): URI {
         return this.options.uri;
     }
+
     isTest(): boolean {
         return (
             this.acceptModifier() &&
             (this.acceptComments() || this.acceptMethodName())
         );
     }
+
     asCodeLens(): CodeLens {
         const codeLens = CodeLens.create(this.range);
         codeLens.command = this.asCommand();
 
         return codeLens;
     }
+
     asCommand(): Command {
         return {
             title: 'Run Test',
             command: 'phpunit.lsp.test.nearest',
-            arguments: [this.uri.toString(), this.range.start],
+            arguments: [this.uri.fsPath, this.range.start],
         };
     }
+
     asArguments(): string[] {
         const args = [this.uri.fsPath];
 
@@ -103,20 +114,24 @@ class NodeTest implements Test {
             `^.*::(${depends})( with data set .*)?$`,
         ]);
     }
+
     private acceptModifier(): boolean {
         return (
             this.node.isStatic === false &&
             ['', 'public'].indexOf(this.node.visibility) !== -1
         );
     }
+
     private acceptComments(): boolean {
         const comments: any[] = this.node.body.leadingComments || [];
         return comments.some((comment: any) => /@test/.test(comment.value));
     }
+
     private acceptMethodName(): boolean {
         return /^test/.test(this.node.name.name);
     }
 }
+
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
     tests(): Test[] {
@@ -141,6 +156,7 @@ class Clazz {
         );
     }
 }
+
 export default class Parser {
     constructor(
         private files = _files,
@@ -197,6 +213,7 @@ export default class Parser {
                 : classes;
         }, []);
     }
+
     private isTestClass(node: any): boolean {
         return node.kind !== 'class' || node.isAbstract ? false : true;
     }

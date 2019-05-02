@@ -90,7 +90,7 @@ describe('Filesystem', () => {
         });
     });
 
-    fit('fix wndows path', () => {
+    it('fix wndows path', () => {
         const uri = files.asUri('D:\\foo\\bar').with({ scheme: 'file' });
 
         expect(uri.toString()).toEqual('file:///d%3A/foo/bar');

@@ -109,14 +109,14 @@ export class Filesystem {
         return await this.find(search, [cwd].concat(paths));
     }
 
-    asUri(uri: PathLike | URI) {
+    asUri(uri: PathLike | URI): URI {
         return URI.isUri(uri)
             ? uri
             : URI.parse(
                   (uri as string).replace(/\\/g, '/').replace(/(\w):/i, m => {
                       return `/${m[0].toLowerCase()}%3A`;
                   })
-              );
+              ).with({ scheme: 'file' });
     }
 
     lineAt(uri: PathLike | URI, lineNumber: number): Promise<string> {
