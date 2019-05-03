@@ -37,6 +37,7 @@ class NodeTest implements Test {
 
     get depends(): string[] {
         const comments: any[] = this.node.body.leadingComments || [];
+
         return comments.reduce((depends: any[], comment: any) => {
             const matches = (comment.value.match(/@depends\s+[^\n\s]+/g) || [])
                 .map((depend: string) => depend.replace('@depends', '').trim())
@@ -81,7 +82,6 @@ class NodeTest implements Test {
     isTest(): boolean {
         return (
             this.acceptModifier() &&
-            this.node.kind === 'method' &&
             (this.acceptComments() || this.acceptMethodName())
         );
     }
@@ -124,7 +124,6 @@ class NodeTest implements Test {
     }
 
     private acceptComments(): boolean {
-        return true;
         const comments: any[] = this.node.body.leadingComments || [];
 
         return comments.some((comment: any) => /@test/.test(comment.value));
@@ -138,10 +137,8 @@ class NodeTest implements Test {
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
-    tests(): Test[] {
-        const methods = this.node.body.filter(
-            (node: any) => node.kind === 'method'
-        );
+    getTests(): Test[] {
+        const methods = this.getMethods();
 
         const tests = methods
             .map((node: any, index: number) =>
@@ -149,9 +146,7 @@ class Clazz {
             )
             .filter((method: NodeTest) => method.isTest());
 
-        return tests.length > 0
-            ? [this.asTest(this.node)].concat(tests)
-            : tests;
+        return tests.length > 0 ? [this.asTest(this.node)].concat(tests) : [];
     }
 
     private asTest(node: any, prev: any = null) {
@@ -162,7 +157,19 @@ class Clazz {
     }
 
     private fixLeadingComments(node: any, prev: any) {
+        if (prev && prev.body && prev.body.trailingComments) {
+            node.body.leadingComments = prev.body.trailingComments;
+        }
+
+        if (node.body && node.leadingComments) {
+            node.body.leadingComments = node.leadingComments;
+        }
+
         return node;
+    }
+
+    private getMethods() {
+        return this.node.body.filter((node: any) => node.kind === 'method');
     }
 }
 
@@ -206,7 +213,7 @@ export default class Parser {
         const tree: any = this.engine.parseCode(code);
 
         return this.findClasses(this.files.asUri(uri), tree.children).reduce(
-            (methods, clazz) => methods.concat(clazz.tests()),
+            (methods, clazz) => methods.concat(clazz.getTests()),
             []
         );
     }
