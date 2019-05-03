@@ -26,11 +26,11 @@ describe('TestRunner', () => {
         );
     });
 
-    it('test suite', async () => {
+    it('run all', async () => {
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('suite')).toEqual('PHPUnit');
+        expect(await testRunner.run('all')).toEqual('PHPUnit');
         // expect(files.findup).not.toBeCalledWith(['php']);
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
@@ -40,22 +40,31 @@ describe('TestRunner', () => {
         });
     });
 
-    it('test directory', async () => {
+    it('rerun', async () => {
+        const position = Position.create(0, 0);
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('directory', textDocument)).toEqual(
+        expect(
+            await testRunner.run('rerun', textDocument, Position.create(20, 0))
+        ).toEqual('PHPUnit');
+
+        expect(await testRunner.rerun(textDocument, position)).toEqual(
             'PHPUnit'
         );
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'phpunit',
-            arguments: [dirname(uri.fsPath)],
+            arguments: [
+                uri.fsPath,
+                '--filter',
+                '^.*::(test_passed|test_failed)( with data set .*)?$',
+            ],
         });
     });
 
-    it('test file', async () => {
+    it('run file', async () => {
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
@@ -68,14 +77,14 @@ describe('TestRunner', () => {
         });
     });
 
-    it('run test nearest method', async () => {
+    it('run test at cursor', async () => {
         const position = Position.create(20, 0);
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('nearest', textDocument, position)).toEqual(
-            'PHPUnit'
-        );
+        expect(
+            await testRunner.run('test-at-cursor', textDocument, position)
+        ).toEqual('PHPUnit');
 
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
@@ -89,43 +98,19 @@ describe('TestRunner', () => {
         });
     });
 
-    it('run test nearest when not found', async () => {
+    it('run test-at-cursor when not found', async () => {
         const position = Position.create(7, 0);
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('nearest', textDocument, position)).toEqual(
-            'PHPUnit'
-        );
+        expect(
+            await testRunner.run('test-at-cursor', textDocument, position)
+        ).toEqual('PHPUnit');
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'phpunit',
             arguments: [uri.fsPath],
-        });
-    });
-
-    it('rerun last test', async () => {
-        const position = Position.create(0, 0);
-        spyOn(files, 'findup').and.returnValues('phpunit');
-        spyOn(process, 'run').and.returnValue('PHPUnit');
-
-        expect(
-            await testRunner.run('last', textDocument, Position.create(20, 0))
-        ).toEqual('PHPUnit');
-
-        expect(await testRunner.runLast(textDocument, position)).toEqual(
-            'PHPUnit'
-        );
-        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
-        expect(process.run).toBeCalledWith({
-            title: 'PHPUnit LSP',
-            command: 'phpunit',
-            arguments: [
-                uri.fsPath,
-                '--filter',
-                '^.*::(test_passed|test_failed)( with data set .*)?$',
-            ],
         });
     });
 
@@ -138,12 +123,27 @@ describe('TestRunner', () => {
             .setPhpUnitBinary('phpunit')
             .setArgs(['foo', 'bar']);
 
-        expect(await testRunner.run('suite')).toEqual('PHPUnit');
+        expect(await testRunner.run('all')).toEqual('PHPUnit');
         expect(files.findup).not.toBeCalled();
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
             command: 'php',
             arguments: ['phpunit', 'foo', 'bar'],
+        });
+    });
+
+    it('run directory', async () => {
+        spyOn(files, 'findup').and.returnValues('phpunit');
+        spyOn(process, 'run').and.returnValue('PHPUnit');
+
+        expect(await testRunner.run('directory', textDocument)).toEqual(
+            'PHPUnit'
+        );
+        expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
+        expect(process.run).toBeCalledWith({
+            title: 'PHPUnit LSP',
+            command: 'phpunit',
+            arguments: [dirname(uri.fsPath)],
         });
     });
 });

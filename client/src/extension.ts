@@ -67,11 +67,11 @@ export function activate(context: ExtensionContext) {
     );
 
     const commandRegister = new CommandRegister(client, commands);
-    context.subscriptions.push(commandRegister.registerRunSuite());
-    context.subscriptions.push(commandRegister.registerRunDirectory());
+    context.subscriptions.push(commandRegister.registerRunAll());
+    context.subscriptions.push(commandRegister.registerRerun());
     context.subscriptions.push(commandRegister.registerRunFile());
-    context.subscriptions.push(commandRegister.registerRunNearest());
-    context.subscriptions.push(commandRegister.registerRunLast());
+    context.subscriptions.push(commandRegister.registerRunTestAtCursor());
+    context.subscriptions.push(commandRegister.registerRunDirectory());
     // context.subscriptions.push(
     //     commandRegister.registerStartStraming(outputChannel)
     // );

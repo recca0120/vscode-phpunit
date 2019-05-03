@@ -65,10 +65,11 @@ connection.onInitialize((params: InitializeParams) => {
             },
             executeCommandProvider: {
                 commands: [
-                    'phpunit.lsp.test.suite',
-                    'phpunit.lsp.test.file',
-                    'phpunit.lsp.test.nearest',
-                    'phpunit.lsp.test.last',
+                    'phpunit.lsp.run-all',
+                    'phpunit.lsp.rerun',
+                    'phpunit.lsp.run-directory',
+                    'phpunit.lsp.run-file',
+                    'phpunit.lsp.run-test-at-cursor',
                 ],
             },
         },

@@ -35,8 +35,16 @@ export class TestRunner {
         return this;
     }
 
-    async runSuite() {
+    async runAll() {
         return await this.doRun();
+    }
+
+    async rerun(textDocument: TextDocument, position?: Position) {
+        if (this.lastArgs.length === 0) {
+            return await this.runTestAtCursor(textDocument, position);
+        }
+
+        return await this.doRun(this.lastArgs);
     }
 
     async runDirectory(textDocument: TextDocument) {
@@ -49,7 +57,7 @@ export class TestRunner {
         return await this.doRun([this.files.asUri(textDocument.uri).fsPath]);
     }
 
-    async runNearest(textDocument: TextDocument, position?: Position) {
+    async runTestAtCursor(textDocument: TextDocument, position?: Position) {
         const tests: Test[] = this.parser
             .parseTextDocument(textDocument)
             .reduce((tests: Test[], testsuite: TestSuite) => {
@@ -72,32 +80,22 @@ export class TestRunner {
         return test ? await this.doRun(test.asArguments()) : '';
     }
 
-    async runLast(textDocument: TextDocument, position?: Position) {
-        if (this.lastArgs.length === 0) {
-            return await this.runNearest(textDocument, position);
-        }
-
-        return await this.doRun(this.lastArgs);
-    }
-
     async run(
         method: string,
         textDocument?: TextDocument,
         position?: Position
     ) {
         const map = {
-            suite: 'runSuite',
+            all: 'runAll',
             directory: 'runDirectory',
             file: 'runFile',
-            last: 'runLast',
-            nearest: 'runNearest',
+            'test-at-cursor': 'runTestAtCursor',
+            rerun: 'rerun',
         };
 
-        method = method
-            .replace(/^phpunit\.lsp\.test\.(run)?/, '')
-            .toLowerCase();
+        method = method.replace(/^phpunit\.lsp\.(run-)?/, '').toLowerCase();
 
-        method = map[method] || 'runNearest';
+        method = map[method] || 'runTestAtCursor';
 
         return await this[method](textDocument, position);
     }

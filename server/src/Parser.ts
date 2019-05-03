@@ -97,7 +97,7 @@ class NodeTest implements Test {
     asCommand(): Command {
         return {
             title: 'Run Test',
-            command: 'phpunit.lsp.test.nearest',
+            command: 'phpunit.lsp.run-test-at-cursor',
             arguments: [this.uri.toString(), this.range.start],
         };
     }

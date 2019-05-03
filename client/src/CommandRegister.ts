@@ -11,24 +11,24 @@ export class CommandRegister {
         });
     }
 
-    registerRunSuite() {
-        return this.registerPHPUnitCommand('phpunit.test.suite');
+    registerRunAll() {
+        return this.registerPHPUnitCommand('phpunit.run-all');
     }
 
-    registerRunDirectory() {
-        return this.registerPHPUnitCommand('phpunit.test.directory');
+    registerRerun() {
+        return this.registerPHPUnitCommand('phpunit.rerun');
     }
 
     registerRunFile() {
-        return this.registerPHPUnitCommand('phpunit.test.file');
+        return this.registerPHPUnitCommand('phpunit.run-file');
     }
 
-    registerRunNearest() {
-        return this.registerPHPUnitCommand('phpunit.test.nearest');
+    registerRunTestAtCursor() {
+        return this.registerPHPUnitCommand('phpunit.run-test-at-cursor');
     }
 
-    registerRunLast() {
-        return this.registerPHPUnitCommand('phpunit.test.last');
+    registerRunDirectory() {
+        return this.registerPHPUnitCommand('phpunit.run-directory');
     }
 
     // registerStartStraming(outputChannel: SocketOutputChannel) {

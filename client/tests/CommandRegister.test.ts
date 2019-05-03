@@ -62,9 +62,9 @@ function expectRegisterTextEditorCommand(callback: Function, expected: any) {
 }
 
 describe('commands', () => {
-    it('register test suite', () => {
+    it('register run all', () => {
         const expected = {
-            command: 'phpunit.test.suite',
+            command: 'phpunit.run-all',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -74,13 +74,13 @@ describe('commands', () => {
 
         expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
-            commandRegister.registerRunSuite();
+            commandRegister.registerRunAll();
         }, expected);
     });
 
-    it('register test nearest', () => {
+    it('register rerun', () => {
         const expected = {
-            command: 'phpunit.test.nearest',
+            command: 'phpunit.rerun',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -90,13 +90,13 @@ describe('commands', () => {
 
         expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
-            commandRegister.registerRunNearest();
+            commandRegister.registerRerun();
         }, expected);
     });
 
-    it('register run last', () => {
+    it('register run file', () => {
         const expected = {
-            command: 'phpunit.test.last',
+            command: 'phpunit.run-file',
             uri: 'foo.php',
             position: {
                 line: 0,
@@ -106,10 +106,41 @@ describe('commands', () => {
 
         expectRegisterTextEditorCommand((client: any, commands: any) => {
             const commandRegister = new CommandRegister(client, commands);
-            commandRegister.registerRunLast();
+            commandRegister.registerRunFile();
         }, expected);
     });
 
+    it('register run test at cursor', () => {
+        const expected = {
+            command: 'phpunit.run-test-at-cursor',
+            uri: 'foo.php',
+            position: {
+                line: 0,
+                character: 0,
+            },
+        };
+
+        expectRegisterTextEditorCommand((client: any, commands: any) => {
+            const commandRegister = new CommandRegister(client, commands);
+            commandRegister.registerRunTestAtCursor();
+        }, expected);
+    });
+
+    it('register run directory', () => {
+        const expected = {
+            command: 'phpunit.run-directory',
+            uri: 'foo.php',
+            position: {
+                line: 0,
+                character: 0,
+            },
+        };
+
+        expectRegisterTextEditorCommand((client: any, commands: any) => {
+            const commandRegister = new CommandRegister(client, commands);
+            commandRegister.registerRunDirectory();
+        }, expected);
+    });
     // it('register start streaming', () => {
     //     const commands: any = {
     //         registerCommand: () => {},

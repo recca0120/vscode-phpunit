@@ -209,7 +209,7 @@ describe('Parser', () => {
             range: suite.range,
             command: {
                 title: 'Run Test',
-                command: 'phpunit.lsp.test.nearest',
+                command: 'phpunit.lsp.run-test-at-cursor',
                 arguments: [file.toString(), suite.range.start],
             },
         });
@@ -227,7 +227,7 @@ describe('Parser', () => {
             range: test.range,
             command: {
                 title: 'Run Test',
-                command: 'phpunit.lsp.test.nearest',
+                command: 'phpunit.lsp.run-test-at-cursor',
                 arguments: [file.toString(), test.range.start],
             },
         });

@@ -25,60 +25,60 @@
     },
     "activationEvents": [
         "onLanguage:php",
-        "onCommand:phpunit.test.suite",
-        "onCommand:phpunit.test.file",
-        "onCommand:phpunit.test.nearest",
-        "onCommand:phpunit.test.directory",
-        "onCommand:phpunit.test.last"
+        "onCommand:phpunit.test.run-all",
+        "onCommand:phpunit.test.run-directory",
+        "onCommand:phpunit.test.run-file",
+        "onCommand:phpunit.test.run-test-at-cursor",
+        "onCommand:phpunit.test.run-last"
     ],
     "main": "./client/out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "phpunit.test.suite",
-                "title": "PHPUnit: Run All Tests"
+                "command": "phpunit.run-all",
+                "title": "PHPUnit: Run all tests"
             },
             {
-                "command": "phpunit.test.file",
-                "title": "PHPUnit: Run This File"
+                "command": "phpunit.rerun",
+                "title": "PHPUnit: Repeat the last test run"
             },
             {
-                "command": "phpunit.test.nearest",
-                "title": "PHPUnit: Run This Test"
+                "command": "phpunit.run-file",
+                "title": "PHPUnit: Run tests in current file"
             },
             {
-                "command": "phpunit.test.directory",
-                "title": "PHPUnit: Run This Directory"
+                "command": "phpunit.run-test-at-cursor",
+                "title": "PHPUnit: Run the test at the current cursor position"
             },
             {
-                "command": "phpunit.test.last",
-                "title": "PHPUnit: Run Last Test"
+                "command": "phpunit.run-directory",
+                "title": "PHPUnit: Run tests in current directory"
             }
         ],
         "keybindings": [
             {
                 "key": "cmd+t cmd+f",
-                "command": "phpunit.test.file",
+                "command": "phpunit.run-file",
                 "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+t",
-                "command": "phpunit.test.nearest",
+                "command": "phpunit.run-test-at-cursor",
                 "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+l",
-                "command": "phpunit.test.last",
+                "command": "phpunit.rerun",
                 "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+d",
-                "command": "phpunit.test.directory",
+                "command": "phpunit.run-directory",
                 "when": "editorTextFocus && editorLangId = php"
             },
             {
                 "key": "cmd+t cmd+s",
-                "command": "phpunit.test.suite"
+                "command": "phpunit.run-all"
             }
         ],
         "configuration": {
