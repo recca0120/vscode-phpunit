@@ -81,6 +81,7 @@ class NodeTest implements Test {
     isTest(): boolean {
         return (
             this.acceptModifier() &&
+            this.node.kind === 'method' &&
             (this.acceptComments() || this.acceptMethodName())
         );
     }
@@ -123,6 +124,7 @@ class NodeTest implements Test {
     }
 
     private acceptComments(): boolean {
+        return true;
         const comments: any[] = this.node.body.leadingComments || [];
 
         return comments.some((comment: any) => /@test/.test(comment.value));
@@ -137,17 +139,18 @@ class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
     tests(): Test[] {
-        let tests = this.node.body
+        const methods = this.node.body.filter(
+            (node: any) => node.kind === 'method'
+        );
+
+        const tests = methods
             .map((node: any, index: number) =>
-                this.asTest(
-                    node,
-                    index === 0 ? null : this.node.body[index - 1]
-                )
+                this.asTest(node, index === 0 ? null : methods[index - 1])
             )
             .filter((method: NodeTest) => method.isTest());
 
         return tests.length > 0
-            ? (tests = [this.asTest(this.node)].concat(tests))
+            ? [this.asTest(this.node)].concat(tests)
             : tests;
     }
 
@@ -159,14 +162,6 @@ class Clazz {
     }
 
     private fixLeadingComments(node: any, prev: any) {
-        if (prev && prev.body && prev.body.trailingComments) {
-            node.body.leadingComments = prev.body.trailingComments;
-        }
-
-        if (node.leadingComments) {
-            node.body.leadingComments = node.leadingComments;
-        }
-
         return node;
     }
 }
@@ -203,6 +198,7 @@ export default class Parser {
         if (!textDocument) {
             return [];
         }
+
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
@@ -229,6 +225,6 @@ export default class Parser {
     }
 
     private isTestClass(node: any): boolean {
-        return node.kind !== 'class' || node.isAbstract ? false : true;
+        return node.kind === 'class' && !node.isAbstract;
     }
 }

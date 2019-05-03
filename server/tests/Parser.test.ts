@@ -204,4 +204,14 @@ describe('Parser', () => {
             projectPath('tests/LeadingCommentsTest.php')
         );
     });
+
+    it('has property', async () => {
+        await expectTest(
+            {
+                class: 'HasPropertyTest',
+                method: 'property',
+            },
+            projectPath('tests/HasPropertyTest.php')
+        );
+    });
 });
