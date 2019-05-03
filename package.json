@@ -4,7 +4,7 @@
     "icon": "client/images/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.11",
+    "version": "2.0.12",
     "preview": true,
     "repository": {
         "type": "git",
@@ -154,6 +154,5 @@
         "ts-jest": "^24.0.2",
         "tslint": "^5.11.0",
         "typescript": "^3.1.3"
-    },
-    "dependencies": {}
+    }
 }
