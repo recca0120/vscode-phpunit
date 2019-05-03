@@ -12,9 +12,10 @@ client/node_modules/**
 !client/node_modules/vscode-languageserver-protocol/**
 !client/node_modules/vscode-languageserver-types/**
 
-!client/tests/**
+**/.phpunit.result.cache
+**/tsconfig.tsbuildinfo
+client/tests/**
 coverage/**
-!server/tests/**
+server/tests/**
 jest.config.js
 *.vsix
-tsconfig.tsbuildinfo

@@ -95,11 +95,12 @@ export function activate(context: ExtensionContext) {
         });
 
         const notify = new Notify(window);
-        client.onNotification('before', () => {
+
+        client.onNotification('started', () => {
             notify.show('PHPUnit Running...');
         });
 
-        client.onNotification('after', () => {
+        client.onNotification('finished', () => {
             notify.hide();
         });
     });

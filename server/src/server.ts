@@ -178,7 +178,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const settings = await getDocumentSettings(textDocument.uri);
 
     connection.sendNotification(WillSaveTextDocumentNotification.type, {});
-    connection.sendNotification('before');
+    connection.sendNotification('started');
 
     try {
         runner
@@ -246,7 +246,7 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     } catch (e) {
         throw e;
     } finally {
-        connection.sendNotification('after');
+        connection.sendNotification('finished');
     }
 });
 /*

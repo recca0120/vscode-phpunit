@@ -6,12 +6,15 @@ export class Process {
         return new Promise(resolve => {
             const process = spawn(command.command, command.arguments, options);
             const buffers = [];
+
             process.stdout.on('data', data => {
                 buffers.push(data);
             });
+
             process.stderr.on('data', data => {
                 buffers.push(data);
             });
+
             process.on('close', () => {
                 resolve(
                     buffers.reduce((response, buffer) => {
