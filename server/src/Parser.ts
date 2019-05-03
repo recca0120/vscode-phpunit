@@ -124,6 +124,7 @@ class NodeTest implements Test {
 
     private acceptComments(): boolean {
         const comments: any[] = this.node.body.leadingComments || [];
+
         return comments.some((comment: any) => /@test/.test(comment.value));
     }
 
@@ -134,26 +135,39 @@ class NodeTest implements Test {
 
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
+
     tests(): Test[] {
         let tests = this.node.body
-            .map((node: any, index: number) => this.asTest(node, index))
+            .map((node: any, index: number) =>
+                this.asTest(
+                    node,
+                    index === 0 ? null : this.node.body[index - 1]
+                )
+            )
             .filter((method: NodeTest) => method.isTest());
 
         return tests.length > 0
             ? (tests = [this.asTest(this.node)].concat(tests))
             : tests;
     }
-    private asTest(node: any, index: number | null = null) {
-        if (index !== null && index !== 0) {
-            const prev = this.node.body[index - 1];
-            if (prev && prev.body && prev.body.trailingComments) {
-                node.body.leadingComments = prev.body.trailingComments;
-            }
-        }
+
+    private asTest(node: any, prev: any = null) {
         return new NodeTest(
-            node,
+            this.fixLeadingComments(node, prev),
             Object.assign({ class: this.node.name.name }, this.options)
         );
+    }
+
+    private fixLeadingComments(node: any, prev: any) {
+        if (prev && prev.body && prev.body.trailingComments) {
+            node.body.leadingComments = prev.body.trailingComments;
+        }
+
+        if (node.leadingComments) {
+            node.body.leadingComments = node.leadingComments;
+        }
+
+        return node;
     }
 }
 

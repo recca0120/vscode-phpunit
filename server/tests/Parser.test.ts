@@ -1,21 +1,32 @@
 import Parser, { Test } from '../src/Parser';
 import URI from 'vscode-uri';
 import { TextDocument } from 'vscode-languageserver-types';
-import { Filesystem } from '../src/Filesystem';
+import files from '../src/Filesystem';
 import { projectPath } from './helpers';
 
 describe('Parser', () => {
     const parser = new Parser();
     const file = projectPath('tests/AssertionsTest.php');
-    let index = 0;
+    let tests: Test[] = [];
 
-    const getTest = async (key: number) => {
-        const tests = await parser.parse(file.fsPath);
+    const getTest = async (options: any = {}, testfile: URI = file) => {
+        tests = await parser.parse(testfile);
 
-        return tests[key];
+        return tests.find(test => {
+            for (const key in options) {
+                if (
+                    JSON.stringify(test[key]) !== JSON.stringify(options[key])
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        });
     };
 
-    const expectTest = async (test: Test, actual: any) => {
+    const expectTest = async (actual: any, testfile: URI = file) => {
+        const test = await getTest(actual, testfile);
+
         const expectObj = {
             class: test.class,
             depends: test.depends,
@@ -45,7 +56,7 @@ describe('Parser', () => {
                         }),
                     },
                     uri: jasmine.objectContaining({
-                        fsPath: file.fsPath,
+                        fsPath: testfile.fsPath,
                     }),
                 },
                 actual
@@ -54,56 +65,57 @@ describe('Parser', () => {
     };
 
     it('class', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             kind: 'class',
+            method: '',
         });
     });
 
     it('passed', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'test_passed',
         });
     });
 
     it('failed', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'test_failed',
             depends: ['test_passed'],
         });
     });
 
     it('test_isnt_same', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'test_isnt_same',
         });
     });
 
     it('test_risky', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'test_risky',
         });
     });
 
     it('annotation_test', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'annotation_test',
         });
     });
 
     it('test_skipped', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'test_skipped',
         });
     });
 
     it('test_incomplete', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'test_incomplete',
         });
     });
 
     it('addition_provider', async () => {
-        expectTest(await getTest(index++), {
+        await expectTest({
             method: 'addition_provider',
         });
     });
@@ -113,10 +125,10 @@ describe('Parser', () => {
 
         const tests = parser.parseTextDocument(
             TextDocument.create(
-                file.fsPath,
+                file.toString(),
                 'php',
                 1,
-                await new Filesystem().get(file)
+                await files.get(file)
             )
         );
 
@@ -130,7 +142,10 @@ describe('Parser', () => {
     });
 
     it('class as codelens', async () => {
-        const test = await getTest(0);
+        const test = await getTest({
+            kind: 'class',
+            method: '',
+        });
 
         expect(test.asCodeLens()).toEqual({
             range: test.range,
@@ -143,7 +158,10 @@ describe('Parser', () => {
     });
 
     it('method as codelens', async () => {
-        const test = await getTest(2);
+        const test = await getTest({
+            method: 'test_failed',
+            depends: ['test_passed'],
+        });
 
         expect(test.asCodeLens()).toEqual({
             range: test.range,
@@ -156,18 +174,34 @@ describe('Parser', () => {
     });
 
     it('class as arguments', async () => {
-        const test = await getTest(0);
+        const test = await getTest({
+            kind: 'class',
+            method: '',
+        });
 
         expect(test.asArguments()).toEqual([file.fsPath]);
     });
 
     it('method as arguments', async () => {
-        const test = await getTest(2);
+        const test = await getTest({
+            method: 'test_failed',
+            depends: ['test_passed'],
+        });
 
         expect(test.asArguments()).toEqual([
             file.fsPath,
             '--filter',
             '^.*::(test_passed|test_failed)( with data set .*)?$',
         ]);
+    });
+
+    it('leading comments', async () => {
+        await expectTest(
+            {
+                class: 'LeadingCommentsTest',
+                method: 'firstLeadingComments',
+            },
+            projectPath('tests/LeadingCommentsTest.php')
+        );
     });
 });
