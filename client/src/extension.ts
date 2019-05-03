@@ -81,6 +81,7 @@ export function activate(context: ExtensionContext) {
             if (!window.activeTextEditor || !window.activeTextEditor.document) {
                 return;
             }
+
             const clearOutpuOnRun = workspace
                 .getConfiguration('phpunit')
                 .get('clearOutputOnRun', true);

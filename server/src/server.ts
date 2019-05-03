@@ -57,9 +57,9 @@ connection.onInitialize((params: InitializeParams) => {
         capabilities: {
             textDocumentSync: documents.syncKind,
             // Tell the client that the server supports code completion
-            completionProvider: {
-                resolveProvider: true,
-            },
+            // completionProvider: {
+            //     resolveProvider: true,
+            // },
             codeLensProvider: {
                 resolveProvider: true,
             },
@@ -85,7 +85,7 @@ connection.onInitialized(() => {
     }
     if (hasWorkspaceFolderCapability) {
         connection.workspace.onDidChangeWorkspaceFolders(_event => {
-            connection.console.log('Workspace folder change event received.');
+            // connection.console.log('Workspace folder change event received.');
         });
     }
 });
@@ -156,7 +156,7 @@ documents.onDidChangeContent(change => {
 connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VSCode
     // connection.console.log(JSON.stringify(_change));
-    connection.console.log('We received an file change event');
+    // connection.console.log('We received an file change event');
 });
 
 connection.onCodeLens((params: CodeLensParams) => {
