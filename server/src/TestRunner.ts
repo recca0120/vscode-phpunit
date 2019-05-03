@@ -85,19 +85,28 @@ export class TestRunner {
         textDocument?: TextDocument,
         position?: Position
     ) {
-        const map = {
-            all: 'runAll',
-            directory: 'runDirectory',
-            file: 'runFile',
-            'test-at-cursor': 'runTestAtCursor',
-            rerun: 'rerun',
-        };
-
         method = method.replace(/^phpunit\.lsp\.(run-)?/, '').toLowerCase();
 
-        method = map[method] || 'runTestAtCursor';
+        let response;
+        switch (method) {
+            case 'all':
+                response = await this.runAll();
+                break;
+            case 'directory':
+                response = await this.runDirectory(textDocument);
+                break;
+            case 'file':
+                response = await this.runFile(textDocument);
+                break;
+            case 'rerun':
+                response = await this.rerun(textDocument, position);
+                break;
+            default:
+            case 'test-at-cursor':
+                response = await this.runTestAtCursor(textDocument, position);
+        }
 
-        return await this[method](textDocument, position);
+        return response;
     }
 
     async doRun(args: string[] = []) {
@@ -129,7 +138,7 @@ export class TestRunner {
         return this.phpBinary;
     }
 
-    private async getPhpUnitBinary(): Promise<string> {
+    private async getPhpUnitBinary(): Promise<string | void> {
         if (this.phpUnitBinary) {
             return this.phpUnitBinary;
         }

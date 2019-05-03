@@ -5,7 +5,7 @@ export class Process {
     public run(command: Command, options?: SpawnOptions): Promise<string> {
         return new Promise(resolve => {
             const process = spawn(command.command, command.arguments, options);
-            const buffers = [];
+            const buffers: any[] = [];
 
             process.stdout.on('data', data => {
                 buffers.push(data);

@@ -1,5 +1,4 @@
 import { join } from 'path';
-import URI from 'vscode-uri';
 import files from '../src/Filesystem';
 
 export function fixturePath(...paths: string[]) {

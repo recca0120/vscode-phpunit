@@ -1,8 +1,31 @@
 import { Location, Range } from 'vscode-languageserver-protocol';
 import files, { Filesystem } from './Filesystem';
 
+export enum PHPUnitStatus {
+    UNKNOWN,
+    PASSED,
+    SKIPPED,
+    INCOMPLETE,
+    FAILURE,
+    ERROR,
+    RISKY,
+    WARNING,
+}
+
+export interface Problem {
+    name: string;
+    namespace: string;
+    class: string;
+    method: string;
+    status: PHPUnitStatus;
+    uri: string;
+    range: Range;
+    message: string;
+    files: Location[];
+}
+
 abstract class ProblemMatcherBase<T> {
-    private problems = [];
+    private problems: any[] = [];
     private problemIndex = -1;
     private currentIndex = -1;
 
@@ -77,29 +100,6 @@ abstract class ProblemMatcherBase<T> {
             ? 0
             : this.currentIndex + 1;
     }
-}
-
-export enum PHPUnitStatus {
-    UNKNOWN,
-    PASSED,
-    SKIPPED,
-    INCOMPLETE,
-    FAILURE,
-    ERROR,
-    RISKY,
-    WARNING,
-}
-
-export interface Problem {
-    name: string;
-    namespace: string;
-    class: string;
-    method: string;
-    status: PHPUnitStatus;
-    uri: string;
-    range: Range;
-    message: string;
-    files: Location[];
 }
 
 export class ProblemMatcher extends ProblemMatcherBase<Problem> {

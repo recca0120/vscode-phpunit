@@ -78,7 +78,7 @@ export class Filesystem {
     async find(
         search: string | string[],
         paths: string[] = []
-    ): Promise<string> {
+    ): Promise<string | void> {
         for (let file of this.searchFile(search, paths.concat(this.paths))) {
             if (await this.exists(file)) {
                 return file;
@@ -89,7 +89,7 @@ export class Filesystem {
     async which(
         search: string | string[],
         cwd: string = process.cwd()
-    ): Promise<string> {
+    ): Promise<string | void> {
         return await this.find(search, [cwd]);
     }
 

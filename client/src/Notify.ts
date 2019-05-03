@@ -1,4 +1,5 @@
-import { Progress, CancellationToken } from 'vscode';
+// import { Progress, CancellationToken } from 'vscode';
+import { Progress } from 'vscode';
 
 interface ProgressOptions {
     message?: string;
@@ -9,7 +10,7 @@ export class Notify {
     private progress: Progress<ProgressOptions> | null = null;
     protected promise: Promise<undefined> | null = null;
     private resolve: Function | null = null;
-    private token?: CancellationToken;
+    // private token?: CancellationToken;
 
     constructor(private window: any) {}
 
@@ -20,9 +21,10 @@ export class Notify {
                 title: title,
                 cancellable: cancellable,
             },
-            (progress: Progress<ProgressOptions>, token: CancellationToken) => {
+            // (progress: Progress<ProgressOptions>, token: CancellationToken) => {
+            (progress: Progress<ProgressOptions>) => {
                 this.progress = progress;
-                this.token = token;
+                // this.token = token;
 
                 return (this.promise = new Promise(
                     (resolve: Function) => (this.resolve = resolve)

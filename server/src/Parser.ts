@@ -1,3 +1,5 @@
+/// <reference path="../types/php-parser.d.ts" />
+
 import _files from './Filesystem';
 import {
     Range,
@@ -10,6 +12,7 @@ import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
 
 interface TestOptions {
+    [propName: string]: any;
     class?: string;
     namespace?: string;
     method?: string;

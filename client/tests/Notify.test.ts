@@ -14,8 +14,8 @@ describe('progress', () => {
         const progress: any = {};
         const token: any = {};
 
-        spyOn(window, 'withProgress').and.callFake((options, callback) => {
-            callback(progress, token);
+        spyOn(window, 'withProgress').and.callFake((...args) => {
+            args[1](progress, token);
         });
 
         const notify = new StubNotify(window);

@@ -20,11 +20,11 @@ function givenClient() {
 
 function givenCommands(uri: string, position: any) {
     const commands: any = {
-        registerTextEditorCommand: (command: string, callback: () => {}) => {},
+        registerTextEditorCommand: () => {},
     };
 
-    spyOn(commands, 'registerTextEditorCommand').and.callFake((command, cb) =>
-        cb({
+    spyOn(commands, 'registerTextEditorCommand').and.callFake((...args) =>
+        args[1]({
             document: {
                 uri: uri,
                 languageId: 'php',

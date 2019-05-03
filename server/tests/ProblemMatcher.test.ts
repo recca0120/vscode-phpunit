@@ -11,7 +11,7 @@ describe('ProblemMatcher', () => {
     const contents: string = readFileSync(file).toString('UTF-8');
     const problemMatcher = new ProblemMatcher();
 
-    let problems = [];
+    let problems: any[] = [];
 
     function getProblem(name: string) {
         return problems.find(problem => problem.name.indexOf(name) !== -1);

@@ -1,7 +1,6 @@
 import { Process } from '../src/Process';
 import { projectPath } from './helpers';
 import files from '../src/Filesystem';
-import { join } from 'path';
 
 describe('Process', () => {
     fit('running phpunit', async () => {
@@ -12,7 +11,7 @@ describe('Process', () => {
         const process = new Process();
         const command = {
             title: 'phpunit',
-            command: phpUnitBinary,
+            command: phpUnitBinary || '',
             arguments: ['--configuration', projectPath('phpunit.xml').fsPath],
         };
 
