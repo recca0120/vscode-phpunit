@@ -12,20 +12,21 @@ import { default as Engine } from 'php-parser';
 interface TestOptions {
     class?: string;
     namespace?: string;
+    method?: string;
     uri: URI;
 }
 
-export interface Test {
-    class: string;
+export interface Test extends TestOptions {
     depends: string[];
     kind: string;
-    method: string;
-    namespace: string;
     range: Range;
-    uri: URI;
     asCodeLens(): CodeLens;
     asCommand(): Command;
     asArguments(): string[];
+}
+
+export interface TestSuite extends Test {
+    children: Test[];
 }
 
 class NodeTest implements Test {
@@ -134,26 +135,34 @@ class NodeTest implements Test {
     }
 }
 
+class NodeTestSuite extends NodeTest implements TestSuite {
+    constructor(node: any, public children: Test[], options?: TestOptions) {
+        super(node, options);
+    }
+}
+
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
-    getTests(): Test[] {
+    asTestSuite(): TestSuite {
+        const options = this.getTestOptions();
         const methods = this.getMethods();
 
         const tests = methods
             .map((node: any, index: number) =>
-                this.asTest(node, index === 0 ? null : methods[index - 1])
+                this.asTest(node, options, methods[index - 1])
             )
             .filter((method: NodeTest) => method.isTest());
 
-        return tests.length > 0 ? [this.asTest(this.node)].concat(tests) : [];
+        if (tests.length === 0) {
+            return null;
+        }
+
+        return new NodeTestSuite(this.node, tests, options);
     }
 
-    private asTest(node: any, prev: any = null) {
-        return new NodeTest(
-            this.fixLeadingComments(node, prev),
-            Object.assign({ class: this.node.name.name }, this.options)
-        );
+    private asTest(node: any, testOptions: any, prev: any = null) {
+        return new NodeTest(this.fixLeadingComments(node, prev), testOptions);
     }
 
     private fixLeadingComments(node: any, prev: any) {
@@ -170,6 +179,10 @@ class Clazz {
 
     private getMethods() {
         return this.node.body.filter((node: any) => node.kind === 'method');
+    }
+
+    private getTestOptions() {
+        return Object.assign({ class: this.node.name.name }, this.options);
     }
 }
 
@@ -197,11 +210,11 @@ export default class Parser {
         })
     ) {}
 
-    async parse(uri: PathLike | URI): Promise<Test[]> {
+    async parse(uri: PathLike | URI): Promise<TestSuite[]> {
         return this.parseCode(await this.files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument | null): Test[] {
+    parseTextDocument(textDocument: TextDocument | null): TestSuite[] {
         if (!textDocument) {
             return [];
         }
@@ -209,11 +222,15 @@ export default class Parser {
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
-    parseCode(code: string, uri: PathLike | URI): Test[] {
+    parseCode(code: string, uri: PathLike | URI): TestSuite[] {
         const tree: any = this.engine.parseCode(code);
 
         return this.findClasses(this.files.asUri(uri), tree.children).reduce(
-            (methods, clazz) => methods.concat(clazz.getTests()),
+            (testSuites, clazz) => {
+                const testSuite = clazz.asTestSuite();
+
+                return testSuite ? testSuites.concat([testSuite]) : testSuites;
+            },
             []
         );
     }
@@ -225,6 +242,7 @@ export default class Parser {
                     this.findClasses(uri, node.children, node.name)
                 );
             }
+
             return this.isTestClass(node)
                 ? classes.concat(new Clazz(node, { uri, namespace }))
                 : classes;

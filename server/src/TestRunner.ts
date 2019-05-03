@@ -1,5 +1,5 @@
 import { TextDocument, Position } from 'vscode-languageserver-protocol';
-import Parser, { Test } from './Parser';
+import Parser, { Test, TestSuite } from './Parser';
 import _files from './Filesystem';
 import { Process } from './Process';
 import { PathLike } from 'fs';
@@ -50,7 +50,14 @@ export class TestRunner {
     }
 
     async runNearest(textDocument: TextDocument, position?: Position) {
-        const tests: Test[] = this.parser.parseTextDocument(textDocument);
+        const tests: Test[] = this.parser
+            .parseTextDocument(textDocument)
+            .reduce((tests: Test[], testsuite: TestSuite) => {
+                return tests
+                    .concat([testsuite as Test])
+                    .concat(testsuite.children);
+            }, []);
+
         const line = position && position.line ? position.line : 0;
 
         let test = tests.find(test => {

@@ -1,4 +1,4 @@
-import Parser, { Test } from '../src/Parser';
+import Parser, { Test, TestSuite } from '../src/Parser';
 import URI from 'vscode-uri';
 import { TextDocument } from 'vscode-languageserver-types';
 import files from '../src/Filesystem';
@@ -7,12 +7,15 @@ import { projectPath } from './helpers';
 describe('Parser', () => {
     const parser = new Parser();
     const file = projectPath('tests/AssertionsTest.php');
-    let tests: Test[] = [];
 
-    const getTest = async (options: any = {}, testfile: URI = file) => {
-        tests = await parser.parse(testfile);
+    const getTestSuite = async (testfile: URI = file): Promise<TestSuite> => {
+        const suites = await parser.parse(testfile);
 
-        return tests.find(test => {
+        return suites[0];
+    };
+
+    const getTest = (suite: TestSuite, options: any = {}) => {
+        return suite.children.find(test => {
             for (const key in options) {
                 if (
                     JSON.stringify(test[key]) !== JSON.stringify(options[key])
@@ -24,9 +27,7 @@ describe('Parser', () => {
         });
     };
 
-    const expectTest = async (actual: any, testfile: URI = file) => {
-        const test = await getTest(actual, testfile);
-
+    const expectTest = (test: Test, actual: any) => {
         const expectObj = {
             class: test.class,
             depends: test.depends,
@@ -56,7 +57,7 @@ describe('Parser', () => {
                         }),
                     },
                     uri: jasmine.objectContaining({
-                        fsPath: testfile.fsPath,
+                        fsPath: test.uri.fsPath,
                     }),
                 },
                 actual
@@ -65,65 +66,99 @@ describe('Parser', () => {
     };
 
     it('class', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        expectTest(suite, {
             kind: 'class',
             method: '',
         });
     });
 
     it('passed', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'test_passed',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('failed', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'test_failed',
             depends: ['test_passed'],
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('test_isnt_same', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'test_isnt_same',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('test_risky', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'test_risky',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('annotation_test', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'annotation_test',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('test_skipped', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'test_skipped',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('test_incomplete', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'test_incomplete',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('addition_provider', async () => {
-        await expectTest({
+        const suite = await getTestSuite();
+
+        const expected = {
             method: 'addition_provider',
-        });
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('parse TextDocument', async () => {
         const parser = new Parser();
 
-        const tests = parser.parseTextDocument(
+        const suites = parser.parseTextDocument(
             TextDocument.create(
                 file.toString(),
                 'php',
@@ -132,7 +167,33 @@ describe('Parser', () => {
             )
         );
 
-        expect(tests).toBeDefined();
+        expect(suites).toBeDefined();
+    });
+
+    it('leading comments', async () => {
+        const suite = await getTestSuite(
+            projectPath('tests/LeadingCommentsTest.php')
+        );
+
+        const expected = {
+            class: 'LeadingCommentsTest',
+            method: 'firstLeadingComments',
+        };
+
+        await expectTest(getTest(suite, expected), expected);
+    });
+
+    it('has property', async () => {
+        const suite = await getTestSuite(
+            projectPath('tests/HasPropertyTest.php')
+        );
+
+        const expected = {
+            class: 'HasPropertyTest',
+            method: 'property',
+        };
+
+        await expectTest(getTest(suite, expected), expected);
     });
 
     it('parse code error', () => {
@@ -142,23 +203,22 @@ describe('Parser', () => {
     });
 
     it('class as codelens', async () => {
-        const test = await getTest({
-            kind: 'class',
-            method: '',
-        });
+        const suite = await getTestSuite();
 
-        expect(test.asCodeLens()).toEqual({
-            range: test.range,
+        expect(suite.asCodeLens()).toEqual({
+            range: suite.range,
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.test.nearest',
-                arguments: [file.toString(), test.range.start],
+                arguments: [file.toString(), suite.range.start],
             },
         });
     });
 
     it('method as codelens', async () => {
-        const test = await getTest({
+        const suite = await getTestSuite();
+
+        const test = getTest(suite, {
             method: 'test_failed',
             depends: ['test_passed'],
         });
@@ -174,16 +234,15 @@ describe('Parser', () => {
     });
 
     it('class as arguments', async () => {
-        const test = await getTest({
-            kind: 'class',
-            method: '',
-        });
+        const suite = await getTestSuite();
 
-        expect(test.asArguments()).toEqual([file.fsPath]);
+        expect(suite.asArguments()).toEqual([file.fsPath]);
     });
 
     it('method as arguments', async () => {
-        const test = await getTest({
+        const suite = await getTestSuite();
+
+        const test = getTest(suite, {
             method: 'test_failed',
             depends: ['test_passed'],
         });
@@ -193,25 +252,5 @@ describe('Parser', () => {
             '--filter',
             '^.*::(test_passed|test_failed)( with data set .*)?$',
         ]);
-    });
-
-    it('leading comments', async () => {
-        await expectTest(
-            {
-                class: 'LeadingCommentsTest',
-                method: 'firstLeadingComments',
-            },
-            projectPath('tests/LeadingCommentsTest.php')
-        );
-    });
-
-    it('has property', async () => {
-        await expectTest(
-            {
-                class: 'HasPropertyTest',
-                method: 'property',
-            },
-            projectPath('tests/HasPropertyTest.php')
-        );
     });
 });
