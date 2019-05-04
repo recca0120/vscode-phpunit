@@ -177,10 +177,17 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 
     const settings = await getDocumentSettings(textDocument.uri);
 
-    connection.sendNotification(WillSaveTextDocumentNotification.type, {});
-    connection.sendNotification('started');
-
     try {
+        connection.sendNotification(WillSaveTextDocumentNotification.type, {});
+        connection.sendNotification('started', () => {});
+
+        if (textDocument) {
+            connection.sendDiagnostics({
+                uri: textDocument.uri,
+                diagnostics: [],
+            });
+        }
+
         runner
             .setPhpBinary(settings.php)
             .setPhpUnitBinary(settings.phpunit)
