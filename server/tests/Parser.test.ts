@@ -1,4 +1,4 @@
-import Parser, { Test, TestSuite } from '../src/Parser';
+import Parser, { TestSuiteInfo } from '../src/Parser';
 import URI from 'vscode-uri';
 import { TextDocument } from 'vscode-languageserver-types';
 import files from '../src/Filesystem';
@@ -8,13 +8,22 @@ describe('Parser', () => {
     const parser = new Parser();
     const file = projectPath('tests/AssertionsTest.php');
 
-    const getTestSuite = async (testfile: URI = file): Promise<TestSuite> => {
+    const getId = (
+        id: string,
+        clazz = 'Recca0120\\VSCode\\Tests\\AssertionsTest'
+    ) => {
+        return `${clazz}::${id}`;
+    };
+
+    const getTestSuite = async (
+        testfile: URI = file
+    ): Promise<TestSuiteInfo> => {
         const suites = await parser.parse(testfile);
 
         return suites[0];
     };
 
-    const getTest = (suite: TestSuite, options: any = {}) => {
+    const getTest = (suite: TestSuiteInfo, options: any = {}) => {
         return suite.children.find(test => {
             for (const key in options) {
                 if (
@@ -27,135 +36,146 @@ describe('Parser', () => {
         });
     };
 
-    const expectTest = (test: Test, actual: any) => {
-        const expectObj = {
-            class: test.class,
-            depends: test.depends,
-            kind: test.kind,
-            method: test.method,
-            namespace: test.namespace,
-            range: test.range,
-            uri: test.uri,
-        };
-
-        expect(expectObj).toEqual(
-            Object.assign(
-                {
-                    class: 'AssertionsTest',
-                    depends: [],
-                    kind: 'method',
-                    method: '',
-                    namespace: 'Recca0120\\VSCode\\Tests',
-                    range: {
-                        start: jasmine.objectContaining({
-                            line: jasmine.anything(),
-                            character: jasmine.anything(),
-                        }),
-                        end: jasmine.objectContaining({
-                            line: jasmine.anything(),
-                            character: jasmine.anything(),
-                        }),
-                    },
-                    uri: jasmine.objectContaining({
-                        fsPath: test.uri.fsPath,
-                    }),
-                },
-                actual
-            )
-        );
-    };
-
     it('class', async () => {
         const suite = await getTestSuite();
 
-        expectTest(suite, {
-            kind: 'class',
-            method: '',
-        });
+        expect(suite).toEqual(
+            jasmine.objectContaining({
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+            })
+        );
     });
 
     it('passed', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'test_passed',
-        };
+        const id = getId('test_passed');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('failed', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'test_failed',
-            depends: ['test_passed'],
-        };
+        const id = getId('test_failed');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+                depends: ['test_passed'],
+            })
+        );
     });
 
     it('test_isnt_same', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'test_isnt_same',
-        };
+        const id = getId('test_isnt_same');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('test_risky', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'test_risky',
-        };
+        const id = getId('test_risky');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('annotation_test', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'annotation_test',
-        };
+        const id = getId('annotation_test');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('test_skipped', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'test_skipped',
-        };
+        const id = getId('test_skipped');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('test_incomplete', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'test_incomplete',
-        };
+        const id = getId('test_incomplete');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('addition_provider', async () => {
         const suite = await getTestSuite();
 
-        const expected = {
-            method: 'addition_provider',
-        };
+        const id = getId('addition_provider');
+        const test = getTest(suite, { id });
 
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
-    it('parse TextDocument', async () => {
+    it('parse text document', async () => {
         const parser = new Parser();
 
         const suites = parser.parseTextDocument(
@@ -167,33 +187,59 @@ describe('Parser', () => {
             )
         );
 
-        expect(suites).toBeDefined();
+        const suite = suites[0];
+
+        const id = getId('test_passed');
+        const test = getTest(suite, { id });
+
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('leading comments', async () => {
-        const suite = await getTestSuite(
-            projectPath('tests/LeadingCommentsTest.php')
+        const file = projectPath('tests/LeadingCommentsTest.php');
+        const suite = await getTestSuite(file);
+
+        const id = getId(
+            'firstLeadingComments',
+            'Recca0120\\VSCode\\Tests\\LeadingCommentsTest'
         );
+        const test = getTest(suite, { id });
 
-        const expected = {
-            class: 'LeadingCommentsTest',
-            method: 'firstLeadingComments',
-        };
-
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('has property', async () => {
-        const suite = await getTestSuite(
-            projectPath('tests/HasPropertyTest.php')
+        const file = projectPath('tests/HasPropertyTest.php');
+        const suite = await getTestSuite(file);
+
+        const id = getId(
+            'property',
+            'Recca0120\\VSCode\\Tests\\HasPropertyTest'
         );
+        const test = getTest(suite, { id });
 
-        const expected = {
-            class: 'HasPropertyTest',
-            method: 'property',
-        };
-
-        await expectTest(getTest(suite, expected), expected);
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label: id,
+                file: file.toString(),
+                line: jasmine.anything(),
+            })
+        );
     });
 
     it('parse code error', () => {
@@ -236,7 +282,7 @@ describe('Parser', () => {
     it('class as arguments', async () => {
         const suite = await getTestSuite();
 
-        expect(suite.asArguments()).toEqual([file.fsPath]);
+        expect(suite.asCommandArguments()).toEqual([file.fsPath]);
     });
 
     it('method as arguments', async () => {
@@ -247,7 +293,7 @@ describe('Parser', () => {
             depends: ['test_passed'],
         });
 
-        expect(test.asArguments()).toEqual([
+        expect(test.asCommandArguments()).toEqual([
             file.fsPath,
             '--filter',
             '^.*::(test_passed|test_failed)( with data set .*)?$',

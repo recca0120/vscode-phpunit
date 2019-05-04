@@ -1,5 +1,5 @@
 import { TextDocument, Position } from 'vscode-languageserver-protocol';
-import Parser, { Test, TestSuite } from './Parser';
+import Parser, { TestInfo, TestSuiteInfo, ExportCodeLens } from './Parser';
 import _files from './Filesystem';
 import { Process } from './Process';
 import { PathLike } from 'fs';
@@ -58,26 +58,29 @@ export class TestRunner {
     }
 
     async runTestAtCursor(textDocument: TextDocument, position?: Position) {
-        const tests: Test[] = this.parser
-            .parseTextDocument(textDocument)
-            .reduce((tests: Test[], testsuite: TestSuite) => {
-                return tests
-                    .concat([testsuite as Test])
-                    .concat(testsuite.children);
-            }, []);
-
         const line = position && position.line ? position.line : 0;
 
-        let test = tests.find(test => {
-            const start = test.range.start.line;
-            const end = test.range.end.line;
+        const testInfo: ExportCodeLens = this.parser
+            .parseTextDocument(textDocument)
+            .reduce((tests: ExportCodeLens[], testsuite: TestSuiteInfo) => {
+                tests.push(testsuite);
 
-            return test.kind === 'class'
-                ? start >= line || end <= line
-                : test.kind !== 'class' && end >= line;
-        });
+                testsuite.children.forEach((test: TestInfo) =>
+                    tests.push(test as ExportCodeLens)
+                );
 
-        return test ? await this.doRun(test.asArguments()) : '';
+                return tests;
+            }, [])
+            .find(test => {
+                const start = test.range.start.line;
+                const end = test.range.end.line;
+
+                return test.kind === 'class'
+                    ? start >= line || end <= line
+                    : test.kind !== 'class' && end >= line;
+            });
+
+        return testInfo ? await this.doRun(testInfo.asCommandArguments()) : '';
     }
 
     async run(

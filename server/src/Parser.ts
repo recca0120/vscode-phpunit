@@ -19,24 +19,81 @@ interface TestOptions {
     uri: URI;
 }
 
-export interface Test extends TestOptions {
-    depends: string[];
+export interface ExportCodeLens {
+    [propName: string]: any;
     kind: string;
+    uri: URI;
     range: Range;
+    depends: string[];
     asCodeLens(): CodeLens;
-    asCommand(): Command;
-    asArguments(): string[];
+    asCodeLensCommand(): Command;
+    asCommandArguments(): string[];
 }
 
-export interface TestSuite extends Test {
-    children: Test[];
+export interface TestSuiteInfo extends ExportCodeLens {
+    type: 'suite';
+    id: string;
+    /** The label to be displayed by the Test Explorer for this suite. */
+    label: string;
+    /** The description to be displayed next to the label. */
+    description?: string;
+    /** The tooltip text to be displayed by the Test Explorer when you hover over this suite. */
+    tooltip?: string;
+    /**
+     * The file containing this suite (if known).
+     * This can either be an absolute path (if it is a local file) or a URI.
+     * Note that this should never contain a `file://` URI.
+     */
+    file?: string;
+    /** The line within the specified file where the suite definition starts (if known). */
+    line?: number;
+    children: (TestSuiteInfo | TestInfo)[];
 }
 
-class NodeTest implements Test {
+export interface TestInfo extends ExportCodeLens {
+    type: 'test';
+    id: string;
+    /** The label to be displayed by the Test Explorer for this test. */
+    label: string;
+    /** The description to be displayed next to the label. */
+    description?: string;
+    /** The tooltip text to be displayed by the Test Explorer when you hover over this test. */
+    tooltip?: string;
+    /**
+     * The file containing this test (if known).
+     * This can either be an absolute path (if it is a local file) or a URI.
+     * Note that this should never contain a `file://` URI.
+     */
+    file?: string;
+    /** The line within the specified file where the test definition starts (if known). */
+    line?: number;
+    /** Indicates whether this test will be skipped during test runs */
+    skipped?: boolean;
+}
+
+abstract class BaseTest {
     constructor(private node: any, private options?: TestOptions) {}
 
-    get class(): string {
-        return this.options.class;
+    get id(): string {
+        const className = [this.options.namespace, this.options.class]
+            .filter(name => !!name)
+            .join('\\');
+
+        return this.node.kind === 'method'
+            ? [className, this.node.name.name].join('::')
+            : className;
+    }
+
+    get label(): string {
+        return this.id;
+    }
+
+    get file(): string {
+        return this.options.uri.toString();
+    }
+
+    get line(): number {
+        return this.node.loc.start.line - 1;
     }
 
     get depends(): string[] {
@@ -57,10 +114,6 @@ class NodeTest implements Test {
 
     get method(): string {
         return this.kind === 'method' ? this.node.name.name : '';
-    }
-
-    get namespace(): string {
-        return this.options.namespace;
     }
 
     get range(): Range {
@@ -92,12 +145,12 @@ class NodeTest implements Test {
 
     asCodeLens(): CodeLens {
         const codeLens = CodeLens.create(this.range);
-        codeLens.command = this.asCommand();
+        codeLens.command = this.asCodeLensCommand();
 
         return codeLens;
     }
 
-    asCommand(): Command {
+    asCodeLensCommand(): Command {
         return {
             title: 'Run Test',
             command: 'phpunit.lsp.run-test-at-cursor',
@@ -105,7 +158,7 @@ class NodeTest implements Test {
         };
     }
 
-    asArguments(): string[] {
+    asCommandArguments(): string[] {
         const args = [this.uri.fsPath];
 
         if (!this.method) {
@@ -138,8 +191,21 @@ class NodeTest implements Test {
     }
 }
 
-class NodeTestSuite extends NodeTest implements TestSuite {
-    constructor(node: any, public children: Test[], options?: TestOptions) {
+class NodeTest extends BaseTest implements TestInfo {
+    type: 'test';
+
+    constructor(node: any, options?: TestOptions) {
+        super(node, options);
+    }
+}
+
+class NodeTestSuite extends BaseTest implements TestSuiteInfo {
+    type: 'suite';
+    constructor(
+        node: any,
+        public children: (TestSuiteInfo | TestInfo)[],
+        options?: TestOptions
+    ) {
         super(node, options);
     }
 }
@@ -147,7 +213,7 @@ class NodeTestSuite extends NodeTest implements TestSuite {
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
-    asTestSuite(): TestSuite {
+    asTestSuite(): TestSuiteInfo {
         const options = this.getTestOptions();
         const methods = this.getMethods();
 
@@ -213,11 +279,11 @@ export default class Parser {
         })
     ) {}
 
-    async parse(uri: PathLike | URI): Promise<TestSuite[]> {
+    async parse(uri: PathLike | URI): Promise<TestSuiteInfo[]> {
         return this.parseCode(await this.files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument | null): TestSuite[] {
+    parseTextDocument(textDocument: TextDocument | null): TestSuiteInfo[] {
         if (!textDocument) {
             return [];
         }
@@ -225,7 +291,7 @@ export default class Parser {
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
-    parseCode(code: string, uri: PathLike | URI): TestSuite[] {
+    parseCode(code: string, uri: PathLike | URI): TestSuiteInfo[] {
         const tree: any = this.engine.parseCode(code);
 
         return this.findClasses(this.files.asUri(uri), tree.children).reduce(

@@ -1,5 +1,15 @@
+// Place your settings in this file to overwrite default and user settings.
 {
+    "files.exclude": {
+        "out": false
+    },
+    "search.exclude": {
+        "out": true,
+        "server": true
+    },
+    "files.trimTrailingWhitespace": true,
     "editor.insertSpaces": false,
-    "typescript.tsc.autoDetect": "off",
-    "typescript.preferences.quoteStyle": "single"
+    "editor.tabSize": 4,
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "typescript.tsc.autoDetect": "off"
 }
