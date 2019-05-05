@@ -1,5 +1,9 @@
-import { TextDocument, Position } from 'vscode-languageserver-protocol';
-import Parser, { TestSuiteInfo, AsCodeLens, TestSuite } from './Parser';
+import {
+    TextDocument,
+    Position,
+    CodeLens,
+} from 'vscode-languageserver-protocol';
+import Parser, { TestSuiteInfo } from './Parser';
 import _files from './Filesystem';
 import { Process } from './Process';
 import { PathLike } from 'fs';
@@ -67,16 +71,11 @@ export class TestRunner {
         }
 
         const line = position && position.line ? position.line : 0;
+        const codeLens = testSuite
+            .exportCodeLens()
+            .find(codeLens => this.findCodeLensAtCursor(codeLens, line));
 
-        const exportCodelens: AsCodeLens = [testSuite as AsCodeLens]
-            .concat(testSuite.children as AsCodeLens[])
-            .find((exportCodelens: AsCodeLens) =>
-                this.findMethodAtCursor(exportCodelens, line)
-            );
-
-        return exportCodelens
-            ? await this.doRun(exportCodelens.asCommandArguments())
-            : '';
+        return codeLens ? await this.doRun(codeLens.data.arguments) : '';
     }
 
     async run(
@@ -145,12 +144,15 @@ export class TestRunner {
         return await this.files.findup(['vendor/bin/phpunit', 'phpunit']);
     }
 
-    private findMethodAtCursor(exportCodelens: AsCodeLens, line: number) {
-        const start = exportCodelens.range.start.line;
-        const end = exportCodelens.range.end.line;
-        const isTestSuiteInfo = exportCodelens instanceof TestSuite;
-        return isTestSuiteInfo
-            ? start >= line || end <= line
-            : !isTestSuiteInfo && end >= line;
+    private findCodeLensAtCursor(codeLens: CodeLens, line: number) {
+        const { type, range } = codeLens.data;
+        const start = range.start.line;
+        const end = range.end.line;
+
+        if (type === 'suite') {
+            return start >= line || end <= line;
+        }
+
+        return type !== 'suite' && end >= line;
     }
 }

@@ -20,7 +20,7 @@ import {
     LogMessageNotification,
     DiagnosticRelatedInformation,
 } from 'vscode-languageserver';
-import Parser, { TestSuiteInfo, AsCodeLens } from './Parser';
+import Parser, { TestSuiteInfo } from './Parser';
 import { TestRunner } from './TestRunner';
 import { ProblemMatcher, Problem } from './ProblemMatcher';
 
@@ -160,17 +160,11 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 
 connection.onCodeLens((params: CodeLensParams) => {
-    const testsuite: TestSuiteInfo = parser.parseTextDocument(
+    const testSuite: TestSuiteInfo = parser.parseTextDocument(
         documents.get(params.textDocument.uri)
     );
 
-    if (!testsuite) {
-        return [];
-    }
-
-    return [testsuite as AsCodeLens]
-        .concat(testsuite.children as AsCodeLens[])
-        .map(test => test.asCodeLens());
+    return !testSuite ? [] : testSuite.exportCodeLens();
 });
 
 const runner = new TestRunner();

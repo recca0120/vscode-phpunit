@@ -270,6 +270,20 @@ describe('Parser', () => {
                 command: 'phpunit.lsp.run-test-at-cursor',
                 arguments: [file.toString(), suite.range.start],
             },
+            data: {
+                arguments: [file.fsPath],
+                range: {
+                    end: {
+                        character: 1,
+                        line: 69,
+                    },
+                    start: {
+                        character: 0,
+                        line: 7,
+                    },
+                },
+                type: 'suite',
+            },
         });
     });
 
@@ -288,27 +302,24 @@ describe('Parser', () => {
                 command: 'phpunit.lsp.run-test-at-cursor',
                 arguments: [file.toString(), test.range.start],
             },
+            data: {
+                arguments: [
+                    file.fsPath,
+                    '--filter',
+                    '^.*::(test_passed|test_failed)( with data set .*)?$',
+                ],
+                range: {
+                    end: {
+                        character: 5,
+                        line: 22,
+                    },
+                    start: {
+                        character: 5,
+                        line: 19,
+                    },
+                },
+                type: 'test',
+            },
         });
-    });
-
-    it('class as arguments', async () => {
-        const suite = await getTestSuite();
-
-        expect(suite.asCommandArguments()).toEqual([file.fsPath]);
-    });
-
-    it('method as arguments', async () => {
-        const suite = await getTestSuite();
-
-        const test = getTest(suite, {
-            method: 'test_failed',
-            depends: ['test_passed'],
-        });
-
-        expect(test.asCommandArguments()).toEqual([
-            file.fsPath,
-            '--filter',
-            '^.*::(test_passed|test_failed)( with data set .*)?$',
-        ]);
     });
 });

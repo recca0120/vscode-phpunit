@@ -19,7 +19,7 @@ interface TestOptions {
     uri: URI;
 }
 
-export interface AsCodeLens {
+interface AsCodeLens {
     [propName: string]: any;
     kind: string;
     uri: URI;
@@ -27,10 +27,13 @@ export interface AsCodeLens {
     depends: string[];
     asCodeLens(): CodeLens;
     asCodeLensCommand(): Command;
-    asCommandArguments(): string[];
 }
 
-export interface TestSuiteInfo extends AsCodeLens {
+interface ExportCodeLens {
+    exportCodeLens(): CodeLens[];
+}
+
+export interface TestSuiteInfo extends AsCodeLens, ExportCodeLens {
     type: 'suite';
     id: string;
     /** The label to be displayed by the Test Explorer for this suite. */
@@ -146,6 +149,11 @@ abstract class BaseTest {
     asCodeLens(): CodeLens {
         const codeLens = CodeLens.create(this.range);
         codeLens.command = this.asCodeLensCommand();
+        codeLens.data = {
+            type: this instanceof TestSuite ? 'suite' : 'test',
+            range: this.range,
+            arguments: this.asCommandArguments(),
+        };
 
         return codeLens;
     }
@@ -158,7 +166,7 @@ abstract class BaseTest {
         };
     }
 
-    asCommandArguments(): string[] {
+    private asCommandArguments(): string[] {
         const args = [this.uri.fsPath];
 
         if (!this.method) {
@@ -200,6 +208,12 @@ export class TestSuite extends BaseTest implements TestSuiteInfo {
         options?: TestOptions
     ) {
         super(node, options);
+    }
+
+    exportCodeLens(): CodeLens[] {
+        return [this as AsCodeLens]
+            .concat(this.children as AsCodeLens[])
+            .map(test => test.asCodeLens());
     }
 }
 
