@@ -9,6 +9,7 @@ import { Process } from './Process';
 import { PathLike } from 'fs';
 import URI from 'vscode-uri';
 import { TestCollection } from './TestCollection';
+import { TestResponse } from './TestResponse';
 
 export class TestRunner {
     private phpBinary = '';
@@ -66,7 +67,7 @@ export class TestRunner {
         const suite = await this.suites.get(textDocument.uri);
 
         if (!suite) {
-            return '';
+            return undefined;
         }
 
         const line = position && position.line ? position.line : 0;
@@ -76,7 +77,7 @@ export class TestRunner {
                 this.findCodeLensAtCursor(codeLens, line)
             );
 
-        return codeLens ? await this.doRun(codeLens.data.arguments) : '';
+        return codeLens ? await this.doRun(codeLens.data.arguments) : undefined;
     }
 
     async run(
@@ -111,7 +112,9 @@ export class TestRunner {
     async doRun(args: string[] = []) {
         this.lastArgs = args;
 
-        return await this.process.run(await this.getCommand(args));
+        return new TestResponse(
+            await this.process.run(await this.getCommand(args))
+        );
     }
 
     private async getCommand(args: string[]): Promise<Command> {

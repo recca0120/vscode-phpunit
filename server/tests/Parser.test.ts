@@ -1,4 +1,4 @@
-import Parser, { TestSuiteInfo } from '../src/Parser';
+import Parser, { TestSuite } from '../src/Parser';
 import URI from 'vscode-uri';
 import { TextDocument } from 'vscode-languageserver-types';
 import files from '../src/Filesystem';
@@ -17,13 +17,13 @@ describe('Parser', () => {
 
     const getTestSuite = async (
         testfile: URI = file
-    ): Promise<TestSuiteInfo | undefined> => {
+    ): Promise<TestSuite | undefined> => {
         const suite = await parser.parse(testfile);
 
         return suite;
     };
 
-    const getTest = (suite: TestSuiteInfo, options: any = {}) => {
+    const getTest = (suite: TestSuite, options: any = {}) => {
         return suite.children.find(test => {
             for (const key in options) {
                 if (

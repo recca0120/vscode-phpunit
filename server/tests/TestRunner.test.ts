@@ -33,7 +33,7 @@ describe('TestRunner', () => {
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('all')).toEqual('PHPUnit');
+        expect(new String(await testRunner.run('all'))).toEqual('PHPUnit');
         // expect(files.findup).not.toBeCalledWith(['php']);
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
@@ -49,12 +49,18 @@ describe('TestRunner', () => {
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(
-            await testRunner.run('rerun', textDocument, Position.create(20, 0))
+            new String(
+                await testRunner.run(
+                    'rerun',
+                    textDocument,
+                    Position.create(20, 0)
+                )
+            )
         ).toEqual('PHPUnit');
 
-        expect(await testRunner.rerun(textDocument, position)).toEqual(
-            'PHPUnit'
-        );
+        expect(
+            new String(await testRunner.rerun(textDocument, position))
+        ).toEqual('PHPUnit');
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
@@ -71,7 +77,9 @@ describe('TestRunner', () => {
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('file', textDocument)).toEqual('PHPUnit');
+        expect(new String(await testRunner.run('file', textDocument))).toEqual(
+            'PHPUnit'
+        );
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
@@ -86,7 +94,9 @@ describe('TestRunner', () => {
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(
-            await testRunner.run('test-at-cursor', textDocument, position)
+            new String(
+                await testRunner.run('test-at-cursor', textDocument, position)
+            )
         ).toEqual('PHPUnit');
 
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
@@ -107,7 +117,9 @@ describe('TestRunner', () => {
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
         expect(
-            await testRunner.run('test-at-cursor', textDocument, position)
+            new String(
+                await testRunner.run('test-at-cursor', textDocument, position)
+            )
         ).toEqual('PHPUnit');
 
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
@@ -127,7 +139,7 @@ describe('TestRunner', () => {
             .setPhpUnitBinary('phpunit')
             .setArgs(['foo', 'bar']);
 
-        expect(await testRunner.run('all')).toEqual('PHPUnit');
+        expect(new String(await testRunner.run('all'))).toEqual('PHPUnit');
         expect(files.findup).not.toBeCalled();
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',
@@ -140,9 +152,9 @@ describe('TestRunner', () => {
         spyOn(files, 'findup').and.returnValues('phpunit');
         spyOn(process, 'run').and.returnValue('PHPUnit');
 
-        expect(await testRunner.run('directory', textDocument)).toEqual(
-            'PHPUnit'
-        );
+        expect(
+            new String(await testRunner.run('directory', textDocument))
+        ).toEqual('PHPUnit');
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',

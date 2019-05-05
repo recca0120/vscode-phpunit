@@ -7,8 +7,6 @@ import {
     createConnection,
     TextDocuments,
     TextDocument,
-    Diagnostic,
-    DiagnosticSeverity,
     ProposedFeatures,
     InitializeParams,
     DidChangeConfigurationNotification,
@@ -17,13 +15,11 @@ import {
     Position,
     MessageType,
     LogMessageNotification,
-    DiagnosticRelatedInformation,
     WillSaveTextDocumentWaitUntilRequest,
     TextDocumentSaveReason,
 } from 'vscode-languageserver';
 import { TestSuite } from './Parser';
 import { TestRunner } from './TestRunner';
-import { ProblemMatcher, Problem } from './ProblemMatcher';
 import { TestCollection } from './TestCollection';
 
 const suites = new TestCollection();
@@ -185,15 +181,14 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
                 textDocument,
                 reason: TextDocumentSaveReason.Manual,
             });
-        }
-        connection.sendNotification('started', () => {});
 
-        if (textDocument) {
-            connection.sendDiagnostics({
-                uri: textDocument.uri,
-                diagnostics: [],
-            });
+            // connection.sendDiagnostics({
+            //     uri: textDocument.uri,
+            //     diagnostics: [],
+            // });
         }
+
+        connection.sendNotification('started', () => {});
 
         runner
             .setPhpBinary(settings.php)
@@ -206,57 +201,23 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
             position
         );
 
-        connection.sendNotification(LogMessageNotification.type, {
-            type: MessageType.Log,
-            message: response,
+        if (!response) {
+            return;
+        }
+
+        (await response.asDiagnosticGroup(
+            hasDiagnosticRelatedInformationCapability
+        )).forEach((diagnostics, uri) => {
+            connection.sendDiagnostics({
+                uri,
+                diagnostics,
+            });
         });
 
-        const problemMatcher = new ProblemMatcher();
-        const problems = await problemMatcher.parse(response);
-
-        problems
-            .reduce(
-                (
-                    diagnosticGroup: Map<string, Diagnostic[]>,
-                    problem: Problem
-                ) => {
-                    const diagnostics = diagnosticGroup.has(problem.uri)
-                        ? diagnosticGroup.get(problem.uri)
-                        : [];
-
-                    const diagnostic: Diagnostic = {
-                        severity: DiagnosticSeverity.Error,
-                        range: problem.range,
-                        message: problem.message.trim(),
-                        source: 'PHPUnit',
-                    };
-
-                    if (hasDiagnosticRelatedInformationCapability) {
-                        diagnostic.relatedInformation = problem.files.map(
-                            file => {
-                                return DiagnosticRelatedInformation.create(
-                                    file,
-                                    problem.message.trim()
-                                );
-                            }
-                        );
-                    }
-
-                    diagnosticGroup.set(
-                        problem.uri,
-                        diagnostics.concat([diagnostic])
-                    );
-
-                    return diagnosticGroup;
-                },
-                new Map<string, Diagnostic[]>()
-            )
-            .forEach((diagnostics: Diagnostic[], uri: string) => {
-                connection.sendDiagnostics({
-                    uri,
-                    diagnostics,
-                });
-            });
+        connection.sendNotification(LogMessageNotification.type, {
+            type: MessageType.Log,
+            message: response.toString(),
+        });
     } catch (e) {
         throw e;
     } finally {

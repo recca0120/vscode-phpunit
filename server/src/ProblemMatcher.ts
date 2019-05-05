@@ -1,37 +1,11 @@
-import { Location, Range } from 'vscode-languageserver-protocol';
-import files, { Filesystem } from './Filesystem';
-
-export enum PHPUnitStatus {
-    UNKNOWN,
-    PASSED,
-    SKIPPED,
-    INCOMPLETE,
-    FAILURE,
-    ERROR,
-    RISKY,
-    WARNING,
-}
-
-export interface Problem {
-    name: string;
-    namespace: string;
-    class: string;
-    method: string;
-    status: PHPUnitStatus;
-    uri: string;
-    range: Range;
-    message: string;
-    files: Location[];
-}
-
-abstract class ProblemMatcherBase<T> {
+export abstract class ProblemMatcher<T> {
     private problems: any[] = [];
     private problemIndex = -1;
     private currentIndex = -1;
 
     constructor(private patterns: RegExp[] = []) {}
 
-    async parse(contents: string): Promise<Problem[]> {
+    async parse(contents: string): Promise<T[]> {
         const lines: string[] = contents.split(/\r\n|\r|\n/g);
 
         this.problems = [];
@@ -99,116 +73,5 @@ abstract class ProblemMatcherBase<T> {
         return this.currentIndex === this.patterns.length - 1
             ? 0
             : this.currentIndex + 1;
-    }
-}
-
-export class ProblemMatcher extends ProblemMatcherBase<Problem> {
-    private currentStatus: PHPUnitStatus = this.asStatus('failure');
-
-    private status = [
-        'UNKNOWN',
-        'PASSED',
-        'SKIPPED',
-        'INCOMPLETE',
-        'FAILURE',
-        'ERROR',
-        'RISKY',
-        'WARNING',
-    ].join('|');
-
-    private statusPattern = new RegExp(
-        `There (was|were) \\d+ (${this.status})(s?)( test?)(:?)`,
-        'i'
-    );
-
-    constructor(private _files: Filesystem = files) {
-        super([
-            new RegExp('^\\d+\\)\\s(([^:]*)::([^\\s]*).*)$'),
-            new RegExp('^(.*)$'),
-            new RegExp('^(.*):(\\d+)$'),
-        ]);
-    }
-
-    async parse(contents: string): Promise<Problem[]> {
-        this.currentStatus = this.asStatus('failure');
-
-        const problems = await super.parse(contents);
-
-        return problems.map(problem => {
-            let location = problem.files
-                .slice()
-                .reverse()
-                .find(file => {
-                    return new RegExp(`${problem.class}.php$`).test(file.uri);
-                });
-
-            if (!location) {
-                location = problem.files[problem.files.length - 1];
-            } else {
-                problem.files = problem.files.filter(l => l !== location);
-            }
-
-            return Object.assign(problem, location);
-        });
-    }
-
-    protected parseLine(line: string) {
-        let m: RegExpMatchArray;
-        if ((m = line.match(this.statusPattern))) {
-            this.currentStatus = this.asStatus(m[2].trim().toLowerCase());
-        }
-    }
-
-    protected async create(m: RegExpMatchArray): Promise<Problem> {
-        return {
-            name: m[1],
-            namespace: '',
-            class: '',
-            method: '',
-            status: this.currentStatus,
-            uri: '',
-            range: Range.create(0, 0, 0, 0),
-            message: '',
-            files: [],
-        };
-    }
-
-    protected async update(
-        problem: Problem,
-        m: RegExpMatchArray,
-        index: number
-    ) {
-        switch (index) {
-            case 0:
-                problem.namespace = m[2]
-                    .substr(0, m[2].lastIndexOf('\\'))
-                    .replace(/\\$/, '');
-
-                problem.class = m[2]
-                    .substr(m[2].lastIndexOf('\\'))
-                    .replace(/^\\/, '');
-
-                problem.name = m[1];
-                problem.method = m[3];
-                break;
-            case 1:
-                problem.message += `${m[1]}\n`;
-                break;
-            case 2:
-                problem.files.push(
-                    await this._files.lineLocation(m[1], parseInt(m[2], 10) - 1)
-                );
-                break;
-        }
-    }
-
-    private asStatus(status: string): PHPUnitStatus {
-        for (const name in PHPUnitStatus) {
-            if (name.toLowerCase() === status) {
-                return PHPUnitStatus[name] as any;
-            }
-        }
-
-        return PHPUnitStatus.ERROR;
     }
 }

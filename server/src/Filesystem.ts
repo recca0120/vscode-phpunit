@@ -1,7 +1,7 @@
 import { readFile, PathLike, writeFile, access, createReadStream } from 'fs';
 import { join, dirname } from 'path';
 import URI from 'vscode-uri';
-import * as glob from 'glob';
+import glob from 'glob';
 import { createInterface } from 'readline';
 import { Position, Range, Location } from 'vscode-languageserver-protocol';
 
