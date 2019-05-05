@@ -1,12 +1,12 @@
-import { TestSuiteCollection } from '../src/TestSuiteCollection';
+import { TestCollection } from '../src/TestCollection';
 import { projectPath } from './helpers';
 
-describe('TestSuiteCollection', () => {
+describe('TestCollection', () => {
     const path = projectPath('');
-    const collection = new TestSuiteCollection();
+    const collection = new TestCollection();
 
     it('instance', () => {
-        expect(collection).toBeInstanceOf(TestSuiteCollection);
+        expect(collection).toBeInstanceOf(TestCollection);
     });
 
     it('all', async () => {

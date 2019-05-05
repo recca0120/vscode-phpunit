@@ -8,7 +8,7 @@ import _files from './Filesystem';
 import { Process } from './Process';
 import { PathLike } from 'fs';
 import URI from 'vscode-uri';
-import { TestSuiteCollection } from './TestSuiteCollection';
+import { TestCollection } from './TestCollection';
 
 export class TestRunner {
     private phpBinary = '';
@@ -17,7 +17,7 @@ export class TestRunner {
     private lastArgs: string[] = [];
 
     constructor(
-        private suites: TestSuiteCollection,
+        private suites: TestCollection,
         private process = new Process(),
         private files = _files
     ) {}

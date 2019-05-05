@@ -24,9 +24,9 @@ import {
 import { TestSuite } from './Parser';
 import { TestRunner } from './TestRunner';
 import { ProblemMatcher, Problem } from './ProblemMatcher';
-import { TestSuiteCollection } from './TestSuiteCollection';
+import { TestCollection } from './TestCollection';
 
-const suites = new TestSuiteCollection();
+const suites = new TestCollection();
 const runner = new TestRunner(suites);
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.

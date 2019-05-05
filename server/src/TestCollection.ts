@@ -3,7 +3,7 @@ import Parser, { TestSuite } from './Parser';
 import { PathLike } from 'fs';
 import URI from 'vscode-uri';
 
-export class TestSuiteCollection {
+export class TestCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
 
     constructor(private files = _files, private parser = new Parser()) {}
@@ -21,7 +21,7 @@ export class TestSuiteCollection {
         return this;
     }
 
-    async put(uri: PathLike | URI): Promise<TestSuiteCollection> {
+    async put(uri: PathLike | URI): Promise<TestCollection> {
         uri = this.files.asUri(uri);
 
         const suite = await this.parser.parse(uri);

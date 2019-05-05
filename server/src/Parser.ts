@@ -10,7 +10,7 @@ import {
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
-import { TestSuiteInfo, TestInfo } from './TestInfo';
+import { TestSuiteInfo, TestInfo } from './TestExplorer';
 
 interface TestOptions {
     [propName: string]: any;
