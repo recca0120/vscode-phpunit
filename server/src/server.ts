@@ -20,10 +20,11 @@ import {
     LogMessageNotification,
     DiagnosticRelatedInformation,
 } from 'vscode-languageserver';
-import Parser, { TestInfo, TestSuiteInfo, ExportCodeLens } from './Parser';
+import Parser, { TestSuiteInfo, AsCodeLens } from './Parser';
 import { TestRunner } from './TestRunner';
 import { ProblemMatcher, Problem } from './ProblemMatcher';
 
+const parser = new Parser();
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 let connection = createConnection(ProposedFeatures.all);
@@ -159,17 +160,16 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 
 connection.onCodeLens((params: CodeLensParams) => {
-    return new Parser()
-        .parseTextDocument(documents.get(params.textDocument.uri))
-        .reduce((tests: ExportCodeLens[], testsuite: TestSuiteInfo) => {
-            tests.push(testsuite);
+    const testsuite: TestSuiteInfo = parser.parseTextDocument(
+        documents.get(params.textDocument.uri)
+    );
 
-            testsuite.children.forEach((test: TestInfo) =>
-                tests.push(test as ExportCodeLens)
-            );
+    if (!testsuite) {
+        return [];
+    }
 
-            return tests;
-        }, [])
+    return [testsuite as AsCodeLens]
+        .concat(testsuite.children as AsCodeLens[])
         .map(test => test.asCodeLens());
 });
 

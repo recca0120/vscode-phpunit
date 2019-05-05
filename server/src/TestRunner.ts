@@ -1,5 +1,5 @@
 import { TextDocument, Position } from 'vscode-languageserver-protocol';
-import Parser, { TestInfo, TestSuiteInfo, ExportCodeLens } from './Parser';
+import Parser, { TestSuiteInfo, AsCodeLens, TestSuite } from './Parser';
 import _files from './Filesystem';
 import { Process } from './Process';
 import { PathLike } from 'fs';
@@ -58,29 +58,25 @@ export class TestRunner {
     }
 
     async runTestAtCursor(textDocument: TextDocument, position?: Position) {
+        const testSuite: TestSuiteInfo = this.parser.parseTextDocument(
+            textDocument
+        );
+
+        if (!testSuite) {
+            return '';
+        }
+
         const line = position && position.line ? position.line : 0;
 
-        const testInfo: ExportCodeLens = this.parser
-            .parseTextDocument(textDocument)
-            .reduce((tests: ExportCodeLens[], testsuite: TestSuiteInfo) => {
-                tests.push(testsuite);
+        const exportCodelens: AsCodeLens = [testSuite as AsCodeLens]
+            .concat(testSuite.children as AsCodeLens[])
+            .find((exportCodelens: AsCodeLens) =>
+                this.findMethodAtCursor(exportCodelens, line)
+            );
 
-                testsuite.children.forEach((test: TestInfo) =>
-                    tests.push(test as ExportCodeLens)
-                );
-
-                return tests;
-            }, [])
-            .find(test => {
-                const start = test.range.start.line;
-                const end = test.range.end.line;
-
-                return test.kind === 'class'
-                    ? start >= line || end <= line
-                    : test.kind !== 'class' && end >= line;
-            });
-
-        return testInfo ? await this.doRun(testInfo.asCommandArguments()) : '';
+        return exportCodelens
+            ? await this.doRun(exportCodelens.asCommandArguments())
+            : '';
     }
 
     async run(
@@ -147,5 +143,14 @@ export class TestRunner {
         }
 
         return await this.files.findup(['vendor/bin/phpunit', 'phpunit']);
+    }
+
+    private findMethodAtCursor(exportCodelens: AsCodeLens, line: number) {
+        const start = exportCodelens.range.start.line;
+        const end = exportCodelens.range.end.line;
+        const isTestSuiteInfo = exportCodelens instanceof TestSuite;
+        return isTestSuiteInfo
+            ? start >= line || end <= line
+            : !isTestSuiteInfo && end >= line;
     }
 }

@@ -68,29 +68,3 @@ class AssertionsTest extends TestCase
         ];
     }
 }
-
-class FailTestCase extends TestCase
-{
-    public static function test_static_public_fail()
-    {
-    }
-
-    protected static function test_protected_fail()
-    {
-    }
-
-    private static function test_private_fail()
-    {
-    }
-}
-
-abstract class AbstractAssertionsTest extends TestCase
-{
-    public function test_abstract()
-    {
-    }
-}
-
-function test()
-{
-}

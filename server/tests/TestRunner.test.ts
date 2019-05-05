@@ -106,6 +106,7 @@ describe('TestRunner', () => {
         expect(
             await testRunner.run('test-at-cursor', textDocument, position)
         ).toEqual('PHPUnit');
+
         expect(files.findup).toBeCalledWith(['vendor/bin/phpunit', 'phpunit']);
         expect(process.run).toBeCalledWith({
             title: 'PHPUnit LSP',

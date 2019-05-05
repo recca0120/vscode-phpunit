@@ -19,7 +19,7 @@ interface TestOptions {
     uri: URI;
 }
 
-export interface ExportCodeLens {
+export interface AsCodeLens {
     [propName: string]: any;
     kind: string;
     uri: URI;
@@ -30,7 +30,7 @@ export interface ExportCodeLens {
     asCommandArguments(): string[];
 }
 
-export interface TestSuiteInfo extends ExportCodeLens {
+export interface TestSuiteInfo extends AsCodeLens {
     type: 'suite';
     id: string;
     /** The label to be displayed by the Test Explorer for this suite. */
@@ -50,7 +50,7 @@ export interface TestSuiteInfo extends ExportCodeLens {
     children: (TestSuiteInfo | TestInfo)[];
 }
 
-export interface TestInfo extends ExportCodeLens {
+export interface TestInfo extends AsCodeLens {
     type: 'test';
     id: string;
     /** The label to be displayed by the Test Explorer for this test. */
@@ -191,7 +191,7 @@ abstract class BaseTest {
     }
 }
 
-class TestSuite extends BaseTest implements TestSuiteInfo {
+export class TestSuite extends BaseTest implements TestSuiteInfo {
     type: 'suite';
 
     constructor(
@@ -203,7 +203,7 @@ class TestSuite extends BaseTest implements TestSuiteInfo {
     }
 }
 
-class Test extends BaseTest implements TestInfo {
+export class Test extends BaseTest implements TestInfo {
     type: 'test';
 
     constructor(node: any, options?: TestOptions) {
@@ -280,29 +280,25 @@ export default class Parser {
         })
     ) {}
 
-    async parse(uri: PathLike | URI): Promise<TestSuiteInfo[]> {
+    async parse(uri: PathLike | URI): Promise<TestSuiteInfo | null> {
         return this.parseCode(await this.files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument | null): TestSuiteInfo[] {
+    parseTextDocument(textDocument: TextDocument | null): TestSuiteInfo | null {
         if (!textDocument) {
-            return [];
+            return undefined;
         }
 
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
-    parseCode(code: string, uri: PathLike | URI): TestSuiteInfo[] {
+    parseCode(code: string, uri: PathLike | URI): TestSuiteInfo | null {
         const tree: any = this.engine.parseCode(code);
+        const classes = this.findClasses(this.files.asUri(uri), tree.children);
 
-        return this.findClasses(this.files.asUri(uri), tree.children).reduce(
-            (testSuites, clazz) => {
-                const testSuite = clazz.asTestSuite();
-
-                return testSuite ? testSuites.concat([testSuite]) : testSuites;
-            },
-            []
-        );
+        return !classes || classes.length === 0
+            ? null
+            : classes[0].asTestSuite();
     }
 
     private findClasses(uri: URI, nodes: any[], namespace = ''): Clazz[] {

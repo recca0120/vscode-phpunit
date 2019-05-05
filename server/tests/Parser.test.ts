@@ -17,10 +17,10 @@ describe('Parser', () => {
 
     const getTestSuite = async (
         testfile: URI = file
-    ): Promise<TestSuiteInfo> => {
-        const suites = await parser.parse(testfile);
+    ): Promise<TestSuiteInfo | undefined> => {
+        const suite = await parser.parse(testfile);
 
-        return suites[0];
+        return suite;
     };
 
     const getTest = (suite: TestSuiteInfo, options: any = {}) => {
@@ -175,10 +175,24 @@ describe('Parser', () => {
         );
     });
 
+    it('abstract class', async () => {
+        const file = projectPath('tests/AbstractTest.php');
+        const suite = await getTestSuite(file);
+
+        expect(suite).toBeNull();
+    });
+
+    it('static method', async () => {
+        const file = projectPath('tests/StaticMethodTest.php');
+        const suite = await getTestSuite(file);
+
+        expect(suite).toBeNull();
+    });
+
     it('parse text document', async () => {
         const parser = new Parser();
 
-        const suites = parser.parseTextDocument(
+        const suite = parser.parseTextDocument(
             TextDocument.create(
                 file.toString(),
                 'php',
@@ -186,8 +200,6 @@ describe('Parser', () => {
                 await files.get(file)
             )
         );
-
-        const suite = suites[0];
 
         const id = getId('test_passed');
         const test = getTest(suite, { id });
@@ -245,7 +257,7 @@ describe('Parser', () => {
     it('parse code error', () => {
         const parser = new Parser();
 
-        expect(parser.parseCode('a"bcde', URI.parse('/usr/bin'))).toEqual([]);
+        expect(parser.parseCode('a"bcde', URI.parse('/usr/bin'))).toBeNull();
     });
 
     it('class as codelens', async () => {
