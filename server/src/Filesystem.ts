@@ -21,6 +21,10 @@ export class Env {
             );
     }
 
+    isWin(platform: string = process.platform): boolean {
+        return Env.isWindows(platform);
+    }
+
     static isWindows(platform: string = process.platform) {
         return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(platform)
             ? true
@@ -38,9 +42,9 @@ export class Filesystem {
     private paths: string[] = [];
     private extensions: string[] = [];
 
-    constructor(env: Env = Env.instance()) {
-        this.paths = env.paths();
-        this.extensions = env.extensions;
+    constructor(private env: Env = Env.instance()) {
+        this.paths = this.env.paths();
+        this.extensions = this.env.extensions;
     }
 
     get(uri: PathLike | URI): Promise<string> {
@@ -110,13 +114,19 @@ export class Filesystem {
     }
 
     asUri(uri: PathLike | URI): URI {
-        return URI.isUri(uri)
-            ? uri
-            : URI.parse(
-                  (uri as string).replace(/\\/g, '/').replace(/^(\w):/i, m => {
-                      return `/${m[0].toLowerCase()}%3A`;
-                  })
-              ).with({ scheme: 'file' });
+        if (URI.isUri(uri)) {
+            return uri;
+        }
+
+        uri = uri as string;
+
+        if (this.env.isWin()) {
+            uri = uri.replace(/\\/g, '/').replace(/^(\w):/i, m => {
+                return `/${m[0].toLowerCase()}%3A`;
+            });
+        }
+
+        return URI.parse(uri).with({ scheme: 'file' });
     }
 
     lineAt(uri: PathLike | URI, lineNumber: number): Promise<string> {
