@@ -73,6 +73,25 @@ describe('Filesystem', () => {
         });
     });
 
+    it('glob', async () => {
+        const matches = await files.glob('**/*.php', {
+            ignore: 'vendor/**',
+            cwd: projectPath('').fsPath,
+        });
+
+        expect(matches).toEqual([
+            'src/Calculator.php',
+            'src/Item.php',
+            'tests/AbstractTest.php',
+            'tests/AssertionsTest.php',
+            'tests/bootstrap.php',
+            'tests/CalculatorTest.php',
+            'tests/Directory/HasPropertyTest.php',
+            'tests/Directory/LeadingCommentsTest.php',
+            'tests/StaticMethodTest.php',
+        ]);
+    });
+
     it('fix wndows path', () => {
         const env = new Env(
             [fixturePath('bin').fsPath, fixturePath('usr/local/bin').fsPath],

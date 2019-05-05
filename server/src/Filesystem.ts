@@ -1,6 +1,7 @@
 import { readFile, PathLike, writeFile, access, createReadStream } from 'fs';
 import { join, dirname } from 'path';
 import URI from 'vscode-uri';
+import * as glob from 'glob';
 import { createInterface } from 'readline';
 import { Position, Range, Location } from 'vscode-languageserver-protocol';
 
@@ -187,6 +188,17 @@ export class Filesystem {
             uri.toString(),
             await this.lineRange(uri, lineNumber)
         );
+    }
+
+    async glob(
+        pattern: string,
+        options: glob.IOptions = {}
+    ): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            glob(pattern, options, (error: any, matches: []) => {
+                error ? reject(error) : resolve(matches);
+            });
+        });
     }
 
     private *searchFile(search: string[] | string, paths: string[]) {
