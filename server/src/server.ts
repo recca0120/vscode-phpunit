@@ -92,7 +92,7 @@ connection.onInitialized(() => {
 });
 
 // The example settings
-interface PHPUnitSettings {
+interface Settings {
     maxNumberOfProblems: number;
     php: string;
     phpunit: string;
@@ -102,32 +102,30 @@ interface PHPUnitSettings {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: PHPUnitSettings = {
+const defaultSettings: Settings = {
     maxNumberOfProblems: 1000,
     php: '',
     phpunit: '',
     args: [],
 };
-let globalSettings: PHPUnitSettings = defaultSettings;
+let globalSettings: Settings = defaultSettings;
 
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<PHPUnitSettings>> = new Map();
+let documentSettings: Map<string, Thenable<Settings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
         // Reset all cached document settings
         documentSettings.clear();
     } else {
-        globalSettings = <PHPUnitSettings>(
-            (change.settings.phpunit || defaultSettings)
-        );
+        globalSettings = <Settings>(change.settings.phpunit || defaultSettings);
     }
 
     // Revalidate all open text documents
     // documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<PHPUnitSettings> {
+function getDocumentSettings(resource: string): Thenable<Settings> {
     if (!hasConfigurationCapability) {
         return Promise.resolve(globalSettings);
     }
