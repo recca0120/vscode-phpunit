@@ -72,7 +72,9 @@ export class TestRunner {
         const line = position && position.line ? position.line : 0;
         const codeLens = suite
             .exportCodeLens()
-            .find(codeLens => this.findCodeLensAtCursor(codeLens, line));
+            .find((codeLens: CodeLens) =>
+                this.findCodeLensAtCursor(codeLens, line)
+            );
 
         return codeLens ? await this.doRun(codeLens.data.arguments) : '';
     }

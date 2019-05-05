@@ -20,7 +20,7 @@ import {
     LogMessageNotification,
     DiagnosticRelatedInformation,
 } from 'vscode-languageserver';
-import Parser, { TestSuiteInfo } from './Parser';
+import Parser, { TestSuite } from './Parser';
 import { TestRunner } from './TestRunner';
 import { ProblemMatcher, Problem } from './ProblemMatcher';
 import { TestSuiteCollection } from './TestSuiteCollection';
@@ -166,7 +166,7 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 
 connection.onCodeLens(async (params: CodeLensParams) => {
-    const suite: TestSuiteInfo = await suites.get(params.textDocument.uri);
+    const suite: TestSuite = await suites.get(params.textDocument.uri);
 
     return !suite ? [] : suite.exportCodeLens();
 });

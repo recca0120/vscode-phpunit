@@ -1,7 +1,7 @@
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
 import { projectPath } from './helpers';
 
-fdescribe('TestSuiteCollection', () => {
+describe('TestSuiteCollection', () => {
     const path = projectPath('');
     const collection = new TestSuiteCollection();
 

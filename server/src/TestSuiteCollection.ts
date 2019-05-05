@@ -1,13 +1,10 @@
 import { default as _files } from './Filesystem';
-import Parser, { TestSuiteInfo } from './Parser';
+import Parser, { TestSuite } from './Parser';
 import { PathLike } from 'fs';
 import URI from 'vscode-uri';
 
 export class TestSuiteCollection {
-    private suites: Map<string, TestSuiteInfo> = new Map<
-        string,
-        TestSuiteInfo
-    >();
+    private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
 
     constructor(private files = _files, private parser = new Parser()) {}
 

@@ -10,6 +10,7 @@ import {
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { default as Engine } from 'php-parser';
+import { TestSuiteInfo, TestInfo } from './TestInfo';
 
 interface TestOptions {
     [propName: string]: any;
@@ -19,62 +20,13 @@ interface TestOptions {
     uri: URI;
 }
 
-interface AsCodeLens {
-    [propName: string]: any;
-    kind: string;
-    uri: URI;
-    range: Range;
-    depends: string[];
-    asCodeLens(): CodeLens;
-    asCodeLensCommand(): Command;
-}
-
 interface ExportCodeLens {
     exportCodeLens(): CodeLens[];
 }
 
-export interface TestSuiteInfo extends AsCodeLens, ExportCodeLens {
-    type: 'suite';
-    id: string;
-    /** The label to be displayed by the Test Explorer for this suite. */
-    label: string;
-    /** The description to be displayed next to the label. */
-    description?: string;
-    /** The tooltip text to be displayed by the Test Explorer when you hover over this suite. */
-    tooltip?: string;
-    /**
-     * The file containing this suite (if known).
-     * This can either be an absolute path (if it is a local file) or a URI.
-     * Note that this should never contain a `file://` URI.
-     */
-    file?: string;
-    /** The line within the specified file where the suite definition starts (if known). */
-    line?: number;
-    children: (TestSuiteInfo | TestInfo)[];
-}
-
-export interface TestInfo extends AsCodeLens {
-    type: 'test';
-    id: string;
-    /** The label to be displayed by the Test Explorer for this test. */
-    label: string;
-    /** The description to be displayed next to the label. */
-    description?: string;
-    /** The tooltip text to be displayed by the Test Explorer when you hover over this test. */
-    tooltip?: string;
-    /**
-     * The file containing this test (if known).
-     * This can either be an absolute path (if it is a local file) or a URI.
-     * Note that this should never contain a `file://` URI.
-     */
-    file?: string;
-    /** The line within the specified file where the test definition starts (if known). */
-    line?: number;
-    /** Indicates whether this test will be skipped during test runs */
-    skipped?: boolean;
-}
-
 abstract class BaseTest {
+    [propName: string]: any;
+
     constructor(private node: any, private options?: TestOptions) {}
 
     get id(): string {
@@ -207,21 +159,22 @@ abstract class BaseTest {
     }
 }
 
-export class TestSuite extends BaseTest implements TestSuiteInfo {
+export class TestSuite extends BaseTest
+    implements TestSuiteInfo, ExportCodeLens {
     type: 'suite';
 
     constructor(
         node: any,
-        public children: (TestSuiteInfo | TestInfo)[],
+        public children: (TestSuite | Test)[],
         options?: TestOptions
     ) {
         super(node, options);
     }
 
     exportCodeLens(): CodeLens[] {
-        return [this as AsCodeLens]
-            .concat(this.children as AsCodeLens[])
-            .map(test => test.asCodeLens());
+        return [this.asCodeLens()].concat(
+            this.children.map(test => test.asCodeLens())
+        );
     }
 }
 
@@ -236,7 +189,7 @@ export class Test extends BaseTest implements TestInfo {
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
-    asTestSuite(): TestSuiteInfo {
+    asTestSuite(): TestSuite {
         const options = this.getTestOptions();
         const methods = this.getMethods();
 
@@ -302,11 +255,11 @@ export default class Parser {
         })
     ) {}
 
-    async parse(uri: PathLike | URI): Promise<TestSuiteInfo | null> {
+    async parse(uri: PathLike | URI): Promise<TestSuite | null> {
         return this.parseCode(await this.files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument | null): TestSuiteInfo | null {
+    parseTextDocument(textDocument: TextDocument | null): TestSuite | null {
         if (!textDocument) {
             return undefined;
         }
@@ -314,7 +267,7 @@ export default class Parser {
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
-    parseCode(code: string, uri: PathLike | URI): TestSuiteInfo | null {
+    parseCode(code: string, uri: PathLike | URI): TestSuite | null {
         const tree: any = this.engine.parseCode(code);
         const classes = this.findClasses(this.files.asUri(uri), tree.children);
 
