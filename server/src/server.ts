@@ -23,8 +23,11 @@ import {
 import Parser, { TestSuiteInfo } from './Parser';
 import { TestRunner } from './TestRunner';
 import { ProblemMatcher, Problem } from './ProblemMatcher';
+import { TestSuiteCollection } from './TestSuiteCollection';
 
-const parser = new Parser();
+const suites = new TestSuiteCollection();
+const runner = new TestRunner(suites);
+
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 let connection = createConnection(ProposedFeatures.all);
@@ -77,7 +80,7 @@ connection.onInitialize((params: InitializeParams) => {
     };
 });
 
-connection.onInitialized(() => {
+connection.onInitialized(async () => {
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
         connection.client.register(
@@ -86,10 +89,13 @@ connection.onInitialized(() => {
         );
     }
     if (hasWorkspaceFolderCapability) {
-        connection.workspace.onDidChangeWorkspaceFolders(_event => {
+        connection.workspace.onDidChangeWorkspaceFolders(async () => {
+            await suites.load();
             // connection.console.log('Workspace folder change event received.');
         });
     }
+
+    await suites.load();
 });
 
 // The example settings
@@ -159,15 +165,12 @@ connection.onDidChangeWatchedFiles(_change => {
     // connection.console.log('We received an file change event');
 });
 
-connection.onCodeLens((params: CodeLensParams) => {
-    const testSuite: TestSuiteInfo = parser.parseTextDocument(
-        documents.get(params.textDocument.uri)
-    );
+connection.onCodeLens(async (params: CodeLensParams) => {
+    const suite: TestSuiteInfo = await suites.get(params.textDocument.uri);
 
-    return !testSuite ? [] : testSuite.exportCodeLens();
+    return !suite ? [] : suite.exportCodeLens();
 });
 
-const runner = new TestRunner();
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const args = params.arguments;
     const textDocument: TextDocument = documents.get(args[0]);

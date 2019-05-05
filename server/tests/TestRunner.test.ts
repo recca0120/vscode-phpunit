@@ -4,19 +4,22 @@ import { TestRunner } from '../src/TestRunner';
 import { Process } from '../src/process';
 import { projectPath } from './helpers';
 import { dirname } from 'path';
+import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
-describe('TestRunner', () => {
+fdescribe('TestRunner', () => {
     const uri = _files.asUri(projectPath('tests/AssertionsTest.php'));
 
+    let suites: TestSuiteCollection;
     let process: Process;
     let files: Filesystem;
     let testRunner: TestRunner;
     let textDocument: TextDocument;
 
     beforeEach(async () => {
+        suites = await new TestSuiteCollection().load(projectPath(''));
         process = new Process();
         files = new Filesystem();
-        testRunner = new TestRunner(process, files);
+        testRunner = new TestRunner(suites, process, files);
 
         textDocument = TextDocument.create(
             uri.path,

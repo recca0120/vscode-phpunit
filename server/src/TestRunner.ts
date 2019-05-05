@@ -2,12 +2,13 @@ import {
     TextDocument,
     Position,
     CodeLens,
+    Command,
 } from 'vscode-languageserver-protocol';
-import Parser, { TestSuiteInfo } from './Parser';
 import _files from './Filesystem';
 import { Process } from './Process';
 import { PathLike } from 'fs';
 import URI from 'vscode-uri';
+import { TestSuiteCollection } from './TestSuiteCollection';
 
 export class TestRunner {
     private phpBinary = '';
@@ -16,9 +17,9 @@ export class TestRunner {
     private lastArgs: string[] = [];
 
     constructor(
+        private suites: TestSuiteCollection,
         private process = new Process(),
-        private files = _files,
-        private parser = new Parser()
+        private files = _files
     ) {}
 
     setPhpBinary(phpBinary: PathLike | URI) {
@@ -62,16 +63,14 @@ export class TestRunner {
     }
 
     async runTestAtCursor(textDocument: TextDocument, position?: Position) {
-        const testSuite: TestSuiteInfo = this.parser.parseTextDocument(
-            textDocument
-        );
+        const suite = await this.suites.get(textDocument.uri);
 
-        if (!testSuite) {
+        if (!suite) {
             return '';
         }
 
         const line = position && position.line ? position.line : 0;
-        const codeLens = testSuite
+        const codeLens = suite
             .exportCodeLens()
             .find(codeLens => this.findCodeLensAtCursor(codeLens, line));
 
@@ -109,27 +108,32 @@ export class TestRunner {
 
     async doRun(args: string[] = []) {
         this.lastArgs = args;
-        let command = [];
+
+        return await this.process.run(await this.getCommand(args));
+    }
+
+    private async getCommand(args: string[]): Promise<Command> {
+        let thisArgs = [];
 
         const phpBinary = this.getPhpBinary();
 
         if (phpBinary) {
-            command.push(phpBinary);
+            thisArgs.push(phpBinary);
         }
 
         const phpUnitBinary = await this.getPhpUnitBinary();
 
         if (phpUnitBinary) {
-            command.push(phpUnitBinary);
+            thisArgs.push(phpUnitBinary);
         }
 
-        command = command.concat(this.args, args).filter(arg => !!arg);
+        thisArgs = thisArgs.concat(this.args, args).filter(arg => !!arg);
 
-        return await this.process.run({
+        return {
             title: 'PHPUnit LSP',
-            command: command.shift(),
-            arguments: command,
-        });
+            command: thisArgs.shift(),
+            arguments: thisArgs,
+        };
     }
 
     private getPhpBinary(): string {
