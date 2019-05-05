@@ -137,6 +137,7 @@ export class ProblemMatcher extends ProblemMatcherBase<Problem> {
                 return Status[name] as any;
             }
         }
+
         return Status.ERROR;
     }
 }
@@ -172,16 +173,7 @@ export class TestResponse {
         problem: Problem,
         hasRelatedInformation: boolean
     ): Diagnostic | undefined {
-        const problemStatus = [
-            Status.ERROR,
-            Status.FAILURE,
-            Status.WARNING,
-            Status.RISKY,
-            Status.SKIPPED,
-            Status.INCOMPLETE,
-        ];
-
-        if (!problemStatus.includes(problem.status)) {
+        if (problem.status === Status.PASSED) {
             return undefined;
         }
 
