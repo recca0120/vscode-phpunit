@@ -203,12 +203,12 @@ describe('Parser', () => {
     });
 
     it('leading comments', async () => {
-        const file = projectPath('tests/LeadingCommentsTest.php');
+        const file = projectPath('tests/Directory/LeadingCommentsTest.php');
         const suite = await getTestSuite(file);
 
         const id = getId(
             'firstLeadingComments',
-            'Recca0120\\VSCode\\Tests\\LeadingCommentsTest'
+            'Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest'
         );
         const test = getTest(suite, { id });
 
@@ -223,12 +223,12 @@ describe('Parser', () => {
     });
 
     it('has property', async () => {
-        const file = projectPath('tests/HasPropertyTest.php');
+        const file = projectPath('tests/Directory/HasPropertyTest.php');
         const suite = await getTestSuite(file);
 
         const id = getId(
             'property',
-            'Recca0120\\VSCode\\Tests\\HasPropertyTest'
+            'Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest'
         );
         const test = getTest(suite, { id });
 

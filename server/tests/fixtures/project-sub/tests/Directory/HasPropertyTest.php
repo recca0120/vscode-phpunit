@@ -1,6 +1,6 @@
 <?php
 
-namespace Recca0120\VSCode\Tests;
+namespace Recca0120\VSCode\Tests\Directory;
 
 use PHPUnit\Framework\TestCase;
 
