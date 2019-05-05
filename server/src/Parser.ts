@@ -78,17 +78,13 @@ abstract class BaseTest {
     constructor(private node: any, private options?: TestOptions) {}
 
     get id(): string {
-        const className = [this.options.namespace, this.options.class]
-            .filter(name => !!name)
-            .join('\\');
-
-        return this.node.kind === 'method'
-            ? [className, this.node.name.name].join('::')
-            : className;
+        return this.kind === 'method'
+            ? [this.fullclass, this.node.name.name].join('::')
+            : this.fullclass;
     }
 
     get label(): string {
-        return this.id;
+        return this.kind === 'method' ? this.method : this.class;
     }
 
     get file(): string {
@@ -113,6 +109,18 @@ abstract class BaseTest {
 
     get kind(): string {
         return this.node.kind;
+    }
+
+    get fullclass(): string {
+        return [this.namespace, this.class].filter(name => !!name).join('\\');
+    }
+
+    get namespace(): string {
+        return this.options.namespace;
+    }
+
+    get class(): string {
+        return this.options.class;
     }
 
     get method(): string {

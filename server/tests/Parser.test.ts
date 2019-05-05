@@ -42,6 +42,7 @@ describe('Parser', () => {
         expect(suite).toEqual(
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                label: 'AssertionsTest',
             })
         );
     });
@@ -49,13 +50,14 @@ describe('Parser', () => {
     it('passed', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('test_passed');
+        const label = 'test_passed';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -65,13 +67,14 @@ describe('Parser', () => {
     it('failed', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('test_failed');
+        const label = 'test_failed';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
                 depends: ['test_passed'],
@@ -82,13 +85,14 @@ describe('Parser', () => {
     it('test_isnt_same', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('test_isnt_same');
+        const label = 'test_isnt_same';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -98,13 +102,14 @@ describe('Parser', () => {
     it('test_risky', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('test_risky');
+        const label = 'test_risky';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -114,13 +119,14 @@ describe('Parser', () => {
     it('annotation_test', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('annotation_test');
+        const label = 'annotation_test';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -130,13 +136,14 @@ describe('Parser', () => {
     it('test_skipped', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('test_skipped');
+        const label = 'test_skipped';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -146,13 +153,14 @@ describe('Parser', () => {
     it('test_incomplete', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('test_incomplete');
+        const label = 'test_incomplete';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -162,13 +170,14 @@ describe('Parser', () => {
     it('addition_provider', async () => {
         const suite = await getTestSuite();
 
-        const id = getId('addition_provider');
+        const label = 'addition_provider';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -201,13 +210,14 @@ describe('Parser', () => {
             )
         );
 
-        const id = getId('test_passed');
+        const label = 'test_passed';
+        const id = getId(label);
         const test = getTest(suite, { id });
 
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -218,8 +228,9 @@ describe('Parser', () => {
         const file = projectPath('tests/Directory/LeadingCommentsTest.php');
         const suite = await getTestSuite(file);
 
+        const label = 'firstLeadingComments';
         const id = getId(
-            'firstLeadingComments',
+            label,
             'Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest'
         );
         const test = getTest(suite, { id });
@@ -227,7 +238,7 @@ describe('Parser', () => {
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
@@ -238,8 +249,9 @@ describe('Parser', () => {
         const file = projectPath('tests/Directory/HasPropertyTest.php');
         const suite = await getTestSuite(file);
 
+        const label = 'property';
         const id = getId(
-            'property',
+            label,
             'Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest'
         );
         const test = getTest(suite, { id });
@@ -247,7 +259,7 @@ describe('Parser', () => {
         expect(test).toEqual(
             jasmine.objectContaining({
                 id: id,
-                label: id,
+                label,
                 file: file.toString(),
                 line: jasmine.anything(),
             })
