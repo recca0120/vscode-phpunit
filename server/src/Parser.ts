@@ -191,21 +191,22 @@ abstract class BaseTest {
     }
 }
 
-class NodeTest extends BaseTest implements TestInfo {
-    type: 'test';
-
-    constructor(node: any, options?: TestOptions) {
-        super(node, options);
-    }
-}
-
-class NodeTestSuite extends BaseTest implements TestSuiteInfo {
+class TestSuite extends BaseTest implements TestSuiteInfo {
     type: 'suite';
+
     constructor(
         node: any,
         public children: (TestSuiteInfo | TestInfo)[],
         options?: TestOptions
     ) {
+        super(node, options);
+    }
+}
+
+class Test extends BaseTest implements TestInfo {
+    type: 'test';
+
+    constructor(node: any, options?: TestOptions) {
         super(node, options);
     }
 }
@@ -221,17 +222,17 @@ class Clazz {
             .map((node: any, index: number) =>
                 this.asTest(node, options, methods[index - 1])
             )
-            .filter((method: NodeTest) => method.isTest());
+            .filter((method: Test) => method.isTest());
 
         if (tests.length === 0) {
             return null;
         }
 
-        return new NodeTestSuite(this.node, tests, options);
+        return new TestSuite(this.node, tests, options);
     }
 
     private asTest(node: any, testOptions: any, prev: any = null) {
-        return new NodeTest(this.fixLeadingComments(node, prev), testOptions);
+        return new Test(this.fixLeadingComments(node, prev), testOptions);
     }
 
     private fixLeadingComments(node: any, prev: any) {
