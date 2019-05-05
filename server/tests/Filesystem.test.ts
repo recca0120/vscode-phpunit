@@ -3,14 +3,12 @@ import { Filesystem, Env } from '../src/Filesystem';
 import { fixturePath, projectPath } from './helpers';
 
 describe('Filesystem', () => {
-    const systemPath = new Env(
-        [fixturePath('bin').fsPath, fixturePath('usr/local/bin').fsPath].join(
-            ':'
-        ),
-        ':'
-    );
-
-    const files = new Filesystem(systemPath);
+    const paths = [
+        fixturePath('bin').fsPath,
+        fixturePath('usr/local/bin').fsPath,
+    ];
+    const env = new Env(paths, process.platform);
+    const files = new Filesystem(env);
 
     it('get content from file', async () => {
         const uri = projectPath('tests/AssertionsTest.php').fsPath;
@@ -31,21 +29,6 @@ describe('Filesystem', () => {
     it('which ls', async () => {
         expect(await files.which(['ls.exe', 'ls'])).toBe(
             fixturePath('bin/ls').fsPath
-        );
-    });
-
-    it('which cmd.cmd', async () => {
-        const systemPath = new Env(
-            [
-                fixturePath('bin').fsPath,
-                fixturePath('usr/local/bin').fsPath,
-            ].join(';'),
-            ';',
-            ['.cmd']
-        );
-        const files = new Filesystem(systemPath);
-        expect(await files.which('cmd')).toBe(
-            fixturePath('usr/local/bin/cmd.cmd').fsPath
         );
     });
 
@@ -91,8 +74,23 @@ describe('Filesystem', () => {
     });
 
     it('fix wndows path', () => {
+        const env = new Env(
+            [fixturePath('bin').fsPath, fixturePath('usr/local/bin').fsPath],
+            'win32'
+        );
+        const files = new Filesystem(env);
+
         const uri = files.asUri('D:\\foo\\bar').with({ scheme: 'file' });
 
         expect(uri.toString()).toEqual('file:///d%3A/foo/bar');
+    });
+
+    it('which cmd.cmd', async () => {
+        const env = new Env([fixturePath('usr/local/bin').fsPath], 'win32');
+        const files = new Filesystem(env);
+
+        expect(await files.which('cmd')).toBe(
+            fixturePath('usr/local/bin/cmd.cmd').fsPath
+        );
     });
 });

@@ -5,26 +5,38 @@ import { createInterface } from 'readline';
 import { Position, Range, Location } from 'vscode-languageserver-protocol';
 
 export class Env {
+    private delimiter = ':';
+    public extensions = [''];
+
     constructor(
-        private _paths: string = process.env.PATH as string,
-        public delimiter: string = Env.isWindows() ? ';' : ':',
-        public extensions: string[] = Env.isWindows()
-            ? ['.bat', '.exe', '.cmd', '']
-            : ['']
-    ) {}
+        private _paths: string | string[] = process.env.PATH as string,
+        private platform: string = process.platform as string
+    ) {
+        if (this.isWin()) {
+            this.delimiter = ';';
+            this.extensions = ['.bat', '.exe', '.cmd', ''];
+        }
+    }
 
     paths(): string[] {
-        return this._paths
+        return this.splitPaths(this._paths);
+    }
+
+    isWin(): boolean {
+        return Env.isWindows(this.platform);
+    }
+
+    private splitPaths(paths: string | string[]): string[] {
+        if (paths instanceof Array) {
+            return paths;
+        }
+
+        return paths
             .split(new RegExp(this.delimiter, 'g'))
             .map((path: string) =>
                 path.replace(new RegExp(`${this.delimiter}$`, 'g'), '').trim()
             );
     }
-
-    isWin(platform: string = process.platform): boolean {
-        return Env.isWindows(platform);
-    }
-
     static isWindows(platform: string = process.platform) {
         return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(platform)
             ? true
