@@ -11,7 +11,7 @@ import {
     LanguageClientOptions,
     ServerOptions,
     TransportKind,
-    WillSaveTextDocumentNotification,
+    WillSaveTextDocumentWaitUntilRequest,
 } from 'vscode-languageclient';
 import { CommandRegister } from './CommandRegister';
 // import { SocketOutputChannel } from './SocketOutputChannel';
@@ -77,11 +77,18 @@ export function activate(context: ExtensionContext) {
     // );
 
     client.onReady().then(() => {
-        client.onNotification(WillSaveTextDocumentNotification.type, () => {
+        client.onRequest(WillSaveTextDocumentWaitUntilRequest.type, () => {
             if (!window.activeTextEditor || !window.activeTextEditor.document) {
                 return;
             }
+            window.activeTextEditor.document.save();
 
+            return null;
+        });
+
+        const notify = new Notify(window);
+
+        client.onNotification('started', () => {
             const clearOutpuOnRun = workspace
                 .getConfiguration('phpunit')
                 .get('clearOutputOnRun', true);
@@ -91,12 +98,6 @@ export function activate(context: ExtensionContext) {
             }
 
             outputChannel.show(true);
-            window.activeTextEditor.document.save();
-        });
-
-        const notify = new Notify(window);
-
-        client.onNotification('started', () => {
             notify.show('PHPUnit Running...');
         });
 

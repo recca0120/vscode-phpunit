@@ -15,12 +15,13 @@ import {
     CodeLensParams,
     ExecuteCommandParams,
     Position,
-    WillSaveTextDocumentNotification,
     MessageType,
     LogMessageNotification,
     DiagnosticRelatedInformation,
+    WillSaveTextDocumentWaitUntilRequest,
+    TextDocumentSaveReason,
 } from 'vscode-languageserver';
-import Parser, { TestSuite } from './Parser';
+import { TestSuite } from './Parser';
 import { TestRunner } from './TestRunner';
 import { ProblemMatcher, Problem } from './ProblemMatcher';
 import { TestSuiteCollection } from './TestSuiteCollection';
@@ -179,7 +180,12 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const settings = await getDocumentSettings(textDocument.uri);
 
     try {
-        connection.sendNotification(WillSaveTextDocumentNotification.type, {});
+        if (textDocument) {
+            connection.sendRequest(WillSaveTextDocumentWaitUntilRequest.type, {
+                textDocument,
+                reason: TextDocumentSaveReason.Manual,
+            });
+        }
         connection.sendNotification('started', () => {});
 
         if (textDocument) {
