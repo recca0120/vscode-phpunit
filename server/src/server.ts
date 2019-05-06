@@ -20,8 +20,11 @@ import {
     LogMessageNotification,
     WillSaveTextDocumentWaitUntilRequest,
     TextDocumentSaveReason,
+    CompletionItem,
 } from 'vscode-languageserver';
+import { Snippets } from './snippets';
 
+const snippets = new Snippets();
 const suites = new TestCollection();
 const runner = new TestRunner(suites);
 
@@ -57,10 +60,9 @@ connection.onInitialize((params: InitializeParams) => {
     return {
         capabilities: {
             textDocumentSync: documents.syncKind,
-            // Tell the client that the server supports code completion
-            // completionProvider: {
-            //     resolveProvider: true,
-            // },
+            completionProvider: {
+                resolveProvider: true,
+            },
             codeLensProvider: {
                 resolveProvider: true,
             },
@@ -163,6 +165,21 @@ connection.onDidChangeWatchedFiles(_change => {
     // connection.console.log('We received an file change event');
 });
 
+// This handler provides the initial list of the completion items.
+connection.onCompletion(
+    (): CompletionItem[] => {
+        return snippets.all();
+    }
+);
+
+// This handler resolve additional information for the item selected in
+// the completion list.
+connection.onCompletionResolve(
+    (item: CompletionItem): CompletionItem => {
+        return item;
+    }
+);
+
 connection.onCodeLens(async (params: CodeLensParams) => {
     const suite: TestSuite = await suites.get(params.textDocument.uri);
 
@@ -182,11 +199,6 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
                 textDocument,
                 reason: TextDocumentSaveReason.Manual,
             });
-
-            // connection.sendDiagnostics({
-            //     uri: textDocument.uri,
-            //     diagnostics: [],
-            // });
         }
 
         connection.sendNotification('started', () => {});
