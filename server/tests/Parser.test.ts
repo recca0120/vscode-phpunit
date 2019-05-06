@@ -76,7 +76,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
                 depends: ['test_passed'],
             })
         );
@@ -111,7 +111,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -128,7 +128,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -145,7 +145,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -162,7 +162,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -179,7 +179,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -219,7 +219,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -240,7 +240,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });
@@ -261,7 +261,7 @@ describe('Parser', () => {
                 id: id,
                 label,
                 file: file.toString(),
-                line: jasmine.anything(),
+                line: jasmine.any(Number),
             })
         );
     });

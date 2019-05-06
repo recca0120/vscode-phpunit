@@ -101,6 +101,9 @@ export class TestRunner {
             case 'rerun':
                 response = await this.rerun(textDocument, position);
                 break;
+            case 'cancel':
+                this.cancel();
+                break;
             default:
             case 'test-at-cursor':
                 response = await this.runTestAtCursor(textDocument, position);
@@ -115,6 +118,10 @@ export class TestRunner {
         return new TestResponse(
             await this.process.run(await this.getCommand(args))
         );
+    }
+
+    cancel(): boolean {
+        return this.process.cancel();
     }
 
     private async getCommand(args: string[]): Promise<Command> {

@@ -13,7 +13,7 @@ import {
     TransportKind,
     WillSaveTextDocumentWaitUntilRequest,
 } from 'vscode-languageclient';
-import { CommandRegister } from './CommandRegister';
+import { CommandRequest } from './CommandRequest';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 import { Notify } from './Notify';
 
@@ -66,12 +66,13 @@ export function activate(context: ExtensionContext) {
         clientOptions
     );
 
-    const commandRegister = new CommandRegister(client, commands);
-    context.subscriptions.push(commandRegister.registerRunAll());
-    context.subscriptions.push(commandRegister.registerRerun());
-    context.subscriptions.push(commandRegister.registerRunFile());
-    context.subscriptions.push(commandRegister.registerRunTestAtCursor());
-    context.subscriptions.push(commandRegister.registerRunDirectory());
+    const commandRequest = new CommandRequest(client, commands);
+    context.subscriptions.push(commandRequest.runAll());
+    context.subscriptions.push(commandRequest.rerun());
+    context.subscriptions.push(commandRequest.runFile());
+    context.subscriptions.push(commandRequest.runTestAtCursor());
+    context.subscriptions.push(commandRequest.runDirectory());
+    context.subscriptions.push(commandRequest.cancel());
     // context.subscriptions.push(
     //     commandRegister.registerStartStraming(outputChannel)
     // );

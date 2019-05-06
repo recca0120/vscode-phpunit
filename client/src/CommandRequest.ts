@@ -3,32 +3,37 @@ import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 
-export class CommandRegister {
+export class CommandRequest {
     private enabled = false;
+
     constructor(private client: LanguageClient, private commands: any) {
         this.client.onReady().then(() => {
             this.enabled = true;
         });
     }
 
-    registerRunAll() {
-        return this.registerPHPUnitCommand('phpunit.run-all');
+    runAll() {
+        return this.registerCommand('phpunit.run-all');
     }
 
-    registerRerun() {
-        return this.registerPHPUnitCommand('phpunit.rerun');
+    rerun() {
+        return this.registerCommand('phpunit.rerun');
     }
 
-    registerRunFile() {
-        return this.registerPHPUnitCommand('phpunit.run-file');
+    runFile() {
+        return this.registerCommand('phpunit.run-file');
     }
 
-    registerRunTestAtCursor() {
-        return this.registerPHPUnitCommand('phpunit.run-test-at-cursor');
+    runTestAtCursor() {
+        return this.registerCommand('phpunit.run-test-at-cursor');
     }
 
-    registerRunDirectory() {
-        return this.registerPHPUnitCommand('phpunit.run-directory');
+    runDirectory() {
+        return this.registerCommand('phpunit.run-directory');
+    }
+
+    cancel() {
+        return this.registerCommand('phpunit.cancel');
     }
 
     // registerStartStraming(outputChannel: SocketOutputChannel) {
@@ -38,7 +43,7 @@ export class CommandRegister {
     //     });
     // }
 
-    private registerPHPUnitCommand(command: string) {
+    private registerCommand(command: string) {
         return this.commands.registerTextEditorCommand(
             command,
             (textEditor: TextEditor) => {

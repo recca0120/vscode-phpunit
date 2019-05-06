@@ -71,6 +71,7 @@ connection.onInitialize((params: InitializeParams) => {
                     'phpunit.lsp.run-directory',
                     'phpunit.lsp.run-file',
                     'phpunit.lsp.run-test-at-cursor',
+                    'phpunit.lsp.cancel',
                 ],
             },
         },
