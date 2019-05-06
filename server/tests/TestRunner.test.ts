@@ -162,4 +162,10 @@ describe('TestRunner', () => {
             arguments: [dirname(uri.fsPath)],
         });
     });
+
+    it('cancel', async () => {
+        spyOn(process, 'kill');
+        await testRunner.run('cancel');
+        expect(process.kill).toBeCalled();
+    });
 });

@@ -31,7 +31,7 @@ export class Process {
         });
     }
 
-    cancel(): boolean {
+    kill(): boolean {
         if (!this.process) {
             return false;
         }

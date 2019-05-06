@@ -39,9 +39,9 @@ describe('Process', () => {
         };
         spyOn(caller, 'catch').and.callThrough();
 
-        expect(process.cancel()).toBeFalsy();
+        expect(process.kill()).toBeFalsy();
         run(process, caller.catch);
-        expect(process.cancel()).toBeTruthy();
+        expect(process.kill()).toBeTruthy();
         setTimeout(() => {
             expect(caller.catch).toBeCalledTimes(1);
             done();

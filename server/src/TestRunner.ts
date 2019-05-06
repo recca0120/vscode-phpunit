@@ -121,7 +121,7 @@ export class TestRunner {
     }
 
     cancel(): boolean {
-        return this.process.cancel();
+        return this.process.kill();
     }
 
     private async getCommand(args: string[]): Promise<Command> {
