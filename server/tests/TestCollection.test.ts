@@ -1,5 +1,5 @@
-import { TestCollection } from '../src/TestCollection';
 import { projectPath } from './helpers';
+import { TestCollection } from '../src/TestCollection';
 
 describe('TestCollection', () => {
     const path = projectPath('');

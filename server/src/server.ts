@@ -3,6 +3,9 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { TestCollection } from './TestCollection';
+import { TestRunner } from './TestRunner';
+import { TestSuite } from './Parser';
 import {
     createConnection,
     TextDocuments,
@@ -18,9 +21,6 @@ import {
     WillSaveTextDocumentWaitUntilRequest,
     TextDocumentSaveReason,
 } from 'vscode-languageserver';
-import { TestSuite } from './Parser';
-import { TestRunner } from './TestRunner';
-import { TestCollection } from './TestCollection';
 
 const suites = new TestCollection();
 const runner = new TestRunner(suites);

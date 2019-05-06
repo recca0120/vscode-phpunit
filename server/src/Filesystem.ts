@@ -1,9 +1,9 @@
-import { readFile, PathLike, writeFile, access, createReadStream } from 'fs';
-import { join, dirname } from 'path';
-import URI from 'vscode-uri';
 import glob from 'glob';
+import URI from 'vscode-uri';
+import { access, createReadStream, PathLike, readFile, writeFile } from 'fs';
 import { createInterface } from 'readline';
-import { Position, Range, Location } from 'vscode-languageserver-protocol';
+import { dirname, join } from 'path';
+import { Location, Position, Range } from 'vscode-languageserver-protocol';
 
 export class Env {
     private delimiter = ':';

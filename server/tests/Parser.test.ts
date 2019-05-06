@@ -1,8 +1,8 @@
+import files from '../src/Filesystem';
 import Parser, { TestSuite } from '../src/Parser';
 import URI from 'vscode-uri';
-import { TextDocument } from 'vscode-languageserver-types';
-import files from '../src/Filesystem';
 import { projectPath } from './helpers';
+import { TextDocument } from 'vscode-languageserver-protocol';
 
 describe('Parser', () => {
     const parser = new Parser();

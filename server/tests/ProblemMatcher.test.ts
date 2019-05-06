@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs';
-import { ProblemMatcher, Status } from '../src/TestResponse';
 import { fixturePath, projectPath } from './helpers';
+import { ProblemMatcher, Status } from '../src/TestResponse';
+import { readFileSync } from 'fs';
 
 describe('ProblemMatcher', () => {
     const scheme = 'file';

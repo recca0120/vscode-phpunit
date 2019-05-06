@@ -1,6 +1,6 @@
-import { readFileSync, unlinkSync } from 'fs';
-import { Filesystem, Env } from '../src/Filesystem';
+import { Env, Filesystem } from '../src/Filesystem';
 import { fixturePath, projectPath } from './helpers';
+import { readFileSync, unlinkSync } from 'fs';
 
 describe('Filesystem', () => {
     const paths = [

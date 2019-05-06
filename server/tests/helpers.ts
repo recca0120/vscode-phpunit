@@ -1,5 +1,5 @@
-import { join } from 'path';
 import files from '../src/Filesystem';
+import { join } from 'path';
 
 export function fixturePath(...paths: string[]) {
     return files.asUri(join(__dirname, 'fixtures', ...paths));

@@ -1,3 +1,5 @@
+import files, { Filesystem } from './Filesystem';
+import { ProblemMatcher as ProblemMatcherBase } from './ProblemMatcher';
 import {
     Range,
     Location,
@@ -5,8 +7,6 @@ import {
     DiagnosticSeverity,
     DiagnosticRelatedInformation,
 } from 'vscode-languageserver-protocol';
-import files, { Filesystem } from './Filesystem';
-import { ProblemMatcher as ProblemMatcherBase } from './ProblemMatcher';
 
 export interface Problem {
     id: string;

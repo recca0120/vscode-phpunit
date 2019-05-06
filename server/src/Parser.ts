@@ -1,16 +1,17 @@
 /// <reference path="../types/php-parser.d.ts" />
 
 import _files from './Filesystem';
+import URI from 'vscode-uri';
+import { default as Engine } from 'php-parser';
+import { PathLike } from 'fs';
+import { TestInfo, TestSuiteInfo } from './TestExplorer';
+
 import {
     Range,
     TextDocument,
     CodeLens,
     Command,
 } from 'vscode-languageserver-protocol';
-import URI from 'vscode-uri';
-import { PathLike } from 'fs';
-import { default as Engine } from 'php-parser';
-import { TestSuiteInfo, TestInfo } from './TestExplorer';
 
 interface TestOptions {
     [propName: string]: any;

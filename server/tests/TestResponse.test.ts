@@ -1,7 +1,7 @@
-import { TestResponse } from '../src/TestResponse';
 import files from '../src/Filesystem';
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-protocol';
 import { fixturePath, projectPath } from './helpers';
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-types';
+import { TestResponse } from '../src/TestResponse';
 
 describe('TestResponse', () => {
     let testResponse: TestResponse;

@@ -1,6 +1,6 @@
+import files from '../src/Filesystem';
 import { Process } from '../src/Process';
 import { projectPath } from './helpers';
-import files from '../src/Filesystem';
 
 describe('Process', () => {
     fit('running phpunit', async () => {

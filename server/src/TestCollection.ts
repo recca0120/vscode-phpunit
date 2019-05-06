@@ -1,7 +1,7 @@
-import { default as _files } from './Filesystem';
 import Parser, { TestSuite } from './Parser';
-import { PathLike } from 'fs';
 import URI from 'vscode-uri';
+import { default as _files } from './Filesystem';
+import { PathLike } from 'fs';
 
 export class TestCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();

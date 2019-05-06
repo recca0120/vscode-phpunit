@@ -1,15 +1,15 @@
+import _files from './Filesystem';
+import URI from 'vscode-uri';
+import { PathLike } from 'fs';
+import { Process } from './Process';
+import { TestCollection } from './TestCollection';
+import { TestResponse } from './TestResponse';
 import {
     TextDocument,
     Position,
     CodeLens,
     Command,
 } from 'vscode-languageserver-protocol';
-import _files from './Filesystem';
-import { Process } from './Process';
-import { PathLike } from 'fs';
-import URI from 'vscode-uri';
-import { TestCollection } from './TestCollection';
-import { TestResponse } from './TestResponse';
 
 export class TestRunner {
     private phpBinary = '';

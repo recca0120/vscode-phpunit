@@ -1,10 +1,10 @@
-import { TextDocument, Position } from 'vscode-languageserver-types';
 import _files, { Filesystem } from '../src/filesystem';
-import { TestRunner } from '../src/TestRunner';
+import { dirname } from 'path';
+import { Position, TextDocument } from 'vscode-languageserver-protocol';
 import { Process } from '../src/process';
 import { projectPath } from './helpers';
-import { dirname } from 'path';
 import { TestCollection } from '../src/TestCollection';
+import { TestRunner } from '../src/TestRunner';
 
 describe('TestRunner', () => {
     const uri = _files.asUri(projectPath('tests/AssertionsTest.php'));
