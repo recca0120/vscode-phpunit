@@ -193,9 +193,12 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
 
     const settings = await getDocumentSettings(textDocument.uri);
 
-    if (textDocument) {
-        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] });
-    }
+    suites.all().forEach((...args) => {
+        connection.sendDiagnostics({
+            uri: args[1] as string,
+            diagnostics: [],
+        });
+    });
 
     try {
         if (textDocument) {
