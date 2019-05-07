@@ -32,10 +32,10 @@ export class TestCollection {
         return this;
     }
 
-    async get(uri: PathLike | URI) {
+    async get(uri: PathLike | URI, force = false) {
         uri = this.files.asUri(uri);
 
-        if (!this.suites.has(uri.toString())) {
+        if (!this.suites.has(uri.toString()) || force === true) {
             await this.put(uri);
         }
 

@@ -181,7 +181,7 @@ connection.onCompletionResolve(
 );
 
 connection.onCodeLens(async (params: CodeLensParams) => {
-    const suite: TestSuite = await suites.get(params.textDocument.uri);
+    const suite: TestSuite = await suites.get(params.textDocument.uri, true);
 
     return !suite ? [] : suite.exportCodeLens();
 });
@@ -192,6 +192,10 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     const position: Position = args[1];
 
     const settings = await getDocumentSettings(textDocument.uri);
+
+    if (textDocument) {
+        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] });
+    }
 
     try {
         if (textDocument) {
