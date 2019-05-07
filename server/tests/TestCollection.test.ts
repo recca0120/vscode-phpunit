@@ -1,5 +1,7 @@
+import { TextDocument } from 'vscode-languageserver-protocol';
 import { projectPath } from './helpers';
 import { TestCollection } from '../src/TestCollection';
+import files from '../src/Filesystem';
 
 describe('TestCollection', () => {
     const path = projectPath('');
@@ -41,6 +43,25 @@ describe('TestCollection', () => {
         expect(
             await collection.get(projectPath('tests/AssertionsTest.php'))
         ).toEqual(
+            jasmine.objectContaining({
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                label: 'AssertionsTest',
+            })
+        );
+    });
+
+    it('put text document', async () => {
+        const file = projectPath('tests/AssertionsTest.php');
+        const textDocument = TextDocument.create(
+            'foo.php',
+            'php',
+            0,
+            await files.get(file)
+        );
+
+        collection.putTextDocument(textDocument);
+
+        expect(await collection.get(file)).toEqual(
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 label: 'AssertionsTest',

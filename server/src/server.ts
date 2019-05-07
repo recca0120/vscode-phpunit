@@ -159,10 +159,10 @@ documents.onDidChangeContent(() => {
     // validateTextDocument(change.document);
 });
 
-connection.onDidChangeWatchedFiles(_change => {
+connection.onDidChangeWatchedFiles(async _change => {
     // Monitored files have change in VSCode
-    // connection.console.log(JSON.stringify(_change));
-    // connection.console.log('We received an file change event');
+    await Promise.all(_change.changes.map(event => suites.put(event.uri)));
+    connection.console.log('We received an file change event');
 });
 
 // This handler provides the initial list of the completion items.
@@ -181,7 +181,8 @@ connection.onCompletionResolve(
 );
 
 connection.onCodeLens(async (params: CodeLensParams) => {
-    const suite: TestSuite = await suites.get(params.textDocument.uri, true);
+    suites.putTextDocument(documents.get(params.textDocument.uri));
+    const suite: TestSuite = await suites.get(params.textDocument.uri);
 
     return !suite ? [] : suite.exportCodeLens();
 });

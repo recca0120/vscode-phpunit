@@ -2,6 +2,7 @@ import Parser, { TestSuite } from './Parser';
 import URI from 'vscode-uri';
 import { default as _files } from './Filesystem';
 import { PathLike } from 'fs';
+import { TextDocument } from 'vscode-languageserver';
 
 export class TestCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
@@ -10,6 +11,7 @@ export class TestCollection {
 
     async load(uri: PathLike | URI = process.cwd()) {
         uri = this.files.asUri(uri);
+
         const files = await this.files.glob('**/*.php', {
             absolute: true,
             ignore: 'vendor/**',
@@ -22,20 +24,23 @@ export class TestCollection {
     }
 
     async put(uri: PathLike | URI): Promise<TestCollection> {
-        uri = this.files.asUri(uri);
-
-        const suite = await this.parser.parse(uri);
-        if (suite) {
-            this.suites.set(uri.toString(), suite);
-        }
-
-        return this;
+        return this.putTestSuite(
+            this.files.asUri(uri),
+            await this.parser.parse(uri)
+        );
     }
 
-    async get(uri: PathLike | URI, force = false) {
+    putTextDocument(textDocument: TextDocument): TestCollection {
+        return this.putTestSuite(
+            this.files.asUri(textDocument.uri),
+            this.parser.parseTextDocument(textDocument)
+        );
+    }
+
+    async get(uri: PathLike | URI) {
         uri = this.files.asUri(uri);
 
-        if (!this.suites.has(uri.toString()) || force === true) {
+        if (!this.suites.has(uri.toString())) {
             await this.put(uri);
         }
 
@@ -44,5 +49,19 @@ export class TestCollection {
 
     all() {
         return this.suites;
+    }
+
+    private putTestSuite(uri: URI, suite: TestSuite) {
+        const key = uri.toString();
+
+        if (this.suites.has(key)) {
+            this.suites.delete(key);
+        }
+
+        if (suite) {
+            this.suites.set(key, suite);
+        }
+
+        return this;
     }
 }
