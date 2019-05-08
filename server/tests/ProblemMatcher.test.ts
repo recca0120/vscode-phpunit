@@ -1,5 +1,5 @@
 import { fixturePath, projectPath } from './helpers';
-import { ProblemMatcher, Status } from '../src/TestResponse';
+import { PHPUnitOutput, Status } from '../src/ProblemMatcher';
 import { readFileSync } from 'fs';
 
 describe('ProblemMatcher', () => {
@@ -7,7 +7,7 @@ describe('ProblemMatcher', () => {
     const file = fixturePath('test-result.txt').fsPath;
     const testFile = projectPath('tests/AssertionsTest.php').toString();
     const contents: string = readFileSync(file).toString('UTF-8');
-    const problemMatcher = new ProblemMatcher();
+    const problemMatcher = new PHPUnitOutput();
 
     let problems: any[] = [];
 

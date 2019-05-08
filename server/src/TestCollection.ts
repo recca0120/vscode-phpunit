@@ -3,6 +3,34 @@ import URI from 'vscode-uri';
 import { default as _files } from './Filesystem';
 import { PathLike } from 'fs';
 import { TextDocument } from 'vscode-languageserver';
+import { TestSuiteEvent, TestEvent } from './TestExplorer';
+
+export class TestEventCollection {
+    events: (TestSuiteEvent | TestEvent)[];
+
+    put(events: (TestSuiteEvent | TestEvent)[]) {
+        const keys = this.getKeys(events);
+        this.events
+            .filter(event => {
+                return keys.includes(
+                    event.type === 'suite' ? event.suite : event.test
+                );
+            })
+            .concat(events);
+
+        return this;
+    }
+
+    private getKeys(events: (TestSuiteEvent | TestEvent)[]) {
+        return events.map(event => {
+            if (event.type === 'suite') {
+                return event.suite;
+            }
+
+            return event.test;
+        });
+    }
+}
 
 export class TestCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
@@ -38,12 +66,6 @@ export class TestCollection {
     }
 
     async get(uri: PathLike | URI) {
-        uri = this.files.asUri(uri);
-
-        if (!this.suites.has(uri.toString())) {
-            await this.put(uri);
-        }
-
         return this.suites.get(this.files.asUri(uri).toString());
     }
 

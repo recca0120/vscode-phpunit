@@ -1,3 +1,4 @@
+import { TestEventCollection } from './../src/TestCollection';
 import { TextDocument } from 'vscode-languageserver-protocol';
 import { projectPath } from './helpers';
 import { TestCollection } from '../src/TestCollection';
@@ -5,20 +6,18 @@ import files from '../src/Filesystem';
 
 describe('TestCollection', () => {
     const path = projectPath('');
-    const collection = new TestCollection();
+    const suites = new TestCollection();
 
     it('instance', () => {
-        expect(collection).toBeInstanceOf(TestCollection);
+        expect(suites).toBeInstanceOf(TestCollection);
     });
 
     it('all', async () => {
         expect(
-            Array.from((await collection.load(path)).all().values()).map(
-                suite => ({
-                    id: suite.id,
-                    label: suite.label,
-                })
-            )
+            Array.from((await suites.load(path)).all().values()).map(suite => ({
+                id: suite.id,
+                label: suite.label,
+            }))
         ).toEqual([
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -41,7 +40,7 @@ describe('TestCollection', () => {
 
     it('get', async () => {
         expect(
-            await collection.get(projectPath('tests/AssertionsTest.php'))
+            await suites.get(projectPath('tests/AssertionsTest.php'))
         ).toEqual(
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -59,9 +58,9 @@ describe('TestCollection', () => {
             await files.get(file)
         );
 
-        collection.putTextDocument(textDocument);
+        suites.putTextDocument(textDocument);
 
-        expect(await collection.get(file)).toEqual(
+        expect(await suites.get(file)).toEqual(
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 label: 'AssertionsTest',
