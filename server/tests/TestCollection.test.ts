@@ -1,4 +1,3 @@
-import { TestEventCollection } from './../src/TestCollection';
 import { TextDocument } from 'vscode-languageserver-protocol';
 import { projectPath } from './helpers';
 import { TestCollection } from '../src/TestCollection';
