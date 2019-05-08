@@ -1,12 +1,11 @@
-import { TextEditor } from 'vscode';
+import { commands, TextEditor } from 'vscode';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
-// import { SocketOutputChannel } from './SocketOutputChannel';
 
 export class CommandRequest {
     private enabled = false;
 
-    constructor(private client: LanguageClient, private commands: any) {
+    constructor(private client: LanguageClient, private _commands = commands) {
         this.client.onReady().then(() => {
             this.enabled = true;
         });
@@ -36,15 +35,8 @@ export class CommandRequest {
         return this.registerCommand('phpunit.cancel');
     }
 
-    // registerStartStraming(outputChannel: SocketOutputChannel) {
-    //     return this.commands.registerCommand('phpunit.startStreaming', () => {
-    //         // Establish websocket connection
-    //         outputChannel.listen();
-    //     });
-    // }
-
     private registerCommand(command: string) {
-        return this.commands.registerTextEditorCommand(
+        return this._commands.registerTextEditorCommand(
             command,
             (textEditor: TextEditor) => {
                 if (this.isValidTextEditor(textEditor) === false) {
