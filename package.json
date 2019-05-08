@@ -24,12 +24,10 @@
         "vscode": "^1.23.0"
     },
     "activationEvents": [
-        "onLanguage:php",
-        "onCommand:phpunit.test.run-all",
-        "onCommand:phpunit.test.run-directory",
-        "onCommand:phpunit.test.run-file",
-        "onCommand:phpunit.test.run-test-at-cursor",
-        "onCommand:phpunit.test.run-last"
+        "*"
+    ],
+    "extensionDependencies": [
+        "hbenl.vscode-test-explorer"
     ],
     "main": "./client/out/extension",
     "contributes": {
