@@ -43,6 +43,7 @@ export class Notify {
         if (this.resolve) {
             this.resolve();
         }
+
         this.progress = null;
         this.resolve = null;
     }
