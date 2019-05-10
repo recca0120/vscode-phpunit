@@ -1,75 +1,88 @@
 import { TestSuite, Test } from './Parser';
 import { TestSuiteEvent, TestEvent } from './TestExplorer';
 
-export declare type StoreType = TestSuiteEvent | TestEvent | TestSuite | Test;
+export declare type TestInfo = TestSuite | Test | TestSuiteEvent | TestEvent;
 
 export class TestEventCollection {
-    events: (TestSuiteEvent | TestEvent)[] = [];
+    events: Map<string, TestSuiteEvent | TestEvent> = new Map();
 
-    put(events: (StoreType)[] | (StoreType)) {
-        events = events instanceof Array ? events : [events];
+    put(tests: TestInfo | TestInfo[]) {
+        tests = tests instanceof Array ? tests : [tests];
 
-        return this.putEvent(
-            events.reduce((events, event) => {
-                if (event instanceof TestSuite || event instanceof Test) {
-                    return events.concat(this.putTest(event));
-                }
+        const events = tests.reduce((events, test) => {
+            if (test instanceof TestSuite) {
+                return events.concat(this.suiteAsEvents(test));
+            }
 
-                events.push(event);
+            return test.type === 'suite'
+                ? events.concat([this.asTestSuiteInfo(test)])
+                : events.concat(this.asTestInfo(test));
+        }, []);
 
-                return events;
-            }, [])
-        );
+        events.forEach(event => {
+            this.events.set(event.suite || event.test, event);
+        });
+
+        return this;
+    }
+
+    get(id: string): TestSuiteEvent | TestEvent {
+        return this.events.get(id);
     }
 
     all() {
         return this.events;
     }
 
-    private putTest(test: TestSuite | Test) {
-        const events: (TestSuiteEvent | TestEvent)[] = [];
+    private suiteAsEvents(
+        test: TestSuite | Test
+    ): (TestSuiteEvent | TestEvent)[] {
+        const events: any = [];
 
-        if (test instanceof Test) {
-            events.push({
-                type: 'test',
-                test: test,
-                state: 'running',
-            } as TestEvent);
-
-            return events;
+        if (test instanceof TestSuite) {
+            return events
+                .concat([this.asTestSuiteInfo(test)])
+                .concat(test.children.map(test => this.suiteAsEvents(test)));
         }
 
-        events.push({
-            type: 'suite',
-            suite: test,
-            state: 'running',
-        } as TestSuiteEvent);
-
-        // events.push(
-        //     ...test.children.reduce((events, child) => {
-        //         return events.concat(this.putTest(child));
-        //     }, [])
-        // );
-
-        return events;
+        return events.concat([this.asTestInfo(test)]);
     }
 
-    private putEvent(events: (TestSuiteEvent | TestEvent)[]) {
-        const keys = this.getKeys(events);
-        this.events = this.events
-            .filter(event => {
-                return keys.includes(
-                    event.type === 'suite' ? event.suite : event.test
-                );
-            })
-            .concat(events);
+    private asTestSuiteInfo(suite: TestSuite | TestSuiteEvent): TestSuiteEvent {
+        if (suite instanceof TestSuite) {
+            return {
+                type: 'suite',
+                suite: this.asId(suite),
+                state: 'running',
+            };
+        }
 
-        return this;
+        return Object.assign({}, suite, {
+            suite: this.asId(suite),
+        });
     }
 
-    private getKeys(events: (TestSuiteEvent | TestEvent)[]) {
-        return events.map(event =>
-            event.type === 'suite' ? event.suite : event.test
-        );
+    private asTestInfo(test: Test | TestEvent): TestEvent {
+        if (test instanceof Test) {
+            return {
+                type: 'test',
+                test: this.asId(test),
+                state: 'running',
+            };
+        }
+
+        return Object.assign({}, test, {
+            test: this.asId(test),
+        });
+    }
+
+    private asId(test: TestSuite | TestInfo) {
+        if (test instanceof TestSuite || test instanceof Test) {
+            return test.id;
+        }
+
+        const value = test.type === 'suite' ? test.suite : test.test;
+
+        return typeof value === 'string' ? value : value.id;
     }
 }

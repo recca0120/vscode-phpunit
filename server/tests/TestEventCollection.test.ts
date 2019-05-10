@@ -1,6 +1,7 @@
 import { TestEventCollection } from './../src/TestEventCollection';
 import { projectPath } from './helpers';
 import { TestCollection } from '../src/TestCollection';
+import { TestSuiteEvent, TestEvent } from '../src/TestExplorer';
 
 describe('TestEventCollection', () => {
     const path = projectPath('');
@@ -15,16 +16,80 @@ describe('TestEventCollection', () => {
         expect(events).toBeInstanceOf(TestEventCollection);
     });
 
-    it('put test suite or test info', async () => {
-        const tests = Array.from(suites.all().values());
-        events.put(tests);
+    it('put test info', async () => {
+        const suite = await suites.get(projectPath('tests/AssertionsTest.php'));
 
-        expect(events.all()[0]).toEqual(
-            jasmine.objectContaining({
-                state: 'running',
+        events.put(suite.children[0]);
+
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+        expect(events.get(id)).toEqual({
+            type: 'test',
+            test: id,
+            state: 'running',
+        });
+    });
+
+    describe('put test suite info', () => {
+        beforeAll(async () => {
+            const suite = await suites.get(
+                projectPath('tests/AssertionsTest.php')
+            );
+
+            events.put(suite);
+        });
+
+        it('get test suite event', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+            expect(events.get(id)).toEqual({
                 type: 'suite',
-                suite: tests[0],
-            })
-        );
+                suite: id,
+                state: 'running',
+            });
+        });
+
+        it('get test event', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+
+            expect(events.get(id)).toEqual({
+                type: 'test',
+                test: id,
+                state: 'running',
+            });
+        });
+    });
+
+    describe('modify test suite info', () => {
+        beforeAll(async () => {
+            const suite = await suites.get(
+                projectPath('tests/AssertionsTest.php')
+            );
+
+            events.put(suite);
+        });
+
+        it('modify test suite event', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+            const suite = events.get(id) as TestSuiteEvent;
+            suite.state = 'completed';
+
+            expect(events.get(id)).toEqual({
+                type: 'suite',
+                suite: id,
+                state: 'completed',
+            });
+        });
+
+        it('modify test event', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+            const test = events.get(id) as TestEvent;
+            test.state = 'passed';
+            events.put(test);
+
+            expect(events.get(id)).toEqual({
+                type: 'test',
+                test: id,
+                state: 'passed',
+            });
+        });
     });
 });
