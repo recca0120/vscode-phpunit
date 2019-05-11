@@ -4,14 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
-import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
-import {
-    window,
-    workspace,
-    commands,
-    ExtensionContext,
-    extensions,
-} from 'vscode';
+import { window, workspace, commands, ExtensionContext } from 'vscode';
 
 import {
     LanguageClient,
@@ -23,23 +16,9 @@ import {
 import { CommandRequest } from './CommandRequest';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 import { Notify } from './Notify';
-import { PHPUnitController } from './PHPUnitController';
 
 let client: LanguageClient;
-let testHub: TestHub | undefined;
-let controller: PHPUnitController | undefined;
-
 export function activate(context: ExtensionContext) {
-    const testExplorerExtension = extensions.getExtension<TestHub>(
-        testExplorerExtensionId
-    );
-
-    if (testExplorerExtension) {
-        testHub = testExplorerExtension.exports;
-        controller = new PHPUnitController();
-        testHub.registerTestController(controller);
-    }
-
     const outputChannel = window.createOutputChannel('PHPUnit Language Server');
 
     // The server is implemented in node
@@ -91,6 +70,10 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(commandRequest.cancel());
 
     client.onReady().then(() => {
+        const notify = new Notify(window);
+
+        client.onRequest('load', (...args) => console.log(args));
+
         client.onRequest(WillSaveTextDocumentWaitUntilRequest.type, () => {
             if (!window.activeTextEditor || !window.activeTextEditor.document) {
                 return;
@@ -99,8 +82,6 @@ export function activate(context: ExtensionContext) {
 
             return null;
         });
-
-        const notify = new Notify(window);
 
         client.onNotification('started', () => {
             const clearOutpuOnRun = workspace
@@ -125,10 +106,6 @@ export function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-    if (testHub && controller) {
-        testHub.unregisterTestController(controller);
-    }
-
     if (!client) {
         return undefined;
     }

@@ -3,30 +3,27 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { TestCollection } from './TestCollection';
+import { TestSuiteCollection } from './TestSuiteCollection';
 import { TestRunner } from './TestRunner';
 import { TestSuite } from './Parser';
 import {
     createConnection,
     TextDocuments,
-    TextDocument,
+    // TextDocument,
     ProposedFeatures,
     InitializeParams,
     DidChangeConfigurationNotification,
     CodeLensParams,
     ExecuteCommandParams,
-    Position,
-    MessageType,
-    LogMessageNotification,
-    WillSaveTextDocumentWaitUntilRequest,
-    TextDocumentSaveReason,
+    // Position,
+    // MessageType,
+    // LogMessageNotification,
+    // WillSaveTextDocumentWaitUntilRequest,
+    // TextDocumentSaveReason,
     CompletionItem,
 } from 'vscode-languageserver';
 import { Snippets } from './snippets';
-
-const snippets = new Snippets();
-const suites = new TestCollection();
-const runner = new TestRunner(suites);
+import { Controller } from './Controller';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -36,9 +33,14 @@ let connection = createConnection(ProposedFeatures.all);
 // supports full document sync only
 let documents: TextDocuments = new TextDocuments();
 
+const snippets = new Snippets();
+const suites = new TestSuiteCollection();
+const runner = new TestRunner();
+const controller = new Controller(connection, documents, suites, runner);
+
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
-let hasDiagnosticRelatedInformationCapability: boolean = false;
+// let hasDiagnosticRelatedInformationCapability: boolean = false;
 
 connection.onInitialize((params: InitializeParams) => {
     let capabilities = params.capabilities;
@@ -51,11 +53,11 @@ connection.onInitialize((params: InitializeParams) => {
     hasWorkspaceFolderCapability = !!(
         capabilities.workspace && !!capabilities.workspace.workspaceFolders
     );
-    hasDiagnosticRelatedInformationCapability = !!(
-        capabilities.textDocument &&
-        capabilities.textDocument.publishDiagnostics &&
-        capabilities.textDocument.publishDiagnostics.relatedInformation
-    );
+    // hasDiagnosticRelatedInformationCapability = !!(
+    //     capabilities.textDocument &&
+    //     capabilities.textDocument.publishDiagnostics &&
+    //     capabilities.textDocument.publishDiagnostics.relatedInformation
+    // );
 
     return {
         capabilities: {
@@ -67,14 +69,7 @@ connection.onInitialize((params: InitializeParams) => {
                 resolveProvider: true,
             },
             executeCommandProvider: {
-                commands: [
-                    'phpunit.lsp.run-all',
-                    'phpunit.lsp.rerun',
-                    'phpunit.lsp.run-directory',
-                    'phpunit.lsp.run-file',
-                    'phpunit.lsp.run-test-at-cursor',
-                    'phpunit.lsp.cancel',
-                ],
+                commands: controller.commands,
             },
         },
     };
@@ -109,43 +104,43 @@ interface Settings {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: Settings = {
-    maxNumberOfProblems: 1000,
-    php: '',
-    phpunit: '',
-    args: [],
-};
-let globalSettings: Settings = defaultSettings;
+// const defaultSettings: Settings = {
+//     maxNumberOfProblems: 1000,
+//     php: '',
+//     phpunit: '',
+//     args: [],
+// };
+// let globalSettings: Settings = defaultSettings;
 
 // Cache the settings of all open documents
 let documentSettings: Map<string, Thenable<Settings>> = new Map();
 
-connection.onDidChangeConfiguration(change => {
-    if (hasConfigurationCapability) {
-        // Reset all cached document settings
-        documentSettings.clear();
-    } else {
-        globalSettings = <Settings>(change.settings.phpunit || defaultSettings);
-    }
+// connection.onDidChangeConfiguration(change => {
+//     if (hasConfigurationCapability) {
+//         // Reset all cached document settings
+//         documentSettings.clear();
+//     } else {
+//         globalSettings = <Settings>(change.settings.phpunit || defaultSettings);
+//     }
 
-    // Revalidate all open text documents
-    // documents.all().forEach(validateTextDocument);
-});
+//     // Revalidate all open text documents
+//     // documents.all().forEach(validateTextDocument);
+// });
 
-function getDocumentSettings(resource: string): Thenable<Settings> {
-    if (!hasConfigurationCapability) {
-        return Promise.resolve(globalSettings);
-    }
-    let result = documentSettings.get(resource);
-    if (!result) {
-        result = connection.workspace.getConfiguration({
-            scopeUri: resource,
-            section: 'phpunit',
-        });
-        documentSettings.set(resource, result);
-    }
-    return result;
-}
+// function getDocumentSettings(resource: string): Thenable<Settings> {
+//     if (!hasConfigurationCapability) {
+//         return Promise.resolve(globalSettings);
+//     }
+//     let result = documentSettings.get(resource);
+//     if (!result) {
+//         result = connection.workspace.getConfiguration({
+//             scopeUri: resource,
+//             section: 'phpunit',
+//         });
+//         documentSettings.set(resource, result);
+//     }
+//     return result;
+// }
 
 // Only keep settings for open documents
 documents.onDidClose(e => {
@@ -188,63 +183,56 @@ connection.onCodeLens(async (params: CodeLensParams) => {
 });
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    const args = params.arguments;
-    const textDocument: TextDocument = documents.get(args[0]);
-    const position: Position = args[1];
-
-    const settings = await getDocumentSettings(textDocument.uri);
-
-    suites.all().forEach((...args) => {
-        connection.sendDiagnostics({
-            uri: args[1] as string,
-            diagnostics: [],
-        });
-    });
-
-    try {
-        if (textDocument) {
-            connection.sendRequest(WillSaveTextDocumentWaitUntilRequest.type, {
-                textDocument,
-                reason: TextDocumentSaveReason.Manual,
-            });
-        }
-
-        connection.sendNotification('started', () => {});
-
-        runner
-            .setPhpBinary(settings.php)
-            .setPhpUnitBinary(settings.phpunit)
-            .setArgs(settings.args);
-
-        const response = await runner.run(
-            params.command,
-            textDocument,
-            position
-        );
-
-        if (!response) {
-            return;
-        }
-
-        (await response.asDiagnosticGroup(
-            hasDiagnosticRelatedInformationCapability
-        )).forEach((diagnostics, uri) => {
-            connection.sendDiagnostics({
-                uri,
-                diagnostics,
-            });
-        });
-
-        connection.sendNotification(LogMessageNotification.type, {
-            type: MessageType.Log,
-            message: response.toString(),
-        });
-    } catch (e) {
-        throw e;
-    } finally {
-        connection.sendNotification('finished');
-    }
+    controller.executeCommand(params);
+    // const args = params.arguments;
+    // const textDocument: TextDocument = documents.get(args[0]);
+    // const position: Position = args[1];
+    // const settings = await getDocumentSettings(textDocument.uri);
+    // suites.all().forEach((...args) => {
+    //     connection.sendDiagnostics({
+    //         uri: args[1] as string,
+    //         diagnostics: [],
+    //     });
+    // });
+    // try {
+    //     if (textDocument) {
+    //         connection.sendRequest(WillSaveTextDocumentWaitUntilRequest.type, {
+    //             textDocument,
+    //             reason: TextDocumentSaveReason.Manual,
+    //         });
+    //     }
+    //     connection.sendNotification('started', () => {});
+    //     runner
+    //         .setPhpBinary(settings.php)
+    //         .setPhpUnitBinary(settings.phpunit)
+    //         .setArgs(settings.args);
+    //     const response = await runner.run({
+    //         method: params.command,
+    //         textDocument,
+    //         position,
+    //     });
+    //     if (!response) {
+    //         return;
+    //     }
+    //     (await response.asDiagnosticGroup(
+    //         hasDiagnosticRelatedInformationCapability
+    //     )).forEach((diagnostics, uri) => {
+    //         connection.sendDiagnostics({
+    //             uri,
+    //             diagnostics,
+    //         });
+    //     });
+    //     connection.sendNotification(LogMessageNotification.type, {
+    //         type: MessageType.Log,
+    //         message: response.toString(),
+    //     });
+    // } catch (e) {
+    //     throw e;
+    // } finally {
+    //     connection.sendNotification('finished');
+    // }
 });
+
 /*
 connection.onDidOpenTextDocument((params) => {
 	// A text document got opened in VSCode.

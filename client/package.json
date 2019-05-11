@@ -18,7 +18,8 @@
     },
     "dependencies": {
         "vscode-languageclient": "^4.1.4",
-        "vscode-test-adapter-api": "^1.7.0"
+        "vscode-test-adapter-api": "^1.7.0",
+        "vscode-test-adapter-util": "^0.7.0"
     },
     "devDependencies": {
         "vscode": "^1.1.30"

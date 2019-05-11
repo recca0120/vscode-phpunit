@@ -3,9 +3,8 @@ import { PHPUnitOutput, Status } from '../src/ProblemMatcher';
 import { readFileSync } from 'fs';
 
 describe('ProblemMatcher', () => {
-    const scheme = 'file';
     const file = fixturePath('test-result.txt').fsPath;
-    const testFile = projectPath('tests/AssertionsTest.php').toString();
+    const testFile = projectPath('tests/AssertionsTest.php').fsPath;
     const contents: string = readFileSync(file).toString('UTF-8');
     const problemMatcher = new PHPUnitOutput();
 
@@ -28,11 +27,8 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_isnt_same',
             status: Status.FAILURE,
-            uri: testFile.toString(),
-            range: {
-                end: { character: 76, line: 26 },
-                start: { character: 8, line: 26 },
-            },
+            file: testFile,
+            line: 27,
             message: jasmine.anything(),
             files: [],
         });
@@ -62,11 +58,8 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'addition_provider',
             status: Status.FAILURE,
-            uri: testFile,
-            range: {
-                end: { character: 48, line: 58 },
-                start: { character: 8, line: 58 },
-            },
+            file: testFile,
+            line: 59,
             message: jasmine.anything(),
             files: [],
         });
@@ -85,11 +78,8 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_failed',
             status: Status.FAILURE,
-            uri: testFile,
-            range: {
-                end: { character: 33, line: 21 },
-                start: { character: 8, line: 21 },
-            },
+            file: testFile,
+            line: 22,
             message: jasmine.anything(),
             files: [],
         });
@@ -108,11 +98,8 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_risky',
             status: Status.RISKY,
-            uri: testFile,
-            range: {
-                end: { character: 32, line: 29 },
-                start: { character: 4, line: 29 },
-            },
+            file: testFile,
+            line: 30,
             message: jasmine.anything(),
             files: [],
         });
@@ -131,11 +118,8 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_incomplete',
             status: Status.INCOMPLETE,
-            uri: testFile,
-            range: {
-                end: { character: 77, line: 49 },
-                start: { character: 8, line: 49 },
-            },
+            file: testFile,
+            line: 50,
             message: jasmine.anything(),
             files: [],
         });
@@ -154,11 +138,8 @@ describe('ProblemMatcher', () => {
             class: 'AssertionsTest',
             method: 'test_skipped',
             status: Status.SKIPPED,
-            uri: testFile,
-            range: {
-                end: { character: 73, line: 44 },
-                start: { character: 8, line: 44 },
-            },
+            file: testFile,
+            line: 45,
             message: jasmine.anything(),
             files: [],
         });
@@ -180,15 +161,10 @@ describe('ProblemMatcher', () => {
             class: 'CalculatorTest',
             method: 'test_sum_item_method_not_call',
             status: Status.FAILURE,
-            uri: projectPath(
+            file: projectPath(
                 'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php'
-            )
-                .with({ scheme })
-                .toString(),
-            range: {
-                end: { character: 45, line: 28 },
-                start: { character: 8, line: 28 },
-            },
+            ).fsPath,
+            line: 29,
             message: jasmine.anything(),
             files: jasmine.anything(),
         });
@@ -209,13 +185,8 @@ describe('ProblemMatcher', () => {
             class: 'CalculatorTest',
             method: 'test_throw_exception',
             status: Status.FAILURE,
-            uri: projectPath('tests/CalculatorTest.php')
-                .with({ scheme })
-                .toString(),
-            range: {
-                end: { character: 38, line: 53 },
-                start: { character: 8, line: 53 },
-            },
+            file: projectPath('tests/CalculatorTest.php').fsPath,
+            line: 54,
             message: jasmine.anything(),
             files: jasmine.anything(),
         });

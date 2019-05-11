@@ -1,6 +1,3 @@
-import files, { Filesystem } from './Filesystem';
-import { Location, Range } from 'vscode-languageserver-protocol';
-
 export abstract class ProblemMatcher<T> {
     private problems: any[] = [];
     private problemIndex = -1;
@@ -79,14 +76,17 @@ export abstract class ProblemMatcher<T> {
     }
 }
 
-export interface Problem {
+interface Location {
+    file: string;
+    line: number;
+}
+
+export interface Problem extends Location {
     id: string;
     namespace?: string;
     class?: string;
     method?: string;
     status: Status;
-    uri: string;
-    range: Range;
     message: string;
     files: Location[];
 }
@@ -121,7 +121,7 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
         'i'
     );
 
-    constructor(private _files: Filesystem = files) {
+    constructor() {
         super([
             new RegExp('^\\d+\\)\\s(([^:]*)::([^\\s]*).*)$'),
             new RegExp('^(.*)$'),
@@ -137,14 +137,17 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
             let location = problem.files
                 .slice()
                 .reverse()
-                .find(file => {
-                    return new RegExp(`${problem.class}.php$`).test(file.uri);
+                .find(loation => {
+                    return new RegExp(`${problem.class}.php$`).test(
+                        loation.file
+                    );
                 });
             if (!location) {
                 location = problem.files[problem.files.length - 1];
             } else {
                 problem.files = problem.files.filter(l => l !== location);
             }
+
             return Object.assign(problem, location);
         });
     }
@@ -163,8 +166,8 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
             class: '',
             method: '',
             status: this.currentStatus,
-            uri: '',
-            range: Range.create(0, 0, 0, 0),
+            file: '',
+            line: 0,
             message: '',
             files: [],
         };
@@ -188,16 +191,15 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
                 problem.id = m[1];
                 problem.method = m[3];
 
-                problem.id = m[1];
-
                 break;
             case 1:
                 problem.message += `${m[1]}\n`;
                 break;
             case 2:
-                problem.files.push(
-                    await this._files.lineLocation(m[1], parseInt(m[2], 10) - 1)
-                );
+                problem.files.push({
+                    file: m[1],
+                    line: parseInt(m[2], 10),
+                });
                 break;
         }
     }

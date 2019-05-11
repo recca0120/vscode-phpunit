@@ -1,11 +1,11 @@
-import { TestEventCollection } from './../src/TestEventCollection';
 import { projectPath } from './helpers';
-import { TestCollection } from '../src/TestCollection';
-import { TestSuiteEvent, TestEvent } from '../src/TestExplorer';
+import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
+import { TestEventCollection } from './../src/TestEventCollection';
+import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
 describe('TestEventCollection', () => {
     const path = projectPath('');
-    const suites = new TestCollection();
+    const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
 
     beforeAll(async () => {

@@ -1,14 +1,14 @@
-import { TextDocument } from 'vscode-languageserver-protocol';
-import { projectPath } from './helpers';
-import { TestCollection } from '../src/TestCollection';
 import files from '../src/Filesystem';
+import { projectPath } from './helpers';
+import { TestSuiteCollection } from '../src/TestSuiteCollection';
+import { TextDocument } from 'vscode-languageserver-protocol';
 
 describe('TestCollection', () => {
     const path = projectPath('');
-    const suites = new TestCollection();
+    const suites = new TestSuiteCollection();
 
     it('instance', () => {
-        expect(suites).toBeInstanceOf(TestCollection);
+        expect(suites).toBeInstanceOf(TestSuiteCollection);
     });
 
     it('all', async () => {

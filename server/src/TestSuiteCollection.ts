@@ -3,8 +3,9 @@ import URI from 'vscode-uri';
 import { default as _files } from './Filesystem';
 import { PathLike } from 'fs';
 import { TextDocument } from 'vscode-languageserver-protocol';
+import { TestSuiteInfo } from './TestExplorer';
 
-export class TestCollection {
+export class TestSuiteCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
 
     constructor(private files = _files, private parser = new Parser()) {}
@@ -23,14 +24,14 @@ export class TestCollection {
         return this;
     }
 
-    async put(uri: PathLike | URI): Promise<TestCollection> {
+    async put(uri: PathLike | URI): Promise<TestSuiteCollection> {
         return this.putTestSuite(
             this.files.asUri(uri),
             await this.parser.parse(uri)
         );
     }
 
-    putTextDocument(textDocument: TextDocument): TestCollection {
+    putTextDocument(textDocument: TextDocument): TestSuiteCollection {
         return this.putTestSuite(
             this.files.asUri(textDocument.uri),
             this.parser.parseTextDocument(textDocument)
@@ -39,6 +40,15 @@ export class TestCollection {
 
     async get(uri: PathLike | URI) {
         return this.suites.get(this.files.asUri(uri).toString());
+    }
+
+    asTestSuiteInfo(): TestSuiteInfo {
+        return {
+            type: 'suite',
+            id: 'root',
+            label: 'PHPUnit',
+            children: [],
+        };
     }
 
     all() {

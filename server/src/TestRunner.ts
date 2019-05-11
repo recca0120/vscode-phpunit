@@ -2,8 +2,7 @@ import _files from './Filesystem';
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { Process } from './Process';
-import { TestCollection } from './TestCollection';
-import { TestResponse } from './TestResponse';
+import { TestSuiteCollection } from './TestSuiteCollection';
 import {
     TextDocument,
     Position,
@@ -11,17 +10,20 @@ import {
     Command,
 } from 'vscode-languageserver-protocol';
 
+export interface TestRunnerParams {
+    textDocument?: TextDocument;
+    position?: Position;
+    suites?: TestSuiteCollection;
+    codeLens?: CodeLens;
+}
+
 export class TestRunner {
     private phpBinary = '';
     private phpUnitBinary = '';
     private args: string[] = [];
     private lastArgs: string[] = [];
 
-    constructor(
-        private suites: TestCollection,
-        private process = new Process(),
-        private files = _files
-    ) {}
+    constructor(private process = new Process(), private files = _files) {}
 
     setPhpBinary(phpBinary: PathLike | URI) {
         this.phpBinary = this.files.asUri(phpBinary).fsPath;
@@ -45,79 +47,53 @@ export class TestRunner {
         return await this.doRun();
     }
 
-    async rerun(textDocument: TextDocument, position?: Position) {
+    async rerun(params: TestRunnerParams) {
         if (this.lastArgs.length === 0) {
-            return await this.runTestAtCursor(textDocument, position);
+            return await this.runTestAtCursor(params);
         }
 
         return await this.doRun(this.lastArgs);
     }
 
-    async runDirectory(textDocument: TextDocument) {
+    async runDirectory(params: TestRunnerParams) {
         return await this.doRun([
-            this.files.dirname(this.files.asUri(textDocument.uri).fsPath),
+            this.files.dirname(
+                this.files.asUri(params.textDocument.uri).fsPath
+            ),
         ]);
     }
 
-    async runFile(textDocument: TextDocument) {
-        return await this.doRun([this.files.asUri(textDocument.uri).fsPath]);
+    async runFile(params: TestRunnerParams) {
+        return await this.doRun([
+            this.files.asUri(params.textDocument.uri).fsPath,
+        ]);
     }
 
-    async runTestAtCursor(textDocument: TextDocument, position?: Position) {
-        const suite = await this.suites.get(textDocument.uri);
+    async runTestAtCursor(params: TestRunnerParams) {
+        const suite = await params.suites.get(params.textDocument.uri);
 
         if (!suite) {
             return undefined;
         }
 
-        const line = position && position.line ? position.line : 0;
+        const line = params.position.line;
         const codeLens = suite
             .exportCodeLens()
             .find((codeLens: CodeLens) =>
                 this.findCodeLensAtCursor(codeLens, line)
             );
 
-        return codeLens ? await this.doRun(codeLens.data.arguments) : undefined;
+        return codeLens ? await this.runCodeLens({ codeLens }) : undefined;
     }
 
-    async run(
-        method: string,
-        textDocument?: TextDocument,
-        position?: Position
-    ) {
-        method = method.replace(/^phpunit\.lsp\.(run-)?/, '').toLowerCase();
-
-        let response;
-        switch (method) {
-            case 'all':
-                response = await this.runAll();
-                break;
-            case 'directory':
-                response = await this.runDirectory(textDocument);
-                break;
-            case 'file':
-                response = await this.runFile(textDocument);
-                break;
-            case 'rerun':
-                response = await this.rerun(textDocument, position);
-                break;
-            case 'cancel':
-                this.cancel();
-                break;
-            default:
-            case 'test-at-cursor':
-                response = await this.runTestAtCursor(textDocument, position);
-        }
-
-        return response;
+    async runCodeLens(params: TestRunnerParams) {
+        return await this.doRun(params.codeLens.data.arguments);
     }
 
     async doRun(args: string[] = []) {
         this.lastArgs = args;
 
-        return new TestResponse(
-            await this.process.run(await this.getCommand(args))
-        );
+        return await this.process.run(await this.getCommand(args));
     }
 
     cancel(): boolean {
