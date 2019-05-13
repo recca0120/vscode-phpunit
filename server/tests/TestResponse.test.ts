@@ -30,8 +30,7 @@ describe('TestResponse', () => {
                 namespace: 'Recca0120\\VSCode\\Tests',
                 class: 'CalculatorTest',
                 method: 'test_sum_item_method_not_call',
-                file:
-                    '/Users/recca0120/Desktop/vscode-phpunit/server/tests/fixtures/project-sub/vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php',
+                file: '',
                 line: jasmine.any(Number),
                 status: Status.FAILURE,
                 message: jasmine.any(String),

@@ -8,7 +8,6 @@ import {
     TestRunFinishedEvent,
     TestSuiteEvent,
     TestEvent,
-    RetireEvent,
 } from 'vscode-test-adapter-api';
 
 export class LanguageClientAdapter implements TestAdapter {
@@ -38,44 +37,15 @@ export class LanguageClientAdapter implements TestAdapter {
         return this.autorunEmitter.event;
     }
 
-    retire?: Event<RetireEvent>;
+    // retire?: Event<RetireEvent>;
 
     constructor(
         public workspaceFolder: WorkspaceFolder,
         private client: LanguageClient
     ) {
-        this.onRequest(
-            'TestLoadFinishedEvent',
-            ({ suite }): any => {
-                this.testsEmitter.fire(<TestLoadFinishedEvent>{
-                    type: 'finished',
-                    suite: suite,
-                });
-            }
-        );
-
-        this.onRequest(
-            'TestRunStartedEvent',
-            ({ tests, events }): any => {
-                this.testStatesEmitter.fire(<TestRunStartedEvent>{
-                    type: 'started',
-                    tests,
-                });
-
-                this.updateEvents(events);
-            }
-        );
-
-        this.onRequest(
-            'TestRunFinishedEvent',
-            ({ events }): any => {
-                this.updateEvents(events);
-
-                this.testStatesEmitter.fire(<TestRunFinishedEvent>{
-                    type: 'finished',
-                });
-            }
-        );
+        this.listenTestLoadFinishedEvent();
+        this.listenTestRunStartedEvent();
+        this.listenTestRunFinishedEvent();
     }
 
     load(): Promise<void> {
@@ -103,6 +73,43 @@ export class LanguageClientAdapter implements TestAdapter {
             disposable.dispose();
         }
         this.disposables = [];
+    }
+
+    private listenTestRunFinishedEvent() {
+        this.onRequest(
+            'TestRunFinishedEvent',
+            ({ events }): any => {
+                this.updateEvents(events);
+                this.testStatesEmitter.fire(<TestRunFinishedEvent>{
+                    type: 'finished',
+                });
+            }
+        );
+    }
+
+    private listenTestRunStartedEvent() {
+        this.onRequest(
+            'TestRunStartedEvent',
+            ({ tests, events }): any => {
+                this.testStatesEmitter.fire(<TestRunStartedEvent>{
+                    type: 'started',
+                    tests,
+                });
+                this.updateEvents(events);
+            }
+        );
+    }
+
+    private listenTestLoadFinishedEvent() {
+        this.onRequest(
+            'TestLoadFinishedEvent',
+            ({ suite }): any => {
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{
+                    type: 'finished',
+                    suite: suite,
+                });
+            }
+        );
     }
 
     private async sendRequest(

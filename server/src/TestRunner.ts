@@ -43,9 +43,9 @@ export class TestRunner {
         return this;
     }
 
-    async rerun(_params?: Params) {
+    async rerun(_params?: Params, options?: SpawnOptions) {
         if (_params && this.lastArgs.length === 0) {
-            return await this.run(_params);
+            return await this.run(_params, options);
         }
 
         return await this.doRun(this.lastArgs);

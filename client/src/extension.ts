@@ -1,5 +1,11 @@
 import * as path from 'path';
-import { ExtensionContext, window, workspace, extensions } from 'vscode';
+import {
+    ExtensionContext,
+    window,
+    workspace,
+    extensions,
+    commands,
+} from 'vscode';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -10,6 +16,7 @@ import {
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { LanguageClientAdapter } from './LanguageClientAdapter';
+import { CommandRequest } from './CommandRequest';
 // import { CommandRequest } from './CommandRequest';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 // import { Notify } from './Notify';
@@ -58,13 +65,12 @@ export function activate(context: ExtensionContext) {
         clientOptions
     );
 
-    // const commandRequest = new CommandRequest(client, commands);
-    // context.subscriptions.push(commandRequest.runAll());
-    // context.subscriptions.push(commandRequest.rerun());
-    // context.subscriptions.push(commandRequest.runFile());
-    // context.subscriptions.push(commandRequest.runTestAtCursor());
-    // context.subscriptions.push(commandRequest.runDirectory());
-    // context.subscriptions.push(commandRequest.cancel());
+    const commandRequest = new CommandRequest(client, commands);
+    context.subscriptions.push(commandRequest.runAll());
+    context.subscriptions.push(commandRequest.rerun());
+    context.subscriptions.push(commandRequest.runFile());
+    context.subscriptions.push(commandRequest.runTestAtCursor());
+    context.subscriptions.push(commandRequest.cancel());
 
     // client.onReady().then(() => {
     //     const notify = new Notify(window);

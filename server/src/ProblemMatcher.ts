@@ -135,16 +135,19 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
         const problems = await super.parse(contents);
 
         return problems.map(problem => {
-            let location = problem.files
+            let location: any = problem.files
                 .slice()
                 .reverse()
                 .find(loation => {
-                    return new RegExp(`${problem.class}.php$`).test(
+                    return new RegExp(`${problem.class}.php`).test(
                         loation.file
                     );
                 });
             if (!location) {
-                location = problem.files[problem.files.length - 1];
+                location = {
+                    file: '',
+                    line: -1,
+                };
             } else {
                 problem.files = problem.files.filter(l => l !== location);
             }

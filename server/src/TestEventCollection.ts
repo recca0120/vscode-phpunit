@@ -1,9 +1,25 @@
+import { Problem, Status } from './ProblemMatcher';
 import { Test, TestSuite } from './Parser';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
 
-export declare type TestInfo = TestSuite | Test | TestSuiteEvent | TestEvent;
+export declare type TestInfo =
+    | TestSuite
+    | Test
+    | TestSuiteEvent
+    | TestEvent
+    | Problem;
 
 export class TestEventCollection {
+    private states: Map<Status, TestEvent['state']> = new Map([
+        [Status.UNKNOWN, 'errored'],
+        [Status.PASSED, 'passed'],
+        [Status.SKIPPED, 'skipped'],
+        [Status.INCOMPLETE, 'skipped'],
+        [Status.FAILURE, 'failed'],
+        [Status.ERROR, 'errored'],
+        [Status.RISKY, 'failed'],
+        [Status.WARNING, 'failed'],
+    ]);
     events: Map<string, TestSuiteEvent | TestEvent> = new Map();
 
     put(tests: TestInfo | TestInfo[]) {
@@ -12,6 +28,10 @@ export class TestEventCollection {
         const events = tests.reduce((events, test) => {
             if (test instanceof TestSuite) {
                 return events.concat(this.suiteAsEvents(test));
+            }
+
+            if (test.type === 'problem') {
+                return events.concat([this.problemAsEvent(test)]);
             }
 
             return test.type === 'suite'
@@ -49,6 +69,30 @@ export class TestEventCollection {
 
     all(): (TestSuiteEvent | TestEvent)[] {
         return Array.from(this.events.values());
+    }
+
+    private problemAsEvent(problem: Problem): TestEvent {
+        return {
+            type: 'test',
+            test: problem.id,
+            state: this.states.get(problem.status),
+            message: problem.message,
+            decorations: this.asTestDecorations(problem),
+        };
+    }
+
+    private asTestDecorations(problem: Problem) {
+        const current = { file: problem.file, line: problem.line };
+
+        return [current]
+            .concat(problem.files)
+            .filter(
+                location => location.file === problem.file && location.line > 0
+            )
+            .map(location => ({
+                line: location.line - 1,
+                message: problem.message,
+            }));
     }
 
     private suiteAsEvents(
@@ -94,7 +138,11 @@ export class TestEventCollection {
     }
 
     private asId(test: TestSuite | TestInfo) {
-        if (test instanceof TestSuite || test instanceof Test) {
+        if (
+            test instanceof TestSuite ||
+            test instanceof Test ||
+            test.type === 'problem'
+        ) {
             return test.id;
         }
 

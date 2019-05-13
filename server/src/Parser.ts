@@ -106,7 +106,7 @@ abstract class BaseTest {
         codeLens.command = {
             title: 'Run Test',
             command: 'phpunit.lsp.run-test-at-cursor',
-            arguments: [this.id, this.range.start.line],
+            arguments: [this.id],
         } as Command;
 
         return codeLens;

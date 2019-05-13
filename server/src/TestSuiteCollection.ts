@@ -96,6 +96,8 @@ export class TestSuiteCollection {
             type: 'suite',
             id: suite.id,
             label: suite.label,
+            file: suite.file,
+            line: suite.line,
             children: suite.children.map(test => {
                 return test instanceof TestSuite
                     ? this.toTestSuiteInfo(test)
@@ -103,6 +105,8 @@ export class TestSuiteCollection {
                           type: 'test',
                           id: test.id,
                           label: test.label,
+                          file: test.file,
+                          line: test.line,
                       } as TestInfo);
             }),
         };

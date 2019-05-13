@@ -280,7 +280,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [suite.id, suite.range.start.line],
+                arguments: [suite.id],
             },
         });
     });
@@ -298,7 +298,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [test.id, test.range.start.line],
+                arguments: [test.id],
             },
         });
     });

@@ -27,10 +27,6 @@ export class CommandRequest {
         return this.registerCommand('phpunit.run-test-at-cursor');
     }
 
-    runDirectory() {
-        return this.registerCommand('phpunit.run-directory');
-    }
-
     cancel() {
         return this.registerCommand('phpunit.cancel');
     }
@@ -49,7 +45,7 @@ export class CommandRequest {
                     command: command.replace(/^phpunit/, 'phpunit.lsp'),
                     arguments: [
                         document.uri.toString(),
-                        textEditor.selection.active,
+                        textEditor.selection.active.line,
                     ],
                 });
             }

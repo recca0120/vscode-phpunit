@@ -168,10 +168,8 @@ describe('ProblemMatcher', () => {
             class: 'CalculatorTest',
             method: 'test_sum_item_method_not_call',
             status: Status.FAILURE,
-            file: projectPath(
-                'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php'
-            ).fsPath,
-            line: 29,
+            file: '',
+            line: -1,
             message: jasmine.anything(),
             files: jasmine.anything(),
         });

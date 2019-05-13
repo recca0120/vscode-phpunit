@@ -4,7 +4,7 @@
     "icon": "client/images/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.24",
+    "version": "2.0.25",
     "preview": true,
     "repository": {
         "type": "git",
@@ -37,16 +37,16 @@
                 "title": "PHPUnit: Run all tests"
             },
             {
-                "command": "phpunit.rerun",
-                "title": "PHPUnit: Repeat the last test run"
-            },
-            {
                 "command": "phpunit.run-file",
                 "title": "PHPUnit: Run tests in current file"
             },
             {
                 "command": "phpunit.run-test-at-cursor",
                 "title": "PHPUnit: Run the test at the current cursor position"
+            },
+            {
+                "command": "phpunit.rerun",
+                "title": "PHPUnit: Repeat the last test run"
             }
         ],
         "keybindings": [

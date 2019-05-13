@@ -73,12 +73,6 @@ describe('commands', () => {
         });
     });
 
-    it('run directory', () => {
-        expectedCalled('runDirectory', {
-            command: 'phpunit.lsp.run-directory',
-        });
-    });
-
     it('cancel', () => {
         expectedCalled('cancel', {
             command: 'phpunit.lsp.cancel',

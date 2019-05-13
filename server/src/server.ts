@@ -2,12 +2,7 @@ import { Controller } from './Controller';
 import { Snippets } from './snippets';
 import { TestEventCollection } from './TestEventCollection';
 import { TestRunner } from './TestRunner';
-import { TestSuite } from './Parser';
 import { TestSuiteCollection } from './TestSuiteCollection';
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
 
 import {
     createConnection,
@@ -16,7 +11,6 @@ import {
     ProposedFeatures,
     InitializeParams,
     DidChangeConfigurationNotification,
-    CodeLensParams,
     ExecuteCommandParams,
     // Position,
     // MessageType,
@@ -177,12 +171,15 @@ connection.onCompletionResolve(
     }
 );
 
-connection.onCodeLens(async (params: CodeLensParams) => {
-    suites.putTextDocument(documents.get(params.textDocument.uri));
-    const suite: TestSuite = await suites.get(params.textDocument.uri);
-
-    return !suite ? [] : suite.exportCodeLens();
+connection.onCodeLens(() => {
+    return [];
 });
+// connection.onCodeLens(async (params: CodeLensParams) => {
+//     suites.putTextDocument(documents.get(params.textDocument.uri));
+//     const suite: TestSuite = await suites.get(params.textDocument.uri);
+
+//     return !suite ? [] : suite.exportCodeLens();
+// });
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     controller.executeCommand(params);
