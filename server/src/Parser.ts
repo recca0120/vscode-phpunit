@@ -30,14 +30,8 @@ abstract class BaseTest {
 
     constructor(private node: any, private options?: TestOptions) {}
 
-    get id(): string {
-        return this.kind === 'method'
-            ? [this.fullclass, this.node.name.name].join('::')
-            : this.fullclass;
-    }
-
-    get label(): string {
-        return this.kind === 'method' ? this.method : this.class;
+    get name(): string {
+        return this.node.name.name;
     }
 
     get file(): string {
@@ -172,6 +166,14 @@ export class TestSuite extends BaseTest
         super(node, options);
     }
 
+    get id(): string {
+        return this.fullclass;
+    }
+
+    get label(): string {
+        return this.class;
+    }
+
     exportCodeLens(): CodeLens[] {
         return [this.asCodeLens()].concat(
             this.children.map(test => test.asCodeLens())
@@ -184,6 +186,14 @@ export class Test extends BaseTest implements TestInfo {
 
     constructor(node: any, options?: TestOptions) {
         super(node, options);
+    }
+
+    get id(): string {
+        return [this.fullclass, this.name].join('::');
+    }
+
+    get label(): string {
+        return this.method;
     }
 }
 
