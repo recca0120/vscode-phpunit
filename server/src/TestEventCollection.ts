@@ -34,6 +34,13 @@ export class TestEventCollection {
         return this.events;
     }
 
+    asArray() {
+        const result: (TestSuiteEvent | TestEvent)[] = [];
+        this.events.forEach(test => result.push(test));
+
+        return result;
+    }
+
     private suiteAsEvents(
         test: TestSuite | Test
     ): (TestSuiteEvent | TestEvent)[] {
@@ -42,7 +49,7 @@ export class TestEventCollection {
         if (test instanceof TestSuite) {
             return events
                 .concat([this.asTestSuiteInfo(test)])
-                .concat(test.children.map(test => this.suiteAsEvents(test)));
+                .concat(...test.children.map(test => this.suiteAsEvents(test)));
         }
 
         return events.concat([this.asTestInfo(test)]);

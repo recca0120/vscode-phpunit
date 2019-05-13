@@ -3,7 +3,7 @@ import URI from 'vscode-uri';
 import { default as _files } from './Filesystem';
 import { PathLike } from 'fs';
 import { TextDocument } from 'vscode-languageserver-protocol';
-import { TestSuiteInfo } from './TestExplorer';
+import { TestSuiteInfo, TestInfo } from './TestExplorer';
 
 export class TestSuiteCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
@@ -42,12 +42,18 @@ export class TestSuiteCollection {
         return this.suites.get(this.files.asUri(uri).toString());
     }
 
-    asTestSuiteInfo(): TestSuiteInfo {
+    tree(): TestSuiteInfo {
+        const children: TestSuiteInfo[] = [];
+
+        this.suites.forEach(suite => {
+            children.push(this.toTestSuiteInfo(suite));
+        });
+
         return {
             type: 'suite',
             id: 'root',
             label: 'PHPUnit',
-            children: [],
+            children: children,
         };
     }
 
@@ -67,5 +73,22 @@ export class TestSuiteCollection {
         }
 
         return this;
+    }
+
+    private toTestSuiteInfo(suite: TestSuite): TestSuiteInfo {
+        return {
+            type: 'suite',
+            id: suite.id,
+            label: suite.label,
+            children: suite.children.map(test => {
+                return test instanceof TestSuite
+                    ? this.toTestSuiteInfo(test)
+                    : ({
+                          type: 'test',
+                          id: test.id,
+                          label: test.label,
+                      } as TestInfo);
+            }),
+        };
     }
 }
