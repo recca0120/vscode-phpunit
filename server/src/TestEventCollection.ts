@@ -35,11 +35,7 @@ export class TestEventCollection {
     }
 
     asArray(): (TestSuiteEvent | TestEvent)[] {
-        const items: (TestSuiteEvent | TestEvent)[] = [];
-
-        this.events.forEach(test => items.push(test));
-
-        return items;
+        return Array.from(this.all().values());
     }
 
     private suiteAsEvents(

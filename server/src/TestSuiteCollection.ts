@@ -62,10 +62,7 @@ export class TestSuiteCollection {
     }
 
     asArray(): TestSuite[] {
-        const items: TestSuite[] = [];
-        this.suites.forEach(suite => items.push(suite));
-
-        return items;
+        return Array.from(this.all().values());
     }
 
     private putTestSuite(uri: URI, suite: TestSuite) {

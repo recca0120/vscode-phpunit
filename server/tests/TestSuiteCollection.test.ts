@@ -3,7 +3,7 @@ import { projectPath } from './helpers';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
 import { TextDocument } from 'vscode-languageserver-protocol';
 
-describe('TestCollection', () => {
+describe('TestSuiteCollection', () => {
     const path = projectPath('');
     const suites = new TestSuiteCollection();
 
@@ -13,7 +13,7 @@ describe('TestCollection', () => {
 
     it('all', async () => {
         expect(
-            Array.from((await suites.load(path)).all().values()).map(suite => ({
+            (await suites.load(path)).asArray().map(suite => ({
                 id: suite.id,
                 label: suite.label,
             }))
