@@ -30,12 +30,25 @@ export class TestEventCollection {
         return this.events.get(id);
     }
 
-    all() {
-        return this.events;
+    where(filter: (test: TestSuiteEvent | TestEvent) => {}) {
+        return this.all().reduce(
+            (events, event) => {
+                if (filter(event)) {
+                    events = events.concat([event]);
+                }
+
+                return events;
+            },
+            [] as (TestSuiteEvent | TestEvent)[]
+        );
     }
 
-    asArray(): (TestSuiteEvent | TestEvent)[] {
-        return Array.from(this.all().values());
+    find(id: string): TestSuiteEvent | TestEvent {
+        return this.where(event => id === this.asId(event))[0];
+    }
+
+    all(): (TestSuiteEvent | TestEvent)[] {
+        return Array.from(this.events.values());
     }
 
     private suiteAsEvents(

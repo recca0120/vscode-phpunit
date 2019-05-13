@@ -12,12 +12,7 @@ describe('TestSuiteCollection', () => {
     });
 
     it('all', async () => {
-        expect(
-            (await suites.load(path)).asArray().map(suite => ({
-                id: suite.id,
-                label: suite.label,
-            }))
-        ).toEqual([
+        expect((await suites.load(path)).all()).toEqual([
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 label: 'AssertionsTest',
@@ -63,6 +58,46 @@ describe('TestSuiteCollection', () => {
             jasmine.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 label: 'AssertionsTest',
+            })
+        );
+    });
+
+    it('find test suite', async () => {
+        await suites.load(path);
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+        const test = suites.find(id);
+
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+            })
+        );
+    });
+
+    it('find test', async () => {
+        await suites.load(path);
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+
+        const test = suites.find(id);
+
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+            })
+        );
+    });
+
+    it('where test', async () => {
+        await suites.load(path);
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+
+        const tests = suites.where(test => {
+            return test.id === id;
+        });
+
+        expect(tests[0]).toEqual(
+            jasmine.objectContaining({
+                id: id,
             })
         );
     });

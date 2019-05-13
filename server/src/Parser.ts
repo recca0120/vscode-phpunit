@@ -103,37 +103,14 @@ abstract class BaseTest {
 
     asCodeLens(): CodeLens {
         const codeLens = CodeLens.create(this.range);
-        codeLens.command = this.asCodeLensCommand();
-        codeLens.data = {
-            type: this instanceof TestSuite ? 'suite' : 'test',
-            range: this.range,
-            arguments: this.asCommandArguments(),
-        };
 
-        return codeLens;
-    }
-
-    asCodeLensCommand(): Command {
-        return {
+        codeLens.command = {
             title: 'Run Test',
             command: 'phpunit.lsp.run-test-at-cursor',
-            arguments: [this.uri.toString(), this.range.start],
-        };
-    }
+            arguments: [this.id, this.range.start.line],
+        } as Command;
 
-    private asCommandArguments(): string[] {
-        const args = [this.uri.fsPath];
-
-        if (!this.method) {
-            return args;
-        }
-
-        const depends = this.depends.concat(this.method).join('|');
-
-        return args.concat([
-            '--filter',
-            `^.*::(${depends})( with data set .*)?$`,
-        ]);
+        return codeLens;
     }
 
     private acceptModifier(): boolean {

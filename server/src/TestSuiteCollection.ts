@@ -1,4 +1,4 @@
-import Parser, { TestSuite } from './Parser';
+import Parser, { TestSuite, Test } from './Parser';
 import URI from 'vscode-uri';
 import { default as _files } from './Filesystem';
 import { PathLike } from 'fs';
@@ -57,12 +57,24 @@ export class TestSuiteCollection {
         };
     }
 
-    all() {
-        return this.suites;
+    where(filter: (test: TestSuite | Test) => {}) {
+        return this.all().reduce((tests: (TestSuite | Test)[], suite) => {
+            if (filter(suite)) {
+                tests = tests.concat([suite]);
+            }
+
+            return tests.concat(suite.children.filter(test => filter(test)));
+        }, []);
     }
 
-    asArray(): TestSuite[] {
-        return Array.from(this.all().values());
+    find(id: string): TestSuite | Test {
+        return this.where(test => {
+            return id === test.id;
+        })[0];
+    }
+
+    all(): TestSuite[] {
+        return Array.from(this.suites.values());
     }
 
     private putTestSuite(uri: URI, suite: TestSuite) {

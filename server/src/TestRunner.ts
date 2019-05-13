@@ -2,19 +2,12 @@ import _files from './Filesystem';
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { Process } from './Process';
-import { TestSuiteCollection } from './TestSuiteCollection';
-import {
-    TextDocument,
-    Position,
-    CodeLens,
-    Command,
-} from 'vscode-languageserver-protocol';
+import { Command } from 'vscode-languageserver-protocol';
 
-export interface TestRunnerParams {
-    textDocument?: TextDocument;
-    position?: Position;
-    suites?: TestSuiteCollection;
-    codeLens?: CodeLens;
+interface Params {
+    file?: PathLike | URI;
+    method?: string;
+    depends?: string[];
 }
 
 export class TestRunner {
@@ -43,51 +36,36 @@ export class TestRunner {
         return this;
     }
 
-    async runAll() {
-        return await this.doRun();
-    }
-
-    async rerun(params: TestRunnerParams) {
-        if (this.lastArgs.length === 0) {
-            return await this.runTestAtCursor(params);
+    async rerun(_params?: Params) {
+        if (_params && this.lastArgs.length === 0) {
+            return await this.run(_params);
         }
 
         return await this.doRun(this.lastArgs);
     }
 
-    async runDirectory(params: TestRunnerParams) {
-        return await this.doRun([
-            this.files.dirname(
-                this.files.asUri(params.textDocument.uri).fsPath
-            ),
-        ]);
-    }
+    async run(_params?: Params) {
+        const params = [];
+        const deps: string[] = [];
 
-    async runFile(params: TestRunnerParams) {
-        return await this.doRun([
-            this.files.asUri(params.textDocument.uri).fsPath,
-        ]);
-    }
-
-    async runTestAtCursor(params: TestRunnerParams) {
-        const suite = await params.suites.get(params.textDocument.uri);
-
-        if (!suite) {
-            return undefined;
+        if (_params && _params.file) {
+            params.push(this.files.asUri(_params.file).fsPath);
         }
 
-        const line = params.position.line;
-        const codeLens = suite
-            .exportCodeLens()
-            .find((codeLens: CodeLens) =>
-                this.findCodeLensAtCursor(codeLens, line)
-            );
+        if (_params && _params.method) {
+            deps.push(_params.method);
+        }
 
-        return codeLens ? await this.runCodeLens({ codeLens }) : undefined;
-    }
+        if (_params && _params.depends) {
+            deps.push(..._params.depends);
+        }
 
-    async runCodeLens(params: TestRunnerParams) {
-        return await this.doRun(params.codeLens.data.arguments);
+        if (deps.length > 0) {
+            params.push('--filter');
+            params.push(`^.*::(${deps.join('|')})( with data set .*)?$`);
+        }
+
+        return await this.doRun(params);
     }
 
     async doRun(args: string[] = []) {
@@ -134,17 +112,5 @@ export class TestRunner {
         }
 
         return await this.files.findup(['vendor/bin/phpunit', 'phpunit']);
-    }
-
-    private findCodeLensAtCursor(codeLens: CodeLens, line: number) {
-        const { type, range } = codeLens.data;
-        const start = range.start.line;
-        const end = range.end.line;
-
-        if (type === 'suite') {
-            return start >= line || end <= line;
-        }
-
-        return type !== 'suite' && end >= line;
     }
 }
