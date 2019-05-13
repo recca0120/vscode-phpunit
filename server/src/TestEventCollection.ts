@@ -1,5 +1,5 @@
-import { TestSuite, Test } from './Parser';
-import { TestSuiteEvent, TestEvent } from './TestExplorer';
+import { Test, TestSuite } from './Parser';
+import { TestEvent, TestSuiteEvent } from './TestExplorer';
 
 export declare type TestInfo = TestSuite | Test | TestSuiteEvent | TestEvent;
 

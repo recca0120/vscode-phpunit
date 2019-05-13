@@ -1,6 +1,5 @@
 /// <reference path="../types/php-parser.d.ts" />
-
-import _files from './Filesystem';
+import files from './Filesystem';
 import URI from 'vscode-uri';
 import { default as Engine } from 'php-parser';
 import { PathLike } from 'fs';
@@ -221,7 +220,6 @@ class Clazz {
 
 export default class Parser {
     constructor(
-        private files = _files,
         private engine = Engine.create({
             ast: {
                 withPositions: true,
@@ -240,11 +238,12 @@ export default class Parser {
                 asp_tags: true,
                 short_tags: true,
             },
-        })
+        }),
+        private _files = files
     ) {}
 
     async parse(uri: PathLike | URI): Promise<TestSuite | null> {
-        return this.parseCode(await this.files.get(uri), uri);
+        return this.parseCode(await this._files.get(uri), uri);
     }
 
     parseTextDocument(textDocument: TextDocument | null): TestSuite | null {
@@ -257,7 +256,7 @@ export default class Parser {
 
     parseCode(code: string, uri: PathLike | URI): TestSuite | null {
         const tree: any = this.engine.parseCode(code);
-        const classes = this.findClasses(this.files.asUri(uri), tree.children);
+        const classes = this.findClasses(this._files.asUri(uri), tree.children);
 
         return !classes || classes.length === 0
             ? null

@@ -4,6 +4,7 @@ import { access, createReadStream, PathLike, readFile, writeFile } from 'fs';
 import { createInterface } from 'readline';
 import { dirname, join } from 'path';
 import { Location, Position, Range } from 'vscode-languageserver-protocol';
+import { SpawnOptions } from 'child_process';
 
 export class Env {
     private delimiter = ':';
@@ -110,7 +111,8 @@ export class Filesystem {
         return await this.find(search, [cwd]);
     }
 
-    async findup(search: string | string[], cwd: string = process.cwd()) {
+    async findup(search: string | string[], options?: SpawnOptions) {
+        const cwd = options && options.cwd ? options.cwd : process.cwd();
         const paths = [cwd];
 
         do {

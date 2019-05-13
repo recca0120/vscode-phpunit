@@ -82,6 +82,7 @@ interface Location {
 }
 
 export interface Problem extends Location {
+    type: 'problem';
     id: string;
     namespace?: string;
     class?: string;
@@ -161,6 +162,7 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
 
     protected async create(m: RegExpMatchArray): Promise<Problem> {
         return {
+            type: 'problem',
             id: m[1],
             namespace: '',
             class: '',

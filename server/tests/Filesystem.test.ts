@@ -33,7 +33,9 @@ describe('Filesystem', () => {
     });
 
     it('findUp types/php-parser.d.ts', async () => {
-        const file = await files.findup('types/php-parser.d.ts', __filename);
+        const file = await files.findup('types/php-parser.d.ts', {
+            cwd: __filename,
+        } as any);
 
         expect(file).toContain(
             fixturePath('../../types/php-parser.d.ts').fsPath

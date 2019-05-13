@@ -1,12 +1,14 @@
+import { Controller } from './Controller';
+import { Snippets } from './snippets';
 import { TestEventCollection } from './TestEventCollection';
+import { TestRunner } from './TestRunner';
+import { TestSuite } from './Parser';
+import { TestSuiteCollection } from './TestSuiteCollection';
 /* --------------------------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { TestSuiteCollection } from './TestSuiteCollection';
-import { TestRunner } from './TestRunner';
-import { TestSuite } from './Parser';
 import {
     createConnection,
     TextDocuments,
@@ -23,8 +25,6 @@ import {
     // TextDocumentSaveReason,
     CompletionItem,
 } from 'vscode-languageserver';
-import { Snippets } from './snippets';
-import { Controller } from './Controller';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -38,13 +38,7 @@ const snippets = new Snippets();
 const suites = new TestSuiteCollection();
 const events = new TestEventCollection();
 const runner = new TestRunner();
-const controller = new Controller(
-    connection,
-    documents,
-    suites,
-    events,
-    runner
-);
+const controller = new Controller(connection, suites, events, runner);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;

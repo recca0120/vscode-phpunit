@@ -1,6 +1,8 @@
 import _files, { Filesystem } from '../src/filesystem';
 import { Process } from '../src/process';
 import { TestRunner } from '../src/TestRunner';
+import { PHPUnitOutput } from '../src/ProblemMatcher';
+import { TestResponse } from '../src/TestResponse';
 
 describe('TestRunner', () => {
     let process: Process;
@@ -10,103 +12,131 @@ describe('TestRunner', () => {
     beforeEach(async () => {
         process = new Process();
         files = new Filesystem();
-        testRunner = new TestRunner(process, files);
+        testRunner = new TestRunner(process, new PHPUnitOutput(), files);
     });
 
-    it('run all', async () => {
-        spyOn(files, 'findup').and.returnValues('phpunit');
-        spyOn(process, 'run').and.returnValue('PHPUnit');
+    describe('run', () => {
+        let response: TestResponse;
 
-        expect(await testRunner.run()).toEqual('PHPUnit');
-        expect(files.findup).toHaveBeenCalledWith([
-            'vendor/bin/phpunit',
-            'phpunit',
-        ]);
-        expect(process.run).toHaveBeenCalledWith({
-            title: 'PHPUnit LSP',
-            command: 'phpunit',
-            arguments: [],
+        beforeEach(() => {
+            spyOn(process, 'run').and.returnValue('PHPUnit');
         });
-    });
 
-    it('run file', async () => {
-        const file = 'foo.php';
-        spyOn(files, 'findup').and.returnValues('phpunit');
-        spyOn(process, 'run').and.returnValue('PHPUnit');
-
-        expect(await testRunner.run({ file })).toEqual('PHPUnit');
-        expect(files.findup).toHaveBeenCalledWith([
-            'vendor/bin/phpunit',
-            'phpunit',
-        ]);
-        expect(process.run).toHaveBeenCalledWith({
-            title: 'PHPUnit LSP',
-            command: 'phpunit',
-            arguments: [file],
+        afterEach(() => {
+            expect(response.toString()).toEqual('PHPUnit');
         });
-    });
 
-    it('rerun', async () => {
-        const file = 'foo.php';
-        spyOn(files, 'findup').and.returnValues('phpunit');
-        spyOn(process, 'run').and.returnValue('PHPUnit');
+        describe('configurtion', () => {
+            beforeEach(() => {
+                spyOn(files, 'findup').and.returnValues(
+                    'phpunit',
+                    'phpunit.xml'
+                );
+            });
 
-        expect(await testRunner.run({ file })).toEqual('PHPUnit');
-        expect(await testRunner.rerun({})).toEqual('PHPUnit');
-        expect(files.findup).toHaveBeenCalledWith([
-            'vendor/bin/phpunit',
-            'phpunit',
-        ]);
-        expect(process.run).toHaveBeenCalledWith({
-            title: 'PHPUnit LSP',
-            command: 'phpunit',
-            arguments: [file],
+            afterEach(() => {
+                expect(files.findup).toHaveBeenCalledWith(
+                    ['vendor/bin/phpunit', 'phpunit'],
+                    undefined
+                );
+                expect(files.findup).toHaveBeenCalledWith(
+                    ['phpunit.xml', 'phpunit.xml.dist'],
+                    undefined
+                );
+            });
+
+            it('run all', async () => {
+                response = await testRunner.run();
+
+                expect(process.run).toBeCalledWith(
+                    {
+                        title: 'PHPUnit LSP',
+                        command: 'phpunit',
+                        arguments: ['-c', 'phpunit.xml'],
+                    },
+                    undefined
+                );
+            });
+
+            it('run file', async () => {
+                const params = {
+                    file: 'foo.php',
+                };
+
+                response = await testRunner.run(params);
+
+                expect(process.run).toHaveBeenCalledWith(
+                    {
+                        title: 'PHPUnit LSP',
+                        command: 'phpunit',
+                        arguments: ['-c', 'phpunit.xml', params.file],
+                    },
+                    undefined
+                );
+            });
+
+            it('rerun', async () => {
+                const params = {
+                    file: 'foo.php',
+                };
+
+                await testRunner.run(params);
+                response = await testRunner.rerun({});
+
+                expect(process.run).toHaveBeenCalledTimes(2);
+                expect(process.run).toHaveBeenCalledWith(
+                    {
+                        title: 'PHPUnit LSP',
+                        command: 'phpunit',
+                        arguments: ['-c', 'phpunit.xml', params.file],
+                    },
+                    undefined
+                );
+            });
+
+            it('run test', async () => {
+                const params = {
+                    file: 'foo.php',
+                    method: 'test_passed',
+                    depends: ['test_failed'],
+                };
+
+                response = await testRunner.run(params);
+
+                expect(process.run).toHaveBeenCalledWith(
+                    {
+                        title: 'PHPUnit LSP',
+                        command: 'phpunit',
+                        arguments: [
+                            '-c',
+                            'phpunit.xml',
+                            '--filter',
+                            '^.*::(test_passed|test_failed)( with data set .*)?$',
+                            params.file,
+                        ],
+                    },
+                    undefined
+                );
+            });
         });
-        expect(process.run).toHaveBeenCalledTimes(2);
-    });
 
-    it('run test ', async () => {
-        const file = 'foo.php';
-        const method = 'test_passed';
-        const depends = ['test_failed'];
+        it('custom php, phpunit, args', async () => {
+            spyOn(files, 'findup').and.returnValues('phpunit.xml');
+            testRunner
+                .setPhpBinary('php')
+                .setPhpUnitBinary('phpunit')
+                .setArgs(['foo', 'bar']);
 
-        spyOn(files, 'findup').and.returnValues('phpunit');
-        spyOn(process, 'run').and.returnValue('PHPUnit');
+            expect((await testRunner.run()).toString()).toEqual('PHPUnit');
 
-        expect(await testRunner.run({ file, method, depends })).toEqual(
-            'PHPUnit'
-        );
-
-        expect(files.findup).toHaveBeenCalledWith([
-            'vendor/bin/phpunit',
-            'phpunit',
-        ]);
-        expect(process.run).toHaveBeenCalledWith({
-            title: 'PHPUnit LSP',
-            command: 'phpunit',
-            arguments: [
-                file,
-                '--filter',
-                '^.*::(test_passed|test_failed)( with data set .*)?$',
-            ],
-        });
-    });
-
-    it('custom php, phpunit, args', async () => {
-        spyOn(files, 'findup').and.returnValues('phpunit');
-        spyOn(process, 'run').and.returnValue('PHPUnit');
-
-        testRunner
-            .setPhpBinary('php')
-            .setPhpUnitBinary('phpunit')
-            .setArgs(['foo', 'bar']);
-
-        expect(new String(await testRunner.run())).toEqual('PHPUnit');
-        expect(files.findup).not.toHaveBeenCalled();
-        expect(process.run).toHaveBeenCalledWith({
-            title: 'PHPUnit LSP',
-            command: 'php',
-            arguments: ['phpunit', 'foo', 'bar'],
+            expect(process.run).toHaveBeenCalledWith(
+                {
+                    title: 'PHPUnit LSP',
+                    command: 'php',
+                    arguments: ['phpunit', '-c', 'phpunit.xml', 'foo', 'bar'],
+                },
+                undefined
+            );
         });
     });
 

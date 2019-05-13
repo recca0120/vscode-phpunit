@@ -1,6 +1,6 @@
 import Parser, { TestSuite, Test } from './Parser';
 import URI from 'vscode-uri';
-import { default as _files } from './Filesystem';
+import files from './Filesystem';
 import { PathLike } from 'fs';
 import { TextDocument } from 'vscode-languageserver-protocol';
 import { TestSuiteInfo, TestInfo } from './TestExplorer';
@@ -8,12 +8,12 @@ import { TestSuiteInfo, TestInfo } from './TestExplorer';
 export class TestSuiteCollection {
     private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
 
-    constructor(private files = _files, private parser = new Parser()) {}
+    constructor(private parser = new Parser(), private _files = files) {}
 
     async load(uri: PathLike | URI = process.cwd()) {
-        uri = this.files.asUri(uri);
+        uri = this._files.asUri(uri);
 
-        const files = await this.files.glob('**/*.php', {
+        const files = await this._files.glob('**/*.php', {
             absolute: true,
             ignore: 'vendor/**',
             cwd: uri.fsPath,
@@ -26,20 +26,20 @@ export class TestSuiteCollection {
 
     async put(uri: PathLike | URI): Promise<TestSuiteCollection> {
         return this.putTestSuite(
-            this.files.asUri(uri),
+            this._files.asUri(uri),
             await this.parser.parse(uri)
         );
     }
 
     putTextDocument(textDocument: TextDocument): TestSuiteCollection {
         return this.putTestSuite(
-            this.files.asUri(textDocument.uri),
+            this._files.asUri(textDocument.uri),
             this.parser.parseTextDocument(textDocument)
         );
     }
 
     async get(uri: PathLike | URI) {
-        return this.suites.get(this.files.asUri(uri).toString());
+        return this.suites.get(this._files.asUri(uri).toString());
     }
 
     tree(): TestSuiteInfo {

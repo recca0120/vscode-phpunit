@@ -280,21 +280,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [file.toString(), suite.range.start],
-            },
-            data: {
-                arguments: [file.fsPath],
-                range: {
-                    end: {
-                        character: 1,
-                        line: 69,
-                    },
-                    start: {
-                        character: 0,
-                        line: 7,
-                    },
-                },
-                type: 'suite',
+                arguments: [suite.id, suite.range.start.line],
             },
         });
     });
@@ -312,25 +298,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [file.toString(), test.range.start],
-            },
-            data: {
-                arguments: [
-                    file.fsPath,
-                    '--filter',
-                    '^.*::(test_passed|test_failed)( with data set .*)?$',
-                ],
-                range: {
-                    end: {
-                        character: 5,
-                        line: 22,
-                    },
-                    start: {
-                        character: 5,
-                        line: 19,
-                    },
-                },
-                type: 'test',
+                arguments: [test.id, test.range.start.line],
             },
         });
     });

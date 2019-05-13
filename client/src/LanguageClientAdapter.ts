@@ -43,38 +43,55 @@ export class LanguageClientAdapter implements TestAdapter {
     constructor(
         public workspaceFolder: WorkspaceFolder,
         private client: LanguageClient
-    ) {}
+    ) {
+        this.onRequest(
+            'TestLoadFinishedEvent',
+            ({ suite }): any => {
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{
+                    type: 'finished',
+                    suite: suite,
+                });
+            }
+        );
 
-    async load(): Promise<void> {
+        this.onRequest(
+            'TestRunStartedEvent',
+            ({ tests, events }): any => {
+                this.testStatesEmitter.fire(<TestRunStartedEvent>{
+                    type: 'started',
+                    tests,
+                });
+
+                this.updateEvents(events);
+            }
+        );
+
+        this.onRequest(
+            'TestRunFinishedEvent',
+            ({ events }): any => {
+                this.updateEvents(events);
+
+                this.testStatesEmitter.fire(<TestRunFinishedEvent>{
+                    type: 'finished',
+                });
+            }
+        );
+    }
+
+    load(): Promise<void> {
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-        this.testsEmitter.fire(<TestLoadFinishedEvent>{
-            type: 'finished',
-            suite: await this.sendRequest('TestLoadFinishedEvent'),
-        });
+        return this.sendRequest('TestLoadStartedEvent');
     }
 
-    async run(tests: string[]): Promise<void> {
-        this.testStatesEmitter.fire(<TestRunStartedEvent>{
-            type: 'started',
-            tests,
-        });
-
-        this.updateEvents(await this.sendRequest('TestRunStartedEvent'));
-
-        setTimeout(async () => {
-            this.updateEvents(await this.sendRequest('TestRunFinishedEvent'));
-
-            this.testStatesEmitter.fire(<TestRunFinishedEvent>{
-                type: 'finished',
-            });
-        }, 2000);
+    run(tests: string[]): Promise<void> {
+        return this.sendRequest('TestRunStartedEvent', { tests });
     }
 
-    debug?(tests: string[]): Promise<void> {
-        console.log(tests);
-        throw new Error('Method not implemented.');
-    }
+    // debug?(tests: string[]): Promise<void> {
+    //     console.log(tests);
+    //     throw new Error('Method not implemented.');
+    // }
 
     cancel(): void {
         throw new Error('Method not implemented.');
@@ -95,6 +112,15 @@ export class LanguageClientAdapter implements TestAdapter {
         await this.client.onReady();
 
         return await this.client.sendRequest(requestType, params);
+    }
+
+    private async onRequest(
+        requestType: string,
+        cb: (params?: any) => {}
+    ): Promise<any> {
+        await this.client.onReady();
+
+        return this.client.onRequest(requestType, cb);
     }
 
     private updateEvents(events: (TestSuiteEvent | TestEvent)[]) {

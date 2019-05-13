@@ -1,3 +1,5 @@
+import { Problem, PHPUnitOutput, ProblemMatcher } from './ProblemMatcher';
+
 // import {
 //     Diagnostic,
 //     DiagnosticSeverity,
@@ -5,7 +7,14 @@
 // } from 'vscode-languageserver-protocol';
 
 export class TestResponse {
-    constructor(private output: string) {}
+    constructor(
+        private output: string,
+        private problemMatcher: ProblemMatcher<any> = new PHPUnitOutput()
+    ) {}
+
+    async asProblem(): Promise<Problem[]> {
+        return await this.problemMatcher.parse(this.output);
+    }
 
     // async asDiagnosticGroup(
     //     relatedInfo: boolean = true

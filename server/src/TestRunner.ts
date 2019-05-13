@@ -1,8 +1,11 @@
-import _files from './Filesystem';
+import { PHPUnitOutput, ProblemMatcher } from './ProblemMatcher';
+import files from './Filesystem';
 import URI from 'vscode-uri';
+import { Command } from 'vscode-languageserver-protocol';
 import { PathLike } from 'fs';
 import { Process } from './Process';
-import { Command } from 'vscode-languageserver-protocol';
+import { SpawnOptions } from 'child_process';
+import { TestResponse } from './TestResponse';
 
 interface Params {
     file?: PathLike | URI;
@@ -16,16 +19,20 @@ export class TestRunner {
     private args: string[] = [];
     private lastArgs: string[] = [];
 
-    constructor(private process = new Process(), private files = _files) {}
+    constructor(
+        private process = new Process(),
+        private problemMatcher: ProblemMatcher<any> = new PHPUnitOutput(),
+        private _files = files
+    ) {}
 
     setPhpBinary(phpBinary: PathLike | URI) {
-        this.phpBinary = this.files.asUri(phpBinary).fsPath;
+        this.phpBinary = this._files.asUri(phpBinary).fsPath;
 
         return this;
     }
 
     setPhpUnitBinary(phpUnitBinary: PathLike | URI) {
-        this.phpUnitBinary = this.files.asUri(phpUnitBinary).fsPath;
+        this.phpUnitBinary = this._files.asUri(phpUnitBinary).fsPath;
 
         return this;
     }
@@ -44,19 +51,19 @@ export class TestRunner {
         return await this.doRun(this.lastArgs);
     }
 
-    async run(_params?: Params) {
+    async run(_params?: Params, options?: SpawnOptions) {
+        if (!_params) {
+            return await this.doRun([], options);
+        }
+
         const params = [];
         const deps: string[] = [];
 
-        if (_params && _params.file) {
-            params.push(this.files.asUri(_params.file).fsPath);
-        }
-
-        if (_params && _params.method) {
+        if (_params.method) {
             deps.push(_params.method);
         }
 
-        if (_params && _params.depends) {
+        if (_params.depends) {
             deps.push(..._params.depends);
         }
 
@@ -65,52 +72,84 @@ export class TestRunner {
             params.push(`^.*::(${deps.join('|')})( with data set .*)?$`);
         }
 
-        return await this.doRun(params);
+        if (_params.file) {
+            params.push(this._files.asUri(_params.file).fsPath);
+        }
+
+        return await this.doRun(params, options);
     }
 
-    async doRun(args: string[] = []) {
+    async doRun(args: string[] = [], options?: SpawnOptions) {
         this.lastArgs = args;
 
-        return await this.process.run(await this.getCommand(args));
+        return new TestResponse(
+            await this.process.run(
+                await this.getCommand(args, options),
+                options
+            ),
+            this.problemMatcher
+        );
     }
 
     cancel(): boolean {
         return this.process.kill();
     }
 
-    private async getCommand(args: string[]): Promise<Command> {
-        let thisArgs = [];
+    private async getCommand(
+        args: string[],
+        options?: SpawnOptions
+    ): Promise<Command> {
+        let params = [];
 
-        const phpBinary = this.getPhpBinary();
+        const [phpBinary, phpUnitBinary, phpUnitXml] = await Promise.all([
+            this.getPhpBinary(),
+            this.getPhpUnitBinary(options),
+            this.getPhpUnitXml(options),
+        ]);
 
         if (phpBinary) {
-            thisArgs.push(phpBinary);
+            params.push(phpBinary);
         }
-
-        const phpUnitBinary = await this.getPhpUnitBinary();
 
         if (phpUnitBinary) {
-            thisArgs.push(phpUnitBinary);
+            params.push(phpUnitBinary);
         }
 
-        thisArgs = thisArgs.concat(this.args, args).filter(arg => !!arg);
+        if (phpUnitXml) {
+            params.push('-c');
+            params.push(phpUnitXml);
+        }
+
+        params = params.concat(this.args, args).filter(arg => !!arg);
 
         return {
             title: 'PHPUnit LSP',
-            command: thisArgs.shift(),
-            arguments: thisArgs,
+            command: params.shift(),
+            arguments: params,
         };
     }
 
-    private getPhpBinary(): string {
-        return this.phpBinary;
+    private getPhpBinary(): Promise<string> {
+        return Promise.resolve(this.phpBinary);
     }
 
-    private async getPhpUnitBinary(): Promise<string | void> {
+    private async getPhpUnitBinary(
+        options?: SpawnOptions
+    ): Promise<string | void> {
         if (this.phpUnitBinary) {
             return this.phpUnitBinary;
         }
 
-        return await this.files.findup(['vendor/bin/phpunit', 'phpunit']);
+        return await this._files.findup(
+            ['vendor/bin/phpunit', 'phpunit'],
+            options
+        );
+    }
+
+    private async getPhpUnitXml(options?: SpawnOptions) {
+        return await this._files.findup(
+            ['phpunit.xml', 'phpunit.xml.dist'],
+            options
+        );
     }
 }

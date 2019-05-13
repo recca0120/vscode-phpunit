@@ -1,13 +1,46 @@
-// import files from '../src/Filesystem';
-// import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-protocol';
-// import { fixturePath, projectPath } from './helpers';
-// import { TestResponse } from '../src/TestResponse';
+import files from '../src/Filesystem';
+import { fixturePath } from './helpers';
+import { TestResponse } from '../src/TestResponse';
+import { Problem, Status } from '../src/ProblemMatcher';
 
 describe('TestResponse', () => {
-    it('pass', () => {});
-    // let testResponse: TestResponse;
+    let output = '';
+    let testResponse: TestResponse;
+
+    beforeAll(async () => {
+        output = await files.get(fixturePath('test-result.txt'));
+        testResponse = new TestResponse(output);
+    });
+
+    it('output', () => {
+        expect(testResponse.toString()).toEqual(output);
+    });
+
+    describe('problems', () => {
+        let problems: Problem[];
+        beforeAll(async () => {
+            problems = await testResponse.asProblem();
+        });
+
+        it('test_sum_item_method_not_call', () => {
+            expect(problems[0]).toEqual({
+                type: 'problem',
+                id:
+                    'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call',
+                namespace: 'Recca0120\\VSCode\\Tests',
+                class: 'CalculatorTest',
+                method: 'test_sum_item_method_not_call',
+                file:
+                    '/Users/recca0120/Desktop/vscode-phpunit/server/tests/fixtures/project-sub/vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditionsForV8.php',
+                line: jasmine.any(Number),
+                status: Status.FAILURE,
+                message: jasmine.any(String),
+                files: jasmine.anything(),
+            });
+        });
+    });
+
     // beforeAll(async () => {
-    //     const output = await files.get(fixturePath('test-result.txt'));
     //     testResponse = new TestResponse(output);
     // });
     // describe('Diagnostic', () => {

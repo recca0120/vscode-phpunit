@@ -47,10 +47,6 @@
             {
                 "command": "phpunit.run-test-at-cursor",
                 "title": "PHPUnit: Run the test at the current cursor position"
-            },
-            {
-                "command": "phpunit.run-directory",
-                "title": "PHPUnit: Run tests in current directory"
             }
         ],
         "keybindings": [
