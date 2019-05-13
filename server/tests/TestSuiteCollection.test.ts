@@ -11,25 +11,54 @@ describe('TestSuiteCollection', () => {
         expect(suites).toBeInstanceOf(TestSuiteCollection);
     });
 
-    it('all', async () => {
-        expect((await suites.load(path)).all()).toEqual([
-            jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+    describe('all', () => {
+        let items: any[];
+
+        beforeAll(async () => {
+            items = (await suites.load(path)).all().map(suite => {
+                return {
+                    id: suite.id,
+                    label: suite.label,
+                };
+            });
+        });
+
+        it('Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+
+            expect(items.find(item => item.id === id)).toEqual({
+                id: id,
                 label: 'AssertionsTest',
-            }),
-            jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
+            });
+        });
+
+        it('Recca0120\\VSCode\\Tests\\CalculatorTest', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\CalculatorTest';
+
+            expect(items.find(item => item.id === id)).toEqual({
+                id: id,
                 label: 'CalculatorTest',
-            }),
-            jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest',
+            });
+        });
+
+        it('Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest', () => {
+            const id = 'Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest';
+
+            expect(items.find(item => item.id === id)).toEqual({
+                id: id,
                 label: 'HasPropertyTest',
-            }),
-            jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest',
+            });
+        });
+
+        it('Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest', () => {
+            const id =
+                'Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest';
+
+            expect(items.find(item => item.id === id)).toEqual({
+                id: id,
                 label: 'LeadingCommentsTest',
-            }),
-        ]);
+            });
+        });
     });
 
     it('get', async () => {
