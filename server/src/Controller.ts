@@ -1,3 +1,4 @@
+import { TestEventCollection } from './TestEventCollection';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import { TestRunner, TestRunnerParams } from './TestRunner';
 import {
@@ -27,8 +28,36 @@ export class Controller {
         private connection: Connection,
         private documents: TextDocuments,
         private suites: TestSuiteCollection,
+        private events: TestEventCollection,
         private testRunner: TestRunner
-    ) {}
+    ) {
+        this.connection.onRequest('TestLoadFinishedEvent', async () => {
+            await this.suites.load();
+
+            return this.suites.tree();
+        });
+
+        this.connection.onRequest('TestRunStartedEvent', () => {
+            this.events.put(this.suites.asArray());
+
+            return this.events.asArray();
+        });
+
+        this.connection.onRequest('TestRunFinishedEvent', () => {
+            this.events.put(
+                this.events.asArray().map(event => {
+                    event.state =
+                        event.type === 'suite'
+                            ? (event.state = 'completed')
+                            : (event.state = 'passed');
+
+                    return event;
+                })
+            );
+
+            return this.events.asArray();
+        });
+    }
 
     async executeCommand(params: ExecuteCommandParams) {
         return this.runTest(params);

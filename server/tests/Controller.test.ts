@@ -11,17 +11,21 @@ import {
 describe('Controller Test', () => {
     const connection: any = {
         sendNotification: () => {},
+        onNotification: () => {},
         sendRequest: () => {},
+        onRequest: () => {},
     };
     const documents: any = {
         get: () => {},
     };
     const suites: any = {};
+    const events: any = {};
     const testRunner = new TestRunner();
     const controller = new Controller(
         connection,
         documents,
         suites,
+        events,
         testRunner
     );
 

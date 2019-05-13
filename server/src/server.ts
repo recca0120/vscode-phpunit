@@ -1,3 +1,4 @@
+import { TestEventCollection } from './TestEventCollection';
 /* --------------------------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
@@ -35,8 +36,15 @@ let documents: TextDocuments = new TextDocuments();
 
 const snippets = new Snippets();
 const suites = new TestSuiteCollection();
+const events = new TestEventCollection();
 const runner = new TestRunner();
-const controller = new Controller(connection, documents, suites, runner);
+const controller = new Controller(
+    connection,
+    documents,
+    suites,
+    events,
+    runner
+);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
@@ -75,7 +83,7 @@ connection.onInitialize((params: InitializeParams) => {
     };
 });
 
-connection.onInitialized(async () => {
+connection.onInitialized(() => {
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
         connection.client.register(
@@ -85,12 +93,12 @@ connection.onInitialized(async () => {
     }
     if (hasWorkspaceFolderCapability) {
         connection.workspace.onDidChangeWorkspaceFolders(async () => {
-            await suites.load();
+            // await suites.load();
             // connection.console.log('Workspace folder change event received.');
         });
     }
 
-    await suites.load();
+    // await suites.load();
 });
 
 // The example settings

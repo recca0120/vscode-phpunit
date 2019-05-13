@@ -1,21 +1,18 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as path from 'path';
-import { window, workspace, commands, ExtensionContext } from 'vscode';
-
+import { ExtensionContext, window, workspace, extensions } from 'vscode';
 import {
     LanguageClient,
     LanguageClientOptions,
     ServerOptions,
     TransportKind,
-    WillSaveTextDocumentWaitUntilRequest,
+    // WillSaveTextDocumentWaitUntilRequest,
 } from 'vscode-languageclient';
-import { CommandRequest } from './CommandRequest';
+import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
+import { TestAdapterRegistrar } from 'vscode-test-adapter-util';
+import { LanguageClientAdapter } from './LanguageClientAdapter';
+// import { CommandRequest } from './CommandRequest';
 // import { SocketOutputChannel } from './SocketOutputChannel';
-import { Notify } from './Notify';
+// import { Notify } from './Notify';
 
 let client: LanguageClient;
 export function activate(context: ExtensionContext) {
@@ -61,45 +58,63 @@ export function activate(context: ExtensionContext) {
         clientOptions
     );
 
-    const commandRequest = new CommandRequest(client, commands);
-    context.subscriptions.push(commandRequest.runAll());
-    context.subscriptions.push(commandRequest.rerun());
-    context.subscriptions.push(commandRequest.runFile());
-    context.subscriptions.push(commandRequest.runTestAtCursor());
-    context.subscriptions.push(commandRequest.runDirectory());
-    context.subscriptions.push(commandRequest.cancel());
+    // const commandRequest = new CommandRequest(client, commands);
+    // context.subscriptions.push(commandRequest.runAll());
+    // context.subscriptions.push(commandRequest.rerun());
+    // context.subscriptions.push(commandRequest.runFile());
+    // context.subscriptions.push(commandRequest.runTestAtCursor());
+    // context.subscriptions.push(commandRequest.runDirectory());
+    // context.subscriptions.push(commandRequest.cancel());
 
-    client.onReady().then(() => {
-        const notify = new Notify(window);
+    // client.onReady().then(() => {
+    //     const notify = new Notify(window);
 
-        client.onRequest('load', (...args) => console.log(args));
+    //     client.sendRequest('load');
+    //     client.onRequest('load', (...args) => console.log(args));
 
-        client.onRequest(WillSaveTextDocumentWaitUntilRequest.type, () => {
-            if (!window.activeTextEditor || !window.activeTextEditor.document) {
-                return;
-            }
-            window.activeTextEditor.document.save();
+    //     client.onRequest(WillSaveTextDocumentWaitUntilRequest.type, () => {
+    //         if (!window.activeTextEditor || !window.activeTextEditor.document) {
+    //             return;
+    //         }
+    //         window.activeTextEditor.document.save();
 
-            return null;
-        });
+    //         return null;
+    //     });
 
-        client.onNotification('started', () => {
-            const clearOutpuOnRun = workspace
-                .getConfiguration('phpunit')
-                .get('clearOutputOnRun', true);
+    //     client.onNotification('started', () => {
+    //         const clearOutpuOnRun = workspace
+    //             .getConfiguration('phpunit')
+    //             .get('clearOutputOnRun', true);
 
-            if (clearOutpuOnRun) {
-                outputChannel.clear();
-            }
+    //         if (clearOutpuOnRun) {
+    //             outputChannel.clear();
+    //         }
 
-            outputChannel.show(true);
-            notify.show('PHPUnit Running...');
-        });
+    //         outputChannel.show(true);
+    //         notify.show('PHPUnit Running...');
+    //     });
 
-        client.onNotification('finished', () => {
-            notify.hide();
-        });
-    });
+    //     client.onNotification('finished', () => {
+    //         notify.hide();
+    //     });
+    // });
+
+    const testExplorerExtension = extensions.getExtension<TestHub>(
+        testExplorerExtensionId
+    );
+
+    if (testExplorerExtension) {
+        const testHub = testExplorerExtension.exports;
+
+        // this will register an ExampleTestAdapter for each WorkspaceFolder
+        context.subscriptions.push(
+            new TestAdapterRegistrar(
+                testHub,
+                workspaceFolder =>
+                    new LanguageClientAdapter(workspaceFolder, client)
+            )
+        );
+    }
 
     // Start the client. This will also launch the server
     client.start();
