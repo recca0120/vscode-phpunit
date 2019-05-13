@@ -34,11 +34,12 @@ export class TestEventCollection {
         return this.events;
     }
 
-    asArray() {
-        const result: (TestSuiteEvent | TestEvent)[] = [];
-        this.events.forEach(test => result.push(test));
+    asArray(): (TestSuiteEvent | TestEvent)[] {
+        const items: (TestSuiteEvent | TestEvent)[] = [];
 
-        return result;
+        this.events.forEach(test => items.push(test));
+
+        return items;
     }
 
     private suiteAsEvents(
