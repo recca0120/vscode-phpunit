@@ -18,6 +18,7 @@ describe('TestResponse', () => {
 
     describe('problems', () => {
         let problems: Problem[];
+
         beforeAll(async () => {
             problems = await testResponse.asProblem();
         });

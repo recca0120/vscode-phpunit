@@ -40,7 +40,7 @@ export class TestEventCollection {
         }, []);
 
         events.forEach(event => {
-            this.events.set(event.suite || event.test, event);
+            this.events.set(this.asId(event), event);
         });
 
         return this;
@@ -50,17 +50,21 @@ export class TestEventCollection {
         return this.events.get(id);
     }
 
-    where(filter: (test: TestSuiteEvent | TestEvent) => {}) {
-        return this.all().reduce(
-            (events, event) => {
-                if (filter(event)) {
-                    events = events.concat([event]);
-                }
+    where(filter: (test: TestSuiteEvent | TestEvent) => {}, single = false) {
+        const events = this.all();
+        const items: (TestSuiteEvent | TestEvent)[] = [];
 
-                return events;
-            },
-            [] as (TestSuiteEvent | TestEvent)[]
-        );
+        for (const event of events) {
+            if (filter(event)) {
+                items.push(event);
+
+                if (single === true) {
+                    return items;
+                }
+            }
+        }
+
+        return items;
     }
 
     find(id: string): TestSuiteEvent | TestEvent {

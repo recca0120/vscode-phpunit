@@ -11,7 +11,7 @@ import { TestRunner, Params } from './TestRunner';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import { TestResponse } from './TestResponse';
 import { TestSuite, Test } from './Parser';
-import { TestEvent, TestSuiteEvent } from './TestExplorer';
+import { TestSuiteEvent, TestEvent } from './TestExplorer';
 
 export class Controller {
     public commands = [
@@ -36,7 +36,7 @@ export class Controller {
             });
         });
 
-        this.connection.onRequest('TestRunStartedEvent', ({ tests }) => {
+        this.connection.onRequest('TestRunStartedEvent', async ({ tests }) => {
             const id: string = tests[0] || 'root';
 
             if (id === 'root') {
@@ -91,21 +91,27 @@ export class Controller {
 
         this.events.put(tests);
 
-        const runningEvents = this.events.where(
-            event => event.state === 'running'
-        );
+        let events = this.events.where(event => event.state === 'running');
+
+        this.connection.sendRequest('TestRunStartedEvent', {
+            tests,
+            events,
+        });
 
         const response =
             command === 'phpunit.lsp.rerun'
                 ? await this.testRunner.rerun(params, options)
                 : await this.testRunner.run(params, options);
 
-        this.events
-            .put(this.setEventsCompleted(runningEvents))
-            .put(await response.asProblem());
+        events = this.events
+            .put(this.setEventsCompleted(events))
+            .put(await response.asProblem())
+            .where(event =>
+                events.some(ev => this.getTestId(ev) === this.getTestId(event))
+            );
 
         this.connection.sendRequest('TestRunFinishedEvent', {
-            events: this.events.all(),
+            events,
         });
 
         this.connection.sendNotification(LogMessageNotification.type, {
@@ -139,9 +145,18 @@ export class Controller {
 
     private setEventsCompleted(events: (TestSuiteEvent | TestEvent)[]) {
         return events.map(event => {
-            event.state = event.type === 'suite' ? 'completed' : 'passed';
+            if (event.type === 'suite') {
+                event.state = 'completed';
+            } else {
+                event.state = 'passed';
+                event.decorations = [];
+            }
 
             return event;
         });
+    }
+
+    private getTestId(event: TestSuiteEvent | TestEvent) {
+        return event.type === 'suite' ? event.suite : event.test;
     }
 }

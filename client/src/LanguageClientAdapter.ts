@@ -8,6 +8,7 @@ import {
     TestRunFinishedEvent,
     TestSuiteEvent,
     TestEvent,
+    RetireEvent,
 } from 'vscode-test-adapter-api';
 
 export class LanguageClientAdapter implements TestAdapter {
@@ -21,7 +22,7 @@ export class LanguageClientAdapter implements TestAdapter {
         TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent
     >();
 
-    private readonly autorunEmitter = new EventEmitter<void>();
+    private readonly retireEmitter = new EventEmitter<RetireEvent>();
 
     get tests(): Event<TestLoadStartedEvent | TestLoadFinishedEvent> {
         return this.testsEmitter.event;
@@ -33,11 +34,9 @@ export class LanguageClientAdapter implements TestAdapter {
         return this.testStatesEmitter.event;
     }
 
-    get autorun(): Event<void> | undefined {
-        return this.autorunEmitter.event;
+    get retire(): Event<RetireEvent> {
+        return this.retireEmitter.event;
     }
-
-    // retire?: Event<RetireEvent>;
 
     constructor(
         public workspaceFolder: WorkspaceFolder,
@@ -46,16 +45,20 @@ export class LanguageClientAdapter implements TestAdapter {
         this.listenTestLoadFinishedEvent();
         this.listenTestRunStartedEvent();
         this.listenTestRunFinishedEvent();
+
+        this.disposables.push(this.testsEmitter);
+        this.disposables.push(this.testStatesEmitter);
+        this.disposables.push(this.retireEmitter);
     }
 
-    load(): Promise<void> {
+    async load(): Promise<void> {
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-        return this.sendRequest('TestLoadStartedEvent');
+        await this.sendRequest('TestLoadStartedEvent');
     }
 
-    run(tests: string[]): Promise<void> {
-        return this.sendRequest('TestRunStartedEvent', { tests });
+    async run(tests: string[]): Promise<void> {
+        await this.sendRequest('TestRunStartedEvent', { tests });
     }
 
     // debug?(tests: string[]): Promise<void> {
@@ -75,13 +78,13 @@ export class LanguageClientAdapter implements TestAdapter {
         this.disposables = [];
     }
 
-    private listenTestRunFinishedEvent() {
+    private listenTestLoadFinishedEvent() {
         this.onRequest(
-            'TestRunFinishedEvent',
-            ({ events }): any => {
-                this.updateEvents(events);
-                this.testStatesEmitter.fire(<TestRunFinishedEvent>{
+            'TestLoadFinishedEvent',
+            ({ suite }): any => {
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{
                     type: 'finished',
+                    suite: suite,
                 });
             }
         );
@@ -95,18 +98,19 @@ export class LanguageClientAdapter implements TestAdapter {
                     type: 'started',
                     tests,
                 });
+
                 this.updateEvents(events);
             }
         );
     }
 
-    private listenTestLoadFinishedEvent() {
+    private listenTestRunFinishedEvent() {
         this.onRequest(
-            'TestLoadFinishedEvent',
-            ({ suite }): any => {
-                this.testsEmitter.fire(<TestLoadFinishedEvent>{
+            'TestRunFinishedEvent',
+            ({ events }): any => {
+                this.updateEvents(events);
+                this.testStatesEmitter.fire(<TestRunFinishedEvent>{
                     type: 'finished',
-                    suite: suite,
                 });
             }
         );
