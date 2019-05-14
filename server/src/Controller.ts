@@ -143,6 +143,7 @@ export class Controller {
     }
 
     private onTestRunStartedEvent(tests: (TestSuite | Test)[]) {
+        this.connection.sendNotification('TestRunStartedEvent');
         this.connection.sendRequest('TestRunStartedEvent', {
             tests: tests.map(test => test.id),
             events: this.events

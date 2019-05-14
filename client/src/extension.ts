@@ -17,7 +17,6 @@ import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { LanguageClientAdapter } from './LanguageClientAdapter';
 import { CommandRequest } from './CommandRequest';
-// import { CommandRequest } from './CommandRequest';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 // import { Notify } from './Notify';
 
@@ -72,11 +71,21 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(commandRequest.runTestAtCursor());
     context.subscriptions.push(commandRequest.cancel());
 
+    client.onReady().then(() => {
+        client.onNotification('TestRunStartedEvent', () => {
+            const clearOutpuOnRun = workspace
+                .getConfiguration('phpunit')
+                .get('clearOutputOnRun', true);
+
+            if (clearOutpuOnRun) {
+                outputChannel.clear();
+            }
+
+            outputChannel.show(true);
+        });
+    });
     // client.onReady().then(() => {
     //     const notify = new Notify(window);
-
-    //     client.sendRequest('load');
-    //     client.onRequest('load', (...args) => console.log(args));
 
     //     client.onRequest(WillSaveTextDocumentWaitUntilRequest.type, () => {
     //         if (!window.activeTextEditor || !window.activeTextEditor.document) {
