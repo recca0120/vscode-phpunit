@@ -17,6 +17,9 @@
         "Other"
     ],
     "keywords": [
+        "test",
+        "testing",
+        "test explorer",
         "language server protocol",
         "phpunit"
     ],
@@ -131,11 +134,11 @@
         ]
     },
     "scripts": {
+        "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run clean && npm run compile",
         "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
         "webpack": "npm run clean && webpack --mode production --config ./client/webpack.config.js && webpack --mode production --config ./server/webpack.config.js",
         "webpack:dev": "npm run clean && webpack --mode none --config ./client/webpack.config.js && webpack --mode none --config ./server/webpack.config.js",
-        "_compile": "npm run compile:client && npm run compile:server",
-        "compile": "tsc -b",
+        "compile": "npm run compile:client && npm run compile:server",
         "compile:client": "tsc -b ./client/tsconfig.json",
         "compile:server": "tsc -b ./server/tsconfig.json",
         "watch": "tsc -b -w",
