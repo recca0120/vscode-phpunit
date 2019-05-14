@@ -81,12 +81,9 @@ connection.onInitialized(() => {
     }
     if (hasWorkspaceFolderCapability) {
         connection.workspace.onDidChangeWorkspaceFolders(async () => {
-            // await suites.load();
             // connection.console.log('Workspace folder change event received.');
         });
     }
-
-    // await suites.load();
 });
 
 // The example settings
@@ -157,19 +154,15 @@ connection.onDidChangeWatchedFiles(async _change => {
 });
 
 // This handler provides the initial list of the completion items.
-connection.onCompletion(
-    (): CompletionItem[] => {
-        return snippets.all();
-    }
-);
+connection.onCompletion(() => {
+    return snippets.all();
+});
 
 // This handler resolve additional information for the item selected in
 // the completion list.
-connection.onCompletionResolve(
-    (item: CompletionItem): CompletionItem => {
-        return item;
-    }
-);
+connection.onCompletionResolve((item: CompletionItem) => {
+    return item;
+});
 
 connection.onCodeLens(() => {
     return [];
@@ -183,35 +176,11 @@ connection.onCodeLens(() => {
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     controller.executeCommand(params);
-    // const args = params.arguments;
-    // const textDocument: TextDocument = documents.get(args[0]);
-    // const position: Position = args[1];
-    // const settings = await getDocumentSettings(textDocument.uri);
-    // suites.all().forEach((...args) => {
-    //     connection.sendDiagnostics({
-    //         uri: args[1] as string,
-    //         diagnostics: [],
-    //     });
-    // });
-    // try {
     //     if (textDocument) {
     //         connection.sendRequest(WillSaveTextDocumentWaitUntilRequest.type, {
     //             textDocument,
     //             reason: TextDocumentSaveReason.Manual,
     //         });
-    //     }
-    //     connection.sendNotification('started', () => {});
-    //     runner
-    //         .setPhpBinary(settings.php)
-    //         .setPhpUnitBinary(settings.phpunit)
-    //         .setArgs(settings.args);
-    //     const response = await runner.run({
-    //         method: params.command,
-    //         textDocument,
-    //         position,
-    //     });
-    //     if (!response) {
-    //         return;
     //     }
     //     (await response.asDiagnosticGroup(
     //         hasDiagnosticRelatedInformationCapability
@@ -221,15 +190,6 @@ connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     //             diagnostics,
     //         });
     //     });
-    //     connection.sendNotification(LogMessageNotification.type, {
-    //         type: MessageType.Log,
-    //         message: response.toString(),
-    //     });
-    // } catch (e) {
-    //     throw e;
-    // } finally {
-    //     connection.sendNotification('finished');
-    // }
 });
 
 /*

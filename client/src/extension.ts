@@ -96,19 +96,6 @@ export function activate(context: ExtensionContext) {
     //         return null;
     //     });
 
-    //     client.onNotification('started', () => {
-    //         const clearOutpuOnRun = workspace
-    //             .getConfiguration('phpunit')
-    //             .get('clearOutputOnRun', true);
-
-    //         if (clearOutpuOnRun) {
-    //             outputChannel.clear();
-    //         }
-
-    //         outputChannel.show(true);
-    //         notify.show('PHPUnit Running...');
-    //     });
-
     //     client.onNotification('finished', () => {
     //         notify.hide();
     //     });
