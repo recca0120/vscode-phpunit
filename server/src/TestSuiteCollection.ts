@@ -17,6 +17,7 @@ export class TestSuiteCollection {
             absolute: true,
             ignore: 'vendor/**',
             cwd: uri.fsPath,
+            strict: false,
         });
 
         await Promise.all(files.map(file => this.put(file)));

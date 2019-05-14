@@ -4,7 +4,7 @@
     "icon": "client/images/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.29",
+    "version": "2.0.30",
     "preview": true,
     "repository": {
         "type": "git",
@@ -21,7 +21,7 @@
         "phpunit"
     ],
     "engines": {
-        "vscode": "^1.23.0"
+        "vscode": "^1.26.0"
     },
     "activationEvents": [
         "*"

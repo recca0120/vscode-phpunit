@@ -200,11 +200,17 @@ class Clazz {
     }
 
     private fixLeadingComments(node: any, prev: any) {
+        if (!node.body) {
+            node.body = {
+                leadingComments: '',
+            };
+        }
+
         if (prev && prev.body && prev.body.trailingComments) {
             node.body.leadingComments = prev.body.trailingComments;
         }
 
-        if (node.body && node.leadingComments) {
+        if (node && node.leadingComments) {
             node.body.leadingComments = node.leadingComments;
         }
 
