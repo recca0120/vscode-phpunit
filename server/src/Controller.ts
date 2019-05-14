@@ -94,7 +94,7 @@ export class Controller {
         let events = this.events.where(event => event.state === 'running');
 
         this.connection.sendRequest('TestRunStartedEvent', {
-            tests,
+            tests: tests.map(test => test.id),
             events,
         });
 
