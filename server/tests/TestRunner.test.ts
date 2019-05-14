@@ -60,7 +60,7 @@ describe('TestRunner', () => {
 
             it('run file', async () => {
                 const params = {
-                    file: 'foo.php',
+                    file: '/foo.php',
                 };
 
                 response = await testRunner.run(params);
@@ -77,7 +77,7 @@ describe('TestRunner', () => {
 
             it('rerun', async () => {
                 const params = {
-                    file: 'foo.php',
+                    file: '/foo.php',
                 };
 
                 await testRunner.run(params);
@@ -96,7 +96,7 @@ describe('TestRunner', () => {
 
             it('run test', async () => {
                 const params = {
-                    file: 'foo.php',
+                    file: '/foo.php',
                     method: 'test_passed',
                     depends: ['test_failed'],
                 };
@@ -123,8 +123,8 @@ describe('TestRunner', () => {
         it('custom php, phpunit, args', async () => {
             spyOn(files, 'findup').and.returnValues('phpunit.xml');
             testRunner
-                .setPhpBinary('php')
-                .setPhpUnitBinary('phpunit')
+                .setPhpBinary('/php')
+                .setPhpUnitBinary('/phpunit')
                 .setArgs(['foo', 'bar']);
 
             expect((await testRunner.run()).toString()).toEqual('PHPUnit');
@@ -132,8 +132,8 @@ describe('TestRunner', () => {
             expect(process.run).toHaveBeenCalledWith(
                 {
                     title: 'PHPUnit LSP',
-                    command: 'php',
-                    arguments: ['phpunit', '-c', 'phpunit.xml', 'foo', 'bar'],
+                    command: '/php',
+                    arguments: ['/phpunit', '-c', 'phpunit.xml', 'foo', 'bar'],
                 },
                 undefined
             );

@@ -6,7 +6,7 @@ describe('Process', () => {
     it('running phpunit', async () => {
         const phpUnitBinary = await files.findup(
             ['vendor/bin/phpunit', 'phpunit'],
-            projectPath('tests').fsPath
+            { cwd: projectPath('tests').fsPath }
         );
         const process = new Process();
         const command = {
