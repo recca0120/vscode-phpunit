@@ -3,6 +3,7 @@ import { TestSuiteCollection } from './../src/TestSuiteCollection';
 import { Controller } from '../src/Controller';
 import { TestRunner } from '../src/TestRunner';
 import { projectPath } from './helpers';
+import { TestSuiteEvent, TestEvent } from '../src/TestExplorer';
 
 describe('Controller Test', () => {
     const path = projectPath('');
@@ -20,109 +21,111 @@ describe('Controller Test', () => {
     const controller = new Controller(connection, suites, events, testRunner);
     const options = { cwd: path.fsPath };
 
-    describe('run tests', () => {
-        beforeAll(async () => {
-            await suites.load(path);
-        });
+    beforeAll(async () => {
+        await suites.load(path);
+    });
 
+    describe('executeCommand', () => {
         beforeEach(() => {
-            // spyOn(connection, 'sendNotification');
+            spyOn(testRunner, 'run').and.callThrough();
         });
 
-        afterEach(() => {
-            // expect(connection.sendNotification).toHaveBeenCalledTimes(3);
-            // expect(connection.sendNotification).toHaveBeenCalledWith('started');
-            // expect(connection.sendNotification).toHaveBeenCalledWith(
-            //     LogMessageNotification.type,
-            //     jasmine.anything()
-            // );
-            // expect(connection.sendNotification).toHaveBeenCalledWith(
-            //     'finished'
-            // );
-        });
+        const getEvents = function(
+            events: TestEventCollection,
+            filter: (event: TestSuiteEvent | TestEvent) => {}
+        ) {
+            return events
+                .all()
+                .slice()
+                .filter(event => filter(event));
+        };
+
+        const getTestEventId = (event: TestSuiteEvent | TestEvent) => {
+            return event.type === 'suite' ? event.suite : event.test;
+        };
+
+        const expectedCommand = async (params: any = {}) => {
+            await controller.executeCommand(params, options);
+
+            spyOn(connection, 'sendRequest').and.callFake(
+                (requestType: string, params: any) => {
+                    if (requestType === 'TestRunStartedEvent') {
+                        const runningEvents = getEvents(
+                            events,
+                            event => event.state === 'running'
+                        );
+
+                        expect(params).toEqual({
+                            tests: runningEvents.map(event =>
+                                getTestEventId(event)
+                            ),
+                            events: runningEvents,
+                        });
+                    }
+
+                    if (requestType === 'TestRunFinishedEvent') {
+                        expect(params).toEqual({
+                            events: events.all(),
+                        });
+                    }
+                }
+            );
+        };
 
         it('run all', async () => {
             const params = {
                 command: 'phpunit.lsp.run-all',
             };
 
-            await controller.executeCommand(params, options);
+            await expectedCommand(params);
         });
 
-        // describe('run with text document', () => {
-        //     const textPath = 'foo.php';
-        //     const textDocument = TextDocument.create(textPath, 'php', 1, '');
+        it('run file', async () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
 
-        //     beforeEach(() => {
-        //         spyOn(documents, 'get').and.returnValue(textDocument);
-        //         spyOn(connection, 'sendRequest');
-        //     });
+            const params = {
+                command: 'phpunit.lsp.run-file',
+                arguments: [id],
+            };
 
-        //     afterEach(() => {
-        //         expect(documents.get).toHaveBeenCalledWith(textPath);
-        //         expect(connection.sendRequest).toHaveBeenCalledWith(
-        //             WillSaveTextDocumentWaitUntilRequest.type,
-        //             {
-        //                 textDocument: textDocument,
-        //                 reason: TextDocumentSaveReason.Manual,
-        //             }
-        //         );
-        //     });
+            await expectedCommand(params);
+        });
 
-        //     it('run file', async () => {
-        //         spyOn(testRunner, 'runFile');
+        it('run test at cursor with id', async () => {
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
 
-        //         await controller.executeCommand({
-        //             command: 'phpunit.lsp.run-file',
-        //             arguments: [textPath],
-        //         });
+            const params = {
+                command: 'phpunit.lsp.run-test-at-cursor',
+                arguments: [id],
+            };
 
-        //         expect(testRunner.runFile).toHaveBeenCalledWith({
-        //             textDocument,
-        //         });
-        //     });
+            await expectedCommand(params);
 
-        //     it('run directory', async () => {
-        //         spyOn(testRunner, 'runDirectory');
+            expect(testRunner.run).toHaveBeenCalledWith(
+                jasmine.objectContaining({
+                    method: 'test_passed',
+                }),
+                jasmine.anything()
+            );
+        });
 
-        //         await controller.executeCommand({
-        //             command: 'phpunit.lsp.run-directory',
-        //             arguments: [textPath],
-        //         });
+        it('run test at cursor with cursor', async () => {
+            const file = projectPath('tests/AssertionsTest.php').toString();
 
-        //         expect(testRunner.runDirectory).toHaveBeenCalledWith({
-        //             textDocument,
-        //         });
-        //     });
+            const params = {
+                command: 'phpunit.lsp.run-test-at-cursor',
+                arguments: [file, 15],
+            };
 
-        //     it('run test at cursor', async () => {
-        //         const position = Position.create(0, 20);
+            await expectedCommand(params);
 
-        //         spyOn(testRunner, 'runTestAtCursor');
-
-        //         await controller.executeCommand({
-        //             command: 'phpunit.lsp.run-test-at-cursor',
-        //             arguments: [textPath, position],
-        //         });
-
-        //         expect(documents.get).toHaveBeenCalledWith(textPath);
-        //     });
-
-        //     it('rerun', async () => {
-        //         const position = Position.create(0, 20);
-        //         spyOn(testRunner, 'rerun');
-
-        //         await controller.executeCommand({
-        //             command: 'phpunit.lsp.rerun',
-        //             arguments: [textPath, position],
-        //         });
-
-        //         expect(testRunner.rerun).toHaveBeenCalledWith({
-        //             textDocument,
-        //             position,
-        //             suites,
-        //         });
-        //     });
-        // });
+            expect(testRunner.run).toHaveBeenCalledWith(
+                jasmine.objectContaining({
+                    file: file,
+                    method: 'test_passed',
+                }),
+                jasmine.anything()
+            );
+        });
     });
 });

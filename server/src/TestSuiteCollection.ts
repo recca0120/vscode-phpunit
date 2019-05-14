@@ -57,20 +57,37 @@ export class TestSuiteCollection {
         };
     }
 
-    where(filter: (test: TestSuite | Test) => {}) {
-        return this.all().reduce((tests: (TestSuite | Test)[], suite) => {
+    where(filter: (test: TestSuite | Test) => {}, single = false) {
+        const suites = this.all();
+        const tests: (TestSuite | Test)[] = [];
+
+        for (const suite of suites) {
             if (filter(suite)) {
-                tests = tests.concat([suite]);
+                tests.push(suite);
+
+                if (single === true) {
+                    return tests;
+                }
             }
 
-            return tests.concat(suite.children.filter(test => filter(test)));
-        }, []);
+            for (const test of suite.children) {
+                if (filter(test)) {
+                    tests.push(test);
+
+                    if (single === true) {
+                        return tests;
+                    }
+                }
+            }
+        }
+
+        return tests;
     }
 
     find(id: string): TestSuite | Test {
         return this.where(test => {
             return id === test.id;
-        })[0];
+        }, true)[0];
     }
 
     all(): TestSuite[] {

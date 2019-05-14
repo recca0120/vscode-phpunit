@@ -7,9 +7,11 @@ import {
 } from 'vscode-languageserver';
 import { SpawnOptions } from 'child_process';
 import { TestEventCollection } from './TestEventCollection';
-import { TestRunner } from './TestRunner';
+import { TestRunner, Params } from './TestRunner';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import { TestResponse } from './TestResponse';
+import { TestSuite, Test } from './Parser';
+import { TestEvent, TestSuiteEvent } from './TestExplorer';
 
 export class Controller {
     public commands = [
@@ -53,98 +55,53 @@ export class Controller {
     }
 
     async executeCommand(
-        params: ExecuteCommandParams,
+        _params: ExecuteCommandParams,
         options?: SpawnOptions
-    ): Promise<void> {
-        const command = params.command;
-        const args = params.arguments || [];
+    ): Promise<TestResponse> {
+        const command = _params.command;
+        const args = _params.arguments || [];
+
         let idOrFile: string = args[0] || '';
-        let response: TestResponse;
+        let tests: (TestSuite | Test)[] = [];
+        let params: Params = {};
 
         if (command === 'phpunit.lsp.run-all') {
-            this.events.put(this.suites.all());
-
-            const events = this.events.all();
-
-            this.connection.sendRequest('TestRunStartedEvent', {
-                tests: events.map(test =>
-                    test.type === 'suite' ? test.suite : test.test
-                ),
-                events: events,
-            });
-
-            response = await this.testRunner.run({}, options);
+            tests = this.suites.all();
         } else if (command === 'phpunit.lsp.run-file') {
-            const tests = this.suites.where(
+            tests = this.suites.where(
                 test => test.id === idOrFile || test.file === idOrFile
             );
 
-            this.events.put(tests);
-
-            const events = this.events.where(
-                event => event.state === 'running'
-            );
-
-            this.connection.sendRequest('TestRunStartedEvent', {
-                tests: events.map(event =>
-                    event.type === 'suite' ? event.suite : event.test
-                ),
-                events: events,
-            });
-
-            response = await this.testRunner.run(
-                { file: tests[0].file },
-                options
-            );
-        } else if (
-            ['phpunit.lsp.run-test-at-cursor', 'phpunit.lsp.rerun'].includes(
-                command
-            )
-        ) {
+            params = {
+                file: tests[0].file,
+            };
+        } else {
             const line: number = args[1] ? parseInt(args[1], 10) : undefined;
 
             if (line !== undefined) {
                 idOrFile = this._files.asUri(idOrFile).toString();
             }
 
-            const tests = this.suites.where(test => {
-                if (test.id === idOrFile) {
-                    return true;
-                }
-
-                if (test.file !== idOrFile) {
-                    return false;
-                }
-
-                const start = test.range.start.line;
-                const end = test.range.end.line;
-
-                return test.type === 'suite'
-                    ? start >= line || end <= line
-                    : end >= line;
-            });
-
-            this.events.put(tests);
-
-            const events = this.events.where(
-                event => event.state === 'running'
+            tests = this.suites.where(test =>
+                this.filterByIdOrFile(test, idOrFile, line)
             );
 
-            this.connection.sendRequest('TestRunStartedEvent', {
-                tests: events.map(event =>
-                    event.type === 'suite' ? event.suite : event.test
-                ),
-                events: events,
-            });
-
-            response =
-                command === 'phpunit.lsp.rerun'
-                    ? await this.testRunner.rerun(tests[0], options)
-                    : await this.testRunner.run(tests[0], options);
+            params = tests[0];
         }
 
+        this.events.put(tests);
+
+        const runningEvents = this.events.where(
+            event => event.state === 'running'
+        );
+
+        const response =
+            command === 'phpunit.lsp.rerun'
+                ? await this.testRunner.rerun(params, options)
+                : await this.testRunner.run(params, options);
+
         this.events
-            .put(this.setEventsCompleted())
+            .put(this.setEventsCompleted(runningEvents))
             .put(await response.asProblem());
 
         this.connection.sendRequest('TestRunFinishedEvent', {
@@ -155,15 +112,36 @@ export class Controller {
             type: MessageType.Log,
             message: response.toString(),
         });
+
+        return response;
     }
 
-    private setEventsCompleted() {
-        return this.events
-            .where(test => test.state === 'running')
-            .map(event => {
-                event.state = event.type === 'suite' ? 'completed' : 'passed';
+    private filterByIdOrFile(
+        test: TestSuite | Test,
+        idOrFile: string,
+        line: number | undefined
+    ) {
+        if (test.id === idOrFile) {
+            return true;
+        }
 
-                return event;
-            });
+        if (test.file !== idOrFile) {
+            return false;
+        }
+
+        const start = test.range.start.line;
+        const end = test.range.end.line;
+
+        return test.type === 'suite'
+            ? start <= line || end >= line
+            : end <= line;
+    }
+
+    private setEventsCompleted(events: (TestSuiteEvent | TestEvent)[]) {
+        return events.map(event => {
+            event.state = event.type === 'suite' ? 'completed' : 'passed';
+
+            return event;
+        });
     }
 }

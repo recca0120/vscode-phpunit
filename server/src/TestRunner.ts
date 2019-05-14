@@ -7,7 +7,7 @@ import { Process } from './Process';
 import { SpawnOptions } from 'child_process';
 import { TestResponse } from './TestResponse';
 
-interface Params {
+export interface Params {
     file?: PathLike | URI;
     method?: string;
     depends?: string[];
