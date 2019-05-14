@@ -25,28 +25,31 @@ export class TestEventCollection {
     put(tests: TestInfo | TestInfo[]) {
         tests = tests instanceof Array ? tests : [tests];
 
-        const events = tests.reduce((events, test) => {
-            if (test instanceof TestSuite) {
-                return events.concat(this.suiteAsEvents(test));
-            }
+        const events = tests.reduce(
+            (events, test) => {
+                if (test instanceof TestSuite) {
+                    return events.concat(this.suiteAsEvents(test));
+                }
 
-            if (test.type === 'problem') {
-                return events.concat([this.problemAsEvent(test)]);
-            }
+                if (test.type === 'problem') {
+                    return events.concat([this.problemAsEvent(test)]);
+                }
 
-            return test.type === 'suite'
-                ? events.concat([this.asTestSuiteInfo(test)])
-                : events.concat(this.asTestInfo(test));
-        }, []);
+                return test.type === 'suite'
+                    ? events.concat([this.asTestSuiteInfo(test)])
+                    : events.concat(this.asTestInfo(test));
+            },
+            [] as any
+        );
 
-        events.forEach(event => {
+        events.forEach((event: TestSuiteEvent | TestEvent) => {
             this.events.set(this.asId(event), event);
         });
 
         return this;
     }
 
-    get(id: string): TestSuiteEvent | TestEvent {
+    get(id: string): TestSuiteEvent | TestEvent | undefined {
         return this.events.get(id);
     }
 
@@ -79,7 +82,7 @@ export class TestEventCollection {
         return {
             type: 'test',
             test: problem.id,
-            state: this.states.get(problem.status),
+            state: this.states.get(problem.status) as TestEvent['state'],
             message: problem.message,
             decorations: this.asTestDecorations(problem),
         };

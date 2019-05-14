@@ -22,6 +22,6 @@
         "vscode-test-adapter-util": "^0.7.0"
     },
     "devDependencies": {
-        "vscode": "^1.1.30"
+        "vscode": "^1.1.34"
     }
 }

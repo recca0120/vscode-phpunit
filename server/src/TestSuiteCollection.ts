@@ -34,7 +34,7 @@ export class TestSuiteCollection {
     putTextDocument(textDocument: TextDocument): TestSuiteCollection {
         return this.putTestSuite(
             this._files.asUri(textDocument.uri),
-            this.parser.parseTextDocument(textDocument)
+            this.parser.parseTextDocument(textDocument) || null
         );
     }
 
@@ -94,7 +94,11 @@ export class TestSuiteCollection {
         return Array.from(this.suites.values());
     }
 
-    private putTestSuite(uri: URI, suite: TestSuite) {
+    private putTestSuite(uri: URI, suite: TestSuite | null) {
+        if (!suite) {
+            return this;
+        }
+
         const key = uri.toString();
 
         if (this.suites.has(key)) {

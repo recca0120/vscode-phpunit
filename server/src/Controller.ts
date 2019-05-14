@@ -76,7 +76,9 @@ export class Controller {
                 file: tests[0].file,
             };
         } else {
-            const line: number = args[1] ? parseInt(args[1], 10) : undefined;
+            const line: number | undefined = args[1]
+                ? parseInt(args[1], 10)
+                : undefined;
 
             if (line !== undefined) {
                 idOrFile = this._files.asUri(idOrFile).toString();
@@ -131,7 +133,7 @@ export class Controller {
             return true;
         }
 
-        if (test.file !== idOrFile) {
+        if (test.file !== idOrFile || !line) {
             return false;
         }
 

@@ -34,7 +34,7 @@ export class Notify {
     }
 
     report(options: ProgressOptions) {
-        this.progress.report(options);
+        this.progress!.report(options);
 
         return this;
     }

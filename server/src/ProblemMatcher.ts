@@ -10,8 +10,8 @@ export abstract class ProblemMatcher<T> {
 
         this.problems = [];
         this.problemIndex = -1;
-        let current: RegExpMatchArray;
-        let next: RegExpMatchArray;
+        let current: RegExpMatchArray | null;
+        let next: RegExpMatchArray | null;
         for (const line of lines) {
             this.parseLine(line);
             if ((next = line.match(this.nextRule))) {
@@ -157,7 +157,7 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
     }
 
     protected parseLine(line: string) {
-        let m: RegExpMatchArray;
+        let m: RegExpMatchArray | null;
         if ((m = line.match(this.statusPattern))) {
             this.currentStatus = this.asStatus(m[2].trim().toLowerCase());
         }

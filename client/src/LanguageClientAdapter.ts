@@ -1,4 +1,4 @@
-import { Event, EventEmitter, WorkspaceFolder } from 'vscode';
+import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import {
     TestAdapter,
@@ -14,32 +14,32 @@ import {
 export class LanguageClientAdapter implements TestAdapter {
     private disposables: { dispose(): void }[] = [];
 
-    private readonly testsEmitter = new EventEmitter<
+    private readonly testsEmitter = new vscode.EventEmitter<
         TestLoadStartedEvent | TestLoadFinishedEvent
     >();
 
-    private readonly testStatesEmitter = new EventEmitter<
+    private readonly testStatesEmitter = new vscode.EventEmitter<
         TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent
     >();
 
-    private readonly retireEmitter = new EventEmitter<RetireEvent>();
+    private readonly retireEmitter = new vscode.EventEmitter<RetireEvent>();
 
-    get tests(): Event<TestLoadStartedEvent | TestLoadFinishedEvent> {
+    get tests(): vscode.Event<TestLoadStartedEvent | TestLoadFinishedEvent> {
         return this.testsEmitter.event;
     }
 
-    get testStates(): Event<
+    get testStates(): vscode.Event<
         TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent
     > {
         return this.testStatesEmitter.event;
     }
 
-    get retire(): Event<RetireEvent> {
+    get retire(): vscode.Event<RetireEvent> {
         return this.retireEmitter.event;
     }
 
     constructor(
-        public workspaceFolder: WorkspaceFolder,
+        public workspaceFolder: vscode.WorkspaceFolder,
         private client: LanguageClient
     ) {
         this.listenTestLoadFinishedEvent();

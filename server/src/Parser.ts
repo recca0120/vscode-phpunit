@@ -33,8 +33,10 @@ abstract class BaseTest {
         return this.node.name.name;
     }
 
-    get file(): string {
-        return this.options.uri.toString();
+    get file(): string | undefined {
+        return this.options && this.options.uri
+            ? this.options.uri.toString()
+            : undefined;
     }
 
     get line(): number {
@@ -61,12 +63,12 @@ abstract class BaseTest {
         return [this.namespace, this.class].filter(name => !!name).join('\\');
     }
 
-    get namespace(): string {
-        return this.options.namespace;
+    get namespace(): string | undefined {
+        return this.options ? this.options.namespace : undefined;
     }
 
-    get class(): string {
-        return this.options.class;
+    get class(): string | undefined {
+        return this.options ? this.options.class : undefined;
     }
 
     get method(): string {
@@ -89,8 +91,8 @@ abstract class BaseTest {
         );
     }
 
-    get uri(): URI {
-        return this.options.uri;
+    get uri(): URI | undefined {
+        return this.options ? this.options.uri : undefined;
     }
 
     isTest(): boolean {
@@ -132,7 +134,7 @@ abstract class BaseTest {
 
 export class TestSuite extends BaseTest
     implements TestSuiteInfo, ExportCodeLens {
-    type: 'suite';
+    type!: 'suite';
 
     constructor(
         node: any,
@@ -147,7 +149,7 @@ export class TestSuite extends BaseTest
     }
 
     get label(): string {
-        return this.class;
+        return this.class || '';
     }
 
     exportCodeLens(): CodeLens[] {
@@ -158,7 +160,7 @@ export class TestSuite extends BaseTest
 }
 
 export class Test extends BaseTest implements TestInfo {
-    type: 'test';
+    type!: 'test';
 
     constructor(node: any, options?: TestOptions) {
         super(node, options);
@@ -176,7 +178,7 @@ export class Test extends BaseTest implements TestInfo {
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
-    asTestSuite(): TestSuite {
+    asTestSuite(): TestSuite | null {
         const options = this.getTestOptions();
         const methods = this.getMethods();
 
@@ -248,7 +250,7 @@ export default class Parser {
 
     parseTextDocument(textDocument: TextDocument | null): TestSuite | null {
         if (!textDocument) {
-            return undefined;
+            return null;
         }
 
         return this.parseCode(textDocument.getText(), textDocument.uri);

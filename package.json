@@ -4,7 +4,7 @@
     "icon": "client/images/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.27",
+    "version": "2.0.29",
     "preview": true,
     "repository": {
         "type": "git",
@@ -131,8 +131,10 @@
         ]
     },
     "scripts": {
+        "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
         "webpack": "npm run clean && webpack --mode production --config ./client/webpack.config.js && webpack --mode production --config ./server/webpack.config.js",
         "webpack:dev": "npm run clean && webpack --mode none --config ./client/webpack.config.js && webpack --mode none --config ./server/webpack.config.js",
+        "_compile": "npm run compile:client && npm run compile:server",
         "compile": "tsc -b",
         "compile:client": "tsc -b ./client/tsconfig.json",
         "compile:server": "tsc -b ./server/tsconfig.json",

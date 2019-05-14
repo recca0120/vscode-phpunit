@@ -124,7 +124,7 @@ export class TestRunner {
 
         return {
             title: 'PHPUnit LSP',
-            command: params.shift(),
+            command: params.shift() as string,
             arguments: params,
         };
     }

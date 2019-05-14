@@ -65,7 +65,7 @@ export class Filesystem {
         return new Promise((resolve, reject) => {
             readFile(
                 this.asUri(uri).fsPath,
-                (err: NodeJS.ErrnoException, data: Buffer) =>
+                (err: NodeJS.ErrnoException | null, data: Buffer) =>
                     err ? reject(err) : resolve(data.toString())
             );
         });
@@ -76,15 +76,18 @@ export class Filesystem {
             writeFile(
                 this.asUri(uri).fsPath,
                 text,
-                (err: NodeJS.ErrnoException) => resolve(err ? false : true)
+                (err: NodeJS.ErrnoException | null) =>
+                    resolve(err ? false : true)
             );
         });
     }
 
     exists(uri: PathLike | URI): Promise<boolean> {
         return new Promise(resolve => {
-            access(this.asUri(uri).fsPath, (err: NodeJS.ErrnoException) =>
-                resolve(err ? false : true)
+            access(
+                this.asUri(uri).fsPath,
+                (err: NodeJS.ErrnoException | null) =>
+                    resolve(err ? false : true)
             );
         });
     }
@@ -197,7 +200,7 @@ export class Filesystem {
         options: glob.IOptions = {}
     ): Promise<string[]> {
         return new Promise((resolve, reject) => {
-            glob(pattern, options, (error: any, matches: []) => {
+            glob(pattern, options, (error, matches) => {
                 error ? reject(error) : resolve(matches);
             });
         });
