@@ -19,7 +19,9 @@ client/node_modules/**
 **/webpack.config.js
 client/tests/**
 coverage/**
+img/**
 server/tests/**
 shared.webpack.config.js
 jest.config.js
 *.vsix
+!img/icon.png

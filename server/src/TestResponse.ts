@@ -1,4 +1,5 @@
 import { Problem, PHPUnitOutput, ProblemMatcher } from './ProblemMatcher';
+import stripAnsi from 'strip-ansi';
 
 // import {
 //     Diagnostic,
@@ -81,6 +82,6 @@ export class TestResponse {
     // }
 
     toString(): string {
-        return this.output;
+        return stripAnsi(this.output);
     }
 }
