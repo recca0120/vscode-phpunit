@@ -166,9 +166,13 @@ export class Controller {
     }
 
     private changeEventsState(response: TestResponse, problems: Problem[]) {
-        const errorPattern = new RegExp('Fatal error: Uncaught Error', 'i');
+        const errorPattern = [
+            'Fatal error: Uncaught Error',
+            'Usage: phpunit \\[options\\] UnitTest',
+        ].join('|');
+
         let state: TestEvent['state'] = 'passed';
-        if (errorPattern.test(response.toString())) {
+        if (new RegExp(errorPattern, 'i').test(response.toString())) {
             state = 'errored';
         }
 
