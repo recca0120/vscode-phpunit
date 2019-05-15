@@ -20,7 +20,9 @@ client/node_modules/**
 client/tests/**
 coverage/**
 img/**
+server/node_modules/**
 server/tests/**
+server/types/**
 shared.webpack.config.js
 jest.config.js
 *.vsix
