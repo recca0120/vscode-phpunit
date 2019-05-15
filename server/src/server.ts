@@ -1,9 +1,8 @@
 import { Controller } from './Controller';
-import { Snippets } from './snippets';
+import { Snippets } from './Snippets';
 import { TestEventCollection } from './TestEventCollection';
 import { TestRunner } from './TestRunner';
 import { TestSuiteCollection } from './TestSuiteCollection';
-
 import {
     createConnection,
     TextDocuments,
