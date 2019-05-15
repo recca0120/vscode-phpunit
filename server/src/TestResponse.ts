@@ -8,10 +8,14 @@ import stripAnsi from 'strip-ansi';
 // } from 'vscode-languageserver-protocol';
 
 export class TestResponse {
+    private output: string = '';
+
     constructor(
-        private output: string,
+        output: string,
         private problemMatcher: ProblemMatcher<any> = new PHPUnitOutput()
-    ) {}
+    ) {
+        this.output = stripAnsi(output);
+    }
 
     async asProblem(): Promise<Problem[]> {
         return await this.problemMatcher.parse(this.output);
@@ -82,6 +86,6 @@ export class TestResponse {
     // }
 
     toString(): string {
-        return stripAnsi(this.output);
+        return this.output;
     }
 }
