@@ -1,10 +1,11 @@
 {
     "name": "vscode-phpunit",
-    "description": "PHPUnit Language Server",
-    "icon": "client/images/icon.png",
+    "description": "PHPUnit Test Explorer",
+    "displayName": "PHPUnit Test Explorer",
+    "icon": "img/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.31",
+    "version": "2.0.32",
     "preview": true,
     "repository": {
         "type": "git",
@@ -20,8 +21,8 @@
         "test",
         "testing",
         "test explorer",
-        "language server protocol",
-        "phpunit"
+        "phpunit",
+        "language server protocol"
     ],
     "engines": {
         "vscode": "^1.26.0"
