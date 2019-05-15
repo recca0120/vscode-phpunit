@@ -151,7 +151,10 @@ export class Controller {
 
     private async onTestRunFinishedEvent(response: TestResponse) {
         this.connection.sendRequest('TestRunFinishedEvent', {
-            events: this.setEventsCompleted(await response.asProblem()),
+            events: this.changeEventsState(
+                response,
+                await response.asProblem()
+            ),
         });
 
         this.connection.sendNotification(LogMessageNotification.type, {
@@ -162,11 +165,17 @@ export class Controller {
         return response;
     }
 
-    private setEventsCompleted(problems: Problem[]) {
+    private changeEventsState(response: TestResponse, problems: Problem[]) {
+        const errorPattern = new RegExp('Fatal error: Uncaught Error', 'i');
+        let state: TestEvent['state'] = 'passed';
+        if (errorPattern.test(response.toString())) {
+            state = 'errored';
+        }
+
         const events = this.events
             .where(event => event.state === 'running')
             .map(event => {
-                event.state = event.type === 'suite' ? 'completed' : 'passed';
+                event.state = event.type === 'suite' ? 'completed' : state;
 
                 return event;
             });
