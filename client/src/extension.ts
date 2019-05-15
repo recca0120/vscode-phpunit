@@ -54,6 +54,11 @@ export function activate(context: ExtensionContext) {
         // Hijacks all LSP logs and redirect them to a specific port through WebSocket connection
         // outputChannel: websocketOutputChannel,
         outputChannel,
+        middleware: {
+            provideCodeLenses: () => {
+                return null;
+            },
+        },
     };
 
     // Create the language client and start the client.
