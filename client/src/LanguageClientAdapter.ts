@@ -82,7 +82,7 @@ export class LanguageClientAdapter implements TestAdapter {
         this.disposables = [];
     }
 
-    private async onTestLoadFinishedEvent() {
+    private async onTestLoadFinishedEvent(): Promise<void> {
         await this.client.onReady();
 
         this.client.onRequest('TestLoadFinishedEvent', ({ suite }) => {
@@ -93,7 +93,7 @@ export class LanguageClientAdapter implements TestAdapter {
         });
     }
 
-    private async onTestRunStartedEvent() {
+    private async onTestRunStartedEvent(): Promise<void> {
         await this.client.onReady();
 
         this.client.onRequest('TestRunStartedEvent', ({ tests, events }) => {
@@ -106,7 +106,7 @@ export class LanguageClientAdapter implements TestAdapter {
         });
     }
 
-    private async onTestRunFinishedEvent() {
+    private async onTestRunFinishedEvent(): Promise<void> {
         await this.client.onReady();
 
         this.client.onRequest('TestRunFinishedEvent', ({ events }) => {
@@ -117,8 +117,8 @@ export class LanguageClientAdapter implements TestAdapter {
         });
     }
 
-    private updateEvents(events: (TestSuiteEvent | TestEvent)[]) {
-        events.forEach((event: TestSuiteEvent | TestEvent) => {
+    private updateEvents(events: (TestSuiteEvent | TestEvent)[]): void {
+        events.forEach(event => {
             event.type === 'suite'
                 ? this.testStatesEmitter.fire(<TestSuiteEvent>event)
                 : this.testStatesEmitter.fire(<TestEvent>event);

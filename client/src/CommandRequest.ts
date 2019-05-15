@@ -1,4 +1,4 @@
-import { commands, TextEditor } from 'vscode';
+import { commands, TextEditor, Disposable } from 'vscode';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
 
@@ -11,52 +11,49 @@ export class CommandRequest {
         });
     }
 
-    runAll() {
+    runAll(): Disposable {
         return this.registerCommand('phpunit.run-all');
     }
 
-    rerun() {
+    rerun(): Disposable {
         return this.registerCommand('phpunit.rerun');
     }
 
-    runFile() {
+    runFile(): Disposable {
         return this.registerCommand('phpunit.run-file');
     }
 
-    runTestAtCursor() {
+    runTestAtCursor(): Disposable {
         return this.registerCommand('phpunit.run-test-at-cursor');
     }
 
-    cancel() {
+    cancel(): Disposable {
         return this.registerCommand('phpunit.cancel');
     }
 
-    private registerCommand(command: string) {
-        return this._commands.registerTextEditorCommand(
-            command,
-            (textEditor: TextEditor) => {
-                if (this.isValidTextEditor(textEditor) === false) {
-                    return;
-                }
-
-                const document = textEditor.document;
-
-                this.client.sendRequest(ExecuteCommandRequest.type, {
-                    command: command.replace(/^phpunit/, 'phpunit.lsp'),
-                    arguments: [
-                        document.uri.toString(),
-                        textEditor.selection.active.line,
-                    ],
-                });
+    private registerCommand(command: string): Disposable {
+        return this._commands.registerTextEditorCommand(command, textEditor => {
+            if (this.isValidTextEditor(textEditor) === false) {
+                return;
             }
-        );
+
+            const document = textEditor.document;
+
+            this.client.sendRequest(ExecuteCommandRequest.type, {
+                command: command.replace(/^phpunit/, 'phpunit.lsp'),
+                arguments: [
+                    document.uri.toString(),
+                    textEditor.selection.active.line,
+                ],
+            });
+        });
     }
 
-    private isValidTextEditor(textEditor: TextEditor): boolean {
-        if (!this.enabled || !textEditor || !textEditor.document) {
+    private isValidTextEditor(editor: TextEditor): boolean {
+        if (!this.enabled || !editor || !editor.document) {
             return false;
         }
 
-        return textEditor.document.languageId === 'php';
+        return editor.document.languageId === 'php';
     }
 }

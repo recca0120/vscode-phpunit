@@ -39,7 +39,7 @@ export class Env {
                 path.replace(new RegExp(`${this.delimiter}$`, 'g'), '').trim()
             );
     }
-    static isWindows(platform: string = process.platform) {
+    static isWindows(platform: string = process.platform): boolean {
         return /win32|mswin(?!ce)|mingw|bccwin|cygwin/i.test(platform)
             ? true
             : false;

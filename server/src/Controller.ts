@@ -56,11 +56,8 @@ export class Controller {
         });
     }
 
-    async executeCommand(
-        _params: ExecuteCommandParams,
-        options?: SpawnOptions
-    ): Promise<TestResponse> {
-        const command = _params.command;
+    async executeCommand(params: ExecuteCommandParams, options?: SpawnOptions) {
+        const command = params.command;
 
         if (command === 'phpunit.lsp.run-all') {
             return await this.onTestRunFinishedEvent(
@@ -70,18 +67,18 @@ export class Controller {
 
         if (command === 'phpunit.lsp.run-file') {
             return await this.onTestRunFinishedEvent(
-                await this.runFile(_params.arguments || [], options)
+                await this.runFile(params.arguments || [], options)
             );
         }
 
         if (command === 'phpunit.lsp.run-test-at-cursor') {
             return await this.onTestRunFinishedEvent(
-                await this.run(_params.arguments || [], false, options)
+                await this.run(params.arguments || [], false, options)
             );
         }
 
         return await this.onTestRunFinishedEvent(
-            await this.run(_params.arguments || [], true, options)
+            await this.run(params.arguments || [], true, options)
         );
     }
 
