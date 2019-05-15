@@ -32,10 +32,14 @@ export class TestSuiteCollection {
         );
     }
 
-    putTextDocument(textDocument: TextDocument): TestSuiteCollection {
+    putTextDocument(document: TextDocument | undefined): TestSuiteCollection {
+        if (!document) {
+            return this;
+        }
+
         return this.putTestSuite(
-            this._files.asUri(textDocument.uri),
-            this.parser.parseTextDocument(textDocument) || null
+            this._files.asUri(document.uri),
+            this.parser.parseTextDocument(document) || null
         );
     }
 
