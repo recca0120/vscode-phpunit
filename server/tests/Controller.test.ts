@@ -114,7 +114,7 @@ describe('Controller Test', () => {
 
             const params = {
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [file, 15],
+                arguments: [file, 14],
             };
 
             await expectedCommand(params);

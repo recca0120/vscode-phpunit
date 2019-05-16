@@ -1,5 +1,5 @@
 import files from './Filesystem';
-import { TestRunner } from './TestRunner';
+import { TestRunner, Params } from './TestRunner';
 import { Problem } from './ProblemMatcher';
 import { SpawnOptions } from 'child_process';
 import { Test, TestSuite } from './Parser';
@@ -90,31 +90,26 @@ export class Controller {
     }
 
     async executeCommand(params: ExecuteCommandParams, options?: SpawnOptions) {
+        let response: TestResponse;
         const command = params.command;
 
         if (command === 'phpunit.lsp.run-all') {
-            return await this.sendTestRunFinishedEvent(
-                await this.runAll(options)
+            response = await this.runAll(options);
+        } else if (command === 'phpunit.lsp.run-file') {
+            response = await this.runFile(params.arguments || [], options);
+        } else {
+            response = await this.runTestAtCursor(
+                params.arguments || [],
+                options,
+                command === 'phpunit.lsp.run-test-at-cursor'
             );
         }
 
-        if (command === 'phpunit.lsp.run-file') {
-            return await this.sendTestRunFinishedEvent(
-                await this.runFile(params.arguments || [], options)
-            );
-        }
-
-        const runTestAtCursor = command === 'phpunit.lsp.run-test-at-cursor';
-
-        return await this.sendTestRunFinishedEvent(
-            await this.run(params.arguments || [], runTestAtCursor, options)
-        );
+        return await this.sendTestRunFinishedEvent(response);
     }
 
     private async runAll(options?: SpawnOptions) {
-        await this.sendTestRunStartedEvent(this.suites.all());
-
-        return await this.testRunner.run({}, options);
+        return await this.run({}, this.suites.all(), options);
     }
 
     private async runFile(params: string[], options?: SpawnOptions) {
@@ -123,15 +118,13 @@ export class Controller {
             test => test.id === idOrFile || test.file === idOrFile
         );
 
-        await this.sendTestRunStartedEvent(tests);
-
-        return await this.testRunner.run({ file: tests[0].file }, options);
+        return await this.run({ file: tests[0].file }, tests, options);
     }
 
-    private async run(
+    private async runTestAtCursor(
         params: string[],
-        runTestAtCursor = true,
-        options?: SpawnOptions
+        options?: SpawnOptions,
+        runTestAtCursor = true
     ) {
         let tests: (TestSuite | Test)[] = [];
 
@@ -144,15 +137,23 @@ export class Controller {
                 true
             );
         } else {
-            const id = params[0];
-            tests = this.suites.where(test => test.id === id, true);
+            tests = this.suites.where(test => test.id === params[0], true);
         }
 
+        return await this.run(tests[0], tests, options, runTestAtCursor);
+    }
+
+    private async run(
+        params: Params = {},
+        tests: (TestSuite | Test)[],
+        options?: SpawnOptions,
+        runTestAtCursor = true
+    ) {
         await this.sendTestRunStartedEvent(tests);
 
-        return runTestAtCursor
-            ? await this.testRunner.run(tests[0], options)
-            : await this.testRunner.rerun(tests[0], options);
+        return runTestAtCursor === true
+            ? await this.testRunner.run(params, options)
+            : await this.testRunner.rerun(params, options);
     }
 
     private findByFileAndLine(
@@ -167,9 +168,9 @@ export class Controller {
         const start = test.range.start.line;
         const end = test.range.end.line;
 
-        return test.type === 'suite'
-            ? start <= line || end >= line
-            : end <= line;
+        return test instanceof TestSuite
+            ? line <= start || line >= end
+            : line <= end;
     }
 
     private async sendLoadFinishedEvent(
