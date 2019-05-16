@@ -71,14 +71,12 @@ export class Controller {
             );
         }
 
-        if (command === 'phpunit.lsp.run-test-at-cursor') {
-            return await this.onTestRunFinishedEvent(
-                await this.run(params.arguments || [], false, options)
-            );
-        }
-
         return await this.onTestRunFinishedEvent(
-            await this.run(params.arguments || [], true, options)
+            await this.run(
+                params.arguments || [],
+                command === 'phpunit.lsp.run-test-at-cursor',
+                options
+            )
         );
     }
 

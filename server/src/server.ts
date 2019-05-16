@@ -150,7 +150,7 @@ documents.onDidChangeContent(() => {
 connection.onDidChangeWatchedFiles(async _change => {
     // Monitored files have change in VSCode
     await Promise.all(_change.changes.map(event => suites.put(event.uri)));
-    connection.console.log('We received an file change event');
+    // connection.console.log('We received an file change event');
 });
 
 // This handler provides the initial list of the completion items.
