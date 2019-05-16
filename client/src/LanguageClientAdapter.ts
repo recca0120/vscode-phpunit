@@ -94,7 +94,13 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestLoadFinishedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.client.onRequest('TestLoadFinishedEvent', ({ suite }) => {
+        this.client.onRequest('TestLoadFinishedEvent', ({ suite, started }) => {
+            if (!started) {
+                this.testsEmitter.fire(<TestLoadStartedEvent>{
+                    type: 'started',
+                });
+            }
+
             this.testsEmitter.fire(<TestLoadFinishedEvent>{
                 type: 'finished',
                 suite: suite,

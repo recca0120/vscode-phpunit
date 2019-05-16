@@ -80,13 +80,11 @@ export class Controller {
             return [];
         }
 
-        await this.sendLoadStartedEvent();
-
         const codeLens = suites.reduce((codeLens: CodeLens[], suite) => {
             return codeLens.concat(suite!.exportCodeLens());
         }, []);
 
-        this.sendLoadFinishedEvent();
+        this.sendLoadFinishedEvent({ started: false });
 
         return codeLens;
     }
@@ -174,13 +172,12 @@ export class Controller {
             : end <= line;
     }
 
-    private async sendLoadStartedEvent() {
-        await this.connection.sendRequest('TestLoadStartedEvent');
-    }
-
-    private async sendLoadFinishedEvent() {
+    private async sendLoadFinishedEvent(
+        params: { started: boolean } = { started: true }
+    ) {
         await this.connection.sendRequest('TestLoadFinishedEvent', {
             suite: (await this.suites.load()).tree(),
+            started: params.started,
         });
     }
 
