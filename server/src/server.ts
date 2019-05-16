@@ -147,9 +147,8 @@ documents.onDidChangeContent(() => {
     // validateTextDocument(change.document);
 });
 
-connection.onDidChangeWatchedFiles(async _change => {
-    // Monitored files have change in VSCode
-    await Promise.all(_change.changes.map(event => suites.put(event.uri)));
+connection.onDidChangeWatchedFiles(change => {
+    controller.detectChanges(change);
     // connection.console.log('We received an file change event');
 });
 

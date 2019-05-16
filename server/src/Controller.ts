@@ -11,6 +11,7 @@ import {
     ExecuteCommandParams,
     LogMessageNotification,
     MessageType,
+    DidChangeWatchedFilesParams,
 } from 'vscode-languageserver';
 import { TestSuiteEvent, TestEvent } from './TestExplorer';
 
@@ -32,9 +33,7 @@ export class Controller {
         private _files = files
     ) {
         this.connection.onRequest('TestLoadStartedEvent', async () => {
-            this.connection.sendRequest('TestLoadFinishedEvent', {
-                suite: (await this.suites.load()).tree(),
-            });
+            await this.sendLoadFinishedEvent();
         });
 
         this.connection.onRequest('TestRunStartedEvent', async ({ tests }) => {
@@ -56,22 +55,32 @@ export class Controller {
         });
     }
 
+    async detectChanges(change: DidChangeWatchedFilesParams): Promise<void> {
+        await this.sendLoadStartedEvent();
+
+        const uris = change.changes.map(event => event.uri);
+
+        await Promise.all(uris.map(uri => this.suites.put(uri)));
+
+        await this.sendLoadFinishedEvent();
+    }
+
     async executeCommand(params: ExecuteCommandParams, options?: SpawnOptions) {
         const command = params.command;
 
         if (command === 'phpunit.lsp.run-all') {
-            return await this.onTestRunFinishedEvent(
+            return await this.sendTestRunFinishedEvent(
                 await this.runAll(options)
             );
         }
 
         if (command === 'phpunit.lsp.run-file') {
-            return await this.onTestRunFinishedEvent(
+            return await this.sendTestRunFinishedEvent(
                 await this.runFile(params.arguments || [], options)
             );
         }
 
-        return await this.onTestRunFinishedEvent(
+        return await this.sendTestRunFinishedEvent(
             await this.run(
                 params.arguments || [],
                 command === 'phpunit.lsp.run-test-at-cursor',
@@ -81,7 +90,7 @@ export class Controller {
     }
 
     private async runAll(options?: SpawnOptions) {
-        await this.onTestRunStartedEvent(this.suites.all());
+        await this.sendTestRunStartedEvent(this.suites.all());
 
         return await this.testRunner.run({}, options);
     }
@@ -92,7 +101,7 @@ export class Controller {
             test => test.id === idOrFile || test.file === idOrFile
         );
 
-        await this.onTestRunStartedEvent(tests);
+        await this.sendTestRunStartedEvent(tests);
 
         return await this.testRunner.run({ file: tests[0].file }, options);
     }
@@ -113,7 +122,7 @@ export class Controller {
             tests = this.suites.where(test => test.id === id, true);
         }
 
-        await this.onTestRunStartedEvent(tests);
+        await this.sendTestRunStartedEvent(tests);
 
         return reurn
             ? await this.testRunner.rerun(tests[0], options)
@@ -137,8 +146,19 @@ export class Controller {
             : end <= line;
     }
 
-    private async onTestRunStartedEvent(tests: (TestSuite | Test)[]) {
+    private async sendLoadStartedEvent() {
+        await this.connection.sendRequest('TestLoadStartedEvent');
+    }
+
+    private async sendLoadFinishedEvent() {
+        await this.connection.sendRequest('TestLoadFinishedEvent', {
+            suite: (await this.suites.load()).tree(),
+        });
+    }
+
+    private async sendTestRunStartedEvent(tests: (TestSuite | Test)[]) {
         this.connection.sendNotification('TestRunStartedEvent');
+
         await this.connection.sendRequest('TestRunStartedEvent', {
             tests: tests.map(test => test.id),
             events: this.events
@@ -147,7 +167,7 @@ export class Controller {
         });
     }
 
-    private async onTestRunFinishedEvent(response: TestResponse) {
+    private async sendTestRunFinishedEvent(response: TestResponse) {
         this.connection.sendRequest('TestRunFinishedEvent', {
             events: this.changeEventsState(
                 response,

@@ -42,6 +42,7 @@ export class LanguageClientAdapter implements TestAdapter {
         public workspaceFolder: vscode.WorkspaceFolder,
         private client: LanguageClient
     ) {
+        this.onTestLoadStartedEvent();
         this.onTestLoadFinishedEvent();
         this.onTestRunStartedEvent();
         this.onTestRunFinishedEvent();
@@ -80,6 +81,14 @@ export class LanguageClientAdapter implements TestAdapter {
             disposable.dispose();
         }
         this.disposables = [];
+    }
+
+    private async onTestLoadStartedEvent(): Promise<void> {
+        await this.client.onReady();
+
+        this.client.onRequest('TestLoadStartedEvent', () => {
+            this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
+        });
     }
 
     private async onTestLoadFinishedEvent(): Promise<void> {

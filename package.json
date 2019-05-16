@@ -5,7 +5,7 @@
     "icon": "img/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.37",
+    "version": "2.0.38",
     "preview": true,
     "repository": {
         "type": "git",
@@ -13,9 +13,9 @@
     },
     "publisher": "recca0120",
     "categories": [
+        "Other",
         "Debuggers",
-        "Programming Languages",
-        "Other"
+        "Programming Languages"
     ],
     "keywords": [
         "test",
