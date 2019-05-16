@@ -43,7 +43,7 @@ export class TestSuiteCollection {
         );
     }
 
-    async get(uri: PathLike | URI) {
+    get(uri: PathLike | URI) {
         return this.suites.get(this._files.asUri(uri).toString());
     }
 

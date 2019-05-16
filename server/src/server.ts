@@ -18,7 +18,6 @@ import {
     // TextDocumentSaveReason,
     CompletionItem,
 } from 'vscode-languageserver';
-import { TestSuite } from './Parser';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -164,9 +163,9 @@ connection.onCompletionResolve((item: CompletionItem) => {
 });
 
 connection.onCodeLens(async params => {
-    return await controller.detectChanges(
-        documents.get(params.textDocument.uri)
-    );
+    const document = documents.get(params.textDocument.uri);
+
+    return document ? await controller.detectChanges(document) : [];
 });
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {

@@ -58,29 +58,32 @@ export class Controller {
     }
 
     async detectChanges(
-        change: DidChangeWatchedFilesParams | TextDocument | undefined
+        change: DidChangeWatchedFilesParams | TextDocument
     ): Promise<CodeLens[]> {
-        if (!change) {
-            return [];
-        }
-
-        this.sendLoadStartedEvent();
-
         let suites: (TestSuite | undefined)[] = [];
 
         if (TextDocument.is(change)) {
-            this.suites.putTextDocument(change);
-            suites = [await this.suites.get(change.uri)];
+            suites = [this.suites.putTextDocument(change).get(change.uri)];
         } else {
-            const changes = change.changes.map(event => event.uri);
-            await Promise.all(changes.map(uri => this.suites.put(uri)));
             suites = await Promise.all(
-                changes.map(uri => this.suites.get(uri))
+                change.changes.map(event =>
+                    this.suites.put(event.uri).then(() => {
+                        return this.suites.get(event.uri);
+                    })
+                )
             );
         }
 
+        suites = suites.filter(suite => !!suite);
+
+        if (suites.length === 0) {
+            return [];
+        }
+
+        await this.sendLoadStartedEvent();
+
         const codeLens = suites.reduce((codeLens: CodeLens[], suite) => {
-            return !suite ? codeLens : codeLens.concat(suite.exportCodeLens());
+            return codeLens.concat(suite!.exportCodeLens());
         }, []);
 
         this.sendLoadFinishedEvent();

@@ -17,7 +17,7 @@ describe('TestEventCollection', () => {
     });
 
     it('put test info', async () => {
-        const suite = await suites.get(projectPath('tests/AssertionsTest.php'));
+        const suite = suites.get(projectPath('tests/AssertionsTest.php'));
 
         events.put(suite.children[0]);
 
@@ -31,9 +31,7 @@ describe('TestEventCollection', () => {
 
     describe('put test suite info', () => {
         beforeAll(async () => {
-            const suite = await suites.get(
-                projectPath('tests/AssertionsTest.php')
-            );
+            const suite = suites.get(projectPath('tests/AssertionsTest.php'));
 
             events.put(suite);
         });
@@ -60,9 +58,7 @@ describe('TestEventCollection', () => {
 
     describe('modify test suite info', () => {
         beforeAll(async () => {
-            const suite = await suites.get(
-                projectPath('tests/AssertionsTest.php')
-            );
+            const suite = suites.get(projectPath('tests/AssertionsTest.php'));
 
             events.put(suite);
         });
