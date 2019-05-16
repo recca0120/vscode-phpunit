@@ -81,7 +81,7 @@ export class Controller {
     }
 
     private async runAll(options?: SpawnOptions) {
-        this.onTestRunStartedEvent(this.suites.all());
+        await this.onTestRunStartedEvent(this.suites.all());
 
         return await this.testRunner.run({}, options);
     }
@@ -92,7 +92,7 @@ export class Controller {
             test => test.id === idOrFile || test.file === idOrFile
         );
 
-        this.onTestRunStartedEvent(tests);
+        await this.onTestRunStartedEvent(tests);
 
         return await this.testRunner.run({ file: tests[0].file }, options);
     }
@@ -113,7 +113,7 @@ export class Controller {
             tests = this.suites.where(test => test.id === id, true);
         }
 
-        this.onTestRunStartedEvent(tests);
+        await this.onTestRunStartedEvent(tests);
 
         return reurn
             ? await this.testRunner.rerun(tests[0], options)
@@ -137,9 +137,9 @@ export class Controller {
             : end <= line;
     }
 
-    private onTestRunStartedEvent(tests: (TestSuite | Test)[]) {
+    private async onTestRunStartedEvent(tests: (TestSuite | Test)[]) {
         this.connection.sendNotification('TestRunStartedEvent');
-        this.connection.sendRequest('TestRunStartedEvent', {
+        await this.connection.sendRequest('TestRunStartedEvent', {
             tests: tests.map(test => test.id),
             events: this.events
                 .put(tests)
