@@ -106,7 +106,11 @@ export class Controller {
         return await this.testRunner.run({ file: tests[0].file }, options);
     }
 
-    private async run(params: string[], reurn = false, options?: SpawnOptions) {
+    private async run(
+        params: string[],
+        runTestAtCursor = true,
+        options?: SpawnOptions
+    ) {
         let tests: (TestSuite | Test)[] = [];
 
         if (params[1]) {
@@ -124,9 +128,9 @@ export class Controller {
 
         await this.sendTestRunStartedEvent(tests);
 
-        return reurn
-            ? await this.testRunner.rerun(tests[0], options)
-            : await this.testRunner.run(tests[0], options);
+        return runTestAtCursor
+            ? await this.testRunner.run(tests[0], options)
+            : await this.testRunner.rerun(tests[0], options);
     }
 
     private findByFileAndLine(
