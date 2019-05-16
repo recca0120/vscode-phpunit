@@ -102,7 +102,7 @@ export class Controller {
 
         if (params[1]) {
             const file = this._files.asUri(params[0]).toString();
-            const line: number = parseInt(params[1], 10);
+            const line = parseInt(params[1], 10);
 
             tests = this.suites.where(
                 test => this.findByFileAndLine(test, file, line),
@@ -115,9 +115,9 @@ export class Controller {
 
         this.onTestRunStartedEvent(tests);
 
-        return reurn === false
-            ? await this.testRunner.run(tests[0], options)
-            : await this.testRunner.rerun(tests[0], options);
+        return reurn
+            ? await this.testRunner.rerun(tests[0], options)
+            : await this.testRunner.run(tests[0], options);
     }
 
     private findByFileAndLine(
