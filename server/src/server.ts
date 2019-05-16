@@ -164,13 +164,9 @@ connection.onCompletionResolve((item: CompletionItem) => {
 });
 
 connection.onCodeLens(async params => {
-    suites.putTextDocument(documents.get(params.textDocument.uri));
-
-    const suite: TestSuite | undefined = await suites.get(
-        params.textDocument.uri
+    return await controller.detectChanges(
+        documents.get(params.textDocument.uri)
     );
-
-    return !suite ? [] : suite.exportCodeLens();
 });
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {

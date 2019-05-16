@@ -12,6 +12,8 @@ import {
     LogMessageNotification,
     MessageType,
     DidChangeWatchedFilesParams,
+    CodeLens,
+    TextDocument,
 } from 'vscode-languageserver';
 import { TestSuiteEvent, TestEvent } from './TestExplorer';
 
@@ -55,14 +57,35 @@ export class Controller {
         });
     }
 
-    async detectChanges(change: DidChangeWatchedFilesParams): Promise<void> {
-        await this.sendLoadStartedEvent();
+    async detectChanges(
+        change: DidChangeWatchedFilesParams | TextDocument | undefined
+    ): Promise<CodeLens[]> {
+        if (!change) {
+            return [];
+        }
 
-        const uris = change.changes.map(event => event.uri);
+        this.sendLoadStartedEvent();
 
-        await Promise.all(uris.map(uri => this.suites.put(uri)));
+        let suites: (TestSuite | undefined)[] = [];
 
-        await this.sendLoadFinishedEvent();
+        if (TextDocument.is(change)) {
+            this.suites.putTextDocument(change);
+            suites = [await this.suites.get(change.uri)];
+        } else {
+            const changes = change.changes.map(event => event.uri);
+            await Promise.all(changes.map(uri => this.suites.put(uri)));
+            suites = await Promise.all(
+                changes.map(uri => this.suites.get(uri))
+            );
+        }
+
+        const codeLens = suites.reduce((codeLens: CodeLens[], suite) => {
+            return !suite ? codeLens : codeLens.concat(suite.exportCodeLens());
+        }, []);
+
+        this.sendLoadFinishedEvent();
+
+        return codeLens;
     }
 
     async executeCommand(params: ExecuteCommandParams, options?: SpawnOptions) {
@@ -80,12 +103,10 @@ export class Controller {
             );
         }
 
+        const runTestAtCursor = command === 'phpunit.lsp.run-test-at-cursor';
+
         return await this.sendTestRunFinishedEvent(
-            await this.run(
-                params.arguments || [],
-                command === 'phpunit.lsp.run-test-at-cursor',
-                options
-            )
+            await this.run(params.arguments || [], runTestAtCursor, options)
         );
     }
 
