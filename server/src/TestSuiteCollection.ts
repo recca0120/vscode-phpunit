@@ -1,4 +1,4 @@
-import Parser, { TestSuite, Test } from './Parser';
+import Parser, { TestSuiteNode, TestNode } from './Parser';
 import URI from 'vscode-uri';
 import files from './Filesystem';
 import { PathLike } from 'fs';
@@ -6,7 +6,10 @@ import { TextDocument } from 'vscode-languageserver-protocol';
 import { TestSuiteInfo, TestInfo } from './TestExplorer';
 
 export class TestSuiteCollection {
-    private suites: Map<string, TestSuite> = new Map<string, TestSuite>();
+    private suites: Map<string, TestSuiteNode> = new Map<
+        string,
+        TestSuiteNode
+    >();
 
     constructor(private parser = new Parser(), private _files = files) {}
 
@@ -62,9 +65,9 @@ export class TestSuiteCollection {
         };
     }
 
-    where(filter: (test: TestSuite | Test) => {}, single = false) {
+    where(filter: (test: TestSuiteNode | TestNode) => {}, single = false) {
         const suites = this.all();
-        const tests: (TestSuite | Test)[] = [];
+        const tests: (TestSuiteNode | TestNode)[] = [];
 
         for (const suite of suites) {
             if (filter(suite)) {
@@ -89,17 +92,17 @@ export class TestSuiteCollection {
         return tests;
     }
 
-    find(id: string): TestSuite | Test {
+    find(id: string): TestSuiteNode | TestNode {
         return this.where(test => {
             return id === test.id;
         }, true)[0];
     }
 
-    all(): TestSuite[] {
+    all(): TestSuiteNode[] {
         return Array.from(this.suites.values());
     }
 
-    private putTestSuite(uri: URI, suite: TestSuite | null) {
+    private putTestSuite(uri: URI, suite: TestSuiteNode | null) {
         if (!suite) {
             return this;
         }
@@ -117,7 +120,7 @@ export class TestSuiteCollection {
         return this;
     }
 
-    private toTestSuiteInfo(suite: TestSuite): TestSuiteInfo {
+    private toTestSuiteInfo(suite: TestSuiteNode): TestSuiteInfo {
         return {
             type: 'suite',
             id: suite.id,
@@ -125,7 +128,7 @@ export class TestSuiteCollection {
             file: suite.file,
             line: suite.line,
             children: suite.children.map(test => {
-                return test instanceof TestSuite
+                return test instanceof TestSuiteNode
                     ? this.toTestSuiteInfo(test)
                     : ({
                           type: 'test',

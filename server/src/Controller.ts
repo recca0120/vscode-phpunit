@@ -2,7 +2,7 @@ import files from './Filesystem';
 import { TestRunner, Params } from './TestRunner';
 import { Problem } from './ProblemMatcher';
 import { SpawnOptions } from 'child_process';
-import { Test, TestSuite } from './Parser';
+import { TestNode, TestSuiteNode } from './Parser';
 import { TestEventCollection } from './TestEventCollection';
 import { TestResponse } from './TestResponse';
 import { TestSuiteCollection } from './TestSuiteCollection';
@@ -79,7 +79,7 @@ export class Controller {
                   return await this.suites.get(event.uri);
               });
 
-        const suites: (TestSuite | undefined)[] = (await Promise.all(
+        const suites: (TestSuiteNode | undefined)[] = (await Promise.all(
             changes
         )).filter(suite => !!suite);
 
@@ -115,7 +115,7 @@ export class Controller {
 
     private async run(
         params: Params = {},
-        tests: (TestSuite | Test)[],
+        tests: (TestSuiteNode | TestNode)[],
         rerun = false
     ) {
         await this.sendTestRunStartedEvent(tests);
@@ -164,7 +164,7 @@ export class Controller {
         );
     }
 
-    private findTestAtLine(test: TestSuite | Test, file: string, line: number) {
+    private findTestAtLine(test: TestSuiteNode | TestNode, file: string, line: number) {
         if (test.file !== file) {
             return false;
         }
@@ -172,7 +172,7 @@ export class Controller {
         const start = test.range.start.line;
         const end = test.range.end.line;
 
-        return test instanceof TestSuite
+        return test instanceof TestSuiteNode
             ? line <= start || line >= end
             : line <= end;
     }
@@ -186,7 +186,7 @@ export class Controller {
         });
     }
 
-    private async sendTestRunStartedEvent(tests: (TestSuite | Test)[]) {
+    private async sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
         this.connection.sendNotification('TestRunStartedEvent');
 
         await this.connection.sendRequest('TestRunStartedEvent', {

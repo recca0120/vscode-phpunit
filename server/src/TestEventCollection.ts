@@ -1,10 +1,10 @@
 import { Problem, Status } from './ProblemMatcher';
-import { Test, TestSuite } from './Parser';
+import { TestNode, TestSuiteNode } from './Parser';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
 
 export declare type TestInfo =
-    | TestSuite
-    | Test
+    | TestSuiteNode
+    | TestNode
     | TestSuiteEvent
     | TestEvent
     | Problem;
@@ -27,7 +27,7 @@ export class TestEventCollection {
 
         const events = tests.reduce(
             (events, test) => {
-                if (test instanceof TestSuite) {
+                if (test instanceof TestSuiteNode) {
                     return events.concat(this.suiteAsEvents(test));
                 }
 
@@ -103,11 +103,11 @@ export class TestEventCollection {
     }
 
     private suiteAsEvents(
-        test: TestSuite | Test
+        test: TestSuiteNode | TestNode
     ): (TestSuiteEvent | TestEvent)[] {
         const events: any = [];
 
-        if (test instanceof TestSuite) {
+        if (test instanceof TestSuiteNode) {
             return events
                 .concat([this.asTestSuiteInfo(test)])
                 .concat(...test.children.map(test => this.suiteAsEvents(test)));
@@ -116,8 +116,10 @@ export class TestEventCollection {
         return events.concat([this.asTestInfo(test)]);
     }
 
-    private asTestSuiteInfo(suite: TestSuite | TestSuiteEvent): TestSuiteEvent {
-        if (suite instanceof TestSuite) {
+    private asTestSuiteInfo(
+        suite: TestSuiteNode | TestSuiteEvent
+    ): TestSuiteEvent {
+        if (suite instanceof TestSuiteNode) {
             return {
                 type: 'suite',
                 suite: this.asId(suite),
@@ -130,8 +132,8 @@ export class TestEventCollection {
         });
     }
 
-    private asTestInfo(test: Test | TestEvent): TestEvent {
-        if (test instanceof Test) {
+    private asTestInfo(test: TestNode | TestEvent): TestEvent {
+        if (test instanceof TestNode) {
             return {
                 type: 'test',
                 test: this.asId(test),
@@ -144,10 +146,10 @@ export class TestEventCollection {
         });
     }
 
-    private asId(test: TestSuite | TestInfo) {
+    private asId(test: TestSuiteNode | TestInfo) {
         if (
-            test instanceof TestSuite ||
-            test instanceof Test ||
+            test instanceof TestSuiteNode ||
+            test instanceof TestNode ||
             test.type === 'problem'
         ) {
             return test.id;

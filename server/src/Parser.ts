@@ -24,7 +24,7 @@ interface ExportCodeLens {
     exportCodeLens(): CodeLens[];
 }
 
-abstract class BaseTest {
+abstract class BaseTestNode {
     [propName: string]: any;
 
     constructor(private node: any, private options?: TestOptions) {}
@@ -132,13 +132,13 @@ abstract class BaseTest {
     }
 }
 
-export class TestSuite extends BaseTest
+export class TestSuiteNode extends BaseTestNode
     implements TestSuiteInfo, ExportCodeLens {
     type!: 'suite';
 
     constructor(
         node: any,
-        public children: (TestSuite | Test)[],
+        public children: (TestSuiteNode | TestNode)[],
         options?: TestOptions
     ) {
         super(node, options);
@@ -159,7 +159,7 @@ export class TestSuite extends BaseTest
     }
 }
 
-export class Test extends BaseTest implements TestInfo {
+export class TestNode extends BaseTestNode implements TestInfo {
     type!: 'test';
 
     constructor(node: any, options?: TestOptions) {
@@ -178,7 +178,7 @@ export class Test extends BaseTest implements TestInfo {
 class Clazz {
     constructor(private node: any, private options: TestOptions) {}
 
-    asTestSuite(): TestSuite | null {
+    asTestSuite(): TestSuiteNode | null {
         const options = this.getTestOptions();
         const methods = this.getMethods();
 
@@ -186,17 +186,17 @@ class Clazz {
             .map((node: any, index: number) =>
                 this.asTest(node, options, methods[index - 1])
             )
-            .filter((method: Test) => method.isTest());
+            .filter((method: TestNode) => method.isTest());
 
         if (tests.length === 0) {
             return null;
         }
 
-        return new TestSuite(this.node, tests, options);
+        return new TestSuiteNode(this.node, tests, options);
     }
 
     private asTest(node: any, testOptions: any, prev: any = null) {
-        return new Test(this.fixLeadingComments(node, prev), testOptions);
+        return new TestNode(this.fixLeadingComments(node, prev), testOptions);
     }
 
     private fixLeadingComments(node: any, prev: any) {
@@ -250,11 +250,11 @@ export default class Parser {
         private _files = files
     ) {}
 
-    async parse(uri: PathLike | URI): Promise<TestSuite | null> {
+    async parse(uri: PathLike | URI): Promise<TestSuiteNode | null> {
         return this.parseCode(await this._files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument | null): TestSuite | null {
+    parseTextDocument(textDocument: TextDocument | null): TestSuiteNode | null {
         if (!textDocument) {
             return null;
         }
@@ -262,7 +262,7 @@ export default class Parser {
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
-    parseCode(code: string, uri: PathLike | URI): TestSuite | null {
+    parseCode(code: string, uri: PathLike | URI): TestSuiteNode | null {
         const tree: any = this.engine.parseCode(code);
         const classes = this.findClasses(this._files.asUri(uri), tree.children);
 
