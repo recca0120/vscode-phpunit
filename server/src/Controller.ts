@@ -75,6 +75,7 @@ export class Controller {
                   ),
               ]
             : change.changes.map(async event => {
+                  this.connection.console.log(JSON.stringify(event));
                   await this.suites.put(event.uri);
 
                   return await this.suites.get(event.uri);
@@ -210,6 +211,9 @@ export class Controller {
     private async sendLoadFinishedEvent(
         params: { started: boolean } = { started: true }
     ) {
+        this.suites.clear();
+        this.events.clear();
+
         await this.connection.sendRequest('TestLoadFinishedEvent', {
             suite: (await this.suites.load(this.spawnOptions.cwd)).tree(),
             started: params.started,

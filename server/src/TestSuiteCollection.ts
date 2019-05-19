@@ -50,6 +50,16 @@ export class TestSuiteCollection {
         return this.suites.get(this._files.asUri(uri).toString());
     }
 
+    delete(uri: PathLike | URI) {
+        return this.suites.delete(this._files.asUri(uri).toString());
+    }
+
+    clear() {
+        this.suites.clear();
+
+        return this;
+    }
+
     tree(): TestSuiteInfo {
         const children: TestSuiteInfo[] = [];
 

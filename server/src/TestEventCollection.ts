@@ -53,6 +53,21 @@ export class TestEventCollection {
         return this.events.get(id);
     }
 
+    delete(test: TestInfo | TestInfo) {
+        const id =
+            test instanceof TestSuiteNode || test.type === 'problem'
+                ? test.id
+                : this.asId(test);
+
+        return this.events.delete(id);
+    }
+
+    clear() {
+        this.events.clear();
+
+        return this;
+    }
+
     where(filter: (test: TestSuiteEvent | TestEvent) => {}, single = false) {
         const events = this.all();
         const items: (TestSuiteEvent | TestEvent)[] = [];
