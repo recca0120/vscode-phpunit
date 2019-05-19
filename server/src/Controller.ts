@@ -252,7 +252,17 @@ export class Controller {
         const events = this.events
             .where(event => event.state === 'running')
             .map(event => {
-                event.state = event.type === 'suite' ? 'completed' : state;
+                if (event.type === 'suite') {
+                    event.state = 'completed';
+
+                    return event;
+                }
+
+                event.state = state;
+
+                if (state === 'errored') {
+                    event.message = response.toString();
+                }
 
                 return event;
             });
