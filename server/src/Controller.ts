@@ -18,6 +18,8 @@ import {
 import { TestSuiteEvent, TestEvent } from './TestExplorer';
 
 export class Controller {
+    [index: string]: any;
+
     public commands = [
         'phpunit.lsp.load',
         'phpunit.lsp.run-all',
@@ -32,6 +34,9 @@ export class Controller {
         private suites: TestSuiteCollection,
         private events: TestEventCollection,
         private testRunner: TestRunner,
+        private spawnOptions: SpawnOptions = {
+            cwd: process.cwd(),
+        },
         private _files = files
     ) {
         this.connection.onRequest('TestLoadStartedEvent', async () => {
@@ -41,40 +46,42 @@ export class Controller {
         this.connection.onRequest('TestRunStartedEvent', async ({ tests }) => {
             const id: string = tests[0] || 'root';
 
-            if (id === 'root') {
-                this.executeCommand({
-                    command: 'phpunit.lsp.run-all',
-                });
+            const command =
+                id === 'root'
+                    ? { command: 'phpunit.lsp.run-all' }
+                    : {
+                          command: 'phpunit.lsp.run-test-at-cursor',
+                          arguments: [this.suites.find(id).id],
+                      };
 
-                return;
-            }
-
-            const test = this.suites.find(id);
-            this.executeCommand({
-                command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [test.id],
-            });
+            this.executeCommand(command);
         });
+    }
+
+    setSpawnOptions(spawnOptions: SpawnOptions) {
+        this.spawnOptions = Object.assign({}, this.spawnOptions, spawnOptions);
+
+        return this;
     }
 
     async detectChanges(
         change: DidChangeWatchedFilesParams | TextDocument
     ): Promise<CodeLens[]> {
-        let suites: (TestSuite | undefined)[] = [];
+        const changes = TextDocument.is(change)
+            ? [
+                  Promise.resolve(
+                      this.suites.putTextDocument(change).get(change.uri)
+                  ),
+              ]
+            : change.changes.map(async event => {
+                  await this.suites.put(event.uri);
 
-        if (TextDocument.is(change)) {
-            suites = [this.suites.putTextDocument(change).get(change.uri)];
-        } else {
-            suites = await Promise.all(
-                change.changes.map(event =>
-                    this.suites.put(event.uri).then(() => {
-                        return this.suites.get(event.uri);
-                    })
-                )
-            );
-        }
+                  return await this.suites.get(event.uri);
+              });
 
-        suites = suites.filter(suite => !!suite);
+        const suites: (TestSuite | undefined)[] = (await Promise.all(
+            changes
+        )).filter(suite => !!suite);
 
         if (suites.length === 0) {
             return [];
@@ -89,78 +96,75 @@ export class Controller {
         return codeLens;
     }
 
-    async executeCommand(params: ExecuteCommandParams, options?: SpawnOptions) {
-        let response: TestResponse;
+    async executeCommand(params: ExecuteCommandParams) {
         const command = params.command;
+        const args = params.arguments || [];
 
-        if (command === 'phpunit.lsp.run-all') {
-            response = await this.runAll(options);
-        } else if (command === 'phpunit.lsp.run-file') {
-            response = await this.runFile(params.arguments || [], options);
-        } else {
-            response = await this.runTestAtCursor(
-                params.arguments || [],
-                options,
-                command === 'phpunit.lsp.run-test-at-cursor'
-            );
-        }
+        const lookup = {
+            'phpunit.lsp.run-all': this.runAll,
+            'phpunit.lsp.run-file': this.runFile,
+            'phpunit.lsp.run-test-at-cursor': this.runTestAtCursor,
+        } as any;
+
+        const response = lookup[command]
+            ? await lookup[command].call(this, args)
+            : await this.rerun(args);
 
         return await this.sendTestRunFinishedEvent(response);
-    }
-
-    private async runAll(options?: SpawnOptions) {
-        return await this.run({}, this.suites.all(), options);
-    }
-
-    private async runFile(params: string[], options?: SpawnOptions) {
-        const idOrFile: string = params[0] || '';
-        const tests = this.suites.where(
-            test => test.id === idOrFile || test.file === idOrFile
-        );
-
-        return await this.run({ file: tests[0].file }, tests, options);
-    }
-
-    private async runTestAtCursor(
-        params: string[],
-        options?: SpawnOptions,
-        runTestAtCursor = true
-    ) {
-        let tests: (TestSuite | Test)[] = [];
-
-        if (params[1]) {
-            const file = this._files.asUri(params[0]).toString();
-            const line = parseInt(params[1], 10);
-
-            tests = this.suites.where(
-                test => this.findByFileAndLine(test, file, line),
-                true
-            );
-        } else {
-            tests = this.suites.where(test => test.id === params[0], true);
-        }
-
-        return await this.run(tests[0], tests, options, runTestAtCursor);
     }
 
     private async run(
         params: Params = {},
         tests: (TestSuite | Test)[],
-        options?: SpawnOptions,
-        runTestAtCursor = true
+        rerun = false
     ) {
         await this.sendTestRunStartedEvent(tests);
 
-        return runTestAtCursor === true
-            ? await this.testRunner.run(params, options)
-            : await this.testRunner.rerun(params, options);
+        return rerun === true
+            ? await this.testRunner.rerun(params, this.spawnOptions)
+            : await this.testRunner.run(params, this.spawnOptions);
     }
 
-    private findByFileAndLine(
-        test: TestSuite | Test,
-        file: string,
-        line: number
-    ) {
+    private async runAll() {
+        return await this.run({}, this.suites.all());
+    }
+
+    private async runFile(params: string[]) {
+        const idOrFile: string = params[0] || '';
+        const tests = this.suites.where(
+            test => test.id === idOrFile || test.file === idOrFile
+        );
+
+        return await this.run({ file: tests[0].file }, tests);
+    }
+
+    private async runTestAtCursor(params: string[]) {
+        const tests = this.findTestAtCursorOrId(params);
+
+        return await this.run(tests[0], tests);
+    }
+
+    private async rerun(params: string[]) {
+        const tests = this.findTestAtCursorOrId(params);
+
+        return await this.run(tests[0], tests);
+    }
+
+    private findTestAtCursorOrId(params: string[]) {
+        if (!params[1]) {
+            return this.suites.where(test => test.id === params[0], true);
+        }
+
+        const file = this._files.asUri(params[0]).toString();
+        const line = parseInt(params[1], 10);
+
+        return this.suites.where(
+            test => this.findTestAtLine(test, file, line),
+            true
+        );
+    }
+
+    private findTestAtLine(test: TestSuite | Test, file: string, line: number) {
         if (test.file !== file) {
             return false;
         }
@@ -177,7 +181,7 @@ export class Controller {
         params: { started: boolean } = { started: true }
     ) {
         await this.connection.sendRequest('TestLoadFinishedEvent', {
-            suite: (await this.suites.load()).tree(),
+            suite: (await this.suites.load(this.spawnOptions.cwd)).tree(),
             started: params.started,
         });
     }

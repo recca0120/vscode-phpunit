@@ -18,10 +18,17 @@ describe('Controller Test', () => {
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
     const testRunner = new TestRunner();
-    const controller = new Controller(connection, suites, events, testRunner);
-    const options = { cwd: path.fsPath };
+    const spawnOptions = { cwd: path.fsPath };
+    const controller = new Controller(
+        connection,
+        suites,
+        events,
+        testRunner,
+    );
 
     beforeAll(async () => {
+        controller.setSpawnOptions(spawnOptions);
+
         await suites.load(path);
     });
 
@@ -45,7 +52,7 @@ describe('Controller Test', () => {
         };
 
         const expectedCommand = async (params: any = {}) => {
-            await controller.executeCommand(params, options);
+            await controller.executeCommand(params);
 
             spyOn(connection, 'sendRequest').and.callFake(
                 (requestType: string, params: any) => {
