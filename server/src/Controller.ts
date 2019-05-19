@@ -146,8 +146,6 @@ export class Controller {
 
         this.setSettings(settings);
 
-        await this.sendTestRunStartedEvent(tests);
-
         return rerun === true
             ? await this.testRunner.rerun(params, this.spawnOptions)
             : await this.testRunner.run(params, this.spawnOptions);
