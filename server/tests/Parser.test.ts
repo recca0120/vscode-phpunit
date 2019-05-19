@@ -1,5 +1,5 @@
 import files from '../src/Filesystem';
-import Parser, { TestSuite } from '../src/Parser';
+import Parser, { TestSuiteNode } from '../src/Parser';
 import URI from 'vscode-uri';
 import { projectPath } from './helpers';
 import { TextDocument } from 'vscode-languageserver-protocol';
@@ -17,13 +17,13 @@ describe('Parser', () => {
 
     const getTestSuite = async (
         testfile: URI = file
-    ): Promise<TestSuite | undefined> => {
+    ): Promise<TestSuiteNode | undefined> => {
         const suite = await parser.parse(testfile);
 
         return suite;
     };
 
-    const getTest = (suite: TestSuite, options: any = {}) => {
+    const getTest = (suite: TestSuiteNode, options: any = {}) => {
         return suite.children.find(test => {
             for (const key in options) {
                 if (
@@ -38,11 +38,13 @@ describe('Parser', () => {
 
     it('class', async () => {
         const suite = await getTestSuite();
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+        const label = id;
 
         expect(suite).toEqual(
             jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                label: 'AssertionsTest',
+                id,
+                label,
             })
         );
     });

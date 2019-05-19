@@ -149,7 +149,7 @@ export class TestSuiteNode extends BaseTestNode
     }
 
     get label(): string {
-        return this.class || '';
+        return this.fullclass || '';
     }
 
     exportCodeLens(): CodeLens[] {

@@ -6,6 +6,9 @@ import { TextDocument } from 'vscode-languageserver-protocol';
 describe('TestSuiteCollection', () => {
     const path = projectPath('');
     const suites = new TestSuiteCollection();
+    const getLabelById = function(id: string) {
+        return id;
+    };
 
     it('instance', () => {
         expect(suites).toBeInstanceOf(TestSuiteCollection);
@@ -25,49 +28,56 @@ describe('TestSuiteCollection', () => {
 
         it('Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+            const label = getLabelById(id);
 
             expect(items.find(item => item.id === id)).toEqual({
-                id: id,
-                label: 'AssertionsTest',
+                id,
+                label,
             });
         });
 
         it('Recca0120\\VSCode\\Tests\\CalculatorTest', () => {
             const id = 'Recca0120\\VSCode\\Tests\\CalculatorTest';
+            const label = getLabelById(id);
 
             expect(items.find(item => item.id === id)).toEqual({
-                id: id,
-                label: 'CalculatorTest',
+                id,
+                label,
             });
         });
 
         it('Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest', () => {
             const id = 'Recca0120\\VSCode\\Tests\\Directory\\HasPropertyTest';
+            const label = getLabelById(id);
 
             expect(items.find(item => item.id === id)).toEqual({
-                id: id,
-                label: 'HasPropertyTest',
+                id,
+                label,
             });
         });
 
         it('Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest', () => {
             const id =
                 'Recca0120\\VSCode\\Tests\\Directory\\LeadingCommentsTest';
+            const label = getLabelById(id);
 
             expect(items.find(item => item.id === id)).toEqual({
-                id: id,
-                label: 'LeadingCommentsTest',
+                id,
+                label,
             });
         });
     });
 
     it('get', async () => {
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+        const label = getLabelById(id);
+
         expect(
             await suites.get(projectPath('tests/AssertionsTest.php'))
         ).toEqual(
             jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                label: 'AssertionsTest',
+                id,
+                label,
             })
         );
     });
@@ -83,10 +93,13 @@ describe('TestSuiteCollection', () => {
 
         suites.putTextDocument(textDocument);
 
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+        const label = getLabelById(id);
+
         expect(await suites.get(file)).toEqual(
             jasmine.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                label: 'AssertionsTest',
+                id,
+                label,
             })
         );
     });
