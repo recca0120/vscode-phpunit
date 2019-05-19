@@ -57,6 +57,12 @@ export class Controller {
 
             this.executeCommand(command);
         });
+
+        this.connection.onRequest('TestCancelStartedEvent', async () => {
+            return await this.executeCommand({
+                command: 'phpunit.lsp.cancel',
+            });
+        });
     }
 
     setSpawnOptions(spawnOptions: SpawnOptions) {
@@ -119,19 +125,23 @@ export class Controller {
 
     async executeCommand(params: ExecuteCommandParams) {
         const command = params.command;
+
         const args = params.arguments || [];
 
         const lookup = {
             'phpunit.lsp.run-all': this.runAll,
             'phpunit.lsp.run-file': this.runFile,
             'phpunit.lsp.run-test-at-cursor': this.runTestAtCursor,
+            'phpunit.lsp.cancel': this.cancel,
         } as any;
 
         const response = lookup[command]
             ? await lookup[command].call(this, args)
             : await this.rerun(args);
 
-        return await this.sendTestRunFinishedEvent(response);
+        return response !== undefined
+            ? await this.sendTestRunFinishedEvent(response)
+            : undefined;
     }
 
     private async run(
@@ -174,6 +184,14 @@ export class Controller {
         const tests = this.findTestAtCursorOrId(params);
 
         return await this.run(tests[0], tests);
+    }
+
+    private async cancel() {
+        if (this.testRunner.cancel()) {
+            return new TestResponse('cancel');
+        }
+
+        return undefined;
     }
 
     private findTestAtCursorOrId(params: string[]) {

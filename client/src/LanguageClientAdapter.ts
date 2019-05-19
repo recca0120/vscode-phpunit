@@ -71,8 +71,10 @@ export class LanguageClientAdapter implements TestAdapter {
     //     throw new Error('Method not implemented.');
     // }
 
-    cancel(): void {
-        throw new Error('Method not implemented.');
+    async cancel() {
+        await this.client.onReady();
+
+        this.client.sendRequest('TestCancelStartedEvent');
     }
 
     dispose(): void {
