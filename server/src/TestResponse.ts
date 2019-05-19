@@ -77,7 +77,7 @@ export class TestResponse {
             'WARNINGS!',
         ].join('|');
 
-        return new RegExp(pattern, 'ig') ? true : false;
+        return new RegExp(pattern, 'ig').test(this.output);
     }
 
     private parseTestResult() {

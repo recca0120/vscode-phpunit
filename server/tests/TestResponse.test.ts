@@ -39,6 +39,13 @@ Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incom
                 risky: 2,
             });
         });
+
+        it('no tests executed', () => {
+            testResponse = new TestResponse('No tests executed!');
+            const result: TestResult = testResponse.getTestResult();
+
+            expect(result.tests).toEqual(0);
+        });
     });
 
     describe('problems', () => {
