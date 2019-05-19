@@ -16,14 +16,14 @@ describe('TestResponse', () => {
         });
 
         it('assertions ok', () => {
-            testResponse = new TestResponse('OK (2 test, 2 assertion)');
+            testResponse = new TestResponse('OK (2 tests, 2 assertions)');
             const result: TestResult = testResponse.getTestResult();
 
             expect(result.tests).toEqual(2);
             expect(result.assertions).toEqual(2);
         });
 
-        it('assertions as errors', () => {
+        it('assertions has errors', () => {
             testResponse = new TestResponse(`ERRORS!
 Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incomplete: 1, Risky: 2.`);
             const result: TestResult = testResponse.getTestResult();
@@ -45,6 +45,23 @@ Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incom
             const result: TestResult = testResponse.getTestResult();
 
             expect(result.tests).toEqual(0);
+        });
+
+        it('OK, but incomplete, skipped, or risky tests!', () => {
+            testResponse = new TestResponse(
+                `OK, but incomplete, skipped, or risky tests!
+Tests: 3, Assertions: 2, Skipped: 1.
+                `
+            );
+            const result: TestResult = testResponse.getTestResult();
+
+            expect(result).toEqual(
+                jasmine.objectContaining({
+                    tests: 3,
+                    assertions: 2,
+                    skipped: 1,
+                })
+            );
         });
     });
 

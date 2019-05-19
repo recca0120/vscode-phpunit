@@ -55,7 +55,7 @@ export class TestResponse {
     }
 
     private parseSuccessFul() {
-        let matches = this.output.match(
+        const matches = this.output.match(
             new RegExp('OK \\((\\d+) test(s?), (\\d+) assertion(s?)\\)')
         );
 
@@ -75,6 +75,7 @@ export class TestResponse {
             'ERRORS!',
             'FAILURES!',
             'WARNINGS!',
+            'OK, but incomplete, skipped, or risky tests!',
         ].join('|');
 
         return new RegExp(pattern, 'ig').test(this.output);
