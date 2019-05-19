@@ -97,14 +97,14 @@ export class TestRunner {
 
     private async getCommand(
         args: string[],
-        options?: SpawnOptions
+        spawnOptions?: SpawnOptions
     ): Promise<Command> {
         let params = [];
 
         const [phpBinary, phpUnitBinary, phpUnitXml] = await Promise.all([
             this.getPhpBinary(),
-            this.getPhpUnitBinary(options),
-            this.getPhpUnitXml(options),
+            this.getPhpUnitBinary(spawnOptions),
+            this.getPhpUnitXml(spawnOptions),
         ]);
 
         if (phpBinary) {
@@ -115,7 +115,11 @@ export class TestRunner {
             params.push(phpUnitBinary);
         }
 
-        if (phpUnitXml) {
+        const hasConfiguration = this.args.some((arg: string) =>
+            ['-c', '--configuration'].some(key => arg.indexOf(key) !== -1)
+        );
+
+        if (!hasConfiguration && phpUnitXml) {
             params.push('-c');
             params.push(phpUnitXml);
         }
@@ -134,7 +138,7 @@ export class TestRunner {
     }
 
     private async getPhpUnitBinary(
-        options?: SpawnOptions
+        spawnOptions?: SpawnOptions
     ): Promise<string | void> {
         if (this.phpUnitBinary) {
             return this.phpUnitBinary;
@@ -142,14 +146,14 @@ export class TestRunner {
 
         return await this._files.findup(
             ['vendor/bin/phpunit', 'phpunit'],
-            options
+            spawnOptions
         );
     }
 
-    private async getPhpUnitXml(options?: SpawnOptions) {
+    private async getPhpUnitXml(spawnOptions?: SpawnOptions) {
         return await this._files.findup(
             ['phpunit.xml', 'phpunit.xml.dist'],
-            options
+            spawnOptions
         );
     }
 }

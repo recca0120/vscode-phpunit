@@ -16,6 +16,7 @@ import {
     TextDocument,
 } from 'vscode-languageserver';
 import { TestSuiteEvent, TestEvent } from './TestExplorer';
+import { Settings } from './Settings';
 
 export class Controller {
     [index: string]: any;
@@ -96,6 +97,26 @@ export class Controller {
         return codeLens;
     }
 
+    setSettings(settings: Settings | undefined) {
+        if (!settings) {
+            return this;
+        }
+
+        if (settings.php) {
+            this.testRunner.setPhpBinary(settings.php);
+        }
+
+        if (settings.phpunit) {
+            this.testRunner.setPhpBinary(settings.phpunit);
+        }
+
+        if (settings.args) {
+            this.testRunner.setArgs(settings.args);
+        }
+
+        return this;
+    }
+
     async executeCommand(params: ExecuteCommandParams) {
         const command = params.command;
         const args = params.arguments || [];
@@ -118,6 +139,13 @@ export class Controller {
         tests: (TestSuiteNode | TestNode)[],
         rerun = false
     ) {
+        const [settings] = await Promise.all([
+            this.connection.workspace.getConfiguration('phpunit'),
+            this.sendTestRunStartedEvent(tests),
+        ]);
+
+        this.setSettings(settings);
+
         await this.sendTestRunStartedEvent(tests);
 
         return rerun === true
@@ -164,7 +192,11 @@ export class Controller {
         );
     }
 
-    private findTestAtLine(test: TestSuiteNode | TestNode, file: string, line: number) {
+    private findTestAtLine(
+        test: TestSuiteNode | TestNode,
+        file: string,
+        line: number
+    ) {
         if (test.file !== file) {
             return false;
         }

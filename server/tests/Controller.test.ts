@@ -13,18 +13,16 @@ describe('Controller Test', () => {
         onNotification: () => {},
         sendRequest: () => {},
         onRequest: () => {},
+        workspace: {
+            getConfiguration: () => {},
+        },
     };
 
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
     const testRunner = new TestRunner();
     const spawnOptions = { cwd: path.fsPath };
-    const controller = new Controller(
-        connection,
-        suites,
-        events,
-        testRunner,
-    );
+    const controller = new Controller(connection, suites, events, testRunner);
 
     beforeAll(async () => {
         controller.setSpawnOptions(spawnOptions);

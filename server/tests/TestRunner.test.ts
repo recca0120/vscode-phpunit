@@ -121,19 +121,20 @@ describe('TestRunner', () => {
         });
 
         it('custom php, phpunit, args', async () => {
-            spyOn(files, 'findup').and.returnValues('phpunit.xml');
+            spyOn(files, 'findup').and.returnValues('phpunit.ini');
+
             testRunner
                 .setPhpBinary('/php')
                 .setPhpUnitBinary('/phpunit')
                 .setArgs(['foo', 'bar']);
 
-            expect((await testRunner.run()).toString()).toEqual('PHPUnit');
+            response = await testRunner.run();
 
             expect(process.run).toHaveBeenCalledWith(
                 {
                     title: 'PHPUnit LSP',
                     command: '/php',
-                    arguments: ['/phpunit', '-c', 'phpunit.xml', 'foo', 'bar'],
+                    arguments: ['/phpunit', '-c', 'phpunit.ini', 'foo', 'bar'],
                 },
                 undefined
             );

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Recca0120\VSCode\Tests\AssertionsTest" file="/Users/recca0120/Desktop/vscode-phpunit/server/tests/fixtures/project-sub/tests/AssertionsTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.005124">
+    <testcase name="test_passed" class="Recca0120\VSCode\Tests\AssertionsTest" classname="Recca0120.VSCode.Tests.AssertionsTest" file="/Users/recca0120/Desktop/vscode-phpunit/server/tests/fixtures/project-sub/tests/AssertionsTest.php" line="12" assertions="1" time="0.005124"/>
+  </testsuite>
+</testsuites>
