@@ -75,7 +75,6 @@ export class Controller {
                   ),
               ]
             : change.changes.map(async event => {
-                  this.connection.console.log(JSON.stringify(event));
                   await this.suites.put(event.uri);
 
                   return await this.suites.get(event.uri);
