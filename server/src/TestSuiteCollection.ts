@@ -23,16 +23,24 @@ export class TestSuiteCollection {
             strict: false,
         });
 
-        await Promise.all(files.map(file => this.put(file)));
+        (await Promise.all(
+            files.map(async file => [file, await this._files.get(file)])
+        )).forEach(([file, code]) => {
+            this.put(file, code);
+        });
 
         return this;
     }
 
-    async put(uri: PathLike | URI): Promise<TestSuiteCollection> {
-        return this.putTestSuite(
-            this._files.asUri(uri),
-            await this.parser.parse(uri)
-        );
+    async put(
+        uri: PathLike | URI,
+        code?: string
+    ): Promise<TestSuiteCollection> {
+        const suite = code
+            ? this.parser.parseCode(code, uri)
+            : await this.parser.parse(uri);
+
+        return this.putTestSuite(this._files.asUri(uri), suite);
     }
 
     putTextDocument(document: TextDocument | undefined): TestSuiteCollection {
