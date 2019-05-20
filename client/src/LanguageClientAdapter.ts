@@ -77,8 +77,8 @@ export class LanguageClientAdapter implements TestAdapter {
         this.client.sendRequest('TestCancelStartedEvent');
     }
 
-    dispose(): void {
-        // this.cancel();
+    async dispose(): Promise<void> {
+        await this.cancel();
         for (const disposable of this.disposables) {
             disposable.dispose();
         }
