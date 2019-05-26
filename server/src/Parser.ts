@@ -183,9 +183,7 @@ class Clazz {
         const methods = this.getMethods();
 
         const tests = methods
-            .map((node: any, index: number) =>
-                this.asTest(node, options, methods[index - 1])
-            )
+            .map((node: any) => this.asTest(node, options))
             .filter((method: TestNode) => method.isTest());
 
         if (tests.length === 0) {
@@ -195,8 +193,8 @@ class Clazz {
         return new TestSuiteNode(this.node, tests, options);
     }
 
-    private asTest(node: any, testOptions: any, prev: any = null) {
-        return new TestNode(this.fixLeadingComments(node, prev), testOptions);
+    private asTest(node: any, testOptions: any) {
+        return new TestNode(node, testOptions);
     }
 
     private fixLeadingComments(node: any, prev: any) {
@@ -206,19 +204,40 @@ class Clazz {
             };
         }
 
-        if (prev && prev.body && prev.body.trailingComments) {
-            node.body.leadingComments = prev.body.trailingComments;
+        if (node.leadingComments) {
+            node.body.leadingComments = node.leadingComments;
+
+            return node;
         }
 
-        if (node && node.leadingComments) {
-            node.body.leadingComments = node.leadingComments;
+        if (node.body.leadingComments || !prev) {
+            return node;
+        }
+
+        if (prev.trailingComments) {
+            node.body.leadingComments = prev.trailingComments;
+
+            return node;
+        }
+
+        if (prev.body && prev.body.trailingComments) {
+            node.body.leadingComments = prev.body.trailingComments;
+
+            return node;
         }
 
         return node;
     }
 
     private getMethods() {
-        return this.node.body.filter((node: any) => node.kind === 'method');
+        return this.node.body
+            .map((node: any, index: number, childrens: any[]) => {
+                return this.fixLeadingComments(
+                    node,
+                    index === 0 ? this.node : childrens[index - 1]
+                );
+            })
+            .filter((node: any) => node.kind === 'method');
     }
 
     private getTestOptions() {

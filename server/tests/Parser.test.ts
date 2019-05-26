@@ -247,6 +247,27 @@ describe('Parser', () => {
         );
     });
 
+    it('use trait', async () => {
+        const file = projectPath('tests/Directory/UseTraitTest.php');
+        const suite = await getTestSuite(file);
+
+        const label = 'use_trait';
+        const id = getId(
+            label,
+            'Recca0120\\VSCode\\Tests\\Directory\\UseTraitTest'
+        );
+        const test = getTest(suite, { id });
+
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                id: id,
+                label,
+                file: file.toString(),
+                line: jasmine.any(Number),
+            })
+        );
+    });
+
     it('has property', async () => {
         const file = projectPath('tests/Directory/HasPropertyTest.php');
         const suite = await getTestSuite(file);

@@ -90,6 +90,7 @@ describe('Filesystem', () => {
             'tests/CalculatorTest.php',
             'tests/Directory/HasPropertyTest.php',
             'tests/Directory/LeadingCommentsTest.php',
+            'tests/Directory/UseTraitTest.php',
             'tests/StaticMethodTest.php',
         ]);
     });
