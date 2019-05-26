@@ -1,6 +1,6 @@
 import files from './Filesystem';
 import { TestRunner, Params } from './TestRunner';
-import { Problem } from './ProblemMatcher';
+import { ProblemNode } from './ProblemMatcher';
 import { SpawnOptions } from 'child_process';
 import { TestNode, TestSuiteNode } from './Parser';
 import { TestEventCollection } from './TestEventCollection';
@@ -250,11 +250,11 @@ export class Controller {
 
     private async sendTestRunFinishedEvent(response: TestResponse) {
         this.connection.sendRequest('TestRunFinishedEvent', {
+            command: response.getCommand(),
             events: this.changeEventsState(
                 response,
                 await response.asProblem()
             ),
-            command: response.getCommand(),
         });
 
         this.connection.sendNotification(LogMessageNotification.type, {
@@ -265,7 +265,7 @@ export class Controller {
         return response;
     }
 
-    private changeEventsState(response: TestResponse, problems: Problem[]) {
+    private changeEventsState(response: TestResponse, problems: ProblemNode[]) {
         const result = response.getTestResult();
         const state = result.tests === 0 ? 'errored' : 'passed';
 

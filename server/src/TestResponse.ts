@@ -1,5 +1,5 @@
 import stripAnsi from 'strip-ansi';
-import { PHPUnitOutput, Problem, ProblemMatcher } from './ProblemMatcher';
+import { PHPUnitOutput, ProblemNode, ProblemMatcher } from './ProblemMatcher';
 import { Command } from 'vscode-languageserver-protocol';
 // import {
 //     Diagnostic,
@@ -34,7 +34,7 @@ export class TestResponse {
         return this.command;
     }
 
-    async asProblem(): Promise<Problem[]> {
+    async asProblem(): Promise<ProblemNode[]> {
         return await this.problemMatcher.parse(this.output);
     }
 

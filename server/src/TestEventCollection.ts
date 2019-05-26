@@ -1,50 +1,20 @@
-import { Problem, Status } from './ProblemMatcher';
+import { ProblemNode } from './ProblemMatcher';
 import { TestNode, TestSuiteNode } from './Parser';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
 
-export declare type TestInfo =
-    | TestSuiteNode
-    | TestNode
-    | TestSuiteEvent
-    | TestEvent
-    | Problem;
+export declare type Node = TestSuiteNode | TestNode | ProblemNode;
+
+export declare type TestInfo = Node | TestSuiteEvent | TestEvent;
 
 export class TestEventCollection {
-    private states: Map<Status, TestEvent['state']> = new Map([
-        [Status.UNKNOWN, 'errored'],
-        [Status.PASSED, 'passed'],
-        [Status.SKIPPED, 'skipped'],
-        [Status.INCOMPLETE, 'skipped'],
-        [Status.FAILURE, 'failed'],
-        [Status.ERROR, 'errored'],
-        [Status.RISKY, 'failed'],
-        [Status.WARNING, 'failed'],
-    ]);
-    events: Map<string, TestSuiteEvent | TestEvent> = new Map();
+    private events: Map<string, TestSuiteEvent | TestEvent> = new Map();
 
     put(tests: TestInfo | TestInfo[]) {
         tests = tests instanceof Array ? tests : [tests];
 
-        const events = tests.reduce(
-            (events, test) => {
-                if (test instanceof TestSuiteNode) {
-                    return events.concat(this.suiteAsEvents(test));
-                }
-
-                if (test.type === 'problem') {
-                    return events.concat([this.problemAsEvent(test)]);
-                }
-
-                return test.type === 'suite'
-                    ? events.concat([this.asTestSuiteInfo(test)])
-                    : events.concat(this.asTestInfo(test));
-            },
-            [] as any
+        this.asEvents(tests).forEach(event =>
+            this.events.set(this.asId(event), event)
         );
-
-        events.forEach((event: TestSuiteEvent | TestEvent) => {
-            this.events.set(this.asId(event), event);
-        });
 
         return this;
     }
@@ -54,12 +24,7 @@ export class TestEventCollection {
     }
 
     delete(test: TestInfo | TestInfo) {
-        const id =
-            test instanceof TestSuiteNode || test.type === 'problem'
-                ? test.id
-                : this.asId(test);
-
-        return this.events.delete(id);
+        return this.events.delete(this.asId(test));
     }
 
     clear() {
@@ -93,85 +58,49 @@ export class TestEventCollection {
         return Array.from(this.events.values());
     }
 
-    private problemAsEvent(problem: Problem): TestEvent {
-        return {
-            type: 'test',
-            test: problem.id,
-            state: this.states.get(problem.status) as TestEvent['state'],
-            message: problem.message,
-            decorations: this.asTestDecorations(problem),
-        };
+    private asEvents(tests: TestInfo[]) {
+        return tests.reduce(
+            (events: (TestSuiteEvent | TestEvent)[], test: TestInfo) => {
+                if (this.isNode(test)) {
+                    return events.concat(this.nodeAsEvents(test as Node));
+                }
+
+                return events.concat([test as (TestSuiteEvent | TestEvent)]);
+            },
+            []
+        );
     }
 
-    private asTestDecorations(problem: Problem) {
-        const current = { file: problem.file, line: problem.line };
-
-        return [current]
-            .concat(problem.files)
-            .filter(
-                location => location.file === problem.file && location.line > 0
-            )
-            .map(location => ({
-                line: location.line - 1,
-                message: problem.message,
-            }));
-    }
-
-    private suiteAsEvents(
-        test: TestSuiteNode | TestNode
-    ): (TestSuiteEvent | TestEvent)[] {
-        const events: any = [];
+    private nodeAsEvents(test: Node): (TestSuiteEvent | TestEvent)[] {
+        const events: (TestSuiteEvent | TestEvent)[] = [];
 
         if (test instanceof TestSuiteNode) {
             return events
-                .concat([this.asTestSuiteInfo(test)])
-                .concat(...test.children.map(test => this.suiteAsEvents(test)));
+                .concat([test.asTestSuiteEvent()])
+                .concat(...test.children.map(test => this.nodeAsEvents(test)));
         }
 
-        return events.concat([this.asTestInfo(test)]);
+        return events.concat([test.asTestEvent()]);
     }
 
-    private asTestSuiteInfo(
-        suite: TestSuiteNode | TestSuiteEvent
-    ): TestSuiteEvent {
-        if (suite instanceof TestSuiteNode) {
-            return {
-                type: 'suite',
-                suite: this.asId(suite),
-                state: 'running',
-            };
+    private asId(test: TestInfo) {
+        if (this.isNode(test)) {
+            return (test as Node).id;
         }
 
-        return Object.assign({}, suite, {
-            suite: this.asId(suite),
-        });
-    }
-
-    private asTestInfo(test: TestNode | TestEvent): TestEvent {
-        if (test instanceof TestNode) {
-            return {
-                type: 'test',
-                test: this.asId(test),
-                state: 'running',
-            };
-        }
-
-        return Object.assign({}, test, {
-            test: this.asId(test),
-        });
-    }
-
-    private asId(test: TestSuiteNode | TestInfo) {
-        if (
-            test instanceof TestSuiteNode ||
-            test instanceof TestNode ||
-            test.type === 'problem'
-        ) {
-            return test.id;
-        }
-
-        const value = test.type === 'suite' ? test.suite : test.test;
+        const value =
+            test.type === 'suite'
+                ? (test as TestSuiteEvent).suite
+                : (test as TestEvent).test;
 
         return typeof value === 'string' ? value : value.id;
+    }
+
+    private isNode(test: TestInfo) {
+        return (
+            test instanceof TestSuiteNode ||
+            test instanceof TestNode ||
+            test instanceof ProblemNode
+        );
     }
 }

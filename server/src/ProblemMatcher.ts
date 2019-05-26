@@ -1,3 +1,5 @@
+import { TestEvent } from './TestExplorer';
+
 export abstract class ProblemMatcher<T> {
     private problems: any[] = [];
     private problemIndex = -1;
@@ -76,22 +78,6 @@ export abstract class ProblemMatcher<T> {
     }
 }
 
-interface Location {
-    file: string;
-    line: number;
-}
-
-export interface Problem extends Location {
-    type: 'problem';
-    id: string;
-    namespace?: string;
-    class?: string;
-    method?: string;
-    status: Status;
-    message: string;
-    files: Location[];
-}
-
 export enum Status {
     UNKNOWN,
     PASSED,
@@ -103,7 +89,71 @@ export enum Status {
     WARNING,
 }
 
-export class PHPUnitOutput extends ProblemMatcher<Problem> {
+interface Location {
+    file: string;
+    line: number;
+}
+
+interface Problem extends Location {
+    type: 'problem';
+    id: string;
+    namespace?: string;
+    class?: string;
+    method?: string;
+    status: Status;
+    message: string;
+    files: Location[];
+}
+
+const states: Map<Status, TestEvent['state']> = new Map([
+    [Status.UNKNOWN, 'errored'],
+    [Status.PASSED, 'passed'],
+    [Status.SKIPPED, 'skipped'],
+    [Status.INCOMPLETE, 'skipped'],
+    [Status.FAILURE, 'failed'],
+    [Status.ERROR, 'errored'],
+    [Status.RISKY, 'failed'],
+    [Status.WARNING, 'failed'],
+]);
+
+export class ProblemNode implements Problem {
+    type: 'problem' = 'problem';
+    namespace = '';
+    class = '';
+    method = '';
+    file = '';
+    line = 0;
+    message = '';
+    files: Location[] = [];
+
+    constructor(public id: string, public status: Status) {}
+
+    asTestEvent(): TestEvent {
+        return {
+            type: 'test',
+            test: this.id,
+            state: this.getEventState() as TestEvent['state'],
+            message: this.message,
+            decorations: this.asTestDecorations(),
+        };
+    }
+
+    private asTestDecorations() {
+        return [{ file: this.file, line: this.line }]
+            .concat(this.files)
+            .filter(l => l.file === this.file && l.line > 0)
+            .map(location => ({
+                line: location.line - 1,
+                message: this.message,
+            }));
+    }
+
+    private getEventState(): TestEvent['state'] | undefined {
+        return states.get(this.status);
+    }
+}
+
+export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
     private currentStatus: Status = this.asStatus('failure');
 
     private status = [
@@ -130,7 +180,7 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
         ]);
     }
 
-    async parse(contents: string): Promise<Problem[]> {
+    async parse(contents: string): Promise<ProblemNode[]> {
         this.currentStatus = this.asStatus('failure');
         const problems = await super.parse(contents);
 
@@ -143,6 +193,7 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
                         loation.file
                     );
                 });
+
             if (!location) {
                 location = {
                     file: '',
@@ -163,23 +214,12 @@ export class PHPUnitOutput extends ProblemMatcher<Problem> {
         }
     }
 
-    protected async create(m: RegExpMatchArray): Promise<Problem> {
-        return {
-            type: 'problem',
-            id: m[1],
-            namespace: '',
-            class: '',
-            method: '',
-            status: this.currentStatus,
-            file: '',
-            line: 0,
-            message: '',
-            files: [],
-        };
+    protected async create(m: RegExpMatchArray): Promise<ProblemNode> {
+        return new ProblemNode(m[1], this.currentStatus);
     }
 
     protected async update(
-        problem: Problem,
+        problem: ProblemNode,
         m: RegExpMatchArray,
         index: number
     ) {

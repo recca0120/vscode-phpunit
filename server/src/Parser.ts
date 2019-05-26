@@ -3,8 +3,12 @@ import files from './Filesystem';
 import URI from 'vscode-uri';
 import { default as Engine } from 'php-parser';
 import { PathLike } from 'fs';
-import { TestInfo, TestSuiteInfo } from './TestExplorer';
-
+import {
+    TestInfo,
+    TestSuiteInfo,
+    TestEvent,
+    TestSuiteEvent,
+} from './TestExplorer';
 import {
     Range,
     TextDocument,
@@ -134,7 +138,7 @@ abstract class BaseTestNode {
 
 export class TestSuiteNode extends BaseTestNode
     implements TestSuiteInfo, ExportCodeLens {
-    type!: 'suite';
+    type: 'suite' = 'suite';
 
     constructor(
         node: any,
@@ -152,6 +156,14 @@ export class TestSuiteNode extends BaseTestNode
         return this.fullclass || '';
     }
 
+    asTestSuiteEvent(): TestSuiteEvent {
+        return {
+            type: 'suite',
+            suite: this.id,
+            state: 'running',
+        };
+    }
+
     exportCodeLens(): CodeLens[] {
         return [this.asCodeLens()].concat(
             this.children.map(test => test.asCodeLens())
@@ -160,7 +172,7 @@ export class TestSuiteNode extends BaseTestNode
 }
 
 export class TestNode extends BaseTestNode implements TestInfo {
-    type!: 'test';
+    type: 'test' = 'test';
 
     constructor(node: any, options?: TestOptions) {
         super(node, options);
@@ -172,6 +184,14 @@ export class TestNode extends BaseTestNode implements TestInfo {
 
     get label(): string {
         return this.method;
+    }
+
+    asTestEvent(): TestEvent {
+        return {
+            type: 'test',
+            test: this.id,
+            state: 'running',
+        };
     }
 }
 
