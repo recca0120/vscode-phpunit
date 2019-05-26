@@ -14,7 +14,7 @@ import {
     // WillSaveTextDocumentWaitUntilRequest,
 } from 'vscode-languageclient';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
-import { TestAdapterRegistrar } from 'vscode-test-adapter-util';
+import { TestAdapterRegistrar, Log } from 'vscode-test-adapter-util';
 import { LanguageClientAdapter } from './LanguageClientAdapter';
 import { CommandRequest } from './CommandRequest';
 // import { SocketOutputChannel } from './SocketOutputChannel';
@@ -85,10 +85,9 @@ export function activate(context: ExtensionContext) {
             if (clearOutpuOnRun) {
                 outputChannel.clear();
             }
-
-            outputChannel.show(true);
         });
     });
+
     // client.onReady().then(() => {
     //     const notify = new Notify(window);
 
@@ -106,6 +105,10 @@ export function activate(context: ExtensionContext) {
     //     });
     // });
 
+    const workspaceFolder = (workspace.workspaceFolders || [])[0];
+    const log = new Log('phpunit', workspaceFolder, 'PHPUnit Test Explorer');
+    context.subscriptions.push(log);
+
     const testExplorerExtension = extensions.getExtension<TestHub>(
         testExplorerExtensionId
     );
@@ -118,7 +121,8 @@ export function activate(context: ExtensionContext) {
             new TestAdapterRegistrar(
                 testHub,
                 workspaceFolder =>
-                    new LanguageClientAdapter(workspaceFolder, client)
+                    new LanguageClientAdapter(workspaceFolder, client, log),
+                log
             )
         );
     }

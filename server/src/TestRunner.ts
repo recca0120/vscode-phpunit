@@ -81,12 +81,11 @@ export class TestRunner {
 
     async doRun(args: string[] = [], options?: SpawnOptions) {
         this.lastArgs = args;
+        const command = await this.getCommand(args, options);
 
         return new TestResponse(
-            await this.process.run(
-                await this.getCommand(args, options),
-                options
-            ),
+            await this.process.run(command, options),
+            command,
             this.problemMatcher
         );
     }

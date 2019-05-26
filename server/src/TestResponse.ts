@@ -1,5 +1,6 @@
 import stripAnsi from 'strip-ansi';
 import { PHPUnitOutput, Problem, ProblemMatcher } from './ProblemMatcher';
+import { Command } from 'vscode-languageserver-protocol';
 // import {
 //     Diagnostic,
 //     DiagnosticSeverity,
@@ -23,9 +24,14 @@ export class TestResponse {
 
     constructor(
         output: string,
+        private command: Command | null = null,
         private problemMatcher: ProblemMatcher<any> = new PHPUnitOutput()
     ) {
         this.output = stripAnsi(output);
+    }
+
+    getCommand() {
+        return this.command;
     }
 
     async asProblem(): Promise<Problem[]> {

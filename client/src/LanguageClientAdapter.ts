@@ -10,6 +10,7 @@ import {
     TestEvent,
     RetireEvent,
 } from 'vscode-test-adapter-api';
+import { Log } from 'vscode-test-adapter-util';
 
 export class LanguageClientAdapter implements TestAdapter {
     private disposables: { dispose(): void }[] = [];
@@ -40,7 +41,8 @@ export class LanguageClientAdapter implements TestAdapter {
 
     constructor(
         public workspaceFolder: vscode.WorkspaceFolder,
-        private client: LanguageClient
+        private client: LanguageClient,
+        private log: Log
     ) {
         this.onTestLoadStartedEvent();
         this.onTestLoadFinishedEvent();
@@ -53,6 +55,8 @@ export class LanguageClientAdapter implements TestAdapter {
     }
 
     async load(): Promise<void> {
+        this.log.info('Loading tests');
+
         await this.client.onReady();
 
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
@@ -114,6 +118,8 @@ export class LanguageClientAdapter implements TestAdapter {
         await this.client.onReady();
 
         this.client.onRequest('TestRunStartedEvent', ({ tests, events }) => {
+            this.log.info(`Running tests ${JSON.stringify(tests)}`);
+
             this.testStatesEmitter.fire(<TestRunStartedEvent>{
                 type: 'started',
                 tests,
@@ -126,7 +132,9 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestRunFinishedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.client.onRequest('TestRunFinishedEvent', ({ events }) => {
+        this.client.onRequest('TestRunFinishedEvent', ({ events, command }) => {
+            this.log.info(`command: ${JSON.stringify(command)}`);
+
             this.updateEvents(events);
 
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{

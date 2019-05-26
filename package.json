@@ -5,7 +5,7 @@
     "icon": "img/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.50",
+    "version": "2.0.51",
     "preview": true,
     "repository": {
         "type": "git",
@@ -123,6 +123,16 @@
                     "type": "boolean",
                     "default": true,
                     "description": "True will clear the output when we run a new test. False will leave the output after every test."
+                },
+                "phpunit.logpanel": {
+                    "description": "write diagnotic logs to an output panel",
+                    "type": "boolean",
+                    "scope": "resource"
+                },
+                "phpunit.logfile": {
+                    "description": "write diagnostic logs to the given file",
+                    "type": "string",
+                    "scope": "resource"
                 }
             }
         },

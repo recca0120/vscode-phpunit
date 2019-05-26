@@ -1,3 +1,4 @@
+import { Command } from 'vscode-languageserver-protocol';
 import files from '../src/Filesystem';
 import { fixturePath } from './helpers';
 import { TestResponse, TestResult } from '../src/TestResponse';
@@ -5,10 +6,18 @@ import { Problem, Status } from '../src/ProblemMatcher';
 
 describe('TestResponse', () => {
     let testResponse: TestResponse;
+    const command: Command = {
+        title: '',
+        command: 'phpunit',
+        arguments: [],
+    };
 
     describe('PHPUnit', () => {
         it('assertion ok', () => {
-            testResponse = new TestResponse('OK (1 test, 1 assertion)');
+            testResponse = new TestResponse(
+                'OK (1 test, 1 assertion)',
+                command
+            );
             const result: TestResult = testResponse.getTestResult();
 
             expect(result.tests).toEqual(1);
@@ -16,7 +25,10 @@ describe('TestResponse', () => {
         });
 
         it('assertions ok', () => {
-            testResponse = new TestResponse('OK (2 tests, 2 assertions)');
+            testResponse = new TestResponse(
+                'OK (2 tests, 2 assertions)',
+                command
+            );
             const result: TestResult = testResponse.getTestResult();
 
             expect(result.tests).toEqual(2);
@@ -24,8 +36,11 @@ describe('TestResponse', () => {
         });
 
         it('assertions has errors', () => {
-            testResponse = new TestResponse(`ERRORS!
-Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incomplete: 1, Risky: 2.`);
+            testResponse = new TestResponse(
+                `ERRORS!
+Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incomplete: 1, Risky: 2.`,
+                command
+            );
             const result: TestResult = testResponse.getTestResult();
 
             expect(result).toEqual({
@@ -41,7 +56,7 @@ Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incom
         });
 
         it('no tests executed', () => {
-            testResponse = new TestResponse('No tests executed!');
+            testResponse = new TestResponse('No tests executed!', command);
             const result: TestResult = testResponse.getTestResult();
 
             expect(result.tests).toEqual(0);
@@ -51,7 +66,8 @@ Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incom
             testResponse = new TestResponse(
                 `OK, but incomplete, skipped, or risky tests!
 Tests: 3, Assertions: 2, Skipped: 1.
-                `
+                `,
+                command
             );
             const result: TestResult = testResponse.getTestResult();
 
@@ -71,7 +87,7 @@ Tests: 3, Assertions: 2, Skipped: 1.
 
         beforeAll(async () => {
             output = await files.get(fixturePath('test-result.txt'));
-            testResponse = new TestResponse(output);
+            testResponse = new TestResponse(output, command);
         });
 
         it('output', () => {
@@ -98,54 +114,4 @@ Tests: 3, Assertions: 2, Skipped: 1.
             });
         });
     });
-
-    // beforeAll(async () => {
-    //     testResponse = new TestResponse(output);
-    // });
-    // describe('Diagnostic', () => {
-    //     let diagnosticGroup: Map<string, Diagnostic[]>;
-    //     const expectedDiagnostic = () => {
-    //         return jasmine.objectContaining({
-    //             message: jasmine.any(String),
-    //             range: {
-    //                 end: {
-    //                     character: jasmine.any(Number),
-    //                     line: jasmine.any(Number),
-    //                 },
-    //                 start: {
-    //                     character: jasmine.any(Number),
-    //                     line: jasmine.any(Number),
-    //                 },
-    //             },
-    //             relatedInformation: jasmine.anything(),
-    //             severity: DiagnosticSeverity.Error,
-    //             source: 'PHPUnit',
-    //         });
-    //     };
-    //     beforeAll(async () => {
-    //         diagnosticGroup = await testResponse.asDiagnosticGroup();
-    //     });
-    //     it('Recca0120\\VSCode\\Tests\\CalculatorTest', () => {
-    //         const diagnostics: Diagnostic[] = diagnosticGroup.get(
-    //             projectPath('tests/CalculatorTest.php').toString()
-    //         );
-    //         expect(diagnostics).toEqual([
-    //             expectedDiagnostic(),
-    //             expectedDiagnostic(),
-    //         ]);
-    //     });
-    //     it('Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
-    //         const diagnostics: Diagnostic[] = diagnosticGroup.get(
-    //             projectPath('tests/AssertionsTest.php').toString()
-    //         );
-    //         expect(diagnostics).toEqual([
-    //             expectedDiagnostic(),
-    //             expectedDiagnostic(),
-    //             expectedDiagnostic(),
-    //             expectedDiagnostic(),
-    //             expectedDiagnostic(),
-    //             expectedDiagnostic(),
-    //         ]);
-    //     });
-    // });
 });

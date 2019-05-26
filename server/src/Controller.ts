@@ -254,6 +254,7 @@ export class Controller {
                 response,
                 await response.asProblem()
             ),
+            command: response.getCommand(),
         });
 
         this.connection.sendNotification(LogMessageNotification.type, {
