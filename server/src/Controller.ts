@@ -14,6 +14,7 @@ import {
     DidChangeWatchedFilesParams,
     CodeLens,
     TextDocument,
+    FileChangeType,
 } from 'vscode-languageserver';
 import { TestSuiteEvent, TestEvent } from './TestExplorer';
 import { Settings } from './Settings';
@@ -74,21 +75,36 @@ export class Controller {
     async detectChanges(
         change: DidChangeWatchedFilesParams | TextDocument
     ): Promise<CodeLens[]> {
-        const changes = TextDocument.is(change)
-            ? [
-                  Promise.resolve(
-                      this.suites.putTextDocument(change).get(change.uri)
-                  ),
-              ]
-            : change.changes.map(async event => {
-                  await this.suites.put(event.uri);
+        let changes = [];
+        if (TextDocument.is(change)) {
+            changes = [
+                Promise.resolve(
+                    this.suites.putTextDocument(change).get(change.uri)
+                ),
+            ];
+        } else {
+            changes = change.changes
+                .filter(event => {
+                    if (event.type !== FileChangeType.Deleted) {
+                        return true;
+                    }
 
-                  return await this.suites.get(event.uri);
-              });
+                    const suite = this.suites.get(event.uri);
+                    if (suite) {
+                        this.events.delete(suite);
+                        this.suites.delete(event.uri);
+                    }
 
-        const suites: (TestSuiteNode | undefined)[] = (await Promise.all(
-            changes
-        )).filter(suite => !!suite);
+                    return false;
+                })
+                .map(async event => {
+                    await this.suites.put(event.uri);
+
+                    return this.suites.get(event.uri);
+                });
+        }
+
+        const suites = (await Promise.all(changes)).filter(suite => !!suite);
 
         if (suites.length === 0) {
             return [];
