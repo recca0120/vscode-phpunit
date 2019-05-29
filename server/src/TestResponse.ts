@@ -34,7 +34,7 @@ export class TestResponse {
         return this.command;
     }
 
-    async asProblem(): Promise<ProblemNode[]> {
+    async asProblems(): Promise<ProblemNode[]> {
         return await this.problemMatcher.parse(this.output);
     }
 

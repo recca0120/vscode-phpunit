@@ -11,7 +11,7 @@ describe('ProblemMatcher', () => {
     let problems: any[] = [];
 
     function getProblem(id: string) {
-        return problems.find(problem => problem.id.indexOf(id) !== -1);
+        return problems.find(problem => problem.id === id);
     }
 
     beforeEach(async () => {
@@ -19,11 +19,12 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_isnt_same', () => {
-        const problem = getProblem('AssertionsTest::test_isnt_same');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_isnt_same';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_isnt_same',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_isnt_same',
@@ -50,12 +51,13 @@ describe('ProblemMatcher', () => {
     });
 
     it('addition_provider', () => {
-        const problem = getProblem('AssertionsTest::addition_provider');
+        const id =
+            'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id:
-                'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2 (1, 0, 2)',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'addition_provider',
@@ -72,11 +74,12 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_failed', () => {
-        const problem = getProblem('AssertionsTest::test_failed');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_failed',
@@ -93,11 +96,12 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_risky', () => {
-        const problem = getProblem('AssertionsTest::test_risky');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_risky';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_risky',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_risky',
@@ -114,11 +118,12 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_incomplete', () => {
-        const problem = getProblem('AssertionsTest::test_incomplete');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_incomplete';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_incomplete',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_incomplete',
@@ -135,11 +140,12 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_skipped', () => {
-        const problem = getProblem('AssertionsTest::test_skipped');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'AssertionsTest',
             method: 'test_skipped',
@@ -156,14 +162,13 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_sum_item_method_not_call', () => {
-        const problem = getProblem(
-            'CalculatorTest::test_sum_item_method_not_call'
-        );
+        const id =
+            'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id:
-                'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'CalculatorTest',
             method: 'test_sum_item_method_not_call',
@@ -181,12 +186,13 @@ describe('ProblemMatcher', () => {
     });
 
     it('test_throw_exception', () => {
-        const problem = getProblem('CalculatorTest::test_throw_exception');
+        const id =
+            'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception';
+        const problem = getProblem(id);
 
         expect(problem).toEqual({
             type: 'problem',
-            id:
-                'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+            id,
             namespace: 'Recca0120\\VSCode\\Tests',
             class: 'CalculatorTest',
             method: 'test_throw_exception',

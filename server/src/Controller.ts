@@ -1,6 +1,5 @@
 import files from './Filesystem';
 import { TestRunner, Params } from './TestRunner';
-import { ProblemNode } from './ProblemMatcher';
 import { SpawnOptions } from 'child_process';
 import { TestNode, TestSuiteNode } from './Parser';
 import { TestEventCollection } from './TestEventCollection';
@@ -267,10 +266,7 @@ export class Controller {
     private async sendTestRunFinishedEvent(response: TestResponse) {
         this.connection.sendRequest('TestRunFinishedEvent', {
             command: response.getCommand(),
-            events: this.changeEventsState(
-                response,
-                await response.asProblem()
-            ),
+            events: await this.changeEventsState(response),
         });
 
         this.connection.sendNotification(LogMessageNotification.type, {
@@ -281,7 +277,7 @@ export class Controller {
         return response;
     }
 
-    private changeEventsState(response: TestResponse, problems: ProblemNode[]) {
+    private async changeEventsState(response: TestResponse) {
         const result = response.getTestResult();
         const state = result.tests === 0 ? 'errored' : 'passed';
 
@@ -305,7 +301,7 @@ export class Controller {
 
         return this.events
             .put(events)
-            .put(problems)
+            .put(await response.asProblems())
             .where(test =>
                 events.some(
                     event => this.getEventId(test) === this.getEventId(event)

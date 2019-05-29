@@ -118,6 +118,7 @@ const states: Map<Status, TestEvent['state']> = new Map([
 
 export class ProblemNode implements Problem {
     type: 'problem' = 'problem';
+    id = '';
     namespace = '';
     class = '';
     method = '';
@@ -126,7 +127,15 @@ export class ProblemNode implements Problem {
     message = '';
     files: Location[] = [];
 
-    constructor(public id: string, public status: Status) {}
+    constructor(public status: Status) {}
+
+    setId(namespace: string, clazz: string, method: string) {
+        const fullname = [namespace, clazz].filter(name => !!name).join('\\');
+
+        this.id = `${fullname}::${method}`;
+
+        return this;
+    }
 
     asTestEvent(): TestEvent {
         return {
@@ -214,8 +223,8 @@ export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
         }
     }
 
-    protected async create(m: RegExpMatchArray): Promise<ProblemNode> {
-        return new ProblemNode(m[1], this.currentStatus);
+    protected async create(): Promise<ProblemNode> {
+        return new ProblemNode(this.currentStatus);
     }
 
     protected async update(
@@ -233,8 +242,9 @@ export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
                     .substr(m[2].lastIndexOf('\\'))
                     .replace(/^\\/, '');
 
-                problem.id = m[1];
                 problem.method = m[3];
+
+                problem.setId(problem.namespace, problem.class, problem.method);
 
                 break;
             case 1:

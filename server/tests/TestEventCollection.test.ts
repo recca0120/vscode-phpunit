@@ -1,7 +1,9 @@
-import { projectPath } from './helpers';
+import { PHPUnitOutput, ProblemNode } from './../src/ProblemMatcher';
+import { projectPath, fixturePath } from './helpers';
 import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
 import { TestEventCollection } from './../src/TestEventCollection';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
+import files from '../src/Filesystem';
 
 describe('TestEventCollection', () => {
     const path = projectPath('');
@@ -86,6 +88,36 @@ describe('TestEventCollection', () => {
                 test: id,
                 state: 'passed',
             });
+        });
+    });
+
+    describe('put problems', () => {
+        let problems: ProblemNode[];
+
+        function findProblem(id: string) {
+            return problems.filter(problem => problem.id === id)[0];
+        }
+
+        beforeAll(async () => {
+            problems = await new PHPUnitOutput().parse(
+                await files.get(fixturePath('test-result.txt'))
+            );
+        });
+
+        it('put problem', () => {
+            const id =
+                'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider';
+            const problem = findProblem(id);
+
+            events.put(problem);
+
+            expect(events.get(id)).toEqual(
+                jasmine.objectContaining({
+                    type: 'test',
+                    test: id,
+                    state: 'failed',
+                })
+            );
         });
     });
 });

@@ -2,7 +2,7 @@ import { Command } from 'vscode-languageserver-protocol';
 import files from '../src/Filesystem';
 import { fixturePath } from './helpers';
 import { TestResponse, TestResult } from '../src/TestResponse';
-import { Problem, Status } from '../src/ProblemMatcher';
+import { ProblemNode, Status } from '../src/ProblemMatcher';
 
 describe('TestResponse', () => {
     let testResponse: TestResponse;
@@ -83,7 +83,7 @@ Tests: 3, Assertions: 2, Skipped: 1.
 
     describe('problems', () => {
         let output = '';
-        let problems: Problem[];
+        let problems: ProblemNode[];
 
         beforeAll(async () => {
             output = await files.get(fixturePath('test-result.txt'));
@@ -95,7 +95,7 @@ Tests: 3, Assertions: 2, Skipped: 1.
         });
 
         beforeAll(async () => {
-            problems = await testResponse.asProblem();
+            problems = await testResponse.asProblems();
         });
 
         it('test_sum_item_method_not_call', () => {
