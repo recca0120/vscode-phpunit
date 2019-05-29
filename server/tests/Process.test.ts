@@ -47,4 +47,15 @@ describe('Process', () => {
             done();
         }, 100);
     });
+
+    it('command not found', async () => {
+        const process = new Process();
+        const response = await process.run({
+            title: 'test',
+            command: 'abc',
+            arguments: ['def', 'xyz'],
+        });
+
+        expect(response).toEqual('spawn abc ENOENT');
+    });
 });

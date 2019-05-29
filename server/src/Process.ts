@@ -22,24 +22,24 @@ export class Process {
                 return;
             }
 
-            if (this.process.stdout) {
-                this.process.stdout.on('data', data => {
-                    buffers.push(data);
-                });
-            }
+            this.process.stdout!.on('data', data => {
+                buffers.push(data);
+            });
 
-            if (this.process.stderr) {
-                this.process.stderr.on('data', data => {
-                    buffers.push(data);
-                });
-            }
+            this.process.stderr!.on('data', data => {
+                buffers.push(data);
+            });
+
+            this.process.on('error', (err: any) => {
+                resolve(err.message);
+            });
 
             this.process.on('close', () => {
-                resolve(
-                    buffers.reduce((response, buffer) => {
-                        return (response += buffer.toString());
-                    }, '')
-                );
+                const output = buffers.reduce((response, buffer) => {
+                    return (response += buffer.toString());
+                }, '');
+
+                resolve(output);
             });
         });
     }

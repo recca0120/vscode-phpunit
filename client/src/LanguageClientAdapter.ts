@@ -135,6 +135,7 @@ export class LanguageClientAdapter implements TestAdapter {
         this.client.onRequest('TestRunFinishedEvent', ({ events, command }) => {
             this.log.info(`command: ${JSON.stringify(command)}`);
             this.log.info(`events: ${JSON.stringify(events)}`);
+
             this.updateEvents(events);
 
             this.testStatesEmitter.fire(<TestRunFinishedEvent>{
