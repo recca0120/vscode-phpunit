@@ -1,4 +1,5 @@
 import { Controller } from './Controller';
+import { Settings } from './Settings';
 import { Snippets } from './Snippets';
 import { TestEventCollection } from './TestEventCollection';
 import { TestRunner } from './TestRunner';
@@ -18,7 +19,6 @@ import {
     // TextDocumentSaveReason,
     CompletionItem,
 } from 'vscode-languageserver';
-import { Settings } from './Settings';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

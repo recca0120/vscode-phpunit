@@ -1,8 +1,8 @@
-import { PHPUnitOutput, ProblemMatcher } from './ProblemMatcher';
 import files from './Filesystem';
 import URI from 'vscode-uri';
 import { Command } from 'vscode-languageserver-protocol';
 import { PathLike } from 'fs';
+import { PHPUnitOutput, ProblemMatcher } from './ProblemMatcher';
 import { Process } from './Process';
 import { SpawnOptions } from 'child_process';
 import { TestResponse } from './TestResponse';

@@ -1,9 +1,9 @@
-import { TestEventCollection } from './../src/TestEventCollection';
-import { TestSuiteCollection } from './../src/TestSuiteCollection';
 import { Controller } from '../src/Controller';
-import { TestRunner } from '../src/TestRunner';
 import { projectPath } from './helpers';
-import { TestSuiteEvent, TestEvent } from '../src/TestExplorer';
+import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
+import { TestEventCollection } from './../src/TestEventCollection';
+import { TestRunner } from '../src/TestRunner';
+import { TestSuiteCollection } from './../src/TestSuiteCollection';
 
 describe('Controller Test', () => {
     const path = projectPath('');

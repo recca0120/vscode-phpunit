@@ -1,9 +1,9 @@
-import Parser, { TestSuiteNode, TestNode } from './Parser';
-import URI from 'vscode-uri';
 import files from './Filesystem';
+import Parser, { TestNode, TestSuiteNode } from './Parser';
+import URI from 'vscode-uri';
 import { PathLike } from 'fs';
+import { TestInfo, TestSuiteInfo } from './TestExplorer';
 import { TextDocument } from 'vscode-languageserver-protocol';
-import { TestSuiteInfo, TestInfo } from './TestExplorer';
 
 export class TestSuiteCollection {
     private suites: Map<string, TestSuiteNode> = new Map<

@@ -1,8 +1,10 @@
 import files from './Filesystem';
-import { TestRunner, Params } from './TestRunner';
+import { Params, TestRunner } from './TestRunner';
+import { Settings } from './Settings';
 import { SpawnOptions } from 'child_process';
-import { TestNode, TestSuiteNode } from './Parser';
+import { TestEvent, TestSuiteEvent } from './TestExplorer';
 import { TestEventCollection } from './TestEventCollection';
+import { TestNode, TestSuiteNode } from './Parser';
 import { TestResponse } from './TestResponse';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import {
@@ -15,8 +17,6 @@ import {
     TextDocument,
     FileChangeType,
 } from 'vscode-languageserver';
-import { TestSuiteEvent, TestEvent } from './TestExplorer';
-import { Settings } from './Settings';
 
 export class Controller {
     [index: string]: any;

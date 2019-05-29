@@ -1,8 +1,8 @@
 import _files, { Filesystem } from '../src/filesystem';
-import { Process } from '../src/process';
-import { TestRunner } from '../src/TestRunner';
 import { PHPUnitOutput } from '../src/ProblemMatcher';
+import { Process } from '../src/process';
 import { TestResponse } from '../src/TestResponse';
+import { TestRunner } from '../src/TestRunner';
 
 describe('TestRunner', () => {
     let process: Process;

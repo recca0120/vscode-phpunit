@@ -129,10 +129,12 @@ export class ProblemNode implements Problem {
 
     constructor(public status: Status) {}
 
-    setId(namespace: string, clazz: string, method: string) {
-        const fullname = [namespace, clazz].filter(name => !!name).join('\\');
+    updateId() {
+        const qualifiedClassName = [this.namespace, this.class]
+            .filter(name => !!name)
+            .join('\\');
 
-        this.id = `${fullname}::${method}`;
+        this.id = `${qualifiedClassName}::${this.method}`;
 
         return this;
     }
@@ -244,7 +246,7 @@ export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
 
                 problem.method = m[3];
 
-                problem.setId(problem.namespace, problem.class, problem.method);
+                problem.updateId();
 
                 break;
             case 1:

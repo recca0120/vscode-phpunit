@@ -1,6 +1,6 @@
 import stripAnsi from 'strip-ansi';
-import { PHPUnitOutput, ProblemNode, ProblemMatcher } from './ProblemMatcher';
 import { Command } from 'vscode-languageserver-protocol';
+import { PHPUnitOutput, ProblemMatcher, ProblemNode } from './ProblemMatcher';
 // import {
 //     Diagnostic,
 //     DiagnosticSeverity,

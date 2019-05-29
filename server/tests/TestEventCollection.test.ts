@@ -1,9 +1,9 @@
+import files from '../src/Filesystem';
+import { fixturePath, projectPath } from './helpers';
 import { PHPUnitOutput, ProblemNode } from './../src/ProblemMatcher';
-import { projectPath, fixturePath } from './helpers';
 import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
 import { TestEventCollection } from './../src/TestEventCollection';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
-import files from '../src/Filesystem';
 
 describe('TestEventCollection', () => {
     const path = projectPath('');

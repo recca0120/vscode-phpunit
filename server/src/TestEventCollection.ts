@@ -1,6 +1,6 @@
 import { ProblemNode } from './ProblemMatcher';
-import { TestNode, TestSuiteNode } from './Parser';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
+import { TestNode, TestSuiteNode } from './Parser';
 
 export declare type Node = TestSuiteNode | TestNode | ProblemNode;
 

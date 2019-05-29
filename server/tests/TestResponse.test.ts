@@ -1,8 +1,8 @@
-import { Command } from 'vscode-languageserver-protocol';
 import files from '../src/Filesystem';
+import { Command } from 'vscode-languageserver-protocol';
 import { fixturePath } from './helpers';
-import { TestResponse, TestResult } from '../src/TestResponse';
 import { ProblemNode, Status } from '../src/ProblemMatcher';
+import { TestResponse, TestResult } from '../src/TestResponse';
 
 describe('TestResponse', () => {
     let testResponse: TestResponse;
