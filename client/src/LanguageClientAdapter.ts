@@ -61,7 +61,7 @@ export class LanguageClientAdapter implements TestAdapter {
 
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-        this.client.sendRequest('TestLoadStartedEvent');
+        this.client.sendRequest('TestLoadStartedEvent', {});
     }
 
     async run(tests: string[]): Promise<void> {

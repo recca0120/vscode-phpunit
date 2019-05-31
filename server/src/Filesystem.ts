@@ -1,10 +1,12 @@
 import glob from 'glob';
-import URI from 'vscode-uri';
+import URI, { setUriThrowOnMissingScheme } from 'vscode-uri';
 import { access, createReadStream, PathLike, readFile, writeFile } from 'fs';
 import { createInterface } from 'readline';
 import { dirname, join } from 'path';
 import { Location, Position, Range } from 'vscode-languageserver-protocol';
 import { SpawnOptions } from 'child_process';
+
+setUriThrowOnMissingScheme(false);
 
 export class Env {
     private delimiter = ':';
