@@ -18,7 +18,7 @@ export class TestSuiteCollection {
 
         const files = await this._files.glob('**/*.php', {
             absolute: true,
-            ignore: 'vendor/**',
+            ignore: '**/vendor/**',
             cwd: uri.fsPath,
             strict: false,
         });
