@@ -5,7 +5,7 @@
     "icon": "img/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.55",
+    "version": "2.0.56",
     "preview": true,
     "repository": {
         "type": "git",
@@ -25,7 +25,7 @@
         "language server protocol"
     ],
     "engines": {
-        "vscode": "^1.26.0"
+        "vscode": "^1.30.0"
     },
     "activationEvents": [
         "*"
@@ -148,7 +148,8 @@
         "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run clean && npm run compile",
         "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
         "compile": "npm run compile:client && npm run compile:server",
-        "compile:client": "tsc -b ./client/tsconfig.json",
+        "compile:client": "webpack --mode production --config ./client/webpack.config.js",
+        "_compile:client": "tsc -b ./client/tsconfig.json",
         "compile:server": "webpack --mode production --config ./server/webpack.config.js",
         "watch:client": "tsc -b -w ./client/tsconfig.json",
         "_watch:client": "webpack --mode none --config ./client/webpack.config.js --watch",
