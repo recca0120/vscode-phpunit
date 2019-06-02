@@ -61,7 +61,7 @@ export class LanguageClientAdapter implements TestAdapter {
 
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-        this.client.sendRequest('TestLoadStartedEvent', {});
+        this.client.sendRequest('TestLoadStartedEvent');
     }
 
     async run(tests: string[]): Promise<void> {
@@ -92,9 +92,9 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestLoadStartedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.client.onRequest('TestLoadStartedEvent', () => {
-            this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
-        });
+        this.client.onRequest('TestLoadStartedEvent', () =>
+            this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' })
+        );
     }
 
     private async onTestLoadFinishedEvent(): Promise<void> {
