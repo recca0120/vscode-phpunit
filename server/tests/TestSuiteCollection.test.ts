@@ -4,7 +4,8 @@ import { TestSuiteCollection } from '../src/TestSuiteCollection';
 import { TextDocument } from 'vscode-languageserver-protocol';
 
 describe('TestSuiteCollection', () => {
-    const path = projectPath('');
+    const cwd = projectPath('').fsPath;
+    const pattern = '**/*.php';
     const suites = new TestSuiteCollection();
     const getLabelById = function(id: string) {
         return id;
@@ -18,12 +19,16 @@ describe('TestSuiteCollection', () => {
         let items: any[];
 
         beforeAll(async () => {
-            items = (await suites.load(path)).all().map(suite => {
-                return {
-                    id: suite.id,
-                    label: suite.label,
-                };
-            });
+            items = (await suites.load(pattern, {
+                cwd: cwd,
+            }))
+                .all()
+                .map(suite => {
+                    return {
+                        id: suite.id,
+                        label: suite.label,
+                    };
+                });
         });
 
         it('Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
@@ -105,7 +110,7 @@ describe('TestSuiteCollection', () => {
     });
 
     it('find test suite', async () => {
-        await suites.load(path);
+        await suites.load(pattern, { cwd: cwd });
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
         const test = suites.find(id);
 
@@ -117,7 +122,7 @@ describe('TestSuiteCollection', () => {
     });
 
     it('find test', async () => {
-        await suites.load(path);
+        await suites.load(pattern, { cwd: cwd });
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
 
         const test = suites.find(id);
@@ -130,7 +135,7 @@ describe('TestSuiteCollection', () => {
     });
 
     it('where test', async () => {
-        await suites.load(path);
+        await suites.load(pattern, { cwd: cwd });
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
 
         const tests = suites.where(test => {

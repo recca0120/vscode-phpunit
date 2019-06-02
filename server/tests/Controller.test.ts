@@ -1,3 +1,4 @@
+import { Configuration } from './../src/Configuration';
 import { Controller } from '../src/Controller';
 import { projectPath } from './helpers';
 import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
@@ -6,7 +7,8 @@ import { TestRunner } from '../src/TestRunner';
 import { TestSuiteCollection } from './../src/TestSuiteCollection';
 
 describe('Controller Test', () => {
-    const path = projectPath('');
+    const cwd = projectPath('').fsPath;
+    const pattern = '**/*.php';
 
     const connection: any = {
         sendNotification: () => {},
@@ -18,16 +20,23 @@ describe('Controller Test', () => {
         },
     };
 
+    const config = new Configuration(connection);
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
     const testRunner = new TestRunner();
-    const spawnOptions = { cwd: path.fsPath };
-    const controller = new Controller(connection, suites, events, testRunner);
+    const spawnOptions = { cwd: cwd };
+    const controller = new Controller(
+        connection,
+        config,
+        suites,
+        events,
+        testRunner
+    );
 
     beforeAll(async () => {
         controller.setSpawnOptions(spawnOptions);
 
-        await suites.load(path);
+        await suites.load(pattern, { cwd: cwd });
     });
 
     describe('executeCommand', () => {

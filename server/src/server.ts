@@ -1,5 +1,5 @@
+import { Configuration } from './Configuration';
 import { Controller } from './Controller';
-import { Settings } from './Settings';
 import { Snippets } from './Snippets';
 import { TestEventCollection } from './TestEventCollection';
 import { TestRunner } from './TestRunner';
@@ -29,10 +29,12 @@ let connection = createConnection(ProposedFeatures.all);
 let documents: TextDocuments = new TextDocuments();
 
 const snippets = new Snippets();
+
+const config = new Configuration(connection);
 const suites = new TestSuiteCollection();
 const events = new TestEventCollection();
 const runner = new TestRunner();
-const controller = new Controller(connection, suites, events, runner);
+const controller = new Controller(connection, config, suites, events, runner);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
@@ -43,17 +45,20 @@ connection.onInitialize((params: InitializeParams) => {
 
     // Does the client support the `workspace/configuration` request?
     // If not, we will fall back using global settings
-    hasConfigurationCapability = !!(
-        capabilities.workspace && !!capabilities.workspace.configuration
-    );
+    hasConfigurationCapability =
+        !!capabilities.workspace && !!capabilities.workspace.configuration;
+
     hasWorkspaceFolderCapability = !!(
         capabilities.workspace && !!capabilities.workspace.workspaceFolders
     );
+
     // hasDiagnosticRelatedInformationCapability = !!(
     //     capabilities.textDocument &&
     //     capabilities.textDocument.publishDiagnostics &&
     //     capabilities.textDocument.publishDiagnostics.relatedInformation
     // );
+
+    config.setConfigurationCapability(hasConfigurationCapability);
 
     return {
         capabilities: {
@@ -71,7 +76,7 @@ connection.onInitialize((params: InitializeParams) => {
     };
 });
 
-connection.onInitialized(() => {
+connection.onInitialized(async () => {
     if (hasConfigurationCapability) {
         // Register for all configuration changes.
         connection.client.register(
@@ -81,34 +86,26 @@ connection.onInitialized(() => {
     }
     if (hasWorkspaceFolderCapability) {
         connection.workspace.onDidChangeWorkspaceFolders(async () => {
-            // connection.console.log('Workspace folder change event received.');
+            connection.console.log('Workspace folder change event received.');
+            await config.update();
         });
     }
+
+    await config.update();
 });
 
-// Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<Settings>> = new Map();
-
-connection.onDidChangeConfiguration(() => {
-    // if (hasConfigurationCapability) {
-    //     // Reset all cached document settings
-    //     documentSettings.clear();
-    // } else {
-    //     globalSettings = <Settings>(change.settings.phpunit || defaultSettings);
-    // }
+connection.onDidChangeConfiguration(async () => {
+    await config.update();
 });
 
 // Only keep settings for open documents
-documents.onDidClose(e => {
-    documentSettings.delete(e.document.uri);
+documents.onDidClose(() => {
     // connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 });
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(() => {
-    // validateTextDocument(change.document);
-});
+documents.onDidChangeContent(() => {});
 
 connection.onDidChangeWatchedFiles(change => {
     controller.detectChanges(change);
@@ -134,20 +131,6 @@ connection.onCodeLens(async params => {
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
     controller.executeCommand(params);
-    //     if (textDocument) {
-    //         connection.sendRequest(WillSaveTextDocumentWaitUntilRequest.type, {
-    //             textDocument,
-    //             reason: TextDocumentSaveReason.Manual,
-    //         });
-    //     }
-    //     (await response.asDiagnosticGroup(
-    //         hasDiagnosticRelatedInformationCapability
-    //     )).forEach((diagnostics, uri) => {
-    //         connection.sendDiagnostics({
-    //             uri,
-    //             diagnostics,
-    //         });
-    //     });
 });
 
 /*

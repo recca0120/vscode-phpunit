@@ -6,12 +6,13 @@ import { TestEventCollection } from './../src/TestEventCollection';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
 describe('TestEventCollection', () => {
-    const path = projectPath('');
+    const cwd = projectPath('').fsPath;
+    const pattern = '**/*.php';
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
 
     beforeAll(async () => {
-        await suites.load(path);
+        await suites.load(pattern, { cwd: cwd });
     });
 
     it('instance', () => {

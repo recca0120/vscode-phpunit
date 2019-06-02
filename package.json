@@ -5,7 +5,7 @@
     "icon": "img/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.57",
+    "version": "2.0.58",
     "preview": true,
     "repository": {
         "type": "git",
@@ -89,12 +89,6 @@
                     "default": 100,
                     "description": "Controls the maximum number of problems produced by the server."
                 },
-                "phpunit.port": {
-                    "type": "number",
-                    "default": 7000,
-                    "scope": "window",
-                    "description": "The WebSocket port to stream LSP log data into."
-                },
                 "phpunit.trace.server": {
                     "scope": "window",
                     "type": "string",
@@ -105,6 +99,16 @@
                     ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the language server."
+                },
+                "phpunit.logpanel": {
+                    "description": "write diagnotic logs to an output panel",
+                    "type": "boolean",
+                    "scope": "resource"
+                },
+                "phpunit.logfile": {
+                    "description": "write diagnostic logs to the given file",
+                    "type": "string",
+                    "scope": "resource"
                 },
                 "phpunit.php": {
                     "type": "string",
@@ -119,20 +123,22 @@
                     "default": [],
                     "description": "Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist"
                 },
+                "phpunit.files": {
+                    "description": "The glob(s) describing the location of your test files (relative to the workspace folder)",
+                    "type": [
+                        "string",
+                        "array"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": "{test,tests}/**/*Test.php",
+                    "scope": "resource"
+                },
                 "phpunit.clearOutputOnRun": {
                     "type": "boolean",
                     "default": true,
                     "description": "True will clear the output when we run a new test. False will leave the output after every test."
-                },
-                "phpunit.logpanel": {
-                    "description": "write diagnotic logs to an output panel",
-                    "type": "boolean",
-                    "scope": "resource"
-                },
-                "phpunit.logfile": {
-                    "description": "write diagnostic logs to the given file",
-                    "type": "string",
-                    "scope": "resource"
                 }
             }
         },

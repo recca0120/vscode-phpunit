@@ -25,20 +25,22 @@ export class TestRunner {
         private _files = files
     ) {}
 
-    setPhpBinary(phpBinary: PathLike | URI) {
-        this.phpBinary = this._files.asUri(phpBinary).fsPath;
+    setPhpBinary(phpBinary: PathLike | URI | undefined) {
+        this.phpBinary = phpBinary ? this._files.asUri(phpBinary).fsPath : '';
 
         return this;
     }
 
-    setPhpUnitBinary(phpUnitBinary: PathLike | URI) {
-        this.phpUnitBinary = this._files.asUri(phpUnitBinary).fsPath;
+    setPhpUnitBinary(phpUnitBinary: PathLike | URI | undefined) {
+        this.phpUnitBinary = phpUnitBinary
+            ? this._files.asUri(phpUnitBinary).fsPath
+            : '';
 
         return this;
     }
 
-    setArgs(args: string[]) {
-        this.args = args;
+    setArgs(args: string[] | undefined) {
+        this.args = args || [];
 
         return this;
     }

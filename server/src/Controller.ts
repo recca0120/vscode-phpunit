@@ -1,6 +1,6 @@
 import files from './Filesystem';
+import { Configuration } from './Configuration';
 import { Params, TestRunner } from './TestRunner';
-import { Settings } from './Settings';
 import { SpawnOptions } from 'child_process';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
 import { TestEventCollection } from './TestEventCollection';
@@ -16,11 +16,10 @@ import {
     CodeLens,
     TextDocument,
     FileChangeType,
+    FileEvent,
 } from 'vscode-languageserver';
 
 export class Controller {
-    [index: string]: any;
-
     public commands = [
         'phpunit.lsp.load',
         'phpunit.lsp.run-all',
@@ -32,6 +31,7 @@ export class Controller {
 
     constructor(
         private connection: Connection,
+        private config: Configuration,
         private suites: TestSuiteCollection,
         private events: TestEventCollection,
         private testRunner: TestRunner,
@@ -76,31 +76,17 @@ export class Controller {
     ): Promise<CodeLens[]> {
         let changes = [];
         if (TextDocument.is(change)) {
-            changes = [
+            changes.push(
                 Promise.resolve(
                     this.suites.putTextDocument(change).get(change.uri)
-                ),
-            ];
+                )
+            );
         } else {
             changes = change.changes
-                .filter(event => {
-                    if (event.type !== FileChangeType.Deleted) {
-                        return true;
-                    }
-
-                    const suite = this.suites.get(event.uri);
-                    if (suite) {
-                        this.events.delete(suite);
-                        this.suites.delete(event.uri);
-                    }
-
-                    return false;
-                })
-                .map(async event => {
-                    await this.suites.put(event.uri);
-
-                    return this.suites.get(event.uri);
-                });
+                .filter(event => this.filterFileChanged(event))
+                .map(async event =>
+                    (await this.suites.put(event.uri)).get(event.uri)
+                );
         }
 
         const suites = (await Promise.all(changes)).filter(suite => !!suite);
@@ -116,26 +102,6 @@ export class Controller {
         this.sendLoadFinishedEvent({ started: false });
 
         return codeLens;
-    }
-
-    setSettings(settings: Settings | undefined) {
-        if (!settings) {
-            return this;
-        }
-
-        if (settings.php) {
-            this.testRunner.setPhpBinary(settings.php);
-        }
-
-        if (settings.phpunit) {
-            this.testRunner.setPhpBinary(settings.phpunit);
-        }
-
-        if (settings.args) {
-            this.testRunner.setArgs(settings.args);
-        }
-
-        return this;
     }
 
     async executeCommand(params: ExecuteCommandParams) {
@@ -164,12 +130,12 @@ export class Controller {
         tests: (TestSuiteNode | TestNode)[],
         rerun = false
     ) {
-        const [settings] = await Promise.all([
-            this.connection.workspace.getConfiguration('phpunit'),
-            this.sendTestRunStartedEvent(tests),
-        ]);
+        await this.sendTestRunStartedEvent(tests);
 
-        this.setSettings(settings);
+        this.testRunner
+            .setPhpBinary(this.config.php)
+            .setPhpUnitBinary(this.config.phpunit)
+            .setArgs(this.config.args);
 
         return rerun === true
             ? await this.testRunner.rerun(params, this.spawnOptions)
@@ -247,7 +213,10 @@ export class Controller {
         this.events.clear();
 
         await this.connection.sendRequest('TestLoadFinishedEvent', {
-            suite: (await this.suites.load(this.spawnOptions.cwd)).tree(),
+            suite: (await this.suites.load(this.config.files, {
+                ignore: '**/vendor/**',
+                cwd: this.spawnOptions.cwd,
+            })).tree(),
             started: params.started,
         });
     }
@@ -307,6 +276,20 @@ export class Controller {
                     event => this.getEventId(test) === this.getEventId(event)
                 )
             );
+    }
+
+    private filterFileChanged(event: FileEvent) {
+        if (event.type !== FileChangeType.Deleted) {
+            return true;
+        }
+
+        const suite = this.suites.get(event.uri);
+        if (suite) {
+            this.events.delete(suite);
+            this.suites.delete(event.uri);
+        }
+
+        return false;
     }
 
     private getEventId(event: TestSuiteEvent | TestEvent) {

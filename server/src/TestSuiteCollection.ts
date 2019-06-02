@@ -1,6 +1,7 @@
 import files from './Filesystem';
 import Parser, { TestNode, TestSuiteNode } from './Parser';
 import URI from 'vscode-uri';
+import { IOptions } from 'glob';
 import { PathLike } from 'fs';
 import { TestInfo, TestSuiteInfo } from './TestExplorer';
 import { TextDocument } from 'vscode-languageserver-protocol';
@@ -13,15 +14,16 @@ export class TestSuiteCollection {
 
     constructor(private parser = new Parser(), private _files = files) {}
 
-    async load(uri: PathLike | URI = process.cwd()) {
-        uri = this._files.asUri(uri);
-
-        const files = await this._files.glob('**/*.php', {
+    async load(pattern: string, options: IOptions = { cwd: process.cwd() }) {
+        const defaults = {
             absolute: true,
-            ignore: '**/vendor/**',
-            cwd: uri.fsPath,
             strict: false,
-        });
+        };
+
+        const files = await this._files.glob(
+            pattern,
+            Object.assign(defaults, options)
+        );
 
         (await Promise.all(
             files.map(async file => [file, await this._files.get(file)])
