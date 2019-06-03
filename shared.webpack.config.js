@@ -24,6 +24,10 @@ module.exports = function withDefaults( /**@type WebpackConfig*/ extConfig) {
             mainFields: ['module', 'main'],
             extensions: ['.ts', '.js'] // support ts-files and js-files
         },
+        devtool: 'source-map',
+        externals: {
+            vscode: 'commonjs vscode', // ignored because it doesn't exist
+        },
         module: {
             rules: [{
                 test: /\.ts$/,
@@ -40,18 +44,15 @@ module.exports = function withDefaults( /**@type WebpackConfig*/ extConfig) {
                 }]
             }]
         },
-        externals: {
-            'vscode': 'commonjs vscode', // ignored because it doesn't exist
-        },
         output: {
             // all output goes into `dist`.
             // packaging depends on that and this must always be like it
             filename: '[name].js',
             path: path.join(extConfig.context, 'out'),
-            libraryTarget: "commonjs",
+            libraryTarget: "commonjs2",
+            devtoolModuleFilenameTemplate: "../[resource-path]",
         },
         // yes, really source maps
-        devtool: 'source-map'
     };
 
     return merge(defaultConfig, extConfig);

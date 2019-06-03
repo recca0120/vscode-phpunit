@@ -6,7 +6,6 @@
         "strict": true,
         "outDir": "out",
         "rootDir": "src",
-        "lib": ["es6"],
         "sourceMap": true
     },
     "include": ["src"],
