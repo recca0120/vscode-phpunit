@@ -212,15 +212,11 @@ export class Controller {
             : line <= end;
     }
 
-    private sendLoadStartedEvent() {
-        this.connection.sendRequest('TestLoadStartedEvent');
-    }
-
     private async sendLoadFinishedEvent() {
+        this.connection.sendRequest('TestLoadStartedEvent');
+
         this.suites.clear();
         this.events.clear();
-
-        this.sendLoadStartedEvent();
 
         this.connection.sendRequest('TestLoadFinishedEvent', {
             suite: (await this.suites.load(this.config.files, {
@@ -272,7 +268,6 @@ export class Controller {
                 }
 
                 event.state = state;
-
                 if (state === 'errored') {
                     event.message = response.toString();
                 }
@@ -280,14 +275,12 @@ export class Controller {
                 return event;
             });
 
+        const eventIds = events.map(event => this.getEventId(event));
+
         return this.events
             .put(events)
             .put(await response.asProblems())
-            .where(test =>
-                events.some(
-                    event => this.getEventId(test) === this.getEventId(event)
-                )
-            );
+            .where(test => eventIds.includes(this.getEventId(test)));
     }
 
     private filterFileChanged(event: FileEvent) {
