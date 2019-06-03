@@ -1,3 +1,4 @@
+import { Configuration } from './Configuration';
 import * as path from 'path';
 import {
     ExtensionContext,
@@ -16,7 +17,7 @@ import {
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { TestAdapterRegistrar, Log } from 'vscode-test-adapter-util';
 import { LanguageClientAdapter } from './LanguageClientAdapter';
-import { CommandRequest } from './CommandRequest';
+import { LanguageClientController } from './LanguageClientController';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 // import { Notify } from './Notify';
 
@@ -69,41 +70,15 @@ export function activate(context: ExtensionContext) {
         clientOptions
     );
 
-    const commandRequest = new CommandRequest(client, commands);
-    context.subscriptions.push(commandRequest.runAll());
-    context.subscriptions.push(commandRequest.rerun());
-    context.subscriptions.push(commandRequest.runFile());
-    context.subscriptions.push(commandRequest.runTestAtCursor());
-    context.subscriptions.push(commandRequest.cancel());
+    const config = new Configuration(workspace);
+    const controller = new LanguageClientController(
+        client,
+        config,
+        outputChannel,
+        commands
+    );
 
-    client.onReady().then(() => {
-        client.onNotification('TestRunStartedEvent', () => {
-            const clearOutpuOnRun = workspace
-                .getConfiguration('phpunit')
-                .get('clearOutputOnRun', true);
-
-            if (clearOutpuOnRun) {
-                outputChannel.clear();
-            }
-        });
-    });
-
-    // client.onReady().then(() => {
-    //     const notify = new Notify(window);
-
-    //     client.onRequest(WillSaveTextDocumentWaitUntilRequest.type, () => {
-    //         if (!window.activeTextEditor || !window.activeTextEditor.document) {
-    //             return;
-    //         }
-    //         window.activeTextEditor.document.save();
-
-    //         return null;
-    //     });
-
-    //     client.onNotification('finished', () => {
-    //         notify.hide();
-    //     });
-    // });
+    context.subscriptions.push(controller.init());
 
     const workspaceFolder = (workspace.workspaceFolders || [])[0];
     const log = new Log('phpunit', workspaceFolder, 'PHPUnit Test Explorer');
