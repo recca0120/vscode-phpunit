@@ -1,5 +1,6 @@
-import * as vscode from 'vscode';
+import { Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
+import { Log } from 'vscode-test-adapter-util';
 import {
     TestAdapter,
     TestLoadStartedEvent,
@@ -10,37 +11,36 @@ import {
     TestEvent,
     RetireEvent,
 } from 'vscode-test-adapter-api';
-import { Log } from 'vscode-test-adapter-util';
 
 export class LanguageClientAdapter implements TestAdapter {
     private disposables: { dispose(): void }[] = [];
 
-    private readonly testsEmitter = new vscode.EventEmitter<
+    private readonly testsEmitter = new EventEmitter<
         TestLoadStartedEvent | TestLoadFinishedEvent
     >();
 
-    private readonly testStatesEmitter = new vscode.EventEmitter<
+    private readonly testStatesEmitter = new EventEmitter<
         TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent
     >();
 
-    private readonly retireEmitter = new vscode.EventEmitter<RetireEvent>();
+    private readonly retireEmitter = new EventEmitter<RetireEvent>();
 
-    get tests(): vscode.Event<TestLoadStartedEvent | TestLoadFinishedEvent> {
+    get tests(): Event<TestLoadStartedEvent | TestLoadFinishedEvent> {
         return this.testsEmitter.event;
     }
 
-    get testStates(): vscode.Event<
+    get testStates(): Event<
         TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent
     > {
         return this.testStatesEmitter.event;
     }
 
-    get retire(): vscode.Event<RetireEvent> {
+    get retire(): Event<RetireEvent> {
         return this.retireEmitter.event;
     }
 
     constructor(
-        public workspaceFolder: vscode.WorkspaceFolder,
+        public workspaceFolder: WorkspaceFolder,
         private client: LanguageClient,
         private log: Log
     ) {
@@ -59,15 +59,13 @@ export class LanguageClientAdapter implements TestAdapter {
 
         await this.client.onReady();
 
-        this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
-
-        this.client.sendRequest('TestLoadStartedEvent');
+        this.client.sendNotification('TestLoadStartedEvent');
     }
 
     async run(tests: string[]): Promise<void> {
         await this.client.onReady();
 
-        this.client.sendRequest('TestRunStartedEvent', { tests });
+        this.client.sendNotification('TestRunStartedEvent', { tests });
     }
 
     // debug?(tests: string[]): Promise<void> {
@@ -78,7 +76,7 @@ export class LanguageClientAdapter implements TestAdapter {
     async cancel() {
         await this.client.onReady();
 
-        this.client.sendRequest('TestCancelStartedEvent');
+        this.client.sendNotification('TestCancelStartedEvent');
     }
 
     async dispose(): Promise<void> {
@@ -100,13 +98,7 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestLoadFinishedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.client.onRequest('TestLoadFinishedEvent', ({ suite, started }) => {
-            if (!started) {
-                this.testsEmitter.fire(<TestLoadStartedEvent>{
-                    type: 'started',
-                });
-            }
-
+        this.client.onRequest('TestLoadFinishedEvent', ({ suite }) => {
             this.testsEmitter.fire(<TestLoadFinishedEvent>{
                 type: 'finished',
                 suite: suite,

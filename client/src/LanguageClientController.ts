@@ -1,7 +1,8 @@
-import { commands, TextEditor, Disposable, OutputChannel } from 'vscode';
+import { commands, Disposable, OutputChannel, TextEditor } from 'vscode';
+import { Configuration } from './Configuration';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
-import { Configuration } from './Configuration';
+import { TestEvent } from 'vscode-test-adapter-api';
 
 export class LanguageClientController implements Disposable {
     private disposables: Disposable[] = [];
@@ -44,6 +45,24 @@ export class LanguageClientController implements Disposable {
 
     private async onTestRunFinishedEvent() {
         await this.client.onReady();
+
+        this.client.onNotification('TestRunFinishedEvent', ({ events }) => {
+            const showAfterExecution = this.config.showAfterExecution;
+
+            const hasFailure = (events: TestEvent[]) => {
+                return events.some(event =>
+                    ['failed', 'errored'].includes(event.state)
+                );
+            };
+
+            if (showAfterExecution === 'never') {
+                return;
+            }
+
+            if (showAfterExecution === 'always' || hasFailure(events)) {
+                this.outputChannel.show();
+            }
+        });
     }
 
     private runAll() {

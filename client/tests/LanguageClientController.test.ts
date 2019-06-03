@@ -1,6 +1,6 @@
+import { Command } from 'vscode-languageclient';
 import { Configuration } from '../src/Configuration';
 import { LanguageClientController } from '../src/LanguageClientController';
-import { Command } from 'vscode-languageclient';
 
 describe('LanguageClientController', () => {
     const config = {
@@ -14,12 +14,17 @@ describe('LanguageClientController', () => {
     };
     const outputChannel: any = {
         clear: () => {},
+        show: () => {},
     };
 
     const commands: any = {
         commands: {},
         registerTextEditorCommand: (name: string, cb: Function) => {
             commands.commands[name] = cb;
+
+            return {
+                dispose: () => {},
+            };
         },
     };
 
@@ -37,8 +42,8 @@ describe('LanguageClientController', () => {
     };
 
     const client: any = {
-        commands: {},
         notifications: {},
+        requests: {},
         onReady: () => {
             return Promise.resolve(true);
         },
@@ -46,18 +51,18 @@ describe('LanguageClientController', () => {
             client.notifications[name] = cb;
         },
         sendRequest: (_type: any, command: Command) => {
-            client.commands[command.command] = command;
+            client.requests[command.command] = command;
         },
     };
 
     const sendCommand = async (name: string) => {
         await commands.commands[name](textEditor);
 
-        return client.commands[name.replace(/phpunit\./, 'phpunit.lsp.')];
+        return client.requests[name.replace(/phpunit\./, 'phpunit.lsp.')];
     };
 
-    const sendNotification = (type: string) => {
-        client.notifications[type]();
+    const sendNotification = (name: string, params?: any) => {
+        client.notifications[name](params);
     };
 
     const configuration = new Configuration(workspace);
@@ -108,12 +113,38 @@ describe('LanguageClientController', () => {
         });
     });
 
-    it('on test run started event', () => {
+    it('dispose', () => {
+        controller.dispose();
+
+        expect(controller['disposables']).toEqual([]);
+    });
+
+    it('run test and clear outputChannel', () => {
         spyOn(config, 'get').and.returnValue(true);
         spyOn(outputChannel, 'clear');
 
         sendNotification('TestRunStartedEvent');
 
-        expect(outputChannel.clear).toBeCalled();
+        expect(outputChannel.clear).toHaveBeenCalled();
+    });
+
+    it('show outputChanel when has error', () => {
+        spyOn(config, 'get').and.returnValue('onFailure');
+        spyOn(outputChannel, 'show');
+        const params = {
+            command: {
+                title: '',
+                command: 'foo',
+            },
+            events: [
+                {
+                    state: 'failed',
+                },
+            ],
+        };
+
+        sendNotification('TestRunFinishedEvent', params);
+
+        expect(outputChannel.show).toHaveBeenCalled();
     });
 });

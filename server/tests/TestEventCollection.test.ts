@@ -7,7 +7,7 @@ import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
 describe('TestEventCollection', () => {
     const cwd = projectPath('').fsPath;
-    const pattern = '**/*.php';
+    const pattern = 'tests/**/*.php';
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
 

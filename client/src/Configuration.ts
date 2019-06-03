@@ -7,6 +7,10 @@ export class Configuration {
         return this.get('clearOutputOnRun', true);
     }
 
+    get showAfterExecution() {
+        return this.get('showAfterExecution', 'onFailure');
+    }
+
     get(property: string, defaultValue?: any) {
         return this._workspace
             .getConfiguration('phpunit')

@@ -1,124 +1,105 @@
 import { Configuration } from './../src/Configuration';
-import { Controller } from '../src/Controller';
-import { projectPath } from './helpers';
-import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
-import { TestEventCollection } from './../src/TestEventCollection';
+import { Controller } from './../src/Controller';
+import { TestSuiteCollection } from '../src/TestSuiteCollection';
+import { TestEventCollection } from '../src/TestEventCollection';
 import { TestRunner } from '../src/TestRunner';
-import { TestSuiteCollection } from './../src/TestSuiteCollection';
+import { projectPath } from './helpers';
+import {
+    LogMessageNotification,
+    MessageType,
+} from 'vscode-languageserver-protocol';
 
-describe('Controller Test', () => {
+fdescribe('Controller Test', () => {
     const cwd = projectPath('').fsPath;
-    const pattern = '**/*.php';
-
     const connection: any = {
-        sendNotification: () => {},
         onNotification: () => {},
+        sendNotification: () => {},
         sendRequest: () => {},
-        onRequest: () => {},
-        workspace: {
-            getConfiguration: () => {},
-        },
     };
-
-    const config = new Configuration(connection);
+    const configuration = new Configuration(connection);
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
     const testRunner = new TestRunner();
-    const spawnOptions = { cwd: cwd };
-    const controller = new Controller(
-        connection,
-        config,
-        suites,
-        events,
-        testRunner
-    );
+    const spawnOptions = {
+        cwd,
+    };
 
-    beforeAll(async () => {
+    let controller: Controller;
+    beforeEach(async () => {
+        controller = new Controller(
+            connection,
+            configuration,
+            suites,
+            events,
+            testRunner
+        );
         controller.setSpawnOptions(spawnOptions);
-
-        await suites.load(pattern, { cwd: cwd });
+        await suites.load('tests/**/*.php', { cwd: spawnOptions.cwd });
     });
 
-    describe('executeCommand', () => {
+    describe('execute command', () => {
         beforeEach(() => {
-            spyOn(testRunner, 'run').and.callThrough();
+            spyOn(connection, 'sendNotification');
+            spyOn(connection, 'sendRequest');
         });
 
-        const getEvents = function(
-            events: TestEventCollection,
-            filter: (event: TestSuiteEvent | TestEvent) => {}
-        ) {
-            return events
-                .all()
-                .slice()
-                .filter(event => filter(event));
-        };
-
-        const getTestEventId = (event: TestSuiteEvent | TestEvent) => {
-            return event.type === 'suite' ? event.suite : event.test;
-        };
-
-        const expectedCommand = async (params: any = {}) => {
-            await controller.executeCommand(params);
-
-            spyOn(connection, 'sendRequest').and.callFake(
-                (requestType: string, params: any) => {
-                    if (requestType === 'TestRunStartedEvent') {
-                        const runningEvents = getEvents(
-                            events,
-                            event => event.state === 'running'
-                        );
-
-                        expect(params).toEqual({
-                            tests: runningEvents.map(event =>
-                                getTestEventId(event)
-                            ),
-                            events: runningEvents,
-                        });
-                    }
-
-                    if (requestType === 'TestRunFinishedEvent') {
-                        expect(params).toEqual({
-                            events: events.all(),
-                        });
-                    }
+        afterEach(() => {
+            expect(connection.sendNotification).toHaveBeenCalledWith(
+                'TestRunStartedEvent',
+                jasmine.anything()
+            );
+            expect(connection.sendRequest).toHaveBeenCalledWith(
+                'TestRunStartedEvent',
+                jasmine.anything()
+            );
+            expect(connection.sendNotification).toHaveBeenCalledWith(
+                'TestRunFinishedEvent',
+                jasmine.anything()
+            );
+            expect(connection.sendNotification).toHaveBeenCalledWith(
+                LogMessageNotification.type,
+                {
+                    type: MessageType.Log,
+                    message: jasmine.any(String),
                 }
             );
-        };
+        });
 
         it('run all', async () => {
-            const params = {
+            await controller.executeCommand({
                 command: 'phpunit.lsp.run-all',
-            };
+            });
 
-            await expectedCommand(params);
+            expect(connection.sendRequest).toHaveBeenCalledWith(
+                'TestRunFinishedEvent',
+                jasmine.anything()
+            );
         });
 
         it('run file', async () => {
             const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
 
-            const params = {
+            await controller.executeCommand({
                 command: 'phpunit.lsp.run-file',
                 arguments: [id],
-            };
+            });
 
-            await expectedCommand(params);
+            expect(connection.sendRequest).toHaveBeenCalledWith(
+                'TestRunFinishedEvent',
+                jasmine.anything()
+            );
         });
 
         it('run test at cursor with id', async () => {
-            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
 
-            const params = {
+            await controller.executeCommand({
                 command: 'phpunit.lsp.run-test-at-cursor',
                 arguments: [id],
-            };
+            });
 
-            await expectedCommand(params);
-
-            expect(testRunner.run).toHaveBeenCalledWith(
-                jasmine.objectContaining({
-                    method: 'test_passed',
-                }),
+            expect(connection.sendRequest).toHaveBeenCalledWith(
+                'TestRunFinishedEvent',
                 jasmine.anything()
             );
         });
@@ -126,18 +107,27 @@ describe('Controller Test', () => {
         it('run test at cursor with cursor', async () => {
             const file = projectPath('tests/AssertionsTest.php').toString();
 
-            const params = {
+            await controller.executeCommand({
                 command: 'phpunit.lsp.run-test-at-cursor',
                 arguments: [file, 14],
-            };
+            });
 
-            await expectedCommand(params);
+            expect(connection.sendRequest).toHaveBeenCalledWith(
+                'TestRunFinishedEvent',
+                jasmine.anything()
+            );
+        });
 
-            expect(testRunner.run).toHaveBeenCalledWith(
-                jasmine.objectContaining({
-                    file: file,
-                    method: 'test_passed',
-                }),
+        it('rerun', async () => {
+            const file = projectPath('tests/AssertionsTest.php').toString();
+
+            await controller.executeCommand({
+                command: 'phpunit.lsp.rerun',
+                arguments: [file, 14],
+            });
+
+            expect(connection.sendRequest).toHaveBeenCalledWith(
+                'TestRunFinishedEvent',
                 jasmine.anything()
             );
         });

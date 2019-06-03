@@ -29,6 +29,13 @@ export class Controller {
         'phpunit.lsp.cancel',
     ];
 
+    private commandLookup: Map<string, Function> = new Map([
+        ['phpunit.lsp.run-all', this.runAll],
+        ['phpunit.lsp.rerun', this.rerun],
+        ['phpunit.lsp.run-file', this.runFile],
+        ['phpunit.lsp.run-test-at-cursor', this.runTestAtCursor],
+    ]);
+
     constructor(
         private connection: Connection,
         private config: Configuration,
@@ -40,25 +47,28 @@ export class Controller {
         },
         private _files = files
     ) {
-        this.connection.onRequest('TestLoadStartedEvent', async () => {
+        this.connection.onNotification('TestLoadStartedEvent', async () => {
             await this.sendLoadFinishedEvent();
         });
 
-        this.connection.onRequest('TestRunStartedEvent', async ({ tests }) => {
-            const id: string = tests[0] || 'root';
+        this.connection.onNotification(
+            'TestRunStartedEvent',
+            async ({ tests }) => {
+                const id: string = tests[0] || 'root';
 
-            const command =
-                id === 'root'
-                    ? { command: 'phpunit.lsp.run-all' }
-                    : {
-                          command: 'phpunit.lsp.run-test-at-cursor',
-                          arguments: [this.suites.find(id).id],
-                      };
+                const command =
+                    id === 'root'
+                        ? { command: 'phpunit.lsp.run-all' }
+                        : {
+                              command: 'phpunit.lsp.run-test-at-cursor',
+                              arguments: [this.suites.find(id).id],
+                          };
 
-            this.executeCommand(command);
-        });
+                this.executeCommand(command);
+            }
+        );
 
-        this.connection.onRequest('TestCancelStartedEvent', async () => {
+        this.connection.onNotification('TestCancelStartedEvent', async () => {
             return await this.executeCommand({
                 command: 'phpunit.lsp.cancel',
             });
@@ -89,36 +99,26 @@ export class Controller {
                 );
         }
 
-        const suites = (await Promise.all(changes)).filter(suite => !!suite);
+        const codeLens = (await Promise.all(changes))
+            .filter(suite => !!suite)
+            .reduce((codeLens: CodeLens[], suite) => {
+                return codeLens.concat(suite!.exportCodeLens());
+            }, []);
 
-        if (suites.length === 0) {
-            return [];
+        if (codeLens.length > 0) {
+            this.sendLoadFinishedEvent();
         }
-
-        const codeLens = suites.reduce((codeLens: CodeLens[], suite) => {
-            return codeLens.concat(suite!.exportCodeLens());
-        }, []);
-
-        this.sendLoadFinishedEvent({ started: false });
 
         return codeLens;
     }
 
     async executeCommand(params: ExecuteCommandParams) {
         const command = params.command;
-
         const args = params.arguments || [];
 
-        const lookup = {
-            'phpunit.lsp.run-all': this.runAll,
-            'phpunit.lsp.run-file': this.runFile,
-            'phpunit.lsp.run-test-at-cursor': this.runTestAtCursor,
-            'phpunit.lsp.cancel': this.cancel,
-        } as any;
-
-        const response = lookup[command]
-            ? await lookup[command].call(this, args)
-            : await this.rerun(args);
+        const response = this.commandLookup.has(command)
+            ? await this.commandLookup.get(command)!.call(this, args)
+            : await this.cancel();
 
         return response !== undefined
             ? await this.sendTestRunFinishedEvent(response)
@@ -130,7 +130,7 @@ export class Controller {
         tests: (TestSuiteNode | TestNode)[],
         rerun = false
     ) {
-        await this.sendTestRunStartedEvent(tests);
+        this.sendTestRunStartedEvent(tests);
 
         this.testRunner
             .setPhpBinary(this.config.php)
@@ -143,7 +143,13 @@ export class Controller {
     }
 
     private async runAll() {
-        return await this.run({}, this.suites.all());
+        try {
+            return await this.run({}, this.suites.all());
+        } catch (e) {
+            console.log(e);
+        }
+
+        return new TestResponse('failed');
     }
 
     private async runFile(params: string[]) {
@@ -206,37 +212,43 @@ export class Controller {
             : line <= end;
     }
 
-    private async sendLoadFinishedEvent(
-        params: { started: boolean } = { started: true }
-    ) {
+    private sendLoadStartedEvent() {
+        this.connection.sendRequest('TestLoadStartedEvent');
+    }
+
+    private async sendLoadFinishedEvent() {
         this.suites.clear();
         this.events.clear();
 
-        await this.connection.sendRequest('TestLoadFinishedEvent', {
+        this.sendLoadStartedEvent();
+
+        this.connection.sendRequest('TestLoadFinishedEvent', {
             suite: (await this.suites.load(this.config.files, {
                 ignore: '**/vendor/**',
                 cwd: this.spawnOptions.cwd,
             })).tree(),
-            started: params.started,
         });
     }
 
-    private async sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
-        this.connection.sendNotification('TestRunStartedEvent');
-
-        await this.connection.sendRequest('TestRunStartedEvent', {
+    private sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
+        const params = {
             tests: tests.map(test => test.id),
             events: this.events
                 .put(tests)
                 .where(event => event.state === 'running'),
-        });
+        };
+        this.connection.sendNotification('TestRunStartedEvent', params);
+        this.connection.sendRequest('TestRunStartedEvent', params);
     }
 
     private async sendTestRunFinishedEvent(response: TestResponse) {
-        this.connection.sendRequest('TestRunFinishedEvent', {
+        const params = {
             command: response.getCommand(),
             events: await this.changeEventsState(response),
-        });
+        };
+
+        this.connection.sendNotification('TestRunFinishedEvent', params);
+        this.connection.sendRequest('TestRunFinishedEvent', params);
 
         this.connection.sendNotification(LogMessageNotification.type, {
             type: MessageType.Log,

@@ -5,7 +5,7 @@ import { TextDocument } from 'vscode-languageserver-protocol';
 
 describe('TestSuiteCollection', () => {
     const cwd = projectPath('').fsPath;
-    const pattern = '**/*.php';
+    const pattern = 'tests/**/*.php';
     const suites = new TestSuiteCollection();
     const getLabelById = function(id: string) {
         return id;
