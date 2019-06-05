@@ -79,12 +79,10 @@ describe('TestSuiteCollection', () => {
 
         expect(
             await suites.get(projectPath('tests/AssertionsTest.php'))
-        ).toEqual(
-            jasmine.objectContaining({
-                id,
-                label,
-            })
-        );
+        ).toMatchObject({
+            id,
+            label,
+        });
     });
 
     it('put text document', async () => {
@@ -101,12 +99,10 @@ describe('TestSuiteCollection', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
         const label = getLabelById(id);
 
-        expect(await suites.get(file)).toEqual(
-            jasmine.objectContaining({
-                id,
-                label,
-            })
-        );
+        expect(await suites.get(file)).toMatchObject({
+            id,
+            label,
+        });
     });
 
     it('find test suite', async () => {
@@ -114,11 +110,9 @@ describe('TestSuiteCollection', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
         const test = suites.find(id);
 
-        expect(test).toEqual(
-            jasmine.objectContaining({
-                id: id,
-            })
-        );
+        expect(test).toMatchObject({
+            id: id,
+        });
     });
 
     it('find test', async () => {
@@ -127,11 +121,9 @@ describe('TestSuiteCollection', () => {
 
         const test = suites.find(id);
 
-        expect(test).toEqual(
-            jasmine.objectContaining({
-                id: id,
-            })
-        );
+        expect(test).toMatchObject({
+            id: id,
+        });
     });
 
     it('where test', async () => {
@@ -142,10 +134,8 @@ describe('TestSuiteCollection', () => {
             return test.id === id;
         });
 
-        expect(tests[0]).toEqual(
-            jasmine.objectContaining({
-                id: id,
-            })
-        );
+        expect(tests[0]).toMatchObject({
+            id: id,
+        });
     });
 });

@@ -71,13 +71,11 @@ Tests: 3, Assertions: 2, Skipped: 1.
             );
             const result: TestResult = testResponse.getTestResult();
 
-            expect(result).toEqual(
-                jasmine.objectContaining({
-                    tests: 3,
-                    assertions: 2,
-                    skipped: 1,
-                })
-            );
+            expect(result).toMatchObject({
+                tests: 3,
+                assertions: 2,
+                skipped: 1,
+            });
         });
     });
 
@@ -94,12 +92,9 @@ Tests: 3, Assertions: 2, Skipped: 1.
             expect(testResponse.toString()).toEqual(output);
         });
 
-        beforeAll(async () => {
+        it('test_sum_item_method_not_call', async () => {
             problems = await testResponse.asProblems();
-        });
-
-        it('test_sum_item_method_not_call', () => {
-            expect(problems[0]).toEqual({
+            expect(problems[0]).toMatchObject({
                 type: 'problem',
                 id:
                     'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call',

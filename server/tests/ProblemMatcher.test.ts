@@ -22,7 +22,7 @@ describe('ProblemMatcher', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_isnt_same';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -55,7 +55,7 @@ describe('ProblemMatcher', () => {
             'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -76,8 +76,7 @@ describe('ProblemMatcher', () => {
     it('test_failed', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed';
         const problem = getProblem(id);
-
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -99,7 +98,7 @@ describe('ProblemMatcher', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_risky';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -121,7 +120,7 @@ describe('ProblemMatcher', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_incomplete';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -143,7 +142,7 @@ describe('ProblemMatcher', () => {
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -166,7 +165,7 @@ describe('ProblemMatcher', () => {
             'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
@@ -190,7 +189,7 @@ describe('ProblemMatcher', () => {
             'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception';
         const problem = getProblem(id);
 
-        expect(problem).toEqual({
+        expect(problem).toMatchObject({
             type: 'problem',
             id,
             namespace: 'Recca0120\\VSCode\\Tests',
