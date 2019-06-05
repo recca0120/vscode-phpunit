@@ -1,4 +1,6 @@
+import { TestSuiteCollection } from './TestSuiteCollection';
 import { TestEvent } from './TestExplorer';
+import { TestNode } from './Parser';
 
 export abstract class ProblemMatcher {
     private problems: ProblemNode[] = [];
@@ -183,7 +185,7 @@ export class PHPUnitOutput extends ProblemMatcher {
         'i'
     );
 
-    constructor() {
+    constructor(private suites?: TestSuiteCollection) {
         super([
             new RegExp('^\\d+\\)\\s(([^:]*)::([^\\s]*).*)$'),
             new RegExp('^(.*)$'),
@@ -206,10 +208,7 @@ export class PHPUnitOutput extends ProblemMatcher {
                 });
 
             if (!location) {
-                location = {
-                    file: '',
-                    line: -1,
-                };
+                location = this.findLocationByProblem(problem);
             } else {
                 problem.files = problem.files.filter(l => l !== location);
             }
@@ -279,5 +278,41 @@ export class PHPUnitOutput extends ProblemMatcher {
         }
 
         return Status.ERROR;
+    }
+
+    private findLocationByProblem(problem: ProblemNode) {
+        const location = {
+            file: '',
+            line: -1,
+        };
+
+        if (!this.suites) {
+            return location;
+        }
+
+        const suiteId = [problem.namespace, problem.class]
+            .filter(s => !!s)
+            .join('\\');
+
+        const suites = this.suites.where(suite => suite.id === suiteId, true);
+
+        if (suites.length === 0) {
+            return location;
+        }
+
+        const suite = suites[0];
+
+        const test = suite.children.find(
+            (test: TestNode) => test.id === `${suiteId}::${problem.method}`
+        );
+
+        if (!test) {
+            return location;
+        }
+
+        return {
+            file: test.file,
+            line: test.line + 1,
+        };
     }
 }

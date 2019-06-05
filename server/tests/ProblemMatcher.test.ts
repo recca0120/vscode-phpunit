@@ -1,18 +1,24 @@
 import { fixturePath, projectPath } from './helpers';
 import { PHPUnitOutput, Status } from '../src/ProblemMatcher';
 import { readFileSync } from 'fs';
+import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
 describe('ProblemMatcher', () => {
     const file = fixturePath('test-result.txt').fsPath;
     const testFile = projectPath('tests/AssertionsTest.php').fsPath;
     const contents: string = readFileSync(file).toString('UTF-8');
-    const problemMatcher = new PHPUnitOutput();
+    const suites = new TestSuiteCollection();
+    const problemMatcher = new PHPUnitOutput(suites);
 
     let problems: any[] = [];
 
     function getProblem(id: string) {
         return problems.find(problem => problem.id === id);
     }
+
+    beforeAll(async () => {
+        await suites.load('**/*.php', { cwd: projectPath('tests').fsPath });
+    });
 
     beforeEach(async () => {
         problems = await problemMatcher.parse(contents);
@@ -160,7 +166,7 @@ describe('ProblemMatcher', () => {
         );
     });
 
-    it('test_sum_item_method_not_call', () => {
+    fit('test_sum_item_method_not_call', () => {
         const id =
             'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call';
         const problem = getProblem(id);
@@ -172,8 +178,8 @@ describe('ProblemMatcher', () => {
             class: 'CalculatorTest',
             method: 'test_sum_item_method_not_call',
             status: Status.FAILURE,
-            file: '',
-            line: -1,
+            file: projectPath('tests/CalculatorTest.php').toString(),
+            line: 39,
             message: jasmine.anything(),
             files: jasmine.anything(),
         });
