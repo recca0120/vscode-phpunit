@@ -154,9 +154,9 @@ export class ProblemNode implements Problem {
     private asTestDecorations() {
         return [{ file: this.file, line: this.line }]
             .concat(this.files)
-            .filter(l => l.file === this.file && l.line > 0)
+            .filter(l => l.file === this.file && l.line >= 0)
             .map(location => ({
-                line: location.line - 1,
+                line: location.line,
                 message: this.message,
             }));
     }
@@ -249,7 +249,7 @@ export class PHPUnitOutput extends ProblemMatcher {
             case 2:
                 problem.files.push({
                     file: m[1],
-                    line: parseInt(m[2], 10),
+                    line: parseInt(m[2], 10) - 1,
                 });
                 break;
         }
@@ -261,7 +261,6 @@ export class PHPUnitOutput extends ProblemMatcher {
         let clazz = '';
         if (lastIndexOfSlash >= 0) {
             namespace = name.substr(0, lastIndexOfSlash).replace(/\\$/, '');
-
             clazz = name.substr(lastIndexOfSlash).replace(/^\\/, '');
         } else {
             clazz = name;
@@ -302,7 +301,7 @@ export class PHPUnitOutput extends ProblemMatcher {
 
         const suite = suites[0];
 
-        const test = suite.children.find(
+        const test: TestNode = suite.children.find(
             (test: TestNode) => test.id === `${suiteId}::${problem.method}`
         );
 
@@ -312,7 +311,7 @@ export class PHPUnitOutput extends ProblemMatcher {
 
         return {
             file: test.file,
-            line: test.line + 1,
+            line: test.line,
         };
     }
 }

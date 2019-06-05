@@ -36,7 +36,7 @@ describe('ProblemMatcher', () => {
             method: 'test_isnt_same',
             status: Status.FAILURE,
             file: testFile,
-            line: 27,
+            line: 26,
             message: jasmine.anything(),
             files: [],
         });
@@ -69,7 +69,7 @@ describe('ProblemMatcher', () => {
             method: 'addition_provider',
             status: Status.FAILURE,
             file: testFile,
-            line: 59,
+            line: 58,
             message: jasmine.anything(),
             files: [],
         });
@@ -90,7 +90,7 @@ describe('ProblemMatcher', () => {
             method: 'test_failed',
             status: Status.FAILURE,
             file: testFile,
-            line: 22,
+            line: 21,
             message: jasmine.anything(),
             files: [],
         });
@@ -112,7 +112,7 @@ describe('ProblemMatcher', () => {
             method: 'test_risky',
             status: Status.RISKY,
             file: testFile,
-            line: 30,
+            line: 29,
             message: jasmine.anything(),
             files: [],
         });
@@ -134,7 +134,7 @@ describe('ProblemMatcher', () => {
             method: 'test_incomplete',
             status: Status.INCOMPLETE,
             file: testFile,
-            line: 50,
+            line: 49,
             message: jasmine.anything(),
             files: [],
         });
@@ -156,7 +156,7 @@ describe('ProblemMatcher', () => {
             method: 'test_skipped',
             status: Status.SKIPPED,
             file: testFile,
-            line: 45,
+            line: 44,
             message: jasmine.anything(),
             files: [],
         });
@@ -166,7 +166,7 @@ describe('ProblemMatcher', () => {
         );
     });
 
-    fit('test_sum_item_method_not_call', () => {
+    it('test_sum_item_method_not_call', () => {
         const id =
             'Recca0120\\VSCode\\Tests\\CalculatorTest::test_sum_item_method_not_call';
         const problem = getProblem(id);
@@ -179,7 +179,7 @@ describe('ProblemMatcher', () => {
             method: 'test_sum_item_method_not_call',
             status: Status.FAILURE,
             file: projectPath('tests/CalculatorTest.php').toString(),
-            line: 39,
+            line: 38,
             message: jasmine.anything(),
             files: jasmine.anything(),
         });
@@ -203,7 +203,7 @@ describe('ProblemMatcher', () => {
             method: 'test_throw_exception',
             status: Status.FAILURE,
             file: projectPath('tests/CalculatorTest.php').fsPath,
-            line: 54,
+            line: 53,
             message: jasmine.anything(),
             files: jasmine.anything(),
         });

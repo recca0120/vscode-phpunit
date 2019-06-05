@@ -1,3 +1,4 @@
+import { PHPUnitOutput } from './ProblemMatcher';
 import { Configuration } from './Configuration';
 import { Controller } from './Controller';
 import { Snippets } from './Snippets';
@@ -33,7 +34,8 @@ const snippets = new Snippets();
 const config = new Configuration(connection);
 const suites = new TestSuiteCollection();
 const events = new TestEventCollection();
-const runner = new TestRunner();
+const problemMatcher = new PHPUnitOutput(suites);
+const runner = new TestRunner(problemMatcher);
 const controller = new Controller(connection, config, suites, events, runner);
 
 let hasConfigurationCapability: boolean = false;

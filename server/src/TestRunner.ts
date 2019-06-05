@@ -20,8 +20,8 @@ export class TestRunner {
     private lastArgs: string[] = [];
 
     constructor(
-        private process = new Process(),
         private problemMatcher: ProblemMatcher = new PHPUnitOutput(),
+        private process = new Process(),
         private _files = files
     ) {}
 

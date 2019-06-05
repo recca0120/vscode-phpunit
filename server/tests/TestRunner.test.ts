@@ -12,7 +12,7 @@ describe('TestRunner', () => {
     beforeEach(async () => {
         process = new Process();
         files = new Filesystem();
-        testRunner = new TestRunner(process, new PHPUnitOutput(), files);
+        testRunner = new TestRunner(new PHPUnitOutput(), process, files);
     });
 
     describe('run', () => {
