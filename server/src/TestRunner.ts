@@ -21,7 +21,7 @@ export class TestRunner {
 
     constructor(
         private process = new Process(),
-        private problemMatcher: ProblemMatcher<any> = new PHPUnitOutput(),
+        private problemMatcher: ProblemMatcher = new PHPUnitOutput(),
         private _files = files
     ) {}
 
@@ -86,9 +86,9 @@ export class TestRunner {
         const command = await this.getCommand(args, options);
 
         return new TestResponse(
-            await this.process.run(command, options),
+            this.problemMatcher,
             command,
-            this.problemMatcher
+            await this.process.run(command, options)
         );
     }
 

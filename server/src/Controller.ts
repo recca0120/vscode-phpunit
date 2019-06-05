@@ -145,9 +145,7 @@ export class Controller {
     private async runAll(): Promise<ITestResponse> {
         try {
             return await this.run({}, this.suites.all());
-        } catch (e) {
-            console.log(e);
-        }
+        } catch (_e) {}
 
         return new FailedTestResponse('failed');
     }

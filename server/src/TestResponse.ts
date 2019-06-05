@@ -62,9 +62,9 @@ export class TestResponse implements ITestResponse {
     private output: string = '';
 
     constructor(
-        output: string,
-        private command: Command | null = null,
-        private problemMatcher: ProblemMatcher<any> = new PHPUnitOutput()
+        private problemMatcher: ProblemMatcher = new PHPUnitOutput(),
+        private command: Command,
+        output: string
     ) {
         this.output = stripAnsi(output);
     }

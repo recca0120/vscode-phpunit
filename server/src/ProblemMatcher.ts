@@ -1,13 +1,13 @@
 import { TestEvent } from './TestExplorer';
 
-export abstract class ProblemMatcher<T> {
-    private problems: any[] = [];
+export abstract class ProblemMatcher {
+    private problems: ProblemNode[] = [];
     private problemIndex = -1;
     private currentIndex = -1;
 
     constructor(private patterns: RegExp[] = []) {}
 
-    async parse(contents: string): Promise<T[]> {
+    async parse(contents: string): Promise<ProblemNode[]> {
         const lines: string[] = contents.split(/\r\n|\r|\n/g);
 
         this.problems = [];
@@ -43,10 +43,10 @@ export abstract class ProblemMatcher<T> {
 
     protected abstract parseLine(line: string): void;
 
-    protected abstract async create(m: RegExpMatchArray): Promise<T>;
+    protected abstract async create(m: RegExpMatchArray): Promise<ProblemNode>;
 
     protected abstract async update(
-        problem: T,
+        problem: ProblemNode,
         m: RegExpMatchArray,
         index: number
     ): Promise<void>;
@@ -164,7 +164,7 @@ export class ProblemNode implements Problem {
     }
 }
 
-export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
+export class PHPUnitOutput extends ProblemMatcher {
     private currentStatus: Status = this.asStatus('failure');
 
     private status = [
