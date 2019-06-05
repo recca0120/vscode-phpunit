@@ -236,14 +236,9 @@ export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
     ) {
         switch (index) {
             case 0:
-                problem.namespace = m[2]
-                    .substr(0, m[2].lastIndexOf('\\'))
-                    .replace(/\\$/, '');
-
-                problem.class = m[2]
-                    .substr(m[2].lastIndexOf('\\'))
-                    .replace(/^\\/, '');
-
+                const { namespace, clazz } = this.parseNamespace(m[2]);
+                problem.namespace = namespace;
+                problem.class = clazz;
                 problem.method = m[3];
 
                 problem.updateId();
@@ -259,6 +254,21 @@ export class PHPUnitOutput extends ProblemMatcher<ProblemNode> {
                 });
                 break;
         }
+    }
+
+    private parseNamespace(name: string) {
+        const lastIndexOfSlash = name.lastIndexOf('\\');
+        let namespace = '';
+        let clazz = '';
+        if (lastIndexOfSlash >= 0) {
+            namespace = name.substr(0, lastIndexOfSlash).replace(/\\$/, '');
+
+            clazz = name.substr(lastIndexOfSlash).replace(/^\\/, '');
+        } else {
+            clazz = name;
+        }
+
+        return { namespace, clazz };
     }
 
     private asStatus(status: string): Status {
