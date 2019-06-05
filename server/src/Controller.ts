@@ -5,7 +5,7 @@ import { SpawnOptions } from 'child_process';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
 import { TestEventCollection } from './TestEventCollection';
 import { TestNode, TestSuiteNode } from './Parser';
-import { TestResponse } from './TestResponse';
+import { FailedTestResponse, ITestResponse } from './TestResponse';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import {
     Connection,
@@ -142,17 +142,17 @@ export class Controller {
             : await this.testRunner.run(params, this.spawnOptions);
     }
 
-    private async runAll() {
+    private async runAll(): Promise<ITestResponse> {
         try {
             return await this.run({}, this.suites.all());
         } catch (e) {
             console.log(e);
         }
 
-        return new TestResponse('failed');
+        return new FailedTestResponse('failed');
     }
 
-    private async runFile(params: string[]) {
+    private async runFile(params: string[]): Promise<ITestResponse> {
         const idOrFile: string = params[0] || '';
         const tests = this.suites.where(
             test => test.id === idOrFile || test.file === idOrFile
@@ -161,24 +161,22 @@ export class Controller {
         return await this.run({ file: tests[0].file }, tests);
     }
 
-    private async runTestAtCursor(params: string[]) {
+    private async runTestAtCursor(params: string[]): Promise<ITestResponse> {
         const tests = this.findTestAtCursorOrId(params);
 
         return await this.run(tests[0], tests);
     }
 
-    private async rerun(params: string[]) {
+    private async rerun(params: string[]): Promise<ITestResponse> {
         const tests = this.findTestAtCursorOrId(params);
 
         return await this.run(tests[0], tests);
     }
 
-    private async cancel() {
-        if (this.testRunner.cancel()) {
-            return new TestResponse('cancel');
-        }
+    private async cancel(): Promise<ITestResponse> {
+        this.testRunner.cancel();
 
-        return undefined;
+        return new FailedTestResponse('cancel');
     }
 
     private findTestAtCursorOrId(params: string[]) {
@@ -237,7 +235,7 @@ export class Controller {
         this.connection.sendRequest('TestRunStartedEvent', params);
     }
 
-    private async sendTestRunFinishedEvent(response: TestResponse) {
+    private async sendTestRunFinishedEvent(response: ITestResponse) {
         const params = {
             command: response.getCommand(),
             events: await this.changeEventsState(response),
@@ -254,7 +252,7 @@ export class Controller {
         return response;
     }
 
-    private async changeEventsState(response: TestResponse) {
+    private async changeEventsState(response: ITestResponse) {
         const result = response.getTestResult();
         const state = result.tests === 0 ? 'errored' : 'passed';
 

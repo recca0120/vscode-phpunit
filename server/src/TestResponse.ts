@@ -19,7 +19,46 @@ export interface TestResult {
     risky?: number;
 }
 
-export class TestResponse {
+export interface ITestResponse {
+    getCommand: () => Command | null;
+    asProblems: () => Promise<ProblemNode[]>;
+    getTestResult: () => TestResult;
+    toString: () => string;
+}
+
+export class FailedTestResponse implements ITestResponse {
+    private output: string;
+    constructor(output: string) {
+        this.output = stripAnsi(output);
+    }
+
+    getCommand(): null {
+        return null;
+    }
+
+    asProblems() {
+        return Promise.resolve([]);
+    }
+
+    getTestResult() {
+        return {
+            tests: 0,
+            assertions: 0,
+            errors: 0,
+            failures: 0,
+            warnings: 0,
+            skipped: 0,
+            incomplete: 0,
+            risky: 0,
+        };
+    }
+
+    toString(): string {
+        return this.output;
+    }
+}
+
+export class TestResponse implements ITestResponse {
     private output: string = '';
 
     constructor(
@@ -124,6 +163,10 @@ export class TestResponse {
         return result;
     }
 
+    toString(): string {
+        return this.output;
+    }
+
     // async asDiagnosticGroup(
     //     relatedInfo: boolean = true
     // ): Promise<Map<string, Diagnostic[]>> {
@@ -187,8 +230,4 @@ export class TestResponse {
     //         return group;
     //     }, new Map<string, Problem[]>());
     // }
-
-    toString(): string {
-        return this.output;
-    }
 }
