@@ -125,10 +125,7 @@
                 },
                 "phpunit.files": {
                     "description": "The glob(s) describing the location of your test files (relative to the workspace folder)",
-                    "type": [
-                        "string",
-                        "array"
-                    ],
+                    "type": "string",
                     "items": {
                         "type": "string"
                     },
