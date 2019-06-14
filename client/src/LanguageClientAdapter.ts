@@ -45,9 +45,8 @@ export class LanguageClientAdapter implements TestAdapter {
         private log: Log
     ) {
         this.onTestLoadStartedEvent();
-        this.onTestLoadFinishedEvent();
         this.onTestRunStartedEvent();
-        this.onTestRunFinishedEvent();
+        console.log(this.log);
 
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
@@ -55,17 +54,31 @@ export class LanguageClientAdapter implements TestAdapter {
     }
 
     async load(): Promise<void> {
-        this.log.info('Loading tests');
-
         await this.client.onReady();
 
-        this.client.sendNotification('TestLoadStartedEvent');
+        const { suite } = await this.client.sendRequest('LoadTest', {
+            workspaceFolder: this.workspaceFolder.uri,
+        });
+
+        this.testsEmitter.fire(<TestLoadFinishedEvent>{
+            type: 'finished',
+            suite: suite,
+        });
     }
 
     async run(tests: string[]): Promise<void> {
         await this.client.onReady();
 
-        this.client.sendNotification('TestRunStartedEvent', { tests });
+        const { events } = await this.client.sendRequest('RunTest', {
+            tests,
+            workspaceFolder: this.workspaceFolder.uri,
+        });
+
+        this.updateEvents(events);
+
+        this.testStatesEmitter.fire(<TestRunFinishedEvent>{
+            type: 'finished',
+        });
     }
 
     // debug?(tests: string[]): Promise<void> {
@@ -76,7 +89,7 @@ export class LanguageClientAdapter implements TestAdapter {
     async cancel() {
         await this.client.onReady();
 
-        this.client.sendNotification('TestCancelStartedEvent');
+        this.client.sendRequest('CancelTest');
     }
 
     async dispose(): Promise<void> {
@@ -95,44 +108,16 @@ export class LanguageClientAdapter implements TestAdapter {
         );
     }
 
-    private async onTestLoadFinishedEvent(): Promise<void> {
-        await this.client.onReady();
-
-        this.client.onRequest('TestLoadFinishedEvent', ({ suite }) => {
-            this.testsEmitter.fire(<TestLoadFinishedEvent>{
-                type: 'finished',
-                suite: suite,
-            });
-        });
-    }
-
     private async onTestRunStartedEvent(): Promise<void> {
         await this.client.onReady();
 
         this.client.onRequest('TestRunStartedEvent', ({ tests, events }) => {
-            this.log.info(`Running tests ${JSON.stringify(tests)}`);
-
             this.testStatesEmitter.fire(<TestRunStartedEvent>{
                 type: 'started',
                 tests,
             });
 
             this.updateEvents(events);
-        });
-    }
-
-    private async onTestRunFinishedEvent(): Promise<void> {
-        await this.client.onReady();
-
-        this.client.onRequest('TestRunFinishedEvent', ({ events, command }) => {
-            this.log.info(`command: ${JSON.stringify(command)}`);
-            this.log.info(`events: ${JSON.stringify(events)}`);
-
-            this.updateEvents(events);
-
-            this.testStatesEmitter.fire(<TestRunFinishedEvent>{
-                type: 'finished',
-            });
         });
     }
 
