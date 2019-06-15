@@ -39,8 +39,8 @@ export class WorkspaceFolders {
                     config,
                     suites,
                     events,
-                    problemMatcher,
                     testRunner,
+                    problemMatcher,
                     this._files
                 )
             );

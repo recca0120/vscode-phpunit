@@ -1,3 +1,4 @@
+import md5 from 'md5';
 import { Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { Log } from 'vscode-test-adapter-util';
@@ -76,7 +77,7 @@ export class LanguageClientAdapter implements TestAdapter {
     async cancel() {
         await this.client.onReady();
 
-        this.client.sendRequest(this.requestName('CancelTest'));
+        this.client.sendRequest(this.requestName('TestCancelEvent'));
     }
 
     async dispose(): Promise<void> {
@@ -90,7 +91,7 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestLoadStartedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.log.info('started,');
+        this.log.info('started');
         this.client.onRequest(this.requestName('TestLoadStartedEvent'), () =>
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' })
         );
@@ -150,6 +151,6 @@ export class LanguageClientAdapter implements TestAdapter {
     }
 
     private requestName(name: string) {
-        return `${name}-${this.workspaceFolder.uri}`;
+        return `${name}-${md5(this.workspaceFolder.uri.toString())}`;
     }
 }

@@ -13,12 +13,14 @@
     },
     "dependencies": {
         "glob": "^7.1.4",
+        "md5": "^2.2.1",
         "php-parser": "^3.0.0-prerelease.8",
         "strip-ansi": "^5.2.0",
         "vscode-languageserver": "^5.2.1"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
+        "@types/md5": "^2.1.33",
         "@types/strip-ansi": "^5.2.1"
     },
     "scripts": {}

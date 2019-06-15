@@ -17,11 +17,13 @@
         "postinstall": "vscode-install"
     },
     "dependencies": {
+        "md5": "^2.2.1",
         "vscode-languageclient": "^5.2.1",
         "vscode-test-adapter-api": "^1.7.0",
         "vscode-test-adapter-util": "^0.7.0"
     },
     "devDependencies": {
+        "@types/md5": "^2.1.33",
         "vscode": "^1.1.34"
     }
 }

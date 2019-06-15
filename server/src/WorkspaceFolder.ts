@@ -1,4 +1,5 @@
 import files from './Filesystem';
+import md5 from 'md5';
 import { Configuration } from './Configuration';
 import { ProblemMatcher } from './ProblemMatcher';
 import { TestEvent, TestSuiteEvent, TestSuiteInfo } from './TestExplorer';
@@ -34,12 +35,13 @@ export class WorkspaceFolder {
         private config: Configuration,
         private suites: TestSuiteCollection,
         private events: TestEventCollection,
-        private problemMatcher: ProblemMatcher,
         private testRunner: TestRunner,
+        private problemMatcher: ProblemMatcher,
         private _files = files
     ) {
-        this.onLoadTest();
-        this.onRunTest();
+        this.onTestLoadStartedEvent();
+        this.onTestRunStartedEvent();
+        this.onTestCancelEvent();
     }
 
     async detectChange(event: FileEvent) {
@@ -70,17 +72,15 @@ export class WorkspaceFolder {
         const command = params.command;
         const args = params.arguments || [];
 
-        const response: ITestResponse = this.commandLookup.has(command)
+        return this.commandLookup.has(command)
             ? await this.commandLookup.get(command)!.call(this, args)
             : await this.cancel();
-
-        return this.sendRunTestFinished(response);
     }
 
     async cancel() {
         this.testRunner.cancel();
 
-        return new FailedTestResponse('cancel');
+        return this.sendRunTestFinished(new FailedTestResponse('cancel'));
     }
 
     private async runAll() {
@@ -129,7 +129,9 @@ export class WorkspaceFolder {
                 ? await this.testRunner.run(params, options)
                 : await this.testRunner.rerun(params, options);
 
-        return new TestResponse(response, this.problemMatcher);
+        return this.sendRunTestFinished(
+            new TestResponse(response, this.problemMatcher)
+        );
     }
 
     private findTestAtCursorOrId(params: string[]) {
@@ -163,14 +165,14 @@ export class WorkspaceFolder {
             : line <= end;
     }
 
-    private onLoadTest() {
+    private onTestLoadStartedEvent() {
         this.connection.onRequest(
             this.requestName('TestLoadStartedEvent'),
             async () => await this.loadTest()
         );
     }
 
-    private onRunTest() {
+    private onTestRunStartedEvent() {
         this.connection.onRequest(
             this.requestName('TestRunStartedEvent'),
             async ({ tests }) => {
@@ -188,6 +190,15 @@ export class WorkspaceFolder {
         );
     }
 
+    private onTestCancelEvent() {
+        this.connection.onRequest(this.requestName('TestCancelEvent'), () => {
+            return this.executeCommand({
+                command: 'php.lsp.cancel',
+                arguments: [],
+            });
+        });
+    }
+
     private async sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
         const params = {
             tests: tests.map(test => test.id),
@@ -195,6 +206,8 @@ export class WorkspaceFolder {
                 .put(tests)
                 .where(event => event.state === 'running'),
         };
+
+        this.connection.sendNotification('TestRunStartedEvent', params);
 
         await this.connection.sendRequest(
             this.requestName('TestRunStartedEvent'),
@@ -216,6 +229,8 @@ export class WorkspaceFolder {
             events: await this.changeEventsState(response),
         };
 
+        this.connection.sendNotification('TestRunFinishedEvent', params);
+
         await this.connection.sendRequest(
             this.requestName('TestRunFinishedEvent'),
             params
@@ -226,7 +241,7 @@ export class WorkspaceFolder {
             message: response.toString(),
         });
 
-        return params;
+        return response;
     }
 
     private async changeEventsState(response: ITestResponse) {
@@ -277,6 +292,6 @@ export class WorkspaceFolder {
     }
 
     private requestName(name: string) {
-        return `${name}-${this.workspaceFolder}`;
+        return `${name}-${md5(this.workspaceFolder)}`;
     }
 }

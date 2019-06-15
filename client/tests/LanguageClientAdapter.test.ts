@@ -1,13 +1,17 @@
 import { LanguageClientAdapter } from './../src/LanguageClientAdapter';
 import { Log } from 'vscode-test-adapter-util';
 import { Uri, WorkspaceFolder } from 'vscode';
+import md5 from 'md5';
 
-xdescribe('LanguageClientAdapterTest', () => {
+describe('LanguageClientAdapterTest', () => {
     const workspaceFolder: WorkspaceFolder = {
         uri: Uri.parse(__dirname),
         name: 'folder',
         index: 1,
     };
+
+    const requestName = (name: string) =>
+        `${name}-${md5(workspaceFolder.uri.toString())}`;
 
     const log = new Log('phpunit', workspaceFolder, 'PHPUnit TestExplorer');
 
@@ -18,14 +22,14 @@ xdescribe('LanguageClientAdapterTest', () => {
         onRequest: (name: string, cb: Function) => {
             client.requests[name] = cb;
         },
+        triggerRequest: (name: string, params?: any) => {
+            return client.requests[name](params);
+        },
+        sendRequest: () => {},
         onNotification: (name: string, cb: Function) => {
             client.notifications[name] = cb;
         },
         sendNotification: () => {},
-    };
-
-    const sendRequest = (name: string, params?: any) => {
-        return client.requests[name](params);
     };
 
     let adapter: LanguageClientAdapter;
@@ -35,23 +39,23 @@ xdescribe('LanguageClientAdapterTest', () => {
     });
 
     it('load', async () => {
-        spyOn(client, 'sendNotification');
+        spyOn(client, 'sendRequest');
 
         await adapter.load();
 
-        expect(client.sendNotification).toHaveBeenCalledWith(
-            'TestLoadStartedEvent'
+        expect(client.sendRequest).toHaveBeenCalledWith(
+            requestName('TestLoadStartedEvent')
         );
     });
 
     it('run', async () => {
         const tests = ['foo', 'bar'];
-        spyOn(client, 'sendNotification');
+        spyOn(client, 'sendRequest');
 
         await adapter.run(tests);
 
-        expect(client.sendNotification).toHaveBeenCalledWith(
-            'TestRunStartedEvent',
+        expect(client.sendRequest).toHaveBeenCalledWith(
+            requestName('TestRunStartedEvent'),
             {
                 tests,
             }
@@ -59,22 +63,22 @@ xdescribe('LanguageClientAdapterTest', () => {
     });
 
     it('cancel', async () => {
-        spyOn(client, 'sendNotification');
+        spyOn(client, 'sendRequest');
 
         await adapter.cancel();
 
-        expect(client.sendNotification).toHaveBeenCalledWith(
-            'TestCancelStartedEvent'
+        expect(client.sendRequest).toHaveBeenCalledWith(
+            requestName('TestCancelEvent')
         );
     });
 
     it('dispose', async () => {
-        spyOn(client, 'sendNotification');
+        spyOn(client, 'sendRequest');
 
         await adapter.dispose();
 
-        expect(client.sendNotification).toHaveBeenCalledWith(
-            'TestCancelStartedEvent'
+        expect(client.sendRequest).toHaveBeenCalledWith(
+            requestName('TestCancelEvent')
         );
     });
 
@@ -82,7 +86,7 @@ xdescribe('LanguageClientAdapterTest', () => {
         const testsEmitter = adapter['testsEmitter'];
         spyOn(testsEmitter, 'fire');
 
-        sendRequest('TestLoadStartedEvent');
+        client.triggerRequest(requestName('TestLoadStartedEvent'));
 
         expect(testsEmitter.fire).toHaveBeenCalledWith({ type: 'started' });
     });
@@ -94,7 +98,9 @@ xdescribe('LanguageClientAdapterTest', () => {
             foo: 'bar',
         };
 
-        sendRequest('TestLoadFinishedEvent', { suite: fooSuite });
+        client.triggerRequest(requestName('TestLoadFinishedEvent'), {
+            suite: fooSuite,
+        });
 
         expect(testsEmitter.fire).toHaveBeenCalledWith({
             type: 'finished',
@@ -111,7 +117,7 @@ xdescribe('LanguageClientAdapterTest', () => {
             state: 'fail',
         };
 
-        sendRequest('TestRunStartedEvent', {
+        client.triggerRequest(requestName('TestRunStartedEvent'), {
             tests: tests,
             events: [fooEvent],
         });
@@ -136,7 +142,7 @@ xdescribe('LanguageClientAdapterTest', () => {
             state: 'fail',
         };
 
-        sendRequest('TestRunFinishedEvent', {
+        client.triggerRequest(requestName('TestRunFinishedEvent'), {
             events: [fooEvent],
             command: fooCommand,
         });
