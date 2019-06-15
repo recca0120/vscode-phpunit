@@ -9,7 +9,7 @@ import {
     MessageType,
 } from 'vscode-languageserver-protocol';
 
-fdescribe('Controller Test', () => {
+xdescribe('Controller Test', () => {
     const cwd = projectPath('').fsPath;
     const connection: any = {
         onNotification: () => {},

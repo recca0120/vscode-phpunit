@@ -56,9 +56,9 @@ export function activate(context: ExtensionContext) {
         // outputChannel: websocketOutputChannel,
         outputChannel,
         middleware: {
-            provideCodeLenses: () => {
-                return null;
-            },
+            // provideCodeLenses: () => {
+            //     return null;
+            // },
         },
     };
 

@@ -2,7 +2,7 @@ import { LanguageClientAdapter } from './../src/LanguageClientAdapter';
 import { Log } from 'vscode-test-adapter-util';
 import { Uri, WorkspaceFolder } from 'vscode';
 
-describe('LanguageClientAdapterTest', () => {
+xdescribe('LanguageClientAdapterTest', () => {
     const workspaceFolder: WorkspaceFolder = {
         uri: Uri.parse(__dirname),
         name: 'folder',

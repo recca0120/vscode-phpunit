@@ -81,35 +81,35 @@ describe('LanguageClientController', () => {
     it('execute run all', async () => {
         expect(await sendCommand('phpunit.run-all')).toEqual({
             command: 'phpunit.lsp.run-all',
-            arguments: ['foo.php', 0],
+            arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute rerun', async () => {
         expect(await sendCommand('phpunit.rerun')).toEqual({
             command: 'phpunit.lsp.rerun',
-            arguments: ['foo.php', 0],
+            arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute run file', async () => {
         expect(await sendCommand('phpunit.run-file')).toEqual({
             command: 'phpunit.lsp.run-file',
-            arguments: ['foo.php', 0],
+            arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute run test at cursor', async () => {
         expect(await sendCommand('phpunit.run-test-at-cursor')).toEqual({
             command: 'phpunit.lsp.run-test-at-cursor',
-            arguments: ['foo.php', 0],
+            arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute cancel', async () => {
         expect(await sendCommand('phpunit.cancel')).toEqual({
             command: 'phpunit.lsp.cancel',
-            arguments: ['foo.php', 0],
+            arguments: ['foo.php', 'foo.php', 0],
         });
     });
 

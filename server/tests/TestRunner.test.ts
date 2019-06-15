@@ -1,7 +1,5 @@
 import _files, { Filesystem } from '../src/filesystem';
-import { PHPUnitOutput } from '../src/ProblemMatcher';
 import { Process } from '../src/process';
-import { TestResponse } from '../src/TestResponse';
 import { TestRunner } from '../src/TestRunner';
 
 describe('TestRunner', () => {
@@ -12,11 +10,11 @@ describe('TestRunner', () => {
     beforeEach(async () => {
         process = new Process();
         files = new Filesystem();
-        testRunner = new TestRunner(new PHPUnitOutput(), process, files);
+        testRunner = new TestRunner(process, files);
     });
 
     describe('run', () => {
-        let response: TestResponse;
+        let response: string;
 
         beforeEach(() => {
             spyOn(process, 'run').and.returnValue('PHPUnit');

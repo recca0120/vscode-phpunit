@@ -102,6 +102,7 @@ export class LanguageClientController implements Disposable {
                         command: command.replace(/^phpunit/, 'phpunit.lsp'),
                         arguments: [
                             document.uri.toString(),
+                            document.uri.toString(),
                             textEditor.selection.active.line,
                         ],
                     });

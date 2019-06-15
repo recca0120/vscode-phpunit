@@ -1,304 +1,311 @@
-import files from './Filesystem';
-import { Configuration } from './Configuration';
-import { Params, TestRunner } from './TestRunner';
-import { SpawnOptions } from 'child_process';
-import { TestEvent, TestSuiteEvent } from './TestExplorer';
-import { TestEventCollection } from './TestEventCollection';
-import { TestNode, TestSuiteNode } from './Parser';
-import { FailedTestResponse, ITestResponse } from './TestResponse';
-import { TestSuiteCollection } from './TestSuiteCollection';
-import {
-    Connection,
-    ExecuteCommandParams,
-    LogMessageNotification,
-    MessageType,
-    DidChangeWatchedFilesParams,
-    CodeLens,
-    TextDocument,
-    FileChangeType,
-    FileEvent,
-} from 'vscode-languageserver';
+// import files from './Filesystem';
+// import { Configuration } from './Configuration';
+// import { Params, TestRunner } from './TestRunner';
+// import { SpawnOptions } from 'child_process';
+// import { TestEvent, TestSuiteEvent } from './TestExplorer';
+// import { TestNode, TestSuiteNode } from './Parser';
+// import { FailedTestResponse, ITestResponse } from './TestResponse';
+// import {
+//     Connection,
+//     ExecuteCommandParams,
+//     LogMessageNotification,
+//     MessageType,
+//     DidChangeWatchedFilesParams,
+//     CodeLens,
+//     TextDocument,
+//     FileChangeType,
+//     FileEvent,
+// } from 'vscode-languageserver';
+// import { WorkspaceFolder } from './WorkspaceFolders';
 
-export class Controller {
-    public commands = [
-        'phpunit.lsp.load',
-        'phpunit.lsp.run-all',
-        'phpunit.lsp.rerun',
-        'phpunit.lsp.run-file',
-        'phpunit.lsp.run-test-at-cursor',
-        'phpunit.lsp.cancel',
-    ];
+// export class Controller {
+//     public commands = [
+//         'phpunit.lsp.load',
+//         'phpunit.lsp.run-all',
+//         'phpunit.lsp.rerun',
+//         'phpunit.lsp.run-file',
+//         'phpunit.lsp.run-test-at-cursor',
+//         'phpunit.lsp.cancel',
+//     ];
 
-    private commandLookup: Map<string, Function> = new Map([
-        ['phpunit.lsp.run-all', this.runAll],
-        ['phpunit.lsp.rerun', this.rerun],
-        ['phpunit.lsp.run-file', this.runFile],
-        ['phpunit.lsp.run-test-at-cursor', this.runTestAtCursor],
-    ]);
+//     private commandLookup: Map<string, Function> = new Map([
+//         ['phpunit.lsp.run-all', this.runAll],
+//         ['phpunit.lsp.rerun', this.rerun],
+//         ['phpunit.lsp.run-file', this.runFile],
+//         ['phpunit.lsp.run-test-at-cursor', this.runTestAtCursor],
+//     ]);
 
-    constructor(
-        private connection: Connection,
-        private config: Configuration,
-        private suites: TestSuiteCollection,
-        private events: TestEventCollection,
-        private testRunner: TestRunner,
-        private spawnOptions: SpawnOptions = {
-            cwd: process.cwd(),
-        },
-        private _files = files
-    ) {
-        this.connection.onRequest('LoadTest', async () => {
-            this.connection.sendRequest('TestLoadStartedEvent');
-            this.suites.clear();
-            this.events.clear();
+//     constructor(
+//         private connection: Connection,
+//         private config: Configuration,
+//         private testRunner: TestRunner,
+//         private workspaceFolder: WorkspaceFolder,
+//         private spawnOptions: SpawnOptions = {
+//             cwd: process.cwd(),
+//         },
+//         private _files = files
+//     ) {
+//         this.connection.onRequest('LoadTest', async ({ workspaceFolder }) => {
+//             this.connection.sendRequest('TestLoadStartedEvent');
+//             const { suites, events } = this.workspaceFolder.get(
+//                 workspaceFolder
+//             );
 
-            return {
-                suite: (await this.suites.load(this.config.files, {
-                    ignore: '**/vendor/**',
-                    cwd: this.spawnOptions.cwd,
-                })).tree(),
-            };
-        });
+//             suites.clear();
+//             events.clear();
 
-        this.connection.onRequest('RunTest', async ({ tests }) => {
-            const id: string = tests[0] || 'root';
-            const command =
-                id === 'root'
-                    ? { command: 'phpunit.lsp.run-all' }
-                    : {
-                          command: 'phpunit.lsp.run-test-at-cursor',
-                          arguments: [this.suites.find(id).id],
-                      };
+//             return {
+//                 suite: (await suites.load(this.config.files, {
+//                     ignore: '**/vendor/**',
+//                     cwd: workspaceFolder.fsPath,
+//                 })).tree(),
+//             };
+//         });
 
-            return await this.executeCommand(command);
-        });
+//         this.connection.onRequest(
+//             'RunTest',
+//             async ({ tests, workspaceFolder }) => {
+//                 const { suites } = this.workspaceFolder.get(workspaceFolder);
 
-        this.connection.onRequest('CancelTest', async () => {
-            return await this.executeCommand({
-                command: 'phpunit.lsp.cancel',
-            });
-        });
-    }
+//                 const id: string = tests[0] || 'root';
+//                 const command =
+//                     id === 'root'
+//                         ? { command: 'phpunit.lsp.run-all' }
+//                         : {
+//                               command: 'phpunit.lsp.run-test-at-cursor',
+//                               arguments: [suites.find(id).id],
+//                           };
 
-    setSpawnOptions(spawnOptions: SpawnOptions) {
-        this.spawnOptions = Object.assign({}, this.spawnOptions, spawnOptions);
+//                 return await this.executeCommand(command);
+//             }
+//         );
 
-        return this;
-    }
+//         this.connection.onRequest('CancelTest', async () => {
+//             return await this.executeCommand({
+//                 command: 'phpunit.lsp.cancel',
+//             });
+//         });
+//     }
 
-    async executeCommand(params: ExecuteCommandParams) {
-        const command = params.command;
-        const args = params.arguments || [];
+//     setSpawnOptions(spawnOptions: SpawnOptions) {
+//         this.spawnOptions = Object.assign({}, this.spawnOptions, spawnOptions);
 
-        const response = this.commandLookup.has(command)
-            ? await this.commandLookup.get(command)!.call(this, args)
-            : await this.cancel();
+//         return this;
+//     }
 
-        return this.onRunTestFinished(response);
-    }
+//     async executeCommand(params: ExecuteCommandParams) {
+//         const command = params.command;
+//         const args = params.arguments || [];
 
-    async detectChanges(
-        change: DidChangeWatchedFilesParams | TextDocument
-    ): Promise<CodeLens[]> {
-        let changes = [];
-        if (TextDocument.is(change)) {
-            changes.push(
-                Promise.resolve(
-                    this.suites.putTextDocument(change).get(change.uri)
-                )
-            );
-        } else {
-            changes = change.changes
-                .filter(event => this.filterFileChanged(event))
-                .map(async event =>
-                    (await this.suites.put(event.uri)).get(event.uri)
-                );
-        }
+//         const response = this.commandLookup.has(command)
+//             ? await this.commandLookup.get(command)!.call(this, args)
+//             : await this.cancel();
 
-        const codeLens = (await Promise.all(changes))
-            .filter(suite => !!suite)
-            .reduce((codeLens: CodeLens[], suite) => {
-                return codeLens.concat(suite!.exportCodeLens());
-            }, []);
+//         return this.onRunTestFinished(response);
+//     }
 
-        if (codeLens.length > 0) {
-            // this.sendLoadFinishedEvent();
-        }
+//     // async detectChanges(
+//     //     change: DidChangeWatchedFilesParams | TextDocument
+//     // ): Promise<CodeLens[]> {
+//     //     let changes = [];
+//     //     if (TextDocument.is(change)) {
+//     //         changes.push(
+//     //             Promise.resolve(
+//     //                 this.suites.putTextDocument(change).get(change.uri)
+//     //             )
+//     //         );
+//     //     } else {
+//     //         changes = change.changes
+//     //             .filter(event => this.filterFileChanged(event))
+//     //             .map(async event =>
+//     //                 (await this.suites.put(event.uri)).get(event.uri)
+//     //             );
+//     //     }
 
-        return codeLens;
-    }
+//     //     const codeLens = (await Promise.all(changes))
+//     //         .filter(suite => !!suite)
+//     //         .reduce((codeLens: CodeLens[], suite) => {
+//     //             return codeLens.concat(suite!.exportCodeLens());
+//     //         }, []);
 
-    private async onRunTestFinished(response: ITestResponse) {
-        const params = {
-            command: response.getCommand(),
-            events: await this.changeEventsState(response),
-        };
+//     //     if (codeLens.length > 0) {
+//     //         // this.sendLoadFinishedEvent();
+//     //     }
 
-        // this.connection.sendNotification('TestRunFinishedEvent', params);
+//     //     return codeLens;
+//     // }
 
-        this.connection.sendNotification(LogMessageNotification.type, {
-            type: MessageType.Log,
-            message: response.toString(),
-        });
+//     private async run(
+//         params: Params = {},
+//         tests: (TestSuiteNode | TestNode)[],
+//         rerun = false
+//     ) {
+//         this.sendTestRunStartedEvent(tests);
 
-        return params;
-    }
+//         this.testRunner
+//             .setPhpBinary(this.config.php)
+//             .setPhpUnitBinary(this.config.phpunit)
+//             .setArgs(this.config.args);
 
-    private async run(
-        params: Params = {},
-        tests: (TestSuiteNode | TestNode)[],
-        rerun = false
-    ) {
-        this.sendTestRunStartedEvent(tests);
+//         return rerun === true
+//             ? await this.testRunner.rerun(params, this.spawnOptions)
+//             : await this.testRunner.run(params, this.spawnOptions);
+//     }
 
-        this.testRunner
-            .setPhpBinary(this.config.php)
-            .setPhpUnitBinary(this.config.phpunit)
-            .setArgs(this.config.args);
+//     private async runAll(): Promise<ITestResponse> {
+//         try {
+//             return await this.run({}, this.suites.all());
+//         } catch (_e) {}
 
-        return rerun === true
-            ? await this.testRunner.rerun(params, this.spawnOptions)
-            : await this.testRunner.run(params, this.spawnOptions);
-    }
+//         return new FailedTestResponse('failed');
+//     }
 
-    private async runAll(): Promise<ITestResponse> {
-        try {
-            return await this.run({}, this.suites.all());
-        } catch (_e) {}
+//     private async runFile(params: string[]): Promise<ITestResponse> {
+//         const idOrFile: string = params[0] || '';
+//         const tests = this.suites.where(
+//             test => test.id === idOrFile || test.file === idOrFile
+//         );
 
-        return new FailedTestResponse('failed');
-    }
+//         return await this.run({ file: tests[0].file }, tests);
+//     }
 
-    private async runFile(params: string[]): Promise<ITestResponse> {
-        const idOrFile: string = params[0] || '';
-        const tests = this.suites.where(
-            test => test.id === idOrFile || test.file === idOrFile
-        );
+//     private async runTestAtCursor(params: string[]): Promise<ITestResponse> {
+//         const tests = this.findTestAtCursorOrId(params);
 
-        return await this.run({ file: tests[0].file }, tests);
-    }
+//         return await this.run(tests[0], tests);
+//     }
 
-    private async runTestAtCursor(params: string[]): Promise<ITestResponse> {
-        const tests = this.findTestAtCursorOrId(params);
+//     private async rerun(params: string[]): Promise<ITestResponse> {
+//         const tests = this.findTestAtCursorOrId(params);
 
-        return await this.run(tests[0], tests);
-    }
+//         return await this.run(tests[0], tests);
+//     }
 
-    private async rerun(params: string[]): Promise<ITestResponse> {
-        const tests = this.findTestAtCursorOrId(params);
+//     private async cancel(): Promise<ITestResponse> {
+//         this.testRunner.cancel();
 
-        return await this.run(tests[0], tests);
-    }
+//         return new FailedTestResponse('cancel');
+//     }
 
-    private async cancel(): Promise<ITestResponse> {
-        this.testRunner.cancel();
+//     private findTestAtCursorOrId(params: string[]) {
+//         if (!params[1]) {
+//             return this.suites.where(test => test.id === params[0], true);
+//         }
 
-        return new FailedTestResponse('cancel');
-    }
+//         const file = this._files.asUri(params[0]).toString();
+//         const line = parseInt(params[1], 10);
 
-    private findTestAtCursorOrId(params: string[]) {
-        if (!params[1]) {
-            return this.suites.where(test => test.id === params[0], true);
-        }
+//         return this.suites.where(
+//             test => this.findTestAtLine(test, file, line),
+//             true
+//         );
+//     }
 
-        const file = this._files.asUri(params[0]).toString();
-        const line = parseInt(params[1], 10);
+//     private findTestAtLine(
+//         test: TestSuiteNode | TestNode,
+//         file: string,
+//         line: number
+//     ) {
+//         if (test.file !== file) {
+//             return false;
+//         }
 
-        return this.suites.where(
-            test => this.findTestAtLine(test, file, line),
-            true
-        );
-    }
+//         const start = test.range.start.line;
+//         const end = test.range.end.line;
 
-    private findTestAtLine(
-        test: TestSuiteNode | TestNode,
-        file: string,
-        line: number
-    ) {
-        if (test.file !== file) {
-            return false;
-        }
+//         return test instanceof TestSuiteNode
+//             ? line <= start || line >= end
+//             : line <= end;
+//     }
 
-        const start = test.range.start.line;
-        const end = test.range.end.line;
+//     private sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
+//         const params = {
+//             tests: tests.map(test => test.id),
+//             events: this.events
+//                 .put(tests)
+//                 .where(event => event.state === 'running'),
+//         };
 
-        return test instanceof TestSuiteNode
-            ? line <= start || line >= end
-            : line <= end;
-    }
+//         this.connection.sendRequest('TestRunStartedEvent', params);
+//     }
 
-    private sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
-        const params = {
-            tests: tests.map(test => test.id),
-            events: this.events
-                .put(tests)
-                .where(event => event.state === 'running'),
-        };
+//     // private async sendTestRunFinishedEvent(response: ITestResponse) {
+//     //     const params = {
+//     //         command: response.getCommand(),
+//     //         events: await this.changeEventsState(response),
+//     //     };
 
-        this.connection.sendRequest('TestRunStartedEvent', params);
-    }
+//     //     this.connection.sendNotification('TestRunFinishedEvent', params);
+//     //     this.connection.sendRequest('TestRunFinishedEvent', params);
 
-    // private async sendTestRunFinishedEvent(response: ITestResponse) {
-    //     const params = {
-    //         command: response.getCommand(),
-    //         events: await this.changeEventsState(response),
-    //     };
+//     //     this.connection.sendNotification(LogMessageNotification.type, {
+//     //         type: MessageType.Log,
+//     //         message: response.toString(),
+//     //     });
 
-    //     this.connection.sendNotification('TestRunFinishedEvent', params);
-    //     this.connection.sendRequest('TestRunFinishedEvent', params);
+//     //     return response;
+//     // }
 
-    //     this.connection.sendNotification(LogMessageNotification.type, {
-    //         type: MessageType.Log,
-    //         message: response.toString(),
-    //     });
+//     private async changeEventsState(response: ITestResponse) {
+//         const result = response.getTestResult();
+//         const state = result.tests === 0 ? 'errored' : 'passed';
 
-    //     return response;
-    // }
+//         const events = this.events
+//             .where(event => event.state === 'running')
+//             .map(event => {
+//                 if (event.type === 'suite') {
+//                     event.state = 'completed';
 
-    private async changeEventsState(response: ITestResponse) {
-        const result = response.getTestResult();
-        const state = result.tests === 0 ? 'errored' : 'passed';
+//                     return event;
+//                 }
 
-        const events = this.events
-            .where(event => event.state === 'running')
-            .map(event => {
-                if (event.type === 'suite') {
-                    event.state = 'completed';
+//                 event.state = state;
+//                 if (state === 'errored') {
+//                     event.message = response.toString();
+//                 }
 
-                    return event;
-                }
+//                 return event;
+//             });
 
-                event.state = state;
-                if (state === 'errored') {
-                    event.message = response.toString();
-                }
+//         const eventIds = events.map(event => this.getEventId(event));
 
-                return event;
-            });
+//         return this.events
+//             .put(events)
+//             .put(await response.asProblems())
+//             .where(test => eventIds.includes(this.getEventId(test)));
+//     }
 
-        const eventIds = events.map(event => this.getEventId(event));
+//     private filterFileChanged(event: FileEvent) {
+//         if (event.type !== FileChangeType.Deleted) {
+//             return true;
+//         }
 
-        return this.events
-            .put(events)
-            .put(await response.asProblems())
-            .where(test => eventIds.includes(this.getEventId(test)));
-    }
+//         const suite = this.suites.get(event.uri);
+//         if (suite) {
+//             this.events.delete(suite);
+//             this.suites.delete(event.uri);
+//         }
 
-    private filterFileChanged(event: FileEvent) {
-        if (event.type !== FileChangeType.Deleted) {
-            return true;
-        }
+//         return false;
+//     }
 
-        const suite = this.suites.get(event.uri);
-        if (suite) {
-            this.events.delete(suite);
-            this.suites.delete(event.uri);
-        }
+//     private getEventId(event: TestSuiteEvent | TestEvent) {
+//         return event.type === 'suite' ? event.suite : event.test;
+//     }
 
-        return false;
-    }
+//     private async onRunTestFinished(response: ITestResponse) {
+//         const params = {
+//             command: response.getCommand(),
+//             events: await this.changeEventsState(response),
+//         };
 
-    private getEventId(event: TestSuiteEvent | TestEvent) {
-        return event.type === 'suite' ? event.suite : event.test;
-    }
-}
+//         // this.connection.sendNotification('TestRunFinishedEvent', params);
+
+//         this.connection.sendNotification(LogMessageNotification.type, {
+//             type: MessageType.Log,
+//             message: response.toString(),
+//         });
+
+//         return params;
+//     }
+// }

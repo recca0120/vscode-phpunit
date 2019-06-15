@@ -5,7 +5,8 @@ import { projectPath } from './helpers';
 import { TextDocument } from 'vscode-languageserver-protocol';
 
 describe('Parser', () => {
-    const parser = new Parser();
+    const workspaceFolder = URI.parse(__dirname).toString();
+    const parser = new Parser(__dirname);
     const file = projectPath('tests/AssertionsTest.php');
 
     const getId = (
@@ -18,9 +19,7 @@ describe('Parser', () => {
     const getTestSuite = async (
         testfile: URI = file
     ): Promise<TestSuiteNode | undefined> => {
-        const suite = await parser.parse(testfile);
-
-        return suite;
+        return await parser.parse(testfile);
     };
 
     const getTest = (suite: TestSuiteNode, options: any = {}) => {
@@ -43,6 +42,7 @@ describe('Parser', () => {
 
         expect(suite).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id,
                 label,
             })
@@ -58,6 +58,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -75,6 +76,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -93,6 +95,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -110,6 +113,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -127,6 +131,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -144,6 +149,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -161,6 +167,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -178,6 +185,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -201,7 +209,7 @@ describe('Parser', () => {
     });
 
     it('parse text document', async () => {
-        const parser = new Parser();
+        const parser = new Parser(__dirname);
 
         const suite = parser.parseTextDocument(
             TextDocument.create(
@@ -218,6 +226,7 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
+                workspaceFolder,
                 id: id,
                 label,
                 file: file.toString(),
@@ -239,7 +248,8 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
-                id: id,
+                workspaceFolder,
+                id,
                 label,
                 file: file.toString(),
                 line: jasmine.any(Number),
@@ -260,7 +270,8 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
-                id: id,
+                workspaceFolder,
+                id,
                 label,
                 file: file.toString(),
                 line: jasmine.any(Number),
@@ -281,7 +292,8 @@ describe('Parser', () => {
 
         expect(test).toEqual(
             jasmine.objectContaining({
-                id: id,
+                workspaceFolder,
+                id,
                 label,
                 file: file.toString(),
                 line: jasmine.any(Number),
@@ -303,7 +315,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [suite.id],
+                arguments: [workspaceFolder.toString(), suite.id],
             },
         });
     });
@@ -321,7 +333,7 @@ describe('Parser', () => {
             command: {
                 title: 'Run Test',
                 command: 'phpunit.lsp.run-test-at-cursor',
-                arguments: [test.id],
+                arguments: [workspaceFolder.toString(), test.id],
             },
         });
     });

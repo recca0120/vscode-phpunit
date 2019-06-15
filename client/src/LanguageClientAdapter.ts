@@ -45,8 +45,9 @@ export class LanguageClientAdapter implements TestAdapter {
         private log: Log
     ) {
         this.onTestLoadStartedEvent();
+        this.onTestLoadFinishedEvent();
         this.onTestRunStartedEvent();
-        console.log(this.log);
+        this.onTestRunFinishedEvent();
 
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
@@ -56,28 +57,14 @@ export class LanguageClientAdapter implements TestAdapter {
     async load(): Promise<void> {
         await this.client.onReady();
 
-        const { suite } = await this.client.sendRequest('LoadTest', {
-            workspaceFolder: this.workspaceFolder.uri,
-        });
-
-        this.testsEmitter.fire(<TestLoadFinishedEvent>{
-            type: 'finished',
-            suite: suite,
-        });
+        await this.client.sendRequest(this.requestName('TestLoadStartedEvent'));
     }
 
     async run(tests: string[]): Promise<void> {
         await this.client.onReady();
 
-        const { events } = await this.client.sendRequest('RunTest', {
+        await this.client.sendRequest(this.requestName('TestRunStartedEvent'), {
             tests,
-            workspaceFolder: this.workspaceFolder.uri,
-        });
-
-        this.updateEvents(events);
-
-        this.testStatesEmitter.fire(<TestRunFinishedEvent>{
-            type: 'finished',
         });
     }
 
@@ -89,7 +76,7 @@ export class LanguageClientAdapter implements TestAdapter {
     async cancel() {
         await this.client.onReady();
 
-        this.client.sendRequest('CancelTest');
+        this.client.sendRequest(this.requestName('CancelTest'));
     }
 
     async dispose(): Promise<void> {
@@ -103,22 +90,55 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestLoadStartedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.client.onRequest('TestLoadStartedEvent', () =>
+        this.log.info('started,');
+        this.client.onRequest(this.requestName('TestLoadStartedEvent'), () =>
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' })
         );
     }
 
-    private async onTestRunStartedEvent(): Promise<void> {
+    private async onTestLoadFinishedEvent() {
         await this.client.onReady();
 
-        this.client.onRequest('TestRunStartedEvent', ({ tests, events }) => {
-            this.testStatesEmitter.fire(<TestRunStartedEvent>{
-                type: 'started',
-                tests,
-            });
+        this.client.onRequest(
+            this.requestName('TestLoadFinishedEvent'),
+            ({ suite }) => {
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{
+                    type: 'finished',
+                    suite: suite,
+                });
+            }
+        );
+    }
 
-            this.updateEvents(events);
-        });
+    private async onTestRunStartedEvent() {
+        await this.client.onReady();
+
+        this.client.onRequest(
+            this.requestName('TestRunStartedEvent'),
+            ({ tests, events }) => {
+                this.testStatesEmitter.fire(<TestRunStartedEvent>{
+                    type: 'started',
+                    tests,
+                });
+
+                this.updateEvents(events);
+            }
+        );
+    }
+
+    private async onTestRunFinishedEvent() {
+        await this.client.onReady();
+
+        this.client.onRequest(
+            this.requestName('TestRunFinishedEvent'),
+            ({ events }) => {
+                this.updateEvents(events);
+
+                this.testStatesEmitter.fire(<TestRunFinishedEvent>{
+                    type: 'finished',
+                });
+            }
+        );
     }
 
     private updateEvents(events: (TestSuiteEvent | TestEvent)[]): void {
@@ -127,5 +147,9 @@ export class LanguageClientAdapter implements TestAdapter {
                 ? this.testStatesEmitter.fire(<TestSuiteEvent>event)
                 : this.testStatesEmitter.fire(<TestEvent>event);
         });
+    }
+
+    private requestName(name: string) {
+        return `${name}-${this.workspaceFolder.uri}`;
     }
 }

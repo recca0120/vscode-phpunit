@@ -1,10 +1,5 @@
-import { PHPUnitOutput } from './ProblemMatcher';
-import { Configuration } from './Configuration';
-import { Controller } from './Controller';
 import { Snippets } from './Snippets';
-import { TestEventCollection } from './TestEventCollection';
-import { TestRunner } from './TestRunner';
-import { TestSuiteCollection } from './TestSuiteCollection';
+import { WorkspaceFolders } from './WorkspaceFolders';
 import {
     createConnection,
     TextDocuments,
@@ -18,7 +13,10 @@ import {
     // LogMessageNotification,
     // WillSaveTextDocumentWaitUntilRequest,
     // TextDocumentSaveReason,
+    WorkspaceFolder as _WorkspaceFolder,
     CompletionItem,
+    FileEvent,
+    FileChangeType,
 } from 'vscode-languageserver';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -28,21 +26,18 @@ let connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager. The text document manager
 // supports full document sync only
 let documents: TextDocuments = new TextDocuments();
-
 const snippets = new Snippets();
-
-const config = new Configuration(connection);
-const suites = new TestSuiteCollection();
-const events = new TestEventCollection();
-const problemMatcher = new PHPUnitOutput(suites);
-const runner = new TestRunner(problemMatcher);
-const controller = new Controller(connection, config, suites, events, runner);
+const workspaceFolders = new WorkspaceFolders(connection);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
 // let hasDiagnosticRelatedInformationCapability: boolean = false;
 
 connection.onInitialize((params: InitializeParams) => {
+    workspaceFolders.create(
+        params.workspaceFolders || [{ uri: params.rootUri || '', name: '' }]
+    );
+
     let capabilities = params.capabilities;
 
     // Does the client support the `workspace/configuration` request?
@@ -60,7 +55,7 @@ connection.onInitialize((params: InitializeParams) => {
     //     capabilities.textDocument.publishDiagnostics.relatedInformation
     // );
 
-    config.setConfigurationCapability(hasConfigurationCapability);
+    // config.setConfigurationCapability(hasConfigurationCapability);
 
     return {
         capabilities: {
@@ -72,7 +67,14 @@ connection.onInitialize((params: InitializeParams) => {
                 resolveProvider: true,
             },
             executeCommandProvider: {
-                commands: controller.commands,
+                commands: [
+                    'phpunit.lsp.load',
+                    'phpunit.lsp.run-all',
+                    'phpunit.lsp.rerun',
+                    'phpunit.lsp.run-file',
+                    'phpunit.lsp.run-test-at-cursor',
+                    'phpunit.lsp.cancel',
+                ],
             },
         },
     };
@@ -87,18 +89,14 @@ connection.onInitialized(async () => {
         );
     }
     if (hasWorkspaceFolderCapability) {
-        connection.workspace.onDidChangeWorkspaceFolders(async () => {
+        connection.workspace.onDidChangeWorkspaceFolders(async params => {
+            workspaceFolders.create(params.added);
             connection.console.log('Workspace folder change event received.');
-            await config.update();
         });
     }
-
-    await config.update();
 });
 
-connection.onDidChangeConfiguration(async () => {
-    await config.update();
-});
+connection.onDidChangeConfiguration(async () => {});
 
 // Only keep settings for open documents
 documents.onDidClose(() => {
@@ -109,8 +107,18 @@ documents.onDidClose(() => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(() => {});
 
-connection.onDidChangeWatchedFiles(change => {
-    controller.detectChanges(change);
+connection.onDidChangeWatchedFiles(async params => {
+    const changes = await Promise.all(
+        params.changes.map(
+            async (event: FileEvent) =>
+                await workspaceFolders.get(event.uri).detectChange(event)
+        )
+    );
+
+    changes
+        .filter(suite => !!suite)
+        .map(suite => suite!.workspaceFolder)
+        .forEach(folder => workspaceFolders.get(folder!).loadTest());
     // connection.console.log('We received an file change event');
 });
 
@@ -126,13 +134,26 @@ connection.onCompletionResolve((item: CompletionItem) => {
 });
 
 connection.onCodeLens(async params => {
-    const document = documents.get(params.textDocument.uri);
+    const uri = params.textDocument.uri;
+    const event: FileEvent = {
+        uri,
+        type: FileChangeType.Changed,
+    };
 
-    return document ? await controller.detectChanges(document) : [];
+    const suite = await workspaceFolders.get(uri).detectChange(event);
+
+    return suite ? suite.exportCodeLens() : [];
 });
 
 connection.onExecuteCommand(async (params: ExecuteCommandParams) => {
-    controller.executeCommand(params);
+    const command = params.command;
+    const args: string[] = params.arguments || [];
+    const workspaceFolder = args.shift() || '';
+
+    workspaceFolders.get(workspaceFolder).executeCommand({
+        command,
+        arguments: args,
+    });
 });
 
 /*

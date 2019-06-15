@@ -18,6 +18,7 @@ import {
 
 interface TestOptions {
     [propName: string]: any;
+    workspaceFolder: string;
     class?: string;
     namespace?: string;
     method?: string;
@@ -32,6 +33,12 @@ abstract class BaseTestNode {
     [propName: string]: any;
 
     constructor(private node: any, private options?: TestOptions) {}
+
+    get workspaceFolder() {
+        return this.options && this.options.workspaceFolder
+            ? this.options.workspaceFolder
+            : undefined;
+    }
 
     get name(): string {
         return this.node.name.name;
@@ -63,7 +70,7 @@ abstract class BaseTestNode {
         return this.node.kind;
     }
 
-    get fullclass(): string {
+    get qualifiedClassName(): string {
         return [this.namespace, this.class].filter(name => !!name).join('\\');
     }
 
@@ -112,7 +119,7 @@ abstract class BaseTestNode {
         codeLens.command = {
             title: 'Run Test',
             command: 'phpunit.lsp.run-test-at-cursor',
-            arguments: [this.id],
+            arguments: [this.workspaceFolder, this.id],
         } as Command;
 
         return codeLens;
@@ -149,11 +156,11 @@ export class TestSuiteNode extends BaseTestNode
     }
 
     get id(): string {
-        return this.fullclass;
+        return this.qualifiedClassName;
     }
 
     get label(): string {
-        return this.fullclass || '';
+        return this.qualifiedClassName || '';
     }
 
     asTestSuiteEvent(): TestSuiteEvent {
@@ -179,7 +186,7 @@ export class TestNode extends BaseTestNode implements TestInfo {
     }
 
     get id(): string {
-        return [this.fullclass, this.name].join('::');
+        return [this.qualifiedClassName, this.name].join('::');
     }
 
     get label(): string {
@@ -266,7 +273,9 @@ class Clazz {
 }
 
 export default class Parser {
+    private workspaceFolder: string = '';
     constructor(
+        workspaceFolder = process.cwd(),
         private engine = Engine.create({
             ast: {
                 withPositions: true,
@@ -287,7 +296,9 @@ export default class Parser {
             },
         }),
         private _files = files
-    ) {}
+    ) {
+        this.workspaceFolder = this._files.asUri(workspaceFolder).toString();
+    }
 
     async parse(uri: PathLike | URI): Promise<TestSuiteNode | null> {
         return this.parseCode(await this._files.get(uri), uri);
@@ -319,7 +330,13 @@ export default class Parser {
             }
 
             return this.isTestClass(node)
-                ? classes.concat(new Clazz(node, { uri, namespace }))
+                ? classes.concat(
+                      new Clazz(node, {
+                          workspaceFolder: this.workspaceFolder,
+                          uri,
+                          namespace,
+                      })
+                  )
                 : classes;
         }, []);
     }

@@ -1,26 +1,19 @@
 import { PHPUnitOutput, ProblemMatcher } from './../src/ProblemMatcher';
 import files from '../src/Filesystem';
-import { Command } from 'vscode-languageserver-protocol';
 import { fixturePath } from './helpers';
 import { ProblemNode, Status } from '../src/ProblemMatcher';
 import { TestResponse, TestResult } from '../src/TestResponse';
 
 describe('TestResponse', () => {
     const problemMatcher: ProblemMatcher = new PHPUnitOutput();
-    const command: Command = {
-        title: '',
-        command: 'phpunit',
-        arguments: [],
-    };
 
     let testResponse: TestResponse;
 
     describe('PHPUnit', () => {
         it('assertion ok', () => {
             testResponse = new TestResponse(
-                problemMatcher,
-                command,
-                'OK (1 test, 1 assertion)'
+                'OK (1 test, 1 assertion)',
+                problemMatcher
             );
             const result: TestResult = testResponse.getTestResult();
 
@@ -30,9 +23,8 @@ describe('TestResponse', () => {
 
         it('assertions ok', () => {
             testResponse = new TestResponse(
-                problemMatcher,
-                command,
-                'OK (2 tests, 2 assertions)'
+                'OK (2 tests, 2 assertions)',
+                problemMatcher
             );
             const result: TestResult = testResponse.getTestResult();
 
@@ -42,10 +34,9 @@ describe('TestResponse', () => {
 
         it('assertions has errors', () => {
             testResponse = new TestResponse(
-                problemMatcher,
-                command,
                 `ERRORS!
-Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incomplete: 1, Risky: 2.`
+Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incomplete: 1, Risky: 2.`,
+                problemMatcher
             );
             const result: TestResult = testResponse.getTestResult();
 
@@ -63,9 +54,8 @@ Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incom
 
         it('no tests executed', () => {
             testResponse = new TestResponse(
-                problemMatcher,
-                command,
-                'No tests executed!'
+                'No tests executed!',
+                problemMatcher
             );
             const result: TestResult = testResponse.getTestResult();
 
@@ -74,11 +64,10 @@ Test: 20, Assertions: 14, Errors: 2, Failures: 4, Warnings: 2, Skipped: 1, Incom
 
         it('OK, but incomplete, skipped, or risky tests!', () => {
             testResponse = new TestResponse(
-                problemMatcher,
-                command,
                 `OK, but incomplete, skipped, or risky tests!
 Tests: 3, Assertions: 2, Skipped: 1.
-                `
+                `,
+                problemMatcher
             );
             const result: TestResult = testResponse.getTestResult();
 
@@ -96,7 +85,7 @@ Tests: 3, Assertions: 2, Skipped: 1.
 
         beforeAll(async () => {
             output = await files.get(fixturePath('test-result.txt'));
-            testResponse = new TestResponse(problemMatcher, command, output);
+            testResponse = new TestResponse(output, problemMatcher);
         });
 
         it('output', () => {

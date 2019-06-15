@@ -1,11 +1,10 @@
 import files from './Filesystem';
+import stripAnsi from 'strip-ansi';
 import URI from 'vscode-uri';
 import { Command } from 'vscode-languageserver-protocol';
 import { PathLike } from 'fs';
-import { PHPUnitOutput, ProblemMatcher } from './ProblemMatcher';
 import { Process } from './Process';
 import { SpawnOptions } from 'child_process';
-import { TestResponse } from './TestResponse';
 
 export interface Params {
     file?: PathLike | URI;
@@ -19,11 +18,7 @@ export class TestRunner {
     private args: string[] = [];
     private lastArgs: string[] = [];
 
-    constructor(
-        private problemMatcher: ProblemMatcher = new PHPUnitOutput(),
-        private process = new Process(),
-        private _files = files
-    ) {}
+    constructor(private process = new Process(), private _files = files) {}
 
     setPhpBinary(phpBinary: PathLike | URI | undefined) {
         this.phpBinary = phpBinary ? this._files.asUri(phpBinary).fsPath : '';
@@ -85,11 +80,7 @@ export class TestRunner {
         this.lastArgs = args;
         const command = await this.getCommand(args, options);
 
-        return new TestResponse(
-            this.problemMatcher,
-            command,
-            await this.process.run(command, options)
-        );
+        return stripAnsi(await this.process.run(command, options));
     }
 
     cancel(): boolean {
