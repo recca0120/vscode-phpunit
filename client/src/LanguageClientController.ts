@@ -3,6 +3,7 @@ import { Configuration } from './Configuration';
 import { ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { LanguageClient } from 'vscode-languageclient';
 import { TestEvent } from 'vscode-test-adapter-api';
+import { Notify } from './Notify';
 
 export class LanguageClientController implements Disposable {
     private disposables: Disposable[] = [];
@@ -11,6 +12,7 @@ export class LanguageClientController implements Disposable {
         private client: LanguageClient,
         private config: Configuration,
         private outputChannel: OutputChannel,
+        private notify: Notify,
         private _commands = commands
     ) {}
 
@@ -37,6 +39,8 @@ export class LanguageClientController implements Disposable {
         await this.client.onReady();
 
         this.client.onNotification('TestRunStartedEvent', () => {
+            this.notify.show('PHPUnit Running');
+
             if (this.config.clearOutputOnRun === true) {
                 this.outputChannel.clear();
             }
@@ -47,6 +51,8 @@ export class LanguageClientController implements Disposable {
         await this.client.onReady();
 
         this.client.onNotification('TestRunFinishedEvent', ({ events }) => {
+            this.notify.hide();
+
             const showAfterExecution = this.config.showAfterExecution;
 
             const hasFailure = (events: TestEvent[]) => {
@@ -60,7 +66,7 @@ export class LanguageClientController implements Disposable {
             }
 
             if (showAfterExecution === 'always' || hasFailure(events)) {
-                this.outputChannel.show();
+                this.outputChannel.show(false);
             }
         });
     }

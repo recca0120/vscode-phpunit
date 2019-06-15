@@ -14,6 +14,10 @@ const workspace = {
 
 export { workspace, commands };
 
+export enum ProgressLocation {
+    Notification = 15,
+}
+
 export class Uri {
     static parse(path: string) {
         return path;

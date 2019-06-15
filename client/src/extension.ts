@@ -18,6 +18,7 @@ import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { TestAdapterRegistrar, Log } from 'vscode-test-adapter-util';
 import { LanguageClientAdapter } from './LanguageClientAdapter';
 import { LanguageClientController } from './LanguageClientController';
+import { Notify } from './Notify';
 // import { SocketOutputChannel } from './SocketOutputChannel';
 // import { Notify } from './Notify';
 
@@ -71,10 +72,12 @@ export function activate(context: ExtensionContext) {
     );
 
     const config = new Configuration(workspace);
+    const notify = new Notify();
     const controller = new LanguageClientController(
         client,
         config,
         outputChannel,
+        notify,
         commands
     );
 

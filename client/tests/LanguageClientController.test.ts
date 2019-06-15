@@ -1,6 +1,7 @@
 import { Command } from 'vscode-languageclient';
 import { Configuration } from '../src/Configuration';
 import { LanguageClientController } from '../src/LanguageClientController';
+import { Notify } from '../src/Notify';
 
 describe('LanguageClientController', () => {
     const config = {
@@ -16,6 +17,8 @@ describe('LanguageClientController', () => {
         clear: () => {},
         show: () => {},
     };
+
+    const notify = new Notify();
 
     const commands: any = {
         commands: {},
@@ -72,6 +75,7 @@ describe('LanguageClientController', () => {
             client,
             configuration,
             outputChannel,
+            notify,
             commands
         );
         controller.init();
@@ -123,15 +127,19 @@ describe('LanguageClientController', () => {
     it('run test and clear outputChannel', () => {
         spyOn(config, 'get').and.returnValue(true);
         spyOn(outputChannel, 'clear');
+        spyOn(notify, 'show');
 
         client.triggerNotification('TestRunStartedEvent');
 
         expect(outputChannel.clear).toHaveBeenCalled();
+        expect(notify.show).toHaveBeenCalled();
     });
 
     it('show outputChanel when has error', () => {
         spyOn(config, 'get').and.returnValue('onFailure');
         spyOn(outputChannel, 'show');
+        spyOn(notify, 'hide');
+
         const params = {
             command: {
                 title: '',
@@ -147,5 +155,6 @@ describe('LanguageClientController', () => {
         client.triggerNotification('TestRunFinishedEvent', params);
 
         expect(outputChannel.show).toHaveBeenCalled();
+        expect(notify.hide).toHaveBeenCalled();
     });
 });
