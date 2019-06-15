@@ -15,7 +15,6 @@ import {
     // TextDocumentSaveReason,
     WorkspaceFolder as _WorkspaceFolder,
     CompletionItem,
-    FileEvent,
     FileChangeType,
 } from 'vscode-languageserver';
 
@@ -113,14 +112,11 @@ documents.onDidClose(() => {
 documents.onDidChangeContent(() => {});
 
 connection.onDidChangeWatchedFiles(async params => {
-    const changes = await Promise.all(
-        params.changes.map(
-            async (event: FileEvent) =>
-                await workspaceFolders.get(event.uri).detectChange(event)
-        )
+    const changes = params.changes.map(
+        async event => await workspaceFolders.get(event.uri).detectChange(event)
     );
 
-    changes
+    (await Promise.all(changes))
         .filter(suite => !!suite)
         .map(suite => suite!.workspaceFolder)
         .forEach(folder => workspaceFolders.get(folder!).loadTest());
@@ -140,12 +136,11 @@ connection.onCompletionResolve((item: CompletionItem) => {
 
 connection.onCodeLens(async params => {
     const uri = params.textDocument.uri;
-    const event: FileEvent = {
+
+    const suite = await workspaceFolders.get(uri).detectChange({
         uri,
         type: FileChangeType.Changed,
-    };
-
-    const suite = await workspaceFolders.get(uri).detectChange(event);
+    });
 
     return suite ? suite.exportCodeLens() : [];
 });
