@@ -258,20 +258,7 @@ export class WorkspaceFolder {
 
         const events = this.events
             .where(event => event.state === 'running')
-            .map(event => {
-                if (event.type === 'suite') {
-                    event.state = 'completed';
-
-                    return event;
-                }
-
-                event.state = state;
-                if (state === 'errored') {
-                    event.message = response.toString();
-                }
-
-                return event;
-            });
+            .map(event => this.fillTestEventState(event, response, state));
 
         const eventIds = events.map(event => this.getEventId(event));
 
@@ -279,6 +266,25 @@ export class WorkspaceFolder {
             .put(events)
             .put(await response.asProblems())
             .where(test => eventIds.includes(this.getEventId(test)));
+    }
+
+    private fillTestEventState(
+        event: TestSuiteEvent | TestEvent,
+        response: ITestResponse,
+        state: TestEvent['state']
+    ) {
+        if (event.type === 'suite') {
+            event.state = 'completed';
+
+            return event;
+        }
+
+        event.state = state;
+        if (state === 'errored') {
+            event.message = response.toString();
+        }
+
+        return event;
     }
 
     private getEventId(event: TestSuiteEvent | TestEvent) {
