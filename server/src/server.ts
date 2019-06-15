@@ -90,13 +90,17 @@ connection.onInitialized(async () => {
     }
     if (hasWorkspaceFolderCapability) {
         connection.workspace.onDidChangeWorkspaceFolders(async params => {
-            workspaceFolders.create(params.added);
             connection.console.log('Workspace folder change event received.');
+            workspaceFolders.create(params.added);
+            await workspaceFolders.update(hasConfigurationCapability);
         });
     }
+    await workspaceFolders.update(hasConfigurationCapability);
 });
 
-connection.onDidChangeConfiguration(async () => {});
+connection.onDidChangeConfiguration(async () => {
+    await workspaceFolders.update(hasConfigurationCapability);
+});
 
 // Only keep settings for open documents
 documents.onDidClose(() => {

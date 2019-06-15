@@ -44,6 +44,10 @@ export class WorkspaceFolder {
         this.onTestCancelEvent();
     }
 
+    getConfig() {
+        return this.config;
+    }
+
     async detectChange(event: FileEvent) {
         if (this.isFileChanged(event)) {
             await this.suites.put(event.uri);

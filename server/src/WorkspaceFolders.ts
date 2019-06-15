@@ -18,35 +18,27 @@ export class WorkspaceFolders {
     constructor(private connection: Connection, private _files = files) {}
 
     create(workspaceFolders: _WorkspaceFolder[]) {
-        workspaceFolders.forEach(_workspaceFolder => {
-            const uri = this._files.asUri(_workspaceFolder.uri).toString();
+        return workspaceFolders.map(folder => {
+            const uri = this._files.asUri(folder.uri).toString();
 
-            if (this.workspaceFolders.has(uri)) {
-                return;
+            if (!this.workspaceFolders.has(uri)) {
+                this.workspaceFolders.set(uri, this.createWorkspaceFolder(uri));
             }
 
-            const config = new Configuration(this.connection);
-            const suites = new TestSuiteCollection();
-            const events = new TestEventCollection();
-            const problemMatcher = new PHPUnitOutput(suites);
-            const testRunner = new TestRunner();
-
-            this.workspaceFolders.set(
-                uri,
-                new WorkspaceFolder(
-                    uri,
-                    this.connection,
-                    config,
-                    suites,
-                    events,
-                    testRunner,
-                    problemMatcher,
-                    this._files
-                )
-            );
+            return this.workspaceFolders.get(uri);
         });
+    }
 
-        return this;
+    async update(configurationCapability = true) {
+        return Promise.all(
+            Array.from(this.workspaceFolders.values()).map(
+                async workspaceFolder => {
+                    await workspaceFolder
+                        .getConfig()
+                        .update(configurationCapability);
+                }
+            )
+        );
     }
 
     get(uri: PathLike | URI): WorkspaceFolder {
@@ -56,5 +48,24 @@ export class WorkspaceFolders {
         ) as string;
 
         return this.workspaceFolders.get(current)!;
+    }
+
+    private createWorkspaceFolder(uri: string) {
+        const config = new Configuration(this.connection, uri);
+        const suites = new TestSuiteCollection();
+        const events = new TestEventCollection();
+        const problemMatcher = new PHPUnitOutput(suites);
+        const testRunner = new TestRunner();
+
+        return new WorkspaceFolder(
+            uri,
+            this.connection,
+            config,
+            suites,
+            events,
+            testRunner,
+            problemMatcher,
+            this._files
+        );
     }
 }

@@ -14,9 +14,10 @@ export class Configuration implements IConfiguration {
         files: '**/*.php',
     };
 
-    configurationCapability = true;
-
-    constructor(private connection: Connection) {}
+    constructor(
+        private connection: Connection,
+        private workspaceFolder: string
+    ) {}
 
     get maxNumberOfProblems(): number {
         return this.defaults.maxNumberOfProblems;
@@ -38,18 +39,13 @@ export class Configuration implements IConfiguration {
         return this.defaults.args;
     }
 
-    async update() {
-        if (this.configurationCapability) {
-            this.defaults = await this.connection.workspace.getConfiguration(
-                'phpunit'
-            );
+    async update(configurationCapability = true) {
+        if (configurationCapability) {
+            this.defaults = await this.connection.workspace.getConfiguration({
+                scopeUri: this.workspaceFolder,
+                section: 'phpunit',
+            });
         }
-
-        return this;
-    }
-
-    setConfigurationCapability(configurationCapability: boolean) {
-        this.configurationCapability = configurationCapability;
 
         return this;
     }
