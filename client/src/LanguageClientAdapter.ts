@@ -153,7 +153,6 @@ export class LanguageClientAdapter implements TestAdapter {
     }
 
     private requestName(name: string) {
-        this.log.info(`${name}-${md5(this.workspaceFolder.uri.toString())}`);
-        return `${name}-${md5(this.workspaceFolder.uri.toString())}`;
+        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
     }
 }

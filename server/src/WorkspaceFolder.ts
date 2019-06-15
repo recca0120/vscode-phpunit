@@ -299,6 +299,6 @@ export class WorkspaceFolder {
     }
 
     private requestName(name: string) {
-        return `${name}-${md5(this.workspaceFolder)}`;
+        return [name, md5(this.workspaceFolder)].join('-');
     }
 }
