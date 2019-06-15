@@ -1,6 +1,6 @@
-import { PHPUnitOutput, ProblemMatcher } from './../src/ProblemMatcher';
 import files from '../src/Filesystem';
 import { fixturePath } from './helpers';
+import { PHPUnitOutput, ProblemMatcher } from './../src/ProblemMatcher';
 import { ProblemNode, Status } from '../src/ProblemMatcher';
 import { TestResponse, TestResult } from '../src/TestResponse';
 

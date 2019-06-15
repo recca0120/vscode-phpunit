@@ -1,6 +1,6 @@
-import { TestSuiteCollection } from './TestSuiteCollection';
 import { TestEvent } from './TestExplorer';
 import { TestNode } from './Parser';
+import { TestSuiteCollection } from './TestSuiteCollection';
 
 export abstract class ProblemMatcher {
     private problems: ProblemNode[] = [];

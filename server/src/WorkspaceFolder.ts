@@ -195,12 +195,15 @@ export class WorkspaceFolder {
     }
 
     private onTestCancelEvent() {
-        this.connection.onNotification(this.requestName('TestCancelEvent'), () => {
-            return this.executeCommand({
-                command: 'php.lsp.cancel',
-                arguments: [],
-            });
-        });
+        this.connection.onNotification(
+            this.requestName('TestCancelEvent'),
+            () => {
+                return this.executeCommand({
+                    command: 'php.lsp.cancel',
+                    arguments: [],
+                });
+            }
+        );
     }
 
     private async sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {

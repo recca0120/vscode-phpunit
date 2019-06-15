@@ -1,12 +1,12 @@
-import { PHPUnitOutput } from './../src/ProblemMatcher';
-import { WorkspaceFolder } from '../src/WorkspaceFolder';
-import { projectPath } from './helpers';
+import md5 from 'md5';
 import { Configuration } from '../src/Configuration';
-import { TestSuiteCollection } from '../src/TestSuiteCollection';
+import { LogMessageNotification, MessageType } from 'vscode-languageserver';
+import { PHPUnitOutput } from './../src/ProblemMatcher';
+import { projectPath } from './helpers';
 import { TestEventCollection } from '../src/TestEventCollection';
 import { TestRunner } from '../src/TestRunner';
-import { LogMessageNotification, MessageType } from 'vscode-languageserver';
-import md5 from 'md5';
+import { TestSuiteCollection } from '../src/TestSuiteCollection';
+import { WorkspaceFolder } from '../src/WorkspaceFolder';
 
 describe('WorkspaceFolder', () => {
     const folder = projectPath('');
