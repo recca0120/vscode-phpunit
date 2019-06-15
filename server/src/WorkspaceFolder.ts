@@ -170,14 +170,14 @@ export class WorkspaceFolder {
     }
 
     private onTestLoadStartedEvent() {
-        this.connection.onRequest(
+        this.connection.onNotification(
             this.requestName('TestLoadStartedEvent'),
             async () => await this.loadTest()
         );
     }
 
     private onTestRunStartedEvent() {
-        this.connection.onRequest(
+        this.connection.onNotification(
             this.requestName('TestRunStartedEvent'),
             async ({ tests }) => {
                 const id: string = tests[0] || 'root';
@@ -195,7 +195,7 @@ export class WorkspaceFolder {
     }
 
     private onTestCancelEvent() {
-        this.connection.onRequest(this.requestName('TestCancelEvent'), () => {
+        this.connection.onNotification(this.requestName('TestCancelEvent'), () => {
             return this.executeCommand({
                 command: 'php.lsp.cancel',
                 arguments: [],

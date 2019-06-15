@@ -17,6 +17,9 @@ describe('WorkspaceFolder', () => {
         onNotification: (name: string, cb: Function) => {
             connection.notifications[name] = cb;
         },
+        triggerNotification: (name: string, params?: any) => {
+            return connection.notifications[name](params);
+        },
         sendNotification: () => {},
         onRequest: (name: string, cb: Function) => {
             connection.requests[name] = cb;
@@ -26,7 +29,7 @@ describe('WorkspaceFolder', () => {
         },
         sendRequest: () => {},
     };
-    const config = new Configuration(connection);
+    const config = new Configuration(connection, folder.toString());
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
     const problemMatcher = new PHPUnitOutput(suites);
@@ -44,10 +47,15 @@ describe('WorkspaceFolder', () => {
 
     it('TestRunStartedEvent Run All', async () => {
         spyOn(workspaceFolder, 'executeCommand');
-        await connection.triggerRequest(requestName('TestLoadStartedEvent'));
-        await connection.triggerRequest(requestName('TestRunStartedEvent'), {
-            tests: ['root'],
-        });
+        await connection.triggerNotification(
+            requestName('TestLoadStartedEvent')
+        );
+        await connection.triggerNotification(
+            requestName('TestRunStartedEvent'),
+            {
+                tests: ['root'],
+            }
+        );
 
         expect(workspaceFolder.executeCommand).toHaveBeenCalledWith({
             command: 'phpunit.lsp.run-all',
@@ -57,10 +65,15 @@ describe('WorkspaceFolder', () => {
 
     it('TestRunStartedEvent Run Test At Cursor', async () => {
         spyOn(workspaceFolder, 'executeCommand');
-        await connection.triggerRequest(requestName('TestLoadStartedEvent'));
-        await connection.triggerRequest(requestName('TestRunStartedEvent'), {
-            tests: ['foo'],
-        });
+        await connection.triggerNotification(
+            requestName('TestLoadStartedEvent')
+        );
+        await connection.triggerNotification(
+            requestName('TestRunStartedEvent'),
+            {
+                tests: ['foo'],
+            }
+        );
 
         expect(workspaceFolder.executeCommand).toHaveBeenCalledWith({
             command: 'phpunit.lsp.run-test-at-cursor',

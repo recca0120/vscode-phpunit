@@ -91,6 +91,7 @@ connection.onInitialized(async () => {
     if (hasWorkspaceFolderCapability) {
         connection.workspace.onDidChangeWorkspaceFolders(async params => {
             connection.console.log('Workspace folder change event received.');
+
             workspaceFolders.create(params.added);
             await workspaceFolders.update(hasConfigurationCapability);
         });

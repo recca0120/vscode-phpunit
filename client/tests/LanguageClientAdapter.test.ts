@@ -39,22 +39,22 @@ describe('LanguageClientAdapterTest', () => {
     });
 
     it('load', async () => {
-        spyOn(client, 'sendRequest');
+        spyOn(client, 'sendNotification');
 
         await adapter.load();
 
-        expect(client.sendRequest).toHaveBeenCalledWith(
+        expect(client.sendNotification).toHaveBeenCalledWith(
             requestName('TestLoadStartedEvent')
         );
     });
 
     it('run', async () => {
         const tests = ['foo', 'bar'];
-        spyOn(client, 'sendRequest');
+        spyOn(client, 'sendNotification');
 
         await adapter.run(tests);
 
-        expect(client.sendRequest).toHaveBeenCalledWith(
+        expect(client.sendNotification).toHaveBeenCalledWith(
             requestName('TestRunStartedEvent'),
             {
                 tests,
@@ -63,21 +63,21 @@ describe('LanguageClientAdapterTest', () => {
     });
 
     it('cancel', async () => {
-        spyOn(client, 'sendRequest');
+        spyOn(client, 'sendNotification');
 
         await adapter.cancel();
 
-        expect(client.sendRequest).toHaveBeenCalledWith(
+        expect(client.sendNotification).toHaveBeenCalledWith(
             requestName('TestCancelEvent')
         );
     });
 
     it('dispose', async () => {
-        spyOn(client, 'sendRequest');
+        spyOn(client, 'sendNotification');
 
         await adapter.dispose();
 
-        expect(client.sendRequest).toHaveBeenCalledWith(
+        expect(client.sendNotification).toHaveBeenCalledWith(
             requestName('TestCancelEvent')
         );
     });

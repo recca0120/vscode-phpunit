@@ -58,13 +58,15 @@ export class LanguageClientAdapter implements TestAdapter {
     async load(): Promise<void> {
         await this.client.onReady();
 
-        await this.client.sendRequest(this.requestName('TestLoadStartedEvent'));
+        this.client.sendNotification(this.requestName('TestLoadStartedEvent'));
     }
 
     async run(tests: string[]): Promise<void> {
         await this.client.onReady();
 
-        await this.client.sendRequest(this.requestName('TestRunStartedEvent'), {
+        this.log.info(tests);
+
+        this.client.sendNotification(this.requestName('TestRunStartedEvent'), {
             tests,
         });
     }
@@ -77,7 +79,7 @@ export class LanguageClientAdapter implements TestAdapter {
     async cancel() {
         await this.client.onReady();
 
-        this.client.sendRequest(this.requestName('TestCancelEvent'));
+        this.client.sendNotification(this.requestName('TestCancelEvent'));
     }
 
     async dispose(): Promise<void> {
@@ -151,6 +153,7 @@ export class LanguageClientAdapter implements TestAdapter {
     }
 
     private requestName(name: string) {
+        this.log.info(`${name}-${md5(this.workspaceFolder.uri.toString())}`);
         return `${name}-${md5(this.workspaceFolder.uri.toString())}`;
     }
 }

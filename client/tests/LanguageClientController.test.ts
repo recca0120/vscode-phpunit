@@ -50,22 +50,21 @@ describe('LanguageClientController', () => {
         onNotification: (name: string, cb: Function) => {
             client.notifications[name] = cb;
         },
+        triggerNotification: (name: string, params?: any) => {
+            client.notifications[name](params);
+        },
         sendRequest: (_type: any, command: Command) => {
             client.requests[command.command] = command;
         },
-    };
+        triggerCommand: async (name: string) => {
+            await commands.commands[name](textEditor);
 
-    const sendCommand = async (name: string) => {
-        await commands.commands[name](textEditor);
-
-        return client.requests[name.replace(/phpunit\./, 'phpunit.lsp.')];
-    };
-
-    const sendNotification = (name: string, params?: any) => {
-        client.notifications[name](params);
+            return client.requests[name.replace(/phpunit\./, 'phpunit.lsp.')];
+        },
     };
 
     const configuration = new Configuration(workspace);
+
     let controller: LanguageClientController;
 
     beforeEach(() => {
@@ -79,35 +78,37 @@ describe('LanguageClientController', () => {
     });
 
     it('execute run all', async () => {
-        expect(await sendCommand('phpunit.run-all')).toEqual({
+        expect(await client.triggerCommand('phpunit.run-all')).toEqual({
             command: 'phpunit.lsp.run-all',
             arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute rerun', async () => {
-        expect(await sendCommand('phpunit.rerun')).toEqual({
+        expect(await client.triggerCommand('phpunit.rerun')).toEqual({
             command: 'phpunit.lsp.rerun',
             arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute run file', async () => {
-        expect(await sendCommand('phpunit.run-file')).toEqual({
+        expect(await client.triggerCommand('phpunit.run-file')).toEqual({
             command: 'phpunit.lsp.run-file',
             arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute run test at cursor', async () => {
-        expect(await sendCommand('phpunit.run-test-at-cursor')).toEqual({
+        expect(
+            await client.triggerCommand('phpunit.run-test-at-cursor')
+        ).toEqual({
             command: 'phpunit.lsp.run-test-at-cursor',
             arguments: ['foo.php', 'foo.php', 0],
         });
     });
 
     it('execute cancel', async () => {
-        expect(await sendCommand('phpunit.cancel')).toEqual({
+        expect(await client.triggerCommand('phpunit.cancel')).toEqual({
             command: 'phpunit.lsp.cancel',
             arguments: ['foo.php', 'foo.php', 0],
         });
@@ -123,7 +124,7 @@ describe('LanguageClientController', () => {
         spyOn(config, 'get').and.returnValue(true);
         spyOn(outputChannel, 'clear');
 
-        sendNotification('TestRunStartedEvent');
+        client.triggerNotification('TestRunStartedEvent');
 
         expect(outputChannel.clear).toHaveBeenCalled();
     });
@@ -143,7 +144,7 @@ describe('LanguageClientController', () => {
             ],
         };
 
-        sendNotification('TestRunFinishedEvent', params);
+        client.triggerNotification('TestRunFinishedEvent', params);
 
         expect(outputChannel.show).toHaveBeenCalled();
     });
