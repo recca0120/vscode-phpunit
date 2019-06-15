@@ -43,11 +43,12 @@ export class WorkspaceFolders {
 
     get(uri: PathLike | URI): WorkspaceFolder {
         const _uri = this._files.asUri(uri).toString();
-        const current = Array.from(this.workspaceFolders.keys()).find(
-            uri => _uri.indexOf(uri) !== -1
-        ) as string;
 
-        return this.workspaceFolders.get(current)!;
+        const current = Array.from(this.workspaceFolders.keys())
+            .sort((a, b) => b.length - a.length)
+            .find(uri => _uri.indexOf(uri) !== -1);
+
+        return this.workspaceFolders.get(current!)!;
     }
 
     private createWorkspaceFolder(uri: string) {

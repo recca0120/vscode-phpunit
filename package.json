@@ -5,7 +5,7 @@
     "icon": "img/icon.png",
     "author": "recca0120",
     "license": "MIT",
-    "version": "2.0.64",
+    "version": "2.0.65",
     "preview": true,
     "repository": {
         "type": "git",
@@ -188,8 +188,5 @@
         "typescript": "^3.5.1",
         "webpack": "^4.32.2",
         "webpack-cli": "^3.3.2"
-    },
-    "dependencies": {
-        "md5": "^2.2.1"
     }
 }
