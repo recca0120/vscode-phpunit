@@ -1,6 +1,7 @@
 import files from '../src/Filesystem';
 import { fixturePath, projectPath } from './helpers';
-import { PHPUnitOutput, ProblemNode } from './../src/ProblemMatcher';
+import { PHPUnitOutput } from './../src/ProblemMatcher';
+import { ProblemNode } from './../src/Problem';
 import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
 import { TestEventCollection } from './../src/TestEventCollection';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';

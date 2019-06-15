@@ -64,8 +64,6 @@ export class LanguageClientAdapter implements TestAdapter {
     async run(tests: string[]): Promise<void> {
         await this.client.onReady();
 
-        this.log.info(tests);
-
         this.client.sendNotification(this.requestName('TestRunStartedEvent'), {
             tests,
         });
@@ -93,7 +91,6 @@ export class LanguageClientAdapter implements TestAdapter {
     private async onTestLoadStartedEvent(): Promise<void> {
         await this.client.onReady();
 
-        this.log.info('started');
         this.client.onRequest(this.requestName('TestLoadStartedEvent'), () =>
             this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' })
         );
@@ -134,7 +131,8 @@ export class LanguageClientAdapter implements TestAdapter {
 
         this.client.onRequest(
             this.requestName('TestRunFinishedEvent'),
-            ({ events }) => {
+            ({ events, command }) => {
+                this.log.info(command);
                 this.updateEvents(events);
 
                 this.testStatesEmitter.fire(<TestRunFinishedEvent>{

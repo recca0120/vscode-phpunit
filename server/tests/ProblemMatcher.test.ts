@@ -1,6 +1,7 @@
 import { fixturePath, projectPath } from './helpers';
-import { PHPUnitOutput, Status } from '../src/ProblemMatcher';
+import { PHPUnitOutput } from '../src/ProblemMatcher';
 import { readFileSync } from 'fs';
+import { Status } from '../src/Problem';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
 describe('ProblemMatcher', () => {

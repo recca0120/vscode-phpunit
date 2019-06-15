@@ -14,14 +14,12 @@ describe('TestRunner', () => {
     });
 
     describe('run', () => {
-        let response: string;
-
         beforeEach(() => {
             spyOn(process, 'run').and.returnValue('PHPUnit');
         });
 
         afterEach(() => {
-            expect(response.toString()).toEqual('PHPUnit');
+            expect(testRunner.getOutput()).toEqual('PHPUnit');
         });
 
         describe('configurtion', () => {
@@ -44,7 +42,7 @@ describe('TestRunner', () => {
             });
 
             it('run all', async () => {
-                response = await testRunner.run();
+                await testRunner.run();
 
                 expect(process.run).toBeCalledWith(
                     {
@@ -61,7 +59,7 @@ describe('TestRunner', () => {
                     file: '/foo.php',
                 };
 
-                response = await testRunner.run(params);
+                await testRunner.run(params);
 
                 expect(process.run).toHaveBeenCalledWith(
                     {
@@ -79,7 +77,7 @@ describe('TestRunner', () => {
                 };
 
                 await testRunner.run(params);
-                response = await testRunner.rerun({});
+                await testRunner.rerun({});
 
                 expect(process.run).toHaveBeenCalledTimes(2);
                 expect(process.run).toHaveBeenCalledWith(
@@ -99,7 +97,7 @@ describe('TestRunner', () => {
                     depends: ['test_failed'],
                 };
 
-                response = await testRunner.run(params);
+                await testRunner.run(params);
 
                 expect(process.run).toHaveBeenCalledWith(
                     {
@@ -126,7 +124,7 @@ describe('TestRunner', () => {
                 .setPhpUnitBinary('/phpunit')
                 .setArgs(['foo', 'bar']);
 
-            response = await testRunner.run();
+            await testRunner.run();
 
             expect(process.run).toHaveBeenCalledWith(
                 {

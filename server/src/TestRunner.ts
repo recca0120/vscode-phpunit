@@ -1,5 +1,4 @@
 import files from './Filesystem';
-import stripAnsi from 'strip-ansi';
 import URI from 'vscode-uri';
 import { Command } from 'vscode-languageserver-protocol';
 import { PathLike } from 'fs';
@@ -17,6 +16,12 @@ export class TestRunner {
     private phpUnitBinary = '';
     private args: string[] = [];
     private lastArgs: string[] = [];
+    private lastOutput: string = '';
+    private lastCommand: Command = {
+        title: '',
+        command: '',
+        arguments: [],
+    };
 
     constructor(private process = new Process(), private _files = files) {}
 
@@ -40,28 +45,28 @@ export class TestRunner {
         return this;
     }
 
-    async rerun(_params?: Params, options?: SpawnOptions) {
-        if (_params && this.lastArgs.length === 0) {
-            return await this.run(_params, options);
+    async rerun(p?: Params, options?: SpawnOptions) {
+        if (p && this.lastArgs.length === 0) {
+            return await this.run(p, options);
         }
 
-        return await this.doRun(this.lastArgs);
+        return await this.doRun(this.lastArgs, options);
     }
 
-    async run(_params?: Params, options?: SpawnOptions) {
-        if (!_params) {
+    async run(p?: Params, options?: SpawnOptions) {
+        if (!p) {
             return await this.doRun([], options);
         }
 
         const params = [];
         const deps: string[] = [];
 
-        if (_params.method) {
-            deps.push(_params.method);
+        if (p.method) {
+            deps.push(p.method);
         }
 
-        if (_params.depends) {
-            deps.push(..._params.depends);
+        if (p.depends) {
+            deps.push(...p.depends);
         }
 
         if (deps.length > 0) {
@@ -69,25 +74,46 @@ export class TestRunner {
             params.push(`^.*::(${deps.join('|')})( with data set .*)?$`);
         }
 
-        if (_params.file) {
-            params.push(this._files.asUri(_params.file).fsPath);
+        if (p.file) {
+            params.push(this._files.asUri(p.file).fsPath);
         }
 
         return await this.doRun(params, options);
     }
 
     async doRun(args: string[] = [], options?: SpawnOptions) {
-        this.lastArgs = args;
-        const command = await this.getCommand(args, options);
+        try {
+            this.lastArgs = args;
+            this.lastCommand = await this.toCommand(args, options);
+            this.lastOutput = await this.process.run(this.lastCommand, options);
 
-        return stripAnsi(await this.process.run(command, options));
+            return 0;
+        } catch (e) {
+            return 1;
+        }
+    }
+
+    getOutput() {
+        return this.lastOutput;
+    }
+
+    getCommand() {
+        return this.lastCommand;
     }
 
     cancel(): boolean {
-        return this.process.kill();
+        const killed = this.process.kill();
+        this.lastOutput = '';
+        this.lastCommand = {
+            title: '',
+            command: '',
+            arguments: [],
+        };
+
+        return killed;
     }
 
-    private async getCommand(
+    private async toCommand(
         args: string[],
         spawnOptions?: SpawnOptions
     ): Promise<Command> {

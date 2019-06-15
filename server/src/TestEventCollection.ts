@@ -1,4 +1,4 @@
-import { ProblemNode } from './ProblemMatcher';
+import { ProblemNode } from './Problem';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
 import { TestNode, TestSuiteNode } from './Parser';
 

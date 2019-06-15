@@ -128,13 +128,12 @@ export class WorkspaceFolder {
             cwd: this._files.asUri(this.workspaceFolder).fsPath,
         };
 
-        const response =
-            rerun === false
-                ? await this.testRunner.run(params, options)
-                : await this.testRunner.rerun(params, options);
+        rerun === false
+            ? await this.testRunner.run(params, options)
+            : await this.testRunner.rerun(params, options);
 
         return this.sendRunTestFinished(
-            new TestResponse(response, this.problemMatcher)
+            new TestResponse(this.testRunner.getOutput(), this.problemMatcher)
         );
     }
 
@@ -233,6 +232,7 @@ export class WorkspaceFolder {
 
     private async sendRunTestFinished(response: ITestResponse) {
         const params = {
+            command: this.testRunner.getCommand(),
             events: await this.changeEventsState(response),
         };
 

@@ -1,4 +1,6 @@
-import { ProblemMatcher, ProblemNode } from './ProblemMatcher';
+import stripAnsi from 'strip-ansi';
+import { ProblemMatcher } from './ProblemMatcher';
+import { ProblemNode } from './Problem';
 // import {
 //     Diagnostic,
 //     DiagnosticSeverity,
@@ -49,10 +51,10 @@ export class FailedTestResponse implements ITestResponse {
 }
 
 export class TestResponse implements ITestResponse {
-    constructor(
-        private output: string,
-        private problemMatcher: ProblemMatcher
-    ) {}
+    private output: string;
+    constructor(output: string, private problemMatcher: ProblemMatcher) {
+        this.output = stripAnsi(output);
+    }
 
     async asProblems(): Promise<ProblemNode[]> {
         return await this.problemMatcher.parse(this.output);
