@@ -1,4 +1,7 @@
-import { Connection } from 'vscode-languageserver';
+import {
+    Connection,
+    WorkspaceFolder as _WorkspaceFolder,
+} from 'vscode-languageserver';
 
 export interface IConfiguration {
     maxNumberOfProblems: number;
@@ -16,7 +19,7 @@ export class Configuration implements IConfiguration {
 
     constructor(
         private connection: Connection,
-        private workspaceFolder: string
+        private workspaceFolder: _WorkspaceFolder
     ) {}
 
     get maxNumberOfProblems(): number {
@@ -42,7 +45,7 @@ export class Configuration implements IConfiguration {
     async update(configurationCapability = true) {
         if (configurationCapability) {
             this.defaults = await this.connection.workspace.getConfiguration({
-                scopeUri: this.workspaceFolder,
+                scopeUri: this.workspaceFolder.uri,
                 section: 'phpunit',
             });
         }

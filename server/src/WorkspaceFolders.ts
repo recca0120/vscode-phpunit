@@ -19,13 +19,14 @@ export class WorkspaceFolders {
 
     create(workspaceFolders: _WorkspaceFolder[]) {
         return workspaceFolders.map(folder => {
-            const uri = this._files.asUri(folder.uri).toString();
-
-            if (!this.workspaceFolders.has(uri)) {
-                this.workspaceFolders.set(uri, this.createWorkspaceFolder(uri));
+            if (!this.workspaceFolders.has(folder.uri)) {
+                this.workspaceFolders.set(
+                    folder.uri,
+                    this.createWorkspaceFolder(folder)
+                );
             }
 
-            return this.workspaceFolders.get(uri);
+            return this.workspaceFolders.get(folder.uri);
         });
     }
 
@@ -51,15 +52,15 @@ export class WorkspaceFolders {
         return this.workspaceFolders.get(current!)!;
     }
 
-    private createWorkspaceFolder(uri: string) {
-        const config = new Configuration(this.connection, uri);
+    private createWorkspaceFolder(workspaceFolder: _WorkspaceFolder) {
+        const config = new Configuration(this.connection, workspaceFolder);
         const suites = new TestSuiteCollection();
         const events = new TestEventCollection();
         const problemMatcher = new PHPUnitOutput(suites);
         const testRunner = new TestRunner();
 
         return new WorkspaceFolder(
-            uri,
+            workspaceFolder,
             this.connection,
             config,
             suites,

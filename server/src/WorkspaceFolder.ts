@@ -14,6 +14,7 @@ import {
     MessageType,
     FileEvent,
     FileChangeType,
+    WorkspaceFolder as _WorkspaceFolder,
 } from 'vscode-languageserver';
 import {
     TestResponse,
@@ -30,7 +31,7 @@ export class WorkspaceFolder {
     ]);
 
     constructor(
-        private workspaceFolder: string,
+        private workspaceFolder: _WorkspaceFolder,
         private connection: Connection,
         private config: Configuration,
         private suites: TestSuiteCollection,
@@ -67,7 +68,7 @@ export class WorkspaceFolder {
         await this.sendLoadTestFinishedEvent(
             (await this.suites.load(this.config.files, {
                 ignore: '**/vendor/**',
-                cwd: this._files.asUri(this.workspaceFolder).fsPath,
+                cwd: this.fsPath(),
             })).tree()
         );
     }
@@ -125,7 +126,7 @@ export class WorkspaceFolder {
             .setArgs(this.config.args);
 
         const options = {
-            cwd: this._files.asUri(this.workspaceFolder).fsPath,
+            cwd: this.fsPath(),
         };
 
         rerun === false
@@ -298,7 +299,11 @@ export class WorkspaceFolder {
         return false;
     }
 
+    private fsPath() {
+        return this._files.asUri(this.workspaceFolder.uri).fsPath;
+    }
+
     private requestName(name: string) {
-        return [name, md5(this.workspaceFolder)].join('-');
+        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
     }
 }

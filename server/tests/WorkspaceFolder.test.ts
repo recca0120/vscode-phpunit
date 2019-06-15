@@ -9,8 +9,11 @@ import { TestSuiteCollection } from '../src/TestSuiteCollection';
 import { WorkspaceFolder } from '../src/WorkspaceFolder';
 
 describe('WorkspaceFolder', () => {
-    const folder = projectPath('');
-    const requestName = (name: string) => `${name}-${md5(folder.toString())}`;
+    const folder = {
+        uri: projectPath('').toString(),
+        name: '',
+    };
+    const requestName = (name: string) => `${name}-${md5(folder.uri)}`;
     const connection: any = {
         notifications: {},
         requests: {},
@@ -29,14 +32,14 @@ describe('WorkspaceFolder', () => {
         },
         sendRequest: () => {},
     };
-    const config = new Configuration(connection, folder.toString());
+    const config = new Configuration(connection, folder);
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
     const problemMatcher = new PHPUnitOutput(suites);
     const testRunner = new TestRunner();
 
     const workspaceFolder = new WorkspaceFolder(
-        folder.toString(),
+        folder,
         connection,
         config,
         suites,
