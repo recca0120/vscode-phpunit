@@ -1,11 +1,11 @@
-import { ProblemCollection } from './ProblemCollection';
 import files from './Filesystem';
 import md5 from 'md5';
 import { Configuration } from './Configuration';
+import { ProblemCollection } from './ProblemCollection';
 import { ProblemMatcher } from './ProblemMatcher';
 import { TestEvent, TestSuiteEvent, TestSuiteInfo } from './TestExplorer';
 import { TestEventCollection } from './TestEventCollection';
-import { TestNode, TestSuiteNode } from './Parser';
+import { TestNode, TestSuiteNode } from './TestNode';
 import { TestRunner } from './TestRunner';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import {

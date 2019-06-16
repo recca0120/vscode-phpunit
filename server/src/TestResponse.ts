@@ -1,6 +1,6 @@
 import stripAnsi from 'strip-ansi';
 import { ProblemMatcher } from './ProblemMatcher';
-import { ProblemNode } from './Problem';
+import { ProblemNode } from './ProblemNode';
 
 export interface TestResult {
     [index: string]: number | undefined;

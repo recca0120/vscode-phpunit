@@ -1,9 +1,10 @@
 import files from './Filesystem';
-import Parser, { TestNode, TestSuiteNode } from './Parser';
+import Parser from './Parser';
 import URI from 'vscode-uri';
 import { IOptions } from 'glob';
 import { PathLike } from 'fs';
 import { TestInfo, TestSuiteInfo } from './TestExplorer';
+import { TestNode, TestSuiteNode } from './TestNode';
 import { TextDocument } from 'vscode-languageserver-protocol';
 
 export class TestSuiteCollection {

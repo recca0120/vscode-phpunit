@@ -1,15 +1,14 @@
-import { ProblemNode } from './Problem';
+import { ProblemNode } from './ProblemNode';
 import { TestEvent, TestSuiteEvent } from './TestExplorer';
-import { TestNode, TestSuiteNode } from './Parser';
+import { TestNode, TestSuiteNode } from './TestNode';
 
-export declare type Node = TestSuiteNode | TestNode | ProblemNode;
-
-export declare type TestInfo = Node | TestSuiteEvent | TestEvent;
+export declare type NodeGroup = TestSuiteNode | TestNode | ProblemNode;
+export declare type TestEventGroup = NodeGroup | TestSuiteEvent | TestEvent;
 
 export class TestEventCollection {
     private events: Map<string, TestSuiteEvent | TestEvent> = new Map();
 
-    put(tests: TestInfo | TestInfo[]) {
+    put(tests: TestEventGroup | TestEventGroup[]) {
         tests = tests instanceof Array ? tests : [tests];
 
         this.asEvents(tests).forEach(event =>
@@ -23,7 +22,7 @@ export class TestEventCollection {
         return this.events.get(id);
     }
 
-    delete(test: TestInfo | TestInfo) {
+    delete(test: TestEventGroup | TestEventGroup) {
         return this.events.delete(this.asEventId(test));
     }
 
@@ -58,11 +57,11 @@ export class TestEventCollection {
         return Array.from(this.events.values());
     }
 
-    private asEvents(tests: TestInfo[]) {
+    private asEvents(tests: TestEventGroup[]) {
         return tests.reduce(
-            (events: (TestSuiteEvent | TestEvent)[], test: TestInfo) => {
+            (events: (TestSuiteEvent | TestEvent)[], test: TestEventGroup) => {
                 if (this.isNode(test)) {
-                    return events.concat(this.nodeAsEvents(test as Node));
+                    return events.concat(this.nodeAsEvents(test as NodeGroup));
                 }
 
                 return events.concat([test as (TestSuiteEvent | TestEvent)]);
@@ -71,7 +70,7 @@ export class TestEventCollection {
         );
     }
 
-    private nodeAsEvents(test: Node): (TestSuiteEvent | TestEvent)[] {
+    private nodeAsEvents(test: NodeGroup): (TestSuiteEvent | TestEvent)[] {
         const events: (TestSuiteEvent | TestEvent)[] = [];
 
         if (test instanceof TestSuiteNode) {
@@ -83,9 +82,9 @@ export class TestEventCollection {
         return events.concat([test.asTestEvent()]);
     }
 
-    private asEventId(test: TestInfo) {
+    private asEventId(test: TestEventGroup) {
         if (this.isNode(test)) {
-            return (test as Node).id;
+            return (test as NodeGroup).id;
         }
 
         const value =
@@ -96,7 +95,7 @@ export class TestEventCollection {
         return typeof value === 'string' ? value : value.id;
     }
 
-    private isNode(test: TestInfo) {
+    private isNode(test: TestEventGroup) {
         return (
             test instanceof TestSuiteNode ||
             test instanceof TestNode ||

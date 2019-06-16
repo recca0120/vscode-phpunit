@@ -1,7 +1,7 @@
 import files from '../src/Filesystem';
 import { fixturePath, projectPath } from './helpers';
-import { PHPUnitOutput } from './../src/ProblemMatcher';
-import { ProblemNode } from './../src/Problem';
+import { OutputProblemMatcher } from './../src/OutputProblemMatcher';
+import { ProblemNode } from '../src/ProblemNode';
 import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
 import { TestEventCollection } from './../src/TestEventCollection';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
@@ -101,7 +101,7 @@ describe('TestEventCollection', () => {
         }
 
         beforeAll(async () => {
-            problems = await new PHPUnitOutput().parse(
+            problems = await new OutputProblemMatcher().parse(
                 await files.get(fixturePath('test-result.txt'))
             );
         });

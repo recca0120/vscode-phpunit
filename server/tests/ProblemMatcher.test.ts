@@ -1,16 +1,16 @@
 import { DiagnosticSeverity } from 'vscode-languageserver';
 import { fixturePath, projectPath } from './helpers';
-import { PHPUnitOutput } from '../src/ProblemMatcher';
+import { OutputProblemMatcher } from '../src/OutputProblemMatcher';
 import { readFileSync } from 'fs';
-import { Status } from '../src/Problem';
+import { Status } from '../src/ProblemNode';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
-describe('ProblemMatcher', () => {
+describe('OutputProblemMatcher', () => {
     const file = fixturePath('test-result.txt').fsPath;
     const testFile = projectPath('tests/AssertionsTest.php').fsPath;
     const contents: string = readFileSync(file).toString('UTF-8');
     const suites = new TestSuiteCollection();
-    const problemMatcher = new PHPUnitOutput(suites);
+    const problemMatcher = new OutputProblemMatcher(suites);
 
     let problems: any[] = [];
 

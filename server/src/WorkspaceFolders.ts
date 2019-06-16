@@ -1,9 +1,9 @@
-import { ProblemCollection } from './ProblemCollection';
 import files from './Filesystem';
 import URI from 'vscode-uri';
 import { Configuration } from './Configuration';
+import { OutputProblemMatcher } from './OutputProblemMatcher';
 import { PathLike } from 'fs';
-import { PHPUnitOutput } from './ProblemMatcher';
+import { ProblemCollection } from './ProblemCollection';
 import { TestEventCollection } from './TestEventCollection';
 import { TestRunner } from './TestRunner';
 import { TestSuiteCollection } from './TestSuiteCollection';
@@ -58,7 +58,7 @@ export class WorkspaceFolders {
         const suites = new TestSuiteCollection();
         const events = new TestEventCollection();
         const problems = new ProblemCollection();
-        const problemMatcher = new PHPUnitOutput(suites);
+        const problemMatcher = new OutputProblemMatcher(suites);
         const testRunner = new TestRunner();
 
         return new WorkspaceFolder(

@@ -1,22 +1,16 @@
-import { ProblemNode, Problem, Status } from './Problem';
-import { TestSuiteNode, TestNode } from './Parser';
-import { TestSuiteEvent, TestEvent } from './TestExplorer';
-import { Diagnostic } from 'vscode-languageserver';
 import files from './Filesystem';
-
-export declare type TestInfo =
-    | ProblemNode
-    | TestSuiteNode
-    | TestNode
-    | TestSuiteEvent
-    | TestEvent;
+import { Diagnostic } from 'vscode-languageserver';
+import { Problem, ProblemNode, Status } from './ProblemNode';
+import { TestEvent, TestSuiteEvent } from './TestExplorer';
+import { TestNode, TestSuiteNode } from './TestNode';
+import { TestEventGroup } from './TestEventCollection';
 
 export class ProblemCollection {
     private problems: Map<string, ProblemNode> = new Map();
 
     constructor(private _files = files) {}
 
-    put(tests: TestInfo | TestInfo[]) {
+    put(tests: TestEventGroup | TestEventGroup[]) {
         const problems = this.asProblems(
             tests instanceof Array ? tests : [tests]
         );
@@ -83,9 +77,9 @@ export class ProblemCollection {
         }, new Map<string, ProblemNode[]>());
     }
 
-    private asProblems(tests: TestInfo[]) {
+    private asProblems(tests: TestEventGroup[]) {
         return tests.reduce(
-            (problems: (Problem | ProblemNode)[], test: TestInfo) => {
+            (problems: (Problem | ProblemNode)[], test: TestEventGroup) => {
                 if (test instanceof ProblemNode) {
                     return problems.concat(test);
                 }
@@ -96,7 +90,7 @@ export class ProblemCollection {
         );
     }
 
-    private testAsProblems(test: TestInfo): Problem[] {
+    private testAsProblems(test: TestEventGroup): Problem[] {
         const problems: Problem[] = [];
 
         if (test instanceof TestSuiteNode) {
@@ -118,7 +112,7 @@ export class ProblemCollection {
         ]);
     }
 
-    private asProblemId(test: TestInfo) {
+    private asProblemId(test: TestEventGroup) {
         if (this.isNode(test)) {
             return (test as (TestSuiteNode | TestNode)).id;
         }
@@ -131,7 +125,7 @@ export class ProblemCollection {
         return typeof value === 'string' ? value : value.id;
     }
 
-    private isNode(test: TestInfo) {
+    private isNode(test: TestEventGroup) {
         return test instanceof TestSuiteNode || test instanceof TestNode;
     }
 }

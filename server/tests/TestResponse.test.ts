@@ -1,11 +1,11 @@
 import files from '../src/Filesystem';
 import { fixturePath } from './helpers';
-import { PHPUnitOutput, ProblemMatcher } from './../src/ProblemMatcher';
-import { ProblemNode, Status } from '../src/Problem';
+import { OutputProblemMatcher } from '../src/OutputProblemMatcher';
+import { ProblemNode, Status } from '../src/ProblemNode';
 import { TestResponse, TestResult } from '../src/TestResponse';
 
 describe('TestResponse', () => {
-    const problemMatcher: ProblemMatcher = new PHPUnitOutput();
+    const problemMatcher = new OutputProblemMatcher();
 
     let testResponse: TestResponse;
 

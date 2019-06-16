@@ -1,10 +1,10 @@
+import files from './Filesystem';
 import { TestEvent } from './TestExplorer';
 import {
     Diagnostic,
     DiagnosticSeverity,
     DiagnosticRelatedInformation,
 } from 'vscode-languageserver';
-import files from './Filesystem';
 
 export enum Status {
     UNKNOWN,
