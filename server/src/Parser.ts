@@ -4,7 +4,30 @@ import files from './Filesystem';
 import URI from 'vscode-uri';
 import { PathLike } from 'fs';
 import { TestNode, TestOptions, TestSuiteNode } from './TestNode';
-import { TextDocument } from 'vscode-languageserver';
+import {
+    TextDocument,
+    WorkspaceFolder as _WorkspaceFolder,
+} from 'vscode-languageserver';
+
+const engine = Engine.create({
+    ast: {
+        withPositions: true,
+        withSource: true,
+    },
+    parser: {
+        php7: true,
+        debug: false,
+        extractDoc: true,
+        suppressErrors: true,
+    },
+    lexer: {
+        all_tokens: true,
+        comment_tokens: true,
+        mode_eval: true,
+        asp_tags: true,
+        short_tags: true,
+    },
+});
 
 class ClassNode {
     constructor(private node: any, private options: TestOptions) {}
@@ -77,32 +100,14 @@ class ClassNode {
 }
 
 export default class Parser {
-    private workspaceFolder: string = '';
     constructor(
-        workspaceFolder = process.cwd(),
-        private engine = Engine.create({
-            ast: {
-                withPositions: true,
-                withSource: true,
-            },
-            parser: {
-                php7: true,
-                debug: false,
-                extractDoc: true,
-                suppressErrors: true,
-            },
-            lexer: {
-                all_tokens: true,
-                comment_tokens: true,
-                mode_eval: true,
-                asp_tags: true,
-                short_tags: true,
-            },
-        }),
+        private workspaceFolder: _WorkspaceFolder = {
+            uri: process.cwd(),
+            name: '',
+        },
+        private _engine = engine,
         private _files = files
-    ) {
-        this.workspaceFolder = this._files.asUri(workspaceFolder).toString();
-    }
+    ) {}
 
     async parse(uri: PathLike | URI): Promise<TestSuiteNode | null> {
         return this.parseCode(await this._files.get(uri), uri);
@@ -117,7 +122,7 @@ export default class Parser {
     }
 
     parseCode(code: string, uri: PathLike | URI): TestSuiteNode | null {
-        const tree: any = this.engine.parseCode(code);
+        const tree: any = this._engine.parseCode(code);
         const classes = this.findClasses(this._files.asUri(uri), tree.children);
 
         return !classes || classes.length === 0

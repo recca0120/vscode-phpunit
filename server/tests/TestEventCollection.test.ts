@@ -1,9 +1,9 @@
 import files from '../src/Filesystem';
 import { fixturePath, projectPath } from './helpers';
-import { OutputProblemMatcher } from './../src/OutputProblemMatcher';
+import { OutputProblemMatcher } from '../src/OutputProblemMatcher';
 import { ProblemNode } from '../src/ProblemNode';
 import { TestEvent, TestSuiteEvent } from '../src/TestExplorer';
-import { TestEventCollection } from './../src/TestEventCollection';
+import { TestEventCollection } from '../src/TestEventCollection';
 import { TestSuiteCollection } from '../src/TestSuiteCollection';
 
 describe('TestEventCollection', () => {

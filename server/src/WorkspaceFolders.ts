@@ -1,4 +1,5 @@
 import files from './Filesystem';
+import Parser from './Parser';
 import URI from 'vscode-uri';
 import { Configuration } from './Configuration';
 import { OutputProblemMatcher } from './OutputProblemMatcher';
@@ -55,7 +56,7 @@ export class WorkspaceFolders {
 
     private createWorkspaceFolder(workspaceFolder: _WorkspaceFolder) {
         const config = new Configuration(this.connection, workspaceFolder);
-        const suites = new TestSuiteCollection();
+        const suites = new TestSuiteCollection(new Parser(workspaceFolder));
         const events = new TestEventCollection();
         const problems = new ProblemCollection();
         const problemMatcher = new OutputProblemMatcher(suites);

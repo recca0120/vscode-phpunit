@@ -3,7 +3,7 @@ import {
     WorkspaceFolder as _WorkspaceFolder,
 } from 'vscode-languageserver';
 
-export interface IConfiguration {
+interface IConfiguration {
     maxNumberOfProblems: number;
     files: string;
     php?: string;

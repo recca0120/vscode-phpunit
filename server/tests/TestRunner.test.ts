@@ -1,4 +1,4 @@
-import _files, { Filesystem } from '../src/filesystem';
+import { Filesystem } from '../src/filesystem';
 import { Process } from '../src/process';
 import { TestRunner } from '../src/TestRunner';
 

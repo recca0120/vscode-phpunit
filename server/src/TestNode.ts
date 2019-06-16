@@ -1,5 +1,10 @@
 import URI from 'vscode-uri';
-import { CodeLens, Command, Range } from 'vscode-languageserver-protocol';
+import {
+    CodeLens,
+    Command,
+    Range,
+    WorkspaceFolder as _WorkspaceFolder,
+} from 'vscode-languageserver-protocol';
 import {
     TestInfo,
     TestSuiteInfo,
@@ -9,7 +14,7 @@ import {
 
 export interface TestOptions {
     [propName: string]: any;
-    workspaceFolder: string;
+    workspaceFolder: _WorkspaceFolder;
     class?: string;
     namespace?: string;
     method?: string;
@@ -27,7 +32,7 @@ abstract class BaseTestNode {
 
     get workspaceFolder() {
         return this.options && this.options.workspaceFolder
-            ? this.options.workspaceFolder
+            ? this.options.workspaceFolder.uri
             : undefined;
     }
 

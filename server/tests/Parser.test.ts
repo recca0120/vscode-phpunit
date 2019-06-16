@@ -1,12 +1,16 @@
 import files from '../src/Filesystem';
-import Parser, { TestSuiteNode } from '../src/Parser';
+import Parser from '../src/Parser';
 import URI from 'vscode-uri';
 import { projectPath } from './helpers';
+import { TestSuiteNode } from '../src/TestNode';
 import { TextDocument } from 'vscode-languageserver-protocol';
 
 describe('Parser', () => {
     const workspaceFolder = URI.parse(__dirname).toString();
-    const parser = new Parser(__dirname);
+    const parser = new Parser({
+        uri: workspaceFolder,
+        name: '',
+    });
     const file = projectPath('tests/AssertionsTest.php');
 
     const getId = (
@@ -220,7 +224,10 @@ describe('Parser', () => {
     });
 
     it('parse text document', async () => {
-        const parser = new Parser(__dirname);
+        const parser = new Parser({
+            uri: workspaceFolder,
+            name: '',
+        });
 
         const suite = parser.parseTextDocument(
             TextDocument.create(

@@ -1,8 +1,8 @@
-import { ProblemCollection } from './../src/ProblemCollection';
 import md5 from 'md5';
 import { Configuration } from '../src/Configuration';
 import { LogMessageNotification, MessageType } from 'vscode-languageserver';
-import { OutputProblemMatcher } from './../src/OutputProblemMatcher';
+import { OutputProblemMatcher } from '../src/OutputProblemMatcher';
+import { ProblemCollection } from '../src/ProblemCollection';
 import { projectPath } from './helpers';
 import { TestEventCollection } from '../src/TestEventCollection';
 import { TestRunner } from '../src/TestRunner';

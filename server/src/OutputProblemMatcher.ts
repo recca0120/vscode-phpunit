@@ -3,31 +3,30 @@ import { ProblemNode, Status } from './ProblemNode';
 import { TestNode } from './TestNode';
 import { TestSuiteCollection } from './TestSuiteCollection';
 
+const statusString = [
+    'UNKNOWN',
+    'PASSED',
+    'SKIPPED',
+    'INCOMPLETE',
+    'FAILURE',
+    'ERROR',
+    'RISKY',
+    'WARNING',
+].join('|');
+
+const statusPattern = new RegExp(
+    `There (was|were) \\d+ (${statusString})(s?)( test?)(:?)`,
+    'i'
+);
+const classPattern = new RegExp('^\\d+\\)\\s(([^:]*)::([^\\s]*).*)$');
+const messagePattern = new RegExp('^(.*)$');
+const filesPattern = new RegExp('^(.*):(\\d+)$');
+
 export class OutputProblemMatcher extends ProblemMatcher {
     private currentStatus: Status = this.asStatus('failure');
 
-    private status = [
-        'UNKNOWN',
-        'PASSED',
-        'SKIPPED',
-        'INCOMPLETE',
-        'FAILURE',
-        'ERROR',
-        'RISKY',
-        'WARNING',
-    ].join('|');
-
-    private statusPattern = new RegExp(
-        `There (was|were) \\d+ (${this.status})(s?)( test?)(:?)`,
-        'i'
-    );
-
     constructor(private suites?: TestSuiteCollection) {
-        super([
-            new RegExp('^\\d+\\)\\s(([^:]*)::([^\\s]*).*)$'),
-            new RegExp('^(.*)$'),
-            new RegExp('^(.*):(\\d+)$'),
-        ]);
+        super([classPattern, messagePattern, filesPattern]);
     }
 
     async parse(contents: string): Promise<ProblemNode[]> {
@@ -56,7 +55,7 @@ export class OutputProblemMatcher extends ProblemMatcher {
 
     protected parseLine(line: string) {
         let m: RegExpMatchArray | null;
-        if ((m = line.match(this.statusPattern))) {
+        if ((m = line.match(statusPattern))) {
             this.currentStatus = this.asStatus(m[2].trim().toLowerCase());
         }
     }
