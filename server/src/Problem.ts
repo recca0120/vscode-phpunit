@@ -50,12 +50,13 @@ export class ProblemNode implements Problem {
     namespace = '';
     class = '';
     method = '';
+    status = Status.FAILURE;
     file = '';
     line = 0;
     message = '';
     files: Location[] = [];
 
-    constructor(public status: Status, private _files = files) {}
+    constructor(private _files = files) {}
 
     updateId() {
         const qualifiedClassName = [this.namespace, this.class]

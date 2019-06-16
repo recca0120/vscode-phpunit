@@ -139,7 +139,7 @@ export class PHPUnitOutput extends ProblemMatcher {
     }
 
     protected async create(): Promise<ProblemNode> {
-        return new ProblemNode(this.currentStatus);
+        return new ProblemNode();
     }
 
     protected async update(
@@ -149,10 +149,10 @@ export class PHPUnitOutput extends ProblemMatcher {
     ) {
         switch (index) {
             case 0:
-                const { namespace, clazz } = this.parseNamespace(m[2]);
-                problem.namespace = namespace;
-                problem.class = clazz;
-                problem.method = m[3];
+                Object.assign(problem, this.parseNamespace(m[2]), {
+                    method: m[3],
+                    status: this.currentStatus,
+                });
 
                 problem.updateId();
 
@@ -180,7 +180,7 @@ export class PHPUnitOutput extends ProblemMatcher {
             clazz = name;
         }
 
-        return { namespace, clazz };
+        return { namespace, class: clazz };
     }
 
     private asStatus(status: string): Status {
