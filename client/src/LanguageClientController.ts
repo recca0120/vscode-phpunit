@@ -66,7 +66,7 @@ export class LanguageClientController implements Disposable {
             }
 
             if (showAfterExecution === 'always' || hasFailure(events)) {
-                this.outputChannel.show(false);
+                this.outputChannel.show(true);
             }
         });
     }

@@ -19,7 +19,7 @@ class AssertionsTest extends TestCase
      */
     public function test_failed()
     {
-        $this->assertTrue(true);
+        $this->assertTrue(false);
     }
 
     public function test_isnt_same()
