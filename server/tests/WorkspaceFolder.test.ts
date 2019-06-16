@@ -1,3 +1,4 @@
+import { ProblemCollection } from './../src/ProblemCollection';
 import md5 from 'md5';
 import { Configuration } from '../src/Configuration';
 import { LogMessageNotification, MessageType } from 'vscode-languageserver';
@@ -31,10 +32,12 @@ describe('WorkspaceFolder', () => {
             return connection.requests[name](params);
         },
         sendRequest: () => {},
+        sendDiagnostics: () => {},
     };
     const config = new Configuration(connection, folder);
     const suites = new TestSuiteCollection();
     const events = new TestEventCollection();
+    const problems = new ProblemCollection();
     const problemMatcher = new PHPUnitOutput(suites);
     const testRunner = new TestRunner();
 
@@ -44,8 +47,9 @@ describe('WorkspaceFolder', () => {
         config,
         suites,
         events,
-        testRunner,
-        problemMatcher
+        problems,
+        problemMatcher,
+        testRunner
     );
 
     it('TestRunStartedEvent Run All', async () => {

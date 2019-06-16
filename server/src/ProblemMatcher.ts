@@ -122,7 +122,7 @@ export class PHPUnitOutput extends ProblemMatcher {
                 });
 
             if (!location) {
-                location = this.findLocationByProblem(problem);
+                location = this.findLocationFromSuites(problem);
             } else {
                 problem.files = problem.files.filter(l => l !== location);
             }
@@ -193,7 +193,7 @@ export class PHPUnitOutput extends ProblemMatcher {
         return Status.ERROR;
     }
 
-    private findLocationByProblem(problem: ProblemNode) {
+    private findLocationFromSuites(problem: ProblemNode) {
         const location = {
             file: '',
             line: -1,

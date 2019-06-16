@@ -13,7 +13,7 @@ export class TestEventCollection {
         tests = tests instanceof Array ? tests : [tests];
 
         this.asEvents(tests).forEach(event =>
-            this.events.set(this.asId(event), event)
+            this.events.set(this.asEventId(event), event)
         );
 
         return this;
@@ -24,7 +24,7 @@ export class TestEventCollection {
     }
 
     delete(test: TestInfo | TestInfo) {
-        return this.events.delete(this.asId(test));
+        return this.events.delete(this.asEventId(test));
     }
 
     clear() {
@@ -51,7 +51,7 @@ export class TestEventCollection {
     }
 
     find(id: string): TestSuiteEvent | TestEvent {
-        return this.where(event => id === this.asId(event))[0];
+        return this.where(event => id === this.asEventId(event))[0];
     }
 
     all(): (TestSuiteEvent | TestEvent)[] {
@@ -83,7 +83,7 @@ export class TestEventCollection {
         return events.concat([test.asTestEvent()]);
     }
 
-    private asId(test: TestInfo) {
+    private asEventId(test: TestInfo) {
         if (this.isNode(test)) {
             return (test as Node).id;
         }

@@ -1,3 +1,4 @@
+import { ProblemCollection } from './ProblemCollection';
 import files from './Filesystem';
 import URI from 'vscode-uri';
 import { Configuration } from './Configuration';
@@ -56,6 +57,7 @@ export class WorkspaceFolders {
         const config = new Configuration(this.connection, workspaceFolder);
         const suites = new TestSuiteCollection();
         const events = new TestEventCollection();
+        const problems = new ProblemCollection();
         const problemMatcher = new PHPUnitOutput(suites);
         const testRunner = new TestRunner();
 
@@ -65,8 +67,9 @@ export class WorkspaceFolders {
             config,
             suites,
             events,
-            testRunner,
+            problems,
             problemMatcher,
+            testRunner,
             this._files
         );
     }

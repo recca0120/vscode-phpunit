@@ -1,4 +1,10 @@
 import { TestEvent } from './TestExplorer';
+import {
+    Diagnostic,
+    DiagnosticSeverity,
+    DiagnosticRelatedInformation,
+} from 'vscode-languageserver';
+import files from './Filesystem';
 
 export enum Status {
     UNKNOWN,
@@ -49,7 +55,7 @@ export class ProblemNode implements Problem {
     message = '';
     files: Location[] = [];
 
-    constructor(public status: Status) {}
+    constructor(public status: Status, private _files = files) {}
 
     updateId() {
         const qualifiedClassName = [this.namespace, this.class]
@@ -68,6 +74,28 @@ export class ProblemNode implements Problem {
             state: this.getEventState() as TestEvent['state'],
             message: this.message,
             decorations: this.asTestDecorations(),
+        };
+    }
+
+    async asDiagnostic(): Promise<Diagnostic> {
+        const message = this.message.trim();
+
+        return {
+            severity:
+                this.status === Status.WARNING
+                    ? DiagnosticSeverity.Warning
+                    : DiagnosticSeverity.Error,
+            range: await this._files.lineRange(this.file, this.line),
+            message: message,
+            source: 'PHPUnit',
+            relatedInformation: await Promise.all(
+                this.files.map(async l => {
+                    return DiagnosticRelatedInformation.create(
+                        await this._files.lineLocation(l.file, l.line),
+                        message
+                    );
+                })
+            ),
         };
     }
 

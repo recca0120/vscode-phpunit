@@ -1,3 +1,4 @@
+import { ProblemCollection } from './ProblemCollection';
 import files from './Filesystem';
 import md5 from 'md5';
 import { Configuration } from './Configuration';
@@ -36,8 +37,9 @@ export class WorkspaceFolder {
         private config: Configuration,
         private suites: TestSuiteCollection,
         private events: TestEventCollection,
-        private testRunner: TestRunner,
+        private problems: ProblemCollection,
         private problemMatcher: ProblemMatcher,
+        private testRunner: TestRunner,
         private _files = files
     ) {
         this.onTestLoadStartedEvent();
@@ -244,6 +246,15 @@ export class WorkspaceFolder {
             params
         );
 
+        (await this.problems.asDiagnosticGroup()).forEach(
+            (diagnostics, uri) => {
+                this.connection.sendDiagnostics({
+                    uri,
+                    diagnostics,
+                });
+            }
+        );
+
         this.connection.sendNotification(LogMessageNotification.type, {
             type: MessageType.Log,
             message: response.toString(),
@@ -253,6 +264,7 @@ export class WorkspaceFolder {
     }
 
     private async changeEventsState(response: ITestResponse) {
+        const problems = await response.asProblems();
         const result = response.getTestResult();
         const state = result.tests === 0 ? 'errored' : 'passed';
 
@@ -260,12 +272,14 @@ export class WorkspaceFolder {
             .where(event => event.state === 'running')
             .map(event => this.fillTestEventState(event, response, state));
 
+        this.problems.put(events).put(problems);
+        this.events.put(events).put(problems);
+
         const eventIds = events.map(event => this.getEventId(event));
 
-        return this.events
-            .put(events)
-            .put(await response.asProblems())
-            .where(test => eventIds.includes(this.getEventId(test)));
+        return this.events.where(test =>
+            eventIds.includes(this.getEventId(test))
+        );
     }
 
     private fillTestEventState(
