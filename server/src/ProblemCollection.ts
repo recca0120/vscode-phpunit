@@ -67,10 +67,14 @@ export class ProblemCollection {
                 ? group.get(problem.file)!
                 : [];
 
-            if (problem.status !== Status.PASSED) {
-                items.push(problem);
-            } else {
+            if (
+                [Status.PASSED, Status.INCOMPLETE, Status.SKIPPED].includes(
+                    problem.status
+                )
+            ) {
                 this.problems.delete(problem.id);
+            } else {
+                items.push(problem);
             }
 
             group.set(problem.file, items);
