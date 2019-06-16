@@ -126,10 +126,7 @@ abstract class BaseTestNode {
     }
 
     private acceptModifier(): boolean {
-        return (
-            this.node.isStatic === false &&
-            ['', 'public'].indexOf(this.node.visibility) !== -1
-        );
+        return ['', 'public'].indexOf(this.node.visibility) !== -1;
     }
 
     private acceptComments(): boolean {

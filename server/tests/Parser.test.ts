@@ -204,8 +204,19 @@ describe('Parser', () => {
     it('static method', async () => {
         const file = projectPath('tests/StaticMethodTest.php');
         const suite = await getTestSuite(file);
+        const label = 'test_static_public_fail';
+        const id = `Recca0120\\VSCode\\Tests\\StaticMethodTest::${label}`;
+        const test = getTest(suite, { id });
 
-        expect(suite).toBeNull();
+        expect(test).toEqual(
+            jasmine.objectContaining({
+                workspaceFolder,
+                id: id,
+                label,
+                file: file.toString(),
+                line: jasmine.any(Number),
+            })
+        );
     });
 
     it('parse text document', async () => {
