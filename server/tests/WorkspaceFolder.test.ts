@@ -1,4 +1,3 @@
-import md5 from 'md5';
 import { Configuration } from '../src/Configuration';
 import { LogMessageNotification, MessageType } from 'vscode-languageserver';
 import { OutputProblemMatcher } from '../src/OutputProblemMatcher';
@@ -14,7 +13,7 @@ describe('WorkspaceFolder', () => {
         uri: projectPath('').toString(),
         name: '',
     };
-    const requestName = (name: string) => `${name}-${md5(folder.uri)}`;
+
     const connection: any = {
         notifications: {},
         requests: {},
@@ -55,10 +54,10 @@ describe('WorkspaceFolder', () => {
     it('TestRunStartedEvent Run All', async () => {
         spyOn(workspaceFolder, 'executeCommand');
         await connection.triggerNotification(
-            requestName('TestLoadStartedEvent')
+            workspaceFolder.requestName('TestLoadStartedEvent')
         );
         await connection.triggerNotification(
-            requestName('TestRunStartedEvent'),
+            workspaceFolder.requestName('TestRunStartedEvent'),
             {
                 tests: ['root'],
             }
@@ -73,10 +72,10 @@ describe('WorkspaceFolder', () => {
     it('TestRunStartedEvent Run Test At Cursor', async () => {
         spyOn(workspaceFolder, 'executeCommand');
         await connection.triggerNotification(
-            requestName('TestLoadStartedEvent')
+            workspaceFolder.requestName('TestLoadStartedEvent')
         );
         await connection.triggerNotification(
-            requestName('TestRunStartedEvent'),
+            workspaceFolder.requestName('TestRunStartedEvent'),
             {
                 tests: ['foo'],
             }
@@ -100,7 +99,7 @@ describe('WorkspaceFolder', () => {
 
         afterEach(() => {
             expect(connection.sendRequest).toHaveBeenCalledWith(
-                requestName('TestRunStartedEvent'),
+                workspaceFolder.requestName('TestRunStartedEvent'),
                 jasmine.anything()
             );
             expect(connection.sendNotification).toHaveBeenCalledWith(
@@ -126,7 +125,7 @@ describe('WorkspaceFolder', () => {
             });
 
             expect(connection.sendRequest).toHaveBeenCalledWith(
-                requestName('TestRunFinishedEvent'),
+                workspaceFolder.requestName('TestRunFinishedEvent'),
                 jasmine.anything()
             );
         });
@@ -140,7 +139,7 @@ describe('WorkspaceFolder', () => {
             });
 
             expect(connection.sendRequest).toHaveBeenCalledWith(
-                requestName('TestRunFinishedEvent'),
+                workspaceFolder.requestName('TestRunFinishedEvent'),
                 jasmine.anything()
             );
         });
@@ -154,7 +153,7 @@ describe('WorkspaceFolder', () => {
             });
 
             expect(connection.sendRequest).toHaveBeenCalledWith(
-                requestName('TestRunFinishedEvent'),
+                workspaceFolder.requestName('TestRunFinishedEvent'),
                 jasmine.anything()
             );
         });
@@ -168,7 +167,7 @@ describe('WorkspaceFolder', () => {
             });
 
             expect(connection.sendRequest).toHaveBeenCalledWith(
-                requestName('TestRunFinishedEvent'),
+                workspaceFolder.requestName('TestRunFinishedEvent'),
                 jasmine.anything()
             );
         });
@@ -182,7 +181,7 @@ describe('WorkspaceFolder', () => {
             });
 
             expect(connection.sendRequest).toHaveBeenCalledWith(
-                requestName('TestRunFinishedEvent'),
+                workspaceFolder.requestName('TestRunFinishedEvent'),
                 jasmine.anything()
             );
         });

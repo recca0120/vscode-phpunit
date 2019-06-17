@@ -47,6 +47,10 @@ export class WorkspaceFolder {
         this.onTestCancelEvent();
     }
 
+    public requestName(name: string) {
+        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
+    }
+
     getConfig() {
         return this.config;
     }
@@ -152,6 +156,12 @@ export class WorkspaceFolder {
             test => this.findTestAtLine(test, file, line),
             true
         );
+    }
+
+    async retryTest() {
+        await this.connection.sendRequest(this.requestName('TestRetryEvent'));
+
+        return this;
     }
 
     private findTestAtLine(
@@ -321,9 +331,5 @@ export class WorkspaceFolder {
 
     private fsPath() {
         return this._files.asUri(this.workspaceFolder.uri).fsPath;
-    }
-
-    private requestName(name: string) {
-        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
     }
 }

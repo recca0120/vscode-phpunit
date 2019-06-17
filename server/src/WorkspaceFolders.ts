@@ -20,7 +20,7 @@ export class WorkspaceFolders {
     constructor(private connection: Connection, private _files = files) {}
 
     create(workspaceFolders: _WorkspaceFolder[]) {
-        return workspaceFolders.map(folder => {
+        workspaceFolders.map(folder => {
             if (!this.workspaceFolders.has(folder.uri)) {
                 this.workspaceFolders.set(
                     folder.uri,
@@ -30,6 +30,8 @@ export class WorkspaceFolders {
 
             return this.workspaceFolders.get(folder.uri);
         });
+
+        return this;
     }
 
     async update(configurationCapability = true) {
@@ -52,6 +54,18 @@ export class WorkspaceFolders {
             .find(uri => _uri.indexOf(uri) !== -1);
 
         return this.workspaceFolders.get(current!)!;
+    }
+
+    all() {
+        return Array.from(this.workspaceFolders.values());
+    }
+
+    delete(workspaceFolders: _WorkspaceFolder[]) {
+        workspaceFolders.forEach(folder =>
+            this.workspaceFolders.delete(folder.uri)
+        );
+
+        return this;
     }
 
     private createWorkspaceFolder(workspaceFolder: _WorkspaceFolder) {

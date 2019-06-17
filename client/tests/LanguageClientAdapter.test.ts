@@ -1,7 +1,6 @@
 import { LanguageClientAdapter } from './../src/LanguageClientAdapter';
 import { Log } from 'vscode-test-adapter-util';
 import { Uri, WorkspaceFolder } from 'vscode';
-import md5 from 'md5';
 
 describe('LanguageClientAdapterTest', () => {
     const workspaceFolder: WorkspaceFolder = {
@@ -9,9 +8,6 @@ describe('LanguageClientAdapterTest', () => {
         name: 'folder',
         index: 1,
     };
-
-    const requestName = (name: string) =>
-        `${name}-${md5(workspaceFolder.uri.toString())}`;
 
     const log = new Log('phpunit', workspaceFolder, 'PHPUnit TestExplorer');
 
@@ -44,7 +40,7 @@ describe('LanguageClientAdapterTest', () => {
         await adapter.load();
 
         expect(client.sendNotification).toHaveBeenCalledWith(
-            requestName('TestLoadStartedEvent')
+            adapter.requestName('TestLoadStartedEvent')
         );
     });
 
@@ -55,7 +51,7 @@ describe('LanguageClientAdapterTest', () => {
         await adapter.run(tests);
 
         expect(client.sendNotification).toHaveBeenCalledWith(
-            requestName('TestRunStartedEvent'),
+            adapter.requestName('TestRunStartedEvent'),
             {
                 tests,
             }
@@ -68,7 +64,7 @@ describe('LanguageClientAdapterTest', () => {
         await adapter.cancel();
 
         expect(client.sendNotification).toHaveBeenCalledWith(
-            requestName('TestCancelEvent')
+            adapter.requestName('TestCancelEvent')
         );
     });
 
@@ -78,7 +74,7 @@ describe('LanguageClientAdapterTest', () => {
         await adapter.dispose();
 
         expect(client.sendNotification).toHaveBeenCalledWith(
-            requestName('TestCancelEvent')
+            adapter.requestName('TestCancelEvent')
         );
     });
 
@@ -86,7 +82,7 @@ describe('LanguageClientAdapterTest', () => {
         const testsEmitter = adapter['testsEmitter'];
         spyOn(testsEmitter, 'fire');
 
-        client.triggerRequest(requestName('TestLoadStartedEvent'));
+        client.triggerRequest(adapter.requestName('TestLoadStartedEvent'));
 
         expect(testsEmitter.fire).toHaveBeenCalledWith({ type: 'started' });
     });
@@ -98,7 +94,7 @@ describe('LanguageClientAdapterTest', () => {
             foo: 'bar',
         };
 
-        client.triggerRequest(requestName('TestLoadFinishedEvent'), {
+        client.triggerRequest(adapter.requestName('TestLoadFinishedEvent'), {
             suite: fooSuite,
         });
 
@@ -117,7 +113,7 @@ describe('LanguageClientAdapterTest', () => {
             state: 'fail',
         };
 
-        client.triggerRequest(requestName('TestRunStartedEvent'), {
+        client.triggerRequest(adapter.requestName('TestRunStartedEvent'), {
             tests: tests,
             events: [fooEvent],
         });
@@ -142,7 +138,7 @@ describe('LanguageClientAdapterTest', () => {
             state: 'fail',
         };
 
-        client.triggerRequest(requestName('TestRunFinishedEvent'), {
+        client.triggerRequest(adapter.requestName('TestRunFinishedEvent'), {
             events: [fooEvent],
             command: fooCommand,
         });
@@ -151,5 +147,14 @@ describe('LanguageClientAdapterTest', () => {
         expect(testStatesEmitter.fire).toHaveBeenCalledWith({
             type: 'finished',
         });
+    });
+
+    it('test retry event', async () => {
+        const retireEmitter = adapter['retireEmitter'];
+        spyOn(retireEmitter, 'fire');
+
+        client.triggerRequest(adapter.requestName('TestRetryEvent'));
+
+        expect(retireEmitter.fire).toHaveBeenCalled();
     });
 });

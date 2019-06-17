@@ -91,7 +91,8 @@ connection.onInitialized(async () => {
         connection.workspace.onDidChangeWorkspaceFolders(async params => {
             connection.console.log('Workspace folder change event received.');
 
-            workspaceFolders.create(params.added);
+            workspaceFolders.create(params.added).delete(params.removed);
+
             await workspaceFolders.update(hasConfigurationCapability);
         });
     }
@@ -112,14 +113,21 @@ documents.onDidClose(() => {
 documents.onDidChangeContent(() => {});
 
 connection.onDidChangeWatchedFiles(async params => {
-    const changes = params.changes.map(
-        async event => await workspaceFolders.get(event.uri).detectChange(event)
+    const changes = await Promise.all(
+        params.changes.map(
+            async event =>
+                await workspaceFolders.get(event.uri).detectChange(event)
+        )
     );
 
-    (await Promise.all(changes))
-        .filter(suite => !!suite)
-        .map(suite => suite!.workspaceFolder)
-        .forEach(folder => workspaceFolders.get(folder!).loadTest());
+    await Promise.all(
+        changes
+            .filter(suite => !!suite)
+            .map(suite => suite!.workspaceFolder)
+            .map(folder => workspaceFolders.get(folder!).loadTest())
+    );
+
+    await Promise.all(workspaceFolders.all().map(folder => folder.retryTest()));
     // connection.console.log('We received an file change event');
 });
 

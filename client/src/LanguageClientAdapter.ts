@@ -49,10 +49,15 @@ export class LanguageClientAdapter implements TestAdapter {
         this.onTestLoadFinishedEvent();
         this.onTestRunStartedEvent();
         this.onTestRunFinishedEvent();
+        this.onTestRetryEvent();
 
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
         this.disposables.push(this.retireEmitter);
+    }
+
+    public requestName(name: string) {
+        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
     }
 
     async load(): Promise<void> {
@@ -88,7 +93,7 @@ export class LanguageClientAdapter implements TestAdapter {
         this.disposables = [];
     }
 
-    private async onTestLoadStartedEvent(): Promise<void> {
+    private async onTestLoadStartedEvent() {
         await this.client.onReady();
 
         this.client.onRequest(this.requestName('TestLoadStartedEvent'), () =>
@@ -142,15 +147,19 @@ export class LanguageClientAdapter implements TestAdapter {
         );
     }
 
+    private async onTestRetryEvent() {
+        await this.client.onReady();
+
+        this.client.onRequest(this.requestName('TestRetryEvent'), () => {
+            this.retireEmitter.fire();
+        });
+    }
+
     private updateEvents(events: (TestSuiteEvent | TestEvent)[]): void {
         events.forEach(event => {
             event.type === 'suite'
                 ? this.testStatesEmitter.fire(<TestSuiteEvent>event)
                 : this.testStatesEmitter.fire(<TestEvent>event);
         });
-    }
-
-    private requestName(name: string) {
-        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
     }
 }
