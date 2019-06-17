@@ -7,12 +7,6 @@
 contributing.md
 .travis.yml
 client/node_modules/**
-!client/node_modules/vscode-jsonrpc/**
-!client/node_modules/vscode-languageclient/**
-!client/node_modules/vscode-languageserver-protocol/**
-!client/node_modules/vscode-languageserver-types/**
-!client/node_modules/vscode-test-adapter-api/**
-!client/node_modules/vscode-test-adapter-util/**
 
 **/.phpunit.result.cache
 **/tsconfig.tsbuildinfo
