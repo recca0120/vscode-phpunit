@@ -53,7 +53,7 @@ export class TestSuiteCollection {
 
         return this.putTestSuite(
             this._files.asUri(document.uri),
-            this.parser.parseTextDocument(document) || null
+            this.parser.parseTextDocument(document)
         );
     }
 
@@ -123,7 +123,7 @@ export class TestSuiteCollection {
         return Array.from(this.suites.values());
     }
 
-    private putTestSuite(uri: URI, suite: TestSuiteNode | null) {
+    private putTestSuite(uri: URI, suite: TestSuiteNode | undefined) {
         if (!suite) {
             return this;
         }
@@ -134,9 +134,7 @@ export class TestSuiteCollection {
             this.suites.delete(key);
         }
 
-        if (suite) {
-            this.suites.set(key, suite);
-        }
+        this.suites.set(key, suite);
 
         return this;
     }

@@ -32,7 +32,7 @@ const engine = Engine.create({
 class ClassNode {
     constructor(private node: any, private options: TestOptions) {}
 
-    asTestSuite(): TestSuiteNode | null {
+    asTestSuite(): TestSuiteNode | undefined {
         const options = this.getTestOptions();
         const methods = this.getMethods();
 
@@ -41,7 +41,7 @@ class ClassNode {
             .filter((method: TestNode) => method.isTest());
 
         if (tests.length === 0) {
-            return null;
+            return undefined;
         }
 
         return new TestSuiteNode(this.node, tests, options);
@@ -109,24 +109,24 @@ export default class Parser {
         private _files = files
     ) {}
 
-    async parse(uri: PathLike | URI): Promise<TestSuiteNode | null> {
+    async parse(uri: PathLike | URI): Promise<TestSuiteNode | undefined> {
         return this.parseCode(await this._files.get(uri), uri);
     }
 
-    parseTextDocument(textDocument: TextDocument | null): TestSuiteNode | null {
+    parseTextDocument(textDocument: TextDocument | undefined): TestSuiteNode | undefined {
         if (!textDocument) {
-            return null;
+            return undefined;
         }
 
         return this.parseCode(textDocument.getText(), textDocument.uri);
     }
 
-    parseCode(code: string, uri: PathLike | URI): TestSuiteNode | null {
+    parseCode(code: string, uri: PathLike | URI): TestSuiteNode | undefined {
         const tree: any = this._engine.parseCode(code);
         const classes = this.findClasses(this._files.asUri(uri), tree.children);
 
         return !classes || classes.length === 0
-            ? null
+            ? undefined
             : classes[0].asTestSuite();
     }
 

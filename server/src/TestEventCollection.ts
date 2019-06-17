@@ -60,11 +60,9 @@ export class TestEventCollection {
     private asEvents(tests: TestEventGroup[]) {
         return tests.reduce(
             (events: (TestSuiteEvent | TestEvent)[], test: TestEventGroup) => {
-                if (this.isNode(test)) {
-                    return events.concat(this.nodeAsEvents(test as NodeGroup));
-                }
-
-                return events.concat([test as (TestSuiteEvent | TestEvent)]);
+                return this.isNode(test)
+                    ? events.concat(this.nodeAsEvents(test as NodeGroup))
+                    : events.concat([test as (TestSuiteEvent | TestEvent)]);
             },
             []
         );
@@ -73,13 +71,11 @@ export class TestEventCollection {
     private nodeAsEvents(test: NodeGroup): (TestSuiteEvent | TestEvent)[] {
         const events: (TestSuiteEvent | TestEvent)[] = [];
 
-        if (test instanceof TestSuiteNode) {
-            return events
-                .concat([test.asTestSuiteEvent()])
-                .concat(...test.children.map(test => this.nodeAsEvents(test)));
-        }
-
-        return events.concat([test.asTestEvent()]);
+        return test instanceof TestSuiteNode
+            ? events
+                  .concat([test.asTestSuiteEvent()])
+                  .concat(...test.children.map(test => this.nodeAsEvents(test)))
+            : events.concat([test.asTestEvent()]);
     }
 
     private asEventId(test: TestEventGroup) {

@@ -202,7 +202,7 @@ describe('Parser', () => {
         const file = projectPath('tests/AbstractTest.php');
         const suite = await getTestSuite(file);
 
-        expect(suite).toBeNull();
+        expect(suite).toBeUndefined();
     });
 
     it('static method', async () => {
@@ -322,7 +322,9 @@ describe('Parser', () => {
     it('parse code error', () => {
         const parser = new Parser();
 
-        expect(parser.parseCode('a"bcde', URI.parse('/usr/bin'))).toBeNull();
+        expect(
+            parser.parseCode('a"bcde', URI.parse('/usr/bin'))
+        ).toBeUndefined();
     });
 
     it('class as codelens', async () => {
