@@ -113,19 +113,29 @@ documents.onDidClose(() => {
 documents.onDidChangeContent(() => {});
 
 connection.onDidChangeWatchedFiles(async params => {
-    const changes = await Promise.all(
+    const changes = (await Promise.all(
         params.changes.map(
             async event =>
                 await workspaceFolders.get(event.uri).detectChange(event)
         )
-    );
+    )).filter(suite => !!suite);
 
-    await Promise.all(
-        changes
-            .filter(suite => !!suite)
-            .map(suite => suite!.workspaceFolder)
-            .map(folder => workspaceFolders.get(folder!).loadTest())
-    );
+    if (changes.length > 0) {
+        await Promise.all(
+            params.changes.map(event =>
+                connection.sendDiagnostics({
+                    uri: event.uri,
+                    diagnostics: [],
+                })
+            )
+        );
+
+        await Promise.all(
+            changes.map(suite =>
+                workspaceFolders.get(suite!.workspaceFolder!).loadTest()
+            )
+        );
+    }
 
     await Promise.all(workspaceFolders.all().map(folder => folder.retryTest()));
     // connection.console.log('We received an file change event');
