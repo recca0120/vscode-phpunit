@@ -129,7 +129,7 @@
                     "items": {
                         "type": "string"
                     },
-                    "default": "{test,tests}/**/*Test.php",
+                    "default": "{test,tests,Test,Tests}/**/*Test.php",
                     "scope": "resource"
                 },
                 "phpunit.clearOutputOnRun": {
