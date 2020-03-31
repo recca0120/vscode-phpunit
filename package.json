@@ -132,6 +132,11 @@
                     "default": "{test,tests,Test,Tests}/**/*Test.php",
                     "scope": "resource"
                 },
+                "phpunit.relativeFilePath": {
+                    "description": "File path as relative argument instead of full path.",
+                    "type": "boolean",
+                    "default": false
+                },
                 "phpunit.clearOutputOnRun": {
                     "type": "boolean",
                     "default": true,

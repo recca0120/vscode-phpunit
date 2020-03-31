@@ -129,7 +129,8 @@ export class WorkspaceFolder {
         this.testRunner
             .setPhpBinary(this.config.php)
             .setPhpUnitBinary(this.config.phpunit)
-            .setArgs(this.config.args);
+            .setArgs(this.config.args)
+            .setRelativeFilePath(this.config.relativeFilePath);
 
         const options = {
             cwd: this.fsPath(),
