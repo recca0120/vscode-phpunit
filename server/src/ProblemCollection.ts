@@ -7,8 +7,16 @@ import { TestNode, TestSuiteNode } from './TestNode';
 
 export class ProblemCollection {
     private problems: Map<string, ProblemNode> = new Map();
+    private remoteCwd: string = '';
 
     constructor(private _files = files) {}
+
+    setRemoteCwd(remoteCwd: string) {
+        this.remoteCwd = remoteCwd;
+        this._files.setRemoteCwd(this.remoteCwd);
+
+        return this;
+    }
 
     put(tests: TestEventGroup | TestEventGroup[]) {
         const problems = this.asProblems(

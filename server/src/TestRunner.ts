@@ -17,6 +17,7 @@ export class TestRunner {
     private args: string[] = [];
     private lastArgs: string[] = [];
     private lastOutput: string = '';
+    private relativeFilePath: boolean = false;
     private lastCommand: Command = {
         title: '',
         command: '',
@@ -41,6 +42,12 @@ export class TestRunner {
 
     setArgs(args: string[] | undefined) {
         this.args = args || [];
+
+        return this;
+    }
+
+    setRelativeFilePath(relativeFilePath: boolean) {
+        this.relativeFilePath = relativeFilePath;
 
         return this;
     }
@@ -71,11 +78,15 @@ export class TestRunner {
 
         if (deps.length > 0) {
             params.push('--filter');
-            params.push(`^.*::(${deps.join('|')})( with data set .*)?$`);
+            params.push(`'/^.*::${deps.join('|')}.*$/'`);
         }
 
         if (p.file) {
-            params.push(this._files.asUri(p.file).fsPath);
+            let testFilePath = this._files.asUri(p.file).fsPath;
+            if (this.relativeFilePath && options && options.cwd) {
+                testFilePath = testFilePath.replace(new RegExp(options.cwd.replace(/\\/g, '\\\\') + '[\\/\\\\]'), '');
+            }
+            params.push(testFilePath);
         }
 
         return await this.doRun(params, options);

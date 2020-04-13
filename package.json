@@ -132,6 +132,21 @@
                     "default": "{test,tests,Test,Tests}/**/*Test.php",
                     "scope": "resource"
                 },
+                "phpunit.relativeFilePath": {
+                    "description": "File path as relative argument instead of full path.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "phpunit.remoteCwd": {
+                    "description": "Remote file path to the location of the root folder.",
+                    "type": "string",
+                    "default": ""
+                },
+                "phpunit.shell": {
+                    "description": "Shell to be used to call php.",
+                    "type": "string",
+                    "default": ""
+                },
                 "phpunit.clearOutputOnRun": {
                     "type": "boolean",
                     "default": true,
