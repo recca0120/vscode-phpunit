@@ -20,7 +20,7 @@ export class Configuration implements IConfiguration {
         files: '**/*.php',
         relativeFilePath: false,
         shell: '',
-        remoteCwd: '',
+        remoteCwd: ''
     };
 
     constructor(
