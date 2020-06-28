@@ -6,6 +6,7 @@ import {
 interface IConfiguration {
     maxNumberOfProblems: number;
     files: string;
+    relativeFilePath: boolean;
     php?: string;
     phpunit?: string;
     args?: string[];
@@ -15,6 +16,7 @@ export class Configuration implements IConfiguration {
     defaults: IConfiguration = {
         maxNumberOfProblems: 10000,
         files: '**/*.php',
+        relativeFilePath: false
     };
 
     constructor(
@@ -28,6 +30,10 @@ export class Configuration implements IConfiguration {
 
     get files(): string {
         return this.defaults.files;
+    }
+
+    get relativeFilePath(): boolean {
+        return this.defaults.relativeFilePath;
     }
 
     get php(): string | undefined {
