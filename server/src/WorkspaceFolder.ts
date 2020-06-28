@@ -130,10 +130,13 @@ export class WorkspaceFolder {
             .setPhpBinary(this.config.php)
             .setPhpUnitBinary(this.config.phpunit)
             .setArgs(this.config.args)
-            .setRelativeFilePath(this.config.relativeFilePath);
+            .setRelativeFilePath(this.config.relativeFilePath)
+
+        this.problems.setRemoteCwd(this.config.remoteCwd);
 
         const options = {
             cwd: this.fsPath(),
+            shell: this.config.shell,
         };
 
         rerun === false

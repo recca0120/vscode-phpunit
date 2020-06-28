@@ -78,7 +78,7 @@ export class TestRunner {
 
         if (deps.length > 0) {
             params.push('--filter');
-            params.push(`^.*::(${deps.join('|')})( with data set .*)?$`);
+            params.push(`'/^.*::${deps.join('|')}.*$/'`);
         }
 
         if (p.file) {

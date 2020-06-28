@@ -18,6 +18,7 @@ Run your PHPUnit tests in Node using the
 * Install the extension
 * Restart VS Code and open the Test view
 * Run your tests using the ![Run](img/run.png) icons in the Test Explorer or the CodeLenses in your test file
+* For running phpunit on a remote system or using vagrant see Troubleshooting
 
 ## Configuration
 
@@ -45,3 +46,22 @@ ID                                 | Command
 `test-explorer.cancel`             | Cancel running tests
 
 ## Troubleshooting
+
+### All tests are appearing twice with "\*** duplicate ID **\*" found.
+You likely have a file sensitive file system. The default value of `"phpunit.files": "{test,tests,Test,Tests}/**/*Test.php",` should be changed to `"phpunit.files": "{test,tests}/**/*Test.php",`
+
+### I'm using Vagrant / Homestead for remote execution
+Your tests will list in the explorer for reading locally, but you need to run your tests remotely using PHP on your vagrant machine.
+
+To do this you need to configure the following settings:
+
+`"phpunit.relativeFilePath": true,` - This will ensure your files are located correctly for local checks
+
+`"phpunit.phpunit": "/FULL_PATH_TO/vendor/bin/phpunit",` - your remote path, likely in `/var/www/html/`
+
+`"phpunit.php": "/usr/local/bin/vagrant exec php",` this is to execute PHP on the remote machine. You'll need to install and configure https://github.com/p0deje/vagrant-exec - this wraps the command like using `ssh -C`
+
+You can also use the method above to execute on Docker remotely
+
+### My `/usr/local/bin/vagrant` isn't found?
+Spawn likely can't find vagrant locally. You need to switch to using your regular terminal using something like `"phpunit.shell": "/bin/bash",` or `"phpunit.shell": "/bin/zsh",`

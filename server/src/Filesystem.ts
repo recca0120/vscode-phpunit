@@ -57,10 +57,17 @@ export class Env {
 export class Filesystem {
     private paths: string[] = [];
     private extensions: string[] = [];
+    private remoteCwd: string = '';
 
     constructor(private env: Env = Env.instance()) {
         this.paths = this.env.paths();
         this.extensions = this.env.extensions;
+    }
+
+    public setRemoteCwd(remoteCwd: string) {
+        this.remoteCwd = remoteCwd;
+
+        return this;
     }
 
     get(uri: PathLike | URI): Promise<string> {
@@ -151,8 +158,15 @@ export class Filesystem {
 
     lineAt(uri: PathLike | URI, lineNumber: number): Promise<string> {
         return new Promise((resolve, reject) => {
+
+            let filename = this.asUri(uri).fsPath;
+            if (this.remoteCwd) {
+                // for remote systems remove the root path to prevent a filestream error
+                filename = filename.replace(this.remoteCwd, '');
+            }
+
             const rl = createInterface({
-                input: createReadStream(this.asUri(uri).fsPath),
+                input: createReadStream(filename),
                 crlfDelay: Infinity,
             });
 
