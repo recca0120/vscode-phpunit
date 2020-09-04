@@ -32,7 +32,11 @@ export class OutputProblemMatcher extends ProblemMatcher {
 
     async parse(contents: string): Promise<ProblemNode[]> {
         this.currentStatus = this.asStatus('failure');
-        const problems = await super.parse(he.decode(contents));
+        const problems = (await super.parse(contents)).map(problem => {
+            problem.message = he.decode(problem.message);
+
+            return problem;
+        });
 
         return problems.map(problem => {
             let location: any = problem.files
