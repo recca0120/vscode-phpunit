@@ -57,22 +57,22 @@
             {
                 "key": "cmd+t cmd+f",
                 "command": "phpunit.run-file",
-                "when": "editorTextFocus && editorLangId = php"
+                "when": "editorTextFocus && editorLangId == php"
             },
             {
                 "key": "cmd+t cmd+t",
                 "command": "phpunit.run-test-at-cursor",
-                "when": "editorTextFocus && editorLangId = php"
+                "when": "editorTextFocus && editorLangId == php"
             },
             {
                 "key": "cmd+t cmd+l",
                 "command": "phpunit.rerun",
-                "when": "editorTextFocus && editorLangId = php"
+                "when": "editorTextFocus && editorLangId == php"
             },
             {
                 "key": "cmd+t cmd+d",
                 "command": "phpunit.run-directory",
-                "when": "editorTextFocus && editorLangId = php"
+                "when": "editorTextFocus && editorLangId == php"
             },
             {
                 "key": "cmd+t cmd+s",
