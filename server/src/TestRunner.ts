@@ -78,7 +78,15 @@ export class TestRunner {
 
         if (deps.length > 0) {
             params.push('--filter');
-            params.push(`'/^.*::${deps.join('|')}.*$/'`);
+            let filter = `/^.*::${deps.join('|')}.*$/`;
+            if (options && options.shell) {
+                if (process.platform === 'win32') {
+                    filter = `"${filter}"`;
+                } else {
+                    filter = `'${filter}'`;
+                }
+            }
+            params.push(filter);
         }
 
         if (p.file) {
