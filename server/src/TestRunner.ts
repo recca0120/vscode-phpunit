@@ -24,7 +24,7 @@ export class TestRunner {
         arguments: [],
     };
 
-    constructor(private process = new Process(), private _files = files) {}
+    constructor(private process = new Process(), private _files = files) { }
 
     setPhpBinary(phpBinary: PathLike | URI | undefined) {
         this.phpBinary = phpBinary ? this._files.asUri(phpBinary).fsPath : '';
