@@ -21,7 +21,7 @@ const statusPattern = new RegExp(
 );
 const classPattern = new RegExp('^\\d+\\)\\s(([^:]*)::([^\\s]*).*)$');
 const messagePattern = new RegExp('^(.*)$');
-const filesPattern = new RegExp('^(.*):(\\d+)$');
+const filesPattern = new RegExp('^[^ -](.*):(\\d+)$');
 
 export class OutputProblemMatcher extends ProblemMatcher {
     private currentStatus: Status = this.asStatus('failure');
