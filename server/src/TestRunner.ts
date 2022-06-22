@@ -6,191 +6,189 @@ import { Process } from './Process';
 import { SpawnOptions } from 'child_process';
 
 export interface Params {
-    file?: PathLike | URI;
-    method?: string;
-    depends?: string[];
+	file?: PathLike | URI;
+	method?: string;
+	depends?: string[];
 }
 
 export class TestRunner {
-    private phpBinary = '';
-    private phpUnitBinary = '';
-    private args: string[] = [];
-    private lastArgs: string[] = [];
-    private lastOutput: string = '';
-    private relativeFilePath: boolean = false;
-    private lastCommand: Command = {
-        title: '',
-        command: '',
-        arguments: [],
-    };
+	private phpBinary = '';
+	private phpUnitBinary = '';
+	private args: string[] = [];
+	private lastArgs: string[] = [];
+	private lastOutput: string = '';
+	private relativeFilePath: boolean = false;
+	private lastCommand: Command = {
+		title: '',
+		command: '',
+		arguments: [],
+	};
 
-    constructor(private process = new Process(), private _files = files) { }
+	constructor(private process = new Process(), private _files = files) { }
 
-    setPhpBinary(phpBinary: PathLike | URI | undefined) {
-        this.phpBinary = phpBinary ? this._files.asUri(phpBinary).fsPath : '';
+	setPhpBinary(phpBinary: PathLike | URI | undefined) {
+		// this.phpBinary = phpBinary ? this._files.asUri(phpBinary).fsPath : '';
+		this.phpBinary = phpBinary ? phpBinary.toString() : '';
+		return this;
+	}
 
-        return this;
-    }
+	setPhpUnitBinary(phpUnitBinary: PathLike | URI | undefined) {
+		//this.phpUnitBinary = phpUnitBinary ? this._files.asUri(phpUnitBinary).fsPath : '';
+		this.phpUnitBinary = phpUnitBinary ? phpUnitBinary.toString() : '';
+		return this;
+	}
 
-    setPhpUnitBinary(phpUnitBinary: PathLike | URI | undefined) {
-        this.phpUnitBinary = phpUnitBinary
-            ? this._files.asUri(phpUnitBinary).fsPath
-            : '';
+	setArgs(args: string[] | undefined) {
+		this.args = args || [];
 
-        return this;
-    }
+		return this;
+	}
 
-    setArgs(args: string[] | undefined) {
-        this.args = args || [];
+	setRelativeFilePath(relativeFilePath: boolean) {
+		this.relativeFilePath = relativeFilePath;
 
-        return this;
-    }
+		return this;
+	}
 
-    setRelativeFilePath(relativeFilePath: boolean) {
-        this.relativeFilePath = relativeFilePath;
+	async rerun(p?: Params, options?: SpawnOptions) {
+		if (p && this.lastArgs.length === 0) {
+			return await this.run(p, options);
+		}
 
-        return this;
-    }
+		return await this.doRun(this.lastArgs, options);
+	}
 
-    async rerun(p?: Params, options?: SpawnOptions) {
-        if (p && this.lastArgs.length === 0) {
-            return await this.run(p, options);
-        }
+	async run(p?: Params, options?: SpawnOptions) {
+		if (!p) {
+			return await this.doRun([], options);
+		}
 
-        return await this.doRun(this.lastArgs, options);
-    }
+		const params = [];
+		const deps: string[] = [];
 
-    async run(p?: Params, options?: SpawnOptions) {
-        if (!p) {
-            return await this.doRun([], options);
-        }
+		if (p.method) {
+			deps.push(p.method);
+		}
 
-        const params = [];
-        const deps: string[] = [];
+		if (p.depends) {
+			deps.push(...p.depends);
+		}
 
-        if (p.method) {
-            deps.push(p.method);
-        }
+		if (deps.length > 0) {
+			params.push('--filter');
+			let filter = `/^.*::${deps.join('|')}.*$/`;
+			if (options && options.shell) {
+				if (process.platform === 'win32') {
+					filter = `"${filter}"`;
+				} else {
+					filter = `'${filter}'`;
+				}
+			}
+			params.push(filter);
+		}
 
-        if (p.depends) {
-            deps.push(...p.depends);
-        }
+		if (p.file) {
+			let testFilePath = this._files.asUri(p.file).fsPath;
+			if (this.relativeFilePath && options && options.cwd) {
+				testFilePath = testFilePath.replace(new RegExp(options.cwd.replace(/\\/g, '\\\\') + '[\\/\\\\]'), '');
+			}
+			params.push(testFilePath);
+		}
 
-        if (deps.length > 0) {
-            params.push('--filter');
-            let filter = `/^.*::${deps.join('|')}.*$/`;
-            if (options && options.shell) {
-                if (process.platform === 'win32') {
-                    filter = `"${filter}"`;
-                } else {
-                    filter = `'${filter}'`;
-                }
-            }
-            params.push(filter);
-        }
+		return await this.doRun(params, options);
+	}
 
-        if (p.file) {
-            let testFilePath = this._files.asUri(p.file).fsPath;
-            if (this.relativeFilePath && options && options.cwd) {
-                testFilePath = testFilePath.replace(new RegExp(options.cwd.replace(/\\/g, '\\\\') + '[\\/\\\\]'), '');
-            }
-            params.push(testFilePath);
-        }
+	async doRun(args: string[] = [], options?: SpawnOptions) {
+		try {
+			this.lastArgs = args;
+			this.lastCommand = await this.toCommand(args, options);
+			this.lastOutput = await this.process.run(this.lastCommand, options);
 
-        return await this.doRun(params, options);
-    }
+			return 0;
+		} catch (e) {
+			return 1;
+		}
+	}
 
-    async doRun(args: string[] = [], options?: SpawnOptions) {
-        try {
-            this.lastArgs = args;
-            this.lastCommand = await this.toCommand(args, options);
-            this.lastOutput = await this.process.run(this.lastCommand, options);
+	getOutput() {
+		return this.lastOutput;
+	}
 
-            return 0;
-        } catch (e) {
-            return 1;
-        }
-    }
+	getCommand() {
+		return this.lastCommand;
+	}
 
-    getOutput() {
-        return this.lastOutput;
-    }
+	cancel(): boolean {
+		const killed = this.process.kill();
+		this.lastOutput = '';
+		this.lastCommand = {
+			title: '',
+			command: '',
+			arguments: [],
+		};
 
-    getCommand() {
-        return this.lastCommand;
-    }
+		return killed;
+	}
 
-    cancel(): boolean {
-        const killed = this.process.kill();
-        this.lastOutput = '';
-        this.lastCommand = {
-            title: '',
-            command: '',
-            arguments: [],
-        };
+	private async toCommand(
+		args: string[],
+		spawnOptions?: SpawnOptions
+	): Promise<Command> {
+		let params = [];
 
-        return killed;
-    }
+		const [phpBinary, phpUnitBinary, phpUnitXml] = await Promise.all([
+			this.getPhpBinary(),
+			this.getPhpUnitBinary(spawnOptions),
+			this.getPhpUnitXml(spawnOptions),
+		]);
 
-    private async toCommand(
-        args: string[],
-        spawnOptions?: SpawnOptions
-    ): Promise<Command> {
-        let params = [];
+		if (phpBinary) {
+			params.push(phpBinary);
+		}
 
-        const [phpBinary, phpUnitBinary, phpUnitXml] = await Promise.all([
-            this.getPhpBinary(),
-            this.getPhpUnitBinary(spawnOptions),
-            this.getPhpUnitXml(spawnOptions),
-        ]);
+		if (phpUnitBinary) {
+			params.push(phpUnitBinary);
+		}
 
-        if (phpBinary) {
-            params.push(phpBinary);
-        }
+		const hasConfiguration = this.args.some((arg: string) =>
+			['-c', '--configuration'].some(key => arg.indexOf(key) !== -1)
+		);
 
-        if (phpUnitBinary) {
-            params.push(phpUnitBinary);
-        }
+		if (!hasConfiguration && phpUnitXml) {
+			params.push('-c');
+			params.push(phpUnitXml);
+		}
 
-        const hasConfiguration = this.args.some((arg: string) =>
-            ['-c', '--configuration'].some(key => arg.indexOf(key) !== -1)
-        );
+		params = params.concat(this.args, args).filter(arg => !!arg);
 
-        if (!hasConfiguration && phpUnitXml) {
-            params.push('-c');
-            params.push(phpUnitXml);
-        }
+		return {
+			title: 'PHPUnit LSP',
+			command: params.shift() as string,
+			arguments: params,
+		};
+	}
 
-        params = params.concat(this.args, args).filter(arg => !!arg);
+	private getPhpBinary(): Promise<string> {
+		return Promise.resolve(this.phpBinary);
+	}
 
-        return {
-            title: 'PHPUnit LSP',
-            command: params.shift() as string,
-            arguments: params,
-        };
-    }
+	private async getPhpUnitBinary(
+		spawnOptions?: SpawnOptions
+	): Promise<string | void> {
+		if (this.phpUnitBinary) {
+			return this.phpUnitBinary;
+		}
 
-    private getPhpBinary(): Promise<string> {
-        return Promise.resolve(this.phpBinary);
-    }
+		return await this._files.findup(
+			['vendor/bin/phpunit', 'phpunit'],
+			spawnOptions
+		);
+	}
 
-    private async getPhpUnitBinary(
-        spawnOptions?: SpawnOptions
-    ): Promise<string | void> {
-        if (this.phpUnitBinary) {
-            return this.phpUnitBinary;
-        }
-
-        return await this._files.findup(
-            ['vendor/bin/phpunit', 'phpunit'],
-            spawnOptions
-        );
-    }
-
-    private async getPhpUnitXml(spawnOptions?: SpawnOptions) {
-        return await this._files.findup(
-            ['phpunit.xml', 'phpunit.xml.dist'],
-            spawnOptions
-        );
-    }
+	private async getPhpUnitXml(spawnOptions?: SpawnOptions) {
+		return await this._files.findup(
+			['phpunit.xml', 'phpunit.xml.dist'],
+			spawnOptions
+		);
+	}
 }

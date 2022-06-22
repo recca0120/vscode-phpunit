@@ -162,6 +162,10 @@
                     "default": "onFailure",
                     "description": "Specify if the test report will automatically be shown after execution",
                     "scope": "application"
+                },
+                "phpunit.pathMappings": {
+                    "type": "object",
+                    "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
                 }
             }
         },
