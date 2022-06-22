@@ -9,331 +9,358 @@ import { TestNode, TestSuiteNode } from './TestNode';
 import { TestRunner } from './TestRunner';
 import { TestSuiteCollection } from './TestSuiteCollection';
 import {
-    Connection,
-    ExecuteCommandParams,
-    LogMessageNotification,
-    MessageType,
-    FileEvent,
-    FileChangeType,
-    WorkspaceFolder as _WorkspaceFolder,
+	Connection,
+	ExecuteCommandParams,
+	LogMessageNotification,
+	MessageType,
+	FileEvent,
+	FileChangeType,
+	WorkspaceFolder as _WorkspaceFolder,
 } from 'vscode-languageserver';
 import {
-    TestResponse,
-    ITestResponse,
-    FailedTestResponse,
+	TestResponse,
+	ITestResponse,
+	FailedTestResponse,
 } from './TestResponse';
 
+
 export class WorkspaceFolder {
-    private commandLookup: Map<string, Function> = new Map([
-        ['phpunit.lsp.run-all', this.runAll],
-        ['phpunit.lsp.rerun', this.rerun],
-        ['phpunit.lsp.run-file', this.runFile],
-        ['phpunit.lsp.run-test-at-cursor', this.runTestAtCursor],
-    ]);
+	private commandLookup: Map<string, Function> = new Map([
+		['phpunit.lsp.run-all', this.runAll],
+		['phpunit.lsp.rerun', this.rerun],
+		['phpunit.lsp.run-file', this.runFile],
+		['phpunit.lsp.run-test-at-cursor', this.runTestAtCursor],
+	]);
 
-    constructor(
-        private workspaceFolder: _WorkspaceFolder,
-        private connection: Connection,
-        private config: Configuration,
-        private suites: TestSuiteCollection,
-        private events: TestEventCollection,
-        private problems: ProblemCollection,
-        private problemMatcher: ProblemMatcher,
-        private testRunner: TestRunner,
-        private _files = files
-    ) {
-        this.onTestLoadStartedEvent();
-        this.onTestRunStartedEvent();
-        this.onTestCancelEvent();
-    }
+	constructor(
+		private workspaceFolder: _WorkspaceFolder,
+		private connection: Connection,
+		private config: Configuration,
+		private suites: TestSuiteCollection,
+		private events: TestEventCollection,
+		private problems: ProblemCollection,
+		private problemMatcher: ProblemMatcher,
+		private testRunner: TestRunner,
+		private _files = files
+	) {
+		this.onTestLoadStartedEvent();
+		this.onTestRunStartedEvent();
+		this.onTestCancelEvent();
+	}
 
-    public requestName(name: string) {
-        return [name, md5(this.workspaceFolder.uri.toString())].join('-');
-    }
+	public requestName(name: string) {
+		return [name, md5(this.workspaceFolder.uri.toString())].join('-');
+	}
 
-    getConfig() {
-        return this.config;
-    }
+	getConfig() {
+		return this.config;
+	}
 
-    async detectChange(event: FileEvent) {
-        if (this.isFileChanged(event)) {
-            await this.suites.put(event.uri);
-        }
+	replacepath(file: string, local: boolean = true): string {
+		if (this.config.pathMappings) {
+			const MapV: string[] = Object.values(this.config.pathMappings);
+			const MapK: string[] = Object.keys(this.config.pathMappings);
+			let key: number, value: string, localPath: string;
+			for (let kv of Object.keys(MapK)) {
+				key = Number(kv);
+				localPath = MapV[key];
+				value = MapK[key]
+					.replace(/\$\{workspaceRoot\}/gi, this.fsPath())
+					.replace(/\\/gi, "/");
+				file = file.replace(new RegExp(local ? localPath : value, "ig"), local ? value : localPath);
+			}
+		}
+		file = file.replace(/\$\{workspaceRoot\}/gi, this.fsPath());
+		return file;
+	}
+	remote2local(file: string): string {
+		return this.replacepath(file, true);
+	}
+	local2remote(file: string): string {
+		return this.replacepath(file, false);
+	}
+	async detectChange(event: FileEvent) {
+		if (this.isFileChanged(event)) {
+			await this.suites.put(event.uri);
+		}
+		return this.suites.get(event.uri);
+	}
 
-        return this.suites.get(event.uri);
-    }
+	async loadTest() {
+		await this.connection.sendRequest(
+			this.requestName('TestLoadStartedEvent')
+		);
 
-    async loadTest() {
-        await this.connection.sendRequest(
-            this.requestName('TestLoadStartedEvent')
-        );
+		this.suites.clear();
+		this.events.clear();
 
-        this.suites.clear();
-        this.events.clear();
+		await this.sendLoadTestFinishedEvent(
+			(await this.suites.load(this.config.files, {
+				ignore: '**/vendor/**',
+				cwd: this.fsPath(),
+			})).tree()
+		);
+	}
 
-        await this.sendLoadTestFinishedEvent(
-            (await this.suites.load(this.config.files, {
-                ignore: '**/vendor/**',
-                cwd: this.fsPath(),
-            })).tree()
-        );
-    }
+	async executeCommand(params: ExecuteCommandParams) {
+		const command = params.command;
+		const args = params.arguments || [];
 
-    async executeCommand(params: ExecuteCommandParams) {
-        const command = params.command;
-        const args = params.arguments || [];
+		return this.commandLookup.has(command)
+			? await this.commandLookup.get(command)!.call(this, args)
+			: await this.cancel();
+	}
 
-        return this.commandLookup.has(command)
-            ? await this.commandLookup.get(command)!.call(this, args)
-            : await this.cancel();
-    }
+	async cancel() {
+		this.testRunner.cancel();
 
-    async cancel() {
-        this.testRunner.cancel();
+		return this.sendRunTestFinished(new FailedTestResponse('cancel'));
+	}
 
-        return this.sendRunTestFinished(new FailedTestResponse('cancel'));
-    }
+	private async runAll() {
+		return await this.run({}, this.suites.all());
+	}
 
-    private async runAll() {
-        return await this.run({}, this.suites.all());
-    }
+	private async runFile(params: string[]) {
+		const idOrFile: string = params[0] || '';
+		const tests = this.suites.where(
+			test => test.id === idOrFile || test.file === idOrFile
+		);
 
-    private async runFile(params: string[]) {
-        const idOrFile: string = params[0] || '';
-        const tests = this.suites.where(
-            test => test.id === idOrFile || test.file === idOrFile
-        );
+		return await this.run({ file: tests[0].file }, tests);
+	}
 
-        return await this.run({ file: tests[0].file }, tests);
-    }
+	private async runTestAtCursor(params: string[]) {
+		const tests = this.findTestAtCursorOrId(params);
 
-    private async runTestAtCursor(params: string[]) {
-        const tests = this.findTestAtCursorOrId(params);
+		return await this.run(tests[0], tests);
+	}
 
-        return await this.run(tests[0], tests);
-    }
+	private async rerun(params: string[]) {
+		const tests = this.findTestAtCursorOrId(params);
 
-    private async rerun(params: string[]) {
-        const tests = this.findTestAtCursorOrId(params);
+		return await this.run(tests[0], tests, true);
+	}
 
-        return await this.run(tests[0], tests, true);
-    }
+	private async run(
+		params: any,
+		tests: (TestSuiteNode | TestNode)[],
+		rerun = false
+	) {
+		await this.sendTestRunStartedEvent(tests);
 
-    private async run(
-        params: any,
-        tests: (TestSuiteNode | TestNode)[],
-        rerun = false
-    ) {
-        await this.sendTestRunStartedEvent(tests);
+		this.testRunner
+			.setPhpBinary(this.config.php)
+			.setPhpUnitBinary(this.config.phpunit)
+			.setArgs(this.config.args)
+			.setRelativeFilePath(this.config.relativeFilePath);
 
-        this.testRunner
-            .setPhpBinary(this.config.php)
-            .setPhpUnitBinary(this.config.phpunit)
-            .setArgs(this.config.args)
-            .setRelativeFilePath(this.config.relativeFilePath)
+		this.problems.setRemoteCwd(this.config.remoteCwd);
 
-        this.problems.setRemoteCwd(this.config.remoteCwd);
+		const options = {
+			cwd: this.fsPath(),
+			shell: this.config.shell,
+		};
+		params.options.uri = this.local2remote(this._files.asUri(params.file).fsPath);
+		rerun === false
+			? await this.testRunner.run(params, options)
+			: await this.testRunner.rerun(params, options);
 
-        const options = {
-            cwd: this.fsPath(),
-            shell: this.config.shell,
-        };
+		return this.sendRunTestFinished(
+			new TestResponse(this.testRunner.getOutput(), this.problemMatcher)
+		);
+	}
 
-        rerun === false
-            ? await this.testRunner.run(params, options)
-            : await this.testRunner.rerun(params, options);
+	private findTestAtCursorOrId(params: string[]) {
+		if (!params[1]) {
+			return this.suites.where(test => test.id === params[0], true);
+		}
 
-        return this.sendRunTestFinished(
-            new TestResponse(this.testRunner.getOutput(), this.problemMatcher)
-        );
-    }
+		const file = this._files.asUri(params[0]).toString();
+		const line = parseInt(params[1], 10);
 
-    private findTestAtCursorOrId(params: string[]) {
-        if (!params[1]) {
-            return this.suites.where(test => test.id === params[0], true);
-        }
+		return this.suites.where(
+			test => this.findTestAtLine(test, file, line),
+			true
+		);
+	}
 
-        const file = this._files.asUri(params[0]).toString();
-        const line = parseInt(params[1], 10);
+	async retryTest() {
+		await this.connection.sendRequest(this.requestName('TestRetryEvent'));
 
-        return this.suites.where(
-            test => this.findTestAtLine(test, file, line),
-            true
-        );
-    }
+		return this;
+	}
 
-    async retryTest() {
-        await this.connection.sendRequest(this.requestName('TestRetryEvent'));
+	private findTestAtLine(
+		test: TestSuiteNode | TestNode,
+		file: string,
+		line: number
+	) {
+		if (test.file !== file) {
+			return false;
+		}
 
-        return this;
-    }
+		const start = test.range.start.line;
+		const end = test.range.end.line;
 
-    private findTestAtLine(
-        test: TestSuiteNode | TestNode,
-        file: string,
-        line: number
-    ) {
-        if (test.file !== file) {
-            return false;
-        }
+		return test instanceof TestSuiteNode
+			? line <= start || line >= end
+			: line <= end;
+	}
 
-        const start = test.range.start.line;
-        const end = test.range.end.line;
+	private onTestLoadStartedEvent() {
+		this.connection.onNotification(
+			this.requestName('TestLoadStartedEvent'),
+			async () => await this.loadTest()
+		);
+	}
 
-        return test instanceof TestSuiteNode
-            ? line <= start || line >= end
-            : line <= end;
-    }
+	private onTestRunStartedEvent() {
+		this.connection.onNotification(
+			this.requestName('TestRunStartedEvent'),
+			async ({ tests }) => {
+				const id: string = tests[0] || 'root';
+				const command =
+					id === 'root'
+						? { command: 'phpunit.lsp.run-all', arguments: [] }
+						: {
+							command: 'phpunit.lsp.run-test-at-cursor',
+							arguments: [id],
+						};
 
-    private onTestLoadStartedEvent() {
-        this.connection.onNotification(
-            this.requestName('TestLoadStartedEvent'),
-            async () => await this.loadTest()
-        );
-    }
+				return this.executeCommand(command);
+			}
+		);
+	}
 
-    private onTestRunStartedEvent() {
-        this.connection.onNotification(
-            this.requestName('TestRunStartedEvent'),
-            async ({ tests }) => {
-                const id: string = tests[0] || 'root';
-                const command =
-                    id === 'root'
-                        ? { command: 'phpunit.lsp.run-all', arguments: [] }
-                        : {
-                              command: 'phpunit.lsp.run-test-at-cursor',
-                              arguments: [id],
-                          };
+	private onTestCancelEvent() {
+		this.connection.onNotification(
+			this.requestName('TestCancelEvent'),
+			() => {
+				return this.executeCommand({
+					command: 'php.lsp.cancel',
+					arguments: [],
+				});
+			}
+		);
+	}
 
-                return this.executeCommand(command);
-            }
-        );
-    }
+	private async sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
+		const params = {
+			tests: tests.map(test => test.id),
+			events: this.events
+				.put(tests)
+				.where(event => event.state === 'running'),
+		};
 
-    private onTestCancelEvent() {
-        this.connection.onNotification(
-            this.requestName('TestCancelEvent'),
-            () => {
-                return this.executeCommand({
-                    command: 'php.lsp.cancel',
-                    arguments: [],
-                });
-            }
-        );
-    }
+		this.connection.sendNotification('TestRunStartedEvent', params);
 
-    private async sendTestRunStartedEvent(tests: (TestSuiteNode | TestNode)[]) {
-        const params = {
-            tests: tests.map(test => test.id),
-            events: this.events
-                .put(tests)
-                .where(event => event.state === 'running'),
-        };
+		await this.connection.sendRequest(
+			this.requestName('TestRunStartedEvent'),
+			params
+		);
+	}
 
-        this.connection.sendNotification('TestRunStartedEvent', params);
+	private async sendLoadTestFinishedEvent(suite: TestSuiteInfo) {
+		await this.connection.sendRequest(
+			this.requestName('TestLoadFinishedEvent'),
+			{
+				suite,
+			}
+		);
+	}
 
-        await this.connection.sendRequest(
-            this.requestName('TestRunStartedEvent'),
-            params
-        );
-    }
+	private async sendRunTestFinished(response: ITestResponse) {
+		const params = {
+			command: this.testRunner.getCommand(),
+			events: await this.changeEventsState(response),
+		};
 
-    private async sendLoadTestFinishedEvent(suite: TestSuiteInfo) {
-        await this.connection.sendRequest(
-            this.requestName('TestLoadFinishedEvent'),
-            {
-                suite,
-            }
-        );
-    }
+		this.connection.sendNotification('TestRunFinishedEvent', params);
 
-    private async sendRunTestFinished(response: ITestResponse) {
-        const params = {
-            command: this.testRunner.getCommand(),
-            events: await this.changeEventsState(response),
-        };
+		await this.connection.sendRequest(
+			this.requestName('TestRunFinishedEvent'),
+			params
+		);
 
-        this.connection.sendNotification('TestRunFinishedEvent', params);
+		(await this.problems.asDiagnosticGroup()).forEach(
+			(diagnostics, uri) => {
+				this.connection.sendDiagnostics({
+					uri,
+					diagnostics,
+				});
+			}
+		);
 
-        await this.connection.sendRequest(
-            this.requestName('TestRunFinishedEvent'),
-            params
-        );
+		this.connection.sendNotification(LogMessageNotification.type, {
+			type: MessageType.Log,
+			message: response.toString(),
+		});
 
-        (await this.problems.asDiagnosticGroup()).forEach(
-            (diagnostics, uri) => {
-                this.connection.sendDiagnostics({
-                    uri,
-                    diagnostics,
-                });
-            }
-        );
+		return response;
+	}
 
-        this.connection.sendNotification(LogMessageNotification.type, {
-            type: MessageType.Log,
-            message: response.toString(),
-        });
+	private async changeEventsState(response: ITestResponse) {
+		let problems = await response.asProblems();
+		const result = response.getTestResult();
+		const state = result.tests === 0 ? 'errored' : 'passed';
 
-        return response;
-    }
+		const events = this.events
+			.where(event => event.state === 'running')
+			.map(event => this.fillTestEventState(event, response, state));
+		problems = problems.map((i) => {
+			i.file = this.remote2local(i.file);
+			return i;
+		});
 
-    private async changeEventsState(response: ITestResponse) {
-        const problems = await response.asProblems();
-        const result = response.getTestResult();
-        const state = result.tests === 0 ? 'errored' : 'passed';
+		this.problems.put(events).put(problems);
+		this.events.put(events).put(problems);
 
-        const events = this.events
-            .where(event => event.state === 'running')
-            .map(event => this.fillTestEventState(event, response, state));
+		const eventIds = events.map(event => this.getEventId(event));
 
-        this.problems.put(events).put(problems);
-        this.events.put(events).put(problems);
+		return this.events.where(test =>
+			eventIds.includes(this.getEventId(test))
+		);
+	}
 
-        const eventIds = events.map(event => this.getEventId(event));
+	private fillTestEventState(
+		event: TestSuiteEvent | TestEvent,
+		response: ITestResponse,
+		state: TestEvent['state']
+	) {
+		if (event.type === 'suite') {
+			event.state = 'completed';
 
-        return this.events.where(test =>
-            eventIds.includes(this.getEventId(test))
-        );
-    }
+			return event;
+		}
 
-    private fillTestEventState(
-        event: TestSuiteEvent | TestEvent,
-        response: ITestResponse,
-        state: TestEvent['state']
-    ) {
-        if (event.type === 'suite') {
-            event.state = 'completed';
+		event.state = state;
+		if (state === 'errored') {
+			event.message = response.toString();
+		}
 
-            return event;
-        }
+		return event;
+	}
 
-        event.state = state;
-        if (state === 'errored') {
-            event.message = response.toString();
-        }
+	private getEventId(event: TestSuiteEvent | TestEvent) {
+		return event.type === 'suite' ? event.suite : event.test;
+	}
 
-        return event;
-    }
+	private isFileChanged(event: FileEvent) {
+		if (event.type !== FileChangeType.Deleted) {
+			return true;
+		}
 
-    private getEventId(event: TestSuiteEvent | TestEvent) {
-        return event.type === 'suite' ? event.suite : event.test;
-    }
+		const suite = this.suites.get(event.uri);
+		if (suite) {
+			this.events.delete(suite);
+			this.suites.delete(event.uri);
+		}
 
-    private isFileChanged(event: FileEvent) {
-        if (event.type !== FileChangeType.Deleted) {
-            return true;
-        }
+		return false;
+	}
 
-        const suite = this.suites.get(event.uri);
-        if (suite) {
-            this.events.delete(suite);
-            this.suites.delete(event.uri);
-        }
-
-        return false;
-    }
-
-    private fsPath() {
-        return this._files.asUri(this.workspaceFolder.uri).fsPath;
-    }
+	private fsPath() {
+		return this._files.asUri(this.workspaceFolder.uri).fsPath;
+	}
 }
