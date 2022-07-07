@@ -148,6 +148,10 @@ export class Filesystem {
         uri = uri as string;
 
         if (this.env.isWin()) {
+            if (uri.startsWith('phpvfscomposer://')) {
+                uri = uri.replace('phpvfscomposer://', '');
+            }
+
             uri = uri.replace(/\\/g, '/').replace(/^(\w):/i, m => {
                 return `/${m[0].toLowerCase()}%3A`;
             });
