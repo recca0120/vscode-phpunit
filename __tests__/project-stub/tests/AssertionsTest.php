@@ -22,7 +22,7 @@ class AssertionsTest extends TestCase
         $this->assertTrue(false);
     }
 
-    public function test_isnt_same()
+    public function test_is_not_same()
     {
         $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);
     }
