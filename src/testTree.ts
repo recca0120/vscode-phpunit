@@ -37,7 +37,11 @@ export class TestFile {
      * Parses the tests from the input text, and updates the tests contained
      * by this file to be those from the text,
      */
-    public updateFromContents(controller: vscode.TestController, content: string, item: vscode.TestItem) {
+    public updateFromContents(
+        controller: vscode.TestController,
+        content: string,
+        item: vscode.TestItem
+    ) {
         const ancestors = [{ item, children: [] as vscode.TestItem[] }];
         const thisGeneration = generationCounter++;
         this.didResolve = true;
@@ -54,7 +58,6 @@ export class TestFile {
                 const parent = ancestors[ancestors.length - 1];
                 const data = new TestCase(a, operator as Operator, b, expected, thisGeneration);
                 const id = `${item.uri}/${data.getLabel()}`;
-
 
                 const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
                 testData.set(tcase, data);
@@ -80,7 +83,7 @@ export class TestFile {
 }
 
 export class TestHeading {
-    constructor(public generation: number) { }
+    constructor(public generation: number) {}
 }
 
 type Operator = '+' | '-' | '*' | '/';
@@ -92,7 +95,7 @@ export class TestCase {
         private readonly b: number,
         private readonly expected: number,
         public generation: number
-    ) { }
+    ) {}
 
     getLabel() {
         return `${this.a} ${this.operator} ${this.b} = ${this.expected}`;
@@ -100,14 +103,18 @@ export class TestCase {
 
     async run(item: vscode.TestItem, options: vscode.TestRun): Promise<void> {
         const start = Date.now();
-        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
         const actual = this.evaluate();
         const duration = Date.now() - start;
 
         if (actual === this.expected) {
             options.passed(item, duration);
         } else {
-            const message = vscode.TestMessage.diff(`Expected ${item.label}`, String(this.expected), String(actual));
+            const message = vscode.TestMessage.diff(
+                `Expected ${item.label}`,
+                String(this.expected),
+                String(actual)
+            );
             message.location = new vscode.Location(item.uri!, item.range!);
             options.failed(item, message, duration);
         }
