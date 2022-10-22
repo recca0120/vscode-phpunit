@@ -6,15 +6,9 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 
 suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
 
 	test('Sample test', async () => {
-		const showInformationMessage = sinon.spy(vscode.window, 'showInformationMessage');
 		const ext = vscode.extensions.getExtension("recca0120.vscode-phpunit")!;
 		await ext.activate();
-
-		vscode.commands.executeCommand("vscode-phpunit.helloWorld");
-
-		chai.expect(showInformationMessage.calledWith('Hello World from vscode-phpunit!')).to.be.true;
 	});
 });
