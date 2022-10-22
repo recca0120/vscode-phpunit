@@ -27,9 +27,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 12, character: 4 },
                     end: { line: 12, character: 29 },
                 })
@@ -43,9 +43,10 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
+                    annotations: { depends: ['test_passed'] },
                     start: { line: 20, character: 4 },
                     end: { line: 20, character: 29 },
                 })
@@ -59,9 +60,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 25, character: 4 },
                     end: { line: 25, character: 34 },
                 })
@@ -75,9 +76,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 30, character: 4 },
                     end: { line: 30, character: 28 },
                 })
@@ -91,9 +92,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 38, character: 4 },
                     end: { line: 38, character: 33 },
                 })
@@ -107,9 +108,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 43, character: 4 },
                     end: { line: 43, character: 30 },
                 })
@@ -123,9 +124,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 48, character: 4 },
                     end: { line: 48, character: 33 },
                 })
@@ -139,9 +140,9 @@ describe('Parser Test', () => {
                 expect.objectContaining({
                     filename,
                     id: generateId(method),
-                    namespace: namespace,
-                    clazz: clazz,
-                    method: method,
+                    namespace,
+                    clazz,
+                    method,
                     start: { line: 57, character: 4 },
                     end: { line: 57, character: 52 },
                 })

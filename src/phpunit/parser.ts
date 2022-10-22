@@ -1,15 +1,4 @@
-import {
-    Class,
-    Declaration,
-    Engine,
-    Namespace,
-    Node,
-    Program,
-    UseGroup,
-    Location,
-    Method,
-    CommentBlock,
-} from 'php-parser';
+import { Class, Declaration, Engine, Namespace, Node, Program, UseGroup } from 'php-parser';
 
 const engine = new Engine({
     ast: { withPositions: true, withSource: true },
@@ -53,6 +42,22 @@ const isTest = (declaration: Declaration) => {
     return getName(declaration).startsWith('test');
 };
 
+const parseAnnotation = (declaration: Declaration, annotation = '@depends') => {
+    const pattern = new RegExp(`${annotation}\\s+[^\\n\\s]+`, 'g');
+
+    const match = (comment: string) => {
+        return (comment.match(pattern) || [])
+            .map((match: string) => match.replace(annotation, '').trim())
+            .filter((match: string) => !!match);
+    };
+
+    return !declaration.leadingComments
+        ? undefined
+        : declaration.leadingComments.reduce((acc, comment) => {
+              return acc.concat(match(comment.value) ?? []);
+          }, [] as string[]);
+};
+
 const travel = (
     ast: Program | Namespace | UseGroup | Class | Node,
     filename: string,
@@ -90,6 +95,7 @@ export class TestCase {
     public readonly method: string;
     public readonly start: { character: number; line: number };
     public readonly end: { character: number; line: number };
+    public readonly annotations: { depends?: string[] };
 
     constructor(
         private readonly filename: string,
@@ -102,6 +108,9 @@ export class TestCase {
         this.method = getName(declaration);
         this.qualifiedClazz = generateQualifiedClazz(this.clazz, this.namespace);
         this.id = generateId(this.qualifiedClazz, this.method);
+        this.annotations = {
+            depends: parseAnnotation(declaration),
+        };
 
         const loc = declaration.loc!;
         this.start = { line: loc.start.line, character: loc.start.column };
