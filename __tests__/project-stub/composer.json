@@ -1,0 +1,26 @@
+{
+  "name": "recca0120/vscode-phpunit",
+  "type": "project",
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "mockery/mockery": "^1.5"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Recca0120\\VSCode\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Recca0120\\VSCode\\Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "recca0120",
+      "email": "recca0120@gmail.com"
+    }
+  ],
+  "require": {}
+}
