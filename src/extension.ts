@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run, runHandler, true);
 
-    ctrl.resolveHandler = async item => {
+    ctrl.resolveHandler = async (item) => {
         if (!item) {
             context.subscriptions.push(...startWatchingWorkspace(ctrl));
             return;
@@ -139,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
-        vscode.workspace.onDidChangeTextDocument(e => updateNodeForDocument(e.document))
+        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document))
     );
 }
 
@@ -161,7 +161,7 @@ function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
 
 function gatherTestItems(collection: vscode.TestItemCollection) {
     const items: vscode.TestItem[] = [];
-    collection.forEach(item => items.push(item));
+    collection.forEach((item) => items.push(item));
     return items;
 }
 
@@ -170,7 +170,7 @@ function getWorkspaceTestPatterns() {
         return [];
     }
 
-    return vscode.workspace.workspaceFolders.map(workspaceFolder => ({
+    return vscode.workspace.workspaceFolders.map((workspaceFolder) => ({
         workspaceFolder,
         pattern: new vscode.RelativePattern(workspaceFolder, '**/*.md'),
     }));
@@ -183,17 +183,17 @@ async function findInitialFiles(controller: vscode.TestController, pattern: vsco
 }
 
 function startWatchingWorkspace(controller: vscode.TestController) {
-    return getWorkspaceTestPatterns().map(({ workspaceFolder, pattern }) => {
+    return getWorkspaceTestPatterns().map(({ pattern }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-        watcher.onDidCreate(uri => getOrCreateFile(controller, uri));
-        watcher.onDidChange(uri => {
+        watcher.onDidCreate((uri) => getOrCreateFile(controller, uri));
+        watcher.onDidChange((uri) => {
             const { file, data } = getOrCreateFile(controller, uri);
             if (data.didResolve) {
                 data.updateFromDisk(controller, file);
             }
         });
-        watcher.onDidDelete(uri => controller.items.delete(uri.toString()));
+        watcher.onDidDelete((uri) => controller.items.delete(uri.toString()));
 
         findInitialFiles(controller, pattern);
 

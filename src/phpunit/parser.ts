@@ -17,164 +17,276 @@ const engine = new Engine({
     },
 });
 
+type Attribute = {
+    id: string;
+    qualifiedClazz: string;
+    namespace: string;
+    clazz: string;
+    method?: string;
+    start: Position;
+    end: Position;
+    annotations: Annotations;
+};
+
 type Annotations = {
     depends?: string[];
     dataProvider?: string[];
 };
 
-const appendAnnotations = (
-    annotations: Annotations | any,
-    matches: IterableIterator<RegExpMatchArray>
-) => {
-    for (let match of matches) {
-        const groups = match!.groups;
-        for (const property in groups) {
-            const value = groups[property];
-            if (value) {
-                annotations[property] = [...(annotations[property] ?? []), value];
-            }
-        }
-    }
-
-    return annotations;
-};
-
-const parseAnnotations = (declaration: Declaration): Annotations => {
-    const lookup = ['depends', 'dataProvider'];
-    const template = (annotation: string) => `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
-    const pattern = new RegExp(lookup.map((name) => template(name)).join('|'), 'g');
-    const comments = declaration.leadingComments ?? [];
-
-    return comments
-        .map((comment) => comment.value.matchAll(pattern))
-        .reduce((result, matches) => appendAnnotations(result, matches), {} as Annotations);
+type Position = {
+    character: number;
+    line: number;
 };
 
 const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
 
-const generateId = (namespace?: string, clazz?: string, method?: string) => {
-    if (!clazz) {
-        return namespace;
+class AnnotationParser {
+    private readonly lookup = ['depends', 'dataProvider'];
+    private readonly template = (annotation: string) =>
+        `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
+
+    private readonly pattern: RegExp = new RegExp(
+        this.lookup.map((name) => this.template(name)).join('|'),
+        'g'
+    );
+
+    public parse(declaration: Declaration): Annotations {
+        const comments = declaration.leadingComments ?? [];
+
+        return comments
+            .map((comment) => comment.value.matchAll(this.pattern))
+            .reduce((result, matches) => this.append(result, matches), {} as Annotations);
     }
 
-    const name = generateQualifiedClazz(namespace, clazz);
+    private append(annotations: Annotations | any, matches: IterableIterator<RegExpMatchArray>) {
+        for (let match of matches) {
+            const groups = match!.groups;
+            for (const property in groups) {
+                const value = groups[property];
+                if (value) {
+                    annotations[property] = [...(annotations[property] ?? []), value];
+                }
+            }
+        }
 
-    return method ? `${name}::${method}` : name;
-};
+        return annotations;
+    }
+}
 
-const generateQualifiedClazz = (namespace?: string, clazz?: string) => {
-    return [namespace, clazz].filter((name) => !!name).join('\\');
-};
+export class AttributeParser {
+    private static readonly parser = new AnnotationParser();
 
-const isAnnotationTest = (declaration: Declaration) => {
-    return !declaration.leadingComments
-        ? false
-        : /@test/.test(declaration.leadingComments.map((comment) => comment.value).join('\n'));
-};
+    private readonly lookup: { [p: string]: Function } = {
+        namespace: this.parseNamespace,
+        class: this.parseClazz,
+        method: this.parseMethod,
+    };
 
-const isAbstract = (declaration: Class | Method) => {
-    return declaration.isAbstract;
-};
-
-const acceptModifier = (declaration: Method) => {
-    return ['', 'public'].indexOf(declaration.visibility) !== -1;
-};
-
-const isTest = (declaration: Declaration) => {
-    if (declaration.kind !== 'method') {
-        return false;
+    private get parser() {
+        return AttributeParser.parser;
     }
 
-    const method = declaration as Method;
+    public uniqueId(namespace?: string, clazz?: string, method?: string) {
+        if (!clazz) {
+            return namespace;
+        }
 
-    if (isAbstract(method) || !acceptModifier(method)) {
-        return false;
+        let uniqueId = this.qualifiedClazz(namespace, clazz);
+        if (method) {
+            uniqueId = `${uniqueId}::${method}`;
+        }
+
+        return uniqueId;
     }
 
-    return isAnnotationTest(method) || getName(method).startsWith('test');
-};
-
-const travel = (
-    ast: Program | Namespace | UseGroup | Class | Node,
-    filename: string,
-    namespace?: Namespace
-): TestCase[] | undefined => {
-    if (ast.kind === 'usegroup') {
-        return;
+    public qualifiedClazz(namespace?: string, clazz?: string) {
+        return [namespace, clazz].filter((name) => !!name).join('\\');
     }
 
-    if (ast.kind === 'namespace') {
-        namespace = ast as Namespace;
-        // console.log(new TestCase(filename, ast as Declaration));
+    public parse(declaration: Declaration, namespace?: Namespace, clazz?: Class): Attribute {
+        const fn = this.lookup[declaration.kind];
+        const parsed = fn.apply(this, [declaration, namespace, clazz]);
+        const annotations = this.parser.parse(declaration);
+        const { start, end } = this.parsePosition(declaration);
+        const id = this.uniqueId(parsed.namespace, parsed.clazz, parsed.method);
+        const qualifiedClazz = this.qualifiedClazz(parsed.namespace, parsed.clazz);
+
+        return {
+            id,
+            qualifiedClazz,
+            ...parsed,
+            start,
+            end,
+            annotations,
+        };
     }
 
-    if (ast.kind === 'class') {
+    private parseNamespace(declaration: Declaration) {
+        return { namespace: this.parseName(declaration) };
+    }
+
+    private parseClazz(declaration: Declaration, namespace?: Namespace) {
+        return { namespace: this.parseName(namespace), clazz: this.parseName(declaration) };
+    }
+
+    private parseMethod(declaration: Declaration, namespace?: Namespace, clazz?: Class) {
+        return {
+            namespace: this.parseName(namespace),
+            clazz: this.parseName(clazz),
+            method: this.parseName(declaration),
+        };
+    }
+
+    private parsePosition(declaration: Declaration) {
+        const loc = declaration.loc!;
+        const start = { line: loc.start.line, character: loc.start.column };
+        const end = { line: loc.start.line, character: loc.source?.length ?? 0 };
+
+        return { start, end };
+    }
+
+    private parseName(declaration?: Namespace | Class | Declaration) {
+        return declaration ? getName(declaration) : undefined;
+    }
+}
+
+class Validator {
+    private lookup: { [p: string]: Function } = {
+        class: this.validateClazz,
+        method: this.validateMethod,
+    };
+
+    public isTest(declaration: Declaration) {
+        const fn = this.lookup[declaration.kind];
+
+        return fn ? fn.apply(this, [declaration]) : false;
+    }
+
+    private validateClazz(declaration: Declaration) {
+        return !this.isAbstract(declaration as Class);
+    }
+
+    private validateMethod(declaration: Declaration) {
+        const method = declaration as Method;
+
+        if (this.isAbstract(method) || !this.acceptModifier(method)) {
+            return false;
+        }
+
+        return this.isAnnotationTest(method) || getName(method).startsWith('test');
+    }
+
+    private isAbstract(declaration: Class | Method) {
+        return declaration.isAbstract;
+    }
+
+    private isAnnotationTest(declaration: Declaration) {
+        return !declaration.leadingComments
+            ? false
+            : /@test/.test(declaration.leadingComments.map((comment) => comment.value).join('\n'));
+    }
+
+    private acceptModifier(declaration: Method) {
+        return ['', 'public'].indexOf(declaration.visibility) !== -1;
+    }
+}
+
+class Parser {
+    private static readonly validator = new Validator();
+    private namespace?: Namespace;
+    private lookup: { [p: string]: Function } = {
+        namespace: this.parseNamespace,
+        class: this.parseClazz,
+    };
+
+    private get validator() {
+        return Parser.validator;
+    }
+
+    public parse(
+        ast: Program | Namespace | UseGroup | Class | Node,
+        filename: string
+    ): TestCase[] | undefined {
+        const fn: Function = this.lookup[ast.kind] ?? this.parseChildren;
+
+        return fn.apply(this, [ast, filename]);
+    }
+
+    private parseNamespace(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
+        // new TestCase(filename, ast as Declaration);
+
+        return this.parseChildren((this.namespace = ast as Namespace), filename);
+    }
+
+    private parseClazz(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
         const clazz = ast as Class;
 
-        if (isAbstract(clazz)) {
+        if (!this.validator.isTest(clazz)) {
             return [];
         }
 
-        // console.log(new TestCase(filename, clazz, clazz, namespace));
+        // new TestSuite(filename, clazz, this.namespace);
 
         return clazz.body
-            .filter((declaration) => isTest(declaration))
-            .map((declaration) => new TestCase(filename, declaration, clazz, namespace));
+            .filter((declaration) => this.validator.isTest(declaration))
+            .map((declaration) => new TestCase(filename, declaration, this.namespace, clazz));
     }
 
-    if ('children' in ast) {
-        return ast.children.reduce(
-            (acc, children: Node) => acc.concat(travel(children, filename, namespace) ?? []),
-            [] as TestCase[]
-        );
-    }
-};
+    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
+        if ('children' in ast) {
+            return ast.children.reduce(
+                (tests, children: Node) => tests.concat(this.parse(children, filename) ?? []),
+                [] as TestCase[]
+            );
+        }
 
-export class TestCase {
-    public readonly id?: string;
-    public readonly qualifiedClazz?: string;
-    public readonly namespace?: string;
-    public readonly clazz?: string;
-    public readonly method?: string;
-    public readonly start: { character: number; line: number };
-    public readonly end: { character: number; line: number };
-    public readonly annotations: Annotations;
+        return;
+    }
+}
+
+abstract class Test implements Attribute {
+    private static readonly parser = new AttributeParser();
+
+    public readonly id!: string;
+    public readonly qualifiedClazz!: string;
+    public readonly namespace!: string;
+    public readonly clazz!: string;
+    public readonly start!: Position;
+    public readonly end!: Position;
+    public readonly annotations!: Annotations;
+
+    protected get parser() {
+        return Test.parser;
+    }
+}
+
+// export class TestSuite extends Test {
+//     constructor(
+//         public readonly filename: string,
+//         declaration: Declaration,
+//         _namespace?: Namespace
+//     ) {
+//         super();
+//         Object.assign(this, this.parser.parse(declaration, _namespace));
+//     }
+// }
+
+export class TestCase extends Test {
+    public readonly method!: string;
 
     constructor(
         public readonly filename: string,
         declaration: Declaration,
-        clazz?: Class,
-        namespace?: Namespace
+        _namespace?: Namespace,
+        _clazz?: Class
     ) {
-        if (declaration.kind === 'namespace') {
-            this.namespace = getName(declaration);
-        } else if (declaration.kind === 'class') {
-            this.namespace = namespace ? getName(namespace) : undefined;
-            this.clazz = getName(declaration);
-        } else {
-            this.namespace = namespace ? getName(namespace) : undefined;
-            this.qualifiedClazz = generateQualifiedClazz(this.namespace, this.clazz);
-            this.clazz = clazz ? getName(clazz) : undefined;
-            this.method = getName(declaration);
-        }
-
-        this.id = generateId(this.namespace, this.clazz, this.method);
-        this.annotations = parseAnnotations(declaration);
-
-        const loc = declaration.loc!;
-        this.start = { line: loc.start.line, character: loc.start.column };
-        this.end = { line: loc.start.line, character: loc.source?.length ?? 0 };
-    }
-
-    public toJSON() {
-        const { filename, id, namespace, qualifiedClazz, clazz, method, start, end } = this;
-
-        return { filename, id, namespace, qualifiedClazz, clazz, method, start, end };
+        super();
+        Object.assign(this, this.parser.parse(declaration, _namespace, _clazz));
     }
 }
 
 export const parse = (buffer: Buffer | string, filename: string) => {
-    return travel(engine.parseCode(buffer.toString(), filename), filename);
+    return new Parser().parse(engine.parseCode(buffer.toString(), filename), filename);
 };
