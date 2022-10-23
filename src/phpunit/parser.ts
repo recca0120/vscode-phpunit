@@ -54,11 +54,17 @@ const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
 
-const generateId = (qualifiedClazz: string, method: string) => {
-    return `${qualifiedClazz}::${method}`;
+const generateId = (namespace?: string, clazz?: string, method?: string) => {
+    if (!clazz) {
+        return namespace;
+    }
+
+    const name = generateQualifiedClazz(namespace, clazz);
+
+    return method ? `${name}::${method}` : name;
 };
 
-const generateQualifiedClazz = (clazz: string, namespace?: string) => {
+const generateQualifiedClazz = (namespace?: string, clazz?: string) => {
     return [namespace, clazz].filter((name) => !!name).join('\\');
 };
 
@@ -101,6 +107,7 @@ const travel = (
 
     if (ast.kind === 'namespace') {
         namespace = ast as Namespace;
+        // console.log(new TestCase(filename, ast as Declaration));
     }
 
     if (ast.kind === 'class') {
@@ -109,6 +116,8 @@ const travel = (
         if (isAbstract(clazz)) {
             return [];
         }
+
+        // console.log(new TestCase(filename, clazz, clazz, namespace));
 
         return clazz.body
             .filter((declaration) => isTest(declaration))
@@ -124,11 +133,11 @@ const travel = (
 };
 
 export class TestCase {
-    public readonly id: string;
-    public readonly qualifiedClazz: string;
+    public readonly id?: string;
+    public readonly qualifiedClazz?: string;
     public readonly namespace?: string;
-    public readonly clazz: string;
-    public readonly method: string;
+    public readonly clazz?: string;
+    public readonly method?: string;
     public readonly start: { character: number; line: number };
     public readonly end: { character: number; line: number };
     public readonly annotations: Annotations;
@@ -136,14 +145,22 @@ export class TestCase {
     constructor(
         public readonly filename: string,
         declaration: Declaration,
-        clazz: Class,
+        clazz?: Class,
         namespace?: Namespace
     ) {
-        this.namespace = namespace ? getName(namespace) : undefined;
-        this.clazz = getName(clazz);
-        this.method = getName(declaration);
-        this.qualifiedClazz = generateQualifiedClazz(this.clazz, this.namespace);
-        this.id = generateId(this.qualifiedClazz, this.method);
+        if (declaration.kind === 'namespace') {
+            this.namespace = getName(declaration);
+        } else if (declaration.kind === 'class') {
+            this.namespace = namespace ? getName(namespace) : undefined;
+            this.clazz = getName(declaration);
+        } else {
+            this.namespace = namespace ? getName(namespace) : undefined;
+            this.qualifiedClazz = generateQualifiedClazz(this.namespace, this.clazz);
+            this.clazz = clazz ? getName(clazz) : undefined;
+            this.method = getName(declaration);
+        }
+
+        this.id = generateId(this.namespace, this.clazz, this.method);
         this.annotations = parseAnnotations(declaration);
 
         const loc = declaration.loc!;
