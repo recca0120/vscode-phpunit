@@ -1,4 +1,4 @@
-import { Class, Declaration, Engine, Namespace, Node, Program, UseGroup } from 'php-parser';
+import { Class, Declaration, Engine, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 
 const engine = new Engine({
     ast: { withPositions: true, withSource: true },
@@ -63,8 +63,12 @@ const isAnnotationTest = (declaration: Declaration) => {
         : /@test/.test(declaration.leadingComments.map((comment) => comment.value).join('\n'));
 };
 
+const isAbstract = (declaration: Class | Method) => {
+    return declaration.isAbstract;
+};
+
 const isTest = (declaration: Declaration) => {
-    if (declaration.kind !== 'method') {
+    if (declaration.kind !== 'method' || isAbstract(declaration as Method)) {
         return false;
     }
 
@@ -90,6 +94,10 @@ const travel = (
 
     if (ast.kind === 'class') {
         const clazz = ast as Class;
+
+        if (isAbstract(clazz)) {
+            return [];
+        }
 
         return clazz.body
             .filter((declaration) => isTest(declaration))

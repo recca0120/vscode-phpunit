@@ -5,28 +5,31 @@ import { parse, TestCase } from '../../src/phpunit/parser';
 const projectPath = (uri: string) => path.join(__dirname, '../project-stub', uri);
 
 describe('Parser Test', () => {
-    describe('parse AssertionsTest', () => {
-        let tests: TestCase[];
+    let tests: TestCase[];
+    const generateId = (namespace: string, clazz: string, method: string) =>
+        `${namespace}\\${clazz}::${method}`;
+
+    const givenTest = (method: string) => {
+        return tests.find((test) => test.method === method);
+    };
+
+    describe('it should parse AssertionsTest', () => {
         const filename = projectPath('tests/AssertionsTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests';
         const clazz = 'AssertionsTest';
-        const generateId = (method: string) => `${namespace}\\${clazz}::${method}`;
-        const givenTest = (method: string) => {
-            return tests.find((test) => test.method === method);
-        };
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
             tests = parse(buffer.toString(), filename)!;
         });
 
-        it('parse test_passed', () => {
+        it('it should parse test_passed', () => {
             const method = 'test_passed';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -36,13 +39,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse test_failed', () => {
+        it('it should parse test_failed', () => {
             const method = 'test_failed';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -53,13 +56,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse test_is_not_same', () => {
+        it('it should parse test_is_not_same', () => {
             const method = 'test_is_not_same';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -69,13 +72,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse test_risky', () => {
+        it('it should parse test_risky', () => {
             const method = 'test_risky';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -85,13 +88,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse annotation_test', () => {
+        it('it should parse annotation_test', () => {
             const method = 'annotation_test';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -101,13 +104,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse test_skipped', () => {
+        it('it should parse test_skipped', () => {
             const method = 'test_skipped';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -117,13 +120,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse test_incomplete', () => {
+        it('it should parse test_incomplete', () => {
             const method = 'test_incomplete';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -133,13 +136,13 @@ describe('Parser Test', () => {
             );
         });
 
-        it('parse addition_provider', () => {
+        it('it should parse addition_provider', () => {
             const method = 'addition_provider';
 
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: generateId(method),
+                    id: generateId(namespace, clazz, method),
                     namespace,
                     clazz,
                     method,
@@ -148,6 +151,19 @@ describe('Parser Test', () => {
                     end: { line: 58, character: 52 },
                 })
             );
+        });
+    });
+
+    describe('parse AbstractTest', () => {
+        const filename = projectPath('tests/AbstractTest.php');
+
+        beforeAll(async () => {
+            const buffer = await readFile(filename);
+            tests = parse(buffer.toString(), filename)!;
+        });
+
+        it('it should not parse abstract class', () => {
+            expect(tests).toHaveLength(0);
         });
     });
 });
