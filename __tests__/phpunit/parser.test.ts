@@ -168,13 +168,58 @@ describe('Parser Test', () => {
 
     describe('parse StaticMethodTest', () => {
         const filename = projectPath('tests/StaticMethodTest.php');
+        const namespace = 'Recca0120\\VSCode\\Tests';
+        const clazz = 'StaticMethodTest';
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
             tests = parse(buffer.toString(), filename)!;
         });
 
-        it('it should not parse static method', () => {
+        it('it should parse test_static_public_fail', () => {
+            const method = 'test_static_public_fail';
+
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    filename,
+                    id: generateId(namespace, clazz, method),
+                    namespace,
+                    clazz,
+                    method,
+                    start: { line: 9, character: 4 },
+                    end: { line: 9, character: 48 },
+                })
+            );
+
+            expect(tests).toHaveLength(1);
+        });
+    });
+
+    describe('parse HasPropertyTest', () => {
+        const filename = projectPath('tests/SubFolder/HasPropertyTest.php');
+        const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
+        const clazz = 'HasPropertyTest';
+
+        beforeAll(async () => {
+            const buffer = await readFile(filename);
+            tests = parse(buffer.toString(), filename)!;
+        });
+
+        it('it should parse property', () => {
+            const method = 'property';
+
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    filename,
+                    id: generateId(namespace, clazz, method),
+                    namespace,
+                    clazz,
+                    method,
+                    start: { line: 17, character: 4 },
+                    end: { line: 17, character: 26 },
+                })
+            );
+
             expect(tests).toHaveLength(1);
         });
     });
