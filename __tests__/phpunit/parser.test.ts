@@ -143,8 +143,9 @@ describe('Parser Test', () => {
                     namespace,
                     clazz,
                     method,
-                    start: { line: 57, character: 4 },
-                    end: { line: 57, character: 52 },
+                    annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
+                    start: { line: 58, character: 4 },
+                    end: { line: 58, character: 52 },
                 })
             );
         });

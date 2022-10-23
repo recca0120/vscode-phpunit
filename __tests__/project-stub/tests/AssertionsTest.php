@@ -52,6 +52,7 @@ class AssertionsTest extends TestCase
 
     /**
      * @test
+     * @depends test_passed
      * @dataProvider additionProvider
      */
     public function addition_provider($a, $b, $expected)

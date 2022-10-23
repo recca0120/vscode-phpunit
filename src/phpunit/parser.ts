@@ -12,6 +12,39 @@ const engine = new Engine({
     },
 });
 
+type Annotations = {
+    depends?: string[];
+    dataProvider?: string[];
+};
+
+const appendAnnotations = (
+    annotations: Annotations | any,
+    matches: IterableIterator<RegExpMatchArray>
+) => {
+    for (let match of matches) {
+        const groups = match!.groups;
+        for (const property in groups) {
+            const value = groups[property];
+            if (value) {
+                annotations[property] = [...(annotations[property] ?? []), value];
+            }
+        }
+    }
+
+    return annotations;
+};
+
+const parseAnnotations = (declaration: Declaration): Annotations => {
+    const lookup = ['depends', 'dataProvider'];
+    const template = (annotation: string) => `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
+    const pattern = new RegExp(lookup.map((name) => template(name)).join('|'), 'g');
+    const comments = declaration.leadingComments ?? [];
+
+    return comments
+        .map((comment) => comment.value.matchAll(pattern))
+        .reduce((result, matches) => appendAnnotations(result, matches), {} as Annotations);
+};
+
 const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
@@ -40,22 +73,6 @@ const isTest = (declaration: Declaration) => {
     }
 
     return getName(declaration).startsWith('test');
-};
-
-const parseAnnotation = (declaration: Declaration, annotation = '@depends') => {
-    const pattern = new RegExp(`${annotation}\\s+[^\\n\\s]+`, 'g');
-
-    const match = (comment: string) => {
-        return (comment.match(pattern) || [])
-            .map((match: string) => match.replace(annotation, '').trim())
-            .filter((match: string) => !!match);
-    };
-
-    return !declaration.leadingComments
-        ? undefined
-        : declaration.leadingComments.reduce((acc, comment) => {
-              return acc.concat(match(comment.value) ?? []);
-          }, [] as string[]);
 };
 
 const travel = (
@@ -95,7 +112,7 @@ export class TestCase {
     public readonly method: string;
     public readonly start: { character: number; line: number };
     public readonly end: { character: number; line: number };
-    public readonly annotations: { depends?: string[] };
+    public readonly annotations: Annotations;
 
     constructor(
         private readonly filename: string,
@@ -108,9 +125,7 @@ export class TestCase {
         this.method = getName(declaration);
         this.qualifiedClazz = generateQualifiedClazz(this.clazz, this.namespace);
         this.id = generateId(this.qualifiedClazz, this.method);
-        this.annotations = {
-            depends: parseAnnotation(declaration),
-        };
+        this.annotations = parseAnnotations(declaration);
 
         const loc = declaration.loc!;
         this.start = { line: loc.start.line, character: loc.start.column };
@@ -125,7 +140,5 @@ export class TestCase {
 }
 
 export const parse = (buffer: Buffer | string, filename: string) => {
-    const ast = engine.parseCode(buffer.toString(), filename);
-
-    return travel(ast, filename);
+    return travel(engine.parseCode(buffer.toString(), filename), filename);
 };
