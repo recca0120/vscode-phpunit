@@ -4,10 +4,15 @@ const engine = new Engine({
     ast: { withPositions: true, withSource: true },
     parser: { php7: true, debug: false, extractDoc: true, suppressErrors: false },
     lexer: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         all_tokens: true,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         comment_tokens: true,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         mode_eval: true,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         asp_tags: true,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         short_tags: true,
     },
 });
@@ -129,7 +134,7 @@ export class TestCase {
     public readonly annotations: Annotations;
 
     constructor(
-        private readonly filename: string,
+        public readonly filename: string,
         declaration: Declaration,
         clazz: Class,
         namespace?: Namespace
