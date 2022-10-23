@@ -223,4 +223,58 @@ describe('Parser Test', () => {
             expect(tests).toHaveLength(1);
         });
     });
+
+    describe('LeadingCommentsTest Test', () => {
+        const filename = projectPath('tests/SubFolder/LeadingCommentsTest.php');
+        const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
+        const clazz = 'LeadingCommentsTest';
+
+        beforeAll(async () => {
+            const buffer = await readFile(filename);
+            tests = parse(buffer.toString(), filename)!;
+        });
+
+        it('it should parse firstLeadingComments', () => {
+            const method = 'firstLeadingComments';
+
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    filename,
+                    id: generateId(namespace, clazz, method),
+                    namespace,
+                    clazz,
+                    method,
+                    start: { line: 10, character: 4 },
+                    end: { line: 10, character: 38 },
+                })
+            );
+        });
+    });
+
+    describe('UseTraitTest Test', () => {
+        const filename = projectPath('tests/SubFolder/UseTraitTest.php');
+        const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
+        const clazz = 'UseTraitTest';
+
+        beforeAll(async () => {
+            const buffer = await readFile(filename);
+            tests = parse(buffer.toString(), filename)!;
+        });
+
+        it('it should parse use_trait', () => {
+            const method = 'use_trait';
+
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    filename,
+                    id: generateId(namespace, clazz, method),
+                    namespace,
+                    clazz,
+                    method,
+                    start: { line: 12, character: 4 },
+                    end: { line: 12, character: 27 },
+                })
+            );
+        });
+    });
 });
