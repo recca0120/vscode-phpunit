@@ -67,16 +67,22 @@ const isAbstract = (declaration: Class | Method) => {
     return declaration.isAbstract;
 };
 
+const acceptModifier = (declaration: Method) => {
+    return ['', 'public'].indexOf(declaration.visibility) !== -1;
+};
+
 const isTest = (declaration: Declaration) => {
-    if (declaration.kind !== 'method' || isAbstract(declaration as Method)) {
+    if (declaration.kind !== 'method') {
         return false;
     }
 
-    if (isAnnotationTest(declaration)) {
-        return true;
+    const method = declaration as Method;
+
+    if (isAbstract(method) || !acceptModifier(method)) {
+        return false;
     }
 
-    return getName(declaration).startsWith('test');
+    return isAnnotationTest(method) || getName(method).startsWith('test');
 };
 
 const travel = (

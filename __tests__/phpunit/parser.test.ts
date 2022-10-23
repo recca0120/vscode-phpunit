@@ -6,12 +6,11 @@ const projectPath = (uri: string) => path.join(__dirname, '../project-stub', uri
 
 describe('Parser Test', () => {
     let tests: TestCase[];
-    const generateId = (namespace: string, clazz: string, method: string) =>
-        `${namespace}\\${clazz}::${method}`;
-
-    const givenTest = (method: string) => {
-        return tests.find((test) => test.method === method);
+    const generateId = (namespace: string, clazz: string, method: string) => {
+        return `${namespace}\\${clazz}::${method}`;
     };
+
+    const givenTest = (method: string) => tests.find((test) => test.method === method);
 
     describe('it should parse AssertionsTest', () => {
         const filename = projectPath('tests/AssertionsTest.php');
@@ -164,6 +163,19 @@ describe('Parser Test', () => {
 
         it('it should not parse abstract class', () => {
             expect(tests).toHaveLength(0);
+        });
+    });
+
+    describe('parse StaticMethodTest', () => {
+        const filename = projectPath('tests/StaticMethodTest.php');
+
+        beforeAll(async () => {
+            const buffer = await readFile(filename);
+            tests = parse(buffer.toString(), filename)!;
+        });
+
+        it('it should not parse static method', () => {
+            expect(tests).toHaveLength(1);
         });
     });
 });
