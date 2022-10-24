@@ -1,9 +1,8 @@
-import * as Yargs from 'yargs';
-import { ArgumentsCamelCase } from 'yargs';
+import * as parser from 'yargs-parser';
+import { Arguments } from 'yargs-parser';
 
 class TeamcityParser {
     private readonly pattern = /^\s*#+teamcity/;
-    private readonly yargs = Yargs();
 
     public parse(text: string) {
         text = text
@@ -11,35 +10,23 @@ class TeamcityParser {
             .replace(this.pattern, '')
             .replace(/^\[|\]$/g, '');
 
-        return this.parseArguments(text)
-            .then((argv) => this.toCommand(argv))
-            .then((argv) => this.toArguments(argv));
+        const { _, $0, ...argv } = this.toTeamcityArgv(text);
+
+        return { ...argv };
     }
 
-    private toArguments(argv: ArgumentsCamelCase<any>) {
-        const [teamcity] = argv._;
-        const { _, $0, ...args } = argv;
+    private toTeamcityArgv(text: string) {
+        const [teamcity, ...args] = this.parseArgv(text)._;
+        const command = [
+            `--teamcity='${teamcity}'`,
+            ...args.map((parameter) => `--${parameter}`),
+        ].join(' ');
 
-        return { teamcity, args };
+        return this.parseArgv(command);
     }
 
-    private toCommand(argv: ArgumentsCamelCase<any>) {
-        const [event, ...args] = argv._;
-        const command = [event, ...args.map((parameter) => `--${parameter}`)].join(' ');
-
-        return this.parseArguments(command);
-    }
-
-    private parseArguments(text: string): Promise<ArgumentsCamelCase<any>> {
-        return new Promise((resolve) => {
-            this.yargs.parse(text, (err: Error | undefined, argv: ArgumentsCamelCase<any>) => {
-                if (err) {
-                    throw err;
-                }
-
-                resolve(argv);
-            });
-        });
+    private parseArgv(text: string): Arguments {
+        return parser(text);
     }
 }
 
