@@ -2,16 +2,10 @@ import { Class, Declaration, Engine, Method, Namespace, Node, Program, UseGroup 
 
 const engine = new Engine({
     ast: { withPositions: true, withSource: true },
-    parser: { php7: true, debug: false, extractDoc: true, suppressErrors: false },
+    parser: { extractDoc: true, suppressErrors: false },
     lexer: {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         all_tokens: true,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        comment_tokens: true,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        mode_eval: true,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        asp_tags: true,
         // eslint-disable-next-line @typescript-eslint/naming-convention
         short_tags: true,
     },
@@ -205,7 +199,32 @@ class Parser {
         return Parser.validator;
     }
 
-    public parse(
+    public parse(text: Buffer | string, filename: string) {
+        text = text.toString();
+
+        // Todo https://github.com/glayzzle/php-parser/issues/170
+        text = text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
+
+        const ast = engine.parseCode(text, filename);
+
+        // https://github.com/glayzzle/php-parser/issues/155
+        // currently inline comments include the line break at the end, we need to
+        // strip those out and update the end location for each comment manually
+        ast.comments?.forEach((comment) => {
+            if (comment.value[comment.value.length - 1] === '\r') {
+                comment.value = comment.value.slice(0, -1);
+                comment.loc!.end.offset = comment.loc!.end.offset - 1;
+            }
+            if (comment.value[comment.value.length - 1] === '\n') {
+                comment.value = comment.value.slice(0, -1);
+                comment.loc!.end.offset = comment.loc!.end.offset - 1;
+            }
+        });
+
+        return this.parseAst(ast, filename);
+    }
+
+    private parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
         filename: string
     ): TestCase[] | undefined {
@@ -237,7 +256,7 @@ class Parser {
     private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
         if ('children' in ast) {
             return ast.children.reduce(
-                (tests, children: Node) => tests.concat(this.parse(children, filename) ?? []),
+                (tests, children: Node) => tests.concat(this.parseAst(children, filename) ?? []),
                 [] as TestCase[]
             );
         }
@@ -290,25 +309,5 @@ export class TestCase extends Test {
 const parser = new Parser();
 
 export const parse = (buffer: Buffer | string, filename: string) => {
-    let text = buffer.toString();
-
-    // Todo https://github.com/glayzzle/php-parser/issues/170
-    text = text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
-    const ast = engine.parseCode(text, filename);
-
-    // https://github.com/glayzzle/php-parser/issues/155
-    // currently inline comments include the line break at the end, we need to
-    // strip those out and update the end location for each comment manually
-    ast.comments?.forEach((comment) => {
-        if (comment.value[comment.value.length - 1] === '\r') {
-            comment.value = comment.value.slice(0, -1);
-            comment.loc!.end.offset = comment.loc!.end.offset - 1;
-        }
-        if (comment.value[comment.value.length - 1] === '\n') {
-            comment.value = comment.value.slice(0, -1);
-            comment.loc!.end.offset = comment.loc!.end.offset - 1;
-        }
-    });
-
-    return parser.parse(ast, filename);
+    return parser.parse(buffer, filename);
 };
