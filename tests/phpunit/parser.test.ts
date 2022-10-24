@@ -4,11 +4,11 @@ import { AttributeParser, parse, TestCase } from '../../src/phpunit/parser';
 import { projectPath } from '../helper';
 
 const attributeParser = new AttributeParser();
-const uniqueId = (namespace: string, clazz: string, method: string) => {
-    return attributeParser.uniqueId(namespace, clazz, method);
+const uniqueId = (namespace: string, _class: string, method: string) => {
+    return attributeParser.uniqueId(namespace, _class, method);
 };
-const qualifiedClazz = (namespace: string, clazz: string) => {
-    return attributeParser.qualifiedClazz(namespace, clazz);
+const qualifiedClass = (namespace: string, _class: string) => {
+    return attributeParser.qualifiedClass(namespace, _class);
 };
 
 describe('Parser Test', () => {
@@ -18,7 +18,7 @@ describe('Parser Test', () => {
     describe('parse AssertionsTest', () => {
         const filename = projectPath('tests/AssertionsTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests';
-        const clazz = 'AssertionsTest';
+        const _class = 'AssertionsTest';
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
@@ -31,10 +31,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 12, character: 4 },
                     end: { line: 12, character: 29 },
@@ -48,10 +48,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     annotations: { depends: ['test_passed'] },
                     start: { line: 20, character: 4 },
@@ -66,10 +66,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 25, character: 4 },
                     end: { line: 25, character: 34 },
@@ -83,10 +83,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 30, character: 4 },
                     end: { line: 30, character: 28 },
@@ -100,10 +100,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 38, character: 4 },
                     end: { line: 38, character: 33 },
@@ -117,10 +117,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 43, character: 4 },
                     end: { line: 43, character: 30 },
@@ -134,10 +134,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 48, character: 4 },
                     end: { line: 48, character: 33 },
@@ -151,10 +151,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
                     start: { line: 58, character: 4 },
@@ -180,7 +180,7 @@ describe('Parser Test', () => {
     describe('parse StaticMethodTest', () => {
         const filename = projectPath('tests/StaticMethodTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests';
-        const clazz = 'StaticMethodTest';
+        const _class = 'StaticMethodTest';
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
@@ -193,10 +193,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 9, character: 4 },
                     end: { line: 9, character: 48 },
@@ -210,7 +210,7 @@ describe('Parser Test', () => {
     describe('parse HasPropertyTest', () => {
         const filename = projectPath('tests/SubFolder/HasPropertyTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
-        const clazz = 'HasPropertyTest';
+        const _class = 'HasPropertyTest';
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
@@ -223,10 +223,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 17, character: 4 },
                     end: { line: 17, character: 26 },
@@ -240,7 +240,7 @@ describe('Parser Test', () => {
     describe('parse LeadingCommentsTest', () => {
         const filename = projectPath('tests/SubFolder/LeadingCommentsTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
-        const clazz = 'LeadingCommentsTest';
+        const _class = 'LeadingCommentsTest';
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
@@ -253,10 +253,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 10, character: 4 },
                     end: { line: 10, character: 38 },
@@ -268,7 +268,7 @@ describe('Parser Test', () => {
     describe('parse UseTraitTest', () => {
         const filename = projectPath('tests/SubFolder/UseTraitTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
-        const clazz = 'UseTraitTest';
+        const _class = 'UseTraitTest';
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
@@ -280,10 +280,10 @@ describe('Parser Test', () => {
             expect(givenTest(method)).toEqual(
                 expect.objectContaining({
                     filename,
-                    id: uniqueId(namespace, clazz, method),
-                    qualifiedClazz: qualifiedClazz(namespace, clazz),
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
                     namespace,
-                    clazz,
+                    class: _class,
                     method,
                     start: { line: 12, character: 4 },
                     end: { line: 12, character: 27 },

@@ -13,9 +13,9 @@ const engine = new Engine({
 
 type Attribute = {
     id: string;
-    qualifiedClazz: string;
+    qualifiedClass: string;
     namespace: string;
-    clazz: string;
+    class: string;
     method?: string;
     start: Position;
     end: Position;
@@ -74,7 +74,7 @@ export class AttributeParser {
 
     private readonly lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
-        class: this.parseClazz,
+        class: this.parseClass,
         method: this.parseMethod,
     };
 
@@ -82,12 +82,12 @@ export class AttributeParser {
         return AttributeParser.parser;
     }
 
-    public uniqueId(namespace?: string, clazz?: string, method?: string) {
-        if (!clazz) {
+    public uniqueId(namespace?: string, _class?: string, method?: string) {
+        if (!_class) {
             return namespace;
         }
 
-        let uniqueId = this.qualifiedClazz(namespace, clazz);
+        let uniqueId = this.qualifiedClass(namespace, _class);
         if (method) {
             uniqueId = `${uniqueId}::${method}`;
         }
@@ -95,21 +95,21 @@ export class AttributeParser {
         return uniqueId;
     }
 
-    public qualifiedClazz(namespace?: string, clazz?: string) {
-        return [namespace, clazz].filter((name) => !!name).join('\\');
+    public qualifiedClass(namespace?: string, _class?: string) {
+        return [namespace, _class].filter((name) => !!name).join('\\');
     }
 
-    public parse(declaration: Declaration, namespace?: Namespace, clazz?: Class): Attribute {
+    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): Attribute {
         const fn = this.lookup[declaration.kind];
-        const parsed = fn.apply(this, [declaration, namespace, clazz]);
+        const parsed = fn.apply(this, [declaration, namespace, _class]);
         const annotations = this.parser.parse(declaration);
         const { start, end } = this.parsePosition(declaration);
-        const id = this.uniqueId(parsed.namespace, parsed.clazz, parsed.method);
-        const qualifiedClazz = this.qualifiedClazz(parsed.namespace, parsed.clazz);
+        const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
+        const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
 
         return {
             id,
-            qualifiedClazz,
+            qualifiedClass,
             ...parsed,
             start,
             end,
@@ -121,14 +121,14 @@ export class AttributeParser {
         return { namespace: this.parseName(declaration) };
     }
 
-    private parseClazz(declaration: Declaration, namespace?: Namespace) {
-        return { namespace: this.parseName(namespace), clazz: this.parseName(declaration) };
+    private parseClass(declaration: Declaration, namespace?: Namespace) {
+        return { namespace: this.parseName(namespace), class: this.parseName(declaration) };
     }
 
-    private parseMethod(declaration: Declaration, namespace?: Namespace, clazz?: Class) {
+    private parseMethod(declaration: Declaration, namespace?: Namespace, _class?: Class) {
         return {
             namespace: this.parseName(namespace),
-            clazz: this.parseName(clazz),
+            class: this.parseName(_class),
             method: this.parseName(declaration),
         };
     }
@@ -148,7 +148,7 @@ export class AttributeParser {
 
 class Validator {
     private lookup: { [p: string]: Function } = {
-        class: this.validateClazz,
+        class: this.validateClass,
         method: this.validateMethod,
     };
 
@@ -158,7 +158,7 @@ class Validator {
         return fn ? fn.apply(this, [declaration]) : false;
     }
 
-    private validateClazz(declaration: Declaration) {
+    private validateClass(declaration: Declaration) {
         return !this.isAbstract(declaration as Class);
     }
 
@@ -192,7 +192,7 @@ class Parser {
     private namespace?: Namespace;
     private lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
-        class: this.parseClazz,
+        class: this.parseClass,
     };
 
     private get validator() {
@@ -239,18 +239,18 @@ class Parser {
         return this.parseChildren((this.namespace = ast as Namespace), filename);
     }
 
-    private parseClazz(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
-        const clazz = ast as Class;
+    private parseClass(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
+        const _class = ast as Class;
 
-        if (!this.validator.isTest(clazz)) {
+        if (!this.validator.isTest(_class)) {
             return [];
         }
 
-        // new TestSuite(filename, clazz, this.namespace);
+        // new TestSuite(filename, _class, this.namespace);
 
-        return clazz.body
+        return _class.body
             .filter((declaration) => this.validator.isTest(declaration))
-            .map((declaration) => new TestCase(filename, declaration, this.namespace, clazz));
+            .map((declaration) => new TestCase(filename, declaration, this.namespace, _class));
     }
 
     private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
@@ -269,9 +269,9 @@ abstract class Test implements Attribute {
     private static readonly parser = new AttributeParser();
 
     public readonly id!: string;
-    public readonly qualifiedClazz!: string;
+    public readonly qualifiedClass!: string;
     public readonly namespace!: string;
-    public readonly clazz!: string;
+    public readonly class!: string;
     public readonly start!: Position;
     public readonly end!: Position;
     public readonly annotations!: Annotations;
@@ -299,10 +299,10 @@ export class TestCase extends Test {
         public readonly filename: string,
         declaration: Declaration,
         _namespace?: Namespace,
-        _clazz?: Class
+        _class?: Class
     ) {
         super();
-        Object.assign(this, this.parser.parse(declaration, _namespace, _clazz));
+        Object.assign(this, this.parser.parse(declaration, _namespace, _class));
     }
 }
 
