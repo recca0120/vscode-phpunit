@@ -106,5 +106,35 @@ describe('Problem Matcher Test', () => {
                 flowId: 8024,
             });
         });
+
+        it('parse test_skipped testIgnored', () => {
+            const teamcity =
+                "##teamcity[testIgnored name='test_skipped' message='The MySQLi extension is not available.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:45|n ' duration='0' flowId='8024']";
+
+            expect(parser.parse(teamcity)).toEqual({
+                teamcity: 'testIgnored',
+                name: 'test_skipped',
+                message: 'The MySQLi extension is not available.',
+                details:
+                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:45|n ',
+                duration: 0,
+                flowId: 8024,
+            });
+        });
+
+        it('parse test_incomplete testIgnored', () => {
+            const teamcity =
+                "##teamcity[testIgnored name='test_incomplete' message='This test has not been implemented yet.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:50|n ' duration='0' flowId='8024']";
+
+            expect(parser.parse(teamcity)).toEqual({
+                teamcity: 'testIgnored',
+                name: 'test_incomplete',
+                message: 'This test has not been implemented yet.',
+                details:
+                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:50|n ',
+                duration: 0,
+                flowId: 8024,
+            });
+        });
     });
 });
