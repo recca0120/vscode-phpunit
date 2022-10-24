@@ -287,6 +287,28 @@ export class TestCase extends Test {
     }
 }
 
+const parser = new Parser();
+
 export const parse = (buffer: Buffer | string, filename: string) => {
-    return new Parser().parse(engine.parseCode(buffer.toString(), filename), filename);
+    let text = buffer.toString();
+
+    // Todo https://github.com/glayzzle/php-parser/issues/170
+    text = text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
+    const ast = engine.parseCode(text, filename);
+
+    // https://github.com/glayzzle/php-parser/issues/155
+    // currently inline comments include the line break at the end, we need to
+    // strip those out and update the end location for each comment manually
+    ast.comments?.forEach((comment) => {
+        if (comment.value[comment.value.length - 1] === '\r') {
+            comment.value = comment.value.slice(0, -1);
+            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+        }
+        if (comment.value[comment.value.length - 1] === '\n') {
+            comment.value = comment.value.slice(0, -1);
+            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+        }
+    });
+
+    return parser.parse(ast, filename);
 };
