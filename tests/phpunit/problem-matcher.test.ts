@@ -48,5 +48,25 @@ describe('Problem Matcher Test', () => {
                 },
             });
         });
+
+        it('parse test_is_not_same testFailed', async () => {
+            const teamcity =
+                "##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']";
+
+            expect(await parser.parse(teamcity)).toEqual({
+                teamcity: 'testFailed',
+                args: {
+                    name: 'test_is_not_same',
+                    message: 'Failed asserting that two arrays are identical.',
+                    details:
+                        ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:27|n ',
+                    duration: 0,
+                    type: 'comparisonFailure',
+                    actual: "Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)",
+                    expected: "Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)",
+                    flowId: 8024,
+                },
+            });
+        });
     });
 });
