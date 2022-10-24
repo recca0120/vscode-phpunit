@@ -3,6 +3,16 @@ import { teamcityParser as parser } from '../../src/phpunit/problem-matcher';
 
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {
+        it('parse testCount', () => {
+            const teamcity = " ##teamcity[testCount count='19' flowId='8024']";
+
+            expect(parser.parse(teamcity)).toEqual({
+                teamcity: 'testCount',
+                count: 19,
+                flowId: 8024,
+            });
+        });
+
         it('parse test_passed testStarted', () => {
             const teamcity =
                 "##teamcity[testStarted name='test_passed' locationHint='php_qn://C:Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']";
