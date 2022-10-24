@@ -1,0 +1,142 @@
+PHPUnit 9.5.25 #StandWithUkraine
+
+Runtime:       PHP 8.1.11
+Configuration: C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\phpunit.xml
+
+
+##teamcity[testCount count='19' flowId='8024']
+
+##teamcity[testSuiteStarted name='default' flowId='8024']
+
+##teamcity[testSuiteStarted name='Recca0120\VSCode\Tests\CalculatorTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php::\Recca0120\VSCode\Tests\CalculatorTest' flowId='8024']
+
+##teamcity[testStarted name='test_throw_exception' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php::\Recca0120\VSCode\Tests\CalculatorTest::test_throw_exception' flowId='8024']
+
+##teamcity[testFailed name='test_throw_exception' message='Exception' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\src\Calculator.php:21|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php:54|n ' duration='5' flowId='8024']
+
+##teamcity[testFinished name='test_throw_exception' duration='5' flowId='8024']
+
+##teamcity[testStarted name='test_sum_item_method_not_call' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php::\Recca0120\VSCode\Tests\CalculatorTest::test_sum_item_method_not_call' flowId='8024']
+
+##teamcity[testFailed name='test_sum_item_method_not_call' message='Mockery\Exception\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called|r|n exactly 1 times but called 0 times.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\CountValidator\Exact.php:38|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\Expectation.php:308|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\ExpectationDirector.php:119|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\Container.php:299|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\Container.php:284|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery.php:204|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration.php:68|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration.php:43|n C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\vendor\mockery\mockery\library\Mockery\Adapter\Phpunit\MockeryPHPUnitIntegrationAssertPostConditions.php:29|n ' duration='13' flowId='8024']
+
+##teamcity[testFinished name='test_sum_item_method_not_call' duration='13' flowId='8024']
+
+##teamcity[testStarted name='test_sum_fail' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php::\Recca0120\VSCode\Tests\CalculatorTest::test_sum_fail' flowId='8024']
+
+##teamcity[testFailed name='test_sum_fail' message='Failed asserting that 4 is identical to 3.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php:26|n ' duration='0' flowId='8024']
+
+##teamcity[testFinished name='test_sum_fail' duration='0' flowId='8024']
+
+##teamcity[testStarted name='test_sum' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php::\Recca0120\VSCode\Tests\CalculatorTest::test_sum' flowId='8024']
+
+##teamcity[testFinished name='test_sum' duration='0' flowId='8024']
+
+##teamcity[testStarted name='test_sum_item' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\CalculatorTest.php::\Recca0120\VSCode\Tests\CalculatorTest::test_sum_item' flowId='8024']
+
+##teamcity[testFinished name='test_sum_item' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='Recca0120\VSCode\Tests\CalculatorTest' flowId='8024']
+
+##teamcity[testSuiteStarted name='Recca0120\VSCode\Tests\AssertionsTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest' flowId='8024']
+
+##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::test_is_not_same' flowId='8024']
+
+##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']
+
+##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']
+
+##teamcity[testStarted name='test_incomplete' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::test_incomplete' flowId='8024']
+
+##teamcity[testIgnored name='test_incomplete' message='This test has not been implemented yet.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php:50|n ' duration='0' flowId='8024']
+
+##teamcity[testFinished name='test_incomplete' duration='0' flowId='8024']
+
+##teamcity[testStarted name='test_passed' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::test_passed' flowId='8024']
+
+##teamcity[testFinished name='test_passed' duration='0' flowId='8024']
+
+##teamcity[testStarted name='test_failed' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::test_failed' flowId='8024']
+
+##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php:22|n ' duration='0' flowId='8024']
+
+##teamcity[testFinished name='test_failed' duration='0' flowId='8024']
+
+##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::addition_provider' flowId='8024']
+
+##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::addition_provider with data set #2' flowId='8024']
+
+##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php:60|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']
+
+##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']
+
+##teamcity[testStarted name='addition_provider with data set #0' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::addition_provider with data set #0' flowId='8024']
+
+##teamcity[testFinished name='addition_provider with data set #0' duration='0' flowId='8024']
+
+##teamcity[testStarted name='addition_provider with data set #1' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::addition_provider with data set #1' flowId='8024']
+
+##teamcity[testFinished name='addition_provider with data set #1' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='addition_provider' flowId='8024']
+
+##teamcity[testStarted name='test_risky' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::test_risky' flowId='8024']
+
+##teamcity[testFailed name='test_risky' message='This test did not perform any assertions|n|nC:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php:30' details=' ' duration='0' flowId='8024']
+
+##teamcity[testFinished name='test_risky' duration='0' flowId='8024']
+
+##teamcity[testStarted name='annotation_test' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::annotation_test' flowId='8024']
+
+##teamcity[testFinished name='annotation_test' duration='0' flowId='8024']
+
+##teamcity[testStarted name='test_skipped' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php::\Recca0120\VSCode\Tests\AssertionsTest::test_skipped' flowId='8024']
+
+##teamcity[testIgnored name='test_skipped' message='The MySQLi extension is not available.' details=' C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\AssertionsTest.php:45|n ' duration='0' flowId='8024']
+
+##teamcity[testFinished name='test_skipped' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='Recca0120\VSCode\Tests\AssertionsTest' flowId='8024']
+
+##teamcity[testSuiteStarted name='Recca0120\VSCode\Tests\StaticMethodTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\StaticMethodTest.php::\Recca0120\VSCode\Tests\StaticMethodTest' flowId='8024']
+
+##teamcity[testStarted name='test_static_public_fail' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\StaticMethodTest.php::\Recca0120\VSCode\Tests\StaticMethodTest::test_static_public_fail' flowId='8024']
+
+##teamcity[testFailed name='test_static_public_fail' message='This test did not perform any assertions|n|nC:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\StaticMethodTest.php:9' details=' ' duration='0' flowId='8024']
+
+##teamcity[testFinished name='test_static_public_fail' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='Recca0120\VSCode\Tests\StaticMethodTest' flowId='8024']
+
+##teamcity[testSuiteStarted name='Recca0120\VSCode\Tests\SubFolder\HasPropertyTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\SubFolder\HasPropertyTest.php::\Recca0120\VSCode\Tests\SubFolder\HasPropertyTest' flowId='8024']
+
+##teamcity[testStarted name='property' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\SubFolder\HasPropertyTest.php::\Recca0120\VSCode\Tests\SubFolder\HasPropertyTest::property' flowId='8024']
+
+##teamcity[testFinished name='property' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='Recca0120\VSCode\Tests\SubFolder\HasPropertyTest' flowId='8024']
+
+##teamcity[testSuiteStarted name='Recca0120\VSCode\Tests\SubFolder\LeadingCommentsTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\SubFolder\LeadingCommentsTest.php::\Recca0120\VSCode\Tests\SubFolder\LeadingCommentsTest' flowId='8024']
+
+##teamcity[testStarted name='firstLeadingComments' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\SubFolder\LeadingCommentsTest.php::\Recca0120\VSCode\Tests\SubFolder\LeadingCommentsTest::firstLeadingComments' flowId='8024']
+
+##teamcity[testFinished name='firstLeadingComments' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='Recca0120\VSCode\Tests\SubFolder\LeadingCommentsTest' flowId='8024']
+
+##teamcity[testSuiteStarted name='Recca0120\VSCode\Tests\SubFolder\UseTraitTest' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\SubFolder\UseTraitTest.php::\Recca0120\VSCode\Tests\SubFolder\UseTraitTest' flowId='8024']
+
+##teamcity[testStarted name='use_trait' locationHint='php_qn://C:\Users\recca\Desktop\vscode-phpunit\__tests__\fixtures\project-stub\tests\SubFolder\UseTraitTest.php::\Recca0120\VSCode\Tests\SubFolder\UseTraitTest::use_trait' flowId='8024']
+
+##teamcity[testFinished name='use_trait' duration='0' flowId='8024']
+
+##teamcity[testSuiteFinished name='Recca0120\VSCode\Tests\SubFolder\UseTraitTest' flowId='8024']
+
+##teamcity[testSuiteFinished name='default' flowId='8024']
+
+
+Time: 00:00.049, Memory: 6.00 MB
+
+
+ERRORS!
+Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.
