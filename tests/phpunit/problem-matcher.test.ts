@@ -4,11 +4,31 @@ import { teamcityParser as parser } from '../../src/phpunit/problem-matcher';
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {
         it('parse testCount', () => {
-            const teamcity = " ##teamcity[testCount count='19' flowId='8024']";
+            const teamcity = "##teamcity[testCount count='19' flowId='8024']";
 
             expect(parser.parse(teamcity)).toEqual({
                 teamcity: 'testCount',
                 count: 19,
+                flowId: 8024,
+            });
+        });
+
+        it('parse default testSuiteStarted', () => {
+            const teamcity = "##teamcity[testSuiteStarted name='default' flowId='8024']";
+
+            expect(parser.parse(teamcity)).toEqual({
+                teamcity: 'testSuiteStarted',
+                name: 'default',
+                flowId: 8024,
+            });
+        });
+
+        it('parse default testSuiteFinished', () => {
+            const teamcity = "##teamcity[testSuiteFinished name='default' flowId='8024']";
+
+            expect(parser.parse(teamcity)).toEqual({
+                teamcity: 'testSuiteFinished',
+                name: 'default',
                 flowId: 8024,
             });
         });
