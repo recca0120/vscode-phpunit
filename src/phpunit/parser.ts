@@ -189,15 +189,13 @@ class Validator {
 
 class Parser {
     private static readonly validator = new Validator();
+    private static readonly attributeParser = new AttributeParser();
+
     private namespace?: Namespace;
     private lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseClass,
     };
-
-    private get validator() {
-        return Parser.validator;
-    }
 
     public parse(text: Buffer | string, filename: string) {
         text = text.toString();
@@ -224,6 +222,14 @@ class Parser {
         return this.parseAst(ast, filename);
     }
 
+    private isTest(declaration: Declaration) {
+        return Parser.validator.isTest(declaration);
+    }
+
+    private parseAttributes(declaration: Declaration, _namespace?: Namespace, _class?: Class) {
+        return Parser.attributeParser.parse(declaration, _namespace, _class);
+    }
+
     private parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
         filename: string
@@ -234,7 +240,7 @@ class Parser {
     }
 
     private parseNamespace(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
-        // new TestCase(filename, ast as Declaration);
+        // new TestCase(filename, this.parseAttributes(ast as Declaration, this.namespace));
 
         return this.parseChildren((this.namespace = ast as Namespace), filename);
     }
@@ -242,15 +248,20 @@ class Parser {
     private parseClass(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
         const _class = ast as Class;
 
-        if (!this.validator.isTest(_class)) {
+        if (!this.isTest(_class)) {
             return [];
         }
 
-        // new TestSuite(filename, _class, this.namespace);
+        // new TestSuite(filename, this.parseAttributes(declaration, this.namespace));
 
         return _class.body
-            .filter((declaration) => this.validator.isTest(declaration))
-            .map((declaration) => new TestCase(filename, declaration, this.namespace, _class));
+            .filter((declaration) => this.isTest(declaration))
+            .map((declaration) => {
+                return new TestCase(
+                    filename,
+                    this.parseAttributes(declaration, this.namespace, _class)
+                );
+            });
     }
 
     private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
@@ -266,8 +277,6 @@ class Parser {
 }
 
 abstract class Test implements Attribute {
-    private static readonly parser = new AttributeParser();
-
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
@@ -276,38 +285,17 @@ abstract class Test implements Attribute {
     public readonly end!: Position;
     public readonly annotations!: Annotations;
 
-    protected get parser() {
-        return Test.parser;
+    constructor(public readonly filename: string, attributes: Attribute) {
+        Object.assign(this, attributes);
     }
 }
 
-// export class TestSuite extends Test {
-//     constructor(
-//         public readonly filename: string,
-//         declaration: Declaration,
-//         _namespace?: Namespace
-//     ) {
-//         super();
-//         Object.assign(this, this.parser.parse(declaration, _namespace));
-//     }
-// }
+// export class TestSuite extends Test {}
 
 export class TestCase extends Test {
     public readonly method!: string;
-
-    constructor(
-        public readonly filename: string,
-        declaration: Declaration,
-        _namespace?: Namespace,
-        _class?: Class
-    ) {
-        super();
-        Object.assign(this, this.parser.parse(declaration, _namespace, _class));
-    }
 }
 
 const parser = new Parser();
 
-export const parse = (buffer: Buffer | string, filename: string) => {
-    return parser.parse(buffer, filename);
-};
+export const parse = (buffer: Buffer | string, filename: string) => parser.parse(buffer, filename);
