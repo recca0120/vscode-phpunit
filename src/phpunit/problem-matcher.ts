@@ -1,7 +1,7 @@
 import * as parser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
 
-class EscapeValue {
+export class EscapeValue {
     private values = {
         escape: ['||', "|'", '|n', '|r', '|]', '|['],
         unescape: ['|', "'", '\n', '\r', ']', '['],
@@ -45,10 +45,10 @@ class EscapeValue {
     }
 }
 
-export const escapeValue = new EscapeValue();
-
-class TeamcityParser {
+export class TeamcityParser {
     private readonly pattern = /^\s*#+teamcity/;
+
+    constructor(private escapeValue: EscapeValue) {}
 
     public parse(text: string) {
         text = text
@@ -58,7 +58,7 @@ class TeamcityParser {
 
         const { _, $0, ...argv } = this.toTeamcityArgv(text);
         for (const x in argv) {
-            argv[x] = escapeValue.unescape(argv[x]);
+            argv[x] = this.escapeValue.unescape(argv[x]);
         }
 
         return { ...argv };
@@ -79,4 +79,5 @@ class TeamcityParser {
     }
 }
 
-export const teamcityParser = new TeamcityParser();
+export const escapeValue = new EscapeValue();
+export const teamcityParser = new TeamcityParser(escapeValue);
