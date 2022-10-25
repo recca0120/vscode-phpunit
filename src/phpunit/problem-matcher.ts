@@ -46,14 +46,42 @@ export class EscapeValue {
 }
 
 export class TeamcityParser {
-    private readonly pattern = /^\s*#+teamcity/;
+    private readonly teamcityPattern = /^\s*#+teamcity/;
+    private readonly timeAndMemoryPattern =
+        /Time: (?<time>[\d+:\.]+), Memory: (?<memory>[\d\.]+\s\w+)/;
 
     constructor(private escapeValue: EscapeValue) {}
 
     public parse(text: string) {
+        if (this.isTeamcity(text)) {
+            return this.parseTeamcity(text);
+        }
+
+        if (this.isTimeAndMemory(text)) {
+            return this.parseTimeAnMemory(text);
+        }
+
+        return undefined;
+    }
+
+    private isTimeAndMemory(text: string) {
+        return !!text.match(this.timeAndMemoryPattern);
+    }
+
+    private isTeamcity(text: string): boolean {
+        return !!text.match(this.teamcityPattern);
+    }
+
+    private parseTimeAnMemory(text: string) {
+        const { time, memory } = this.timeAndMemoryPattern.exec(text)!.groups!;
+
+        return { time, memory };
+    }
+
+    private parseTeamcity(text: string) {
         text = text
             .trim()
-            .replace(this.pattern, '')
+            .replace(this.teamcityPattern, '')
             .replace(/^\[|\]$/g, '');
 
         const { _, $0, ...argv } = this.toTeamcityArgv(text);

@@ -158,5 +158,14 @@ describe('Problem Matcher Test', () => {
                 flowId: 8024,
             });
         });
+
+        it('parse time and memory', () => {
+            const text = 'Time: 00:00.049, Memory: 6.00 MB';
+
+            expect(parser.parse(text)).toEqual({
+                time: '00:00.049',
+                memory: '6.00 MB',
+            });
+        });
     });
 });
