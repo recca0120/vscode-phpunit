@@ -65,9 +65,9 @@ export class TeamcityParser {
     }
 
     private toTeamcityArgv(text: string) {
-        const [teamcity, ...args] = this.parseArgv(text)._;
+        const [eventName, ...args] = this.parseArgv(text)._;
         const command = [
-            `--teamcity='${teamcity}'`,
+            `--event='${eventName}'`,
             ...args.map((parameter) => `--${parameter}`),
         ].join(' ');
 
