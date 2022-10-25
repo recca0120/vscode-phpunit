@@ -16,16 +16,16 @@ export class EscapeValue {
         };
     }
 
-    public escape(value: string | number) {
+    public escape(value: string | number | object) {
         return this.doEscape(value, this.patterns.unescape, this.values.escape);
     }
 
-    public unescape(value: string | number) {
+    public unescape(value: string | number | object) {
         return this.doEscape(value, this.patterns.escape, this.values.unescape);
     }
 
-    private doEscape(value: string | number, from: RegExp[], to: string[]) {
-        if (typeof value === 'number') {
+    private doEscape(value: string | number | object, from: RegExp[], to: string[]) {
+        if (typeof value !== 'string') {
             return value;
         }
 
@@ -128,5 +128,4 @@ export class TeamcityParser {
     }
 }
 
-export const escapeValue = new EscapeValue();
-export const teamcityParser = new TeamcityParser(escapeValue);
+export const teamcityParser = new TeamcityParser(new EscapeValue());
