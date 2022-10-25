@@ -84,12 +84,33 @@ export class TeamcityParser {
             .replace(this.teamcityPattern, '')
             .replace(/^\[|\]$/g, '');
 
-        const { _, $0, ...argv } = this.toTeamcityArgv(text);
+        const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
+
+        return { ...argv, ...this.parseLocationHint(argv) };
+    }
+
+    private parseLocationHint(argv: Pick<Arguments, string | number>) {
+        if (!argv.locationHint) {
+            return {};
+        }
+
+        const locationHint = argv.locationHint;
+        const split = locationHint
+            .replace(/^php_qn:\/\//, '')
+            .replace(/::\\/g, '::')
+            .split('::');
+        const file = split.shift();
+        const id = split.join('::');
+
+        return { id, file };
+    }
+
+    private unescapeArgv(argv: Pick<Arguments, string | number>) {
         for (const x in argv) {
             argv[x] = this.escapeValue.unescape(argv[x]);
         }
 
-        return { ...argv };
+        return argv;
     }
 
     private toTeamcityArgv(text: string) {

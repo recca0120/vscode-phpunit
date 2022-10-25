@@ -41,15 +41,32 @@ describe('Problem Matcher Test', () => {
             });
         });
 
+        it('parse testSuiteStarted with locationHint', () => {
+            const text =
+                "##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\CalculatorTest' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest' flowId='8024']";
+
+            expect(parser.parse(text)).toEqual({
+                event: 'testSuiteStarted',
+                id: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\CalculatorTest.php',
+                name: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
+                locationHint:
+                    'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest',
+                flowId: 8024,
+            });
+        });
+
         it('parse test_passed testStarted', () => {
             const text =
-                "##teamcity[testStarted name='test_passed' locationHint='php_qn://C:Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']";
+                "##teamcity[testStarted name='test_passed' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']";
 
             expect(parser.parse(text)).toEqual({
                 event: 'testStarted',
                 name: 'test_passed',
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                 locationHint:
-                    'php_qn://C:Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                    'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
                 flowId: 8024,
             });
         });
