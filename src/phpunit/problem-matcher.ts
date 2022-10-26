@@ -86,7 +86,25 @@ export class TeamcityParser {
 
         const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
 
-        return { ...argv, ...this.parseLocationHint(argv) };
+        return { ...argv, ...this.parseLocationHint(argv), ...this.parseDetails(argv) };
+    }
+
+    private parseDetails(argv: Pick<Arguments, string | number>) {
+        if (!argv.details) {
+            return {};
+        }
+
+        return {
+            details: argv.details
+                .trim()
+                .split(/\r\n|\n/g)
+                .filter((detail: string) => !!detail)
+                .map((detail: string) => {
+                    const { file, line } = /(?<file>.+):(?<line>\d+)$/g.exec(detail)!.groups!;
+
+                    return { file, line: parseInt(line, 10) };
+                }),
+        };
     }
 
     private parseLocationHint(argv: Pick<Arguments, string | number>) {

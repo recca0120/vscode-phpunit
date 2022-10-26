@@ -82,8 +82,12 @@ describe('Problem Matcher Test', () => {
                 event: 'testFailed',
                 name: 'test_failed',
                 message: 'Failed asserting that false is true.',
-                details:
-                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:22\n ',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        line: 22,
+                    },
+                ],
                 duration: 0,
                 flowId: 8024,
             });
@@ -97,8 +101,12 @@ describe('Problem Matcher Test', () => {
                 event: 'testFailed',
                 name: 'test_is_not_same',
                 message: 'Failed asserting that two arrays are identical.',
-                details:
-                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:27\n ',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        line: 27,
+                    },
+                ],
                 duration: 0,
                 type: 'comparisonFailure',
                 actual: "Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n)",
@@ -116,8 +124,44 @@ describe('Problem Matcher Test', () => {
                 name: 'test_sum_item_method_not_call',
                 message:
                     'Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called\r\n exactly 1 times but called 0 times.',
-                details:
-                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php:38\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php:308\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php:119\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:299\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:284\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery.php:204\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:68\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:43\n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegrationAssertPostConditions.php:29\n ',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php',
+                        line: 38,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php',
+                        line: 308,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php',
+                        line: 119,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        line: 299,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php',
+                        line: 284,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery.php',
+                        line: 204,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php',
+                        line: 68,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php',
+                        line: 43,
+                    },
+                    {
+                        file: ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegrationAssertPostConditions.php',
+                        line: 29,
+                    },
+                ],
                 duration: 13,
                 flowId: 8024,
             });
@@ -131,8 +175,12 @@ describe('Problem Matcher Test', () => {
                 event: 'testIgnored',
                 name: 'test_skipped',
                 message: 'The MySQLi extension is not available.',
-                details:
-                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:45\n ',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        line: 45,
+                    },
+                ],
                 duration: 0,
                 flowId: 8024,
             });
@@ -146,8 +194,12 @@ describe('Problem Matcher Test', () => {
                 event: 'testIgnored',
                 name: 'test_incomplete',
                 message: 'This test has not been implemented yet.',
-                details:
-                    ' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:50\n ',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        line: 50,
+                    },
+                ],
                 duration: 0,
                 flowId: 8024,
             });
@@ -162,7 +214,7 @@ describe('Problem Matcher Test', () => {
                 name: 'test_risky',
                 message:
                     'This test did not perform any assertions\n\nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:30',
-                details: ' ',
+                details: [],
                 duration: 0,
                 flowId: 8024,
             });
