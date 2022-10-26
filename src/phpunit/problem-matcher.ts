@@ -61,7 +61,7 @@ type TestSuiteStarted = TeamcityInfo & { id?: string; file?: string; locationHin
 type TestSuiteFinished = TeamcityInfo;
 type TestStarted = TeamcityInfo & { id: string; file: string; locationHint: string };
 type TestFinished = TeamcityInfo & { duration: number };
-type TestResult = {
+type TestResultCount = {
     tests?: number;
     assertions?: number;
     errors?: number;
@@ -92,14 +92,14 @@ type Teamcity =
     | TestIgnored
     | TestFinished;
 
-type Result = Teamcity | TestResult | TestCount | TimeAndMemory | undefined;
+export type Result = Teamcity | TestResultCount | TestCount | TimeAndMemory;
 
 interface IParser<T> {
     is: (text: string) => boolean;
     parse: (text: string) => T;
 }
 
-class TestResultParser implements IParser<TestResult> {
+class TestResultCountParser implements IParser<TestResultCount> {
     private readonly pattern = (() => {
         const items = ['Errors', 'Failures', 'Skipped', 'Incomplete', 'Risky'];
         const end = '\\s(\\d+)[\\.\\s,]\\s?';
@@ -121,7 +121,7 @@ class TestResultParser implements IParser<TestResult> {
             result[name.toLowerCase()] = parseInt(count, 10);
 
             return result;
-        }, {} as TestResult);
+        }, {} as TestResultCount);
     }
 }
 
@@ -141,14 +141,14 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     }
 }
 
-export class Parser implements IParser<Result> {
+export class Parser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^\\s*#+teamcity');
     private readonly detailsPattern = new RegExp('(?<file>.+):(?<line>\\d+)$');
-    private readonly parsers = [new TimeAndMemoryParser(), new TestResultParser()];
+    private readonly parsers = [new TimeAndMemoryParser(), new TestResultCountParser()];
 
     constructor(private escapeValue: EscapeValue) {}
 
-    public parse(text: string): Result {
+    public parse(text: string): Result | undefined {
         return this.is(text)
             ? this.doParse(text)
             : this.parsers.find((parser) => parser.is(text))?.parse(text);
@@ -244,7 +244,9 @@ class ProblemMatcher {
 
     constructor(private parser: Parser) {}
 
-    read(input: string | Buffer): Teamcity | TestCount | TestResult | TimeAndMemory | undefined {
+    read(
+        input: string | Buffer
+    ): Teamcity | TestCount | TestResultCount | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());
 
         return !result || this.isReturn(result)
@@ -252,11 +254,11 @@ class ProblemMatcher {
             : this.lookup[(result as Teamcity).event]?.call(this, result as Teamcity);
     }
 
-    private isReturn(result: Teamcity | TestCount | TestResult | TimeAndMemory) {
+    private isReturn(result: Teamcity | TestCount | TestResultCount | TimeAndMemory) {
         return (
             (result as TimeAndMemory).hasOwnProperty('memory') ||
             (result as TestCount).event === TeamcityEvent.testCount ||
-            (result as TestResult).hasOwnProperty('tests')
+            (result as TestResultCount).hasOwnProperty('tests')
         );
     }
 
