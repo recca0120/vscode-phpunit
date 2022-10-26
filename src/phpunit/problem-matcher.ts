@@ -45,6 +45,44 @@ export class EscapeValue {
     }
 }
 
+export enum TeamcityEvent {
+    testCount = 'testCount',
+    testSuiteStarted = 'testSuiteStarted',
+    testSuiteFinished = 'testSuiteFinished',
+    testStarted = 'testStarted',
+    testFailed = 'testFailed',
+    testIgnored = 'testIgnored',
+    testFinished = 'testFinished',
+}
+
+type TestCount = { event: TeamcityEvent; count: number; flowId: number };
+type TeamcityInfo = { event: TeamcityEvent; name: string; flowId: number };
+type TestSuiteStarted = TeamcityInfo & { id?: string; file?: string; locationHint?: string };
+type TestSuiteFinished = TeamcityInfo;
+type TestStarted = TeamcityInfo & { id: string; file: string; locationHint: string };
+type TestFinished = TeamcityInfo & { duration: number };
+
+type TestFailed = TestFinished & {
+    message: string;
+    details: Array<{ file: string; line: number }>;
+
+    type?: string;
+    actual?: string;
+    expected?: string;
+};
+
+type TestIgnored = TestFailed;
+
+type TimeAndMemory = { time: string; memory: string };
+
+type TeamcityResult =
+    | TestSuiteStarted
+    | TestSuiteFinished
+    | TestStarted
+    | TestFailed
+    | TestIgnored
+    | TestFinished;
+
 export class TeamcityParser {
     private readonly teamcityPattern = /^\s*#+teamcity/;
     private readonly timeAndMemoryPattern =
@@ -52,7 +90,7 @@ export class TeamcityParser {
 
     constructor(private escapeValue: EscapeValue) {}
 
-    public parse(text: string) {
+    public parse(text: string): TeamcityResult | TestCount | TimeAndMemory | undefined {
         if (this.isTeamcity(text)) {
             return this.parseTeamcity(text);
         }
@@ -68,14 +106,14 @@ export class TeamcityParser {
         return !!text.match(this.timeAndMemoryPattern);
     }
 
-    private isTeamcity(text: string): boolean {
-        return !!text.match(this.teamcityPattern);
-    }
-
-    private parseTimeAnMemory(text: string) {
+    private parseTimeAnMemory(text: string): TimeAndMemory {
         const { time, memory } = this.timeAndMemoryPattern.exec(text)!.groups!;
 
         return { time, memory };
+    }
+
+    private isTeamcity(text: string): boolean {
+        return !!text.match(this.teamcityPattern);
     }
 
     private parseTeamcity(text: string) {
@@ -86,7 +124,11 @@ export class TeamcityParser {
 
         const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
 
-        return { ...argv, ...this.parseLocationHint(argv), ...this.parseDetails(argv) };
+        return {
+            ...argv,
+            ...this.parseLocationHint(argv),
+            ...this.parseDetails(argv),
+        } as TeamcityResult;
     }
 
     private parseDetails(argv: Pick<Arguments, string | number>) {
@@ -146,4 +188,72 @@ export class TeamcityParser {
     }
 }
 
+class ProblemMatcher {
+    private collect = new Map<string, TeamcityResult>();
+
+    private lookup: { [p: string]: Function } = {
+        [TeamcityEvent.testSuiteStarted]: this.handleStarted,
+        [TeamcityEvent.testStarted]: this.handleStarted,
+        [TeamcityEvent.testSuiteFinished]: this.handleFinished,
+        [TeamcityEvent.testFinished]: this.handleFinished,
+        [TeamcityEvent.testFailed]: this.handleFault,
+        [TeamcityEvent.testIgnored]: this.handleFault,
+    };
+
+    constructor(private parser: TeamcityParser) {}
+
+    read(input: string | Buffer): any {
+        const result = this.parser.parse(input.toString());
+
+        if (result === undefined) {
+            return;
+        }
+
+        if (this.isReturn(result)) {
+            return result;
+        }
+
+        return this.lookup[(result as TeamcityResult).event]?.call(this, result as TeamcityResult);
+    }
+
+    private isReturn(result: TeamcityResult | TestCount | TimeAndMemory) {
+        return (
+            (result as TimeAndMemory).hasOwnProperty('memory') ||
+            (result as TestCount).event === TeamcityEvent.testCount
+        );
+    }
+
+    private handleStarted(result: TeamcityResult) {
+        const id = this.generateId(result);
+        this.collect.set(id, { ...result });
+
+        return this.collect.get(id);
+    }
+
+    private handleFault(result: TeamcityResult) {
+        const id = this.generateId(result);
+        const prevData = this.collect.get(id);
+        this.collect.set(id, { ...prevData, ...result });
+    }
+
+    private handleFinished(result: TeamcityResult) {
+        const id = this.generateId(result);
+
+        const prevData = this.collect.get(id)!;
+        const event = this.isFault(prevData) ? prevData.event : result.event;
+        this.collect.set(id, { ...prevData, ...result, event });
+
+        return this.collect.get(id);
+    }
+
+    private isFault(result: TeamcityResult) {
+        return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(result.event);
+    }
+
+    private generateId(result: TeamcityResult) {
+        return `${result.name}-${result.flowId}`;
+    }
+}
+
 export const teamcityParser = new TeamcityParser(new EscapeValue());
+export const problemMatcher = new ProblemMatcher(teamcityParser);

@@ -1,13 +1,13 @@
 import { describe, it, expect } from '@jest/globals';
-import { teamcityParser as parser } from '../../src/phpunit/problem-matcher';
+import { problemMatcher, TeamcityEvent, teamcityParser } from '../../src/phpunit/problem-matcher';
 
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {
         it('parse testCount', () => {
             const text = "##teamcity[testCount count='19' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testCount',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testCount,
                 count: 19,
                 flowId: 8024,
             });
@@ -16,8 +16,8 @@ describe('Problem Matcher Test', () => {
         it('parse default testSuiteStarted', () => {
             const text = "##teamcity[testSuiteStarted name='default' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testSuiteStarted',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testSuiteStarted,
                 name: 'default',
                 flowId: 8024,
             });
@@ -26,8 +26,8 @@ describe('Problem Matcher Test', () => {
         it('parse default testSuiteFinished', () => {
             const text = "##teamcity[testSuiteFinished name='default' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testSuiteFinished',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testSuiteFinished,
                 name: 'default',
                 flowId: 8024,
             });
@@ -37,8 +37,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\CalculatorTest' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testSuiteStarted',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\CalculatorTest.php',
                 name: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
@@ -52,8 +52,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testStarted name='test_passed' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testStarted',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testStarted,
                 name: 'test_passed',
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
@@ -66,8 +66,8 @@ describe('Problem Matcher Test', () => {
         it('parse test_passed testFinished', () => {
             const text = "##teamcity[testFinished name='test_passed' duration='0' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testFinished',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testFinished,
                 name: 'test_passed',
                 duration: 0,
                 flowId: 8024,
@@ -78,8 +78,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:22|n ' duration='0' flowId='8024'] ";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testFailed',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testFailed,
                 name: 'test_failed',
                 message: 'Failed asserting that false is true.',
                 details: [
@@ -97,8 +97,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testFailed',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testFailed,
                 name: 'test_is_not_same',
                 message: 'Failed asserting that two arrays are identical.',
                 details: [
@@ -119,8 +119,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testFailed name='test_sum_item_method_not_call' message='Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called|r|n exactly 1 times but called 0 times.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php:38|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php:308|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php:119|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:299|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:284|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery.php:204|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:68|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:43|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegrationAssertPostConditions.php:29|n ' duration='13' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testFailed',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testFailed,
                 name: 'test_sum_item_method_not_call',
                 message:
                     'Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called\r\n exactly 1 times but called 0 times.',
@@ -171,8 +171,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testIgnored name='test_skipped' message='The MySQLi extension is not available.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:45|n ' duration='0' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testIgnored',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testIgnored,
                 name: 'test_skipped',
                 message: 'The MySQLi extension is not available.',
                 details: [
@@ -190,8 +190,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testIgnored name='test_incomplete' message='This test has not been implemented yet.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:50|n ' duration='0' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testIgnored',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testIgnored,
                 name: 'test_incomplete',
                 message: 'This test has not been implemented yet.',
                 details: [
@@ -209,8 +209,8 @@ describe('Problem Matcher Test', () => {
             const text =
                 "##teamcity[testFailed name='test_risky' message='This test did not perform any assertions|n|nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:30' details=' ' duration='0' flowId='8024']";
 
-            expect(parser.parse(text)).toEqual({
-                event: 'testFailed',
+            expect(teamcityParser.parse(text)).toEqual({
+                event: TeamcityEvent.testFailed,
                 name: 'test_risky',
                 message:
                     'This test did not perform any assertions\n\nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:30',
@@ -223,9 +223,119 @@ describe('Problem Matcher Test', () => {
         it('parse time and memory', () => {
             const text = 'Time: 00:00.049, Memory: 6.00 MB';
 
-            expect(parser.parse(text)).toEqual({
+            expect(teamcityParser.parse(text)).toEqual({
                 time: '00:00.049',
                 memory: '6.00 MB',
+            });
+        });
+    });
+
+    describe('ProblemMatcher Text', () => {
+        describe('Teamcity Life Cycle', () => {
+            const contents = [
+                [
+                    'full test suite started',
+                    "##teamcity[testSuiteStarted name='default' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testSuiteStarted,
+                        name: 'default',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test suite started',
+                    "##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testSuiteStarted,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test pass started',
+                    "##teamcity[testStarted name='test_passed' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testStarted,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test pass finished',
+                    "##teamcity[testFinished name='test_passed' duration='0' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testFinished,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test failed started',
+                    "##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testStarted,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test failed result',
+                    "##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']",
+                    undefined,
+                ],
+                [
+                    'test failed finished',
+                    "##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testFailed,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
+                        message: 'Failed asserting that two arrays are identical.',
+                        details: [
+                            {
+                                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                                line: 27,
+                            },
+                        ],
+                        duration: 0,
+                        type: 'comparisonFailure',
+                        actual: "Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n)",
+                        expected: "Array &0 (\n    'a' => 'b'\n    'c' => 'd'\n)",
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test suite finished',
+                    "##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testSuiteFinished,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'full test suite finished',
+                    "##teamcity[testSuiteFinished name='default' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testSuiteFinished,
+                        name: 'default',
+                        flowId: 8024,
+                    },
+                ],
+                ['empty line', '', undefined],
+            ];
+
+            const resultShouldBe = (content: string, expected: any) => {
+                if (expected === undefined) {
+                    expect(problemMatcher.read(content)).toBeUndefined();
+                } else {
+                    expect(problemMatcher.read(content)).toEqual(expect.objectContaining(expected));
+                }
+            };
+
+            it.each(contents)('%s', (...x: any[]) => {
+                const [, context, expected] = x;
+
+                resultShouldBe(context, expected);
             });
         });
     });
