@@ -228,6 +228,21 @@ describe('Problem Matcher Test', () => {
                 memory: '6.00 MB',
             });
         });
+
+        it('parse test result', () => {
+            const text =
+                'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.';
+
+            expect(teamcityParser.parse(text)).toEqual({
+                tests: 19,
+                assertions: 15,
+                errors: 2,
+                failures: 4,
+                skipped: 1,
+                incomplete: 1,
+                risky: 2,
+            });
+        });
     });
 
     describe('ProblemMatcher Text', () => {
@@ -239,6 +254,15 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TeamcityEvent.testSuiteStarted,
                         name: 'default',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test count',
+                    "##teamcity[testCount count='19' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testCount,
+                        count: 19,
                         flowId: 8024,
                     },
                 ],
@@ -319,6 +343,28 @@ describe('Problem Matcher Test', () => {
                         event: TeamcityEvent.testSuiteFinished,
                         name: 'default',
                         flowId: 8024,
+                    },
+                ],
+                [
+                    'test count',
+                    "##teamcity[testCount count='19' flowId='8024']",
+                    {
+                        event: TeamcityEvent.testCount,
+                        count: 19,
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test result',
+                    'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
+                    {
+                        tests: 19,
+                        assertions: 15,
+                        errors: 2,
+                        failures: 4,
+                        skipped: 1,
+                        incomplete: 1,
+                        risky: 2,
                     },
                 ],
                 ['empty line', '', undefined],

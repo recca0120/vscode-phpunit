@@ -61,6 +61,15 @@ type TestSuiteStarted = TeamcityInfo & { id?: string; file?: string; locationHin
 type TestSuiteFinished = TeamcityInfo;
 type TestStarted = TeamcityInfo & { id: string; file: string; locationHint: string };
 type TestFinished = TeamcityInfo & { duration: number };
+type TestResult = {
+    tests?: number;
+    assertions?: number;
+    errors?: number;
+    failures?: number;
+    skipped?: number;
+    incomplete?: number;
+    risky?: number;
+};
 
 type TestFailed = TestFinished & {
     message: string;
@@ -88,9 +97,20 @@ export class TeamcityParser {
     private readonly timeAndMemoryPattern =
         /Time: (?<time>[\d+:\.]+), Memory: (?<memory>[\d\.]+\s\w+)/;
 
+    private readonly testResultPattern = (() => {
+        const items = ['Errors', 'Failures', 'Skipped', 'Incomplete', 'Risky'];
+        const end = '\\s(\\d+)[\\.\\s,]\\s?';
+        const tests = `Tests:${end}`;
+        const assertions = `Assertions:${end}`;
+
+        return new RegExp(`^${tests}${assertions}((${items.join('|')}):${end})*`, 'g');
+    })();
+
     constructor(private escapeValue: EscapeValue) {}
 
-    public parse(text: string): TeamcityResult | TestCount | TimeAndMemory | undefined {
+    public parse(
+        text: string
+    ): TeamcityResult | TestCount | TestResult | TimeAndMemory | undefined {
         if (this.isTeamcity(text)) {
             return this.parseTeamcity(text);
         }
@@ -99,7 +119,26 @@ export class TeamcityParser {
             return this.parseTimeAnMemory(text);
         }
 
+        if (this.isTestResult(text)) {
+            return this.parseTestResult(text);
+        }
+
         return undefined;
+    }
+
+    private isTestResult(text: string) {
+        return text.match(this.testResultPattern);
+    }
+
+    private parseTestResult(text: string) {
+        const pattern = new RegExp(`(?<name>\\w+):\\s(?<count>\\d+)[\\.\\s,]?`, 'g');
+
+        return [...text.matchAll(pattern)].reduce((result: any, match) => {
+            const { name, count } = match.groups!;
+            result[name.toLowerCase()] = parseInt(count, 10);
+
+            return result;
+        }, {} as TestResult);
     }
 
     private isTimeAndMemory(text: string) {
@@ -107,7 +146,7 @@ export class TeamcityParser {
     }
 
     private parseTimeAnMemory(text: string): TimeAndMemory {
-        const { time, memory } = this.timeAndMemoryPattern.exec(text)!.groups!;
+        const { time, memory } = text.match(this.timeAndMemoryPattern)!.groups!;
 
         return { time, memory };
     }
@@ -216,10 +255,11 @@ class ProblemMatcher {
         return this.lookup[(result as TeamcityResult).event]?.call(this, result as TeamcityResult);
     }
 
-    private isReturn(result: TeamcityResult | TestCount | TimeAndMemory) {
+    private isReturn(result: TeamcityResult | TestCount | TestResult | TimeAndMemory) {
         return (
             (result as TimeAndMemory).hasOwnProperty('memory') ||
-            (result as TestCount).event === TeamcityEvent.testCount
+            (result as TestCount).event === TeamcityEvent.testCount ||
+            (result as TestResult).hasOwnProperty('tests')
         );
     }
 
