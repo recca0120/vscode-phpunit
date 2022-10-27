@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { problemMatcher, TeamcityEvent, parser } from '../../src/phpunit/problem-matcher';
+import { parser, problemMatcher, TeamcityEvent } from '../problem-matcher';
 
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {

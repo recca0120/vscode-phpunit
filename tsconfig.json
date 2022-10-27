@@ -4,7 +4,7 @@
         "target": "ES2020",
         "lib": ["ES2020", "DOM"],
         "sourceMap": true,
-        "rootDir": ".",
+        "rootDir": "src",
         "strict": true /* enable all strict type-checking options */,
         /* Additional Checks */
         "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
@@ -12,6 +12,5 @@
         "noUnusedParameters": true /* Report errors on unused parameters. */,
         "skipLibCheck": true
     },
-    "include": ["**/*"],
-    "exclude": ["node_modules", "tests/fixtures"]
+    "exclude": ["**/__tests__/**/*"]
 }

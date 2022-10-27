@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { readFile } from 'fs/promises';
-import { AttributeParser, parse, TestCase } from '../../src/phpunit/parser';
-import { projectPath } from '../helper';
+import { projectPath } from './helper';
+import { AttributeParser, parse, TestCase } from '../parser';
 
 const attributeParser = new AttributeParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {

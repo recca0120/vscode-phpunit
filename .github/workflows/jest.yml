@@ -30,7 +30,7 @@ jobs:
               with:
                   timeout_minutes: 5
                   max_attempts: 5
-                  command: cd tests/fixtures/project-stub && composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress ${{ matrix.flags }}
+                  command: cd src/phpunit/__tests__/fixtures/project-stub && composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress ${{ matrix.flags }}
 
             - name: Setup Node.js
               uses: actions/setup-node@v1

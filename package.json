@@ -34,7 +34,7 @@
         "watch-tests": "tsc -p . -w --outDir out",
         "pretest": "npm run compile-tests && npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/src/test/runTest.js",
+        "test": "node ./out/test/runTest.js",
         "jest": "jest",
         "jest:watch": "jest --watch-all",
         "download-api": "vscode-dts main && vscode-dts dev",
