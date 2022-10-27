@@ -1,4 +1,4 @@
-import * as parser from 'yargs-parser';
+import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
 
 export class EscapeValue {
@@ -84,7 +84,7 @@ type TestIgnored = TestFailed;
 
 type TimeAndMemory = { time: string; memory: string };
 
-type TeamcityResult =
+type Teamcity =
     | TestSuiteStarted
     | TestSuiteFinished
     | TestStarted
@@ -92,12 +92,15 @@ type TeamcityResult =
     | TestIgnored
     | TestFinished;
 
-export class TeamcityParser {
-    private readonly teamcityPattern = /^\s*#+teamcity/;
-    private readonly timeAndMemoryPattern =
-        /Time: (?<time>[\d+:\.]+), Memory: (?<memory>[\d\.]+\s\w+)/;
+type Result = Teamcity | TestResult | TestCount | TimeAndMemory | undefined;
 
-    private readonly testResultPattern = (() => {
+interface IParser<T> {
+    is: (text: string) => boolean;
+    parse: (text: string) => T;
+}
+
+class TestResultParser implements IParser<TestResult> {
+    private readonly pattern = (() => {
         const items = ['Errors', 'Failures', 'Skipped', 'Incomplete', 'Risky'];
         const end = '\\s(\\d+)[\\.\\s,]\\s?';
         const tests = `Tests:${end}`;
@@ -106,31 +109,11 @@ export class TeamcityParser {
         return new RegExp(`^${tests}${assertions}((${items.join('|')}):${end})*`, 'g');
     })();
 
-    constructor(private escapeValue: EscapeValue) {}
-
-    public parse(
-        text: string
-    ): TeamcityResult | TestCount | TestResult | TimeAndMemory | undefined {
-        if (this.isTeamcity(text)) {
-            return this.parseTeamcity(text);
-        }
-
-        if (this.isTimeAndMemory(text)) {
-            return this.parseTimeAnMemory(text);
-        }
-
-        if (this.isTestResult(text)) {
-            return this.parseTestResult(text);
-        }
-
-        return undefined;
+    public is(text: string) {
+        return !!text.match(this.pattern);
     }
 
-    private isTestResult(text: string) {
-        return text.match(this.testResultPattern);
-    }
-
-    private parseTestResult(text: string) {
+    public parse(text: string) {
         const pattern = new RegExp(`(?<name>\\w+):\\s(?<count>\\d+)[\\.\\s,]?`, 'g');
 
         return [...text.matchAll(pattern)].reduce((result: any, match) => {
@@ -140,25 +123,45 @@ export class TeamcityParser {
             return result;
         }, {} as TestResult);
     }
+}
 
-    private isTimeAndMemory(text: string) {
-        return !!text.match(this.timeAndMemoryPattern);
+class TimeAndMemoryParser implements IParser<TimeAndMemory> {
+    private readonly pattern = new RegExp(
+        'Time: (?<time>[\\d+:\\.]+), Memory: (?<memory>[\\d\\.]+\\s\\w+)'
+    );
+
+    public is(text: string) {
+        return !!text.match(this.pattern);
     }
 
-    private parseTimeAnMemory(text: string): TimeAndMemory {
-        const { time, memory } = text.match(this.timeAndMemoryPattern)!.groups!;
+    public parse(text: string): TimeAndMemory {
+        const { time, memory } = text.match(this.pattern)!.groups!;
 
         return { time, memory };
     }
+}
 
-    private isTeamcity(text: string): boolean {
-        return !!text.match(this.teamcityPattern);
+export class Parser implements IParser<Result> {
+    private readonly pattern = new RegExp('^\\s*#+teamcity');
+    private readonly detailsPattern = new RegExp('(?<file>.+):(?<line>\\d+)$');
+    private readonly parsers = [new TimeAndMemoryParser(), new TestResultParser()];
+
+    constructor(private escapeValue: EscapeValue) {}
+
+    public parse(text: string): Result {
+        return this.is(text)
+            ? this.doParse(text)
+            : this.parsers.find((parser) => parser.is(text))?.parse(text);
     }
 
-    private parseTeamcity(text: string) {
+    public is(text: string): boolean {
+        return !!text.match(this.pattern);
+    }
+
+    private doParse(text: string) {
         text = text
             .trim()
-            .replace(this.teamcityPattern, '')
+            .replace(this.pattern, '')
             .replace(/^\[|\]$/g, '');
 
         const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
@@ -167,7 +170,7 @@ export class TeamcityParser {
             ...argv,
             ...this.parseLocationHint(argv),
             ...this.parseDetails(argv),
-        } as TeamcityResult;
+        } as Teamcity;
     }
 
     private parseDetails(argv: Pick<Arguments, string | number>) {
@@ -181,7 +184,7 @@ export class TeamcityParser {
                 .split(/\r\n|\n/g)
                 .filter((detail: string) => !!detail)
                 .map((detail: string) => {
-                    const { file, line } = /(?<file>.+):(?<line>\d+)$/g.exec(detail)!.groups!;
+                    const { file, line } = detail.match(this.detailsPattern)!.groups!;
 
                     return { file, line: parseInt(line, 10) };
                 }),
@@ -223,12 +226,12 @@ export class TeamcityParser {
     }
 
     private parseArgv(text: string): Arguments {
-        return parser(text);
+        return yargsParser(text);
     }
 }
 
 class ProblemMatcher {
-    private collect = new Map<string, TeamcityResult>();
+    private collect = new Map<string, Teamcity>();
 
     private lookup: { [p: string]: Function } = {
         [TeamcityEvent.testSuiteStarted]: this.handleStarted,
@@ -239,23 +242,17 @@ class ProblemMatcher {
         [TeamcityEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: TeamcityParser) {}
+    constructor(private parser: Parser) {}
 
-    read(input: string | Buffer): any {
+    read(input: string | Buffer): Teamcity | TestCount | TestResult | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());
 
-        if (result === undefined) {
-            return;
-        }
-
-        if (this.isReturn(result)) {
-            return result;
-        }
-
-        return this.lookup[(result as TeamcityResult).event]?.call(this, result as TeamcityResult);
+        return !result || this.isReturn(result)
+            ? result
+            : this.lookup[(result as Teamcity).event]?.call(this, result as Teamcity);
     }
 
-    private isReturn(result: TeamcityResult | TestCount | TestResult | TimeAndMemory) {
+    private isReturn(result: Teamcity | TestCount | TestResult | TimeAndMemory) {
         return (
             (result as TimeAndMemory).hasOwnProperty('memory') ||
             (result as TestCount).event === TeamcityEvent.testCount ||
@@ -263,20 +260,20 @@ class ProblemMatcher {
         );
     }
 
-    private handleStarted(result: TeamcityResult) {
+    private handleStarted(result: Teamcity) {
         const id = this.generateId(result);
         this.collect.set(id, { ...result });
 
         return this.collect.get(id);
     }
 
-    private handleFault(result: TeamcityResult) {
+    private handleFault(result: Teamcity) {
         const id = this.generateId(result);
         const prevData = this.collect.get(id);
         this.collect.set(id, { ...prevData, ...result });
     }
 
-    private handleFinished(result: TeamcityResult) {
+    private handleFinished(result: Teamcity) {
         const id = this.generateId(result);
 
         const prevData = this.collect.get(id)!;
@@ -286,14 +283,14 @@ class ProblemMatcher {
         return this.collect.get(id);
     }
 
-    private isFault(result: TeamcityResult) {
+    private isFault(result: Teamcity) {
         return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(result.event);
     }
 
-    private generateId(result: TeamcityResult) {
+    private generateId(result: Teamcity) {
         return `${result.name}-${result.flowId}`;
     }
 }
 
-export const teamcityParser = new TeamcityParser(new EscapeValue());
-export const problemMatcher = new ProblemMatcher(teamcityParser);
+export const parser = new Parser(new EscapeValue());
+export const problemMatcher = new ProblemMatcher(parser);

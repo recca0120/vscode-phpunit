@@ -179,7 +179,9 @@ class Validator {
     private isAnnotationTest(declaration: Declaration) {
         return !declaration.leadingComments
             ? false
-            : /@test/.test(declaration.leadingComments.map((comment) => comment.value).join('\n'));
+            : new RegExp('@test').test(
+                  declaration.leadingComments.map((comment) => comment.value).join('\n')
+              );
     }
 
     private acceptModifier(declaration: Method) {
