@@ -1,7 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import { projectPath } from './helper';
-import { AttributeParser, parse, TestCase } from '../parser';
+import { AttributeParser, parse, TestCase, TestSuite } from '../parser';
+import { Test } from 'mocha';
 
 const attributeParser = new AttributeParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {
@@ -12,8 +13,8 @@ const qualifiedClass = (namespace: string, _class: string) => {
 };
 
 describe('Parser Test', () => {
-    let tests: TestCase[];
-    const givenTest = (method: string) => tests.find((test) => test.method === method);
+    let suites: TestSuite[];
+    const givenTest = (method: string) => suites[0].children.find((test) => test.method === method);
 
     describe('parse AssertionsTest', () => {
         const filename = projectPath('tests/AssertionsTest.php');
@@ -22,7 +23,7 @@ describe('Parser Test', () => {
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
-            tests = parse(buffer.toString(), filename)!;
+            suites = parse(buffer.toString(), filename)!;
         });
 
         it('it should parse test_passed', () => {
@@ -169,11 +170,11 @@ describe('Parser Test', () => {
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
-            tests = parse(buffer.toString(), filename)!;
+            suites = parse(buffer.toString(), filename)!;
         });
 
         it('it should not parse abstract class', () => {
-            expect(tests).toHaveLength(0);
+            expect(suites).toHaveLength(0);
         });
     });
 
@@ -184,7 +185,7 @@ describe('Parser Test', () => {
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
-            tests = parse(buffer.toString(), filename)!;
+            suites = parse(buffer.toString(), filename)!;
         });
 
         it('it should parse test_static_public_fail', () => {
@@ -203,7 +204,7 @@ describe('Parser Test', () => {
                 })
             );
 
-            expect(tests).toHaveLength(1);
+            expect(suites).toHaveLength(1);
         });
     });
 
@@ -214,7 +215,7 @@ describe('Parser Test', () => {
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
-            tests = parse(buffer.toString(), filename)!;
+            suites = parse(buffer.toString(), filename)!;
         });
 
         it('it should parse property', () => {
@@ -233,7 +234,7 @@ describe('Parser Test', () => {
                 })
             );
 
-            expect(tests).toHaveLength(1);
+            expect(suites).toHaveLength(1);
         });
     });
 
@@ -244,7 +245,7 @@ describe('Parser Test', () => {
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
-            tests = parse(buffer.toString(), filename)!;
+            suites = parse(buffer.toString(), filename)!;
         });
 
         it('it should parse firstLeadingComments', () => {
@@ -272,7 +273,7 @@ describe('Parser Test', () => {
 
         beforeAll(async () => {
             const buffer = await readFile(filename);
-            tests = parse(buffer.toString(), filename)!;
+            suites = parse(buffer.toString(), filename)!;
         });
 
         it('it should parse use_trait', () => {
