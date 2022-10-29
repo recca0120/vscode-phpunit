@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { parser, problemMatcher, TestEvent } from '../problem-matcher';
 
 describe('Problem Matcher Test', () => {
@@ -243,6 +243,21 @@ describe('Problem Matcher Test', () => {
                 risky: 2,
             });
         });
+
+        it('parse addition_provider with data set', () => {
+            const text =
+                "##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']";
+
+            expect(parser.parse(text)).toEqual({
+                event: 'testStarted',
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                name: 'addition_provider with data set #2',
+                locationHint:
+                    'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                flowId: 8024,
+            });
+        });
     });
 
     describe('ProblemMatcher Text', () => {
@@ -324,6 +339,58 @@ describe('Problem Matcher Test', () => {
                         type: 'comparisonFailure',
                         actual: "Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n)",
                         expected: "Array &0 (\n    'a' => 'b'\n    'c' => 'd'\n)",
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test addition_provider suite start',
+                    "##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider' flowId='8024']",
+                    {
+                        event: TestEvent.testSuiteStarted,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        locationHint:
+                            'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test addition_provider with data start',
+                    "##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']",
+                    {
+                        event: TestEvent.testStarted,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        locationHint:
+                            'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                        flowId: 8024,
+                    },
+                ],
+                [
+                    'test addition_provider with data failed',
+                    "##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:60|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']",
+                    undefined,
+                ],
+                [
+                    'test addition_provider with data finished',
+                    "##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']",
+                    {
+                        event: TestEvent.testFailed,
+                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        locationHint:
+                            'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                        message: 'Failed asserting that 1 matches expected 2.',
+                        details: [
+                            {
+                                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                                line: 60,
+                            },
+                        ],
+                        type: 'comparisonFailure',
+                        actual: 1,
+                        expected: 2,
+                        duration: 0,
                         flowId: 8024,
                     },
                 ],
