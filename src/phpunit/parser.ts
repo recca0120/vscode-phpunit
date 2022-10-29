@@ -1,8 +1,8 @@
 import { Class, Declaration, Engine, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 
 const engine = new Engine({
-    ast: {withPositions: true, withSource: true},
-    parser: {extractDoc: true, suppressErrors: false},
+    ast: { withPositions: true, withSource: true },
+    parser: { extractDoc: true, suppressErrors: false },
     lexer: {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         all_tokens: true,
@@ -15,7 +15,7 @@ type Attribute = {
     id: string;
     qualifiedClass: string;
     namespace: string;
-    class: string;
+    class?: string;
     method?: string;
     start: Position;
     end: Position;
@@ -103,7 +103,7 @@ export class AttributeParser {
         const fn = this.lookup[declaration.kind];
         const parsed = fn.apply(this, [declaration, namespace, _class]);
         const annotations = this.parser.parse(declaration);
-        const {start, end} = this.parsePosition(declaration);
+        const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
         const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
 
@@ -118,11 +118,11 @@ export class AttributeParser {
     }
 
     private parseNamespace(declaration: Declaration) {
-        return {namespace: this.parseName(declaration)};
+        return { namespace: this.parseName(declaration) };
     }
 
     private parseClass(declaration: Declaration, namespace?: Namespace) {
-        return {namespace: this.parseName(namespace), class: this.parseName(declaration)};
+        return { namespace: this.parseName(namespace), class: this.parseName(declaration) };
     }
 
     private parseMethod(declaration: Declaration, namespace?: Namespace, _class?: Class) {
@@ -135,10 +135,10 @@ export class AttributeParser {
 
     private parsePosition(declaration: Declaration) {
         const loc = declaration.loc!;
-        const start = {line: loc.start.line, character: loc.start.column};
-        const end = {line: loc.start.line, character: loc.source?.length ?? 0};
+        const start = { line: loc.start.line, character: loc.start.column };
+        const end = { line: loc.start.line, character: loc.source?.length ?? 0 };
 
-        return {start, end};
+        return { start, end };
     }
 
     private parseName(declaration?: Namespace | Class | Declaration) {
@@ -180,8 +180,8 @@ class Validator {
         return !declaration.leadingComments
             ? false
             : new RegExp('@test').test(
-                declaration.leadingComments.map((comment) => comment.value).join('\n')
-            );
+                  declaration.leadingComments.map((comment) => comment.value).join('\n')
+              );
     }
 
     private acceptModifier(declaration: Method) {
@@ -235,7 +235,7 @@ class Parser {
     private parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
         filename: string
-    ): TestSuite[] | undefined {
+    ): Test[] | undefined {
         const fn: Function = this.lookup[ast.kind] ?? this.parseChildren;
 
         return fn.apply(this, [ast, filename]);
@@ -254,14 +254,14 @@ class Parser {
             return [];
         }
 
-        let attributes = this.parseAttributes(ast as Declaration, this.namespace);
-        const suite = new TestSuite(filename, attributes);
+        const attributes = this.parseAttributes(ast as Declaration, this.namespace);
+        const suite = new Test(filename, attributes);
 
         suite.children = _class.body
             .filter((declaration) => this.isTest(declaration))
             .map((declaration) => {
                 const attributes = this.parseAttributes(declaration, this.namespace, _class);
-                const test = new TestCase(filename, attributes);
+                const test = new Test(filename, attributes);
                 test.parent = suite;
 
                 return test;
@@ -274,7 +274,7 @@ class Parser {
         if ('children' in ast) {
             return ast.children.reduce(
                 (tests, children: Node) => tests.concat(this.parseAst(children, filename) ?? []),
-                [] as TestSuite[]
+                [] as Test[]
             );
         }
 
@@ -282,28 +282,21 @@ class Parser {
     }
 }
 
-abstract class Test implements Attribute {
+export class Test implements Attribute {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
-    public readonly class!: string;
+    public readonly class?: string;
+    public readonly method?: string;
     public readonly start!: Position;
     public readonly end!: Position;
     public readonly annotations!: Annotations;
+    public parent?: Test;
+    public children: Test[] = [];
 
     constructor(public readonly filename: string, attributes: Attribute) {
         Object.assign(this, attributes);
     }
-}
-
-export class TestSuite extends Test {
-    public children: TestCase[] = [];
-}
-
-export class TestCase extends Test {
-    public readonly method!: string;
-    public parent?: TestSuite;
-
 }
 
 const parser = new Parser();

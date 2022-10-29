@@ -1,8 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import { projectPath } from './helper';
-import { AttributeParser, parse, TestCase, TestSuite } from '../parser';
-import { Test } from 'mocha';
+import { AttributeParser, parse, Test } from '../parser';
 
 const attributeParser = new AttributeParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {
@@ -13,7 +12,7 @@ const qualifiedClass = (namespace: string, _class: string) => {
 };
 
 describe('Parser Test', () => {
-    let suites: TestSuite[];
+    let suites: Test[];
     const givenTest = (method: string) => suites[0].children.find((test) => test.method === method);
 
     describe('parse AssertionsTest', () => {
