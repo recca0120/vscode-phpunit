@@ -83,13 +83,12 @@ type TestResultCount = {
     risky?: number;
 };
 
-type TestResult =
-    | TestSuiteStarted
-    | TestSuiteFinished
-    | TestStarted
-    | TestFailed
-    | TestIgnored
-    | TestFinished;
+type TestResult = TestSuiteStarted &
+    TestSuiteFinished &
+    TestStarted &
+    TestFailed &
+    TestIgnored &
+    TestFinished;
 
 export type Result = TestResult | TestResultCount | TestCount | TimeAndMemory;
 
@@ -200,6 +199,7 @@ export class Parser implements IParser<Result | undefined> {
             .replace(/^php_qn:\/\//, '')
             .replace(/::\\/g, '::')
             .split('::');
+
         const file = split.shift();
         const id = split.join('::');
 
@@ -248,16 +248,16 @@ class ProblemMatcher {
     ): TestResult | TestCount | TestResultCount | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());
 
-        return !result || this.isReturn(result)
+        return !result || this.isTestResult(result)
             ? result
             : this.lookup[(result as TestResult).event]?.call(this, result as TestResult);
     }
 
-    private isReturn(result: TestResult | TestCount | TestResultCount | TimeAndMemory) {
-        return (
-            (result as TimeAndMemory).hasOwnProperty('memory') ||
-            (result as TestCount).event === TestEvent.testCount ||
-            (result as TestResultCount).hasOwnProperty('tests')
+    private isTestResult(result: any) {
+        return !(
+            result.hasOwnProperty('event') &&
+            result.hasOwnProperty('name') &&
+            result.hasOwnProperty('flowId')
         );
     }
 
