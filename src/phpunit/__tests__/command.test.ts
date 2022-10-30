@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { projectPath } from './helper';
 import { Command } from '../command';
 import { Result } from '../problem-matcher';
