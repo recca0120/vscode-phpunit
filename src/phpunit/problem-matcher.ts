@@ -261,35 +261,36 @@ class ProblemMatcher {
         );
     }
 
-    private handleStarted(result: TestResult) {
-        const id = this.generateId(result);
-        this.collect.set(id, { ...result });
+    private handleStarted(testResult: TestResult) {
+        const id = this.generateId(testResult);
+        this.collect.set(id, { ...testResult });
 
         return this.collect.get(id);
     }
 
-    private handleFault(result: TestResult) {
-        const id = this.generateId(result);
+    private handleFault(testResult: TestResult) {
+        const id = this.generateId(testResult);
         const prevData = this.collect.get(id);
-        this.collect.set(id, { ...prevData, ...result });
+        this.collect.set(id, { ...prevData, ...testResult });
     }
 
-    private handleFinished(result: TestResult) {
-        const id = this.generateId(result);
+    private handleFinished(testResult: TestResult) {
+        const id = this.generateId(testResult);
 
         const prevData = this.collect.get(id)!;
-        const event = this.isFault(prevData) ? prevData.event : result.event;
-        this.collect.set(id, { ...prevData, ...result, event });
+        const event = this.isFault(prevData) ? prevData.event : testResult.event;
+        const result = { ...prevData, ...testResult, event };
+        this.collect.delete(id);
 
-        return this.collect.get(id);
+        return result;
     }
 
-    private isFault(result: TestResult) {
-        return [TestEvent.testFailed, TestEvent.testIgnored].includes(result.event);
+    private isFault(testResult: TestResult) {
+        return [TestEvent.testFailed, TestEvent.testIgnored].includes(testResult.event);
     }
 
-    private generateId(result: TestResult) {
-        return `${result.name}-${result.flowId}`;
+    private generateId(testResult: TestResult) {
+        return `${testResult.name}-${testResult.flowId}`;
     }
 }
 

@@ -1,6 +1,6 @@
 import { projectPath } from './helper';
 import { Command } from '../command';
-import { problemMatcher, Result } from '../problem-matcher';
+import { Result } from '../problem-matcher';
 
 describe('Command Test', () => {
     it('execute phpunit', async () => {
