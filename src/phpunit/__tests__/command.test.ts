@@ -6,15 +6,15 @@ describe('Command Test', () => {
     it('execute phpunit', async () => {
         const onTest = jest.fn();
         const onClose = jest.fn();
-        const command = new Command();
+        const command = new Command({ cwd: projectPath('') });
         command.on('test', (test: Result) => onTest(test));
         command.on('close', onClose);
-        await command.execute('php vendor/bin/phpunit -c phpunit.xml', { cwd: projectPath('') });
+        await command.execute('php vendor/bin/phpunit -c phpunit.xml');
 
         expect(onTest).toHaveBeenCalledWith({
             event: 'testCount',
-            count: 19,
-            flowId: expect.anything(),
+            count: expect.any(Number),
+            flowId: expect.any(Number),
         });
         expect(onClose).toHaveBeenCalled();
     });

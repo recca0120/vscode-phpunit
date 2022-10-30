@@ -32,6 +32,8 @@ export class Command {
         close: [],
     };
 
+    constructor(private options?: SpawnOptionsWithoutStdio) {}
+
     on(event: 'test' | 'line' | 'close', fn: Function) {
         if (this.listeners[event] === undefined) {
             this.listeners[event] = [];
@@ -46,7 +48,7 @@ export class Command {
         return new Promise((resolve, reject) => {
             const { command, args } = parsePhpUnitCommand(input);
 
-            const process = spawn(command, args, options);
+            const process = spawn(command, args, { ...this.options, ...options });
             const rl = readline.createInterface(process.stdout.wrap(process.stderr));
 
             let lastOutput = '';
