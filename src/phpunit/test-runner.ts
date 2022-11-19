@@ -25,7 +25,7 @@ const parsePhpUnitCommand = (input: string) => {
     return { command, args: args.concat('--teamcity', '--colors=never') };
 };
 
-export class Command {
+export class TestRunner {
     private listeners: { [p: string]: Array<Function> } = {
         test: [],
         line: [],

@@ -1,16 +1,17 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { projectPath } from './helper';
-import { Command } from '../command';
+import { TestRunner } from '../test-runner';
 import { Result } from '../problem-matcher';
 
 describe('Command Test', () => {
     it('execute phpunit', async () => {
         const onTest = jest.fn();
         const onClose = jest.fn();
-        const command = new Command({ cwd: projectPath('') });
-        command.on('test', (test: Result) => onTest(test));
-        command.on('close', onClose);
-        await command.execute('php vendor/bin/phpunit -c phpunit.xml');
+        const testRunner = new TestRunner({ cwd: projectPath('') });
+        testRunner.on('test', (test: Result) => onTest(test));
+        testRunner.on('close', onClose);
+
+        await testRunner.execute('php vendor/bin/phpunit -c phpunit.xml');
 
         expect(onTest).toHaveBeenCalledWith({
             event: 'testCount',
