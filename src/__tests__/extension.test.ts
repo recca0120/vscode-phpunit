@@ -74,8 +74,14 @@ describe('Extension Test', () => {
             context.subscriptions.push.mockReset();
         });
 
-        it('should activate extension', async () => {
+        it('should load tests', async () => {
             await activate(context);
+            const testController = getTestController();
+
+            const createTestItem = testController.createTestItem;
+            const file = URI.file(path.join(root, 'test.md'));
+
+            expect(createTestItem).toBeCalledWith(file.toString(), 'test.md', expect.any(URI));
             expect(context.subscriptions.push).toHaveBeenCalledTimes(2);
         });
 
