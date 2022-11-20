@@ -1,6 +1,5 @@
 import * as yargsParser from 'yargs-parser';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
-import * as readline from 'readline';
 import { problemMatcher } from './problem-matcher';
 
 const parseValue = (key: any, value: any): string[] => {
@@ -25,20 +24,24 @@ const parsePhpUnitCommand = (input: string) => {
     return { command, args: args.concat('--teamcity', '--colors=never') };
 };
 
+export enum TestRunnerEvent {
+    result,
+    line,
+    close,
+}
+
 export class TestRunner {
-    private listeners: { [p: string]: Array<Function> } = {
-        test: [],
-        line: [],
-        close: [],
-    };
+    private listeners = Object.keys(TestRunnerEvent).reduce((listeners, key) => {
+        listeners[key] = [];
+        return listeners;
+    }, {} as { [p: string | number]: Array<Function> });
+    private pattern = new RegExp(
+        'PHPUnit\\s[\\d\\.]+\\sby\\sSebastian\\sBergmann\\sand\\scontributors'
+    );
 
     constructor(private options?: SpawnOptionsWithoutStdio) {}
 
-    on(event: 'test' | 'line' | 'close', fn: Function) {
-        if (this.listeners[event] === undefined) {
-            this.listeners[event] = [];
-        }
-
+    on(event: TestRunnerEvent, fn: Function) {
         this.listeners[event].push(fn);
 
         return this;
@@ -47,24 +50,42 @@ export class TestRunner {
     execute(input: string, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve, reject) => {
             const { command, args } = parsePhpUnitCommand(input);
+            const proc = spawn(command, args, { ...this.options, ...options });
 
-            const process = spawn(command, args, { ...this.options, ...options });
-            const rl = readline.createInterface(process.stdout.wrap(process.stderr));
-
-            let lastOutput = '';
-            rl.on('line', (line) => {
-                lastOutput = line;
-                this.listeners['line'].forEach((fn) => fn(line));
-                const result = problemMatcher.read(line);
-                if (result) {
-                    this.listeners['test'].forEach((fn) => fn(result));
+            let temp = '';
+            let output = '';
+            const processOutput = (data: string) => {
+                const out = data.toString();
+                output += out;
+                temp += out;
+                const lines = temp.split(/\r\n|\n/);
+                while (lines.length > 1) {
+                    this.processLine(lines.shift()!);
                 }
-            });
+                temp = lines.shift()!;
+            };
 
-            process.on('close', (code) => {
-                this.listeners['close'].forEach((fn) => fn(code));
-                code === 1 ? reject(lastOutput) : resolve(code);
+            proc.stdout.on('data', processOutput);
+            proc.stderr.on('data', processOutput);
+            proc.stdout.on('end', () => this.processLine(temp));
+            proc.stderr.on('end', () => this.processLine(temp));
+
+            proc.on('close', (code) => {
+                this.listeners[TestRunnerEvent.close].forEach((fn) => fn(code));
+                this.isPhpUnit(output) ? resolve(output) : reject(output);
             });
         });
+    }
+
+    private isPhpUnit(output: string) {
+        return this.pattern.test(output);
+    }
+
+    private processLine(line: string) {
+        this.listeners[TestRunnerEvent.line].forEach((fn) => fn(line));
+        const result = problemMatcher.read(line);
+        if (result) {
+            this.listeners[TestRunnerEvent.result].forEach((fn) => fn(result));
+        }
     }
 }

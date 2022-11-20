@@ -7,6 +7,24 @@ import { readFileSync } from 'fs';
 import { URI } from 'vscode-uri';
 import { projectPath } from '../phpunit/__tests__/helper';
 import * as path from 'path';
+import SpyInstance = jest.SpyInstance;
+
+let executeSpy: SpyInstance;
+
+jest.mock('../phpunit/test-runner', () => {
+    const original = jest.requireActual('../phpunit/test-runner');
+
+    return {
+        ...original,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        TestRunner: jest.fn().mockImplementation((...x: any) => {
+            const testRunner = new original.TestRunner(...x);
+            executeSpy = jest.spyOn(testRunner, 'execute');
+
+            return testRunner;
+        }),
+    };
+});
 
 const setTextDocuments = (textDocuments: TextDocument[]) => {
     Object.defineProperty(vscode.workspace, 'textDocuments', {
@@ -21,7 +39,11 @@ const setWorkspaceFolders = (workspaceFolders: WorkspaceFolder[]) => {
 };
 
 const globTextDocuments = (pattern: string, options?: IOptions) => {
-    options = { absolute: true, ignore: ['**/node_modules/**', '**/.git/**'], ...options };
+    options = {
+        absolute: true,
+        ignore: ['**/node_modules/**', '**/.git/**', '**/vendor/**'],
+        ...options,
+    };
 
     return glob
         .sync(pattern, options)
@@ -63,31 +85,31 @@ const getTestRun = (ctrl: TestController) => {
 };
 
 describe('Extension Test', () => {
-    beforeEach(() => jest.clearAllMocks());
+    const root = projectPath('');
+
+    beforeEach(() => {
+        setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: URI.file(root) }]);
+        setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
+        jest.clearAllMocks();
+    });
 
     describe('activate()', () => {
-        // const root = path.join(__dirname, '../../sample');
-        const root = projectPath('');
         const context: any = { subscriptions: { push: jest.fn() } };
-
         beforeEach(() => {
-            setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: URI.file(root) }]);
-            setTextDocuments(globTextDocuments('**/*.php', { cwd: root }));
             context.subscriptions.push.mockReset();
         });
 
         it('should load tests', async () => {
-            await activate(context);
-
             const file = URI.file(path.join(root, 'tests/AssertionsTest.php'));
-            const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
-            const parent = getTestController().items.get(id);
-            const child = parent.children.get(`${id}::test_passed`);
+            await activate(context);
+            const parent = getTestController().items.get(testId);
+            const child = parent.children.get(`${testId}::test_passed`);
 
             expect(parent).toEqual(
                 expect.objectContaining({
-                    id,
+                    id: testId,
                     uri: expect.objectContaining({
                         path: file.path,
                     }),
@@ -96,7 +118,7 @@ describe('Extension Test', () => {
 
             expect(child).toEqual(
                 expect.objectContaining({
-                    id: `${id}::test_passed`,
+                    id: `${testId}::test_passed`,
                     uri: expect.objectContaining({
                         path: file.path,
                     }),
@@ -110,39 +132,84 @@ describe('Extension Test', () => {
             expect(context.subscriptions.push).toHaveBeenCalledTimes(2);
         });
 
-        xit('should run test', async () => {
+        it('should run all tests', async () => {
             await activate(context);
-
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-
-            const request = {
-                include: [getTestFile(ctrl, /test\.md$/)],
-                exclude: [],
-                profile: runProfile,
-            };
-
-            await useFakeTimers(500, () => {
-                runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-            });
+            const request = { include: undefined, exclude: [], profile: runProfile };
+            runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
+            await new Promise((resolve) => setTimeout(() => resolve(true), 500));
 
             const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
 
-            expect(enqueued).toHaveBeenCalledTimes(4);
-            expect(started).toHaveBeenCalledTimes(4);
-            expect(passed).toHaveBeenCalledTimes(3);
-            expect(failed).toHaveBeenCalledTimes(1);
+            expect(enqueued).toHaveBeenCalledTimes(34);
+            expect(started).toHaveBeenCalledTimes(20);
+            expect(passed).toHaveBeenCalledTimes(10);
+            expect(failed).toHaveBeenCalledTimes(8);
             expect(end).toHaveBeenCalledTimes(1);
+
+            const pattern = new RegExp('php\\svendor/bin/phpunit');
+            expect(executeSpy).toBeCalledWith(expect.stringMatching(pattern), expect.anything());
         });
 
-        xit('should refresh test', async () => {
+        it('should run test suite', async () => {
+            // const file = URI.file(path.join(root, 'tests/AssertionsTest.php'));
+            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
+
+            await activate(context);
+            const ctrl = getTestController();
+            const runProfile = getRunProfile(ctrl);
+            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
+            runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
+            await new Promise((resolve) => setTimeout(() => resolve(true), 500));
+
+            const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
+
+            expect(enqueued).toHaveBeenCalledTimes(8);
+            expect(started).toHaveBeenCalledTimes(11);
+            expect(passed).toHaveBeenCalledTimes(5);
+            expect(failed).toHaveBeenCalledTimes(4);
+            expect(end).toHaveBeenCalledTimes(1);
+
+            const pattern = new RegExp('php\\svendor/bin/phpunit\\s.+AssertionsTest\\.php');
+            expect(executeSpy).toBeCalledWith(expect.stringMatching(pattern), expect.anything());
+        });
+
+        it('should run test case', async () => {
+            // const file = URI.file(path.join(root, 'tests/AssertionsTest.php'));
+            const method = 'test_passed';
+            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest::${method}`;
+
+            await activate(context);
+            const ctrl = getTestController();
+            const runProfile = getRunProfile(ctrl);
+            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
+
+            runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
+            await new Promise((resolve) => setTimeout(() => resolve(true), 500));
+
+            const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
+
+            expect(enqueued).toHaveBeenCalledTimes(1);
+            expect(started).toHaveBeenCalledTimes(1);
+            expect(passed).toHaveBeenCalledTimes(1);
+            expect(failed).toHaveBeenCalledTimes(0);
+            expect(end).toHaveBeenCalledTimes(1);
+
+            const pattern = new RegExp(
+                `php\\svendor/bin/phpunit\\s.+AssertionsTest\\.php\\s--filter\\s["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
+            );
+            expect(executeSpy).toBeCalledWith(expect.stringMatching(pattern), expect.anything());
+        });
+
+        it('should refresh test', async () => {
             await activate(context);
             const ctrl = getTestController();
 
             await ctrl.refreshHandler();
         });
 
-        xit('should resolve test', async () => {
+        it('should resolve test', async () => {
             await activate(context);
             const ctrl = getTestController();
 

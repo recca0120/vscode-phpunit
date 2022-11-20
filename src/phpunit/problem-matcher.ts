@@ -254,11 +254,7 @@ class ProblemMatcher {
     }
 
     private isTestResult(result: any) {
-        return !(
-            result.hasOwnProperty('event') &&
-            result.hasOwnProperty('name') &&
-            result.hasOwnProperty('flowId')
-        );
+        return !('event' in result && 'name' in result && 'flowId' in result);
     }
 
     private handleStarted(testResult: TestResult) {

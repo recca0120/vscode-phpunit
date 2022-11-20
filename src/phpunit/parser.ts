@@ -199,29 +199,33 @@ class Parser {
         class: this.parseClass,
     };
 
-    public parse(text: Buffer | string, filename: string) {
+    public parse(text: Buffer | string, file: string) {
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
         text = text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
 
-        const ast = engine.parseCode(text, filename);
+        try {
+            const ast = engine.parseCode(text, file);
 
-        // https://github.com/glayzzle/php-parser/issues/155
-        // currently inline comments include the line break at the end, we need to
-        // strip those out and update the end location for each comment manually
-        ast.comments?.forEach((comment) => {
-            if (comment.value[comment.value.length - 1] === '\r') {
-                comment.value = comment.value.slice(0, -1);
-                comment.loc!.end.offset = comment.loc!.end.offset - 1;
-            }
-            if (comment.value[comment.value.length - 1] === '\n') {
-                comment.value = comment.value.slice(0, -1);
-                comment.loc!.end.offset = comment.loc!.end.offset - 1;
-            }
-        });
+            // https://github.com/glayzzle/php-parser/issues/155
+            // currently inline comments include the line break at the end, we need to
+            // strip those out and update the end location for each comment manually
+            ast.comments?.forEach((comment) => {
+                if (comment.value[comment.value.length - 1] === '\r') {
+                    comment.value = comment.value.slice(0, -1);
+                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
+                }
+                if (comment.value[comment.value.length - 1] === '\n') {
+                    comment.value = comment.value.slice(0, -1);
+                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
+                }
+            });
 
-        return this.parseAst(ast, filename);
+            return this.parseAst(ast, file);
+        } catch (e) {
+            return undefined;
+        }
     }
 
     private isTest(declaration: Declaration) {
@@ -234,20 +238,20 @@ class Parser {
 
     private parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
-        filename: string
+        file: string
     ): Test[] | undefined {
         const fn: Function = this.lookup[ast.kind] ?? this.parseChildren;
 
-        return fn.apply(this, [ast, filename]);
+        return fn.apply(this, [ast, file]);
     }
 
-    private parseNamespace(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
-        // new TestCase(filename, this.parseAttributes(ast as Declaration, this.namespace));
+    private parseNamespace(ast: Program | Namespace | UseGroup | Class | Node, file: string) {
+        // new TestCase(file, this.parseAttributes(ast as Declaration, this.namespace));
 
-        return this.parseChildren((this.namespace = ast as Namespace), filename);
+        return this.parseChildren((this.namespace = ast as Namespace), file);
     }
 
-    private parseClass(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
+    private parseClass(ast: Program | Namespace | UseGroup | Class | Node, file: string) {
         const _class = ast as Class;
 
         if (!this.isTest(_class)) {
@@ -255,13 +259,13 @@ class Parser {
         }
 
         const attributes = this.parseAttributes(ast as Declaration, this.namespace);
-        const suite = new Test(filename, attributes);
+        const suite = new Test(file, attributes);
 
         suite.children = _class.body
             .filter((declaration) => this.isTest(declaration))
             .map((declaration) => {
                 const attributes = this.parseAttributes(declaration, this.namespace, _class);
-                const test = new Test(filename, attributes);
+                const test = new Test(file, attributes);
                 test.parent = suite;
 
                 return test;
@@ -270,10 +274,10 @@ class Parser {
         return suite.children.length > 0 ? [suite] : undefined;
     }
 
-    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, filename: string) {
+    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, file: string) {
         if ('children' in ast) {
             return ast.children.reduce(
-                (tests, children: Node) => tests.concat(this.parseAst(children, filename) ?? []),
+                (tests, children: Node) => tests.concat(this.parseAst(children, file) ?? []),
                 [] as Test[]
             );
         }
@@ -294,11 +298,11 @@ export class Test implements Attribute {
     public parent?: Test;
     public children: Test[] = [];
 
-    constructor(public readonly filename: string, attributes: Attribute) {
+    constructor(public readonly file: string, attributes: Attribute) {
         Object.assign(this, attributes);
     }
 }
 
 const parser = new Parser();
 
-export const parse = (buffer: Buffer | string, filename: string) => parser.parse(buffer, filename);
+export const parse = (buffer: Buffer | string, file: string) => parser.parse(buffer, file);

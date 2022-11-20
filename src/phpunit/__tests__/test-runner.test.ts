@@ -1,15 +1,15 @@
 import { describe, expect, it } from '@jest/globals';
 import { projectPath } from './helper';
-import { TestRunner } from '../test-runner';
+import { TestRunner, TestRunnerEvent } from '../test-runner';
 import { Result } from '../problem-matcher';
 
-describe('Command Test', () => {
+describe('TestRunner Test', () => {
     it('execute phpunit', async () => {
         const onTest = jest.fn();
         const onClose = jest.fn();
         const testRunner = new TestRunner({ cwd: projectPath('') });
-        testRunner.on('test', (test: Result) => onTest(test));
-        testRunner.on('close', onClose);
+        testRunner.on(TestRunnerEvent.result, (test: Result) => onTest(test));
+        testRunner.on(TestRunnerEvent.close, onClose);
 
         await testRunner.execute('php vendor/bin/phpunit -c phpunit.xml');
 

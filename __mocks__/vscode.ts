@@ -25,16 +25,25 @@ enum TestRunProfileKind {
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
 
+    constructor(private parent?: any) {}
+
     get size() {
         return this.items.size;
     }
 
     add(item: TestItem) {
+        if (this.parent) {
+            item = Object.defineProperty(item, 'parent', { value: this.parent });
+        }
         this.items.set(item.id, item);
     }
 
     get(itemId: string) {
         return this.items.get(itemId);
+    }
+
+    delete(itemId: string) {
+        return this.items.delete(itemId);
     }
 
     replace(items: readonly TestItem[]) {
@@ -59,12 +68,10 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
 const createTestItem = jest
     .fn()
     .mockImplementation((id: string, label: string, uri?: Uri): TestItem => {
-        return {
-            id,
-            uri,
-            children: new FakeTestItemCollection(),
-            label,
-        } as any;
+        const testItem = { id, label, uri } as any;
+        testItem.children = new FakeTestItemCollection(testItem);
+
+        return testItem;
     });
 
 const createRunProfile = jest
@@ -103,14 +110,16 @@ const createTestRun = jest
 const createTestController = jest
     .fn()
     .mockImplementation((id: string, label: string): TestController => {
-        return {
+        const testController = {
             id,
             label,
             createRunProfile,
             createTestItem,
             createTestRun,
-            items: new FakeTestItemCollection(),
         } as any;
+        testController.items = new FakeTestItemCollection();
+
+        return testController;
     });
 
 const tests = { createTestController };
@@ -158,13 +167,16 @@ const workspace = {
         );
     },
     findFiles: jest.fn().mockImplementation((pattern) => {
-        return glob
-            .sync(pattern.pattern, {
-                absolute: true,
-                ignore: ['**/node_modules/**', '**/.git/**'],
-                cwd: pattern.uri.fsPath,
-            })
-            .map((file) => URI.parse(file));
+        return Promise.resolve(
+            glob
+                .sync(pattern.pattern, {
+                    absolute: true,
+                    ignore: ['**/node_modules/**', '**/.git/**', '**/vendor/**'],
+                    cwd: pattern.uri.fsPath,
+                    cache: true as any,
+                })
+                .map((file) => URI.parse(file))
+        );
     }),
     createFileSystemWatcher: jest.fn().mockImplementation(() => {
         return {

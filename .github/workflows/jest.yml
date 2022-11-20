@@ -5,7 +5,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
         php: [ '7.1', '8.1' ]
@@ -13,15 +13,34 @@ jobs:
         stability: [ prefer-stable ]
 
     name: ${{ matrix.os }} node-${{ matrix.node }} php-${{ matrix.php }}
-
+    env:
+      extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, redis, memcached
+      key: cache-v1 # can be any string, change to clear the extension cache.
+      project: src/phpunit/__tests__/fixtures/project-stub
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ${{ env.extensions }}
+          key: ${{ env.key }}
+
+      - name: Cache extensions
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, redis, memcached
+          extensions: ${{ env.extensions }}
           tools: composer:v2
           coverage: none
 
@@ -30,7 +49,7 @@ jobs:
         with:
           timeout_minutes: 5
           max_attempts: 5
-          command: cd src/phpunit/__tests__/fixtures/project-stub && composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress ${{ matrix.flags }}
+          command: cd ${{ env.project }} && composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress ${{ matrix.flags }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -40,8 +59,9 @@ jobs:
 
       # Install required deps for action
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       # Finally, run our tests
       - name: Run the tests
         run: npm run jest
+
