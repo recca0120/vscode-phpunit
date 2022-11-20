@@ -1,17 +1,20 @@
 import { readFileSync } from 'fs';
 import {
     CancellationToken,
+    DocumentFilter,
     MarkdownString,
     TestController,
     TestItem,
     TestItemCollection,
     TestRunRequest,
     TestTag,
+    TextDocument,
     Uri,
     WorkspaceFolder,
 } from 'vscode';
 import { glob } from 'glob';
 import { URI } from 'vscode-uri';
+import * as minimatch from 'minimatch';
 
 enum TestRunProfileKind {
     Run = 1,
@@ -149,6 +152,11 @@ const CancellationTokenSource = jest.fn().mockImplementation(() => {
 const workspace = {
     workspaceFolders: [],
     textDocuments: [],
+    getWorkspaceFolder: (uri: URI) => {
+        return workspace.workspaceFolders.find((folder: WorkspaceFolder) =>
+            uri.toString().includes(folder.uri.toString())
+        );
+    },
     findFiles: jest.fn().mockImplementation((pattern) => {
         return glob
             .sync(pattern.pattern, {
@@ -175,6 +183,17 @@ const workspace = {
     },
 };
 
+const languages = {
+    match: (documentFilter: DocumentFilter, document: TextDocument) => {
+        const pattern =
+            typeof documentFilter.pattern === 'string'
+                ? documentFilter.pattern
+                : documentFilter.pattern!.pattern;
+
+        return minimatch(document.uri.fsPath, pattern) ? 10 : 0;
+    },
+};
+
 const RelativePattern = jest
     .fn()
     .mockImplementation((workspaceFolder: WorkspaceFolder, pattern: string) => {
@@ -186,6 +205,7 @@ const RelativePattern = jest
     });
 
 export {
+    languages,
     workspace,
     Disposable,
     Range,

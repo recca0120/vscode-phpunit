@@ -1,14 +1,11 @@
 import * as vscode from 'vscode';
-import {
-    getContentFromFilesystem,
-    MarkdownTestData,
-    TestCase,
-    testData,
-    TestFile,
-} from './testTree';
+import { getContentFromFilesystem, TestCase, testData, TestFile } from './testTree';
+import { parse, Test } from './phpunit/parser';
+
+const textDecoder = new TextDecoder('utf-8');
 
 export async function activate(context: vscode.ExtensionContext) {
-    const ctrl = vscode.tests.createTestController('mathTestController', 'Markdown Math');
+    const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
@@ -102,7 +99,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
-            getWorkspaceTestPatterns().map(({ pattern }) => findInitialFiles(ctrl, pattern))
+            getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+                findInitialFiles(ctrl, pattern, exclude)
+            )
         );
     };
 
@@ -120,22 +119,33 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     };
 
-    function updateNodeForDocument(e: vscode.TextDocument) {
+    async function updateNodeForDocument(e: vscode.TextDocument) {
         if (e.uri.scheme !== 'file') {
             return;
         }
 
-        if (!e.uri.path.endsWith('.md')) {
+        if (!e.uri.path.endsWith('.php')) {
             return;
         }
 
-        const { file, data } = getOrCreateFile(ctrl, e.uri);
-        data.updateFromContents(ctrl, e.getText(), file);
+        const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
+        const workspaceTestPattern = getWorkspaceTestPatterns().find(({ workspaceFolder }) => {
+            return currentWorkspaceFolder!.name === workspaceFolder.name;
+        });
+
+        if (
+            !workspaceTestPattern ||
+            vscode.languages.match({ pattern: workspaceTestPattern.exclude.pattern }, e) !== 0
+        ) {
+            return;
+        }
+
+        await getOrCreateFile(ctrl, e.uri);
     }
 
-    for (const document of vscode.workspace.textDocuments) {
-        updateNodeForDocument(document);
-    }
+    await Promise.all(
+        vscode.workspace.textDocuments.map((document) => updateNodeForDocument(document))
+    );
 
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
@@ -143,20 +153,45 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 }
 
-function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
-    const existing = controller.items.get(uri.toString());
-    if (existing) {
-        return { file: existing, data: testData.get(existing) as TestFile };
-    }
+async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
+    // const existing = controller.items.get(uri.toString());
+    // if (existing) {
+    //     return { file: existing, data: testData.get(existing) as TestFile };
+    // }
 
-    const file = controller.createTestItem(uri.toString(), uri.path.split('/').pop()!, uri);
-    controller.items.add(file);
+    const contents = textDecoder.decode(await vscode.workspace.fs.readFile(uri));
+    const suites = parse(contents, uri.fsPath)?.map((suite: Test) => {
+        const parent = controller.createTestItem(suite.id, suite.qualifiedClass, uri);
+        parent.canResolveChildren = true;
+        parent.children.replace(
+            suite.children.map((test: Test, index) => {
+                const children = controller.createTestItem(test.id, test.method!, uri);
+                children.canResolveChildren = false;
+                children.sortText = `${index}`;
+                children.range = new vscode.Range(
+                    new vscode.Position(test.start.line - 1, test.start.character),
+                    new vscode.Position(test.end.line - 1, test.end.character)
+                );
 
-    const data = new TestFile();
-    testData.set(file, data);
+                return children;
+            })
+        );
 
-    file.canResolveChildren = true;
-    return { file, data };
+        return parent;
+    });
+
+    suites?.forEach((suite) => controller.items.add(suite));
+
+    // controller.createTestItem(test.id)
+
+    // const file = controller.createTestItem(uri.toString(), uri.path.split('/').pop()!, uri);
+    // controller.items.add(file);
+    //
+    // const data = new TestFile();
+    // testData.set(file, data);
+    //
+    // file.canResolveChildren = true;
+    // return { file, data };
 }
 
 function gatherTestItems(collection: vscode.TestItemCollection) {
@@ -172,30 +207,30 @@ function getWorkspaceTestPatterns() {
 
     return vscode.workspace.workspaceFolders.map((workspaceFolder) => ({
         workspaceFolder,
-        pattern: new vscode.RelativePattern(workspaceFolder, '**/*.md'),
+        pattern: new vscode.RelativePattern(workspaceFolder, '**/*.php'),
+        exclude: new vscode.RelativePattern(workspaceFolder, '**/{.git,node_modules,vendor}/**'),
     }));
 }
 
-async function findInitialFiles(controller: vscode.TestController, pattern: vscode.GlobPattern) {
-    for (const file of await vscode.workspace.findFiles(pattern)) {
-        getOrCreateFile(controller, file);
-    }
+async function findInitialFiles(
+    controller: vscode.TestController,
+    pattern: vscode.GlobPattern,
+    exclude: vscode.GlobPattern
+) {
+    await vscode.workspace.findFiles(pattern, exclude).then((files) => {
+        return Promise.all(files.map((file) => getOrCreateFile(controller, file)));
+    });
 }
 
 function startWatchingWorkspace(controller: vscode.TestController) {
-    return getWorkspaceTestPatterns().map(({ pattern }) => {
+    return getWorkspaceTestPatterns().map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => getOrCreateFile(controller, uri));
-        watcher.onDidChange((uri) => {
-            const { file, data } = getOrCreateFile(controller, uri);
-            if (data.didResolve) {
-                data.updateFromDisk(controller, file);
-            }
-        });
+        watcher.onDidChange((uri) => getOrCreateFile(controller, uri));
         watcher.onDidDelete((uri) => controller.items.delete(uri.toString()));
 
-        findInitialFiles(controller, pattern);
+        findInitialFiles(controller, pattern, exclude);
 
         return watcher;
     });
