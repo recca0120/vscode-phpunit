@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, beforeEach } from '@jest/globals';
 import { projectPath } from './helper';
 import { Command, TestRunner, TestRunnerEvent } from '../test-runner';
 import { Result } from '../problem-matcher';
@@ -7,6 +7,10 @@ import { spawn } from 'child_process';
 jest.mock('child_process');
 
 describe('TestRunner Test', () => {
+    beforeEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it('execute phpunit', async () => {
         const onTest = jest.fn();
         const onClose = jest.fn();
