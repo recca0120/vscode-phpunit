@@ -21,7 +21,28 @@ enum TestRunProfileKind {
     Coverage = 3,
 }
 
-const Uri = URI;
+const isWin = process.platform === 'win32';
+
+const Uri = new Proxy(URI, {
+    get: (target: any, p) => {
+        if (p !== 'file' || isWin) {
+            return target[p];
+        }
+
+        return (...args: any[]) => {
+            const result = target[p].apply(target, args);
+            const str = result.toString().replace(/%5C/g, '/');
+            const fsPath = result.fsPath;
+            const path = result.path.replace(/\\/g, '/');
+
+            return Object.assign({}, result, {
+                path,
+                fsPath,
+                toString: () => str,
+            });
+        };
+    },
+});
 
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
