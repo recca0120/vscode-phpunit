@@ -265,6 +265,8 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
 
     const testItems = suites.map((suite: Test) => {
         const parent = controller.createTestItem(suite.id, suite.qualifiedClass, uri);
+        controller.items.add(parent);
+
         parent.canResolveChildren = true;
         parent.range = new vscode.Range(
             new vscode.Position(suite.start.line - 1, suite.start.character),
@@ -273,12 +275,15 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
         parent.children.replace(
             suite.children.map((test: Test, index) => {
                 const child = controller.createTestItem(test.id, test.method!, uri);
+                controller.items.add(child);
+
                 child.canResolveChildren = false;
                 child.sortText = `${index}`;
                 child.range = new vscode.Range(
                     new vscode.Position(test.start.line - 1, test.start.character),
                     new vscode.Position(test.end.line - 1, test.end.character)
                 );
+
                 return child;
             })
         );
@@ -286,13 +291,7 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
         return parent;
     });
 
-    testItems.forEach((suite) => {
-        controller.items.add(suite);
-        suite.children.forEach((test) => controller.items.add(test));
-    });
-    const testFile = new TestFile(uri, suites, testItems);
-
-    testData.set(uri.toString(), testFile);
+    testData.set(uri.toString(), new TestFile(uri, suites, testItems));
 
     // controller.createTestItem(test.id)
 
