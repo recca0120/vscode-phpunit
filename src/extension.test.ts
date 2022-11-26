@@ -1,11 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
-import { activate } from '../extension';
+import { activate } from './extension';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { TestController, TextDocument, WorkspaceFolder } from 'vscode';
 import { glob, IOptions } from 'glob';
 import { readFileSync } from 'fs';
-import { normalPath, projectPath } from '../phpunit/__tests__/helper';
+import { normalPath, projectPath } from './phpunit/__tests__/helper';
 import * as path from 'path';
 import { spawn } from 'child_process';
 

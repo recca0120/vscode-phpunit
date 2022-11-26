@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
-import { projectPath } from './helper';
-import { AttributeParser, parse, Test } from '../parser';
+import { projectPath } from './__tests__/helper';
+import { AttributeParser, parse, Test } from './parser';
 
 const attributeParser = new AttributeParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {

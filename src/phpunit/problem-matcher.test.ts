@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { parser, problemMatcher, TestEvent } from '../problem-matcher';
+import { parser, problemMatcher, TestEvent } from './problem-matcher';
 
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {

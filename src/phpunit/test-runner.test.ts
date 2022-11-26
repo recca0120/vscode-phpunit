@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { projectPath } from './helper';
-import { Command, TestRunner, TestRunnerEvent } from '../test-runner';
-import { Result, TestEvent } from '../problem-matcher';
+import { projectPath } from './__tests__/helper';
+import { Command, TestRunner, TestRunnerEvent } from './test-runner';
+import { Result, TestEvent } from './problem-matcher';
 import { spawn } from 'child_process';
 
 jest.mock('child_process');
