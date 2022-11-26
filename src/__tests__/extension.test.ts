@@ -5,27 +5,9 @@ import { TestController, TextDocument, WorkspaceFolder } from 'vscode';
 import { glob, IOptions } from 'glob';
 import { readFileSync } from 'fs';
 import { URI } from 'vscode-uri';
-import { projectPath } from '../phpunit/__tests__/helper';
+import { normalPath, projectPath } from '../phpunit/__tests__/helper';
 import * as path from 'path';
 import { spawn } from 'child_process';
-// import SpyInstance = jest.SpyInstance;
-
-// let executeSpy: SpyInstance;
-
-// jest.mock('../phpunit/test-runner', () => {
-//     const original = jest.requireActual('../phpunit/test-runner');
-//
-//     return {
-//         ...original,
-//         // eslint-disable-next-line @typescript-eslint/naming-convention
-//         TestRunner: jest.fn().mockImplementation((...x: any) => {
-//             const testRunner = new original.TestRunner(...x);
-//             executeSpy = jest.spyOn(testRunner, 'execute');
-//
-//             return testRunner;
-//         }),
-//     };
-// });
 
 jest.mock('child_process');
 
@@ -98,8 +80,10 @@ describe('Extension Test', () => {
 
     describe('activate()', () => {
         const context: any = { subscriptions: { push: jest.fn() } };
+        let cwd: string;
         beforeEach(() => {
             context.subscriptions.push.mockReset();
+            cwd = normalPath(projectPath(''));
         });
 
         it('should load tests', async () => {
@@ -154,7 +138,7 @@ describe('Extension Test', () => {
             expect(spawn).toBeCalledWith(
                 'php',
                 ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
-                { cwd: projectPath('') }
+                { cwd }
             );
         });
 
@@ -181,11 +165,11 @@ describe('Extension Test', () => {
                 'php',
                 [
                     'vendor/bin/phpunit',
-                    projectPath('tests/AssertionsTest.php'),
+                    normalPath(projectPath('tests/AssertionsTest.php')),
                     '--teamcity',
                     '--colors=never',
                 ],
-                { cwd: projectPath('') }
+                { cwd }
             );
         });
 
@@ -217,12 +201,12 @@ describe('Extension Test', () => {
                 'php',
                 [
                     'vendor/bin/phpunit',
-                    projectPath('tests/AssertionsTest.php'),
+                    normalPath(projectPath('tests/AssertionsTest.php')),
                     expect.stringMatching(pattern),
                     '--teamcity',
                     '--colors=never',
                 ],
-                { cwd: projectPath('') }
+                { cwd }
             );
         });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from '@jest/globals';
 import { projectPath } from './helper';
 import { Command, TestRunner, TestRunnerEvent } from '../test-runner';
-import { Result } from '../problem-matcher';
+import { Result, TestEvent } from '../problem-matcher';
 import { spawn } from 'child_process';
 
 jest.mock('child_process');
@@ -29,11 +29,20 @@ describe('TestRunner Test', () => {
             { cwd: projectPath('') }
         );
 
-        expect(onTest).toHaveBeenCalledWith({
-            event: 'testCount',
-            count: expect.any(Number),
-            flowId: expect.any(Number),
-        });
+        const file = projectPath('tests/AssertionsTest.php');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed';
+        const locationHint = `php_qn://${file}::\\${id}`;
+
+        expect(onTest).toHaveBeenCalledWith(
+            expect.objectContaining({
+                event: TestEvent.testFinished,
+                name: 'test_passed',
+                flowId: expect.any(Number),
+                locationHint,
+                id,
+                file,
+            })
+        );
         expect(onClose).toHaveBeenCalled();
     });
 });
