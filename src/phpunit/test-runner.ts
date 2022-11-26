@@ -24,11 +24,21 @@ export class Command {
     }
 
     apply(options?: SpawnOptions): ChildProcess {
-        const { command, args } = parsePhpUnitCommand(
-            [this.phpPath(), this.phpUnitPath(), this.arguments].join(' ')
-        );
+        const args = [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
+        const command = args.shift();
 
-        return spawn(command, args, options ?? {});
+        return spawn(command!, args, options ?? {});
+    }
+
+    private getArguments(): string[] {
+        const { _, ...argv } = yargsParser(this.arguments, { alias: { configuration: ['c'] } });
+
+        return Object.entries(argv)
+            .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
+            .reduce((args: any, [key, value]) => {
+                return args.concat(parseValue(key, value));
+            }, _)
+            .concat('--teamcity', '--colors=never');
     }
 
     private phpPath() {
@@ -39,18 +49,6 @@ export class Command {
         return 'vendor/bin/phpunit';
     }
 }
-
-const parsePhpUnitCommand = (input: string) => {
-    const { _, ...argv } = yargsParser(input, { alias: { configuration: ['c'] } });
-
-    const [command, ...args] = Object.entries(argv)
-        .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-        .reduce((args: any, [key, value]) => {
-            return args.concat(parseValue(key, value));
-        }, _);
-
-    return { command, args: args.concat('--teamcity', '--colors=never') };
-};
 
 export enum TestRunnerEvent {
     result,
