@@ -2,6 +2,14 @@ import { describe, expect, it } from '@jest/globals';
 import { projectPath } from './helper';
 import { TestRunner, TestRunnerEvent } from '../test-runner';
 import { Result } from '../problem-matcher';
+import * as child_process from 'child_process';
+
+jest.mock('child_process', () => {
+    const requireActual = jest.requireActual('child_process');
+    const spawn = jest.fn().mockImplementation((...args: any[]) => requireActual.spawn(...args));
+
+    return { ...requireActual, spawn };
+});
 
 describe('TestRunner Test', () => {
     it('execute phpunit', async () => {
@@ -12,6 +20,12 @@ describe('TestRunner Test', () => {
         testRunner.on(TestRunnerEvent.close, onClose);
 
         await testRunner.execute('php vendor/bin/phpunit -c phpunit.xml');
+
+        expect(child_process.spawn).toBeCalledWith(
+            'php',
+            ['vendor/bin/phpunit', '--configuration=phpunit.xml', '--teamcity', '--colors=never'],
+            { cwd: projectPath('') }
+        );
 
         expect(onTest).toHaveBeenCalledWith({
             event: 'testCount',
