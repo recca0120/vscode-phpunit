@@ -267,6 +267,7 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
         const parent = controller.createTestItem(suite.id, suite.qualifiedClass, uri);
         controller.items.add(parent);
 
+        parent.sortText = suite.id;
         parent.canResolveChildren = true;
         parent.range = new vscode.Range(
             new vscode.Position(suite.start.line - 1, suite.start.character),
@@ -277,8 +278,8 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
                 const child = controller.createTestItem(test.id, test.method!, uri);
                 controller.items.add(child);
 
-                child.canResolveChildren = false;
                 child.sortText = `${index}`;
+                child.canResolveChildren = false;
                 child.range = new vscode.Range(
                     new vscode.Position(test.start.line - 1, test.start.character),
                     new vscode.Position(test.end.line - 1, test.end.character)
