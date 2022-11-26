@@ -9,7 +9,6 @@ import {
     TestRunRequest,
     TestTag,
     TextDocument,
-    Uri,
     WorkspaceFolder,
 } from 'vscode';
 import { glob } from 'glob';
@@ -21,6 +20,8 @@ enum TestRunProfileKind {
     Debug = 2,
     Coverage = 3,
 }
+
+const Uri = URI;
 
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
@@ -67,7 +68,7 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
 
 const createTestItem = jest
     .fn()
-    .mockImplementation((id: string, label: string, uri?: Uri): TestItem => {
+    .mockImplementation((id: string, label: string, uri?: URI): TestItem => {
         const testItem = { id, label, uri } as any;
         testItem.children = new FakeTestItemCollection(testItem);
 
@@ -138,7 +139,7 @@ class Disposable {
     dispose = (): any => jest.fn();
 }
 
-const Location = jest.fn().mockImplementation((uri: Uri, rangeOrPosition: any) => {
+const Location = jest.fn().mockImplementation((uri: URI, rangeOrPosition: any) => {
     return { uri, range: rangeOrPosition };
 });
 
@@ -189,7 +190,7 @@ const workspace = {
     onDidOpenTextDocument: jest.fn().mockReturnValue(new Disposable()),
     onDidChangeTextDocument: jest.fn().mockReturnValue(new Disposable()),
     fs: {
-        readFile: jest.fn().mockImplementation((uri: Uri) => {
+        readFile: jest.fn().mockImplementation((uri: URI) => {
             return new Promise((resolve) => resolve(readFileSync(uri.fsPath)));
         }),
     },
@@ -228,4 +229,5 @@ export {
     TestMessage,
     CancellationTokenSource,
     RelativePattern,
+    Uri,
 };

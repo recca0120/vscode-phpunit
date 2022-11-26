@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
 import { TestController, TextDocument, WorkspaceFolder } from 'vscode';
 import { glob, IOptions } from 'glob';
 import { readFileSync } from 'fs';
-import { URI } from 'vscode-uri';
 import { normalPath, projectPath } from '../phpunit/__tests__/helper';
 import * as path from 'path';
 import { spawn } from 'child_process';
@@ -32,7 +31,7 @@ const globTextDocuments = (pattern: string, options?: IOptions) => {
 
     return glob
         .sync(pattern, options)
-        .map((file) => URI.file(file))
+        .map((file) => vscode.Uri.file(file))
         .map((uri) => ({
             uri,
             fileName: uri.fsPath,
@@ -73,7 +72,7 @@ describe('Extension Test', () => {
     const root = projectPath('');
 
     beforeEach(() => {
-        setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: URI.file(root) }]);
+        setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: vscode.Uri.file(root) }]);
         setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
         jest.clearAllMocks();
     });
@@ -87,7 +86,7 @@ describe('Extension Test', () => {
         });
 
         it('should load tests', async () => {
-            const file = URI.file(path.join(root, 'tests/AssertionsTest.php'));
+            const file = vscode.Uri.file(path.join(root, 'tests/AssertionsTest.php'));
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
             await activate(context);
@@ -143,7 +142,7 @@ describe('Extension Test', () => {
         });
 
         it('should run test suite', async () => {
-            // const file = URI.file(path.join(root, 'tests/AssertionsTest.php'));
+            // const file = vscode.Uri.file(path.join(root, 'tests/AssertionsTest.php'));
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
             await activate(context);
@@ -174,7 +173,7 @@ describe('Extension Test', () => {
         });
 
         it('should run test case', async () => {
-            // const file = URI.file(path.join(root, 'tests/AssertionsTest.php'));
+            // const file = vscode.Uri.file(path.join(root, 'tests/AssertionsTest.php'));
             const method = 'test_passed';
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest::${method}`;
 
