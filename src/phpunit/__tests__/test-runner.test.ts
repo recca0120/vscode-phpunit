@@ -2,14 +2,9 @@ import { describe, expect, it } from '@jest/globals';
 import { projectPath } from './helper';
 import { Command, TestRunner, TestRunnerEvent } from '../test-runner';
 import { Result } from '../problem-matcher';
-import * as child_process from 'child_process';
+import { spawn } from 'child_process';
 
-jest.mock('child_process', () => {
-    const requireActual = jest.requireActual('child_process');
-    const spawn = jest.fn().mockImplementation((...args: any[]) => requireActual.spawn(...args));
-
-    return { ...requireActual, spawn };
-});
+jest.mock('child_process');
 
 describe('TestRunner Test', () => {
     it('execute phpunit', async () => {
@@ -24,7 +19,7 @@ describe('TestRunner Test', () => {
 
         await testRunner.execute(command);
 
-        expect(child_process.spawn).toBeCalledWith(
+        expect(spawn).toBeCalledWith(
             'php',
             ['vendor/bin/phpunit', '--configuration=phpunit.xml', '--teamcity', '--colors=never'],
             { cwd: projectPath('') }
