@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { projectPath } from './helper';
-import { TestRunner, TestRunnerEvent } from '../test-runner';
+import { Command, TestRunner, TestRunnerEvent } from '../test-runner';
 import { Result } from '../problem-matcher';
 import * as child_process from 'child_process';
 
@@ -19,7 +19,10 @@ describe('TestRunner Test', () => {
         testRunner.on(TestRunnerEvent.result, (test: Result) => onTest(test));
         testRunner.on(TestRunnerEvent.close, onClose);
 
-        await testRunner.execute('php vendor/bin/phpunit -c phpunit.xml');
+        const command = new Command();
+        command.setArguments('-c phpunit.xml');
+
+        await testRunner.execute(command);
 
         expect(child_process.spawn).toBeCalledWith(
             'php',

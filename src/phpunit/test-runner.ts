@@ -1,5 +1,5 @@
 import * as yargsParser from 'yargs-parser';
-import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
+import { ChildProcess, spawn, SpawnOptions, SpawnOptionsWithoutStdio } from 'child_process';
 import { problemMatcher } from './problem-matcher';
 
 const parseValue = (key: any, value: any): string[] => {
@@ -11,6 +11,34 @@ const parseValue = (key: any, value: any): string[] => {
 
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
 };
+
+export class Command {
+    private arguments = '';
+
+    constructor() {}
+
+    setArguments(args: string) {
+        this.arguments = args.trim();
+
+        return this;
+    }
+
+    apply(options?: SpawnOptions): ChildProcess {
+        const { command, args } = parsePhpUnitCommand(
+            [this.phpPath(), this.phpUnitPath(), this.arguments].join(' ')
+        );
+
+        return spawn(command, args, options ?? {});
+    }
+
+    private phpPath() {
+        return 'php';
+    }
+
+    private phpUnitPath() {
+        return 'vendor/bin/phpunit';
+    }
+}
 
 const parsePhpUnitCommand = (input: string) => {
     const { _, ...argv } = yargsParser(input, { alias: { configuration: ['c'] } });
@@ -47,10 +75,9 @@ export class TestRunner {
         return this;
     }
 
-    execute(input: string, options?: SpawnOptionsWithoutStdio) {
+    execute(command: Command, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve, reject) => {
-            const { command, args } = parsePhpUnitCommand(input);
-            const proc = spawn(command, args, { ...this.options, ...options });
+            const proc = command.apply({ ...this.options, ...options });
 
             let temp = '';
             let output = '';
@@ -65,10 +92,10 @@ export class TestRunner {
                 temp = lines.shift()!;
             };
 
-            proc.stdout.on('data', processOutput);
-            proc.stderr.on('data', processOutput);
-            proc.stdout.on('end', () => this.processLine(temp));
-            proc.stderr.on('end', () => this.processLine(temp));
+            proc.stdout!.on('data', processOutput);
+            proc.stderr!.on('data', processOutput);
+            proc.stdout!.on('end', () => this.processLine(temp));
+            proc.stderr!.on('end', () => this.processLine(temp));
 
             proc.on('close', (code) => {
                 this.listeners[TestRunnerEvent.close].forEach((fn) => fn(code));
