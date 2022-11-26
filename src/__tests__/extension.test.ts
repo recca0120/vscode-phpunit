@@ -7,24 +7,27 @@ import { readFileSync } from 'fs';
 import { URI } from 'vscode-uri';
 import { projectPath } from '../phpunit/__tests__/helper';
 import * as path from 'path';
-import SpyInstance = jest.SpyInstance;
+import { spawn } from 'child_process';
+// import SpyInstance = jest.SpyInstance;
 
-let executeSpy: SpyInstance;
+// let executeSpy: SpyInstance;
 
-jest.mock('../phpunit/test-runner', () => {
-    const original = jest.requireActual('../phpunit/test-runner');
+// jest.mock('../phpunit/test-runner', () => {
+//     const original = jest.requireActual('../phpunit/test-runner');
+//
+//     return {
+//         ...original,
+//         // eslint-disable-next-line @typescript-eslint/naming-convention
+//         TestRunner: jest.fn().mockImplementation((...x: any) => {
+//             const testRunner = new original.TestRunner(...x);
+//             executeSpy = jest.spyOn(testRunner, 'execute');
+//
+//             return testRunner;
+//         }),
+//     };
+// });
 
-    return {
-        ...original,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        TestRunner: jest.fn().mockImplementation((...x: any) => {
-            const testRunner = new original.TestRunner(...x);
-            executeSpy = jest.spyOn(testRunner, 'execute');
-
-            return testRunner;
-        }),
-    };
-});
+jest.mock('child_process');
 
 const setTextDocuments = (textDocuments: TextDocument[]) => {
     Object.defineProperty(vscode.workspace, 'textDocuments', {
@@ -148,8 +151,11 @@ describe('Extension Test', () => {
             expect(failed).toHaveBeenCalledTimes(8);
             expect(end).toHaveBeenCalledTimes(1);
 
-            const pattern = new RegExp('php\\svendor/bin/phpunit');
-            expect(executeSpy).toBeCalledWith(expect.stringMatching(pattern), expect.anything());
+            expect(spawn).toBeCalledWith(
+                'php',
+                ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
+                { cwd: projectPath('') }
+            );
         });
 
         it('should run test suite', async () => {
@@ -171,8 +177,16 @@ describe('Extension Test', () => {
             expect(failed).toHaveBeenCalledTimes(4);
             expect(end).toHaveBeenCalledTimes(1);
 
-            const pattern = new RegExp('php\\svendor/bin/phpunit\\s.+AssertionsTest\\.php');
-            expect(executeSpy).toBeCalledWith(expect.stringMatching(pattern), expect.anything());
+            expect(spawn).toBeCalledWith(
+                'php',
+                [
+                    'vendor/bin/phpunit',
+                    projectPath('tests/AssertionsTest.php'),
+                    '--teamcity',
+                    '--colors=never',
+                ],
+                { cwd: projectPath('') }
+            );
         });
 
         it('should run test case', async () => {
@@ -197,9 +211,19 @@ describe('Extension Test', () => {
             expect(end).toHaveBeenCalledTimes(1);
 
             const pattern = new RegExp(
-                `php\\svendor/bin/phpunit\\s.+AssertionsTest\\.php\\s--filter\\s["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
+                `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
             );
-            expect(executeSpy).toBeCalledWith(expect.stringMatching(pattern), expect.anything());
+            expect(spawn).toBeCalledWith(
+                'php',
+                [
+                    'vendor/bin/phpunit',
+                    projectPath('tests/AssertionsTest.php'),
+                    expect.stringMatching(pattern),
+                    '--teamcity',
+                    '--colors=never',
+                ],
+                { cwd: projectPath('') }
+            );
         });
 
         it('should refresh test', async () => {

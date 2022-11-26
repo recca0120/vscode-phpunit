@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { parse, Test } from './phpunit/parser';
-import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
+import { Command, TestRunner, TestRunnerEvent } from './phpunit/test-runner';
 import { Result, TestEvent } from './phpunit/problem-matcher';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -17,6 +17,8 @@ class TestFile {
 export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
+
+    const command = new Command();
 
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
         const queue: { test: vscode.TestItem }[] = [];
@@ -127,7 +129,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             let filter = '';
             if (request.include === undefined) {
-                await testRunner.execute(`php vendor/bin/phpunit`, options);
+                await testRunner.execute(command.setArguments(''), options);
             } else {
                 for (const test of request.include) {
                     if (!test.canResolveChildren && test.parent?.uri) {
@@ -152,7 +154,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     }
 
                     await testRunner.execute(
-                        `php vendor/bin/phpunit ${test.uri!.fsPath} ${filter}`.trim(),
+                        command.setArguments(`${test.uri!.fsPath} ${filter}`),
                         options
                     );
                 }
