@@ -21,7 +21,7 @@ describe('TestRunner Test', () => {
         const command = new Command();
         command.setArguments('-c phpunit.xml');
 
-        await testRunner.execute(command);
+        await testRunner.run(command);
 
         expect(spawn).toBeCalledWith(
             'php',

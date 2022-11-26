@@ -75,7 +75,7 @@ export class TestRunner {
         return this;
     }
 
-    execute(command: Command, options?: SpawnOptionsWithoutStdio) {
+    run(command: Command, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve, reject) => {
             const proc = command.apply({ ...this.options, ...options });
 

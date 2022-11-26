@@ -129,7 +129,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             let filter = '';
             if (request.include === undefined) {
-                await testRunner.execute(command.setArguments(''), options);
+                await testRunner.run(command.setArguments(''), options);
             } else {
                 for (const test of request.include) {
                     if (!test.canResolveChildren && test.parent?.uri) {
@@ -153,7 +153,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         filter = `--filter ${filter}`;
                     }
 
-                    await testRunner.execute(
+                    await testRunner.run(
                         command.setArguments(`${test.uri!.fsPath} ${filter}`),
                         options
                     );
