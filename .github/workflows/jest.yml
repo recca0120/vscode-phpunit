@@ -14,9 +14,10 @@ jobs:
 
     name: ${{ matrix.os }} node-${{ matrix.node }} php-${{ matrix.php }}
     env:
-      extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, redis, memcached
+      extensions: curl
       key: cache-v1 # can be any string, change to clear the extension cache.
       project: src/phpunit/__tests__/fixtures/project-stub
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
