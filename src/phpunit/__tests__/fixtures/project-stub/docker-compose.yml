@@ -2,11 +2,15 @@ version: '3.8'
 services:
     php:
       build:
+          context: ./dockerfiles
           dockerfile: Dockerfile
       container_name: php
       tty: true
+      ports:
+          - ${SSH_PORT:-2222}:22
       volumes:
-          - .:/var/www/html
+          - .:/app
+          - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys:ro
       networks:
           - app-network
 

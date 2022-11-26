@@ -1,6 +1,6 @@
 FROM php:8.1-cli-alpine
 
-WORKDIR /var/www/html
+WORKDIR /app
 
 ENV TZ=UTC
 
@@ -11,5 +11,15 @@ RUN apk update && apk add --no-cache tzdata git openssh && \
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN chmod +x /usr/local/bin/install-php-extensions && \
-    install-php-extensions bcmath curl exif gd intl mbstring opcache pdo pdo_mysql pdo_sqlite pcntl posix redis swoole tokenizer xml zip xdebug && \
+    install-php-extensions xdebug && \
     install-php-extensions @composer
+
+RUN mkdir -p /root/.ssh \
+    && chmod 0700 /root/.ssh \
+    && ssh-keygen -A \
+    && echo -e "PasswordAuthentication no" >> /etc/ssh/sshd_config
+
+COPY entrypoint.sh /
+
+EXPOSE 22
+ENTRYPOINT ["sh", "/entrypoint.sh"]
