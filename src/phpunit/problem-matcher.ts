@@ -141,7 +141,7 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
 
 export class Parser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^\\s*#+teamcity');
-    private readonly detailsPattern = new RegExp('(?<file>.+):(?<line>\\d+)$');
+    private readonly detailsPattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
     private readonly parsers = [new TimeAndMemoryParser(), new TestResultCountParser()];
 
     constructor(private escapeValue: EscapeValue) {}
@@ -184,7 +184,10 @@ export class Parser implements IParser<Result | undefined> {
                 .map((detail: string) => {
                     const { file, line } = detail.match(this.detailsPattern)!.groups!;
 
-                    return { file, line: parseInt(line, 10) };
+                    return {
+                        file: file.replace(/^(-)+/, '').trim(),
+                        line: parseInt(line, 10),
+                    };
                 }),
         };
     }
