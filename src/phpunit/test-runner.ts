@@ -58,17 +58,9 @@ export class Command {
     }
 }
 
-export class DockerCommand extends Command {
-    constructor(private lookup = new Map<string, string>()) {
+export abstract class RemoteCommand extends Command {
+    constructor(protected lookup = new Map<string, string>()) {
         super();
-    }
-
-    protected apply() {
-        return ['docker', 'exec', this.container(), ...super.apply()];
-    }
-
-    private container() {
-        return 'CONTAINER';
     }
 
     protected replacePath(path: string, _remote = true) {
@@ -83,6 +75,16 @@ export class DockerCommand extends Command {
         this.lookup.forEach(fn);
 
         return path;
+    }
+}
+
+export class DockerCommand extends RemoteCommand {
+    protected apply() {
+        return ['docker', 'exec', this.container(), ...super.apply()];
+    }
+
+    private container() {
+        return 'CONTAINER';
     }
 }
 

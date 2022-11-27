@@ -10,10 +10,11 @@ describe('TestRunner Test', () => {
     const cwd = projectPath('');
     const onTest = jest.fn();
     const onClose = jest.fn();
-    const dataProviderPattern = (name: string) =>
-        new RegExp(
+    const dataProviderPattern = (name: string) => {
+        return new RegExp(
             `--filter=["']?\\^\\.\\*::\\(${name}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
         );
+    };
 
     const runTest = async (command: Command) => {
         const testRunner = new TestRunner({ cwd });
@@ -23,10 +24,12 @@ describe('TestRunner Test', () => {
         await testRunner.run(command);
     };
 
-    const expectedRun = (expected: any[]) => {
-        const [command, ...args] = expected;
+    const expectedRun = async (command: Command, expected: any[]) => {
+        await runTest(command);
 
-        expect(spawn).toBeCalledWith(command, args, { cwd });
+        const [cmd, ...args] = expected;
+
+        expect(spawn).toBeCalledWith(cmd, args, { cwd });
     };
 
     const expectedTest = (expected: any) => {
@@ -44,11 +47,9 @@ describe('TestRunner Test', () => {
         const command = new Command();
         const appPath = projectPath;
         it('should run all tests', async () => {
-            command.setArguments('-c phpunit.xml');
+            const args = '-c phpunit.xml';
 
-            await runTest(command);
-
-            expectedRun([
+            await expectedRun(command.setArguments(args), [
                 'php',
                 'vendor/bin/phpunit',
                 '--configuration=phpunit.xml',
@@ -66,11 +67,9 @@ describe('TestRunner Test', () => {
         });
 
         it('should run test suite', async () => {
-            command.setArguments(`${projectPath('tests/AssertionsTest.php')} -c phpunit.xml`);
+            const args = `${projectPath('tests/AssertionsTest.php')} -c phpunit.xml`;
 
-            await runTest(command);
-
-            expectedRun([
+            await expectedRun(command.setArguments(args), [
                 'php',
                 'vendor/bin/phpunit',
                 appPath('tests/AssertionsTest.php'),
@@ -91,14 +90,10 @@ describe('TestRunner Test', () => {
         it('should run test case', async () => {
             const name = 'test_passed';
             const filter = '^.*::(test_passed)( with data set .*)?$';
+            const file = projectPath('tests/AssertionsTest.php');
+            const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
-            command.setArguments(
-                `${projectPath('tests/AssertionsTest.php')} --filter "${filter}" -c phpunit.xml`
-            );
-
-            await runTest(command);
-
-            await expectedRun([
+            await expectedRun(command.setArguments(args), [
                 'php',
                 'vendor/bin/phpunit',
                 appPath('tests/AssertionsTest.php'),
@@ -123,11 +118,9 @@ describe('TestRunner Test', () => {
         const command = new DockerCommand(new Map<string, string>([[projectPath(''), '/app']]));
 
         it('should run all tests', async () => {
-            command.setArguments('-c phpunit.xml');
+            const args = '-c phpunit.xml';
 
-            await runTest(command);
-
-            expectedRun([
+            await expectedRun(command.setArguments(args), [
                 'docker',
                 'exec',
                 'CONTAINER',
@@ -148,11 +141,9 @@ describe('TestRunner Test', () => {
         });
 
         it('should run test suite', async () => {
-            command.setArguments(`${projectPath('tests/AssertionsTest.php')} -c phpunit.xml`);
+            const args = `${projectPath('tests/AssertionsTest.php')} -c phpunit.xml`;
 
-            await runTest(command);
-
-            expectedRun([
+            await expectedRun(command.setArguments(args), [
                 'docker',
                 'exec',
                 'CONTAINER',
@@ -176,14 +167,10 @@ describe('TestRunner Test', () => {
         it('should run test case', async () => {
             const name = 'test_passed';
             const filter = '^.*::(test_passed)( with data set .*)?$';
+            const file = projectPath('tests/AssertionsTest.php');
+            const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
-            command.setArguments(
-                `${projectPath('tests/AssertionsTest.php')} --filter "${filter}" -c phpunit.xml`
-            );
-
-            await runTest(command);
-
-            await expectedRun([
+            await expectedRun(command.setArguments(args), [
                 'docker',
                 'exec',
                 'CONTAINER',
