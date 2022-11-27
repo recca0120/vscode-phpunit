@@ -1,6 +1,6 @@
 import { SpawnOptionsWithoutStdio } from 'child_process';
 import { problemMatcher } from './problem-matcher';
-import { Command } from "./command";
+import { Command } from './command';
 
 export enum TestRunnerEvent {
     result,
@@ -70,6 +70,13 @@ export class TestRunner {
 
             if ('file' in result) {
                 result.file = command.mapping(result.file);
+            }
+
+            if ('details' in result) {
+                result.details = result.details.map(({ file, line }) => ({
+                    file: command.mapping(file),
+                    line,
+                }));
             }
 
             this.listeners[TestRunnerEvent.result].forEach((fn) => fn(result));

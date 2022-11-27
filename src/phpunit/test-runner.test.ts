@@ -17,10 +17,11 @@ describe('TestRunner Test', () => {
         );
     };
 
-    const mockSpawn = (contents: string[]) => {
-        if (!process.env.GITHUB_ACTIONS) {
+    const mockSpawn = (contents: string[], force = false) => {
+        if (!process.env.GITHUB_ACTIONS && !force) {
             return;
         }
+
         const stdout = jest.fn().mockImplementation((_event, fn: Function) => {
             contents.forEach((line) => fn(line + '\n'));
         });
@@ -48,6 +49,22 @@ describe('TestRunner Test', () => {
             `##teamcity[testStarted name='test_passed' locationHint='${locationHint}::test_passed' flowId='8024']`,
             `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
         ]);
+    };
+
+    const mockTestFailed = (appPath: Function, force = false) => {
+        const file = appPath('tests/AssertionsTest.php');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+        const locationHint = `php_qn://${file}::\\${id}`;
+
+        mockSpawn(
+            [
+                'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+                `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
+                `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ' duration='0' flowId='8024']`,
+                `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
+            ],
+            force
+        );
     };
 
     const mockTestSuite = (appPath: Function) => {
@@ -133,9 +150,9 @@ describe('TestRunner Test', () => {
             });
         });
 
-        it('should run test case', async () => {
+        it('should run test passed', async () => {
             const name = 'test_passed';
-            const filter = '^.*::(test_passed)( with data set .*)?$';
+            const filter = `^.*::(${name})( with data set .*)?$`;
             const file = projectPath('tests/AssertionsTest.php');
             const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
@@ -155,6 +172,34 @@ describe('TestRunner Test', () => {
                 flowId: expect.any(Number),
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
                 file: projectPath('tests/AssertionsTest.php'),
+            });
+        });
+
+        it('should run test failed', async () => {
+            const name = 'test_failed';
+            const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
+            const file = projectPath('tests/AssertionsTest.php');
+            const args = `${file} --filter "${filter}" -c phpunit.xml`;
+
+            await expectedRun(command.setArguments(args), [
+                'php',
+                'vendor/bin/phpunit',
+                appPath('tests/AssertionsTest.php'),
+                expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+                '--configuration=phpunit.xml',
+                '--teamcity',
+                '--colors=never',
+            ]);
+
+            expectedTest({
+                event: TestEvent.testFailed,
+                name,
+                flowId: expect.any(Number),
+                id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
+                file: projectPath('tests/AssertionsTest.php'),
+                message: 'Failed asserting that false is true.',
+                details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+                duration: expect.any(Number),
             });
         });
     });
@@ -216,7 +261,7 @@ describe('TestRunner Test', () => {
 
         it('should run test case', async () => {
             const name = 'test_passed';
-            const filter = '^.*::(test_passed)( with data set .*)?$';
+            const filter = `^.*::(${name})( with data set .*)?$`;
             const file = projectPath('tests/AssertionsTest.php');
             const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
@@ -252,9 +297,9 @@ describe('TestRunner Test', () => {
         };
         const command = new DockerCommand(new Map<string, string>([[projectPath(''), '/app']]));
 
-        it('should run test case', async () => {
+        it('should mapping path', async () => {
             const name = 'test_passed';
-            const filter = '^.*::(test_passed)( with data set .*)?$';
+            const filter = `^.*::(${name})( with data set .*)?$`;
             const file = projectPath('tests/AssertionsTest.php');
             const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
@@ -279,6 +324,39 @@ describe('TestRunner Test', () => {
                 flowId: expect.any(Number),
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
                 file: projectPath('tests/AssertionsTest.php'),
+            });
+        });
+
+        it('should mapping details path', async () => {
+            const name = 'test_failed';
+            const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
+            const file = projectPath('tests/AssertionsTest.php');
+            const args = `${file} --filter "${filter}" -c phpunit.xml`;
+
+            mockTestFailed(appPath);
+
+            await expectedRun(command.setArguments(args), [
+                'docker',
+                'exec',
+                'CONTAINER',
+                'php',
+                'vendor/bin/phpunit',
+                appPath('tests/AssertionsTest.php'),
+                expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+                '--configuration=phpunit.xml',
+                '--teamcity',
+                '--colors=never',
+            ]);
+
+            expectedTest({
+                event: TestEvent.testFailed,
+                name,
+                flowId: expect.any(Number),
+                id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
+                file: projectPath('tests/AssertionsTest.php'),
+                message: 'Failed asserting that false is true.',
+                details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+                duration: expect.any(Number),
             });
         });
     });
