@@ -63,18 +63,31 @@ export abstract class RemoteCommand extends Command {
         super();
     }
 
-    protected replacePath(path: string, _remote = true) {
+    protected replacePath(path: string, _localToRemote = true) {
         if (this.lookup.size === 0) {
             return path;
         }
 
-        const fn = _remote
-            ? (remote: string, local: string) => (path = path.replace(local, remote))
-            : (remote: string, local: string) => (path = path.replace(remote, local));
-
-        this.lookup.forEach(fn);
+        this.lookup.forEach((remotePath: string, localPath: string) => {
+            path = this.replacer(path, localPath, remotePath, _localToRemote);
+        });
 
         return path;
+    }
+
+    protected replacer(path: string, localPath: string, remotePath: string, toRemote: boolean) {
+        if (toRemote) {
+            return path.replace(localPath, remotePath).replace(/\\/g, '/');
+        }
+
+        return path
+            .replace(remotePath, localPath)
+            .replace(
+                /^(php_qn:\/\/)?(\w:)(.+)/,
+                (_matched: string, protocol: string, driveLetter: string, file: string) => {
+                    return `${protocol ?? ''}${driveLetter}${file.replace(/\//g, '\\')}`;
+                }
+            );
     }
 }
 
@@ -99,6 +112,7 @@ export class TestRunner {
         listeners[key] = [];
         return listeners;
     }, {} as { [p: string | number]: Array<Function> });
+
     private pattern = new RegExp(
         'PHPUnit\\s[\\d\\.]+\\sby\\sSebastian\\sBergmann\\sand\\scontributors'
     );
@@ -147,6 +161,7 @@ export class TestRunner {
     private processLine(command: Command, line: string) {
         this.listeners[TestRunnerEvent.line].forEach((fn) => fn(line));
         const result = problemMatcher.read(line);
+
         if (result) {
             if ('locationHint' in result) {
                 result.locationHint = command.mapping(result.locationHint);
