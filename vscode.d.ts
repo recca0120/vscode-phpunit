@@ -1286,7 +1286,7 @@ declare module 'vscode' {
 		/**
 		 * Insert text at a location.
 		 * You can use \r\n or \n in `value` and they will be normalized to the current {@link TextDocument document}.
-		 * Although the equivalent text edit can be made with {@link TextEditorEdit.replace replace}, `insert` will produce a different resulting selection (it will get moved).
+		 * Although the equivalent text edit can be made with {@link TextEditorEdit.replacePath replace}, `insert` will produce a different resulting selection (it will get moved).
 		 *
 		 * @param location The position where the new text should be inserted.
 		 * @param value The new text this operation should insert.

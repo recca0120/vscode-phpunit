@@ -15,19 +15,28 @@ const parseValue = (key: any, value: any): string[] => {
 export class Command {
     private arguments = '';
 
-    constructor() {}
-
     setArguments(args: string) {
         this.arguments = args.trim();
 
         return this;
     }
 
-    apply(options?: SpawnOptions): ChildProcess {
-        const args = [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
-        const command = args.shift();
+    mapping(path: string) {
+        return this.replacePath(path, false);
+    }
+
+    run(options?: SpawnOptions): ChildProcess {
+        const [command, ...args] = this.apply();
 
         return spawn(command!, args, options ?? {});
+    }
+
+    protected apply() {
+        return [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
+    }
+
+    protected replacePath(path: string, _remote = false) {
+        return path;
     }
 
     private getArguments(): string[] {
@@ -36,6 +45,7 @@ export class Command {
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
             .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
+            .map((arg: string) => this.replacePath(arg))
             .concat('--teamcity', '--colors=never');
     }
 
@@ -45,6 +55,34 @@ export class Command {
 
     private phpUnitPath() {
         return 'vendor/bin/phpunit';
+    }
+}
+
+export class DockerCommand extends Command {
+    constructor(private lookup = new Map<string, string>()) {
+        super();
+    }
+
+    protected apply() {
+        return ['docker', 'exec', this.container(), ...super.apply()];
+    }
+
+    private container() {
+        return 'CONTAINER';
+    }
+
+    protected replacePath(path: string, _remote = true) {
+        if (this.lookup.size === 0) {
+            return path;
+        }
+
+        const fn = _remote
+            ? (remote: string, local: string) => (path = path.replace(local, remote))
+            : (remote: string, local: string) => (path = path.replace(remote, local));
+
+        this.lookup.forEach(fn);
+
+        return path;
     }
 }
 
@@ -73,7 +111,7 @@ export class TestRunner {
 
     run(command: Command, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve, reject) => {
-            const proc = command.apply({ ...this.options, ...options });
+            const proc = command.run({ ...this.options, ...options });
 
             let temp = '';
             let output = '';
@@ -83,15 +121,15 @@ export class TestRunner {
                 temp += out;
                 const lines = temp.split(/\r\n|\n/);
                 while (lines.length > 1) {
-                    this.processLine(lines.shift()!);
+                    this.processLine(command, lines.shift()!);
                 }
                 temp = lines.shift()!;
             };
 
             proc.stdout!.on('data', processOutput);
             proc.stderr!.on('data', processOutput);
-            proc.stdout!.on('end', () => this.processLine(temp));
-            proc.stderr!.on('end', () => this.processLine(temp));
+            proc.stdout!.on('end', () => this.processLine(command, temp));
+            proc.stderr!.on('end', () => this.processLine(command, temp));
 
             proc.on('close', (code) => {
                 this.listeners[TestRunnerEvent.close].forEach((fn) => fn(code));
@@ -104,10 +142,18 @@ export class TestRunner {
         return this.pattern.test(output);
     }
 
-    private processLine(line: string) {
+    private processLine(command: Command, line: string) {
         this.listeners[TestRunnerEvent.line].forEach((fn) => fn(line));
         const result = problemMatcher.read(line);
         if (result) {
+            if ('locationHint' in result) {
+                result.locationHint = command.mapping(result.locationHint);
+            }
+
+            if ('file' in result) {
+                result.file = command.mapping(result.file);
+            }
+
             this.listeners[TestRunnerEvent.result].forEach((fn) => fn(result));
         }
     }

@@ -4,7 +4,7 @@ services:
       build:
           context: ./dockerfiles
           dockerfile: Dockerfile
-      container_name: php
+      container_name: CONTAINER
       tty: true
       ports:
           - ${SSH_PORT:-2222}:22
