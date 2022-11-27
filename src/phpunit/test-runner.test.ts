@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { projectPath } from './__tests__/helper';
-import { Command, DockerCommand, TestRunner, TestRunnerEvent } from './test-runner';
+import { TestRunner, TestRunnerEvent } from './test-runner';
 import { Result, TestEvent } from './problem-matcher';
 import { spawn } from 'child_process';
+import { LocalCommand, DockerCommand, Command } from './command';
 
 jest.mock('child_process');
 
@@ -20,19 +21,20 @@ describe('TestRunner Test', () => {
         if (!process.env.GITHUB_ACTIONS) {
             return;
         }
+        const stdout = jest.fn().mockImplementation((_event, fn: Function) => {
+            contents.forEach((line) => fn(line + '\n'));
+        });
+        const stderr = jest.fn();
+        const onClose = jest.fn().mockImplementation((_event, fn: Function) => {
+            if (_event === 'close') {
+                fn(2);
+            }
+        });
 
         (spawn as jest.Mock).mockReturnValue({
-            stdout: {
-                on: jest.fn().mockImplementation((_event, fn: Function) => {
-                    contents.forEach((line) => fn(line + '\n'));
-                }),
-            },
-            stderr: {
-                on: jest.fn(),
-            },
-            on: jest.fn().mockImplementation((_event, fn: Function) => {
-                fn(0);
-            }),
+            stdout: { on: stdout },
+            stderr: { on: stderr },
+            on: onClose,
         });
     };
 
@@ -88,7 +90,7 @@ describe('TestRunner Test', () => {
     });
 
     describe('PHPUnit', () => {
-        const command = new Command();
+        const command = new LocalCommand();
         const appPath = projectPath;
         it('should run all tests', async () => {
             const args = '-c phpunit.xml';
