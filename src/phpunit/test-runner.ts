@@ -35,9 +35,7 @@ export class Command {
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-            .reduce((args: any, [key, value]) => {
-                return args.concat(parseValue(key, value));
-            }, _)
+            .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
             .concat('--teamcity', '--colors=never');
     }
 

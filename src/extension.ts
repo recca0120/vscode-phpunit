@@ -149,8 +149,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         }
 
                         filter = `^.*::(${deps.join('|')})( with data set .*)?$`;
-                        filter = process.platform === 'win32' ? `'${filter}'` : `"${filter}"`;
-                        filter = `--filter ${filter}`;
+                        filter = `--filter '${filter}'`;
                     }
 
                     await testRunner.run(
