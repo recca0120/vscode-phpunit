@@ -124,8 +124,8 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
             const request = { include: undefined, exclude: [], profile: runProfile };
-            runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-            await new Promise((resolve) => setTimeout(() => resolve(true), 500));
+
+            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
 
@@ -150,8 +150,8 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
             const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
-            runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-            await new Promise((resolve) => setTimeout(() => resolve(true), 500));
+
+            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
 
@@ -183,8 +183,7 @@ describe('Extension Test', () => {
             const runProfile = getRunProfile(ctrl);
             const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
 
-            runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-            await new Promise((resolve) => setTimeout(() => resolve(true), 500));
+            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
 

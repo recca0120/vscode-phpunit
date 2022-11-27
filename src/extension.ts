@@ -128,36 +128,38 @@ export async function activate(context: vscode.ExtensionContext) {
         const runTestQueue = async () => {
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
 
-            let filter = '';
             if (request.include === undefined) {
                 await testRunner.run(command.setArguments(''), options);
-            } else {
-                for (const test of request.include) {
-                    if (!test.canResolveChildren && test.parent?.uri) {
-                        const deps = [test.label];
-                        const testFile = testData.get(test.parent.uri.toString());
-                        if (testFile) {
-                            const t = testFile.tests
-                                .reduce((acc, test) => {
-                                    acc.push(test);
-                                    if (test.children) {
-                                        acc = acc.concat(test.children);
-                                    }
-                                    return acc;
-                                }, [] as Test[])
-                                .find((ttt) => ttt.method === test.label)!;
-                            deps.push(...(t.annotations.depends ?? []));
-                        }
 
-                        filter = `^.*::(${deps.join('|')})( with data set .*)?$`;
-                        filter = `--filter '${filter}'`;
+                return;
+            }
+
+            const promises = [];
+            for (const test of request.include) {
+                let filter = '';
+                if (!test.canResolveChildren && test.parent?.uri) {
+                    const deps = [test.label];
+                    const testFile = testData.get(test.parent.uri.toString());
+                    if (testFile) {
+                        const t = testFile.tests
+                            .reduce((acc, test) => {
+                                acc.push(test);
+                                if (test.children) {
+                                    acc = acc.concat(test.children);
+                                }
+                                return acc;
+                            }, [] as Test[])
+                            .find((ttt) => ttt.method === test.label)!;
+                        deps.push(...(t.annotations.depends ?? []));
                     }
 
-                    await testRunner.run(
-                        command.setArguments(`${test.uri!.fsPath} ${filter}`),
-                        options
-                    );
+                    filter = `^.*::(${deps.join('|')})( with data set .*)?$`;
+                    filter = `--filter '${filter}'`;
                 }
+
+                const args = `${test.uri!.fsPath} ${filter}`;
+
+                await testRunner.run(command.setArguments(args), options);
             }
 
             // for (const { test } of queue) {
@@ -181,7 +183,6 @@ export async function activate(context: vscode.ExtensionContext) {
             //     run.appendOutput(`Completed ${test.id}\r\n`);
             // }
         };
-
         run.coverageProvider = {
             provideFileCoverage() {
                 const coverage: vscode.FileCoverage[] = [];
@@ -198,7 +199,7 @@ export async function activate(context: vscode.ExtensionContext) {
             },
         };
 
-        discoverTests(request.include ?? gatherTestItems(ctrl.items)).then(runTestQueue);
+        return discoverTests(request.include ?? gatherTestItems(ctrl.items)).then(runTestQueue);
     };
 
     ctrl.refreshHandler = async () => {
