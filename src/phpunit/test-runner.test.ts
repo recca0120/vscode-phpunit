@@ -6,6 +6,8 @@ import { spawn } from 'child_process';
 
 jest.mock('child_process');
 
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+
 describe('TestRunner Test', () => {
     const cwd = projectPath('');
     const onTest = jest.fn();
@@ -113,7 +115,7 @@ describe('TestRunner Test', () => {
         });
     });
 
-    describe('docker', () => {
+    describeIf(!process.env.GITHUB_ACTIONS)('docker', () => {
         const appPath = (path: string) => `/app/${path}`;
         const command = new DockerCommand(new Map<string, string>([[projectPath(''), '/app']]));
 
