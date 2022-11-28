@@ -1,5 +1,6 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as yargsParser from 'yargs-parser';
+import { Result } from './problem-matcher';
 
 const parseValue = (key: any, value: any): string[] => {
     if (value instanceof Array) {
@@ -20,8 +21,23 @@ export abstract class Command {
         return this;
     }
 
-    mapping(path: string) {
-        return this.replacePath(path, false);
+    mapping(result: Result) {
+        if ('locationHint' in result) {
+            result.locationHint = this.remoteToLocal(result.locationHint);
+        }
+
+        if ('file' in result) {
+            result.file = this.remoteToLocal(result.file);
+        }
+
+        if ('details' in result) {
+            result.details = result.details.map(({ file, line }) => ({
+                file: this.remoteToLocal(file),
+                line,
+            }));
+        }
+
+        return result;
     }
 
     run(options?: SpawnOptions): ChildProcess {
@@ -34,8 +50,12 @@ export abstract class Command {
         return [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
     }
 
-    protected replacePath(path: string, localToRemote = false) {
-        return localToRemote ? path : this.replaceWindowsPath(this.removePhpVfsComposer(path));
+    protected remoteToLocal(path: string) {
+        return this.replaceWindowsPath(this.removePhpVfsComposer(path));
+    }
+
+    protected localToRemote(path: string) {
+        return this.replaceWindowsPath(path.replace(/\\/g, '/'));
     }
 
     private removePhpVfsComposer(path: string) {
@@ -57,7 +77,7 @@ export abstract class Command {
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
             .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
-            .map((arg: string) => this.replacePath(arg))
+            .map((arg: string) => this.localToRemote(arg))
             .concat('--teamcity', '--colors=never');
     }
 
@@ -75,24 +95,32 @@ export abstract class RemoteCommand extends Command {
         super();
     }
 
-    protected replacePath(path: string, localToRemote = true) {
+    protected localToRemote(path: string) {
+        return super.localToRemote(
+            this.doLoop(path, (localPath, remotePath) => {
+                return path.replace(localPath, remotePath);
+            })
+        );
+    }
+
+    protected remoteToLocal(path: string) {
+        return super.remoteToLocal(
+            this.doLoop(path, (localPath, remotePath) => {
+                return path.replace(remotePath, localPath);
+            })
+        );
+    }
+
+    private doLoop(path: string, fn: (remotePath: string, localPath: string) => string) {
         if (this.lookup.size === 0) {
-            return super.replacePath(path, localToRemote);
+            return path;
         }
 
         this.lookup.forEach((remotePath: string, localPath: string) => {
-            path = this.replacer(path, localPath, remotePath, localToRemote);
+            path = fn(localPath, remotePath);
         });
 
-        return super.replacePath(path, localToRemote);
-    }
-
-    protected replacer(path: string, localPath: string, remotePath: string, toRemote: boolean) {
-        if (toRemote) {
-            return path.replace(localPath, remotePath).replace(/\\/g, '/');
-        }
-
-        return path.replace(remotePath, localPath);
+        return path;
     }
 }
 

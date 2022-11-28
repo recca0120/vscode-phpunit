@@ -38,15 +38,15 @@ export class TestRunner {
                 temp += out;
                 const lines = temp.split(/\r\n|\n/);
                 while (lines.length > 1) {
-                    this.processLine(command, lines.shift()!);
+                    this.processLine(lines.shift()!, command);
                 }
                 temp = lines.shift()!;
             };
 
             proc.stdout!.on('data', processOutput);
             proc.stderr!.on('data', processOutput);
-            proc.stdout!.on('end', () => this.processLine(command, temp));
-            proc.stderr!.on('end', () => this.processLine(command, temp));
+            proc.stdout!.on('end', () => this.processLine(temp, command));
+            proc.stderr!.on('end', () => this.processLine(temp, command));
 
             proc.on('close', (code) => {
                 this.listeners[TestRunnerEvent.close].forEach((fn) => fn(code));
@@ -59,27 +59,12 @@ export class TestRunner {
         return this.pattern.test(output);
     }
 
-    private processLine(command: Command, line: string) {
+    private processLine(line: string, command: Command) {
         this.listeners[TestRunnerEvent.line].forEach((fn) => fn(line));
         const result = problemMatcher.read(line);
 
         if (result) {
-            if ('locationHint' in result) {
-                result.locationHint = command.mapping(result.locationHint);
-            }
-
-            if ('file' in result) {
-                result.file = command.mapping(result.file);
-            }
-
-            if ('details' in result) {
-                result.details = result.details.map(({ file, line }) => ({
-                    file: command.mapping(file),
-                    line,
-                }));
-            }
-
-            this.listeners[TestRunnerEvent.result].forEach((fn) => fn(result));
+            this.listeners[TestRunnerEvent.result].forEach((fn) => fn(command.mapping(result)));
         }
     }
 }
