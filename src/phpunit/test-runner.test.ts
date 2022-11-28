@@ -60,6 +60,20 @@ describe('TestRunner Test', () => {
         ]);
     };
 
+    const mockTestFailedWithPhpVfsComposer = (appPath: (path: string) => string) => {
+        const file = appPath('tests/AssertionsTest.php');
+        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
+        const locationHint = `php_qn://${file}::\\${id}`;
+        const phpVfsComposer = `phpvfscomposer://${appPath('vendor/phpunit/phpunit/phpunit')}`;
+
+        mockSpawn([
+            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
+            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
+            `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
+        ]);
+    };
+
     const mockTestSuite = (appPath: (path: string) => string) => {
         const file = appPath('tests/AssertionsTest.php');
         const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
@@ -154,7 +168,8 @@ describe('TestRunner Test', () => {
     async function shouldRunTestFailed(
         expected: any[],
         command: LocalCommand,
-        projectPath: (uri: string) => string
+        projectPath: (uri: string) => string,
+        phpVfsComposer = false
     ) {
         const name = 'test_failed';
         const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
@@ -163,6 +178,11 @@ describe('TestRunner Test', () => {
 
         await expectedRun(command.setArguments(args), expected);
 
+        const details = [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }];
+        if (phpVfsComposer) {
+            details.push({ file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 });
+        }
+
         expectedTest({
             event: TestEvent.testFailed,
             name,
@@ -170,9 +190,17 @@ describe('TestRunner Test', () => {
             id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
             file: projectPath('tests/AssertionsTest.php'),
             message: 'Failed asserting that false is true.',
-            details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+            details,
             duration: expect.any(Number),
         });
+    }
+
+    async function shouldRunTestFailedWithPhpVfsComposer(
+        expected: any[],
+        command: LocalCommand,
+        projectPath: (uri: string) => string
+    ) {
+        await shouldRunTestFailed(expected, command, projectPath, true);
     }
 
     describe('PHPUnit', () => {
@@ -229,6 +257,24 @@ describe('TestRunner Test', () => {
 
         it('should run test failed', async () => {
             await shouldRunTestFailed(
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    appPath('tests/AssertionsTest.php'),
+                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+                    '--configuration=phpunit.xml',
+                    '--teamcity',
+                    '--colors=never',
+                ],
+                command,
+                projectPath
+            );
+        });
+
+        it('should run test failed with phpvfscomposer', async () => {
+            mockTestFailedWithPhpVfsComposer(appPath);
+
+            await shouldRunTestFailedWithPhpVfsComposer(
                 [
                     'php',
                     'vendor/bin/phpunit',
@@ -309,6 +355,48 @@ describe('TestRunner Test', () => {
                 projectPath
             );
         });
+
+        it('should run test failed', async () => {
+            mockTestFailed(appPath);
+
+            await shouldRunTestFailed(
+                [
+                    'docker',
+                    'exec',
+                    'CONTAINER',
+                    'php',
+                    'vendor/bin/phpunit',
+                    appPath('tests/AssertionsTest.php'),
+                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+                    '--configuration=phpunit.xml',
+                    '--teamcity',
+                    '--colors=never',
+                ],
+                command,
+                projectPath
+            );
+        });
+
+        it('should run test failed with phpvfscomposer', async () => {
+            mockTestFailedWithPhpVfsComposer(appPath);
+
+            await shouldRunTestFailedWithPhpVfsComposer(
+                [
+                    'docker',
+                    'exec',
+                    'CONTAINER',
+                    'php',
+                    'vendor/bin/phpunit',
+                    appPath('tests/AssertionsTest.php'),
+                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+                    '--configuration=phpunit.xml',
+                    '--teamcity',
+                    '--colors=never',
+                ],
+                command,
+                projectPath
+            );
+        });
     });
 
     describe('docker for windows', () => {
@@ -341,10 +429,31 @@ describe('TestRunner Test', () => {
             );
         });
 
-        it('should mapping details path', async () => {
+        it('should run test failed', async () => {
             mockTestFailed(appPath);
 
             await shouldRunTestFailed(
+                [
+                    'docker',
+                    'exec',
+                    'CONTAINER',
+                    'php',
+                    'vendor/bin/phpunit',
+                    appPath('tests/AssertionsTest.php'),
+                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+                    '--configuration=phpunit.xml',
+                    '--teamcity',
+                    '--colors=never',
+                ],
+                command,
+                projectPath
+            );
+        });
+
+        it('should run test failed with phpvfscomposer', async () => {
+            mockTestFailedWithPhpVfsComposer(appPath);
+
+            await shouldRunTestFailedWithPhpVfsComposer(
                 [
                     'docker',
                     'exec',

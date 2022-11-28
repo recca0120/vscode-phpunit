@@ -34,8 +34,21 @@ export abstract class Command {
         return [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
     }
 
-    protected replacePath(path: string, _remote = false) {
-        return path;
+    protected replacePath(path: string, localToRemote = false) {
+        return localToRemote ? path : this.replaceWindowsPath(this.removePhpVfsComposer(path));
+    }
+
+    private removePhpVfsComposer(path: string) {
+        return path.replace(/phpvfscomposer:\/\//g, '');
+    }
+
+    private replaceWindowsPath(path: string) {
+        return path.replace(
+            /^(php_qn:\/\/)?(\w:)(.+)/,
+            (_matched: string, protocol: string, driveLetter: string, file: string) => {
+                return `${protocol ?? ''}${driveLetter}${file.replace(/\//g, '\\')}`;
+            }
+        );
     }
 
     private getArguments(): string[] {
@@ -62,16 +75,16 @@ export abstract class RemoteCommand extends Command {
         super();
     }
 
-    protected replacePath(path: string, _localToRemote = true) {
+    protected replacePath(path: string, localToRemote = true) {
         if (this.lookup.size === 0) {
-            return path;
+            return super.replacePath(path, localToRemote);
         }
 
         this.lookup.forEach((remotePath: string, localPath: string) => {
-            path = this.replacer(path, localPath, remotePath, _localToRemote);
+            path = this.replacer(path, localPath, remotePath, localToRemote);
         });
 
-        return path;
+        return super.replacePath(path, localToRemote);
     }
 
     protected replacer(path: string, localPath: string, remotePath: string, toRemote: boolean) {
@@ -79,14 +92,7 @@ export abstract class RemoteCommand extends Command {
             return path.replace(localPath, remotePath).replace(/\\/g, '/');
         }
 
-        return path
-            .replace(remotePath, localPath)
-            .replace(
-                /^(php_qn:\/\/)?(\w:)(.+)/,
-                (_matched: string, protocol: string, driveLetter: string, file: string) => {
-                    return `${protocol ?? ''}${driveLetter}${file.replace(/\//g, '\\')}`;
-                }
-            );
+        return path.replace(remotePath, localPath);
     }
 }
 
