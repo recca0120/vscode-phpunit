@@ -19,7 +19,7 @@ RUN mkdir -p /root/.ssh \
     && ssh-keygen -A \
     && echo -e "PasswordAuthentication no" >> /etc/ssh/sshd_config
 
-COPY entrypoint.sh /
+COPY ../entrypoint.sh /
 
 EXPOSE 22
 ENTRYPOINT ["sh", "/entrypoint.sh"]

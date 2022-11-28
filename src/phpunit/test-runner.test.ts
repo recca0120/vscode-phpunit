@@ -265,6 +265,10 @@ describe('TestRunner Test', () => {
                 command: new DockerCommand(
                     // new Map<string, string>([[projectPath(''), '/app']])
                     new Configuration({
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        'docker.command':
+                            'docker run -i --rm -v ${PWD}:/app -w /app project-stub-phpunit',
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
                         args: ['-c', 'phpunit.xml'],
                         paths: { [projectPath('')]: '/app' },
                     })
@@ -272,7 +276,18 @@ describe('TestRunner Test', () => {
                 appPath: (path: string) => `/app/${path}`,
                 projectPath,
             },
-            ['docker', 'exec', 'CONTAINER', 'php'],
+            [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'project-stub-phpunit',
+                'php',
+            ],
         ],
         [
             'Docker for Windows',
@@ -281,6 +296,10 @@ describe('TestRunner Test', () => {
                 command: new DockerCommand(
                     // new Map<string, string>([['C:\\vscode', '/app']])
                     new Configuration({
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        'docker.command':
+                            'docker run -i --rm -v ${PWD}:/app -w /app project-stub-phpunit',
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
                         args: ['-c', 'phpunit.xml'],
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         paths: { 'C:\\vscode': '/app' },
@@ -291,7 +310,18 @@ describe('TestRunner Test', () => {
                     return `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
                 },
             },
-            ['docker', 'exec', 'CONTAINER', 'php'],
+            [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'project-stub-phpunit',
+                'php',
+            ],
         ],
     ];
     describe.each(dataSet)('%s', (...data: any[]) => {

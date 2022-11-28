@@ -1,18 +1,29 @@
 version: '3.8'
 services:
-    php:
-      build:
-          context: ./dockerfiles
-          dockerfile: Dockerfile
-      container_name: CONTAINER
-      tty: true
-      ports:
-          - ${SSH_PORT:-2222}:22
-      volumes:
-          - .:/app
-          - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys:ro
-      networks:
-          - app-network
+  phpunit:
+    build:
+      context: ./dockerfiles/phpunit
+      dockerfile: Dockerfile
+    container_name: phpunit
+    tty: true
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+
+  sshd:
+    build:
+      context: ./dockerfiles/sshd
+      dockerfile: Dockerfile
+    container_name: sshd
+    tty: true
+    ports:
+      - ${SSH_PORT:-2222}:22
+    volumes:
+      - .:/app
+      - ./dockerfiles/sshd/id_rsa.pub:/root/.ssh/authorized_keys:ro
+    networks:
+      - app-network
 
 networks:
   app-network:

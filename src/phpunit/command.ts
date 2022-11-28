@@ -116,9 +116,11 @@ export abstract class Command {
     }
 
     run(options?: SpawnOptions) {
-        const [command, ...args] = this.apply().filter(
-            (arg: string) => ![undefined, ''].includes(arg)
-        );
+        const [command, ...args] = this.apply()
+            .filter((arg: string) => ![undefined, ''].includes(arg))
+            .map((arg: string) => {
+                return arg.replace('${PWD}', (options?.cwd ?? '') as string);
+            });
 
         return spawn(command!, args, options ?? {});
     }
@@ -178,6 +180,6 @@ export class DockerCommand extends RemoteCommand {
     }
 
     private container() {
-        return this.configuration.get('docker.container', 'CONTAINER') as string;
+        return this.configuration.get('docker.container', '') as string;
     }
 }
