@@ -298,7 +298,7 @@ describe('TestRunner Test', () => {
                     new Configuration({
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         'docker.command':
-                            'docker run -i --rm -v ${PWD}:/app -w /app project-stub-phpunit',
+                            'docker run -i --rm -v ${workspaceFolder}:/app -w /app project-stub-phpunit',
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         args: ['-c', 'phpunit.xml'],
                         // eslint-disable-next-line @typescript-eslint/naming-convention

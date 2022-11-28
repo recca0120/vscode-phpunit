@@ -118,11 +118,26 @@ export abstract class Command {
     run(options?: SpawnOptions) {
         const [command, ...args] = this.apply()
             .filter((arg: string) => ![undefined, ''].includes(arg))
-            .map((arg: string) => {
-                return arg.replace('${PWD}', (options?.cwd ?? '') as string);
-            });
+            .map((arg: string) => this.replaceWorkspaceFolder(arg, options));
 
         return spawn(command!, args, options ?? {});
+    }
+
+    private replaceWorkspaceFolder(arg: string, options?: SpawnOptions) {
+        const lookup = ['${PWD}', '${workspaceFolder}'];
+
+        return lookup.reduce((arg, variable) => {
+            return arg.replace(this.toReplacePattern(variable), (options?.cwd ?? '') as string);
+        }, arg);
+    }
+
+    private toReplacePattern(pattern: string) {
+        return new RegExp(
+            pattern.replace(/[\\$\\{\\}]/g, (matched) => {
+                return `\\${matched}` + (['{', '}'].includes(matched) ? '?' : '');
+            }),
+            'g'
+        );
     }
 
     protected abstract resolvePathReplacer(paths: Path): PathReplacer;
