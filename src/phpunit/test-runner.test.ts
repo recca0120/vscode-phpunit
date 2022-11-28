@@ -252,6 +252,7 @@ describe('TestRunner Test', () => {
         [
             'PHPUnit',
             {
+                mock: false,
                 command: new LocalCommand(),
                 appPath: (path: string) => projectPath(path),
                 projectPath,
@@ -261,6 +262,7 @@ describe('TestRunner Test', () => {
         [
             'Docker',
             {
+                mock: true,
                 command: new DockerCommand(new Map<string, string>([[projectPath(''), '/app']])),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath,
@@ -270,6 +272,7 @@ describe('TestRunner Test', () => {
         [
             'Docker for Windows',
             {
+                mock: true,
                 command: new DockerCommand(new Map<string, string>([['C:\\vscode', '/app']])),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath: (path: string) => {
@@ -281,14 +284,14 @@ describe('TestRunner Test', () => {
     ];
 
     describe.each(dataSet)('%s', (...data: any[]) => {
-        const [_name, { command, appPath, projectPath }, expected] = data;
+        const [_name, { mock, command, appPath, projectPath }, expected] = data;
 
         beforeEach(() => {
             jest.restoreAllMocks();
         });
 
         it('should run all tests', async () => {
-            if (!(command instanceof LocalCommand)) {
+            if (mock) {
                 mockTestPassed(appPath);
             }
 
@@ -296,7 +299,7 @@ describe('TestRunner Test', () => {
         });
 
         it('should run test suite', async () => {
-            if (!(command instanceof LocalCommand)) {
+            if (mock) {
                 mockTestSuite(appPath);
             }
 
@@ -304,7 +307,7 @@ describe('TestRunner Test', () => {
         });
 
         it('should run test passed', async () => {
-            if (!(command instanceof LocalCommand)) {
+            if (mock) {
                 mockTestPassed(appPath);
             }
 
@@ -312,7 +315,7 @@ describe('TestRunner Test', () => {
         });
 
         it('should run test failed', async () => {
-            if (!(command instanceof LocalCommand)) {
+            if (mock) {
                 mockTestFailed(appPath);
             }
 
