@@ -134,7 +134,11 @@ export abstract class Command {
     }
 
     private getArguments(): string[] {
-        const { _, ...argv } = yargsParser(this.arguments, { alias: { configuration: ['c'] } });
+        const args = [this.arguments, ...(this.configuration.get('args', []) as string[])];
+
+        const { _, ...argv } = yargsParser(args.join(' ').trim(), {
+            alias: { configuration: ['c'] },
+        });
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))

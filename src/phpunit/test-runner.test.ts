@@ -129,9 +129,7 @@ describe('TestRunner Test', () => {
         command: Command,
         projectPath: (path: string) => string
     ) {
-        const args = '-c phpunit.xml';
-
-        await expectedRun(command.setArguments(args), [
+        await expectedRun(command, [
             ...expected,
             'vendor/bin/phpunit',
             '--configuration=phpunit.xml',
@@ -157,7 +155,7 @@ describe('TestRunner Test', () => {
         projectPath: (path: string) => string,
         appPath: (path: string) => string
     ) {
-        const args = `${projectPath('tests/AssertionsTest.php')} -c phpunit.xml`;
+        const args = `${projectPath('tests/AssertionsTest.php')}`;
 
         await expectedRun(command.setArguments(args), [
             ...expected,
@@ -189,7 +187,7 @@ describe('TestRunner Test', () => {
         const name = 'test_passed';
         const filter = `^.*::(${name})( with data set .*)?$`;
         const file = projectPath('tests/AssertionsTest.php');
-        const args = `${file} --filter "${filter}" -c phpunit.xml`;
+        const args = `${file} --filter "${filter}"`;
 
         await expectedRun(command.setArguments(args), [
             ...expected,
@@ -222,7 +220,7 @@ describe('TestRunner Test', () => {
         const name = 'test_failed';
         const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
         const file = projectPath('tests/AssertionsTest.php');
-        const args = `${file} --filter "${filter}" -c phpunit.xml`;
+        const args = `${file} --filter "${filter}"`;
 
         await expectedRun(command.setArguments(args), [
             ...expected,
@@ -254,7 +252,7 @@ describe('TestRunner Test', () => {
             'PHPUnit',
             {
                 mock: false,
-                command: new LocalCommand(new Configuration()),
+                command: new LocalCommand(new Configuration({ args: ['-c', 'phpunit.xml'] })),
                 appPath: (path: string) => projectPath(path),
                 projectPath,
             },
@@ -266,7 +264,10 @@ describe('TestRunner Test', () => {
                 mock: true,
                 command: new DockerCommand(
                     // new Map<string, string>([[projectPath(''), '/app']])
-                    new Configuration({ paths: { [projectPath('')]: '/app' } })
+                    new Configuration({
+                        args: ['-c', 'phpunit.xml'],
+                        paths: { [projectPath('')]: '/app' },
+                    })
                 ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath,
@@ -279,8 +280,11 @@ describe('TestRunner Test', () => {
                 mock: true,
                 command: new DockerCommand(
                     // new Map<string, string>([['C:\\vscode', '/app']])
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
-                    new Configuration({ paths: { 'C:\\vscode': '/app' } })
+                    new Configuration({
+                        args: ['-c', 'phpunit.xml'],
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        paths: { 'C:\\vscode': '/app' },
+                    })
                 ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath: (path: string) => {
