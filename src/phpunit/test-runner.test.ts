@@ -22,16 +22,14 @@ describe('TestRunner Test', () => {
             contents.forEach((line) => fn(line + '\n'));
         });
 
-        const onClose = jest.fn().mockImplementation((_event, fn: (data: number) => void) => {
-            if (_event === 'close') {
-                fn(2);
-            }
-        });
-
         (spawn as jest.Mock).mockReturnValue({
             stdout: { on: stdout },
             stderr: { on: jest.fn() },
-            on: onClose,
+            on: jest.fn().mockImplementation((_event, fn: (data: number) => void) => {
+                if (_event === 'close') {
+                    fn(2);
+                }
+            }),
         });
     };
 
@@ -97,10 +95,27 @@ describe('TestRunner Test', () => {
         expect(spawn).toBeCalledWith(cmd, args, { cwd });
     };
 
-    const expectedTest = (expected: any) => {
+    const expectedTest = (expected: any, projectPath: (path: string) => string) => {
         const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
 
-        expect(onTest).toHaveBeenCalledWith(expect.objectContaining({ ...expected, locationHint }));
+        const test = onTest.mock.calls.find(
+            (call: any) => call[0].id === expected.id && call[0].event === expected.event
+        );
+
+        expect(test).not.toBeUndefined();
+
+        if (expected.event === TestEvent.testFailed) {
+            if (test[0].details.length === 2) {
+                expected.details.push({
+                    file: projectPath('vendor/phpunit/phpunit/phpunit'),
+                    line: 60,
+                });
+            }
+            expect(test[0].details).toEqual(expected.details);
+        }
+
+        expect(test[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
+
         expect(onClose).toHaveBeenCalled();
     };
 
@@ -115,360 +130,199 @@ describe('TestRunner Test', () => {
     ) {
         const args = '-c phpunit.xml';
 
-        await expectedRun(command.setArguments(args), expected);
+        await expectedRun(command.setArguments(args), [
+            ...expected,
+            'vendor/bin/phpunit',
+            '--configuration=phpunit.xml',
+            '--teamcity',
+            '--colors=never',
+        ]);
 
-        expectedTest({
-            event: TestEvent.testFinished,
-            name: 'test_passed',
-            flowId: expect.any(Number),
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-            file: projectPath('tests/AssertionsTest.php'),
-        });
+        expectedTest(
+            {
+                event: TestEvent.testFinished,
+                name: 'test_passed',
+                flowId: expect.any(Number),
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                file: projectPath('tests/AssertionsTest.php'),
+            },
+            projectPath
+        );
     }
 
     async function shouldRunTestSuite(
         expected: any[],
         command: Command,
-        projectPath: (path: string) => string
+        projectPath: (path: string) => string,
+        appPath: (path: string) => string
     ) {
         const args = `${projectPath('tests/AssertionsTest.php')} -c phpunit.xml`;
 
-        await expectedRun(command.setArguments(args), expected);
+        await expectedRun(command.setArguments(args), [
+            ...expected,
+            'vendor/bin/phpunit',
+            appPath('tests/AssertionsTest.php'),
+            '--configuration=phpunit.xml',
+            '--teamcity',
+            '--colors=never',
+        ]);
 
-        expectedTest({
-            event: TestEvent.testSuiteFinished,
-            name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-            flowId: expect.any(Number),
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-            file: projectPath('tests/AssertionsTest.php'),
-        });
+        expectedTest(
+            {
+                event: TestEvent.testSuiteFinished,
+                name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                flowId: expect.any(Number),
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                file: projectPath('tests/AssertionsTest.php'),
+            },
+            projectPath
+        );
     }
 
     async function shouldRunTestPassed(
         expected: any[],
         command: Command,
-        name: string,
-        projectPath: (path: string) => string
+        projectPath: (path: string) => string,
+        appPath: (path: string) => string
     ) {
+        const name = 'test_passed';
         const filter = `^.*::(${name})( with data set .*)?$`;
         const file = projectPath('tests/AssertionsTest.php');
         const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
-        await expectedRun(command.setArguments(args), expected);
+        await expectedRun(command.setArguments(args), [
+            ...expected,
+            'vendor/bin/phpunit',
+            appPath('tests/AssertionsTest.php'),
+            expect.stringMatching(dataProviderPattern(name)),
+            '--configuration=phpunit.xml',
+            '--teamcity',
+            '--colors=never',
+        ]);
 
-        expectedTest({
-            event: TestEvent.testFinished,
-            name,
-            flowId: expect.any(Number),
-            id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
-            file: projectPath('tests/AssertionsTest.php'),
-        });
+        expectedTest(
+            {
+                event: TestEvent.testFinished,
+                name,
+                flowId: expect.any(Number),
+                id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
+                file: projectPath('tests/AssertionsTest.php'),
+            },
+            projectPath
+        );
     }
 
     async function shouldRunTestFailed(
         expected: any[],
-        command: LocalCommand,
+        command: Command,
         projectPath: (uri: string) => string,
-        phpVfsComposer = false
+        appPath: (uri: string) => string
     ) {
         const name = 'test_failed';
         const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
         const file = projectPath('tests/AssertionsTest.php');
         const args = `${file} --filter "${filter}" -c phpunit.xml`;
 
-        await expectedRun(command.setArguments(args), expected);
+        await expectedRun(command.setArguments(args), [
+            ...expected,
+            'vendor/bin/phpunit',
+            appPath('tests/AssertionsTest.php'),
+            expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+            '--configuration=phpunit.xml',
+            '--teamcity',
+            '--colors=never',
+        ]);
 
-        const details = [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }];
-        if (phpVfsComposer) {
-            details.push({ file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 });
-        }
+        expectedTest(
+            {
+                event: TestEvent.testFailed,
+                name,
+                flowId: expect.any(Number),
+                id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
+                file: projectPath('tests/AssertionsTest.php'),
+                message: 'Failed asserting that false is true.',
+                details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+                duration: expect.any(Number),
+            },
+            projectPath
+        );
+    }
 
-        expectedTest({
-            event: TestEvent.testFailed,
-            name,
-            flowId: expect.any(Number),
-            id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
-            file: projectPath('tests/AssertionsTest.php'),
-            message: 'Failed asserting that false is true.',
-            details,
-            duration: expect.any(Number),
+    const dataSet = [
+        [
+            'PHPUnit',
+            {
+                command: new LocalCommand(),
+                appPath: (path: string) => projectPath(path),
+                projectPath,
+            },
+            ['php'],
+        ],
+        [
+            'Docker',
+            {
+                command: new DockerCommand(new Map<string, string>([[projectPath(''), '/app']])),
+                appPath: (path: string) => `/app/${path}`,
+                projectPath,
+            },
+            ['docker', 'exec', 'CONTAINER', 'php'],
+        ],
+        [
+            'Docker for Windows',
+            {
+                command: new DockerCommand(new Map<string, string>([['C:\\vscode', '/app']])),
+                appPath: (path: string) => `/app/${path}`,
+                projectPath: (path: string) => {
+                    return `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
+                },
+            },
+            ['docker', 'exec', 'CONTAINER', 'php'],
+        ],
+    ];
+
+    describe.each(dataSet)('%s', (...data: any[]) => {
+        const [_name, { command, appPath, projectPath }, expected] = data;
+
+        beforeEach(() => {
+            jest.restoreAllMocks();
         });
-    }
-
-    async function shouldRunTestFailedWithPhpVfsComposer(
-        expected: any[],
-        command: LocalCommand,
-        projectPath: (uri: string) => string
-    ) {
-        await shouldRunTestFailed(expected, command, projectPath, true);
-    }
-
-    describe('PHPUnit', () => {
-        const command = new LocalCommand();
-        const appPath = projectPath;
 
         it('should run all tests', async () => {
-            await shouldRunAllTests(
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
+            if (!(command instanceof LocalCommand)) {
+                mockTestPassed(appPath);
+            }
+
+            await shouldRunAllTests(expected, command, projectPath);
         });
 
         it('should run test suite', async () => {
-            await shouldRunTestSuite(
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
+            if (!(command instanceof LocalCommand)) {
+                mockTestSuite(appPath);
+            }
+
+            await shouldRunTestSuite(expected, command, projectPath, appPath);
         });
 
         it('should run test passed', async () => {
-            const name = 'test_passed';
+            if (!(command instanceof LocalCommand)) {
+                mockTestPassed(appPath);
+            }
 
-            await shouldRunTestPassed(
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern(name)),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                name,
-                projectPath
-            );
+            await shouldRunTestPassed(expected, command, projectPath, appPath);
         });
 
         it('should run test failed', async () => {
-            await shouldRunTestFailed(
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
+            if (!(command instanceof LocalCommand)) {
+                mockTestFailed(appPath);
+            }
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath);
         });
 
         it('should run test failed with phpvfscomposer', async () => {
             mockTestFailedWithPhpVfsComposer(appPath);
 
-            await shouldRunTestFailedWithPhpVfsComposer(
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
-        });
-    });
-
-    describe('docker', () => {
-        const appPath = (path: string) => `/app/${path}`;
-        const command = new DockerCommand(new Map<string, string>([[projectPath(''), '/app']]));
-
-        it('should run all tests', async () => {
-            mockTestPassed(appPath);
-
-            await shouldRunAllTests(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
-        });
-
-        it('should run test suite', async () => {
-            mockTestSuite(appPath);
-
-            await shouldRunTestSuite(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
-        });
-
-        it('should run test passed', async () => {
-            const name = 'test_passed';
-            mockTestPassed(appPath);
-
-            await shouldRunTestPassed(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern(name)),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                name,
-                projectPath
-            );
-        });
-
-        it('should run test failed', async () => {
-            mockTestFailed(appPath);
-
-            await shouldRunTestFailed(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
-        });
-
-        it('should run test failed with phpvfscomposer', async () => {
-            mockTestFailedWithPhpVfsComposer(appPath);
-
-            await shouldRunTestFailedWithPhpVfsComposer(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
-        });
-    });
-
-    describe('docker for windows', () => {
-        const appPath = (path: string) => `/app/${path}`;
-        const projectPath = (path: string) => {
-            return `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
-        };
-        const command = new DockerCommand(new Map<string, string>([[projectPath(''), '/app']]));
-
-        it('should run test passed', async () => {
-            const name = 'test_passed';
-            mockTestPassed(appPath);
-
-            await shouldRunTestPassed(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern(name)),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                name,
-                projectPath
-            );
-        });
-
-        it('should run test failed', async () => {
-            mockTestFailed(appPath);
-
-            await shouldRunTestFailed(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
-        });
-
-        it('should run test failed with phpvfscomposer', async () => {
-            mockTestFailedWithPhpVfsComposer(appPath);
-
-            await shouldRunTestFailedWithPhpVfsComposer(
-                [
-                    'docker',
-                    'exec',
-                    'CONTAINER',
-                    'php',
-                    'vendor/bin/phpunit',
-                    appPath('tests/AssertionsTest.php'),
-                    expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
-                    '--configuration=phpunit.xml',
-                    '--teamcity',
-                    '--colors=never',
-                ],
-                command,
-                projectPath
-            );
+            await shouldRunTestFailed(expected, command, projectPath, appPath);
         });
     });
 });
