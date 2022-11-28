@@ -9,7 +9,7 @@ export interface IConfiguration {
 export class Configuration implements IConfiguration {
     private items = new Map<string, unknown>();
 
-    constructor(items: Map<string, unknown> | { [p: string]: any } | undefined = undefined) {
+    constructor(items: Map<string, unknown> | { [p: string]: unknown } | undefined = undefined) {
         if (items instanceof Map) {
             this.items = items;
         } else if (!!items) {

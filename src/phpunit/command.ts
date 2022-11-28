@@ -16,6 +16,15 @@ const parseValue = (key: any, value: any): string[] => {
 type Path = { [p: string]: string };
 
 class PathReplacer {
+    private workspaceFolderPatterns = ['${PWD}', '${workspaceFolder}'].map((pattern) => {
+        return new RegExp(
+            pattern.replace(/[\\$\\{\\}]/g, (matched) => {
+                return `\\${matched}` + (['{', '}'].includes(matched) ? '?' : '');
+            }),
+            'g'
+        );
+    });
+
     constructor(private mapping = new Map<string, string>()) {}
 
     static fromJson(paths?: Path) {
@@ -29,6 +38,12 @@ class PathReplacer {
         }
 
         return new PathReplacer(mapping);
+    }
+
+    public replaceWorkspaceFolder(path: string, options?: SpawnOptions) {
+        return this.workspaceFolderPatterns.reduce((path, pattern) => {
+            return path.replace(pattern, (options?.cwd ?? '') as string);
+        }, path);
     }
 
     public remoteToLocal(path: string) {
@@ -117,27 +132,10 @@ export abstract class Command {
 
     run(options?: SpawnOptions) {
         const [command, ...args] = this.apply()
-            .filter((arg: string) => ![undefined, ''].includes(arg))
-            .map((arg: string) => this.replaceWorkspaceFolder(arg, options));
+            .filter((input: string) => ![undefined, ''].includes(input))
+            .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input, options));
 
         return spawn(command!, args, options ?? {});
-    }
-
-    private replaceWorkspaceFolder(arg: string, options?: SpawnOptions) {
-        const lookup = ['${PWD}', '${workspaceFolder}'];
-
-        return lookup.reduce((arg, variable) => {
-            return arg.replace(this.toReplacePattern(variable), (options?.cwd ?? '') as string);
-        }, arg);
-    }
-
-    private toReplacePattern(pattern: string) {
-        return new RegExp(
-            pattern.replace(/[\\$\\{\\}]/g, (matched) => {
-                return `\\${matched}` + (['{', '}'].includes(matched) ? '?' : '');
-            }),
-            'g'
-        );
     }
 
     protected abstract resolvePathReplacer(paths: Path): PathReplacer;
@@ -160,7 +158,7 @@ export abstract class Command {
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
             .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
-            .map((arg: string) => this.getPathReplacer().localToRemote(arg))
+            .map((input: string) => this.getPathReplacer().localToRemote(input))
             .concat('--teamcity', '--colors=never');
     }
 
