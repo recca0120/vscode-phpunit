@@ -1,6 +1,7 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { spawn, SpawnOptions } from 'child_process';
 import * as yargsParser from 'yargs-parser';
 import { Result } from './problem-matcher';
+import { Configuration } from './configuration';
 
 const parseValue = (key: any, value: any): string[] => {
     if (value instanceof Array) {
@@ -12,8 +13,23 @@ const parseValue = (key: any, value: any): string[] => {
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
 };
 
+type Path = { [p: string]: string };
+
 class PathReplacer {
     constructor(private mapping = new Map<string, string>()) {}
+
+    static fromJson(paths?: Path) {
+        if (!paths) {
+            return new PathReplacer();
+        }
+
+        const mapping = new Map<string, string>();
+        for (const local in paths) {
+            mapping.set(local, paths[local]);
+        }
+
+        return new PathReplacer(mapping);
+    }
 
     public remoteToLocal(path: string) {
         return this.toWindowsPath(this.removePhpVfsComposer(this.doRemoteToLocal(path)));
@@ -66,6 +82,13 @@ class PathReplacer {
 
 export abstract class Command {
     private arguments = '';
+    private readonly pathReplacer: PathReplacer;
+
+    constructor(protected configuration = new Configuration()) {
+        this.pathReplacer = this.resolvePathReplacer(
+            this.configuration.get('paths') as { [p: string]: string }
+        );
+    }
 
     setArguments(args: string) {
         this.arguments = args.trim();
@@ -74,18 +97,17 @@ export abstract class Command {
     }
 
     mapping(result: Result) {
-        const pathReplacer = this.resolvePathReplacer();
         if ('locationHint' in result) {
-            result.locationHint = pathReplacer.remoteToLocal(result.locationHint);
+            result.locationHint = this.getPathReplacer().remoteToLocal(result.locationHint);
         }
 
         if ('file' in result) {
-            result.file = pathReplacer.remoteToLocal(result.file);
+            result.file = this.getPathReplacer().remoteToLocal(result.file);
         }
 
         if ('details' in result) {
             result.details = result.details.map(({ file, line }) => ({
-                file: pathReplacer.remoteToLocal(file),
+                file: this.getPathReplacer().remoteToLocal(file),
                 line,
             }));
         }
@@ -93,60 +115,65 @@ export abstract class Command {
         return result;
     }
 
-    run(options?: SpawnOptions): ChildProcess {
-        const [command, ...args] = this.apply();
+    run(options?: SpawnOptions) {
+        const [command, ...args] = this.apply().filter(
+            (arg: string) => ![undefined, ''].includes(arg)
+        );
 
         return spawn(command!, args, options ?? {});
     }
 
-    protected abstract resolvePathReplacer(): PathReplacer;
+    protected abstract resolvePathReplacer(paths: Path): PathReplacer;
+
+    protected getPathReplacer() {
+        return this.pathReplacer;
+    }
 
     protected apply() {
         return [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
     }
 
     private getArguments(): string[] {
-        const pathReplacer = this.resolvePathReplacer();
         const { _, ...argv } = yargsParser(this.arguments, { alias: { configuration: ['c'] } });
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
             .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
-            .map((arg: string) => pathReplacer.localToRemote(arg))
+            .map((arg: string) => this.getPathReplacer().localToRemote(arg))
             .concat('--teamcity', '--colors=never');
     }
 
     private phpPath() {
-        return 'php';
+        return this.configuration.get('php', 'php') as string;
     }
 
     private phpUnitPath() {
-        return 'vendor/bin/phpunit';
+        return this.configuration.get('phpunit', 'vendor/bin/phpunit') as string;
     }
 }
 
 export class LocalCommand extends Command {
-    protected resolvePathReplacer(): PathReplacer {
+    protected resolvePathReplacer() {
         return new PathReplacer();
     }
 }
 
 export abstract class RemoteCommand extends Command {
-    constructor(protected lookup = new Map<string, string>()) {
-        super();
-    }
-
-    protected resolvePathReplacer(): PathReplacer {
-        return new PathReplacer(this.lookup);
+    protected resolvePathReplacer(paths: { [p: string]: string }) {
+        return PathReplacer.fromJson(paths);
     }
 }
 
 export class DockerCommand extends RemoteCommand {
     protected apply() {
-        return ['docker', 'exec', this.container(), ...super.apply()];
+        return [...this.dockerCommand(), this.container(), ...super.apply()];
+    }
+
+    private dockerCommand() {
+        return (this.configuration.get('docker.command', 'docker exec') as string).split(' ');
     }
 
     private container() {
-        return 'CONTAINER';
+        return this.configuration.get('docker.container', 'CONTAINER') as string;
     }
 }

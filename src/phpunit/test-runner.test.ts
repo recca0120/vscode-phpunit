@@ -4,6 +4,7 @@ import { TestRunner, TestRunnerEvent } from './test-runner';
 import { Result, TestEvent } from './problem-matcher';
 import { spawn } from 'child_process';
 import { Command, DockerCommand, LocalCommand } from './command';
+import { Configuration } from './configuration';
 
 jest.mock('child_process');
 
@@ -253,7 +254,7 @@ describe('TestRunner Test', () => {
             'PHPUnit',
             {
                 mock: false,
-                command: new LocalCommand(),
+                command: new LocalCommand(new Configuration()),
                 appPath: (path: string) => projectPath(path),
                 projectPath,
             },
@@ -263,7 +264,10 @@ describe('TestRunner Test', () => {
             'Docker',
             {
                 mock: true,
-                command: new DockerCommand(new Map<string, string>([[projectPath(''), '/app']])),
+                command: new DockerCommand(
+                    // new Map<string, string>([[projectPath(''), '/app']])
+                    new Configuration({ paths: { [projectPath('')]: '/app' } })
+                ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath,
             },
@@ -273,7 +277,11 @@ describe('TestRunner Test', () => {
             'Docker for Windows',
             {
                 mock: true,
-                command: new DockerCommand(new Map<string, string>([['C:\\vscode', '/app']])),
+                command: new DockerCommand(
+                    // new Map<string, string>([['C:\\vscode', '/app']])
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    new Configuration({ paths: { 'C:\\vscode': '/app' } })
+                ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath: (path: string) => {
                     return `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
@@ -282,7 +290,6 @@ describe('TestRunner Test', () => {
             ['docker', 'exec', 'CONTAINER', 'php'],
         ],
     ];
-
     describe.each(dataSet)('%s', (...data: any[]) => {
         const [_name, { mock, command, appPath, projectPath }, expected] = data;
 

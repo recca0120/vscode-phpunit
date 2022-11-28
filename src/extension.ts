@@ -3,6 +3,7 @@ import { parse, Test } from './phpunit/parser';
 import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
 import { Result, TestEvent } from './phpunit/problem-matcher';
 import { LocalCommand } from './phpunit/command';
+import { Configuration } from './phpunit/configuration';
 
 const textDecoder = new TextDecoder('utf-8');
 const testData = new Map<string, TestFile>();
@@ -19,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
-    const command = new LocalCommand();
+    const command = new LocalCommand(new Configuration());
 
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
         const queue: { test: vscode.TestItem }[] = [];
