@@ -1,4 +1,12 @@
-export class Configuration {
+export interface IConfiguration {
+    get(key: string, defaultValue?: unknown): unknown | undefined;
+
+    has(key: string): any;
+
+    update(key: string, value: any): Promise<void>;
+}
+
+export class Configuration implements IConfiguration {
     private items = new Map<string, unknown>();
 
     constructor(items: Map<string, unknown> | { [p: string]: any } | undefined = undefined) {

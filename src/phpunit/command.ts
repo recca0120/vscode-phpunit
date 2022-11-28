@@ -1,7 +1,7 @@
 import { spawn, SpawnOptions } from 'child_process';
 import * as yargsParser from 'yargs-parser';
 import { Result } from './problem-matcher';
-import { Configuration } from './configuration';
+import { Configuration, IConfiguration } from './configuration';
 
 const parseValue = (key: any, value: any): string[] => {
     if (value instanceof Array) {
@@ -84,7 +84,7 @@ export abstract class Command {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
 
-    constructor(protected configuration = new Configuration()) {
+    constructor(protected configuration: IConfiguration = new Configuration()) {
         this.pathReplacer = this.resolvePathReplacer(
             this.configuration.get('paths') as { [p: string]: string }
         );
