@@ -18,6 +18,36 @@
     "activationEvents": [
         "workspaceContains:**/*.php"
     ],
+    "configuration": {
+        "type": "object",
+        "title": "PHPUnit Configuration",
+        "properties": {
+            "phpunit.php": {
+                "type": "string",
+                "description": "Absolute path to php. Fallback to global php if it exists on the command line.",
+                "default": null
+            },
+            "phpunit.phpunit": {
+                "type": "string",
+                "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line",
+                "default": null
+            },
+            "phpunit.command": {
+                "type": "string",
+                "description": "Custom command to run. Ex: `docker exec -t container_name`.",
+                "default": null
+            },
+            "phpunit.args": {
+                "type": "array",
+                "default": [],
+                "description": "Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist"
+            },
+            "phpunit.paths": {
+                "type": "object",
+                "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
+            }
+        }
+    },
     "main": "./dist/extension.js",
     "prettier": {
         "printWidth": 100,
