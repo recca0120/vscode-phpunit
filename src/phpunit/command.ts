@@ -100,9 +100,7 @@ export abstract class Command {
     private readonly pathReplacer: PathReplacer;
 
     constructor(protected configuration: IConfiguration = new Configuration()) {
-        this.pathReplacer = this.resolvePathReplacer(
-            this.configuration.get('paths') as { [p: string]: string }
-        );
+        this.pathReplacer = this.resolvePathReplacer(this.configuration.get('paths') as Path);
     }
 
     setArguments(args: string) {
@@ -178,7 +176,7 @@ export class LocalCommand extends Command {
 }
 
 export abstract class RemoteCommand extends Command {
-    protected resolvePathReplacer(paths: { [p: string]: string }) {
+    protected resolvePathReplacer(paths: Path) {
         return PathReplacer.fromJson(paths);
     }
 }
