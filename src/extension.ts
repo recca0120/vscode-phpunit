@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { parse, Test } from './phpunit/parser';
 import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
 import { Result, TestEvent } from './phpunit/problem-matcher';
-import { LocalCommand } from './phpunit/command';
+import { DockerCommand, LocalCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -21,9 +21,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(ctrl);
     vscode.workspace.getConfiguration();
 
-    const command = new LocalCommand(
-        new Configuration(vscode.workspace.getConfiguration('phpunit'))
-    );
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
 
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
         const queue: { test: vscode.TestItem }[] = [];
@@ -66,6 +64,10 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
             }
         };
+
+        const command = (configuration.get('command', '') as string).match(/docker/)
+            ? new DockerCommand(configuration)
+            : new LocalCommand(configuration);
 
         const testRunner = new TestRunner();
 
@@ -138,7 +140,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            const promises = [];
             for (const test of request.include) {
                 let filter = '';
                 if (!test.canResolveChildren && test.parent?.uri) {
