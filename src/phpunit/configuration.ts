@@ -6,10 +6,14 @@ export interface IConfiguration {
     update(key: string, value: any): Promise<void>;
 }
 
+interface ConfigurationItem {
+    [p: string]: unknown;
+}
+
 export class Configuration implements IConfiguration {
     private items = new Map<string, unknown>();
 
-    constructor(items: Map<string, unknown> | { [p: string]: unknown } | undefined = undefined) {
+    constructor(items: Map<string, unknown> | ConfigurationItem | undefined = undefined) {
         if (items instanceof Map) {
             this.items = items;
         } else if (!!items) {
@@ -20,7 +24,7 @@ export class Configuration implements IConfiguration {
     }
 
     get(key: string, defaultValue?: unknown): unknown | undefined {
-        return this.items.has(key) ? this.items.get(key) : defaultValue;
+        return this.has(key) ? this.items.get(key) : defaultValue;
     }
 
     has(key: string) {
