@@ -180,9 +180,38 @@ const CancellationTokenSource = jest.fn().mockImplementation(() => {
     };
 });
 
+export class Configuration {
+    private items = new Map<string, unknown>();
+
+    constructor(items: Map<string, unknown> | { [p: string]: string } | undefined = undefined) {
+        if (items instanceof Map) {
+            this.items = items;
+        } else if (!!items) {
+            for (const x in items) {
+                this.items.set(x, items[x]);
+            }
+        }
+    }
+
+    get(key: string, defaultValue?: unknown): unknown | undefined {
+        return this.has(key) ? this.items.get(key) : defaultValue;
+    }
+
+    has(key: string) {
+        return this.items.has(key);
+    }
+
+    async update(key: string, value: any) {
+        this.items.set(key, value);
+    }
+}
+
 const workspace = {
     workspaceFolders: [],
     textDocuments: [],
+    getConfiguration: jest.fn().mockImplementation((_section: string) => {
+        return new Configuration();
+    }),
     getWorkspaceFolder: (uri: URI) => {
         return workspace.workspaceFolders.find((folder: WorkspaceFolder) =>
             uri.toString().includes(folder.uri.toString())
