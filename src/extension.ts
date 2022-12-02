@@ -135,7 +135,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             for (const test of request.include) {
                 const testFile = testData.get(test.parent?.uri?.toString() ?? '');
-                const args = testFile?.getArguments(test) ?? test.uri!.fsPath;
+                const args = testFile?.getArguments(test.id) ?? test.uri!.fsPath;
 
                 await runner.run(command.setArguments(args), options);
             }

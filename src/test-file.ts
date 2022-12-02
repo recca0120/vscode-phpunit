@@ -23,33 +23,41 @@ export class TestFile {
         this.testItems.forEach((testItem) => ctrl.items.delete(testItem.id));
     }
 
-    getArguments(testItem: TestItem) {
-        const filter = this.toFilter(testItem) ?? '';
+    getArguments(testId: string): string {
+        const test = this.find(testId);
 
-        return `${testItem.uri!.fsPath} ${filter}`;
-    }
-
-    private toFilter(testItem: TestItem) {
-        if (testItem.canResolveChildren || !testItem.parent?.uri) {
+        if (!test) {
             return '';
         }
 
-        const filter = `^.*::(${this.deps(testItem).join('|')})( with data set .*)?$`;
+        const filter = this.asFilter(test) ?? '';
 
-        return `--filter '${filter}'`;
+        return `${test.file} ${filter}`;
     }
 
-    private deps(testItem: TestItem) {
-        const test = this.tests
-            .reduce((acc, test) => {
-                acc.push(test);
-                if (test.children) {
-                    acc = acc.concat(test.children);
-                }
-                return acc;
-            }, [] as Test[])
-            .find((test) => test.method === testItem.label)!;
+    private find(label: string) {
+        return this.doFind(label, this.tests);
+    }
 
+    private doFind(id: string, tests: Test[]): Test | void {
+        for (const test of tests) {
+            if (id === test.id) {
+                return test;
+            }
+
+            if (test.children.length > 0) {
+                return this.doFind(id, test.children);
+            }
+        }
+    }
+
+    private asFilter(test: Test) {
+        return test.children.length > 0
+            ? ''
+            : `--filter '^.*::(${this.asDeps(test).join('|')})( with data set .*)?$'`;
+    }
+
+    private asDeps(test: Test) {
         return [test.method, ...(test.annotations.depends ?? [])];
     }
 
