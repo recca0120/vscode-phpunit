@@ -244,7 +244,7 @@ describe('Problem Matcher Test', () => {
             });
         });
 
-        it('parse addition_provider with data set', () => {
+        it('parse addition_provider with data set with number key', () => {
             const text =
                 "##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']";
 
@@ -255,6 +255,21 @@ describe('Problem Matcher Test', () => {
                 name: 'addition_provider with data set #2',
                 locationHint:
                     'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                flowId: 8024,
+            });
+        });
+
+        it('parse addition_provider with data set with string key', () => {
+            const text =
+                '##teamcity[testStarted name=\'addition_provider with data set ""foo-bar_%$"\' locationHint=\'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"\' flowId=\'8024\']';
+
+            expect(parser.parse(text)).toEqual({
+                event: 'testStarted',
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"',
+                file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                name: 'addition_provider with data set ""foo-bar_%$"',
+                locationHint:
+                    'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"',
                 flowId: 8024,
             });
         });
