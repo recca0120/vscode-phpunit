@@ -1,12 +1,18 @@
-import { Position, Range, TestController, TestItem, Uri } from 'vscode';
-import { Test } from './phpunit/parser';
+import { Position, Range, TestController, TestItem, Uri, workspace } from 'vscode';
+import { parse, Test } from './phpunit/parser';
+
+const textDecoder = new TextDecoder('utf-8');
 
 export class TestFile {
+    public tests: Test[] = [];
     public testItems: TestItem[] = [];
 
-    constructor(public uri: Uri, public tests: Test[]) {}
+    constructor(public uri: Uri) {}
 
-    update(ctrl: TestController) {
+    async update(ctrl: TestController) {
+        const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
+        this.tests = parse(rawContent, this.uri.fsPath) ?? [];
+
         this.testItems = this.tests.map((suite: Test) => {
             const parent = this.asTestItem(ctrl, suite, suite.id);
             parent.children.replace(

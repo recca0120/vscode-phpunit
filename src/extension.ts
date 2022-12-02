@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { parse } from './phpunit/parser';
 import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
 import { Result, TestEvent } from './phpunit/problem-matcher';
 import { DockerCommand, LocalCommand } from './phpunit/command';
@@ -235,14 +234,9 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
         return;
     }
 
-    const rawContent = textDecoder.decode(await vscode.workspace.fs.readFile(uri));
-    const suites = parse(rawContent, uri.fsPath);
+    const testFile = new TestFile(uri);
 
-    if (!suites || suites.length === 0) {
-        return;
-    }
-
-    testData.set(uri.toString(), new TestFile(uri, suites).update(controller));
+    testData.set(uri.toString(), await testFile.update(controller));
 
     // controller.createTestItem(test.id)
 
