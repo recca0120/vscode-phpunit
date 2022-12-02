@@ -4,17 +4,10 @@ import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
 import { Result, TestEvent } from './phpunit/problem-matcher';
 import { DockerCommand, LocalCommand } from './phpunit/command';
 import { Configuration } from './configuration';
+import { TestFile } from './test-file';
 
 const textDecoder = new TextDecoder('utf-8');
 const testData = new Map<string, TestFile>();
-
-class TestFile {
-    constructor(
-        public uri: vscode.Uri,
-        public tests: Test[],
-        public testItems: vscode.TestItem[]
-    ) {}
-}
 
 export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
@@ -269,36 +262,7 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
         return;
     }
 
-    const testItems = suites.map((suite: Test) => {
-        const parent = controller.createTestItem(suite.id, suite.qualifiedClass, uri);
-        controller.items.add(parent);
-
-        parent.sortText = suite.id;
-        parent.canResolveChildren = true;
-        parent.range = new vscode.Range(
-            new vscode.Position(suite.start.line - 1, suite.start.character),
-            new vscode.Position(suite.end.line - 1, suite.end.character)
-        );
-        parent.children.replace(
-            suite.children.map((test: Test, index) => {
-                const child = controller.createTestItem(test.id, test.method!, uri);
-                controller.items.add(child);
-
-                child.sortText = `${index}`;
-                child.canResolveChildren = false;
-                child.range = new vscode.Range(
-                    new vscode.Position(test.start.line - 1, test.start.character),
-                    new vscode.Position(test.end.line - 1, test.end.character)
-                );
-
-                return child;
-            })
-        );
-
-        return parent;
-    });
-
-    testData.set(uri.toString(), new TestFile(uri, suites, testItems));
+    testData.set(uri.toString(), new TestFile(uri, suites).update(controller));
 
     // controller.createTestItem(test.id)
 
@@ -351,7 +315,7 @@ function startWatchingWorkspace(controller: vscode.TestController) {
             const id = uri.toString();
             const testFile = testData.get(id);
             if (testFile) {
-                testFile.testItems.forEach((testItem) => controller.items.delete(testItem.id));
+                testFile.delete(controller);
                 testData.delete(id);
             }
 
@@ -362,7 +326,7 @@ function startWatchingWorkspace(controller: vscode.TestController) {
             const id = uri.toString();
             const testFile = testData.get(id);
             if (testFile) {
-                testFile.testItems.forEach((testItem) => controller.items.delete(testItem.id));
+                testFile.delete(controller);
                 testData.delete(id);
             }
         });
