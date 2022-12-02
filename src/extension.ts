@@ -68,8 +68,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            const testId = `${result.id.replace(/\swith\sdata\sset\s.+/, '')}`;
-            const test = queue.find(({ test }) => test.id === testId)?.test;
+            const test = queue.find(({ test }) => test.id === result.testId)?.test;
 
             if (!test) {
                 return;
