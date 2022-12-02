@@ -63,7 +63,7 @@ class AssertionsTest extends TestCase
     public function additionProvider()
     {
         return [
-            [0, 0, 0],
+            'foo' => [0, 0, 0],
             [0, 1, 1],
             [1, 0, 2],
         ];
