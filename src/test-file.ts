@@ -23,11 +23,41 @@ export class TestFile {
         this.testItems.forEach((testItem) => ctrl.items.delete(testItem.id));
     }
 
+    getArguments(testItem: TestItem) {
+        const filter = this.toFilter(testItem) ?? '';
+
+        return `${testItem.uri!.fsPath} ${filter}`;
+    }
+
+    private toFilter(testItem: TestItem) {
+        if (testItem.canResolveChildren || !testItem.parent?.uri) {
+            return '';
+        }
+
+        const filter = `^.*::(${this.deps(testItem).join('|')})( with data set .*)?$`;
+
+        return `--filter '${filter}'`;
+    }
+
+    private deps(testItem: TestItem) {
+        const test = this.tests
+            .reduce((acc, test) => {
+                acc.push(test);
+                if (test.children) {
+                    acc = acc.concat(test.children);
+                }
+                return acc;
+            }, [] as Test[])
+            .find((test) => test.method === testItem.label)!;
+
+        return [test.method, ...(test.annotations.depends ?? [])];
+    }
+
     private asTestItem(ctrl: TestController, test: Test, sortText: number | string) {
         const canResolveChildren = test.children.length > 0;
-        const testId = canResolveChildren ? test.qualifiedClass : test.method!;
+        const label = canResolveChildren ? test.qualifiedClass : test.method!;
 
-        const testItem = ctrl.createTestItem(test.id, testId, this.uri);
+        const testItem = ctrl.createTestItem(test.id, label, this.uri);
         ctrl.items.add(testItem);
 
         testItem.sortText = `${sortText}`;

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { parse, Test } from './phpunit/parser';
+import { parse } from './phpunit/parser';
 import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
 import { Result, TestEvent } from './phpunit/problem-matcher';
 import { DockerCommand, LocalCommand } from './phpunit/command';
@@ -62,9 +62,9 @@ export async function activate(context: vscode.ExtensionContext) {
             ? new DockerCommand(configuration)
             : new LocalCommand(configuration);
 
-        const testRunner = new TestRunner();
+        const runner = new TestRunner();
 
-        testRunner.on(TestRunnerEvent.result, (result: Result) => {
+        runner.on(TestRunnerEvent.result, (result: Result) => {
             if (!('event' in result && 'id' in result)) {
                 return;
             }
@@ -122,42 +122,22 @@ export async function activate(context: vscode.ExtensionContext) {
             run.appendOutput(`Completed ${result.id}\r\n`);
         });
 
-        testRunner.on(TestRunnerEvent.close, () => run.end());
+        runner.on(TestRunnerEvent.close, () => run.end());
 
         const runTestQueue = async () => {
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
 
             if (request.include === undefined) {
-                await testRunner.run(command.setArguments(''), options);
+                await runner.run(command.setArguments(''), options);
 
                 return;
             }
 
             for (const test of request.include) {
-                let filter = '';
-                if (!test.canResolveChildren && test.parent?.uri) {
-                    const deps = [test.label];
-                    const testFile = testData.get(test.parent.uri.toString());
-                    if (testFile) {
-                        const t = testFile.tests
-                            .reduce((acc, test) => {
-                                acc.push(test);
-                                if (test.children) {
-                                    acc = acc.concat(test.children);
-                                }
-                                return acc;
-                            }, [] as Test[])
-                            .find((ttt) => ttt.method === test.label)!;
-                        deps.push(...(t.annotations.depends ?? []));
-                    }
+                const testFile = testData.get(test.parent?.uri?.toString() ?? '');
+                const args = testFile?.getArguments(test) ?? test.uri!.fsPath;
 
-                    filter = `^.*::(${deps.join('|')})( with data set .*)?$`;
-                    filter = `--filter '${filter}'`;
-                }
-
-                const args = `${test.uri!.fsPath} ${filter}`;
-
-                await testRunner.run(command.setArguments(args), options);
+                await runner.run(command.setArguments(args), options);
             }
 
             // for (const { test } of queue) {
