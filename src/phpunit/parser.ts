@@ -1,4 +1,14 @@
-import { Class, Declaration, Engine, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
+import {
+    Class,
+    Declaration,
+    Engine,
+    Identifier,
+    Method,
+    Namespace,
+    Node,
+    Program,
+    UseGroup,
+} from 'php-parser';
 
 const engine = new Engine({
     ast: { withPositions: true, withSource: true },
@@ -267,6 +277,18 @@ class Parser {
                 const attributes = this.parseAttributes(declaration, this.namespace, _class);
                 const test = new Test(file, attributes);
                 test.parent = suite;
+
+                if (test.annotations?.dataProvider?.includes('additionProvider')) {
+                    const dataProvider = test.annotations.dataProvider;
+                    // console.log(_class.body.filter((method) => test.method));
+                    _class.body
+                        .filter((method) =>
+                            dataProvider.includes((method.name as Identifier)?.name)
+                        )
+                        .forEach((method) => {
+                            console.log(method);
+                        });
+                }
 
                 return test;
             });
