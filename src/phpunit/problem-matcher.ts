@@ -56,7 +56,12 @@ export enum TestEvent {
 }
 
 type TestBase = { event: TestEvent; name: string; flowId: number };
-type TestSuiteStarted = TestBase & { id?: string; file?: string; locationHint?: string };
+type TestSuiteStarted = TestBase & {
+    id?: string;
+    file?: string;
+    locationHint?: string;
+    testId?: string;
+};
 type TestSuiteFinished = TestBase;
 type TestStarted = TestBase & { id: string; file: string; locationHint: string };
 type TestFinished = TestBase & { duration: number };
@@ -205,8 +210,9 @@ export class Parser implements IParser<Result | undefined> {
 
         const file = split.shift();
         const id = split.join('::');
+        const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
 
-        return { id, file };
+        return { id, file, testId };
     }
 
     private unescapeArgv(argv: Pick<Arguments, string | number>) {
@@ -246,7 +252,7 @@ class ProblemMatcher {
 
     constructor(private parser: Parser) {}
 
-    read(
+    parse(
         input: string | Buffer
     ): TestResult | TestCount | TestResultCount | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());

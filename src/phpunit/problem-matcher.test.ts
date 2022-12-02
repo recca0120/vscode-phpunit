@@ -40,6 +40,7 @@ describe('Problem Matcher Test', () => {
             expect(parser.parse(text)).toEqual({
                 event: TestEvent.testSuiteStarted,
                 id: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
+                testId: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\CalculatorTest.php',
                 name: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
                 locationHint:
@@ -56,6 +57,7 @@ describe('Problem Matcher Test', () => {
                 event: TestEvent.testStarted,
                 name: 'test_passed',
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                 locationHint:
                     'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
@@ -251,6 +253,7 @@ describe('Problem Matcher Test', () => {
             expect(parser.parse(text)).toEqual({
                 event: 'testStarted',
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                 name: 'addition_provider with data set #2',
                 locationHint:
@@ -266,6 +269,7 @@ describe('Problem Matcher Test', () => {
             expect(parser.parse(text)).toEqual({
                 event: 'testStarted',
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"',
+                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
                 file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                 name: 'addition_provider with data set ""foo-bar_%$"',
                 locationHint:
@@ -302,6 +306,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testSuiteStarted,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                         flowId: 8024,
                     },
                 ],
@@ -311,6 +316,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testStarted,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
                         flowId: 8024,
                     },
                 ],
@@ -320,6 +326,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testFinished,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
                         flowId: 8024,
                     },
                 ],
@@ -329,6 +336,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testStarted,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
                         flowId: 8024,
                     },
                 ],
@@ -343,6 +351,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testFailed,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
                         message: 'Failed asserting that two arrays are identical.',
                         details: [
                             {
@@ -363,6 +372,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testSuiteStarted,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
                         file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                         locationHint:
                             'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
@@ -375,6 +385,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testStarted,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
                         file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                         locationHint:
                             'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
@@ -392,6 +403,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testFailed,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
                         file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
                         locationHint:
                             'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
@@ -415,6 +427,7 @@ describe('Problem Matcher Test', () => {
                     {
                         event: TestEvent.testSuiteFinished,
                         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                        testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                         flowId: 8024,
                     },
                 ],
@@ -454,9 +467,11 @@ describe('Problem Matcher Test', () => {
 
             const resultShouldBe = (content: string, expected: any) => {
                 if (expected === undefined) {
-                    expect(problemMatcher.read(content)).toBeUndefined();
+                    expect(problemMatcher.parse(content)).toBeUndefined();
                 } else {
-                    expect(problemMatcher.read(content)).toEqual(expect.objectContaining(expected));
+                    expect(problemMatcher.parse(content)).toEqual(
+                        expect.objectContaining(expected)
+                    );
                 }
             };
 

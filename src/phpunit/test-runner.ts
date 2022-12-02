@@ -61,7 +61,7 @@ export class TestRunner {
 
     private processLine(line: string, command: Command) {
         this.listeners[TestRunnerEvent.line].forEach((fn) => fn(line));
-        const result = problemMatcher.read(line);
+        const result = problemMatcher.parse(line);
 
         if (result) {
             this.listeners[TestRunnerEvent.result].forEach((fn) => fn(command.mapping(result)));
