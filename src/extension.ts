@@ -75,7 +75,12 @@ export async function activate(context: vscode.ExtensionContext) {
         );
     };
 
-    ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run, runHandler, true);
+    const testRunProfile = ctrl.createRunProfile(
+        'Run Tests',
+        vscode.TestRunProfileKind.Run,
+        runHandler,
+        true
+    );
 
     ctrl.resolveHandler = async (item) => {
         if (!item) {
@@ -107,6 +112,19 @@ export async function activate(context: vscode.ExtensionContext) {
     testData.clear();
     await Promise.all(
         vscode.workspace.textDocuments.map((document) => updateNodeForDocument(document))
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('phpunit.run-all', () => {
+            testRunProfile.runHandler(
+                {
+                    exclude: undefined,
+                    include: undefined,
+                    profile: testRunProfile,
+                },
+                new vscode.CancellationTokenSource().token
+            );
+        })
     );
 
     context.subscriptions.push(
