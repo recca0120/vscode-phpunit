@@ -41,18 +41,18 @@ export class TestFile {
         return `${test.file} ${filter}`;
     }
 
-    private find(label: string) {
-        return this.doFind(label, this.tests);
+    private find(testId: string) {
+        return this.doFind(testId, this.tests);
     }
 
-    private doFind(id: string, tests: Test[]): Test | void {
+    private doFind(testId: string, tests: Test[]): Test | void {
         for (const test of tests) {
-            if (id === test.id) {
+            if (testId === test.id) {
                 return test;
             }
 
             if (test.children.length > 0) {
-                return this.doFind(id, test.children);
+                return this.doFind(testId, test.children);
             }
         }
     }
