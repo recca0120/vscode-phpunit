@@ -1,5 +1,5 @@
 import { SpawnOptionsWithoutStdio } from 'child_process';
-import { problemMatcher } from './problem-matcher';
+import { problemMatcher, TestEvent } from './problem-matcher';
 import { Command } from './command';
 
 export enum TestRunnerEvent {
@@ -9,10 +9,13 @@ export enum TestRunnerEvent {
 }
 
 export class TestRunner {
-    private listeners = Object.keys(TestRunnerEvent).reduce((listeners, key) => {
-        listeners[key] = [];
-        return listeners;
-    }, {} as { [p: string | number]: Array<Function> });
+    private listeners = [...Object.keys(TestRunnerEvent), ...Object.keys(TestEvent)].reduce(
+        (listeners, key) => {
+            listeners[key] = [];
+            return listeners;
+        },
+        {} as { [p: string | number]: Array<Function> }
+    );
 
     private pattern = new RegExp(
         'PHPUnit\\s[\\d\\.]+\\sby\\sSebastian\\sBergmann\\sand\\scontributors'
@@ -20,7 +23,7 @@ export class TestRunner {
 
     constructor(private options?: SpawnOptionsWithoutStdio) {}
 
-    on(event: TestRunnerEvent, fn: Function) {
+    on(event: TestRunnerEvent | TestEvent, fn: Function) {
         this.listeners[event].push(fn);
 
         return this;
@@ -64,7 +67,12 @@ export class TestRunner {
         const result = problemMatcher.parse(line);
 
         if (result) {
-            this.listeners[TestRunnerEvent.result].forEach((fn) => fn(command.mapping(result)));
+            const mappingResult = command.mapping(result);
+            if ('event' in result) {
+                this.listeners[result.event].forEach((fn) => fn(mappingResult));
+            }
+
+            this.listeners[TestRunnerEvent.result].forEach((fn) => fn(mappingResult));
         }
     }
 }

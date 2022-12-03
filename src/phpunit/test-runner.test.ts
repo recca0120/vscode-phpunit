@@ -10,6 +10,17 @@ jest.mock('child_process');
 
 describe('TestRunner Test', () => {
     const cwd = projectPath('');
+
+    const onTestEvents = new Map<TestEvent, jest.Mock>([
+        [TestEvent.testCount, jest.fn()],
+        [TestEvent.testSuiteStarted, jest.fn()],
+        [TestEvent.testSuiteFinished, jest.fn()],
+        [TestEvent.testStarted, jest.fn()],
+        [TestEvent.testFailed, jest.fn()],
+        [TestEvent.testIgnored, jest.fn()],
+        [TestEvent.testFinished, jest.fn()],
+    ]);
+
     const onTest = jest.fn();
     const onClose = jest.fn();
     const dataProviderPattern = (name: string) => {
@@ -87,8 +98,13 @@ describe('TestRunner Test', () => {
 
     const expectedRun = async (command: Command, expected: any[]) => {
         const testRunner = new TestRunner({ cwd });
+
+        onTestEvents.forEach((fn, eventName) => {
+            testRunner.on(eventName, (test: Result) => fn(test));
+        });
         testRunner.on(TestRunnerEvent.result, (test: Result) => onTest(test));
         testRunner.on(TestRunnerEvent.close, onClose);
+
         await testRunner.run(command);
 
         const [cmd, ...args] = expected;
@@ -116,6 +132,10 @@ describe('TestRunner Test', () => {
         }
 
         expect(test[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
+
+        expect(onTestEvents.get(expected.event)).toHaveBeenCalledWith(
+            expect.objectContaining({ ...expected, locationHint })
+        );
 
         expect(onClose).toHaveBeenCalled();
     };
