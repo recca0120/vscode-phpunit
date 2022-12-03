@@ -119,7 +119,7 @@ describe('TestRunner Test', () => {
         testRunner.on(TestRunnerEvent.result, (result: Result) => onTest(result));
         testRunner.on(TestRunnerEvent.close, onClose);
 
-        console.log(await testRunner.run(command));
+        await testRunner.run(command);
 
         const [cmd, ...args] = expected;
 

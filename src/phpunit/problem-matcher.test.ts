@@ -244,6 +244,16 @@ describe('Problem Matcher Test', () => {
             });
         });
 
+        it('parse time and memory ms', () => {
+            const text = 'Time: 49 ms, Memory: 6.00 MB';
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.timeAndMemory,
+                time: '49 ms',
+                memory: '6.00 MB',
+            });
+        });
+
         it('parse test successful result count', () => {
             const text = 'OK (1 test, 1 assertion)';
 

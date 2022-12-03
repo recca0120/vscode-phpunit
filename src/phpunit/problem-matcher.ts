@@ -169,7 +169,7 @@ class TestResultCountParser implements IParser<TestResultCount> {
 
 class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     private readonly pattern = new RegExp(
-        'Time: (?<time>[\\d+:\\.]+), Memory: (?<memory>[\\d\\.]+\\s\\w+)'
+        'Time:\\s(?<time>[\\d+:\\.]+(\\s\\w+)?),\\sMemory:\\s(?<memory>[\\d\\.]+\\s\\w+)'
     );
 
     public is(text: string) {
