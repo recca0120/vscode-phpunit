@@ -88,7 +88,7 @@ type TestResultCount = {
     risky?: number;
 };
 
-type TestResult = TestSuiteStarted &
+export type TestResult = TestSuiteStarted &
     TestSuiteFinished &
     TestStarted &
     TestFailed &

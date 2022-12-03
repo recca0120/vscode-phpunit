@@ -1,12 +1,99 @@
 import * as vscode from 'vscode';
-import { TestRunner, TestRunnerEvent } from './phpunit/test-runner';
-import { Result, TestEvent } from './phpunit/problem-matcher';
+import { TestRun } from 'vscode';
+import { TestRunner, TestRunnerObserver } from './phpunit/test-runner';
+import { TestResult } from './phpunit/problem-matcher';
 import { DockerCommand, LocalCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
 
-const textDecoder = new TextDecoder('utf-8');
 const testData = new Map<string, TestFile>();
+
+class Observer implements TestRunnerObserver {
+    constructor(
+        private queue: { test: vscode.TestItem }[] = [],
+        private run: TestRun,
+        private cancellation: vscode.CancellationToken
+    ) {}
+
+    close(): void {
+        this.run.end();
+    }
+
+    // line(line: string): void {}
+    //
+    // result(result: Result): void {}
+
+    testSuiteStarted(result: TestResult): void {
+        this.testStarted(result);
+    }
+
+    testSuiteFinished(result: TestResult): void {
+        this.testFinished(result);
+    }
+
+    testStarted(result: TestResult): void {
+        this.doRun('started', result, (test) => this.run.started(test));
+    }
+
+    testFinished(result: TestResult): void {
+        this.doRun('finished', result, (test) => this.run.passed(test));
+    }
+
+    testFailed(result: TestResult): void {
+        this.doRun('finished', result, (test) =>
+            this.run.failed(test, this.message(result, test), result.duration)
+        );
+    }
+
+    testIgnored(result: TestResult): void {
+        this.doRun('finished', result, (test) => this.run.skipped(test));
+    }
+
+    private message(result: TestResult, test: vscode.TestItem) {
+        const message = vscode.TestMessage.diff(result.message, result.expected!, result.actual!);
+        const details = result.details;
+        if (details.length > 0) {
+            message.location = new vscode.Location(
+                test.uri!,
+                new vscode.Range(
+                    new vscode.Position(details[0].line - 1, 0),
+                    new vscode.Position(details[0].line - 1, 0)
+                )
+            );
+        }
+        return message;
+    }
+
+    private doRun(
+        type: 'started' | 'finished',
+        result: TestResult,
+        fn: (test: vscode.TestItem) => void
+    ) {
+        const test = this.find(result);
+        if (!test) {
+            return;
+        }
+
+        if (this.cancellation.isCancellationRequested) {
+            this.run.skipped(test);
+            return;
+        }
+
+        if (type === 'started') {
+            this.run.appendOutput(`Running ${result.id}\r\n`);
+        }
+
+        fn(test);
+
+        if (type === 'finished') {
+            this.run.appendOutput(`Completed ${result.id}\r\n`);
+        }
+    }
+
+    private find(result: TestResult) {
+        return this.queue.find(({ test }) => test.id === result.testId)?.test;
+    }
+}
 
 export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
@@ -39,59 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
             : new LocalCommand(configuration);
 
         const runner = new TestRunner();
-
-        runner.on(TestRunnerEvent.result, (result: Result) => {
-            if (!('event' in result && 'id' in result)) {
-                return;
-            }
-
-            const test = queue.find(({ test }) => test.id === result.testId)?.test;
-
-            if (!test) {
-                return;
-            }
-
-            if ([TestEvent.testSuiteStarted, TestEvent.testStarted].includes(result.event)) {
-                run.appendOutput(`Running ${result.id}\r\n`);
-                run.started(test);
-
-                return;
-            }
-
-            if ([TestEvent.testSuiteFinished, TestEvent.testFinished].includes(result.event)) {
-                run.passed(test);
-            }
-
-            if (
-                cancellation.isCancellationRequested ||
-                [TestEvent.testIgnored].includes(result.event)
-            ) {
-                run.skipped(test);
-            }
-
-            if ([TestEvent.testFailed].includes(result.event)) {
-                const message = vscode.TestMessage.diff(
-                    result.message,
-                    result.expected!,
-                    result.actual!
-                );
-                const details = result.details;
-                if (details.length > 0) {
-                    message.location = new vscode.Location(
-                        test.uri!,
-                        new vscode.Range(
-                            new vscode.Position(details[0].line - 1, 0),
-                            new vscode.Position(details[0].line - 1, 0)
-                        )
-                    );
-                }
-                run.failed(test, message, result.duration);
-            }
-
-            run.appendOutput(`Completed ${result.id}\r\n`);
-        });
-
-        runner.on(TestRunnerEvent.close, () => run.end());
+        runner.registerObserver(new Observer(queue, run, cancellation));
 
         const runTestQueue = async () => {
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };

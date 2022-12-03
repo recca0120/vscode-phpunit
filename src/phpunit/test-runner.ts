@@ -1,5 +1,5 @@
 import { SpawnOptionsWithoutStdio } from 'child_process';
-import { problemMatcher, Result, TestEvent } from './problem-matcher';
+import { problemMatcher, Result, TestEvent, TestResult } from './problem-matcher';
 import { Command } from './command';
 
 export enum TestRunnerEvent {
@@ -12,7 +12,7 @@ export type TestRunnerObserver = {
     [TestRunnerEvent.result]?: (result: Result) => void;
     [TestRunnerEvent.line]?: (line: string) => void;
     [TestRunnerEvent.close]?: (code: number | null) => void;
-} & { [p in TestEvent]?: (result: Result) => void };
+} & { [p in TestEvent]?: (result: TestResult) => void };
 
 class DefaultObserver implements TestRunnerObserver {
     private listeners = [...Object.values(TestRunnerEvent), ...Object.values(TestEvent)].reduce(
