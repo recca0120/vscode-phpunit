@@ -3,13 +3,13 @@ import { problemMatcher, TestEvent } from './problem-matcher';
 import { Command } from './command';
 
 export enum TestRunnerEvent {
-    result,
-    line,
-    close,
+    result = 'result',
+    line = 'line',
+    close = 'close',
 }
 
 export class TestRunner {
-    private listeners = [...Object.keys(TestRunnerEvent), ...Object.keys(TestEvent)].reduce(
+    private listeners = [...Object.values(TestRunnerEvent), ...Object.values(TestEvent)].reduce(
         (listeners, key) => {
             listeners[key] = [];
             return listeners;
