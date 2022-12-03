@@ -212,9 +212,8 @@ describe('Extension Test', () => {
         });
 
         it('should run test case', async () => {
-            // const file = Uri.file(path.join(root, 'tests/AssertionsTest.php'));
-            const method = 'test_passed';
-            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest::${method}`;
+            const method = 'test_throw_exception';
+            const testId = `Recca0120\\VSCode\\Tests\\CalculatorTest::${method}`;
 
             const pattern = new RegExp(
                 `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
@@ -231,7 +230,7 @@ describe('Extension Test', () => {
                 'php',
                 [
                     'vendor/bin/phpunit',
-                    normalPath(projectPath('tests/AssertionsTest.php')),
+                    normalPath(projectPath('tests/CalculatorTest.php')),
                     expect.stringMatching(pattern),
                     '--teamcity',
                     '--colors=never',
@@ -242,10 +241,24 @@ describe('Extension Test', () => {
             expectTestResultCalled(ctrl, {
                 enqueued: 1,
                 started: 1,
-                passed: 1,
-                failed: 0,
+                passed: 0,
+                failed: 1,
                 end: 1,
             });
+
+            const { failed } = getTestRun(ctrl);
+            const [, message] = (failed as jest.Mock).mock.calls.find(
+                ([test]) => test.id === testId
+            );
+
+            expect(message.location).toEqual(
+                expect.objectContaining({
+                    range: {
+                        start: { line: 53, character: 0 },
+                        end: { line: 53, character: 0 },
+                    },
+                })
+            );
         });
 
         it('should refresh test', async () => {

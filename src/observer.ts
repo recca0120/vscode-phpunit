@@ -60,12 +60,12 @@ export class Observer implements TestRunnerObserver {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
+            const current = details.find(({ file }) => result.file === file)!;
+            const line = current ? current.line - 1 : test.range!.start.line;
+
             message.location = new Location(
                 test.uri!,
-                new Range(
-                    new Position(details[0].line - 1, 0),
-                    new Position(details[0].line - 1, 0)
-                )
+                new Range(new Position(line, 0), new Position(line, 0))
             );
         }
         return message;
