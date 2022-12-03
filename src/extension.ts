@@ -96,11 +96,9 @@ class Observer implements TestRunnerObserver {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
-    vscode.workspace.getConfiguration();
-
-    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
 
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
         const queue: { test: vscode.TestItem }[] = [];
@@ -121,28 +119,33 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         };
 
-        const command = (configuration.get('command', '') as string).match(/docker/)
-            ? new DockerCommand(configuration)
-            : new LocalCommand(configuration);
-
-        const runner = new TestRunner();
-        runner.observe(new Observer(queue, run, cancellation));
+        const getArguments = (test: vscode.TestItem) => {
+            return !test.parent
+                ? test.uri!.fsPath
+                : testData.get(test.parent.uri!.toString())!.getArguments(test.id);
+        };
 
         const runTestQueue = async () => {
+            const command = (configuration.get('command', '') as string).match(/docker/)
+                ? new DockerCommand(configuration)
+                : new LocalCommand(configuration);
+
+            const runner = new TestRunner();
+            runner.observe(new Observer(queue, run, cancellation));
+
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
 
-            if (request.include === undefined) {
-                await runner.run(command.setArguments(''), options);
+            if (!request.include) {
+                await runner.run(command, options);
 
                 return;
             }
 
-            for (const test of request.include) {
-                const testFile = testData.get(test.parent?.uri?.toString() ?? '');
-                const args = testFile?.getArguments(test.id) ?? test.uri!.fsPath;
-
-                await runner.run(command.setArguments(args), options);
-            }
+            await Promise.all(
+                request.include.map((test) =>
+                    runner.run(command.setArguments(getArguments(test)), options)
+                )
+            );
         };
 
         return discoverTests(request.include ?? gatherTestItems(ctrl.items)).then(runTestQueue);
