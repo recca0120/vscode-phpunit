@@ -73,7 +73,7 @@ const getTestRun = (ctrl: TestController) => {
 };
 
 const expectTestResultCalled = (ctrl: TestController, expected: any) => {
-    const {enqueued, started, passed, failed, end} = getTestRun(ctrl);
+    const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
 
     expect(enqueued).toHaveBeenCalledTimes(expected.enqueued);
     expect(started).toHaveBeenCalledTimes(expected.started);
@@ -88,13 +88,13 @@ describe('Extension Test', () => {
     const root = projectPath('');
 
     beforeEach(() => {
-        setWorkspaceFolders([{index: 0, name: 'phpunit', uri: Uri.file(root)}]);
-        setTextDocuments(globTextDocuments('**/*Test.php', {cwd: root}));
+        setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
+        setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
         jest.clearAllMocks();
     });
 
     describe('activate()', () => {
-        const context: any = {subscriptions: {push: jest.fn()}};
+        const context: any = { subscriptions: { push: jest.fn() } };
         let cwd: string;
 
         beforeEach(() => {
@@ -114,17 +114,18 @@ describe('Extension Test', () => {
             expect(parent).toEqual(
                 expect.objectContaining({
                     id: testId,
-                    uri: expect.objectContaining({path: file.path}),
+                    uri: expect.objectContaining({ path: file.path }),
                 })
             );
 
             expect(child).toEqual(
                 expect.objectContaining({
                     id: `${testId}::test_passed`,
-                    uri: expect.objectContaining({path: file.path}),
+                    uri: expect.objectContaining({ path: file.path }),
                     range: {
-                        start: {line: 11, character: 4},
-                        end: {line: 11, character: 29},
+                        start: { line: 11, character: 4 },
+                        end: { line: 14, character: 5 },
+                        // end: {line: 11, character: 29},
                     },
                 })
             );
@@ -143,8 +144,12 @@ describe('Extension Test', () => {
                 'phpunit.run-file',
                 expect.any(Function)
             );
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+                'phpunit.run-test-at-cursor',
+                expect.any(Function)
+            );
 
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(5);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(6);
         });
 
         it('should run all tests', async () => {
@@ -153,14 +158,14 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
 
-            const request = {include: undefined, exclude: [], profile: runProfile};
+            const request = { include: undefined, exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             expect(spawn).toBeCalledWith(
                 'php',
                 ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
-                {cwd}
+                { cwd }
             );
 
             expectTestResultCalled(ctrl, {
@@ -179,7 +184,7 @@ describe('Extension Test', () => {
             const runProfile = getRunProfile(ctrl);
 
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
-            const request = {include: [ctrl.items.get(testId)], exclude: [], profile: runProfile};
+            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
@@ -191,7 +196,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                     '--colors=never',
                 ],
-                {cwd}
+                { cwd }
             );
 
             expectTestResultCalled(ctrl, {
@@ -215,7 +220,7 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-            const request = {include: [ctrl.items.get(testId)], exclude: [], profile: runProfile};
+            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
@@ -228,7 +233,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                     '--colors=never',
                 ],
-                {cwd}
+                { cwd }
             );
 
             expectTestResultCalled(ctrl, {

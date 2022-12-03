@@ -143,6 +143,30 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('phpunit.run-test-at-cursor', () => {
+            if (!vscode.window.activeTextEditor) {
+                return;
+            }
+
+            const activeTextEditor = vscode.window.activeTextEditor;
+            const testFile = testData.get(activeTextEditor.document.uri.toString())!;
+
+            if (!testFile) {
+                return;
+            }
+
+            testRunProfile.runHandler(
+                new vscode.TestRunRequest(
+                    [testFile.findTestItemByPosition(activeTextEditor.selection.active)!],
+                    undefined,
+                    testRunProfile
+                ),
+                new vscode.CancellationTokenSource().token
+            );
+        })
+    );
+
+    context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
         vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document))
     );
@@ -158,17 +182,6 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
     const testFile = new TestFile(uri);
 
     testData.set(uri.toString(), await testFile.update(controller));
-
-    // controller.createTestItem(test.id)
-
-    // const file = controller.createTestItem(uri.toString(), uri.path.split('/').pop()!, uri);
-    // controller.items.add(file);
-    //
-    // const data = new TestFile();
-    // testData.set(file, data);
-    //
-    // file.canResolveChildren = true;
-    // return { file, data };
 }
 
 function gatherTestItems(collection: vscode.TestItemCollection) {

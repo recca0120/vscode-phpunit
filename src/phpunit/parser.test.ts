@@ -37,7 +37,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 12, character: 4 },
-                    end: { line: 12, character: 29 },
+                    end: { line: 15, character: 5 },
+                    // end: { line: 12, character: 29 },
                 })
             );
         });
@@ -55,7 +56,8 @@ describe('Parser Test', () => {
                     method,
                     annotations: { depends: ['test_passed'] },
                     start: { line: 20, character: 4 },
-                    end: { line: 20, character: 29 },
+                    end: { line: 23, character: 5 },
+                    // end: { line: 20, character: 29 },
                 })
             );
         });
@@ -72,7 +74,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 25, character: 4 },
-                    end: { line: 25, character: 34 },
+                    end: { line: 28, character: 5 },
+                    // end: { line: 25, character: 34 },
                 })
             );
         });
@@ -89,7 +92,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 30, character: 4 },
-                    end: { line: 30, character: 28 },
+                    end: { line: 33, character: 5 },
+                    // end: { line: 30, character: 28 },
                 })
             );
         });
@@ -106,7 +110,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 38, character: 4 },
-                    end: { line: 38, character: 33 },
+                    end: { line: 41, character: 5 },
+                    // end: { line: 38, character: 33 },
                 })
             );
         });
@@ -123,7 +128,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 43, character: 4 },
-                    end: { line: 43, character: 30 },
+                    end: { line: 46, character: 5 },
+                    // end: { line: 43, character: 30 },
                 })
             );
         });
@@ -140,7 +146,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 48, character: 4 },
-                    end: { line: 48, character: 33 },
+                    end: { line: 51, character: 5 },
+                    // end: { line: 48, character: 33 },
                 })
             );
         });
@@ -158,7 +165,8 @@ describe('Parser Test', () => {
                     method,
                     annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
                     start: { line: 58, character: 4 },
-                    end: { line: 58, character: 52 },
+                    end: { line: 61, character: 5 },
+                    // end: { line: 58, character: 52 },
                 })
             );
         });
@@ -199,7 +207,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 9, character: 4 },
-                    end: { line: 9, character: 48 },
+                    end: { line: 11, character: 5 },
+                    // end: { line: 9, character: 48 },
                 })
             );
 
@@ -229,7 +238,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 17, character: 4 },
-                    end: { line: 17, character: 26 },
+                    end: { line: 20, character: 5 },
+                    // end: { line: 17, character: 26 },
                 })
             );
 
@@ -259,7 +269,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 10, character: 4 },
-                    end: { line: 10, character: 38 },
+                    end: { line: 13, character: 5 },
+                    // end: { line: 10, character: 38 },
                 })
             );
         });
@@ -286,7 +297,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     start: { line: 12, character: 4 },
-                    end: { line: 12, character: 27 },
+                    end: { line: 15, character: 5 },
+                    // end: { line: 12, character: 27 },
                 })
             );
         });

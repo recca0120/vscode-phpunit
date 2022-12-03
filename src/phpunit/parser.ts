@@ -136,7 +136,7 @@ export class AttributeParser {
     private parsePosition(declaration: Declaration) {
         const loc = declaration.loc!;
         const start = { line: loc.start.line, character: loc.start.column };
-        const end = { line: loc.start.line, character: loc.source?.length ?? 0 };
+        const end = { line: loc.end.line, character: loc.end.column };
 
         return { start, end };
     }
