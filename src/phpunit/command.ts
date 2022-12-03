@@ -161,11 +161,11 @@ export abstract class Command {
     }
 
     private phpPath() {
-        return this.configuration.get('php', 'php') as string;
+        return (this.configuration.get('php') as string) ?? 'php';
     }
 
     private phpUnitPath() {
-        return this.configuration.get('phpunit', 'vendor/bin/phpunit') as string;
+        return (this.configuration.get('phpunit') as string) ?? 'vendor/bin/phpunit';
     }
 }
 

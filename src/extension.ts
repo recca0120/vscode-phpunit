@@ -28,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 if (!test.canResolveChildren) {
                     run.enqueued(test);
-                    queue.push({test});
+                    queue.push({ test });
                 } else {
                     await discoverTests(gatherTestItems(test.children));
                 }
@@ -42,14 +42,14 @@ export async function activate(context: vscode.ExtensionContext) {
         };
 
         const runTestQueue = async () => {
-            const command = (configuration.get('command', '') as string).match(/docker/)
+            const command = ((configuration.get('command') as string) ?? '').match(/docker/)
                 ? new DockerCommand(configuration)
                 : new LocalCommand(configuration);
 
             const runner = new TestRunner();
             runner.observe(new Observer(outputChannel, queue, run, cancellation));
 
-            const options = {cwd: vscode.workspace.workspaceFolders![0].uri.fsPath};
+            const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
 
             if (!request.include) {
                 await runner.run(command, options);
@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
-            getWorkspaceTestPatterns().map(({pattern, exclude}) =>
+            getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
                 findInitialFiles(ctrl, pattern, exclude)
             )
         );
@@ -89,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-        const workspaceTestPattern = getWorkspaceTestPatterns().find(({workspaceFolder}) => {
+        const workspaceTestPattern = getWorkspaceTestPatterns().find(({ workspaceFolder }) => {
             return currentWorkspaceFolder!.name === workspaceFolder.name;
         });
 
@@ -97,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        if (vscode.languages.match({pattern: workspaceTestPattern.exclude.pattern}, e) !== 0) {
+        if (vscode.languages.match({ pattern: workspaceTestPattern.exclude.pattern }, e) !== 0) {
             return;
         }
 
@@ -169,7 +169,7 @@ async function findInitialFiles(
 }
 
 function startWatchingWorkspace(controller: vscode.TestController) {
-    return getWorkspaceTestPatterns().map(({pattern, exclude}) => {
+    return getWorkspaceTestPatterns().map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => getOrCreateFile(controller, uri));
