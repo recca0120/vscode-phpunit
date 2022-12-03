@@ -1,104 +1,11 @@
 import * as vscode from 'vscode';
-import { TestRun } from 'vscode';
-import { TestRunner, TestRunnerObserver } from './phpunit/test-runner';
-import { TestResult } from './phpunit/problem-matcher';
+import { TestRunner } from './phpunit/test-runner';
 import { DockerCommand, LocalCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
+import { Observer } from './observer';
 
 const testData = new Map<string, TestFile>();
-
-class Observer implements TestRunnerObserver {
-    constructor(
-        private outputChannel: vscode.OutputChannel,
-        private queue: { test: vscode.TestItem }[] = [],
-        private run: TestRun,
-        private cancellation: vscode.CancellationToken
-    ) {
-    }
-
-    close(): void {
-        this.run.end();
-    }
-
-    line(line: string): void {
-        this.outputChannel.appendLine(line);
-    }
-
-    //
-    // result(result: Result): void {}
-
-    testSuiteStarted(result: TestResult): void {
-        this.testStarted(result);
-    }
-
-    testSuiteFinished(result: TestResult): void {
-        this.testFinished(result);
-    }
-
-    testStarted(result: TestResult): void {
-        this.doRun('started', result, (test) => this.run.started(test));
-    }
-
-    testFinished(result: TestResult): void {
-        this.doRun('finished', result, (test) => this.run.passed(test));
-    }
-
-    testFailed(result: TestResult): void {
-        this.doRun('finished', result, (test) =>
-            this.run.failed(test, this.message(result, test), result.duration)
-        );
-    }
-
-    testIgnored(result: TestResult): void {
-        this.doRun('finished', result, (test) => this.run.skipped(test));
-    }
-
-    private message(result: TestResult, test: vscode.TestItem) {
-        const message = vscode.TestMessage.diff(result.message, result.expected!, result.actual!);
-        const details = result.details;
-        if (details.length > 0) {
-            message.location = new vscode.Location(
-                test.uri!,
-                new vscode.Range(
-                    new vscode.Position(details[0].line - 1, 0),
-                    new vscode.Position(details[0].line - 1, 0)
-                )
-            );
-        }
-        return message;
-    }
-
-    private doRun(
-        type: 'started' | 'finished',
-        result: TestResult,
-        fn: (test: vscode.TestItem) => void
-    ) {
-        const test = this.find(result);
-        if (!test) {
-            return;
-        }
-
-        if (this.cancellation.isCancellationRequested) {
-            this.run.skipped(test);
-            return;
-        }
-
-        if (type === 'started') {
-            this.run.appendOutput(`Running ${result.id}\r\n`);
-        }
-
-        fn(test);
-
-        if (type === 'finished') {
-            this.run.appendOutput(`Completed ${result.id}\r\n`);
-        }
-    }
-
-    private find(result: TestResult) {
-        return this.queue.find(({test}) => test.id === result.testId)?.test;
-    }
-}
 
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));

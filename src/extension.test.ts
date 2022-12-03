@@ -72,49 +72,59 @@ const getTestRun = (ctrl: TestController) => {
     return (ctrl.createTestRun as jest.Mock).mock.results[0].value;
 };
 
+const expectTestResultCalled = (ctrl: TestController, expected: any) => {
+    const {enqueued, started, passed, failed, end} = getTestRun(ctrl);
+
+    expect(enqueued).toHaveBeenCalledTimes(expected.enqueued);
+    expect(started).toHaveBeenCalledTimes(expected.started);
+    expect(passed).toHaveBeenCalledTimes(expected.passed);
+    expect(failed).toHaveBeenCalledTimes(expected.failed);
+    expect(end).toHaveBeenCalledTimes(expected.end);
+
+    expect(getOutputChannel().appendLine).toHaveBeenCalled();
+};
+
 describe('Extension Test', () => {
     const root = projectPath('');
 
     beforeEach(() => {
-        setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
-        setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
+        setWorkspaceFolders([{index: 0, name: 'phpunit', uri: Uri.file(root)}]);
+        setTextDocuments(globTextDocuments('**/*Test.php', {cwd: root}));
         jest.clearAllMocks();
     });
 
     describe('activate()', () => {
-        const context: any = { subscriptions: { push: jest.fn() } };
+        const context: any = {subscriptions: {push: jest.fn()}};
         let cwd: string;
+
         beforeEach(() => {
             context.subscriptions.push.mockReset();
             cwd = normalPath(projectPath(''));
         });
 
         it('should load tests', async () => {
+            await activate(context);
+
             const file = Uri.file(path.join(root, 'tests/AssertionsTest.php'));
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
-            await activate(context);
             const parent = getTestController().items.get(testId);
             const child = parent.children.get(`${testId}::test_passed`);
 
             expect(parent).toEqual(
                 expect.objectContaining({
                     id: testId,
-                    uri: expect.objectContaining({
-                        path: file.path,
-                    }),
+                    uri: expect.objectContaining({path: file.path}),
                 })
             );
 
             expect(child).toEqual(
                 expect.objectContaining({
                     id: `${testId}::test_passed`,
-                    uri: expect.objectContaining({
-                        path: file.path,
-                    }),
+                    uri: expect.objectContaining({path: file.path}),
                     range: {
-                        start: { line: 11, character: 4 },
-                        end: { line: 11, character: 29 },
+                        start: {line: 11, character: 4},
+                        end: {line: 11, character: 29},
                     },
                 })
             );
@@ -130,47 +140,39 @@ describe('Extension Test', () => {
 
         it('should run all tests', async () => {
             await activate(context);
+
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-            const request = { include: undefined, exclude: [], profile: runProfile };
+
+            const request = {include: undefined, exclude: [], profile: runProfile};
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-
-            const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
-
-            expect(enqueued).toHaveBeenCalledTimes(34);
-            expect(started).toHaveBeenCalledTimes(20);
-            expect(passed).toHaveBeenCalledTimes(10);
-            expect(failed).toHaveBeenCalledTimes(8);
-            expect(end).toHaveBeenCalledTimes(1);
 
             expect(spawn).toBeCalledWith(
                 'php',
                 ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
-                { cwd }
+                {cwd}
             );
 
-            expect(getOutputChannel().appendLine).toHaveBeenCalled();
+            expectTestResultCalled(ctrl, {
+                enqueued: 34,
+                started: 20,
+                passed: 10,
+                failed: 8,
+                end: 1,
+            });
         });
 
         it('should run test suite', async () => {
-            // const file = Uri.file(path.join(root, 'tests/AssertionsTest.php'));
-            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
-
             await activate(context);
+
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
+
+            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
+            const request = {include: [ctrl.items.get(testId)], exclude: [], profile: runProfile};
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-
-            const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
-
-            expect(enqueued).toHaveBeenCalledTimes(8);
-            expect(started).toHaveBeenCalledTimes(11);
-            expect(passed).toHaveBeenCalledTimes(5);
-            expect(failed).toHaveBeenCalledTimes(4);
-            expect(end).toHaveBeenCalledTimes(1);
 
             expect(spawn).toBeCalledWith(
                 'php',
@@ -180,10 +182,16 @@ describe('Extension Test', () => {
                     '--teamcity',
                     '--colors=never',
                 ],
-                { cwd }
+                {cwd}
             );
 
-            expect(getOutputChannel().appendLine).toHaveBeenCalled();
+            expectTestResultCalled(ctrl, {
+                enqueued: 8,
+                started: 11,
+                passed: 5,
+                failed: 4,
+                end: 1,
+            });
         });
 
         it('should run test case', async () => {
@@ -191,24 +199,16 @@ describe('Extension Test', () => {
             const method = 'test_passed';
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest::${method}`;
 
-            await activate(context);
-            const ctrl = getTestController();
-            const runProfile = getRunProfile(ctrl);
-            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
-
-            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-
-            const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
-
-            expect(enqueued).toHaveBeenCalledTimes(1);
-            expect(started).toHaveBeenCalledTimes(1);
-            expect(passed).toHaveBeenCalledTimes(1);
-            expect(failed).toHaveBeenCalledTimes(0);
-            expect(end).toHaveBeenCalledTimes(1);
-
             const pattern = new RegExp(
                 `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
             );
+
+            await activate(context);
+            const ctrl = getTestController();
+            const runProfile = getRunProfile(ctrl);
+            const request = {include: [ctrl.items.get(testId)], exclude: [], profile: runProfile};
+
+            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             expect(spawn).toBeCalledWith(
                 'php',
@@ -219,14 +219,21 @@ describe('Extension Test', () => {
                     '--teamcity',
                     '--colors=never',
                 ],
-                { cwd }
+                {cwd}
             );
 
-            expect(getOutputChannel().appendLine).toHaveBeenCalled();
+            expectTestResultCalled(ctrl, {
+                enqueued: 1,
+                started: 1,
+                passed: 1,
+                failed: 0,
+                end: 1,
+            });
         });
 
         it('should refresh test', async () => {
             await activate(context);
+
             const ctrl = getTestController();
 
             await ctrl.refreshHandler();
@@ -234,6 +241,7 @@ describe('Extension Test', () => {
 
         it('should resolve test', async () => {
             await activate(context);
+
             const ctrl = getTestController();
 
             await ctrl.resolveHandler();
