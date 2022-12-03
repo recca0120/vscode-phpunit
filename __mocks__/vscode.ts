@@ -276,6 +276,12 @@ const window = {
     }),
 };
 
+const commands = {
+    registerCommand: jest.fn().mockImplementation(() => {
+        return new Disposable();
+    }),
+};
+
 export {
     languages,
     workspace,
@@ -290,4 +296,5 @@ export {
     RelativePattern,
     Uri,
     window,
+    commands,
 };

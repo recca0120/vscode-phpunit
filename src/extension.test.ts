@@ -135,7 +135,16 @@ describe('Extension Test', () => {
                 'phpUnitTestController',
                 'PHPUnit'
             );
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(3);
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+                'phpunit.run-all',
+                expect.any(Function)
+            );
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+                'phpunit.run-file',
+                expect.any(Function)
+            );
+
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(5);
         });
 
         it('should run all tests', async () => {

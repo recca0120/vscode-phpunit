@@ -118,8 +118,31 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('phpunit.run-all', () => {
             testRunProfile.runHandler(
                 {
-                    exclude: undefined,
                     include: undefined,
+                    exclude: undefined,
+                    profile: testRunProfile,
+                },
+                new vscode.CancellationTokenSource().token
+            );
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('phpunit.run-file', () => {
+            if (!vscode.window.activeTextEditor) {
+                return;
+            }
+
+            const testFile = testData.get(vscode.window.activeTextEditor.document.uri.toString())!;
+
+            if (!testFile) {
+                return;
+            }
+
+            testRunProfile.runHandler(
+                {
+                    include: testFile.testItems,
+                    exclude: undefined,
                     profile: testRunProfile,
                 },
                 new vscode.CancellationTokenSource().token
