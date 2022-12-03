@@ -11,3 +11,9 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+.idea/**
+.github/**
+coverage/**
+sample/**
+jest.config.js
