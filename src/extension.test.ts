@@ -50,6 +50,10 @@ const useFakeTimers = (ms: number, fn: Function) => {
     });
 };
 
+const getOutputChannel = () => {
+    return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
+};
+
 const getTestController = () => {
     return (vscode.tests.createTestController as jest.Mock).mock.results[0].value;
 };
@@ -115,7 +119,13 @@ describe('Extension Test', () => {
                 })
             );
 
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(2);
+            expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
+            expect(vscode.window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
+            expect(vscode.tests.createTestController).toBeCalledWith(
+                'phpUnitTestController',
+                'PHPUnit'
+            );
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(3);
         });
 
         it('should run all tests', async () => {
@@ -139,6 +149,8 @@ describe('Extension Test', () => {
                 ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
                 { cwd }
             );
+
+            expect(getOutputChannel().appendLine).toHaveBeenCalled();
         });
 
         it('should run test suite', async () => {
@@ -170,6 +182,8 @@ describe('Extension Test', () => {
                 ],
                 { cwd }
             );
+
+            expect(getOutputChannel().appendLine).toHaveBeenCalled();
         });
 
         it('should run test case', async () => {
@@ -195,6 +209,7 @@ describe('Extension Test', () => {
             const pattern = new RegExp(
                 `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
             );
+
             expect(spawn).toBeCalledWith(
                 'php',
                 [
@@ -206,6 +221,8 @@ describe('Extension Test', () => {
                 ],
                 { cwd }
             );
+
+            expect(getOutputChannel().appendLine).toHaveBeenCalled();
         });
 
         it('should refresh test', async () => {

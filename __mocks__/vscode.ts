@@ -267,6 +267,15 @@ const RelativePattern = jest
         };
     });
 
+const window = {
+    createOutputChannel: jest.fn().mockImplementation(() => {
+        return {
+            append: jest.fn(),
+            appendLine: jest.fn(),
+        };
+    }),
+};
+
 export {
     languages,
     workspace,
@@ -280,4 +289,5 @@ export {
     CancellationTokenSource,
     RelativePattern,
     Uri,
+    window,
 };

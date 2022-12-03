@@ -10,16 +10,21 @@ const testData = new Map<string, TestFile>();
 
 class Observer implements TestRunnerObserver {
     constructor(
+        private outputChannel: vscode.OutputChannel,
         private queue: { test: vscode.TestItem }[] = [],
         private run: TestRun,
         private cancellation: vscode.CancellationToken
-    ) {}
+    ) {
+    }
 
     close(): void {
         this.run.end();
     }
 
-    // line(line: string): void {}
+    line(line: string): void {
+        this.outputChannel.appendLine(line);
+    }
+
     //
     // result(result: Result): void {}
 
@@ -91,12 +96,16 @@ class Observer implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        return this.queue.find(({ test }) => test.id === result.testId)?.test;
+        return this.queue.find(({test}) => test.id === result.testId)?.test;
     }
 }
 
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+
+    const outputChannel = vscode.window.createOutputChannel('PHPUnit');
+    context.subscriptions.push(outputChannel);
+
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
@@ -112,7 +121,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 if (!test.canResolveChildren) {
                     run.enqueued(test);
-                    queue.push({ test });
+                    queue.push({test});
                 } else {
                     await discoverTests(gatherTestItems(test.children));
                 }
@@ -131,9 +140,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 : new LocalCommand(configuration);
 
             const runner = new TestRunner();
-            runner.observe(new Observer(queue, run, cancellation));
+            runner.observe(new Observer(outputChannel, queue, run, cancellation));
 
-            const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
+            const options = {cwd: vscode.workspace.workspaceFolders![0].uri.fsPath};
 
             if (!request.include) {
                 await runner.run(command, options);
@@ -153,7 +162,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
-            getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+            getWorkspaceTestPatterns().map(({pattern, exclude}) =>
                 findInitialFiles(ctrl, pattern, exclude)
             )
         );
@@ -173,7 +182,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-        const workspaceTestPattern = getWorkspaceTestPatterns().find(({ workspaceFolder }) => {
+        const workspaceTestPattern = getWorkspaceTestPatterns().find(({workspaceFolder}) => {
             return currentWorkspaceFolder!.name === workspaceFolder.name;
         });
 
@@ -181,7 +190,7 @@ export async function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        if (vscode.languages.match({ pattern: workspaceTestPattern.exclude.pattern }, e) !== 0) {
+        if (vscode.languages.match({pattern: workspaceTestPattern.exclude.pattern}, e) !== 0) {
             return;
         }
 
@@ -253,7 +262,7 @@ async function findInitialFiles(
 }
 
 function startWatchingWorkspace(controller: vscode.TestController) {
-    return getWorkspaceTestPatterns().map(({ pattern, exclude }) => {
+    return getWorkspaceTestPatterns().map(({pattern, exclude}) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => getOrCreateFile(controller, uri));
