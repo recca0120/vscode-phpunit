@@ -244,6 +244,16 @@ describe('Problem Matcher Test', () => {
             });
         });
 
+        it('parse test successful result count', () => {
+            const text = 'OK (1 test, 1 assertion)';
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.testResultCount,
+                tests: 1,
+                assertions: 1,
+            });
+        });
+
         it('parse test result', () => {
             const text =
                 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.';

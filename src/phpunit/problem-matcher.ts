@@ -122,12 +122,15 @@ interface IParser<T> {
 
 class TestResultCountParser implements IParser<TestResultCount> {
     private readonly pattern = (() => {
-        const items = ['Errors', 'Failures', 'Skipped', 'Incomplete', 'Risky'];
+        const items = ['Error(s)?', 'Failure(s)?', 'Skipped', 'Incomplete', 'Risky'];
         const end = '\\s(\\d+)[\\.\\s,]\\s?';
-        const tests = `Tests:${end}`;
+        const tests = `Test(s)?:${end}`;
         const assertions = `Assertions:${end}`;
 
-        return new RegExp(`^${tests}${assertions}((${items.join('|')}):${end})*`, 'g');
+        return new RegExp(
+            `^OK\\s+\\(\\d+\\stest(s)?|^${tests}${assertions}((${items.join('|')}):${end})*`,
+            'ig'
+        );
     })();
 
     public is(text: string) {
@@ -135,18 +138,32 @@ class TestResultCountParser implements IParser<TestResultCount> {
     }
 
     public parse(text: string) {
-        const pattern = new RegExp(`(?<name>\\w+):\\s(?<count>\\d+)[\\.\\s,]?`, 'g');
+        const pattern = new RegExp(
+            `((?<name>\\w+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
+            'ig'
+        );
         const kind = TestExtraResultEvent.testResultCount;
 
         return [...text.matchAll(pattern)].reduce(
             (result: any, match) => {
-                const { name, count } = match.groups!;
-                result[name.toLowerCase()] = parseInt(count, 10);
+                const groups = match.groups!;
+                const [name, count] = groups.name
+                    ? [groups.name, groups.count]
+                    : [groups.name2, groups.count2];
+                result[this.normalize(name)] = parseInt(count, 10);
 
                 return result;
             },
             { kind } as TestResultCount
         );
+    }
+
+    private normalize(name: string) {
+        name = name.toLowerCase();
+
+        return ['skipped', 'incomplete', 'risky'].includes(name)
+            ? name
+            : `${name}${name.match(/s$/) ? '' : 's'}`;
     }
 }
 

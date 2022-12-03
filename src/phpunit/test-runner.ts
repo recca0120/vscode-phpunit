@@ -77,6 +77,14 @@ class DefaultObserver implements TestRunnerObserver {
         this.trigger(TestExtraResultEvent.testCount, result);
     }
 
+    timeAndMemory(result: TimeAndMemory): void {
+        this.trigger(TestExtraResultEvent.timeAndMemory, result);
+    }
+
+    testResultCount(result: TestResultCount): void {
+        this.trigger(TestExtraResultEvent.testResultCount, result);
+    }
+
     on(eventName: TestRunnerEvent | TestResultKind, fn: Function) {
         this.listeners[eventName].push(fn);
 

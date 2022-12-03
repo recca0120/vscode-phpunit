@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { projectPath } from './__tests__/helper';
 import { TestRunner, TestRunnerEvent } from './test-runner';
-import { Result, TestExtraResultEvent, TestResultEvent } from './problem-matcher';
+import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
 import { spawn } from 'child_process';
 import { Command, DockerCommand, LocalCommand } from './command';
 import { Configuration } from './configuration';
@@ -11,8 +11,10 @@ jest.mock('child_process');
 describe('TestRunner Test', () => {
     const cwd = projectPath('');
 
-    const onTestEvents = new Map<TestResultEvent | TestExtraResultEvent, jest.Mock>([
+    const onTestEvents = new Map<TestResultKind, jest.Mock>([
         [TestExtraResultEvent.testCount, jest.fn()],
+        [TestExtraResultEvent.timeAndMemory, jest.fn()],
+        [TestExtraResultEvent.testResultCount, jest.fn()],
         [TestResultEvent.testSuiteStarted, jest.fn()],
         [TestResultEvent.testSuiteFinished, jest.fn()],
         [TestResultEvent.testStarted, jest.fn()],
@@ -52,8 +54,11 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_passed' locationHint='${locationHint}::test_passed' flowId='8024']`,
             `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
+            'Time: 00:00.049, Memory: 6.00 MB',
+            'Tests: 1, Assertions: 1, Failures: 1',
         ]);
     };
 
@@ -64,9 +69,12 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
+            'Time: 00:00.049, Memory: 6.00 MB',
+            'Tests: 1, Assertions: 1, Failures: 1',
         ]);
     };
 
@@ -78,9 +86,12 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
+            'Time: 00:00.049, Memory: 6.00 MB',
+            'Tests: 1, Assertions: 1, Failures: 1',
         ]);
     };
 
@@ -91,8 +102,11 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
             `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
+            'Time: 00:00.049, Memory: 6.00 MB',
+            'OK (1 test, 1 assertion)',
         ]);
     };
 
@@ -102,10 +116,10 @@ describe('TestRunner Test', () => {
         onTestEvents.forEach((fn, eventName) => {
             testRunner.on(eventName, (test: Result) => fn(test));
         });
-        testRunner.on(TestRunnerEvent.result, (test: Result) => onTest(test));
+        testRunner.on(TestRunnerEvent.result, (result: Result) => onTest(result));
         testRunner.on(TestRunnerEvent.close, onClose);
 
-        await testRunner.run(command);
+        console.log(await testRunner.run(command));
 
         const [cmd, ...args] = expected;
 
@@ -136,6 +150,10 @@ describe('TestRunner Test', () => {
         expect(onTestEvents.get(expected.event)).toHaveBeenCalledWith(
             expect.objectContaining({ ...expected, locationHint })
         );
+
+        expect(onTestEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
+        expect(onTestEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
+        expect(onTestEvents.get(TestExtraResultEvent.testResultCount)).toHaveBeenCalled();
 
         expect(onClose).toHaveBeenCalled();
     };
