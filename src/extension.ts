@@ -18,8 +18,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
         const queue: { test: vscode.TestItem }[] = [];
         const run = ctrl.createTestRun(request);
-        // map of file uris to statements on each line:
-        const coveredLines = new Map<string, (vscode.StatementCoverage | undefined)[]>();
 
         const discoverTests = async (tests: Iterable<vscode.TestItem>) => {
             for (const test of tests) {
@@ -32,27 +30,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     queue.push({ test });
                 } else {
                     await discoverTests(gatherTestItems(test.children));
-                }
-
-                if (test.uri && !coveredLines.has(test.uri.toString())) {
-                    try {
-                        const rawContent = await vscode.workspace.fs.readFile(test.uri);
-                        const lines = textDecoder.decode(rawContent).split('\n');
-
-                        coveredLines.set(
-                            test.uri.toString(),
-                            lines.map((lineText, lineNo) =>
-                                lineText.trim().length
-                                    ? new vscode.StatementCoverage(
-                                          0,
-                                          new vscode.Position(lineNo, 0)
-                                      )
-                                    : undefined
-                            )
-                        );
-                    } catch {
-                        // ignored
-                    }
                 }
             }
         };
@@ -111,12 +88,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 run.failed(test, message, result.duration);
             }
 
-            const lineNo = test.range!.start.line;
-            const fileCoverage = coveredLines.get(test.uri!.toString());
-            if (fileCoverage) {
-                fileCoverage[lineNo]!.executionCount++;
-            }
-
             run.appendOutput(`Completed ${result.id}\r\n`);
         });
 
@@ -137,42 +108,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 await runner.run(command.setArguments(args), options);
             }
-
-            // for (const { test } of queue) {
-            //     run.appendOutput(`Running ${test.id}\r\n`);
-            //     if (cancellation.isCancellationRequested) {
-            //         run.skipped(test);
-            //     } else {
-            //         run.started(test);
-            //         await new Promise((resolve) =>
-            //             setTimeout(resolve, 1000 + Math.random() * 1000)
-            //         );
-            //         run.passed(test);
-            //     }
-
-            //     const lineNo = test.range!.start.line;
-            //     const fileCoverage = coveredLines.get(test.uri!.toString());
-            //     if (fileCoverage) {
-            //         fileCoverage[lineNo]!.executionCount++;
-            //     }
-
-            //     run.appendOutput(`Completed ${test.id}\r\n`);
-            // }
-        };
-        run.coverageProvider = {
-            provideFileCoverage() {
-                const coverage: vscode.FileCoverage[] = [];
-                for (const [uri, statements] of coveredLines) {
-                    coverage.push(
-                        vscode.FileCoverage.fromDetails(
-                            vscode.Uri.parse(uri),
-                            statements.filter((s): s is vscode.StatementCoverage => !!s)
-                        )
-                    );
-                }
-
-                return coverage;
-            },
         };
 
         return discoverTests(request.include ?? gatherTestItems(ctrl.items)).then(runTestQueue);
