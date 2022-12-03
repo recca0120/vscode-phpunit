@@ -126,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
             : new LocalCommand(configuration);
 
         const runner = new TestRunner();
-        runner.registerObserver(new Observer(queue, run, cancellation));
+        runner.observe(new Observer(queue, run, cancellation));
 
         const runTestQueue = async () => {
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };

@@ -109,10 +109,10 @@ export class TestRunner {
 
     constructor(private options?: SpawnOptionsWithoutStdio) {
         this.defaultObserver = new DefaultObserver();
-        this.registerObserver(this.defaultObserver);
+        this.observe(this.defaultObserver);
     }
 
-    registerObserver(observer: TestRunnerObserver) {
+    observe(observer: TestRunnerObserver) {
         this.observers.push(observer);
     }
 
