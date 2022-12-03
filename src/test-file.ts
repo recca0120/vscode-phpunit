@@ -27,6 +27,7 @@ export class TestFile {
 
     delete(ctrl: TestController) {
         this.testItems.forEach((testItem) => ctrl.items.delete(testItem.id));
+        this.testItems = [];
     }
 
     getArguments(testId: string): string {
