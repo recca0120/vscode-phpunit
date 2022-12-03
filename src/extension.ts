@@ -16,7 +16,10 @@ export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
+    let latestTestRunRequest: vscode.TestRunRequest | undefined;
     const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
+        latestTestRunRequest = request;
+
         const queue: { test: vscode.TestItem }[] = [];
         const run = ctrl.createTestRun(request);
 
@@ -163,6 +166,16 @@ export async function activate(context: vscode.ExtensionContext) {
                 ),
                 new vscode.CancellationTokenSource().token
             );
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('phpunit.rerun', () => {
+            const request =
+                latestTestRunRequest ??
+                new vscode.TestRunRequest(undefined, undefined, testRunProfile);
+
+            testRunProfile.runHandler(request, new vscode.CancellationTokenSource().token);
         })
     );
 

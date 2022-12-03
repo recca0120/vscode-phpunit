@@ -148,8 +148,11 @@ describe('Extension Test', () => {
                 'phpunit.run-test-at-cursor',
                 expect.any(Function)
             );
-
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(6);
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+                'phpunit.rerun',
+                expect.any(Function)
+            );
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
         });
 
         it('should run all tests', async () => {

@@ -2,8 +2,8 @@
 
 namespace Recca0120\VSCode\Tests;
 
-use PHPUnit\Framework\TestCase;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\TestCase;
 
 class AssertionsTest extends TestCase
 {
