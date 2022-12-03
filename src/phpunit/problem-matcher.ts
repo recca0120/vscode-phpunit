@@ -45,8 +45,7 @@ export class EscapeValue {
     }
 }
 
-export enum TestEvent {
-    testCount = 'testCount',
+export enum TestResultEvent {
     testSuiteStarted = 'testSuiteStarted',
     testSuiteFinished = 'testSuiteFinished',
     testStarted = 'testStarted',
@@ -55,16 +54,29 @@ export enum TestEvent {
     testFinished = 'testFinished',
 }
 
-type TestBase = { event: TestEvent; name: string; flowId: number };
-type TestSuiteStarted = TestBase & {
+export enum TestExtraResultEvent {
+    testCount = 'testCount',
+    timeAndMemory = 'timeAndMemory',
+    testResultCount = 'testResultCount',
+}
+
+export type TestResultKind = TestResultEvent | TestExtraResultEvent;
+
+type TestResultBase = {
+    kind: TestResultKind;
+    event: TestResultEvent;
+    name: string;
+    flowId: number;
+};
+type TestSuiteStarted = TestResultBase & {
     id?: string;
     file?: string;
     locationHint?: string;
     testId?: string;
 };
-type TestSuiteFinished = TestBase;
-type TestStarted = TestBase & { id: string; file: string; locationHint: string };
-type TestFinished = TestBase & { duration: number };
+type TestSuiteFinished = TestResultBase;
+type TestStarted = TestResultBase & { id: string; file: string; locationHint: string };
+type TestFinished = TestResultBase & { duration: number };
 
 type TestFailed = TestFinished & {
     message: string;
@@ -76,9 +88,15 @@ type TestFailed = TestFinished & {
 };
 
 type TestIgnored = TestFailed;
-type TestCount = { event: TestEvent; count: number; flowId: number };
-type TimeAndMemory = { time: string; memory: string };
-type TestResultCount = {
+export type TestCount = {
+    kind: TestResultKind;
+    event: TestResultEvent;
+    count: number;
+    flowId: number;
+};
+export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string };
+export type TestResultCount = {
+    kind: TestResultKind;
     tests?: number;
     assertions?: number;
     errors?: number;
@@ -118,13 +136,17 @@ class TestResultCountParser implements IParser<TestResultCount> {
 
     public parse(text: string) {
         const pattern = new RegExp(`(?<name>\\w+):\\s(?<count>\\d+)[\\.\\s,]?`, 'g');
+        const kind = TestExtraResultEvent.testResultCount;
 
-        return [...text.matchAll(pattern)].reduce((result: any, match) => {
-            const { name, count } = match.groups!;
-            result[name.toLowerCase()] = parseInt(count, 10);
+        return [...text.matchAll(pattern)].reduce(
+            (result: any, match) => {
+                const { name, count } = match.groups!;
+                result[name.toLowerCase()] = parseInt(count, 10);
 
-            return result;
-        }, {} as TestResultCount);
+                return result;
+            },
+            { kind } as TestResultCount
+        );
     }
 }
 
@@ -139,8 +161,9 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
 
     public parse(text: string): TimeAndMemory {
         const { time, memory } = text.match(this.pattern)!.groups!;
+        const kind = TestExtraResultEvent.timeAndMemory;
 
-        return { time, memory };
+        return { time, memory, kind };
     }
 }
 
@@ -168,6 +191,7 @@ export class Parser implements IParser<Result | undefined> {
             .replace(/^\[|\]$/g, '');
 
         const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
+        argv.kind = argv.event;
 
         return {
             ...argv,
@@ -242,12 +266,12 @@ class ProblemMatcher {
     private collect = new Map<string, TestResult>();
 
     private lookup: { [p: string]: Function } = {
-        [TestEvent.testSuiteStarted]: this.handleStarted,
-        [TestEvent.testStarted]: this.handleStarted,
-        [TestEvent.testSuiteFinished]: this.handleFinished,
-        [TestEvent.testFinished]: this.handleFinished,
-        [TestEvent.testFailed]: this.handleFault,
-        [TestEvent.testIgnored]: this.handleFault,
+        [TestResultEvent.testSuiteStarted]: this.handleStarted,
+        [TestResultEvent.testStarted]: this.handleStarted,
+        [TestResultEvent.testSuiteFinished]: this.handleFinished,
+        [TestResultEvent.testFinished]: this.handleFinished,
+        [TestResultEvent.testFailed]: this.handleFault,
+        [TestResultEvent.testIgnored]: this.handleFault,
     };
 
     constructor(private parser: Parser) {}
@@ -284,14 +308,15 @@ class ProblemMatcher {
 
         const prevData = this.collect.get(id)!;
         const event = this.isFault(prevData) ? prevData.event : testResult.event;
-        const result = { ...prevData, ...testResult, event };
+        const kind = event;
+        const result = { ...prevData, ...testResult, event, kind };
         this.collect.delete(id);
 
         return result;
     }
 
     private isFault(testResult: TestResult) {
-        return [TestEvent.testFailed, TestEvent.testIgnored].includes(testResult.event);
+        return [TestResultEvent.testFailed, TestResultEvent.testIgnored].includes(testResult.event);
     }
 
     private generateId(testResult: TestResult) {

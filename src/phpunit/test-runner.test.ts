@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { projectPath } from './__tests__/helper';
 import { TestRunner, TestRunnerEvent } from './test-runner';
-import { Result, TestEvent } from './problem-matcher';
+import { Result, TestExtraResultEvent, TestResultEvent } from './problem-matcher';
 import { spawn } from 'child_process';
 import { Command, DockerCommand, LocalCommand } from './command';
 import { Configuration } from './configuration';
@@ -11,14 +11,14 @@ jest.mock('child_process');
 describe('TestRunner Test', () => {
     const cwd = projectPath('');
 
-    const onTestEvents = new Map<TestEvent, jest.Mock>([
-        [TestEvent.testCount, jest.fn()],
-        [TestEvent.testSuiteStarted, jest.fn()],
-        [TestEvent.testSuiteFinished, jest.fn()],
-        [TestEvent.testStarted, jest.fn()],
-        [TestEvent.testFailed, jest.fn()],
-        [TestEvent.testIgnored, jest.fn()],
-        [TestEvent.testFinished, jest.fn()],
+    const onTestEvents = new Map<TestResultEvent | TestExtraResultEvent, jest.Mock>([
+        [TestExtraResultEvent.testCount, jest.fn()],
+        [TestResultEvent.testSuiteStarted, jest.fn()],
+        [TestResultEvent.testSuiteFinished, jest.fn()],
+        [TestResultEvent.testStarted, jest.fn()],
+        [TestResultEvent.testFailed, jest.fn()],
+        [TestResultEvent.testIgnored, jest.fn()],
+        [TestResultEvent.testFinished, jest.fn()],
     ]);
 
     const onTest = jest.fn();
@@ -121,7 +121,7 @@ describe('TestRunner Test', () => {
 
         expect(test).not.toBeUndefined();
 
-        if (expected.event === TestEvent.testFailed) {
+        if (expected.event === TestResultEvent.testFailed) {
             if (test[0].details.length === 2) {
                 expected.details.push({
                     file: projectPath('vendor/phpunit/phpunit/phpunit'),
@@ -159,7 +159,7 @@ describe('TestRunner Test', () => {
 
         expectedTest(
             {
-                event: TestEvent.testFinished,
+                event: TestResultEvent.testFinished,
                 name: 'test_passed',
                 flowId: expect.any(Number),
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
@@ -188,7 +188,7 @@ describe('TestRunner Test', () => {
 
         expectedTest(
             {
-                event: TestEvent.testSuiteFinished,
+                event: TestResultEvent.testSuiteFinished,
                 name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 flowId: expect.any(Number),
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -221,7 +221,7 @@ describe('TestRunner Test', () => {
 
         expectedTest(
             {
-                event: TestEvent.testFinished,
+                event: TestResultEvent.testFinished,
                 name,
                 flowId: expect.any(Number),
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
@@ -254,7 +254,7 @@ describe('TestRunner Test', () => {
 
         expectedTest(
             {
-                event: TestEvent.testFailed,
+                event: TestResultEvent.testFailed,
                 name,
                 flowId: expect.any(Number),
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,

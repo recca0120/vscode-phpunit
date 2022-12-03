@@ -1,5 +1,15 @@
 import { SpawnOptionsWithoutStdio } from 'child_process';
-import { problemMatcher, Result, TestEvent, TestResult } from './problem-matcher';
+import {
+    problemMatcher,
+    Result,
+    TestCount,
+    TestExtraResultEvent,
+    TestResult,
+    TestResultCount,
+    TestResultEvent,
+    TestResultKind,
+    TimeAndMemory,
+} from './problem-matcher';
 import { Command } from './command';
 
 export enum TestRunnerEvent {
@@ -12,16 +22,20 @@ export type TestRunnerObserver = {
     [TestRunnerEvent.result]?: (result: Result) => void;
     [TestRunnerEvent.line]?: (line: string) => void;
     [TestRunnerEvent.close]?: (code: number | null) => void;
-} & { [p in TestEvent]?: (result: TestResult) => void };
+    [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
+    [TestExtraResultEvent.testResultCount]?: (result: TestResultCount) => void;
+    [TestExtraResultEvent.timeAndMemory]?: (result: TimeAndMemory) => void;
+} & { [p in TestResultEvent]?: (result: TestResult) => void };
 
 class DefaultObserver implements TestRunnerObserver {
-    private listeners = [...Object.values(TestRunnerEvent), ...Object.values(TestEvent)].reduce(
-        (listeners, key) => {
-            listeners[key] = [];
-            return listeners;
-        },
-        {} as { [p: string]: Array<Function> }
-    );
+    private listeners = [
+        ...Object.values(TestRunnerEvent),
+        ...Object.values(TestResultEvent),
+        ...Object.values(TestExtraResultEvent),
+    ].reduce((listeners, key) => {
+        listeners[key] = [];
+        return listeners;
+    }, {} as { [p: string]: Array<Function> });
 
     close(code: number | null): void {
         this.trigger(TestRunnerEvent.close, code);
@@ -36,40 +50,43 @@ class DefaultObserver implements TestRunnerObserver {
     }
 
     testSuiteStarted(result: Result): void {
-        this.trigger(TestEvent.testSuiteStarted, result);
+        this.trigger(TestResultEvent.testSuiteStarted, result);
     }
 
     testSuiteFinished(result: Result): void {
-        this.trigger(TestEvent.testSuiteFinished, result);
+        this.trigger(TestResultEvent.testSuiteFinished, result);
     }
 
     testStarted(result: Result): void {
-        this.trigger(TestEvent.testStarted, result);
+        this.trigger(TestResultEvent.testStarted, result);
     }
 
     testFinished(result: Result): void {
-        this.trigger(TestEvent.testFinished, result);
+        this.trigger(TestResultEvent.testFinished, result);
     }
 
     testFailed(result: Result): void {
-        this.trigger(TestEvent.testFailed, result);
+        this.trigger(TestResultEvent.testFailed, result);
     }
 
     testIgnored(result: Result): void {
-        this.trigger(TestEvent.testIgnored, result);
+        this.trigger(TestResultEvent.testIgnored, result);
     }
 
     testCount(result: Result): void {
-        this.trigger(TestEvent.testCount, result);
+        this.trigger(TestExtraResultEvent.testCount, result);
     }
 
-    on(event: TestRunnerEvent | TestEvent, fn: Function) {
-        this.listeners[event].push(fn);
+    on(eventName: TestRunnerEvent | TestResultKind, fn: Function) {
+        this.listeners[eventName].push(fn);
 
         return this;
     }
 
-    private trigger(eventName: string, result: Result | string | number | null) {
+    private trigger(
+        eventName: TestRunnerEvent | TestResultKind,
+        result: Result | string | number | null
+    ) {
         this.listeners[eventName].forEach((fn) => fn(result));
     }
 }
@@ -91,7 +108,7 @@ export class TestRunner {
         this.observers.push(observer);
     }
 
-    on(eventName: TestRunnerEvent | TestEvent, fn: Function) {
+    on(eventName: TestRunnerEvent | TestResultKind, fn: Function) {
         this.defaultObserver.on(eventName, fn);
 
         return this;
@@ -136,8 +153,8 @@ export class TestRunner {
 
         if (result) {
             const mappingResult = command.mapping(result);
-            if ('event' in result) {
-                this.trigger(result.event, mappingResult);
+            if ('kind' in result) {
+                this.trigger(result.kind, mappingResult);
             }
 
             this.trigger(TestRunnerEvent.result, mappingResult);
@@ -145,7 +162,7 @@ export class TestRunner {
     }
 
     private trigger(
-        eventName: TestEvent | TestRunnerEvent,
+        eventName: TestRunnerEvent | TestResultKind,
         result: Result | string | number | null
     ) {
         this.observers
