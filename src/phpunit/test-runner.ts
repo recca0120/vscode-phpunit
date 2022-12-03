@@ -9,12 +9,12 @@ export enum TestRunnerEvent {
 }
 
 export type TestRunnerObserver = {
-    result?: (result: Result) => void;
-    line?: (line: string) => void;
-    close?: (code: number | null) => void;
+    [TestRunnerEvent.result]?: (result: Result) => void;
+    [TestRunnerEvent.line]?: (line: string) => void;
+    [TestRunnerEvent.close]?: (code: number | null) => void;
 } & { [p in TestEvent]?: (result: Result) => void };
 
-export class TestRunner {
+class DefaultObserver implements TestRunnerObserver {
     private listeners = [...Object.values(TestRunnerEvent), ...Object.values(TestEvent)].reduce(
         (listeners, key) => {
             listeners[key] = [];
@@ -23,20 +23,76 @@ export class TestRunner {
         {} as { [p: string]: Array<Function> }
     );
 
-    private observer: TestRunnerObserver[] = [];
+    close(code: number | null): void {
+        this.trigger(TestRunnerEvent.close, code);
+    }
+
+    line(line: string): void {
+        this.trigger(TestRunnerEvent.line, line);
+    }
+
+    result(result: Result): void {
+        this.trigger(TestRunnerEvent.result, result);
+    }
+
+    testSuiteStarted(result: Result): void {
+        this.trigger(TestEvent.testSuiteStarted, result);
+    }
+
+    testSuiteFinished(result: Result): void {
+        this.trigger(TestEvent.testSuiteFinished, result);
+    }
+
+    testStarted(result: Result): void {
+        this.trigger(TestEvent.testStarted, result);
+    }
+
+    testFinished(result: Result): void {
+        this.trigger(TestEvent.testFinished, result);
+    }
+
+    testFailed(result: Result): void {
+        this.trigger(TestEvent.testFailed, result);
+    }
+
+    testIgnored(result: Result): void {
+        this.trigger(TestEvent.testIgnored, result);
+    }
+
+    testCount(result: Result): void {
+        this.trigger(TestEvent.testCount, result);
+    }
+
+    on(event: TestRunnerEvent | TestEvent, fn: Function) {
+        this.listeners[event].push(fn);
+
+        return this;
+    }
+
+    private trigger(eventName: string, result: Result | string | number | null) {
+        this.listeners[eventName].forEach((fn) => fn(result));
+    }
+}
+
+export class TestRunner {
+    private readonly defaultObserver: DefaultObserver;
+    private observers: TestRunnerObserver[] = [];
 
     private pattern = new RegExp(
         'PHPUnit\\s[\\d\\.]+\\sby\\sSebastian\\sBergmann\\sand\\scontributors'
     );
 
-    constructor(private options?: SpawnOptionsWithoutStdio) {}
-
-    registerObserver(observer: TestRunnerObserver) {
-        this.observer.push(observer);
+    constructor(private options?: SpawnOptionsWithoutStdio) {
+        this.defaultObserver = new DefaultObserver();
+        this.registerObserver(this.defaultObserver);
     }
 
-    on(event: TestRunnerEvent | TestEvent, fn: Function) {
-        this.listeners[event].push(fn);
+    registerObserver(observer: TestRunnerObserver) {
+        this.observers.push(observer);
+    }
+
+    on(eventName: TestRunnerEvent | TestEvent, fn: Function) {
+        this.defaultObserver.on(eventName, fn);
 
         return this;
     }
@@ -88,7 +144,12 @@ export class TestRunner {
         }
     }
 
-    private trigger(eventName: string, result: Result | string | number | null) {
-        this.listeners[eventName].forEach((fn) => fn(result));
+    private trigger(
+        eventName: TestEvent | TestRunnerEvent,
+        result: Result | string | number | null
+    ) {
+        this.observers
+            .filter((observer) => observer[eventName])
+            .forEach((observer) => (observer[eventName] as Function)(result));
     }
 }
