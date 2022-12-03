@@ -117,11 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.run-all', () => {
             testRunProfile.runHandler(
-                {
-                    include: undefined,
-                    exclude: undefined,
-                    profile: testRunProfile,
-                },
+                new vscode.TestRunRequest(undefined, undefined, testRunProfile),
                 new vscode.CancellationTokenSource().token
             );
         })
@@ -140,11 +136,7 @@ export async function activate(context: vscode.ExtensionContext) {
             }
 
             testRunProfile.runHandler(
-                {
-                    include: testFile.testItems,
-                    exclude: undefined,
-                    profile: testRunProfile,
-                },
+                new vscode.TestRunRequest(testFile.testItems, undefined, testRunProfile),
                 new vscode.CancellationTokenSource().token
             );
         })
