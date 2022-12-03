@@ -1,5 +1,5 @@
 import { SpawnOptionsWithoutStdio } from 'child_process';
-import { problemMatcher, TestEvent } from './problem-matcher';
+import { problemMatcher, Result, TestEvent } from './problem-matcher';
 import { Command } from './command';
 
 export enum TestRunnerEvent {
@@ -8,20 +8,32 @@ export enum TestRunnerEvent {
     close = 'close',
 }
 
+export type TestRunnerObserver = {
+    result?: (result: Result) => void;
+    line?: (line: string) => void;
+    close?: (code: number | null) => void;
+} & { [p in TestEvent]?: (result: Result) => void };
+
 export class TestRunner {
     private listeners = [...Object.values(TestRunnerEvent), ...Object.values(TestEvent)].reduce(
         (listeners, key) => {
             listeners[key] = [];
             return listeners;
         },
-        {} as { [p: string | number]: Array<Function> }
+        {} as { [p: string]: Array<Function> }
     );
+
+    private observer: TestRunnerObserver[] = [];
 
     private pattern = new RegExp(
         'PHPUnit\\s[\\d\\.]+\\sby\\sSebastian\\sBergmann\\sand\\scontributors'
     );
 
     constructor(private options?: SpawnOptionsWithoutStdio) {}
+
+    registerObserver(observer: TestRunnerObserver) {
+        this.observer.push(observer);
+    }
 
     on(event: TestRunnerEvent | TestEvent, fn: Function) {
         this.listeners[event].push(fn);
@@ -52,7 +64,7 @@ export class TestRunner {
             proc.stderr!.on('end', () => this.processLine(temp, command));
 
             proc.on('close', (code) => {
-                this.listeners[TestRunnerEvent.close].forEach((fn) => fn(code));
+                this.trigger(TestRunnerEvent.close, code);
                 this.isPhpUnit(output) ? resolve(output) : reject(output);
             });
         });
@@ -63,16 +75,20 @@ export class TestRunner {
     }
 
     private processLine(line: string, command: Command) {
-        this.listeners[TestRunnerEvent.line].forEach((fn) => fn(line));
+        this.trigger(TestRunnerEvent.line, line);
         const result = problemMatcher.parse(line);
 
         if (result) {
             const mappingResult = command.mapping(result);
             if ('event' in result) {
-                this.listeners[result.event].forEach((fn) => fn(mappingResult));
+                this.trigger(result.event, mappingResult);
             }
 
-            this.listeners[TestRunnerEvent.result].forEach((fn) => fn(mappingResult));
+            this.trigger(TestRunnerEvent.result, mappingResult);
         }
+    }
+
+    private trigger(eventName: string, result: Result | string | number | null) {
+        this.listeners[eventName].forEach((fn) => fn(result));
     }
 }
