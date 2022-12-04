@@ -13,6 +13,8 @@ describe('TestRunner Test', () => {
 
     const onTestEvents = new Map<TestResultKind, jest.Mock>([
         [TestExtraResultEvent.testVersion, jest.fn()],
+        [TestExtraResultEvent.testRuntime, jest.fn()],
+        [TestExtraResultEvent.testConfiguration, jest.fn()],
         [TestExtraResultEvent.testCount, jest.fn()],
         [TestExtraResultEvent.timeAndMemory, jest.fn()],
         [TestExtraResultEvent.testResultCount, jest.fn()],

@@ -2,6 +2,7 @@ import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import {
     problemMatcher,
     Result,
+    TestConfiguration,
     TestCount,
     TestExtraResultEvent,
     TestResult,
@@ -32,6 +33,7 @@ export type TestRunnerObserver = {
     [TestRunnerEvent.close]?: (code: number | null) => void;
     [TestExtraResultEvent.testVersion]?: (result: TestVersion) => void;
     [TestExtraResultEvent.testRuntime]?: (result: TestRuntime) => void;
+    [TestExtraResultEvent.testConfiguration]?: (result: TestConfiguration) => void;
     [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
     [TestExtraResultEvent.testResultCount]?: (result: TestResultCount) => void;
     [TestExtraResultEvent.timeAndMemory]?: (result: TimeAndMemory) => void;

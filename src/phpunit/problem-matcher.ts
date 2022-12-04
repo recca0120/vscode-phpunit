@@ -57,6 +57,7 @@ export enum TestResultEvent {
 export enum TestExtraResultEvent {
     testVersion = 'testVersion',
     testRuntime = ' testRuntime',
+    testConfiguration = 'testConfiguration',
     testCount = 'testCount',
     timeAndMemory = 'timeAndMemory',
     testResultCount = 'testResultCount',
@@ -98,6 +99,7 @@ export type TestCount = {
 };
 export type TestVersion = { kind: TestResultKind; version: string; text: string };
 export type TestRuntime = { kind: TestResultKind; runtime: string; text: string };
+export type TestConfiguration = { kind: TestResultKind; configuration: string; text: string }
 export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string };
 export type TestResultCount = {
     kind: TestResultKind;
@@ -142,8 +144,11 @@ class TestVersionParser implements IParser<TestVersion> {
     }
 }
 
-class TestRuntimeParser implements IParser<TestRuntime> {
-    private pattern = new RegExp('^Runtime:\\s+(?<runtime>.+)', 'i');
+abstract class ValueParser {
+    protected constructor(private name: string) {
+    }
+
+    private pattern = new RegExp(`^${this.name}:\\s+(?<${this.name}>.+)`, 'i');
 
     is(text: string): boolean {
         return !!text.match(this.pattern);
@@ -154,9 +159,21 @@ class TestRuntimeParser implements IParser<TestRuntime> {
 
         return {
             kind: TestExtraResultEvent.testRuntime,
-            runtime: groups.runtime,
+            [this.name.toLowerCase()]: groups[this.name],
             text,
-        };
+        } as any;
+    }
+}
+
+class TestRuntimeParser extends ValueParser implements IParser<TestRuntime> {
+    constructor() {
+        super('Runtime');
+    }
+}
+
+class TestConfigurationParser extends ValueParser implements IParser<TestConfiguration> {
+    constructor() {
+        super('Configuration');
     }
 }
 
@@ -194,7 +211,7 @@ class TestResultCountParser implements IParser<TestResultCount> {
 
                 return result;
             },
-            { kind } as TestResultCount
+            {kind} as TestResultCount
         );
     }
 
@@ -217,10 +234,10 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     }
 
     public parse(text: string): TimeAndMemory {
-        const { time, memory } = text.match(this.pattern)!.groups!;
+        const {time, memory} = text.match(this.pattern)!.groups!;
         const kind = TestExtraResultEvent.timeAndMemory;
 
-        return { time, memory, kind };
+        return {time, memory, kind};
     }
 }
 
@@ -230,11 +247,13 @@ export class Parser implements IParser<Result | undefined> {
     private readonly parsers = [
         new TestVersionParser(),
         new TestRuntimeParser(),
+        new TestConfigurationParser(),
         new TimeAndMemoryParser(),
         new TestResultCountParser(),
     ];
 
-    constructor(private escapeValue: EscapeValue) {}
+    constructor(private escapeValue: EscapeValue) {
+    }
 
     public parse(text: string): Result | undefined {
         return this.is(text)
@@ -252,7 +271,7 @@ export class Parser implements IParser<Result | undefined> {
             .replace(this.pattern, '')
             .replace(/^\[|\]$/g, '');
 
-        const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
+        const {_, $0, ...argv} = this.unescapeArgv(this.toTeamcityArgv(text));
         argv.kind = argv.event;
 
         return {
@@ -273,7 +292,7 @@ export class Parser implements IParser<Result | undefined> {
                 .split(/\r\n|\n/g)
                 .filter((fileAndLine: string) => fileAndLine.match(this.filePattern))
                 .map((fileAndLine: string) => {
-                    const { file, line } = fileAndLine.match(this.filePattern)!.groups!;
+                    const {file, line} = fileAndLine.match(this.filePattern)!.groups!;
 
                     return {
                         file: file.replace(/^(-)+/, '').trim(),
@@ -298,7 +317,7 @@ export class Parser implements IParser<Result | undefined> {
         const id = split.join('::');
         const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
 
-        return { id, file, testId };
+        return {id, file, testId};
     }
 
     private unescapeArgv(argv: Pick<Arguments, string | number>) {
@@ -336,7 +355,8 @@ class ProblemMatcher {
         [TestResultEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: Parser) {}
+    constructor(private parser: Parser) {
+    }
 
     parse(
         input: string | Buffer
@@ -354,7 +374,7 @@ class ProblemMatcher {
 
     private handleStarted(testResult: TestResult) {
         const id = this.generateId(testResult);
-        this.collect.set(id, { ...testResult });
+        this.collect.set(id, {...testResult});
 
         return this.collect.get(id);
     }
@@ -362,7 +382,7 @@ class ProblemMatcher {
     private handleFault(testResult: TestResult) {
         const id = this.generateId(testResult);
         const prevData = this.collect.get(id);
-        this.collect.set(id, { ...prevData, ...testResult });
+        this.collect.set(id, {...prevData, ...testResult});
     }
 
     private handleFinished(testResult: TestResult) {
@@ -371,7 +391,7 @@ class ProblemMatcher {
         const prevData = this.collect.get(id)!;
         const event = this.isFault(prevData) ? prevData.event : testResult.event;
         const kind = event;
-        const result = { ...prevData, ...testResult, event, kind };
+        const result = {...prevData, ...testResult, event, kind};
         this.collect.delete(id);
 
         return result;

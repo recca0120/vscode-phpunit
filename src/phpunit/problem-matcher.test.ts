@@ -3,8 +3,8 @@ import { parser, problemMatcher, TestExtraResultEvent, TestResultEvent } from '.
 
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {
-        it('parse version', () => {
-            const text = `PHPUnit 9.5.25 #StandWithUkraine`;
+        it('parse phpunit version', () => {
+            const text = 'PHPUnit 9.5.25 #StandWithUkraine';
 
             expect(parser.parse(text)).toEqual({
                 kind: TestExtraResultEvent.testVersion,
@@ -19,6 +19,17 @@ describe('Problem Matcher Test', () => {
             expect(parser.parse(text)).toEqual({
                 kind: TestExtraResultEvent.testRuntime,
                 runtime: 'PHP 8.1.12',
+                text,
+            });
+        });
+
+        it('parse configuration', () => {
+            const text = `Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/phpunit.xml`;
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.testConfiguration,
+                configuration:
+                    '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/phpunit.xml',
                 text,
             });
         });
@@ -390,6 +401,34 @@ describe('Problem Matcher Test', () => {
     describe('ProblemMatcher Text', () => {
         describe('Teamcity Life Cycle', () => {
             const contents = [
+                [
+                    'phpunit version',
+                    'PHPUnit 9.5.25 #StandWithUkraine',
+                    {
+                        kind: TestExtraResultEvent.testRuntime,
+                        runtime: 'PHP 8.1.12',
+                        text: `PHPUnit 9.5.25 #StandWithUkraine`,
+                    },
+                ],
+                [
+                    'parse runtime',
+                    'Runtime:       PHP 8.1.12',
+                    {
+                        kind: TestExtraResultEvent.testRuntime,
+                        runtime: 'PHP 8.1.12',
+                        text: 'Runtime:       PHP 8.1.12',
+                    },
+                ],
+                [
+                    'parse configuration',
+                    'Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/phpunit.xml',
+                    {
+                        kind: TestExtraResultEvent.testConfiguration,
+                        configuration:
+                            '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/phpunit.xml',
+                        text: 'Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/phpunit.xml',
+                    },
+                ],
                 [
                     'full test suite started',
                     "##teamcity[testSuiteStarted name='default' flowId='8024']",
