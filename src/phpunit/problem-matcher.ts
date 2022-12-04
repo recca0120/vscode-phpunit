@@ -243,7 +243,7 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
 
 export class Parser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^\\s*#+teamcity');
-    private readonly filePattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
+    private readonly filePattern = new RegExp('(s+)?(?<fileAneLine>(?<file>.+):(?<line>\\d+))$');
     private readonly parsers = [
         new TestVersionParser(),
         new TestRuntimeParser(),
@@ -281,11 +281,21 @@ export class Parser implements IParser<Result | undefined> {
     }
 
     private parseDetails(argv: Pick<Arguments, string | number>) {
-        if (!argv.details) {
+        if (!('details' in argv)) {
             return {};
         }
 
+        let message = argv.message;
+
+        if (this.filePattern.test(argv.message)) {
+            const input = argv.message.match(this.filePattern).input;
+            const { fileAneLine } = argv.message.match(this.filePattern).groups;
+            message = input.replace(`${fileAneLine}`, '').trim();
+            argv.details = fileAneLine + '\n' + argv.details;
+        }
+
         return {
+            message,
             details: argv.details
                 .trim()
                 .split(/\r\n|\n/g)

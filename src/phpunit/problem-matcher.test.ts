@@ -257,9 +257,13 @@ describe('Problem Matcher Test', () => {
                 event: TestResultEvent.testFailed,
                 kind: TestResultEvent.testFailed,
                 name: 'test_risky',
-                message:
-                    'This test did not perform any assertions\n\nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php:30',
-                details: [],
+                message: 'This test did not perform any assertions',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\AssertionsTest.php',
+                        line: 30,
+                    },
+                ],
                 duration: 0,
                 flowId: 8024,
             });
@@ -314,6 +318,25 @@ describe('Problem Matcher Test', () => {
                 ],
                 duration: 189,
                 flowId: 68348,
+            });
+        });
+
+        it('parse failed message with file path', () => {
+            const text = `##teamcity[testFailed name='test_static_public_fail' message='This test did not perform any assertions|n|nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\StaticMethodTest.php:9' details=' ' duration='0' flowId='8024']`;
+
+            expect(parser.parse(text)).toEqual({
+                event: TestResultEvent.testFailed,
+                kind: TestResultEvent.testFailed,
+                name: 'test_static_public_fail',
+                message: 'This test did not perform any assertions',
+                details: [
+                    {
+                        file: 'C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\project-stub\\tests\\StaticMethodTest.php',
+                        line: 9,
+                    },
+                ],
+                duration: 0,
+                flowId: 8024,
             });
         });
 
