@@ -272,6 +272,8 @@ const window = {
         return {
             append: jest.fn(),
             appendLine: jest.fn(),
+            clear: jest.fn(),
+            show: jest.fn(),
         };
     }),
 };
