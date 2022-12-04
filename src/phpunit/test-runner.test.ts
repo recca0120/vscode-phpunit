@@ -11,7 +11,7 @@ jest.mock('child_process');
 describe('TestRunner Test', () => {
     const cwd = projectPath('');
 
-    const onTestEvents = new Map<TestResultKind, jest.Mock>([
+    const onTestResultEvents = new Map<TestResultKind, jest.Mock>([
         [TestExtraResultEvent.testVersion, jest.fn()],
         [TestExtraResultEvent.testRuntime, jest.fn()],
         [TestExtraResultEvent.testConfiguration, jest.fn()],
@@ -57,6 +57,8 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            'Runtime:       PHP 8.1.12',
+            `Configuration: ${appPath('phpunit.xml')}`,
             "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_passed' locationHint='${locationHint}::test_passed' flowId='8024']`,
             `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
@@ -72,6 +74,8 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            'Runtime:       PHP 8.1.12',
+            `Configuration: ${appPath('phpunit.xml')}`,
             "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ' duration='0' flowId='8024']`,
@@ -89,6 +93,8 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            'Runtime:       PHP 8.1.12',
+            `Configuration: ${appPath('phpunit.xml')}`,
             "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
@@ -105,6 +111,8 @@ describe('TestRunner Test', () => {
 
         mockSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            'Runtime:       PHP 8.1.12',
+            `Configuration: ${appPath('phpunit.xml')}`,
             "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
             `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
@@ -116,7 +124,7 @@ describe('TestRunner Test', () => {
     const expectedRun = async (command: Command, expected: any[]) => {
         const testRunner = new TestRunner({ cwd });
 
-        onTestEvents.forEach((fn, eventName) => {
+        onTestResultEvents.forEach((fn, eventName) => {
             testRunner.on(eventName, (test: Result) => fn(test));
         });
         testRunner.on(TestRunnerEvent.result, (result: Result) => onTest(result));
@@ -150,13 +158,16 @@ describe('TestRunner Test', () => {
 
         expect(test[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
 
-        expect(onTestEvents.get(expected.event)).toHaveBeenCalledWith(
+        expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
             expect.objectContaining({ ...expected, locationHint })
         );
 
-        expect(onTestEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
-        expect(onTestEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
-        expect(onTestEvents.get(TestExtraResultEvent.testResultCount)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testConfiguration)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testResultCount)).toHaveBeenCalled();
 
         expect(onClose).toHaveBeenCalled();
     };
