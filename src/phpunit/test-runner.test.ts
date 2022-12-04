@@ -11,6 +11,14 @@ jest.mock('child_process');
 describe('TestRunner Test', () => {
     const cwd = projectPath('');
 
+    const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
+        [TestRunnerEvent.command, jest.fn()],
+        [TestRunnerEvent.line, jest.fn()],
+        [TestRunnerEvent.result, jest.fn()],
+        [TestRunnerEvent.close, jest.fn()],
+        [TestRunnerEvent.error, jest.fn()],
+    ]);
+
     const onTestResultEvents = new Map<TestResultKind, jest.Mock>([
         [TestExtraResultEvent.testVersion, jest.fn()],
         [TestExtraResultEvent.testRuntime, jest.fn()],
@@ -26,8 +34,6 @@ describe('TestRunner Test', () => {
         [TestResultEvent.testFinished, jest.fn()],
     ]);
 
-    const onTest = jest.fn();
-    const onClose = jest.fn();
     const dataProviderPattern = (name: string) => {
         return new RegExp(
             `--filter=["']?\\^\\.\\*::\\(${name}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
@@ -127,8 +133,10 @@ describe('TestRunner Test', () => {
         onTestResultEvents.forEach((fn, eventName) => {
             testRunner.on(eventName, (test: Result) => fn(test));
         });
-        testRunner.on(TestRunnerEvent.result, (result: Result) => onTest(result));
-        testRunner.on(TestRunnerEvent.close, onClose);
+
+        onTestRunnerEvents.forEach((fn, eventName) => {
+            testRunner.on(eventName, (test: Result) => fn(test));
+        });
 
         await testRunner.run(command);
 
@@ -140,23 +148,25 @@ describe('TestRunner Test', () => {
     const expectedTest = (expected: any, projectPath: (path: string) => string) => {
         const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
 
-        const test = onTest.mock.calls.find(
-            (call: any) => call[0].id === expected.id && call[0].event === expected.event
-        );
+        const testResult = onTestRunnerEvents
+            .get(TestRunnerEvent.result)!
+            .mock.calls.find(
+                (call: any) => call[0].id === expected.id && call[0].event === expected.event
+            );
 
-        expect(test).not.toBeUndefined();
+        expect(testResult).not.toBeUndefined();
 
         if (expected.event === TestResultEvent.testFailed) {
-            if (test[0].details.length === 2) {
+            if (testResult[0].details.length === 2) {
                 expected.details.push({
                     file: projectPath('vendor/phpunit/phpunit/phpunit'),
                     line: 60,
                 });
             }
-            expect(test[0].details).toEqual(expected.details);
+            expect(testResult[0].details).toEqual(expected.details);
         }
 
-        expect(test[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
+        expect(testResult[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
 
         expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
             expect.objectContaining({ ...expected, locationHint })
@@ -169,7 +179,8 @@ describe('TestRunner Test', () => {
         expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestExtraResultEvent.testResultCount)).toHaveBeenCalled();
 
-        expect(onClose).toHaveBeenCalled();
+        expect(onTestRunnerEvents.get(TestRunnerEvent.command)).toHaveBeenCalled();
+        expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
     };
 
     beforeEach(() => {
