@@ -22,9 +22,6 @@ export class TestResultObserver implements TestRunnerObserver {
         this.run.end();
     }
 
-    //
-    // result(result: Result): void {}
-
     testSuiteStarted(result: TestResult): void {
         this.testStarted(result);
     }
@@ -96,8 +93,8 @@ export class TestResultObserver implements TestRunnerObserver {
 export class OutputChannelObserver implements TestRunnerObserver {
     constructor(private outputChannel: OutputChannel) {}
 
-    command(command: string): void {
-        this.outputChannel.appendLine(command);
+    input(input: string): void {
+        this.outputChannel.appendLine(input);
         this.outputChannel.appendLine('');
     }
 

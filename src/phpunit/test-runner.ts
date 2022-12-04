@@ -6,9 +6,9 @@ import {
     TestCount,
     TestExtraResultEvent,
     TestResult,
-    TestResultCount,
     TestResultEvent,
     TestResultKind,
+    TestResultSummary,
     TestRuntime,
     TestVersion,
     TimeAndMemory,
@@ -35,7 +35,7 @@ export type TestRunnerObserver = {
     [TestExtraResultEvent.testRuntime]?: (result: TestRuntime) => void;
     [TestExtraResultEvent.testConfiguration]?: (result: TestConfiguration) => void;
     [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
-    [TestExtraResultEvent.testResultCount]?: (result: TestResultCount) => void;
+    [TestExtraResultEvent.testResultSummary]?: (result: TestResultSummary) => void;
     [TestExtraResultEvent.timeAndMemory]?: (result: TimeAndMemory) => void;
 } & { [p in TestResultEvent]?: (result: TestResult) => void };
 
@@ -117,8 +117,8 @@ class DefaultObserver implements TestRunnerObserver {
         this.trigger(TestExtraResultEvent.timeAndMemory, result);
     }
 
-    testResultCount(result: TestResultCount): void {
-        this.trigger(TestExtraResultEvent.testResultCount, result);
+    testResultSummary(result: TestResultSummary): void {
+        this.trigger(TestExtraResultEvent.testResultSummary, result);
     }
 
     on(eventName: TestRunnerEvent | TestResultKind, fn: Function) {

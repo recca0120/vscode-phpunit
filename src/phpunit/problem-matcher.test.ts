@@ -324,6 +324,7 @@ describe('Problem Matcher Test', () => {
                 kind: TestExtraResultEvent.timeAndMemory,
                 time: '00:00.049',
                 memory: '6.00 MB',
+                text,
             });
         });
 
@@ -334,6 +335,7 @@ describe('Problem Matcher Test', () => {
                 kind: TestExtraResultEvent.timeAndMemory,
                 time: '49 ms',
                 memory: '6.00 MB',
+                text,
             });
         });
 
@@ -341,9 +343,10 @@ describe('Problem Matcher Test', () => {
             const text = 'OK (1 test, 1 assertion)';
 
             expect(parser.parse(text)).toEqual({
-                kind: TestExtraResultEvent.testResultCount,
+                kind: TestExtraResultEvent.testResultSummary,
                 tests: 1,
                 assertions: 1,
+                text,
             });
         });
 
@@ -352,7 +355,7 @@ describe('Problem Matcher Test', () => {
                 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.';
 
             expect(parser.parse(text)).toEqual({
-                kind: TestExtraResultEvent.testResultCount,
+                kind: TestExtraResultEvent.testResultSummary,
                 tests: 19,
                 assertions: 15,
                 errors: 2,
@@ -360,6 +363,7 @@ describe('Problem Matcher Test', () => {
                 skipped: 1,
                 incomplete: 1,
                 risky: 2,
+                text,
             });
         });
 

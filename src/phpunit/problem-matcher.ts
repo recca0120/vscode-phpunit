@@ -60,7 +60,7 @@ export enum TestExtraResultEvent {
     testConfiguration = 'testConfiguration',
     testCount = 'testCount',
     timeAndMemory = 'timeAndMemory',
-    testResultCount = 'testResultCount',
+    testResultSummary = 'testResultSummary',
 }
 
 export type TestResultKind = TestResultEvent | TestExtraResultEvent;
@@ -100,8 +100,8 @@ export type TestCount = {
 export type TestVersion = { kind: TestResultKind; version: string; text: string };
 export type TestRuntime = { kind: TestResultKind; runtime: string; text: string };
 export type TestConfiguration = { kind: TestResultKind; configuration: string; text: string };
-export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string };
-export type TestResultCount = {
+export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string; text: string };
+export type TestResultSummary = {
     kind: TestResultKind;
     tests?: number;
     assertions?: number;
@@ -110,6 +110,7 @@ export type TestResultCount = {
     skipped?: number;
     incomplete?: number;
     risky?: number;
+    text: string;
 };
 
 export type TestResult = TestSuiteStarted &
@@ -119,7 +120,7 @@ export type TestResult = TestSuiteStarted &
     TestIgnored &
     TestFinished;
 
-export type Result = TestResult | TestResultCount | TestCount | TimeAndMemory;
+export type Result = TestResult | TestResultSummary | TestCount | TimeAndMemory;
 
 interface IParser<T> {
     is: (text: string) => boolean;
@@ -176,7 +177,7 @@ class TestConfigurationParser extends ValueParser implements IParser<TestConfigu
     }
 }
 
-class TestResultCountParser implements IParser<TestResultCount> {
+class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
         const items = ['Error(s)?', 'Failure(s)?', 'Skipped', 'Incomplete', 'Risky'];
         const end = '\\s(\\d+)[\\.\\s,]\\s?';
@@ -198,7 +199,7 @@ class TestResultCountParser implements IParser<TestResultCount> {
             `((?<name>\\w+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
             'ig'
         );
-        const kind = TestExtraResultEvent.testResultCount;
+        const kind = TestExtraResultEvent.testResultSummary;
 
         return [...text.matchAll(pattern)].reduce(
             (result: any, match) => {
@@ -210,7 +211,7 @@ class TestResultCountParser implements IParser<TestResultCount> {
 
                 return result;
             },
-            { kind } as TestResultCount
+            { kind, text } as TestResultSummary
         );
     }
 
@@ -236,7 +237,7 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
         const { time, memory } = text.match(this.pattern)!.groups!;
         const kind = TestExtraResultEvent.timeAndMemory;
 
-        return { time, memory, kind };
+        return { time, memory, kind, text };
     }
 }
 
@@ -248,7 +249,7 @@ export class Parser implements IParser<Result | undefined> {
         new TestRuntimeParser(),
         new TestConfigurationParser(),
         new TimeAndMemoryParser(),
-        new TestResultCountParser(),
+        new TestResultSummaryParser(),
     ];
 
     constructor(private escapeValue: EscapeValue) {}
@@ -357,7 +358,7 @@ class ProblemMatcher {
 
     parse(
         input: string | Buffer
-    ): TestResult | TestCount | TestResultCount | TimeAndMemory | undefined {
+    ): TestResult | TestCount | TestResultSummary | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());
 
         return !result || this.isTestResult(result)

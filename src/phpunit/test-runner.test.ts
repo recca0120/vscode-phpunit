@@ -25,7 +25,7 @@ describe('TestRunner Test', () => {
         [TestExtraResultEvent.testConfiguration, jest.fn()],
         [TestExtraResultEvent.testCount, jest.fn()],
         [TestExtraResultEvent.timeAndMemory, jest.fn()],
-        [TestExtraResultEvent.testResultCount, jest.fn()],
+        [TestExtraResultEvent.testResultSummary, jest.fn()],
         [TestResultEvent.testSuiteStarted, jest.fn()],
         [TestResultEvent.testSuiteFinished, jest.fn()],
         [TestResultEvent.testStarted, jest.fn()],
@@ -177,7 +177,7 @@ describe('TestRunner Test', () => {
         expect(onTestResultEvents.get(TestExtraResultEvent.testConfiguration)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testResultCount)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testResultSummary)).toHaveBeenCalled();
 
         expect(onTestRunnerEvents.get(TestRunnerEvent.input)).toHaveBeenCalled();
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
