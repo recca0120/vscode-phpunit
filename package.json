@@ -10,7 +10,7 @@
         "testCoverage"
     ],
     "engines": {
-        "vscode": "^1.68.0"
+        "vscode": "^1.71.0"
     },
     "categories": [
         "Other"
@@ -20,6 +20,10 @@
     ],
     "contributes": {
         "commands": [
+            {
+                "command": "phpunit.reload",
+                "title": "PHPUnit: Reload tests"
+            },
             {
                 "command": "phpunit.run-all",
                 "title": "PHPUnit: Run all tests"

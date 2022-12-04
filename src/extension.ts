@@ -118,6 +118,16 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('phpunit.reload', async () => {
+            await Promise.all(
+                getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+                    findInitialFiles(ctrl, pattern, exclude)
+                )
+            );
+        })
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.run-all', () => {
             testRunProfile.runHandler(
                 new vscode.TestRunRequest(undefined, undefined, testRunProfile),

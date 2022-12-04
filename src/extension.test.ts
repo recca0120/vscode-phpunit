@@ -137,6 +137,10 @@ describe('Extension Test', () => {
                 'PHPUnit'
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+                'phpunit.reload',
+                expect.any(Function)
+            );
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-all',
                 expect.any(Function)
             );
@@ -152,7 +156,7 @@ describe('Extension Test', () => {
                 'phpunit.rerun',
                 expect.any(Function)
             );
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(8);
         });
 
         it('should run all tests', async () => {
