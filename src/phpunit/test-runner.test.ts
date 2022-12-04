@@ -12,6 +12,7 @@ describe('TestRunner Test', () => {
     const cwd = projectPath('');
 
     const onTestEvents = new Map<TestResultKind, jest.Mock>([
+        [TestExtraResultEvent.testVersion, jest.fn()],
         [TestExtraResultEvent.testCount, jest.fn()],
         [TestExtraResultEvent.timeAndMemory, jest.fn()],
         [TestExtraResultEvent.testResultCount, jest.fn()],

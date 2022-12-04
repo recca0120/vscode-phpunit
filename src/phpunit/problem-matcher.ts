@@ -55,6 +55,7 @@ export enum TestResultEvent {
 }
 
 export enum TestExtraResultEvent {
+    testVersion = 'testVersion',
     testCount = 'testCount',
     timeAndMemory = 'timeAndMemory',
     testResultCount = 'testResultCount',
@@ -94,6 +95,7 @@ export type TestCount = {
     count: number;
     flowId: number;
 };
+export type TestVersion = { kind: TestResultKind; version: string; text: string };
 export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string };
 export type TestResultCount = {
     kind: TestResultKind;
@@ -118,6 +120,24 @@ export type Result = TestResult | TestResultCount | TestCount | TimeAndMemory;
 interface IParser<T> {
     is: (text: string) => boolean;
     parse: (text: string) => T;
+}
+
+class TestVersionParser implements IParser<TestVersion> {
+    private pattern = new RegExp('^PHPUnit\\s(?<version>[\\d\\.]+)', 'i');
+
+    is(text: string): boolean {
+        return !!text.match(this.pattern);
+    }
+
+    parse(text: string) {
+        const groups = text.match(this.pattern)!.groups!;
+
+        return {
+            kind: TestExtraResultEvent.testVersion,
+            version: groups.version,
+            text,
+        };
+    }
 }
 
 class TestResultCountParser implements IParser<TestResultCount> {
@@ -187,7 +207,11 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
 export class Parser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^\\s*#+teamcity');
     private readonly filePattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
-    private readonly parsers = [new TimeAndMemoryParser(), new TestResultCountParser()];
+    private readonly parsers = [
+        new TestVersionParser(),
+        new TimeAndMemoryParser(),
+        new TestResultCountParser(),
+    ];
 
     constructor(private escapeValue: EscapeValue) {}
 

@@ -3,6 +3,16 @@ import { parser, problemMatcher, TestExtraResultEvent, TestResultEvent } from '.
 
 describe('Problem Matcher Test', () => {
     describe('Teamcity Parser', () => {
+        it('parse version', () => {
+            const text = `PHPUnit 9.5.25 #StandWithUkraine`;
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.testVersion,
+                version: '9.5.25',
+                text: 'PHPUnit 9.5.25 #StandWithUkraine',
+            });
+        });
+
         it('parse testCount', () => {
             const text = "##teamcity[testCount count='19' flowId='8024']";
 
