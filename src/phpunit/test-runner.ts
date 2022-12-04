@@ -49,6 +49,18 @@ class DefaultObserver implements TestRunnerObserver {
         return listeners;
     }, {} as { [p: string]: Array<Function> });
 
+    command(command: string): void {
+        this.trigger(TestRunnerEvent.command, command);
+    }
+
+    output(output: string): void {
+        this.trigger(TestRunnerEvent.output, output);
+    }
+
+    error(error: string): void {
+        this.trigger(TestRunnerEvent.error, error);
+    }
+
     close(code: number | null): void {
         this.trigger(TestRunnerEvent.close, code);
     }
@@ -59,6 +71,18 @@ class DefaultObserver implements TestRunnerObserver {
 
     result(result: Result): void {
         this.trigger(TestRunnerEvent.result, result);
+    }
+
+    testVersion(result: TestVersion): void {
+        this.trigger(TestExtraResultEvent.testVersion, result);
+    }
+
+    testRuntime(result: TestRuntime): void {
+        this.trigger(TestExtraResultEvent.testRuntime, result);
+    }
+
+    testConfiguration(result: TestConfiguration): void {
+        this.trigger(TestExtraResultEvent.testConfiguration, result);
     }
 
     testSuiteStarted(result: Result): void {

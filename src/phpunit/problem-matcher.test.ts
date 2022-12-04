@@ -405,8 +405,8 @@ describe('Problem Matcher Test', () => {
                     'phpunit version',
                     'PHPUnit 9.5.25 #StandWithUkraine',
                     {
-                        kind: TestExtraResultEvent.testRuntime,
-                        runtime: 'PHP 8.1.12',
+                        kind: TestExtraResultEvent.testVersion,
+                        version: '9.5.25',
                         text: `PHPUnit 9.5.25 #StandWithUkraine`,
                     },
                 ],
