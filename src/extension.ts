@@ -3,7 +3,7 @@ import { TestRunner } from './phpunit/test-runner';
 import { DockerCommand, LocalCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
-import { Observer } from './observer';
+import { OutputChannelObserver, TestResultObserver } from './observer';
 
 const testData = new Map<string, TestFile>();
 
@@ -50,7 +50,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 : new LocalCommand(configuration);
 
             const runner = new TestRunner();
-            runner.observe(new Observer(outputChannel, queue, run, cancellation));
+            runner.observe(new TestResultObserver(queue, run, cancellation));
+            runner.observe(new OutputChannelObserver(outputChannel));
 
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
 

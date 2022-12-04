@@ -11,9 +11,8 @@ import {
 } from 'vscode';
 import { TestResult } from './phpunit/problem-matcher';
 
-export class Observer implements TestRunnerObserver {
+export class TestResultObserver implements TestRunnerObserver {
     constructor(
-        private outputChannel: OutputChannel,
         private queue: { test: TestItem }[] = [],
         private run: TestRun,
         private cancellation: CancellationToken
@@ -21,10 +20,6 @@ export class Observer implements TestRunnerObserver {
 
     close(): void {
         this.run.end();
-    }
-
-    line(line: string): void {
-        this.outputChannel.appendLine(line);
     }
 
     //
@@ -95,5 +90,22 @@ export class Observer implements TestRunnerObserver {
 
     private find(result: TestResult) {
         return this.queue.find(({ test }) => test.id === result.testId)?.test;
+    }
+}
+
+export class OutputChannelObserver implements TestRunnerObserver {
+    constructor(private outputChannel: OutputChannel) {}
+
+    command(command: string): void {
+        this.outputChannel.appendLine(command);
+        this.outputChannel.appendLine('');
+    }
+
+    line(line: string): void {
+        this.outputChannel.appendLine(line);
+    }
+
+    error(output: string): void {
+        this.outputChannel.append(output);
     }
 }
