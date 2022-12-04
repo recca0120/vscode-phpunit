@@ -9,7 +9,15 @@ import {
     TestMessage,
     TestRun,
 } from 'vscode';
-import { TestResult } from './phpunit/problem-matcher';
+import {
+    TestConfiguration,
+    TestResult,
+    TestResultEvent,
+    TestResultSummary,
+    TestRuntime,
+    TestVersion,
+    TimeAndMemory,
+} from './phpunit/problem-matcher';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
@@ -91,18 +99,125 @@ export class TestResultObserver implements TestRunnerObserver {
 }
 
 export class OutputChannelObserver implements TestRunnerObserver {
+    private testResultMessages = new Map<TestResultEvent, string[]>([
+        [TestResultEvent.testFinished, ['✅', 'PASSED']],
+        [TestResultEvent.testFailed, ['❌', 'FAILED']],
+        [TestResultEvent.testIgnored, ['➖', 'IGNORED']],
+    ]);
+    private decorated = {
+        default: '│',
+        start: '┐',
+        message: '├',
+        diff: '┊',
+        trace: '╵',
+        last: '┴',
+    };
+
     constructor(private outputChannel: OutputChannel) {}
 
     input(input: string): void {
+        this.outputChannel.clear();
+        this.outputChannel.show();
         this.outputChannel.appendLine(input);
         this.outputChannel.appendLine('');
     }
 
-    line(line: string): void {
-        this.outputChannel.appendLine(line);
-    }
+    // line(line: string): void {
+    //     this.outputChannel.appendLine(line);
+    // }
 
     error(output: string): void {
         this.outputChannel.append(output);
+    }
+
+    testVersion(result: TestVersion) {
+        this.outputChannel.appendLine(`${result.text}`);
+        this.outputChannel.appendLine('');
+    }
+
+    testRuntime(result: TestRuntime) {
+        this.outputChannel.appendLine(`${result.text}`);
+    }
+
+    testConfiguration(result: TestConfiguration) {
+        this.outputChannel.appendLine(`${result.text}`);
+        this.outputChannel.appendLine('');
+    }
+
+    testSuiteStarted(result: TestResult): void {
+        if (!result.id || result.id.match(/::/)) {
+            return;
+        }
+
+        this.outputChannel.appendLine(`${result.id}`);
+    }
+
+    testSuiteFinished(result: TestResult): void {
+        if (!result.id || result.id.match(/::/)) {
+            return;
+        }
+
+        this.outputChannel.appendLine('');
+    }
+
+    testFinished(result: TestResult): void {
+        this.printTestResult(result);
+    }
+
+    testFailed(result: TestResult): void {
+        this.printTestResult(result);
+        this.printErrorMessage(result);
+    }
+
+    private printErrorMessage(result: TestResult) {
+        this.printMessage(this.decorated.start);
+        this.printMessage(this.decorated.message, result.message);
+        this.printDiffMessage(result);
+
+        this.printMessage(this.decorated.default);
+        result.details.forEach(({ file, line }) =>
+            this.printMessage(this.decorated.default, `${file}:${line}`)
+        );
+        this.printMessage(this.decorated.last);
+        this.outputChannel.appendLine('');
+    }
+
+    private printDiffMessage(result: TestResult) {
+        if (!(result.expected && result.actual)) {
+            return;
+        }
+
+        this.printMessage(this.decorated.diff, `${result.expected}`, '---·Expected ');
+        this.printMessage(this.decorated.diff, `${result.actual}`, '+++·Actual ');
+    }
+
+    testIgnored(result: TestResult): void {
+        this.printTestResult(result);
+    }
+
+    testResultSummary(result: TestResultSummary) {
+        this.outputChannel.appendLine(result.text);
+    }
+
+    timeAndMemory(result: TimeAndMemory) {
+        this.outputChannel.appendLine(result.text);
+    }
+
+    private printMessage(decorated: string, message: string = '', prefix = '') {
+        const indent = '     ';
+        message.split(/\r\n|\n/g).forEach((message, index) => {
+            this.outputChannel.append(indent);
+            this.outputChannel.append(decorated);
+            this.outputChannel.append(' ');
+            this.outputChannel.appendLine(`${index === 0 ? prefix : ''}${message}`);
+        });
+    }
+
+    private printTestResult(result: TestResult) {
+        const [icon] = this.testResultMessages.get(result.event)!;
+        const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
+        this.outputChannel.append('  ');
+        this.outputChannel.append(`${icon} ${name} ${result.duration} ms`);
+        this.outputChannel.appendLine('');
     }
 }
