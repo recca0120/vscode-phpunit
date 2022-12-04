@@ -12,7 +12,7 @@ describe('TestRunner Test', () => {
     const cwd = projectPath('');
 
     const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
-        [TestRunnerEvent.command, jest.fn()],
+        [TestRunnerEvent.input, jest.fn()],
         [TestRunnerEvent.line, jest.fn()],
         [TestRunnerEvent.result, jest.fn()],
         [TestRunnerEvent.close, jest.fn()],
@@ -179,7 +179,7 @@ describe('TestRunner Test', () => {
         expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestExtraResultEvent.testResultCount)).toHaveBeenCalled();
 
-        expect(onTestRunnerEvents.get(TestRunnerEvent.command)).toHaveBeenCalled();
+        expect(onTestRunnerEvents.get(TestRunnerEvent.input)).toHaveBeenCalled();
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
     };
 

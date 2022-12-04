@@ -2474,7 +2474,7 @@ declare module 'vscode' {
 		 * Creates a new code action.
 		 *
 		 * A code action must have at least a {@link CodeAction.title title} and {@link CodeAction.edit edits}
-		 * and/or a {@link CodeAction.command command}.
+		 * and/or a {@link CodeAction.input command}.
 		 *
 		 * @param title The title of the code action.
 		 * @param kind The kind of the code action.
@@ -5045,7 +5045,7 @@ declare module 'vscode' {
 		 * An optional command for this label part.
 		 *
 		 * The editor renders parts with commands as clickable links. The command is added to the context menu
-		 * when a label part defines {@link InlayHintLabelPart.location location} and {@link InlayHintLabelPart.command command} .
+		 * when a label part defines {@link InlayHintLabelPart.location location} and {@link InlayHintLabelPart.input command} .
 		 *
 		 * *Note* that this property can be set late during
 		 * {@link InlayHintsProvider.resolveInlayHint resolving} of inlay hints.
@@ -10679,7 +10679,7 @@ declare module 'vscode' {
 
 		/**
 		 * Called on hover to resolve the {@link TreeItem.tooltip TreeItem} property if it is undefined.
-		 * Called on tree item click/open to resolve the {@link TreeItem.command TreeItem} property if it is undefined.
+		 * Called on tree item click/open to resolve the {@link TreeItem.input TreeItem} property if it is undefined.
 		 * Only properties that were undefined can be resolved in `resolveTreeItem`.
 		 * Functionality may be expanded later to include being called to resolve other missing
 		 * properties on selection and/or on open.

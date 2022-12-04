@@ -16,7 +16,7 @@ import {
 import { Command } from './command';
 
 export enum TestRunnerEvent {
-    command = 'command',
+    input = 'input',
     line = 'line',
     result = 'result',
     output = 'output',
@@ -25,7 +25,7 @@ export enum TestRunnerEvent {
 }
 
 export type TestRunnerObserver = {
-    [TestRunnerEvent.command]?: (command: string) => void;
+    [TestRunnerEvent.input]?: (input: string) => void;
     [TestRunnerEvent.line]?: (line: string) => void;
     [TestRunnerEvent.result]?: (result: Result) => void;
     [TestRunnerEvent.output]?: (output: string) => void;
@@ -49,8 +49,8 @@ class DefaultObserver implements TestRunnerObserver {
         return listeners;
     }, {} as { [p: string]: Array<Function> });
 
-    command(command: string): void {
-        this.trigger(TestRunnerEvent.command, command);
+    input(input: string): void {
+        this.trigger(TestRunnerEvent.input, input);
     }
 
     output(output: string): void {
@@ -161,12 +161,12 @@ export class TestRunner {
     run(command: Command, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve, reject) => {
             options = { ...this.options, ...options } ?? {};
-            const parameters = command.apply(options);
+            const input = command.apply(options);
 
-            this.trigger(TestRunnerEvent.command, parameters.join(' '));
+            this.trigger(TestRunnerEvent.input, input.join(' '));
 
-            const [cmd, ...args] = parameters;
-            const proc = spawn(cmd!, args, options);
+            const [firstArgs, ...args] = input;
+            const proc = spawn(firstArgs!, args, options);
 
             let temp = '';
             let output = '';
