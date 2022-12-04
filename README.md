@@ -1,71 +1,46 @@
-# vscode-phpunit README
+# PHPUnit for VSCode
 
-This is the README for your extension "vscode-phpunit". After writing up a brief description, we recommend including the following sections.
+Run your PHPUnit tests in Node using the Test Explorer UI.
+
+![Screenshot](img/screenshot.gif)
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+-   Shows a Test Explorer in the Test view in VS Code's sidebar with all detected tests and suites and their state
+-   Shows a failed test's log when the test is selected in the explorer
+-   Lets you choose test suites or individual tests in the explorer that should be run automatically after each file change
 
 ## Extension Settings
 
 Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
 
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+-   `phpunit.php`: Absolute path to php. Fallback to global php if it exists on the command line.
+-   `phpunit.phpunit`: Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n - Composer vendor directory\n - phpunit.phar in your project\n - phpunit (or phpunit.bat for windows) globally on the command line
+-   `phpunit.command`: Custom command to run. Ex: `docker exec -t container_name`.
+-   `phpunit.args`: Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist
 
-## Known Issues
+## Commands
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+The following commands are available in VS Code's command palette, use the ID to add them to your keyboard shortcuts:
 
-## Release Notes
+-   `phpunit.reload`: PHPUnit: Reload tests
+-   `phpunit.run-all`: PHPUnit: Run all tests
+-   `phpunit.run-file`: PHPUnit: Run tests in current file
+-   `phpunit.run-test-at-cursor`: PHPUnit: Run the test at the current cursor position
+-   `phpunit.rerun`: PHPUnit: Repeat the last test run
 
-Users appreciate release notes as you update your extension.
+## Troubleshooting
 
-### 1.0.0
+### Docker
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+```json5
+{
+    'phpunit.command': 'docker run --rm -t -v ${pwd}:/app -w /app php:latest php',
+    'phpunit.paths': {
+        // ${pwd} (current directory) is mounted to /app
+        '${workspaceFolder}': '/app', // ${workspaceFolder} is mapped to /app
+    },
+}
+```
