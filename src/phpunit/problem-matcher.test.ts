@@ -9,7 +9,17 @@ describe('Problem Matcher Test', () => {
             expect(parser.parse(text)).toEqual({
                 kind: TestExtraResultEvent.testVersion,
                 version: '9.5.25',
-                text: 'PHPUnit 9.5.25 #StandWithUkraine',
+                text,
+            });
+        });
+
+        it('parse runtime', () => {
+            const text = `Runtime:       PHP 8.1.12`;
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.testRuntime,
+                runtime: 'PHP 8.1.12',
+                text,
             });
         });
 

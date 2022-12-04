@@ -8,6 +8,7 @@ import {
     TestResultCount,
     TestResultEvent,
     TestResultKind,
+    TestRuntime,
     TestVersion,
     TimeAndMemory,
 } from './problem-matcher';
@@ -30,6 +31,7 @@ export type TestRunnerObserver = {
     [TestRunnerEvent.error]?: (error: string) => void;
     [TestRunnerEvent.close]?: (code: number | null) => void;
     [TestExtraResultEvent.testVersion]?: (result: TestVersion) => void;
+    [TestExtraResultEvent.testRuntime]?: (result: TestRuntime) => void;
     [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
     [TestExtraResultEvent.testResultCount]?: (result: TestResultCount) => void;
     [TestExtraResultEvent.timeAndMemory]?: (result: TimeAndMemory) => void;

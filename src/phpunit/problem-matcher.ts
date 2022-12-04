@@ -56,6 +56,7 @@ export enum TestResultEvent {
 
 export enum TestExtraResultEvent {
     testVersion = 'testVersion',
+    testRuntime = ' testRuntime',
     testCount = 'testCount',
     timeAndMemory = 'timeAndMemory',
     testResultCount = 'testResultCount',
@@ -96,6 +97,7 @@ export type TestCount = {
     flowId: number;
 };
 export type TestVersion = { kind: TestResultKind; version: string; text: string };
+export type TestRuntime = { kind: TestResultKind; runtime: string; text: string };
 export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string };
 export type TestResultCount = {
     kind: TestResultKind;
@@ -135,6 +137,24 @@ class TestVersionParser implements IParser<TestVersion> {
         return {
             kind: TestExtraResultEvent.testVersion,
             version: groups.version,
+            text,
+        };
+    }
+}
+
+class TestRuntimeParser implements IParser<TestRuntime> {
+    private pattern = new RegExp('^Runtime:\\s+(?<runtime>.+)', 'i');
+
+    is(text: string): boolean {
+        return !!text.match(this.pattern);
+    }
+
+    parse(text: string) {
+        const groups = text.match(this.pattern)!.groups!;
+
+        return {
+            kind: TestExtraResultEvent.testRuntime,
+            runtime: groups.runtime,
             text,
         };
     }
@@ -209,6 +229,7 @@ export class Parser implements IParser<Result | undefined> {
     private readonly filePattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
     private readonly parsers = [
         new TestVersionParser(),
+        new TestRuntimeParser(),
         new TimeAndMemoryParser(),
         new TestResultCountParser(),
     ];
