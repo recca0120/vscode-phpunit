@@ -1,4 +1,4 @@
-import { spawn, SpawnOptions } from 'child_process';
+import { SpawnOptions } from 'child_process';
 import * as yargsParser from 'yargs-parser';
 import { Result } from './problem-matcher';
 import { Configuration, IConfiguration } from './configuration';
@@ -128,12 +128,10 @@ export abstract class Command {
         return result;
     }
 
-    run(options?: SpawnOptions) {
-        const [command, ...args] = this.apply()
+    apply(options?: SpawnOptions) {
+        return this.doApply()
             .filter((input: string) => ![undefined, ''].includes(input))
             .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input, options));
-
-        return spawn(command!, args, options ?? {});
     }
 
     protected abstract resolvePathReplacer(paths: Path): PathReplacer;
@@ -142,7 +140,7 @@ export abstract class Command {
         return this.pathReplacer;
     }
 
-    protected apply() {
+    protected doApply() {
         return [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
     }
 
@@ -182,8 +180,8 @@ export abstract class RemoteCommand extends Command {
 }
 
 export class DockerCommand extends RemoteCommand {
-    protected apply() {
-        return [...this.dockerCommand(), this.container(), ...super.apply()];
+    protected doApply() {
+        return [...this.dockerCommand(), this.container(), ...super.doApply()];
     }
 
     private dockerCommand() {

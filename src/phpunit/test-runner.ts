@@ -1,4 +1,4 @@
-import { SpawnOptionsWithoutStdio } from 'child_process';
+import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import {
     problemMatcher,
     Result,
@@ -13,14 +13,20 @@ import {
 import { Command } from './command';
 
 export enum TestRunnerEvent {
-    result = 'result',
+    command = 'command',
     line = 'line',
+    result = 'result',
+    output = 'output',
+    error = 'error',
     close = 'close',
 }
 
 export type TestRunnerObserver = {
-    [TestRunnerEvent.result]?: (result: Result) => void;
+    [TestRunnerEvent.command]?: (command: string) => void;
     [TestRunnerEvent.line]?: (line: string) => void;
+    [TestRunnerEvent.result]?: (result: Result) => void;
+    [TestRunnerEvent.output]?: (output: string) => void;
+    [TestRunnerEvent.error]?: (error: string) => void;
     [TestRunnerEvent.close]?: (code: number | null) => void;
     [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
     [TestExtraResultEvent.testResultCount]?: (result: TestResultCount) => void;
@@ -124,7 +130,13 @@ export class TestRunner {
 
     run(command: Command, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve, reject) => {
-            const proc = command.run({ ...this.options, ...options });
+            options = { ...this.options, ...options } ?? {};
+            const parameters = command.apply(options);
+
+            this.trigger(TestRunnerEvent.command, parameters.join(' '));
+
+            const [cmd, ...args] = parameters;
+            const proc = spawn(cmd!, args, options);
 
             let temp = '';
             let output = '';
@@ -146,7 +158,13 @@ export class TestRunner {
 
             proc.on('close', (code) => {
                 this.trigger(TestRunnerEvent.close, code);
-                this.isPhpUnit(output) ? resolve(output) : reject(output);
+                if (this.isPhpUnit(output)) {
+                    this.trigger(TestRunnerEvent.output, output);
+                    resolve(output);
+                } else {
+                    this.trigger(TestRunnerEvent.error, output);
+                    reject(output);
+                }
             });
         });
     }
