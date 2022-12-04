@@ -187,10 +187,10 @@ export class DockerCommand extends RemoteCommand {
     }
 
     private dockerCommand() {
-        return (this.configuration.get('docker.command', 'docker exec') as string).split(' ');
+        return ((this.configuration.get('docker.command') as string) ?? '').split(' ');
     }
 
     private container() {
-        return this.configuration.get('docker.container', '') as string;
+        return (this.configuration.get('docker.container') as string) ?? '';
     }
 }
