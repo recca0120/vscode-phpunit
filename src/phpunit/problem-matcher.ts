@@ -243,7 +243,7 @@ class TimeAndMemoryParser implements IParser<TimeAndMemory> {
 
 export class Parser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^\\s*#+teamcity');
-    private readonly filePattern = new RegExp('(s+)?(?<fileAneLine>(?<file>.+):(?<line>\\d+))$');
+    private readonly filePattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
     private readonly parsers = [
         new TestVersionParser(),
         new TestRuntimeParser(),
@@ -286,29 +286,30 @@ export class Parser implements IParser<Result | undefined> {
         }
 
         let message = argv.message;
-
-        if (this.filePattern.test(argv.message)) {
-            const input = argv.message.match(this.filePattern).input;
-            const { fileAneLine } = argv.message.match(this.filePattern).groups;
-            message = input.replace(`${fileAneLine}`, '').trim();
-            argv.details = fileAneLine + '\n' + argv.details;
-        }
+        const details = this.parseFileAndLine(argv.message);
+        details.forEach(({ file, line }) => {
+            message = message.replace(`${file}:${line}`, '');
+        });
 
         return {
-            message,
-            details: argv.details
-                .trim()
-                .split(/\r\n|\n/g)
-                .filter((fileAndLine: string) => fileAndLine.match(this.filePattern))
-                .map((fileAndLine: string) => {
-                    const { file, line } = fileAndLine.match(this.filePattern)!.groups!;
-
-                    return {
-                        file: file.replace(/^(-)+/, '').trim(),
-                        line: parseInt(line, 10),
-                    };
-                }),
+            message: message.trim(),
+            details: [...details, ...this.parseFileAndLine(argv.details)],
         };
+    }
+
+    private parseFileAndLine(text: string) {
+        return text
+            .trim()
+            .split(/\r\n|\n/g)
+            .filter((input: string) => input.match(this.filePattern))
+            .map((input: string) => {
+                const { file, line } = input.match(this.filePattern)!.groups!;
+
+                return {
+                    file: file.replace(/^(-)+/, '').trim(),
+                    line: parseInt(line, 10),
+                };
+            });
     }
 
     private parseLocationHint(argv: Pick<Arguments, string | number>) {
