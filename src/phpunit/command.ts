@@ -150,7 +150,19 @@ export abstract class Command {
     }
 
     protected doApply() {
-        return [this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
+        return [...this.command(), this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
+    }
+
+    private command() {
+        return ((this.configuration.get('command') as string) ?? '').split(' ');
+    }
+
+    private phpPath() {
+        return (this.configuration.get('php') as string) ?? '';
+    }
+
+    private phpUnitPath() {
+        return (this.configuration.get('phpunit') as string) ?? '';
     }
 
     private getArguments(): string[] {
@@ -166,14 +178,6 @@ export abstract class Command {
             .map((input: string) => this.getPathReplacer().localToRemote(input))
             .concat('--teamcity', '--colors=never');
     }
-
-    private phpPath() {
-        return (this.configuration.get('php') as string) ?? '';
-    }
-
-    private phpUnitPath() {
-        return (this.configuration.get('phpunit') as string) ?? '';
-    }
 }
 
 export class LocalCommand extends Command {
@@ -183,14 +187,6 @@ export class LocalCommand extends Command {
 }
 
 export class RemoteCommand extends Command {
-    protected doApply() {
-        return [...this.command(), ...super.doApply()];
-    }
-
-    private command() {
-        return ((this.configuration.get('command') as string) ?? '').split(' ');
-    }
-
     protected resolvePathReplacer(
         options: SpawnOptions,
         configuration: IConfiguration
