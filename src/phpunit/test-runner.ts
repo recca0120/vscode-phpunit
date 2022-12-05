@@ -139,7 +139,8 @@ export class TestRunner {
     private readonly defaultObserver: DefaultObserver;
     private observers: TestRunnerObserver[] = [];
 
-    private pattern = new RegExp('PHPUnit\\s+[\\d\\.]+');
+    private phpUnitPattern = new RegExp('PHPUnit\\s+[\\d\\.]+');
+    private runtimePattern = new RegExp('Runtime:\\s+PHP\\s[\\d\\.]+')
 
     constructor() {
         this.defaultObserver = new DefaultObserver();
@@ -182,14 +183,14 @@ export class TestRunner {
             proc.stderr!.on('end', () => this.processLine(temp, command));
 
             proc.on('error', (err: Error) => {
-                const output = err.stack ?? err.message;
-                this.trigger(TestRunnerEvent.error, output);
+                const error = err.stack ?? err.message;
+                this.trigger(TestRunnerEvent.error, error);
                 this.trigger(TestRunnerEvent.close, 2);
                 resolve({ proc });
             });
 
             proc.on('close', (code) => {
-                const eventName = this.isPhpUnit(output)
+                const eventName = this.isTestRunning(output)
                     ? TestRunnerEvent.output
                     : TestRunnerEvent.error;
 
@@ -200,8 +201,8 @@ export class TestRunner {
         });
     }
 
-    private isPhpUnit(output: string) {
-        return this.pattern.test(output);
+    private isTestRunning(output: string) {
+        return this.phpUnitPattern.test(output) && this.runtimePattern.test(output);
     }
 
     private processLine(line: string, command: Command) {

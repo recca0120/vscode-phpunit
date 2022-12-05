@@ -126,8 +126,10 @@ export class OutputChannelObserver implements TestRunnerObserver {
     //     this.outputChannel.appendLine(line);
     // }
 
-    error(output: string): void {
-        this.outputChannel.append(output);
+    error(error: string): void {
+        const [icon] = this.testResultMessages.get(TestResultEvent.testFailed)!;
+        this.outputChannel.clear();
+        this.outputChannel.append(`${icon} ${error}`);
     }
 
     testVersion(result: TestVersion) {
