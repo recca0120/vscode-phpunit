@@ -56,9 +56,12 @@ class PathReplacer {
     }
 
     private doRemoteToLocal(path: string) {
-        return this.replaceMapping(path, (localPath, remotePath) =>
-            path.replace(remotePath, localPath)
-        );
+        return this.replaceMapping(path, (localPath, remotePath) => {
+            return path.replace(
+                new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}([\\/])`, 'g'),
+                (_m, sep) => `${localPath}${sep}`
+            );
+        });
     }
 
     private doLocalToRemote(path: string) {

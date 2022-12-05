@@ -44,8 +44,8 @@ describe('TestRunner Test', () => {
         });
 
         (spawn as jest.Mock).mockReturnValue({
-            stdout: { on: stdout },
-            stderr: { on: jest.fn() },
+            stdout: {on: stdout},
+            stderr: {on: jest.fn()},
             on: jest.fn().mockImplementation((_event, fn: (data: number) => void) => {
                 if (_event === 'close') {
                     fn(2);
@@ -144,7 +144,7 @@ describe('TestRunner Test', () => {
 
         const [cmd, ...args] = expected;
 
-        expect(spawn).toBeCalledWith(cmd, args, { cwd: projectPath('') });
+        expect(spawn).toBeCalledWith(cmd, args, {cwd: projectPath('')});
     };
 
     const expectedTest = (expected: any, projectPath: (path: string) => string) => {
@@ -161,7 +161,7 @@ describe('TestRunner Test', () => {
         if (expected.event === TestResultEvent.testFailed) {
             const hasFile = (pattern: string, l: number) => {
                 return (testResult[0].details as { file: string; line: number }[]).some(
-                    ({ file, line }) => !!file.match(new RegExp(pattern)) && line === l
+                    ({file, line}) => !!file.match(new RegExp(pattern)) && line === l
                 );
             };
 
@@ -187,11 +187,13 @@ describe('TestRunner Test', () => {
             expect(testResult[0].details).toEqual(expected.details);
         }
 
-        expect(testResult[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
+        expect(testResult[0]).toEqual(expect.objectContaining({...expected, locationHint}));
 
         expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
-            expect.objectContaining({ ...expected, locationHint })
+            expect.objectContaining({...expected, locationHint})
         );
+
+        console.log(expected)
 
         expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
@@ -341,7 +343,7 @@ describe('TestRunner Test', () => {
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
                 file: projectPath('tests/AssertionsTest.php'),
                 message: 'Failed asserting that false is true.',
-                details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+                details: [{file: projectPath('tests/AssertionsTest.php'), line: 22}],
                 duration: expect.any(Number),
             },
             projectPath
@@ -355,7 +357,7 @@ describe('TestRunner Test', () => {
                 phpunit: 'vendor/bin/phpunit',
                 args: ['-c', '${PWD}/phpunit.xml'],
             }),
-            { cwd: projectPath('') }
+            {cwd: projectPath('')}
         );
 
         await expectedRun(
@@ -385,7 +387,7 @@ describe('TestRunner Test', () => {
                         phpunit: 'vendor/bin/phpunit',
                         args: ['-c', '${workspaceFolder}/phpunit.xml'],
                     }),
-                    { cwd: projectPath('') }
+                    {cwd: projectPath('')}
                 ),
                 appPath: (path: string) => projectPath(path),
                 projectPath,
@@ -404,9 +406,9 @@ describe('TestRunner Test', () => {
                         php: 'php',
                         phpunit: 'vendor/bin/phpunit',
                         args: ['-c', '${PWD}/phpunit.xml'],
-                        paths: { [projectPath('')]: '/app' },
+                        paths: {[projectPath('')]: '/app'},
                     }),
-                    { cwd: projectPath('') }
+                    {cwd: projectPath('')}
                 ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath,
@@ -439,11 +441,11 @@ describe('TestRunner Test', () => {
                         phpunit: 'vendor/bin/phpunit',
                         args: ['-c', '${PWD}/phpunit.xml'],
                         // eslint-disable-next-line @typescript-eslint/naming-convention
-                        paths: { 'C:\\vscode': '/app' },
+                        paths: {'C:\\vscode': '.'},
                     }),
-                    { cwd: 'C:\\vscode' }
+                    {cwd: 'C:\\vscode'}
                 ),
-                appPath: (path: string) => `/app/${path}`,
+                appPath: (path: string) => `./${path}`,
                 projectPath: (path: string) => {
                     return `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
                 },
@@ -463,7 +465,7 @@ describe('TestRunner Test', () => {
         ],
     ];
     describe.each(dataSet)('%s', (...data: any[]) => {
-        const [_name, { mock, command, appPath, projectPath }, expected] = data;
+        const [_name, {mock, command, appPath, projectPath}, expected] = data;
 
         beforeEach(() => {
             jest.restoreAllMocks();
