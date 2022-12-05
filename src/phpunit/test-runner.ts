@@ -159,8 +159,8 @@ export class TestRunner {
     run(command: Command, options?: SpawnOptionsWithoutStdio) {
         return new Promise((resolve) => {
             options = { ...this.options, ...options } ?? {};
-            const input = command.apply(options);
-
+           
+            const input = command.setOptions(options).apply();
             this.trigger(TestRunnerEvent.input, input.join(' '));
 
             const [firstArgs, ...args] = input;

@@ -24,6 +24,7 @@ class PathReplacer {
             'g'
         );
     });
+    private options: SpawnOptions = {};
 
     constructor(private mapping = new Map<string, string>()) {}
 
@@ -40,9 +41,13 @@ class PathReplacer {
         return new PathReplacer(mapping);
     }
 
-    public replaceWorkspaceFolder(path: string, options?: SpawnOptions) {
+    setOptions(options: SpawnOptions) {
+        this.options = options;
+    }
+
+    public replaceWorkspaceFolder(path: string) {
         return this.workspaceFolderPatterns.reduce((path, pattern) => {
-            return path.replace(pattern, (options?.cwd ?? '') as string);
+            return path.replace(pattern, (this.options?.cwd ?? '') as string);
         }, path);
     }
 
@@ -98,9 +103,17 @@ class PathReplacer {
 export abstract class Command {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
+    private options: SpawnOptions = {};
 
     constructor(protected configuration: IConfiguration = new Configuration()) {
         this.pathReplacer = this.resolvePathReplacer(this.configuration.get('paths') as Path);
+    }
+
+    setOptions(options: SpawnOptions) {
+        this.options = options;
+        this.getPathReplacer().setOptions(options);
+
+        return this;
     }
 
     setArguments(args: string) {
@@ -128,10 +141,10 @@ export abstract class Command {
         return result;
     }
 
-    apply(options?: SpawnOptions) {
+    apply() {
         return this.doApply()
             .filter((input: string) => ![undefined, ''].includes(input))
-            .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input, options));
+            .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input));
     }
 
     protected abstract resolvePathReplacer(paths: Path): PathReplacer;
