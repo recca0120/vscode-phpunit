@@ -203,4 +203,8 @@ export class RemoteCommand extends Command {
             [this.phpPath(), this.phpUnitPath(), ...this.getArguments()].join(' '),
         ];
     }
+
+    protected getArguments(): string[] {
+        return super.getArguments().map((input) => (/^-/.test(input) ? `'${input}'` : input));
+    }
 }

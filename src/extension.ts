@@ -47,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const runTestQueue = async () => {
             const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
 
-            const command = ((configuration.get('command') as string) ?? '').match(/docker/)
+            const command = ((configuration.get('command') as string) ?? '').match(/docker|ssh/)
                 ? new RemoteCommand(configuration, options)
                 : new LocalCommand(configuration, options);
 

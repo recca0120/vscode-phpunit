@@ -217,7 +217,11 @@ describe('TestRunner Test', () => {
 
     function generateExceptedByCommand(command: Command, expected: any[], inputs: unknown[]) {
         if (command instanceof RemoteCommand) {
-            inputs = [inputs.join(' ')];
+            inputs = [
+                (inputs as string[])
+                    .map((input) => (/^-/.test(input) ? `'${input}'` : input))
+                    .join(' '),
+            ];
         }
 
         return [...expected, ...inputs];
@@ -398,6 +402,39 @@ describe('TestRunner Test', () => {
                     appPath,
                     projectPath,
                     expected: [],
+                },
+            ];
+        })(),
+        ((): [string, ExpectedData] => {
+            const appPath = (path: string) => `/app/${path}`;
+
+            const configuration = new Configuration({
+                command:
+                    'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no',
+                php: 'php',
+                phpunit: appPath('vendor/bin/phpunit'),
+                args: ['-c', appPath('phpunit.xml')],
+                paths: { [projectPath('')]: '/app' },
+            });
+
+            return [
+                'ssh',
+                {
+                    mock: true,
+                    configuration,
+                    command: new RemoteCommand(configuration, { cwd: projectPath('') }),
+                    appPath,
+                    projectPath,
+                    expected: [
+                        'ssh',
+                        '-i',
+                        'dockerfiles/sshd/id_rsa',
+                        '-p',
+                        '2222',
+                        'root@localhost',
+                        '-o',
+                        'StrictHostKeyChecking=no',
+                    ],
                 },
             ];
         })(),
