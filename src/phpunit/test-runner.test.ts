@@ -84,7 +84,7 @@ describe('TestRunner Test', () => {
             `Configuration: ${appPath('phpunit.xml')}`,
             "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
-            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ' duration='0' flowId='8024']`,
+            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${file}:22|n ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
             'Tests: 1, Assertions: 1, Failures: 1',
@@ -103,7 +103,7 @@ describe('TestRunner Test', () => {
             `Configuration: ${appPath('phpunit.xml')}`,
             "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
-            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
+            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
             'Tests: 1, Assertions: 1, Failures: 1',
@@ -163,11 +163,24 @@ describe('TestRunner Test', () => {
                 );
             };
 
+            if (hasFile('AssertionsTest', 5)) {
+                expected.details = [
+                    {
+                        file: projectPath('tests/AssertionsTest.php'),
+                        line: 5,
+                    },
+                    ...expected.details,
+                ];
+            }
+
             if (hasFile('phpunit', 60)) {
-                expected.details.push({
-                    file: projectPath('vendor/phpunit/phpunit/phpunit'),
-                    line: 60,
-                });
+                expected.details = [
+                    ...expected.details,
+                    {
+                        file: projectPath('vendor/phpunit/phpunit/phpunit'),
+                        line: 60,
+                    },
+                ];
             }
             expect(testResult[0].details).toEqual(expected.details);
         }
