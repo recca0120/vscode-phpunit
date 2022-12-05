@@ -184,8 +184,8 @@ export class TestRunner {
             proc.on('error', (err: Error) => {
                 const output = err.stack ?? err.message;
                 this.trigger(TestRunnerEvent.error, output);
-                resolve(output);
                 this.trigger(TestRunnerEvent.close, 2);
+                resolve({ proc });
             });
 
             proc.on('close', (code) => {
@@ -194,8 +194,8 @@ export class TestRunner {
                     : TestRunnerEvent.error;
 
                 this.trigger(eventName, output);
-                resolve(output);
                 this.trigger(TestRunnerEvent.close, code);
+                resolve({ proc });
             });
         });
     }
