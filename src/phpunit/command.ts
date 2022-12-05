@@ -38,7 +38,8 @@ class PathReplacer {
     }
 
     public replaceWorkspaceFolder(path: string) {
-        const cwd = (this.options?.cwd ?? process.env.cwd) as string;
+        const cwd = (this.options?.cwd as string) ?? (process.env.cwd as string);
+
         return this.workspaceFolderPatterns.reduce(
             (path, pattern) => path.replace(pattern, cwd),
             path
@@ -75,11 +76,10 @@ class PathReplacer {
     }
 
     private toWindowsPath(path: string) {
-        return path.replace(
-            /^(php_qn:\/\/)?(\w:)(.+)/,
-            (_matched: string, protocol: string, driveLetter: string, file: string) =>
-                `${protocol ?? ''}${driveLetter}${file.replace(/\//g, '\\')}`
-        );
+        return path
+            .replace(/php_qn:\/\//g, 'php_qn:||')
+            .replace(/\w:[\\\/][^:]+/g, (matched) => matched.replace(/\//g, '\\'))
+            .replace(/php_qn:\|\|/g, 'php_qn://');
     }
 
     private removePhpVfsComposer(path: string) {
@@ -156,19 +156,19 @@ export abstract class Command {
         return [...this.command(), this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
     }
 
-    private command() {
+    protected command() {
         return ((this.configuration.get('command') as string) ?? '').split(' ');
     }
 
-    private phpPath() {
+    protected phpPath() {
         return (this.configuration.get('php') as string) ?? '';
     }
 
-    private phpUnitPath() {
+    protected phpUnitPath() {
         return (this.configuration.get('phpunit') as string) ?? '';
     }
 
-    private getArguments(): string[] {
+    protected getArguments(): string[] {
         const args = [this.arguments, ...(this.configuration.get('args', []) as string[])];
 
         const { _, ...argv } = yargsParser(args.join(' ').trim(), {
@@ -195,5 +195,12 @@ export class RemoteCommand extends Command {
         configuration: IConfiguration
     ): PathReplacer {
         return new PathReplacer(options, configuration.get('paths') as Path);
+    }
+
+    protected doApply() {
+        return [
+            ...this.command(),
+            [this.phpPath(), this.phpUnitPath(), ...this.getArguments()].join(' '),
+        ];
     }
 }

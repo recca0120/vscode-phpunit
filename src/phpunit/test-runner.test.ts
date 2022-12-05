@@ -40,13 +40,6 @@ describe('TestRunner Test', () => {
         [TestResultEvent.testIgnored, jest.fn()],
         [TestResultEvent.testFinished, jest.fn()],
     ]);
-
-    const dataProviderPattern = (name: string) => {
-        return new RegExp(
-            `--filter=["']?\\^\\.\\*::\\(${name}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
-        );
-    };
-
     const mockSpawn = (contents: string[]) => {
         const stdout = jest.fn().mockImplementation((_event, fn: (data: string) => void) => {
             contents.forEach((line) => fn(line + '\n'));
@@ -222,19 +215,29 @@ describe('TestRunner Test', () => {
         jest.restoreAllMocks();
     });
 
-    async function shouldRunAllTests(data: ExpectedData) {
-        let { configuration, expected, projectPath, appPath } = data;
+    function generateExceptedByCommand(command: Command, expected: any[], inputs: unknown[]) {
+        if (command instanceof RemoteCommand) {
+            inputs = [inputs.join(' ')];
+        }
 
-        expected = [
-            ...expected,
+        return [...expected, ...inputs];
+    }
+
+    async function shouldRunAllTests(data: ExpectedData) {
+        const { configuration, command, expected, projectPath, appPath } = data;
+
+        let inputs = [
             configuration.get('php'),
-            'vendor/bin/phpunit',
+            configuration.get('phpunit'),
             `--configuration=${appPath('phpunit.xml')}`,
             '--teamcity',
             '--colors=never',
         ];
 
-        await expectedRun({ ...data, expected });
+        await expectedRun({
+            ...data,
+            expected: generateExceptedByCommand(command, expected, inputs),
+        });
 
         expectedTest(
             {
@@ -252,17 +255,20 @@ describe('TestRunner Test', () => {
         let { configuration, expected, command, projectPath, appPath } = data;
         const args = `${projectPath('tests/AssertionsTest.php')}`;
 
-        expected = [
-            ...expected,
+        const inputs = [
             configuration.get('php'),
-            'vendor/bin/phpunit',
+            configuration.get('phpunit'),
             appPath('tests/AssertionsTest.php'),
             `--configuration=${appPath('phpunit.xml')}`,
             '--teamcity',
             '--colors=never',
         ];
 
-        await expectedRun({ ...data, command: command.setArguments(args), expected });
+        await expectedRun({
+            ...data,
+            command: command.setArguments(args),
+            expected: generateExceptedByCommand(command, expected, inputs),
+        });
 
         expectedTest(
             {
@@ -284,18 +290,21 @@ describe('TestRunner Test', () => {
         const file = projectPath('tests/AssertionsTest.php');
         const args = `${file} --filter "${filter}"`;
 
-        expected = [
-            ...expected,
+        const inputs = [
             configuration.get('php'),
-            'vendor/bin/phpunit',
+            configuration.get('phpunit'),
             appPath('tests/AssertionsTest.php'),
-            expect.stringMatching(dataProviderPattern(name)),
+            `--filter=${filter}`,
             `--configuration=${appPath('phpunit.xml')}`,
             '--teamcity',
             '--colors=never',
         ];
 
-        await expectedRun({ ...data, command: command.setArguments(args), expected });
+        await expectedRun({
+            ...data,
+            command: command.setArguments(args),
+            expected: generateExceptedByCommand(command, expected, inputs),
+        });
 
         expectedTest(
             {
@@ -317,18 +326,21 @@ describe('TestRunner Test', () => {
         const file = projectPath('tests/AssertionsTest.php');
         const args = `${file} --filter "${filter}"`;
 
-        expected = [
-            ...expected,
+        const inputs = [
             configuration.get('php'),
-            'vendor/bin/phpunit',
+            configuration.get('phpunit'),
             appPath('tests/AssertionsTest.php'),
-            expect.stringMatching(dataProviderPattern('test_passed|test_failed')),
+            `--filter=${filter}`,
             `--configuration=${appPath('phpunit.xml')}`,
             '--teamcity',
             '--colors=never',
         ];
 
-        await expectedRun({ ...data, command: command.setArguments(args), expected });
+        await expectedRun({
+            ...data,
+            command: command.setArguments(args),
+            expected: generateExceptedByCommand(command, expected, inputs),
+        });
 
         expectedTest(
             {
