@@ -179,10 +179,10 @@ export class RemoteCommand extends Command {
     }
 
     protected doApply() {
-        return [...this.dockerCommand(), ...super.doApply()];
+        return [...this.command(), ...super.doApply()];
     }
 
-    private dockerCommand() {
+    private command() {
         return ((this.configuration.get('command') as string) ?? '').split(' ');
     }
 }
