@@ -310,6 +310,22 @@ describe('TestRunner Test', () => {
         );
     }
 
+    it('run error command', async () => {
+        const command = new LocalCommand(
+            new Configuration({ php: 'foo', args: ['-c', 'phpunit.xml'] })
+        );
+
+        await expectedRun(command, [
+            'foo',
+            'vendor/bin/phpunit',
+            '--configuration=phpunit.xml',
+            '--teamcity',
+            '--colors=never',
+        ]);
+
+        expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalled();
+    });
+
     const dataSet = [
         [
             'PHPUnit',

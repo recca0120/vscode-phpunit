@@ -159,7 +159,7 @@ export class TestRunner {
     }
 
     run(command: Command, options?: SpawnOptionsWithoutStdio) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             options = { ...this.options, ...options } ?? {};
             const input = command.apply(options);
 
@@ -186,15 +186,19 @@ export class TestRunner {
             proc.stdout!.on('end', () => this.processLine(temp, command));
             proc.stderr!.on('end', () => this.processLine(temp, command));
 
+            proc.on('error', (err: Error) => {
+                const output = err.stack ?? err.message;
+                this.trigger(TestRunnerEvent.error, output);
+                resolve(output);
+            });
+
             proc.on('close', (code) => {
+                this.trigger(
+                    this.isPhpUnit(output) ? TestRunnerEvent.output : TestRunnerEvent.error,
+                    output
+                );
+                resolve(output);
                 this.trigger(TestRunnerEvent.close, code);
-                if (this.isPhpUnit(output)) {
-                    this.trigger(TestRunnerEvent.output, output);
-                    resolve(output);
-                } else {
-                    this.trigger(TestRunnerEvent.error, output);
-                    reject(output);
-                }
             });
         });
     }
