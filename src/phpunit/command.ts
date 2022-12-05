@@ -41,8 +41,8 @@ class PathReplacer {
         return new PathReplacer(mapping);
     }
 
-    setOptions(options: SpawnOptions) {
-        this.options = options;
+    setOptions(options?: SpawnOptions) {
+        this.options = options ?? {};
     }
 
     public replaceWorkspaceFolder(path: string) {
@@ -56,7 +56,9 @@ class PathReplacer {
     }
 
     public localToRemote(path: string) {
-        return this.toWindowsPath(this.toPostfixPath(this.doLocalToRemote(path)));
+        return this.toWindowsPath(
+            this.toPostfixPath(this.doLocalToRemote(this.replaceWorkspaceFolder(path)))
+        );
     }
 
     private doRemoteToLocal(path: string) {
