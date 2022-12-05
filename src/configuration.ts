@@ -13,6 +13,8 @@ export class Configuration implements IConfiguration {
     }
 
     async update(key: string, value: any): Promise<void> {
+        console.log(this.items);
+
         return this.items.update(key, value);
     }
 }

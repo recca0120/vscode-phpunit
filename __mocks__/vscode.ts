@@ -206,11 +206,19 @@ export class Configuration {
     }
 }
 
+const configurations = new Map<string, Configuration>();
+
 const workspace = {
     workspaceFolders: [],
     textDocuments: [],
-    getConfiguration: jest.fn().mockImplementation((_section: string) => {
-        return new Configuration();
+    getConfiguration: jest.fn().mockImplementation((section: string) => {
+        if (configurations.has(section)) {
+            return configurations.get(section);
+        }
+       
+        const configuration = new Configuration();
+        configurations.set(section, configuration);
+        return configuration;
     }),
     getWorkspaceFolder: (uri: URI) => {
         return workspace.workspaceFolders.find((folder: WorkspaceFolder) =>

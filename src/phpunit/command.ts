@@ -145,7 +145,7 @@ export abstract class Command {
 
     apply() {
         return this.doApply()
-            .filter((input: string) => ![undefined, ''].includes(input))
+            .filter((input: string) => !!input)
             .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input));
     }
 
@@ -174,11 +174,11 @@ export abstract class Command {
     }
 
     private phpPath() {
-        return (this.configuration.get('php') as string) ?? 'php';
+        return (this.configuration.get('php') as string) ?? '';
     }
 
     private phpUnitPath() {
-        return (this.configuration.get('phpunit') as string) ?? 'vendor/bin/phpunit';
+        return (this.configuration.get('phpunit') as string) ?? '';
     }
 }
 

@@ -97,9 +97,13 @@ describe('Extension Test', () => {
         const context: any = { subscriptions: { push: jest.fn() } };
         let cwd: string;
 
-        beforeEach(() => {
+        beforeEach(async () => {
             context.subscriptions.push.mockReset();
             cwd = normalPath(projectPath(''));
+            await vscode.workspace.getConfiguration('phpunit').update('php', 'php');
+            await vscode.workspace
+                .getConfiguration('phpunit')
+                .update('phpunit', 'vendor/bin/phpunit');
         });
 
         it('should load tests', async () => {
