@@ -157,7 +157,13 @@ describe('TestRunner Test', () => {
         expect(testResult).not.toBeUndefined();
 
         if (expected.event === TestResultEvent.testFailed) {
-            if (testResult[0].details.length === 2) {
+            const hasFile = (pattern: string, l: number) => {
+                return (testResult[0].details as { file: string; line: number }[]).some(
+                    ({ file, line }) => !!file.match(new RegExp(pattern)) && line === l
+                );
+            };
+
+            if (hasFile('phpunit', 60)) {
                 expected.details.push({
                     file: projectPath('vendor/phpunit/phpunit/phpunit'),
                     line: 60,
