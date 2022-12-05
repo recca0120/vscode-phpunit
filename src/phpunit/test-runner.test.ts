@@ -323,7 +323,7 @@ describe('TestRunner Test', () => {
             '--colors=never',
         ]);
 
-        expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalled();
+        expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalledTimes(1);
     });
 
     const dataSet = [
