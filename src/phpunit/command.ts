@@ -173,22 +173,16 @@ export class LocalCommand extends Command {
     }
 }
 
-export abstract class RemoteCommand extends Command {
+export class RemoteCommand extends Command {
     protected resolvePathReplacer(paths: Path) {
         return PathReplacer.fromJson(paths);
     }
-}
 
-export class DockerCommand extends RemoteCommand {
     protected doApply() {
-        return [...this.dockerCommand(), this.container(), ...super.doApply()];
+        return [...this.dockerCommand(), ...super.doApply()];
     }
 
     private dockerCommand() {
-        return ((this.configuration.get('docker.command') as string) ?? '').split(' ');
-    }
-
-    private container() {
-        return (this.configuration.get('docker.container') as string) ?? '';
+        return ((this.configuration.get('command') as string) ?? '').split(' ');
     }
 }

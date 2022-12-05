@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { TestRunner } from './phpunit/test-runner';
-import { DockerCommand, LocalCommand } from './phpunit/command';
+import { RemoteCommand, LocalCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
 import { OutputChannelObserver, TestResultObserver } from './observer';
@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const runTestQueue = async () => {
             const command = ((configuration.get('command') as string) ?? '').match(/docker/)
-                ? new DockerCommand(configuration)
+                ? new RemoteCommand(configuration)
                 : new LocalCommand(configuration);
 
             const runner = new TestRunner();

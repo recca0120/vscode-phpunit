@@ -3,7 +3,7 @@ import { projectPath } from './__tests__/helper';
 import { TestRunner, TestRunnerEvent } from './test-runner';
 import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
 import { spawn } from 'child_process';
-import { Command, DockerCommand, LocalCommand } from './command';
+import { Command, RemoteCommand, LocalCommand } from './command';
 import { Configuration } from './configuration';
 
 jest.mock('child_process');
@@ -361,12 +361,11 @@ describe('TestRunner Test', () => {
             'Docker',
             {
                 mock: true,
-                command: new DockerCommand(
+                command: new RemoteCommand(
                     // new Map<string, string>([[projectPath(''), '/app']])
                     new Configuration({
                         // eslint-disable-next-line @typescript-eslint/naming-convention
-                        'docker.command':
-                            'docker run -i --rm -v ${PWD}:/app -w /app project-stub-phpunit',
+                        command: 'docker run -i --rm -v ${PWD}:/app -w /app project-stub-phpunit',
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         args: ['-c', 'phpunit.xml'],
                         paths: { [projectPath('')]: '/app' },
@@ -392,11 +391,11 @@ describe('TestRunner Test', () => {
             'Docker for Windows',
             {
                 mock: true,
-                command: new DockerCommand(
+                command: new RemoteCommand(
                     // new Map<string, string>([['C:\\vscode', '/app']])
                     new Configuration({
                         // eslint-disable-next-line @typescript-eslint/naming-convention
-                        'docker.command':
+                        command:
                             'docker run -i --rm -v ${workspaceFolder}:/app -w /app project-stub-phpunit',
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         args: ['-c', 'phpunit.xml'],
