@@ -140,7 +140,7 @@ describe('TestRunner Test', () => {
             testRunner.on(eventName, (test: Result) => fn(test));
         });
 
-        await testRunner.run(command, { cwd: projectPath('') });
+        await testRunner.run(command);
 
         const [cmd, ...args] = expected;
 
@@ -354,7 +354,8 @@ describe('TestRunner Test', () => {
                 php: 'foo',
                 phpunit: 'vendor/bin/phpunit',
                 args: ['-c', '${PWD}/phpunit.xml'],
-            })
+            }),
+            { cwd: projectPath('') }
         );
 
         await expectedRun(
@@ -383,7 +384,8 @@ describe('TestRunner Test', () => {
                         php: 'php',
                         phpunit: 'vendor/bin/phpunit',
                         args: ['-c', '${workspaceFolder}/phpunit.xml'],
-                    })
+                    }),
+                    { cwd: projectPath('') }
                 ),
                 appPath: (path: string) => projectPath(path),
                 projectPath,
@@ -403,7 +405,8 @@ describe('TestRunner Test', () => {
                         phpunit: 'vendor/bin/phpunit',
                         args: ['-c', '${PWD}/phpunit.xml'],
                         paths: { [projectPath('')]: '/app' },
-                    })
+                    }),
+                    { cwd: projectPath('') }
                 ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath,
@@ -437,7 +440,8 @@ describe('TestRunner Test', () => {
                         args: ['-c', '${PWD}/phpunit.xml'],
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         paths: { 'C:\\vscode': '/app' },
-                    })
+                    }),
+                    { cwd: 'C:\\vscode' }
                 ),
                 appPath: (path: string) => `/app/${path}`,
                 projectPath: (path: string) => {

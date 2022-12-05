@@ -1,4 +1,4 @@
-import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
+import { spawn } from 'child_process';
 import {
     problemMatcher,
     Result,
@@ -141,7 +141,7 @@ export class TestRunner {
 
     private pattern = new RegExp('PHPUnit\\s+[\\d\\.]+');
 
-    constructor(private options?: SpawnOptionsWithoutStdio) {
+    constructor() {
         this.defaultObserver = new DefaultObserver();
         this.observe(this.defaultObserver);
     }
@@ -156,15 +156,12 @@ export class TestRunner {
         return this;
     }
 
-    run(command: Command, options?: SpawnOptionsWithoutStdio) {
+    run(command: Command) {
         return new Promise((resolve) => {
-            options = { ...this.options, ...options } ?? {};
-           
-            const input = command.setOptions(options).apply();
-            this.trigger(TestRunnerEvent.input, input.join(' '));
+            const { cmd, args, options } = command.apply();
+            this.trigger(TestRunnerEvent.input, [cmd, ...args].join(' '));
 
-            const [firstArgs, ...args] = input;
-            const proc = spawn(firstArgs!, args, options);
+            const proc = spawn(cmd, args, options);
 
             let temp = '';
             let output = '';

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { TestRunner } from './phpunit/test-runner';
-import { RemoteCommand, LocalCommand } from './phpunit/command';
+import { LocalCommand, RemoteCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
 import { OutputChannelObserver, TestResultObserver } from './observer';
@@ -45,26 +45,24 @@ export async function activate(context: vscode.ExtensionContext) {
         };
 
         const runTestQueue = async () => {
+            const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
+
             const command = ((configuration.get('command') as string) ?? '').match(/docker/)
-                ? new RemoteCommand(configuration)
-                : new LocalCommand(configuration);
+                ? new RemoteCommand(configuration, options)
+                : new LocalCommand(configuration, options);
 
             const runner = new TestRunner();
             runner.observe(new TestResultObserver(queue, run, cancellation));
             runner.observe(new OutputChannelObserver(outputChannel));
 
-            const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
-
             if (!request.include) {
-                await runner.run(command, options);
+                await runner.run(command);
 
                 return;
             }
 
             await Promise.all(
-                request.include.map((test) =>
-                    runner.run(command.setArguments(getArguments(test)), options)
-                )
+                request.include.map((test) => runner.run(command.setArguments(getArguments(test))))
             );
         };
 

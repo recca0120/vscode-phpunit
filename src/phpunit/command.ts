@@ -24,31 +24,25 @@ class PathReplacer {
             'g'
         );
     });
-    private options: SpawnOptions = {};
 
-    constructor(private mapping = new Map<string, string>()) {}
+    private mapping = new Map<string, string>();
 
-    static fromJson(paths?: Path) {
-        if (!paths) {
-            return new PathReplacer();
+    constructor(private options: SpawnOptions = {}, paths?: Map<string, string> | Path) {
+        if (paths instanceof Map) {
+            this.mapping = paths;
+        } else if (paths) {
+            for (const local in paths) {
+                this.mapping.set(local, paths[local]);
+            }
         }
-
-        const mapping = new Map<string, string>();
-        for (const local in paths) {
-            mapping.set(local, paths[local]);
-        }
-
-        return new PathReplacer(mapping);
-    }
-
-    setOptions(options?: SpawnOptions) {
-        this.options = options ?? {};
     }
 
     public replaceWorkspaceFolder(path: string) {
-        return this.workspaceFolderPatterns.reduce((path, pattern) => {
-            return path.replace(pattern, (this.options?.cwd ?? '') as string);
-        }, path);
+        const cwd = (this.options?.cwd ?? process.env.cwd) as string;
+        return this.workspaceFolderPatterns.reduce(
+            (path, pattern) => path.replace(pattern, cwd),
+            path
+        );
     }
 
     public remoteToLocal(path: string) {
@@ -105,17 +99,12 @@ class PathReplacer {
 export abstract class Command {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
-    private options: SpawnOptions = {};
 
-    constructor(protected configuration: IConfiguration = new Configuration()) {
-        this.pathReplacer = this.resolvePathReplacer(this.configuration.get('paths') as Path);
-    }
-
-    setOptions(options: SpawnOptions) {
-        this.options = options;
-        this.getPathReplacer().setOptions(options);
-
-        return this;
+    constructor(
+        protected configuration: IConfiguration = new Configuration(),
+        private options: SpawnOptions = {}
+    ) {
+        this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
     setArguments(args: string) {
@@ -144,12 +133,17 @@ export abstract class Command {
     }
 
     apply() {
-        return this.doApply()
+        const [cmd, ...args] = this.doApply()
             .filter((input: string) => !!input)
             .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input));
+
+        return { cmd, args, options: this.options };
     }
 
-    protected abstract resolvePathReplacer(paths: Path): PathReplacer;
+    protected abstract resolvePathReplacer(
+        options: SpawnOptions,
+        configuration: IConfiguration
+    ): PathReplacer;
 
     protected getPathReplacer() {
         return this.pathReplacer;
@@ -183,21 +177,24 @@ export abstract class Command {
 }
 
 export class LocalCommand extends Command {
-    protected resolvePathReplacer() {
-        return new PathReplacer();
+    protected resolvePathReplacer(options: SpawnOptions): PathReplacer {
+        return new PathReplacer(options);
     }
 }
 
 export class RemoteCommand extends Command {
-    protected resolvePathReplacer(paths: Path) {
-        return PathReplacer.fromJson(paths);
-    }
-
     protected doApply() {
         return [...this.command(), ...super.doApply()];
     }
 
     private command() {
         return ((this.configuration.get('command') as string) ?? '').split(' ');
+    }
+
+    protected resolvePathReplacer(
+        options: SpawnOptions,
+        configuration: IConfiguration
+    ): PathReplacer {
+        return new PathReplacer(options, configuration.get('paths') as Path);
     }
 }
