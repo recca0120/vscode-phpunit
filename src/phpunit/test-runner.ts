@@ -139,9 +139,7 @@ export class TestRunner {
     private readonly defaultObserver: DefaultObserver;
     private observers: TestRunnerObserver[] = [];
 
-    private pattern = new RegExp(
-        'PHPUnit\\s[\\d\\.]+\\sby\\sSebastian\\sBergmann\\sand\\scontributors'
-    );
+    private pattern = new RegExp('PHPUnit\\s+[\\d\\.]+');
 
     constructor(private options?: SpawnOptionsWithoutStdio) {
         this.defaultObserver = new DefaultObserver();
