@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.6] - 2022-12-06
+
+- ssh
+- fix error output
+
 ## [3.0.5] - 2022-12-05
 
 -fix remote command get wrong `command` argument
