@@ -188,13 +188,15 @@ export class TestRunner {
                 const output = err.stack ?? err.message;
                 this.trigger(TestRunnerEvent.error, output);
                 resolve(output);
+                this.trigger(TestRunnerEvent.close, 2);
             });
 
             proc.on('close', (code) => {
-                this.trigger(
-                    this.isPhpUnit(output) ? TestRunnerEvent.output : TestRunnerEvent.error,
-                    output
-                );
+                const eventName = this.isPhpUnit(output)
+                    ? TestRunnerEvent.output
+                    : TestRunnerEvent.error;
+
+                this.trigger(eventName, output);
                 resolve(output);
                 this.trigger(TestRunnerEvent.close, code);
             });

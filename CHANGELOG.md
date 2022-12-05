@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.4] - 2022-12-05
+
+- when spawn error, receive close event
+
 ## [3.0.3] - 2022-12-05
 
 - beautiful output channel

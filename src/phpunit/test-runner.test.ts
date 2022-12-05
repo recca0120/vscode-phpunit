@@ -343,6 +343,7 @@ describe('TestRunner Test', () => {
         ]);
 
         expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalledTimes(1);
+        expect(onTestRunnerEvents.get(TestRunnerEvent.close)!).toHaveBeenCalledTimes(1);
     });
 
     const dataSet = [
