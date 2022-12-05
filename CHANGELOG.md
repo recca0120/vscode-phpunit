@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.7] - 2022-12-06
+
+- auto reload configuration
+
 ## [3.0.6] - 2022-12-06
 
 - ssh

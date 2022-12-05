@@ -189,6 +189,9 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(() =>
+            configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))
+        ),
         vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
         vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document))
     );

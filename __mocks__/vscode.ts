@@ -203,6 +203,7 @@ export class Configuration {
 
     async update(key: string, value: any) {
         this.items.set(key, value);
+        workspace.onDidChangeConfiguration();
     }
 }
 
@@ -215,7 +216,7 @@ const workspace = {
         if (configurations.has(section)) {
             return configurations.get(section);
         }
-       
+
         const configuration = new Configuration();
         configurations.set(section, configuration);
         return configuration;
@@ -244,6 +245,9 @@ const workspace = {
             onDidDelete: jest.fn(),
             disposable: new Disposable(),
         };
+    }),
+    onDidChangeConfiguration: jest.fn().mockImplementation(() => {
+        return new Disposable();
     }),
     onDidOpenTextDocument: jest.fn().mockReturnValue(new Disposable()),
     onDidChangeTextDocument: jest.fn().mockReturnValue(new Disposable()),

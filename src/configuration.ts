@@ -2,19 +2,23 @@ import { IConfiguration } from './phpunit/configuration';
 import { WorkspaceConfiguration } from 'vscode';
 
 export class Configuration implements IConfiguration {
-    constructor(private items: WorkspaceConfiguration) {}
+    constructor(private workspaceConfiguration: WorkspaceConfiguration) {}
+
+    updateWorkspaceConfiguration(workspaceConfiguration: WorkspaceConfiguration) {
+        this.workspaceConfiguration = workspaceConfiguration;
+    }
 
     get(key: string, defaultValue?: unknown): unknown | undefined {
-        return this.items.get(key, defaultValue);
+        return this.workspaceConfiguration.get(key, defaultValue);
     }
 
     has(key: string): any {
-        return this.items.has(key);
+        return this.workspaceConfiguration.has(key);
     }
 
     async update(key: string, value: any): Promise<void> {
-        console.log(this.items);
+        console.log(this.workspaceConfiguration);
 
-        return this.items.update(key, value);
+        return this.workspaceConfiguration.update(key, value);
     }
 }

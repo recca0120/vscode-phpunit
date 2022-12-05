@@ -75,5 +75,3 @@ The following commands are available in VS Code's command palette, use the ID to
 ```
 
 ## Troubleshooting
-
-- when change configuration need to reload vscode for now
