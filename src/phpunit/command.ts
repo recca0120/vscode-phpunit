@@ -175,11 +175,23 @@ export abstract class Command {
             alias: { configuration: ['c'] },
         });
 
-        return Object.entries(argv)
-            .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-            .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
-            .map((input: string) => this.getPathReplacer().localToRemote(input))
-            .concat('--teamcity', '--colors=never');
+        return this.setParaTestFunctional(
+            Object.entries(argv)
+                .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
+                .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
+                .map((input: string) => this.getPathReplacer().localToRemote(input))
+        ).concat('--teamcity', '--colors=never');
+    }
+
+    private setParaTestFunctional(args: string[]) {
+        return this.isParaTestFunctional(args) ? args.concat('-f') : args;
+    }
+
+    private isParaTestFunctional(args: string[]) {
+        return (
+            !!this.phpUnitPath().match(/paratest/) &&
+            args.some((arg: string) => !!arg.match(/--filter/))
+        );
     }
 }
 
