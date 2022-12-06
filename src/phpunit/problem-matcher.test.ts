@@ -8,7 +8,20 @@ describe('Problem Matcher Test', () => {
 
             expect(parser.parse(text)).toEqual({
                 kind: TestExtraResultEvent.testVersion,
-                version: '9.5.25',
+                phpunit: '9.5.25',
+                paratest: undefined,
+                text,
+            });
+        });
+
+        it('parse paratest and phpunit version', () => {
+            const text =
+                'ParaTest v6.6.5 upon PHPUnit 9.5.26 by Sebastian Bergmann and contributors.';
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.testVersion,
+                phpunit: '9.5.26',
+                paratest: '6.6.5',
                 text,
             });
         });
@@ -433,7 +446,7 @@ describe('Problem Matcher Test', () => {
                     'PHPUnit 9.5.25 #StandWithUkraine',
                     {
                         kind: TestExtraResultEvent.testVersion,
-                        version: '9.5.25',
+                        phpunit: '9.5.25',
                         text: `PHPUnit 9.5.25 #StandWithUkraine`,
                     },
                 ],

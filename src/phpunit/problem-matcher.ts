@@ -97,7 +97,12 @@ export type TestCount = {
     count: number;
     flowId: number;
 };
-export type TestVersion = { kind: TestResultKind; version: string; text: string };
+export type TestVersion = {
+    kind: TestResultKind;
+    phpunit: string;
+    paratest?: string;
+    text: string;
+};
 export type TestRuntime = { kind: TestResultKind; runtime: string; text: string };
 export type TestConfiguration = { kind: TestResultKind; configuration: string; text: string };
 export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string; text: string };
@@ -128,7 +133,10 @@ interface IParser<T> {
 }
 
 class TestVersionParser implements IParser<TestVersion> {
-    private pattern = new RegExp('^PHPUnit\\s(?<version>[\\d\\.]+)', 'i');
+    private pattern = new RegExp(
+        '^(ParaTest\\s(v)?(?<paratest>[\\d.]+).+)?PHPUnit\\s(?<phpunit>[\\d\\.]+)',
+        'i'
+    );
 
     is(text: string): boolean {
         return !!text.match(this.pattern);
@@ -139,7 +147,8 @@ class TestVersionParser implements IParser<TestVersion> {
 
         return {
             kind: TestExtraResultEvent.testVersion,
-            version: groups.version,
+            phpunit: groups.phpunit,
+            paratest: groups.paratest,
             text,
         };
     }
