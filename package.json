@@ -101,6 +101,11 @@
                     "type": "object",
                     "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
                 },
+                "phpunit.clearOutputOnRun": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "True will clear the output when we run a new test. False will leave the output after every test."
+                },
                 "phpunit.showAfterExecution": {
                     "type": "string",
                     "enum": [
