@@ -113,9 +113,12 @@ export class OutputChannelObserver implements TestRunnerObserver {
         last: '┴',
     };
 
+    private latestInput = '';
+
     constructor(private outputChannel: OutputChannel) {}
 
     input(input: string): void {
+        this.latestInput = input;
         this.outputChannel.clear();
         this.outputChannel.show();
         this.outputChannel.appendLine(input);
@@ -129,6 +132,8 @@ export class OutputChannelObserver implements TestRunnerObserver {
     error(error: string): void {
         const [icon] = this.testResultMessages.get(TestResultEvent.testFailed)!;
         this.outputChannel.clear();
+        this.outputChannel.appendLine(this.latestInput);
+        this.outputChannel.appendLine('');
         this.outputChannel.append(`${icon} ${error}`);
     }
 
