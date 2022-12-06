@@ -140,7 +140,7 @@ export class TestRunner {
     private observers: TestRunnerObserver[] = [];
 
     private phpUnitPattern = new RegExp('PHPUnit\\s+[\\d\\.]+');
-    private runtimePattern = new RegExp('Runtime:\\s+PHP\\s[\\d\\.]+');
+    private teamcityPattern = new RegExp('##teamcity\\[', 'i');
 
     constructor() {
         this.defaultObserver = new DefaultObserver();
@@ -202,7 +202,7 @@ export class TestRunner {
     }
 
     private isTestRunning(output: string) {
-        return this.phpUnitPattern.test(output) && this.runtimePattern.test(output);
+        return this.phpUnitPattern.test(output) && this.teamcityPattern.test(output);
     }
 
     private processLine(line: string, command: Command) {
