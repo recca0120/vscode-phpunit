@@ -3,7 +3,7 @@ import { TestRunner } from './phpunit/test-runner';
 import { LocalCommand, RemoteCommand } from './phpunit/command';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
-import { OutputChannelObserver, TestResultObserver } from './observer';
+import { OutputChannelObserver, TestResultObserver } from './observers';
 
 const testData = new Map<string, TestFile>();
 

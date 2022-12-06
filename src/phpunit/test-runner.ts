@@ -140,7 +140,7 @@ export class TestRunner {
     private observers: TestRunnerObserver[] = [];
 
     private phpUnitPattern = new RegExp('PHPUnit\\s+[\\d\\.]+');
-    private runtimePattern = new RegExp('Runtime:\\s+PHP\\s[\\d\\.]+')
+    private runtimePattern = new RegExp('Runtime:\\s+PHP\\s[\\d\\.]+');
 
     constructor() {
         this.defaultObserver = new DefaultObserver();
