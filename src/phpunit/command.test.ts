@@ -17,9 +17,9 @@ describe('Command Test', () => {
             expect(args).toEqual([
                 'vendor/bin/paratest',
                 '--filter=^.*::(test_passed)( with data set .*)?$',
-                '-f',
                 '--teamcity',
                 '--colors=never',
+                '-f',
             ]);
         });
     });
@@ -45,7 +45,7 @@ describe('Command Test', () => {
                 '-w',
                 '/app',
                 'project-stub-phpunit',
-                "php vendor/bin/paratest '--filter=^.*::(test_passed)( with data set .*)?$' '-f' '--teamcity' '--colors=never'",
+                "php vendor/bin/paratest '--filter=^.*::(test_passed)( with data set .*)?$' '--teamcity' '--colors=never' '-f'",
             ]);
         });
     });

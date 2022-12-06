@@ -143,48 +143,55 @@ export abstract class Command {
         return { cmd, args, options: this.options };
     }
 
+    protected doApply() {
+        return [...this.command(), ...this.getPhpUnitCommand()];
+    }
+
+    protected getPhpUnitCommand() {
+        return this.setParaTestFunctional([
+            this.phpPath(),
+            this.phpUnitPath(),
+            ...this.getArguments(),
+        ]);
+    }
+
     protected abstract resolvePathReplacer(
         options: SpawnOptions,
         configuration: IConfiguration
     ): PathReplacer;
 
-    protected getPathReplacer() {
-        return this.pathReplacer;
-    }
-
-    protected doApply() {
-        return [...this.command(), this.phpPath(), this.phpUnitPath(), ...this.getArguments()];
-    }
-
-    protected command() {
-        return ((this.configuration.get('command') as string) ?? '').split(' ');
-    }
-
-    protected phpPath() {
-        return (this.configuration.get('php') as string) ?? '';
-    }
-
-    protected phpUnitPath() {
+    private phpUnitPath() {
         return (this.configuration.get('phpunit') as string) ?? '';
     }
 
-    protected getArguments(): string[] {
+    private command() {
+        return ((this.configuration.get('command') as string) ?? '').split(' ');
+    }
+
+    private phpPath() {
+        return (this.configuration.get('php') as string) ?? '';
+    }
+
+    private getArguments(): string[] {
         const args = [this.arguments, ...(this.configuration.get('args', []) as string[])];
 
         const { _, ...argv } = yargsParser(args.join(' ').trim(), {
             alias: { configuration: ['c'] },
         });
 
-        return this.setParaTestFunctional(
-            Object.entries(argv)
-                .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-                .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
-                .map((input: string) => this.getPathReplacer().localToRemote(input))
-        ).concat('--teamcity', '--colors=never');
+        return Object.entries(argv)
+            .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
+            .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
+            .map((input: string) => this.getPathReplacer().localToRemote(input))
+            .concat('--teamcity', '--colors=never');
+    }
+
+    private getPathReplacer() {
+        return this.pathReplacer;
     }
 
     private setParaTestFunctional(args: string[]) {
-        return this.isParaTestFunctional(args) ? args.concat('-f') : args;
+        return this.isParaTestFunctional(args) ? [...args, '-f'] : args;
     }
 
     private isParaTestFunctional(args: string[]) {
@@ -209,14 +216,12 @@ export class RemoteCommand extends Command {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
-    protected doApply() {
+    protected getPhpUnitCommand() {
         return [
-            ...this.command(),
-            [this.phpPath(), this.phpUnitPath(), ...this.getArguments()].join(' '),
+            super
+                .getPhpUnitCommand()
+                .map((input) => (/^-/.test(input) ? `'${input}'` : input))
+                .join(' '),
         ];
-    }
-
-    protected getArguments(): string[] {
-        return super.getArguments().map((input) => (/^-/.test(input) ? `'${input}'` : input));
     }
 }

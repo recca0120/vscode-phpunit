@@ -34,7 +34,25 @@ The following commands are available in VS Code's command palette, use the ID to
 - `phpunit.run-test-at-cursor`: PHPUnit: Run the test at the current cursor position
 - `phpunit.rerun`: PHPUnit: Repeat the last test run
 
-## Remote Configuration
+## Configuration
+
+### [ParaTest](https://github.com/paratestphp/paratest)
+
+```json5
+{
+  "phpunit.php": "php",
+  "phpunit.phpunit": "vendor/bin/paratest",
+  "phpunit.args": [
+    "-c",
+    "phpunit.xml"
+  ],
+  "phpunit.paths": {
+    // ${pwd} (current directory) is mounted to /app
+    "${workspaceFolder}": '/app',
+    // ${workspaceFolder} is mapped to /app
+  },
+}
+```
 
 ### Docker
 
@@ -55,7 +73,7 @@ The following commands are available in VS Code's command palette, use the ID to
 }
 ```
 
-### Ssh
+### SSH
 
 ```json5
 {

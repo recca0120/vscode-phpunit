@@ -174,10 +174,7 @@ describe('TestRunner Test', () => {
 
             if (hasFile('AssertionsTest', 5)) {
                 expected.details = [
-                    {
-                        file: projectPath('tests/AssertionsTest.php'),
-                        line: 5,
-                    },
+                    { file: projectPath('tests/AssertionsTest.php'), line: 5 },
                     ...expected.details,
                 ];
             }
@@ -185,10 +182,7 @@ describe('TestRunner Test', () => {
             if (hasFile('phpunit', 60)) {
                 expected.details = [
                     ...expected.details,
-                    {
-                        file: projectPath('vendor/phpunit/phpunit/phpunit'),
-                        line: 60,
-                    },
+                    { file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 },
                 ];
             }
             expect(testResult[0].details).toEqual(expected.details);
@@ -215,7 +209,7 @@ describe('TestRunner Test', () => {
         jest.restoreAllMocks();
     });
 
-    function generateExceptedByCommand(command: Command, expected: any[], inputs: unknown[]) {
+    const generateExceptedByCommand = (command: Command, expected: any[], inputs: unknown[]) => {
         if (command instanceof RemoteCommand) {
             inputs = [
                 (inputs as string[])
@@ -225,7 +219,7 @@ describe('TestRunner Test', () => {
         }
 
         return [...expected, ...inputs];
-    }
+    };
 
     async function shouldRunAllTests(data: ExpectedData) {
         const { configuration, command, expected, projectPath, appPath } = data;
