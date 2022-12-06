@@ -23,6 +23,7 @@ This extension contributes the following settings:
   globally on the command line
 - `phpunit.command`: Custom command to run. Ex: `docker exec -t container_name`.
 - `phpunit.args`: Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist
+- `phpunit.showAfterExecution` Specify if the test report will automatically be shown after execution
 
 ## Commands
 

@@ -18,6 +18,13 @@ import {
     TestVersion,
     TimeAndMemory,
 } from './phpunit/problem-matcher';
+import { Configuration } from './configuration';
+
+enum ShowOutputState {
+    always = 'always',
+    onFailure = 'onFailure',
+    never = 'never',
+}
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
@@ -115,12 +122,13 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     private latestInput = '';
 
-    constructor(private outputChannel: OutputChannel) {}
+    constructor(private outputChannel: OutputChannel, private configuration: Configuration) {}
 
     input(input: string): void {
-        this.latestInput = input;
         this.outputChannel.clear();
-        this.outputChannel.show();
+        this.showOutput(ShowOutputState.always);
+
+        this.latestInput = input;
         this.outputChannel.appendLine(input);
         this.outputChannel.appendLine('');
     }
@@ -204,6 +212,9 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     testResultSummary(result: TestResultSummary) {
         this.outputChannel.appendLine(result.text);
+        if (result.tests !== result.assertions) {
+            this.showOutput(ShowOutputState.onFailure);
+        }
     }
 
     timeAndMemory(result: TimeAndMemory) {
@@ -226,5 +237,15 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.append('  ');
         this.outputChannel.append(`${icon} ${name} ${result.duration} ms`);
         this.outputChannel.appendLine('');
+    }
+
+    private showOutput(state: ShowOutputState) {
+        const showAfterExecution =
+            (this.configuration.get('showAfterExecution') as ShowOutputState) ??
+            ShowOutputState.onFailure;
+
+        if (showAfterExecution !== ShowOutputState.never && state === showAfterExecution) {
+            this.outputChannel.show();
+        }
     }
 }

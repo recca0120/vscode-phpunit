@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             const runner = new TestRunner();
             runner.observe(new TestResultObserver(queue, run, cancellation));
-            runner.observe(new OutputChannelObserver(outputChannel));
+            runner.observe(new OutputChannelObserver(outputChannel, configuration));
 
             if (!request.include) {
                 await runner.run(command);

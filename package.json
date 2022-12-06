@@ -4,7 +4,7 @@
     "displayName": "PHPUnit Test Explorer",
     "icon": "img/icon.png",
     "publisher": "recca0120",
-    "version": "3.0.9",
+    "version": "3.0.10",
     "private": true,
     "license": "MIT",
     "repository": {
@@ -100,6 +100,17 @@
                 "phpunit.paths": {
                     "type": "object",
                     "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
+                },
+                "phpunit.showAfterExecution": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "onFailure",
+                        "never"
+                    ],
+                    "default": "onFailure",
+                    "description": "Specify if the test report will automatically be shown after execution",
+                    "scope": "application"
                 }
             }
         }

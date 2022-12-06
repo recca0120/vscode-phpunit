@@ -4,6 +4,14 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.10] - 2022-12-07
+
+- showAfterExecution
+
+## [3.0.9] - 2022-12-06
+
+- [ParaTest](https://github.com/paratestphp/paratest)
+
 ## [3.0.8] - 2022-12-06
 
 - fix error rule
