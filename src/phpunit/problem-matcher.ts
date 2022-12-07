@@ -134,7 +134,7 @@ interface IParser<T> {
 
 class TestVersionParser implements IParser<TestVersion> {
     private pattern = new RegExp(
-        '^(ParaTest\\s(v)?(?<paratest>[\\d.]+).+)?PHPUnit\\s(?<phpunit>[\\d\\.]+)',
+        '^(ParaTest\\s(v)?(?<paratest>[\\d.]+).+)?PHPUnit\\s(?<phpunit>[\\d.]+)',
         'i'
     );
 
@@ -235,7 +235,7 @@ class TestResultSummaryParser implements IParser<TestResultSummary> {
 
 class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     private readonly pattern = new RegExp(
-        'Time:\\s(?<time>[\\d+:\\.]+(\\s\\w+)?),\\sMemory:\\s(?<memory>[\\d\\.]+\\s\\w+)'
+        'Time:\\s(?<time>[\\d+:.]+(\\s\\w+)?),\\sMemory:\\s(?<memory>[\\d.]+\\s\\w+)'
     );
 
     public is(text: string) {
@@ -277,7 +277,7 @@ export class Parser implements IParser<Result | undefined> {
         text = text
             .trim()
             .replace(this.pattern, '')
-            .replace(/^\[|\]$/g, '');
+            .replace(/^\[|]$/g, '');
 
         const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
         argv.kind = argv.event;

@@ -18,7 +18,7 @@ type Path = { [p: string]: string };
 class PathReplacer {
     private workspaceFolderPatterns = ['${PWD}', '${workspaceFolder}'].map((pattern) => {
         return new RegExp(
-            pattern.replace(/[\\$\\{\\}]/g, (matched) => {
+            pattern.replace(/[${}]/g, (matched) => {
                 return `\\${matched}` + (['{', '}'].includes(matched) ? '?' : '');
             }),
             'g'
@@ -60,7 +60,7 @@ class PathReplacer {
     private doRemoteToLocal(path: string) {
         return this.replaceMapping(path, (localPath, remotePath) => {
             return path.replace(
-                new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}([\\/])`, 'g'),
+                new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}(\/)`, 'g'),
                 (_m, sep) => `${localPath}${sep}`
             );
         });
