@@ -18,7 +18,9 @@ import {
     TestVersion,
     TimeAndMemory,
 } from './phpunit/problem-matcher';
-import { Configuration } from './configuration';
+import { IConfiguration } from './phpunit/configuration';
+
+export const EOL = '\n';
 
 enum ShowOutputState {
     always = 'always',
@@ -34,7 +36,7 @@ export class TestResultObserver implements TestRunnerObserver {
     ) {}
 
     line(line: string): void {
-        this.run.appendOutput(`${line}\r\n`);
+        this.run.appendOutput(`${line}${EOL}`);
     }
 
     error(error: string): void {
@@ -98,13 +100,13 @@ export class TestResultObserver implements TestRunnerObserver {
         }
 
         if (type === 'started') {
-            this.run.appendOutput(`Running ${result.id}\r\n`);
+            this.run.appendOutput(`Running ${result.id}${EOL}`);
         }
 
         fn(test);
 
         if (type === 'finished') {
-            this.run.appendOutput(`Completed ${result.id}\r\n`);
+            this.run.appendOutput(`Completed ${result.id}${EOL}`);
         }
     }
 
@@ -130,7 +132,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     private latestInput = '';
 
-    constructor(private outputChannel: OutputChannel, private configuration: Configuration) {}
+    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {}
 
     input(input: string): void {
         this.outputChannel.clear();
@@ -188,28 +190,6 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.printErrorMessage(result);
     }
 
-    private printErrorMessage(result: TestResult) {
-        this.printMessage(this.decorated.start);
-        this.printMessage(this.decorated.message, result.message);
-        this.printDiffMessage(result);
-
-        this.printMessage(this.decorated.default);
-        result.details.forEach(({ file, line }) =>
-            this.printMessage(this.decorated.default, `${file}:${line}`)
-        );
-        this.printMessage(this.decorated.last);
-        this.outputChannel.appendLine('');
-    }
-
-    private printDiffMessage(result: TestResult) {
-        if (!(result.expected && result.actual)) {
-            return;
-        }
-
-        this.printMessage(this.decorated.diff, `${result.expected}`, '---·Expected ');
-        this.printMessage(this.decorated.diff, `${result.actual}`, '+++·Actual ');
-    }
-
     testIgnored(result: TestResult): void {
         this.printTestResult(result);
     }
@@ -225,22 +205,46 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine(result.text);
     }
 
+    private printErrorMessage(result: TestResult) {
+        this.outputChannel.append(
+            [
+                this.printMessage(this.decorated.start),
+                this.printMessage(this.decorated.message, result.message),
+                this.printDiffMessage(result),
+
+                this.printMessage(this.decorated.default),
+                result.details.reduce((msg, { file, line }) => {
+                    return (msg += this.printMessage(this.decorated.default, `${file}:${line}`));
+                }, ''),
+                this.printMessage(this.decorated.last),
+            ].join('') + EOL
+        );
+    }
+
+    private printDiffMessage(result: TestResult) {
+        if (!(result.expected && result.actual)) {
+            return;
+        }
+
+        return [
+            this.printMessage(this.decorated.diff, `${result.expected}`, '---·Expected '),
+            this.printMessage(this.decorated.diff, `${result.actual}`, '+++·Actual '),
+        ].join('');
+    }
+
     private printMessage(decorated: string, message: string = '', prefix = '') {
         const indent = '     ';
-        message.split(/\r\n|\n/g).forEach((message, index) => {
-            this.outputChannel.append(indent);
-            this.outputChannel.append(decorated);
-            this.outputChannel.append(' ');
-            this.outputChannel.appendLine(`${index === 0 ? prefix : ''}${message}`);
-        });
+
+        return message.split(/\r\n|\n/g).reduce((msg, line, index) => {
+            return (msg += `${indent}${decorated} ${index === 0 ? prefix : ''}${line}${EOL}`);
+        }, '');
     }
 
     private printTestResult(result: TestResult) {
         const [icon] = this.testResultMessages.get(result.event)!;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
-        this.outputChannel.append('  ');
-        this.outputChannel.append(`${icon} ${name} ${result.duration} ms`);
-        this.outputChannel.appendLine('');
+
+        this.outputChannel.appendLine(`  ${icon} ${name} ${result.duration} ms`);
     }
 
     private showOutput(state: ShowOutputState) {
