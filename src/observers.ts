@@ -33,6 +33,14 @@ export class TestResultObserver implements TestRunnerObserver {
         private cancellation: CancellationToken
     ) {}
 
+    line(line: string): void {
+        this.run.appendOutput(`${line}\r\n`);
+    }
+
+    error(error: string): void {
+        this.run.appendOutput(error);
+    }
+
     close(): void {
         this.run.end();
     }
@@ -132,10 +140,6 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine(input);
         this.outputChannel.appendLine('');
     }
-
-    // line(line: string): void {
-    //     this.outputChannel.appendLine(line);
-    // }
 
     error(error: string): void {
         const [icon] = this.testResultMessages.get(TestResultEvent.testFailed)!;
