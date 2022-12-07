@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.13] - 2022-12-07
+
+- fix ${workspaceFolder} bug
+
 ## [3.0.12] - 2022-12-07
 
 - show teamcity in testing api terminal

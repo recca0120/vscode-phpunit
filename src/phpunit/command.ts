@@ -27,12 +27,13 @@ class PathReplacer {
 
     private mapping = new Map<string, string>();
 
-    constructor(private options: SpawnOptions = {}, paths?: Map<string, string> | Path) {
-        if (paths instanceof Map) {
-            this.mapping = paths;
-        } else if (paths) {
+    constructor(private options: SpawnOptions = {}, paths?: Path) {
+        if (paths) {
             for (const local in paths) {
-                this.mapping.set(local, paths[local]);
+                this.mapping.set(
+                    this.replaceWorkspaceFolder(local),
+                    this.replaceWorkspaceFolder(paths[local])
+                );
             }
         }
     }
