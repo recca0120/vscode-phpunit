@@ -22,7 +22,7 @@ import {
 } from './phpunit/problem-matcher';
 import { IConfiguration } from './phpunit/configuration';
 
-export const EOL = '\n';
+export const EOL = '\r\n';
 
 enum ShowOutputState {
     always = 'always',

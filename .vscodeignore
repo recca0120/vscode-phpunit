@@ -17,3 +17,5 @@ vsc-extension-quickstart.md
 coverage/**
 sample/**
 jest.config.js
+img/**
+!img/icon.png
