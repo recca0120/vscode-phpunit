@@ -11,8 +11,10 @@ import {
 } from 'vscode';
 import {
     TestConfiguration,
+    TestExtraResultEvent,
     TestResult,
     TestResultEvent,
+    TestResultKind,
     TestResultSummary,
     TestRuntime,
     TestVersion,
@@ -116,7 +118,8 @@ export class TestResultObserver implements TestRunnerObserver {
 }
 
 export class OutputChannelObserver implements TestRunnerObserver {
-    private testResultMessages = new Map<TestResultEvent, string[]>([
+    private testResultMessages = new Map<TestResultKind, string[]>([
+        [TestExtraResultEvent.testVersion, ['🚀', 'STARTED']],
         [TestResultEvent.testFinished, ['✅', 'PASSED']],
         [TestResultEvent.testFailed, ['❌', 'FAILED']],
         [TestResultEvent.testIgnored, ['➖', 'IGNORED']],
@@ -135,7 +138,10 @@ export class OutputChannelObserver implements TestRunnerObserver {
     constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {}
 
     input(input: string): void {
-        this.outputChannel.clear();
+        if (this.isClearOutputOnRun()) {
+            this.outputChannel.clear();
+        }
+
         this.showOutput(ShowOutputState.always);
 
         this.latestInput = input;
@@ -153,7 +159,8 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testVersion(result: TestVersion) {
-        this.outputChannel.appendLine(`${result.text}`);
+        const [icon] = this.testResultMessages.get(result.kind)!;
+        this.outputChannel.appendLine(`${icon} ${result.text}`);
         this.outputChannel.appendLine('');
     }
 
@@ -249,7 +256,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     private printTestResult(result: TestResult) {
-        const [icon] = this.testResultMessages.get(result.event)!;
+        const [icon] = this.testResultMessages.get(result.kind)!;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
         this.outputChannel.appendLine(`  ${icon} ${name} ${result.duration} ms`);
@@ -263,5 +270,9 @@ export class OutputChannelObserver implements TestRunnerObserver {
         if (showAfterExecution !== ShowOutputState.never && state === showAfterExecution) {
             this.outputChannel.show();
         }
+    }
+
+    private isClearOutputOnRun() {
+        return this.configuration.get('clearOutputOnRun') === true;
     }
 }
