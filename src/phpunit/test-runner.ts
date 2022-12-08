@@ -16,7 +16,7 @@ import {
 import { Command } from './command';
 
 export enum TestRunnerEvent {
-    input = 'input',
+    run = 'run',
     line = 'line',
     result = 'result',
     output = 'output',
@@ -25,7 +25,7 @@ export enum TestRunnerEvent {
 }
 
 export type TestRunnerObserver = {
-    [TestRunnerEvent.input]?: (input: string) => void;
+    [TestRunnerEvent.run]?: (command: string) => void;
     [TestRunnerEvent.line]?: (line: string) => void;
     [TestRunnerEvent.result]?: (result: Result) => void;
     [TestRunnerEvent.output]?: (output: string) => void;
@@ -49,8 +49,8 @@ class DefaultObserver implements TestRunnerObserver {
         return listeners;
     }, {} as { [p: string]: Array<Function> });
 
-    input(input: string): void {
-        this.trigger(TestRunnerEvent.input, input);
+    run(command: string): void {
+        this.trigger(TestRunnerEvent.run, command);
     }
 
     output(output: string): void {
@@ -160,7 +160,7 @@ export class TestRunner {
     run(command: Command) {
         return new Promise((resolve) => {
             const { cmd, args, options } = command.apply();
-            this.trigger(TestRunnerEvent.input, [cmd, ...args].join(' '));
+            this.trigger(TestRunnerEvent.run, [cmd, ...args].join(' '));
 
             const proc = spawn(cmd, args, options);
 

@@ -33,20 +33,20 @@ enum ShowOutputState {
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
         private queue: { test: TestItem }[] = [],
-        private run: TestRun,
+        private testRun: TestRun,
         private cancellation: CancellationToken
     ) {}
 
     line(line: string): void {
-        this.run.appendOutput(`${line}${EOL}`);
+        this.testRun.appendOutput(`${line}${EOL}`);
     }
 
     error(error: string): void {
-        this.run.appendOutput(error);
+        this.testRun.appendOutput(error);
     }
 
     close(): void {
-        this.run.end();
+        this.testRun.end();
     }
 
     testSuiteStarted(result: TestResult): void {
@@ -58,21 +58,21 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testStarted(result: TestResult): void {
-        this.doRun('started', result, (test) => this.run.started(test));
+        this.doRun('started', result, (test) => this.testRun.started(test));
     }
 
     testFinished(result: TestResult): void {
-        this.doRun('finished', result, (test) => this.run.passed(test));
+        this.doRun('finished', result, (test) => this.testRun.passed(test));
     }
 
     testFailed(result: TestResult): void {
         this.doRun('finished', result, (test) =>
-            this.run.failed(test, this.message(result, test), result.duration)
+            this.testRun.failed(test, this.message(result, test), result.duration)
         );
     }
 
     testIgnored(result: TestResult): void {
-        this.doRun('finished', result, (test) => this.run.skipped(test));
+        this.doRun('finished', result, (test) => this.testRun.skipped(test));
     }
 
     private message(result: TestResult, test: TestItem) {
@@ -97,18 +97,18 @@ export class TestResultObserver implements TestRunnerObserver {
         }
 
         if (this.cancellation.isCancellationRequested) {
-            this.run.skipped(test);
+            this.testRun.skipped(test);
             return;
         }
 
         if (type === 'started') {
-            this.run.appendOutput(`Running ${result.id}${EOL}`);
+            this.testRun.appendOutput(`Running ${result.id}${EOL}`);
         }
 
         fn(test);
 
         if (type === 'finished') {
-            this.run.appendOutput(`Completed ${result.id}${EOL}`);
+            this.testRun.appendOutput(`Completed ${result.id}${EOL}`);
         }
     }
 
@@ -137,15 +137,15 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {}
 
-    input(input: string): void {
+    run(command: string): void {
         if (this.isClearOutputOnRun()) {
             this.outputChannel.clear();
         }
 
         this.showOutput(ShowOutputState.always);
 
-        this.latestInput = input;
-        this.outputChannel.appendLine(input);
+        this.latestInput = command;
+        this.outputChannel.appendLine(command);
         this.outputChannel.appendLine('');
     }
 

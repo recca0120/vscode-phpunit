@@ -19,7 +19,7 @@ interface ExpectedData {
 
 describe('TestRunner Test', () => {
     const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
-        [TestRunnerEvent.input, jest.fn()],
+        [TestRunnerEvent.run, jest.fn()],
         [TestRunnerEvent.line, jest.fn()],
         [TestRunnerEvent.result, jest.fn()],
         [TestRunnerEvent.close, jest.fn()],
@@ -201,7 +201,7 @@ describe('TestRunner Test', () => {
         expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestExtraResultEvent.testResultSummary)).toHaveBeenCalled();
 
-        expect(onTestRunnerEvents.get(TestRunnerEvent.input)).toHaveBeenCalled();
+        expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
     };
 
