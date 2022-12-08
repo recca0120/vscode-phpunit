@@ -17,11 +17,16 @@ describe('OutputChannelObserver', () => {
         console.log((outputChannel.append as jest.Mock).mock.calls);
     }
 
-    async function run(file?: string, filter?: string) {
+    async function run(
+        file?: string,
+        filter?: string,
+        config: { [p: string]: string | string[] } = {}
+    ) {
         const configuration = new Configuration({
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', 'phpunit.xml'],
+            ...config,
         });
 
         if (filter) {
@@ -202,5 +207,66 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(/Cannot open file .*NotFound\.php/)
         );
+    });
+
+    it('always show output channel', async () => {
+        const testFile = projectPath('tests/AssertionsTest.php');
+        const filter = 'test_passed';
+        await run(testFile, filter, { showAfterExecution: 'always' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).toHaveBeenCalled();
+    });
+
+    it('should not show output channel when successful', async () => {
+        const testFile = projectPath('tests/AssertionsTest.php');
+        const filter = 'test_passed';
+        await run(testFile, filter, { showAfterExecution: 'onFailure' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).not.toHaveBeenCalled();
+    });
+
+    it('should show output channel when failure', async () => {
+        const testFile = projectPath('tests/AssertionsTest.php');
+        const filter = 'test_failed|test_passed';
+        await run(testFile, filter, { showAfterExecution: 'onFailure' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).toHaveBeenCalled();
+    });
+
+    it('should show output channel when failure', async () => {
+        const testFile = projectPath('tests/NotFound.php');
+        await run(testFile, undefined, { showAfterExecution: 'onFailure' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).toHaveBeenCalled();
+    });
+
+    it('never show output channel when successful', async () => {
+        const testFile = projectPath('tests/AssertionsTest.php');
+        const filter = 'test_passed';
+        await run(testFile, filter, { showAfterExecution: 'never' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).not.toHaveBeenCalled();
+    });
+
+    it('never show output channel when failure', async () => {
+        const testFile = projectPath('tests/AssertionsTest.php');
+        const filter = 'test_failed|test_passed';
+        await run(testFile, filter, { showAfterExecution: 'never' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).not.toHaveBeenCalled();
+    });
+
+    it('never show output channel when failure', async () => {
+        const testFile = projectPath('tests/NotFound.php');
+        await run(testFile, undefined, { showAfterExecution: 'never' });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.show).not.toHaveBeenCalled();
     });
 });

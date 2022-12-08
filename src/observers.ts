@@ -149,6 +149,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine(this.latestInput);
         this.outputChannel.appendLine('');
         this.outputChannel.append(`${icon} ${error}`);
+        this.showOutput(ShowOutputState.onFailure);
     }
 
     testVersion(result: TestVersion) {
@@ -196,7 +197,14 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     testResultSummary(result: TestResultSummary) {
         this.outputChannel.appendLine(result.text);
-        if (result.tests !== result.assertions) {
+
+        if (
+            result.failures ||
+            result.errors ||
+            result.skipped ||
+            result.incomplete ||
+            result.risky
+        ) {
             this.showOutput(ShowOutputState.onFailure);
         }
     }
