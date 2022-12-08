@@ -154,7 +154,7 @@ class TestVersionParser implements IParser<TestVersion> {
     }
 }
 
-abstract class ValueParser {
+abstract class ValueParser<T> implements IParser<T> {
     protected constructor(private name: string, private kind: TestResultKind) {}
 
     private pattern = new RegExp(`^${this.name}:\\s+(?<${this.name}>.+)`, 'i');
@@ -170,17 +170,17 @@ abstract class ValueParser {
             kind: this.kind,
             [this.name.toLowerCase()]: groups[this.name],
             text,
-        } as any;
+        } as T;
     }
 }
 
-class TestRuntimeParser extends ValueParser implements IParser<TestRuntime> {
+class TestRuntimeParser extends ValueParser<TestRuntime> {
     constructor() {
         super('Runtime', TestExtraResultEvent.testRuntime);
     }
 }
 
-class TestConfigurationParser extends ValueParser implements IParser<TestConfiguration> {
+class TestConfigurationParser extends ValueParser<TestConfiguration> {
     constructor() {
         super('Configuration', TestExtraResultEvent.testConfiguration);
     }
