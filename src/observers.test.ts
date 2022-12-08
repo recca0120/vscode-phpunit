@@ -20,12 +20,14 @@ describe('OutputChannelObserver', () => {
     async function run(
         file?: string,
         filter?: string,
-        config: { [p: string]: string | string[] } = {}
+        config: { [p: string]: string | string[] | boolean } = {}
     ) {
         const configuration = new Configuration({
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', 'phpunit.xml'],
+            clearOutputOnRun: true,
+            showAfterExecution: 'onFailure',
             ...config,
         });
 
@@ -268,5 +270,14 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.show).not.toHaveBeenCalled();
+    });
+
+    it('should not clear output channel', async () => {
+        const testFile = projectPath('tests/AssertionsTest.php');
+        const filter = 'test_passed';
+        await run(testFile, filter, { clearOutputOnRun: false });
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.clear).not.toHaveBeenCalled();
     });
 });
