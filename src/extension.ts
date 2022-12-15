@@ -6,73 +6,20 @@ import { TestFile } from './test-file';
 import { OutputChannelObserver, TestResultObserver } from './observers';
 
 const testData = new Map<string, TestFile>();
+let configuration: Configuration;
+let outputChannel: vscode.OutputChannel;
+let ctrl: vscode.TestController;
 
 export async function activate(context: vscode.ExtensionContext) {
-    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
 
-    const outputChannel = vscode.window.createOutputChannel('PHPUnit');
+    outputChannel = vscode.window.createOutputChannel('PHPUnit');
     context.subscriptions.push(outputChannel);
 
-    const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
+    ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
-    let latestTestRunRequest: vscode.TestRunRequest | undefined;
-    const runHandler = (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
-        latestTestRunRequest = request;
-
-        const queue: { test: vscode.TestItem }[] = [];
-        const run = ctrl.createTestRun(request);
-
-        const discoverTests = async (tests: Iterable<vscode.TestItem>) => {
-            for (const test of tests) {
-                if (request.exclude?.includes(test)) {
-                    continue;
-                }
-
-                if (!test.canResolveChildren) {
-                    run.enqueued(test);
-                    queue.push({ test });
-                } else {
-                    await discoverTests(gatherTestItems(test.children));
-                }
-            }
-        };
-
-        const getArguments = (test: vscode.TestItem) => {
-            return !test.parent
-                ? test.uri!.fsPath
-                : testData.get(test.parent.uri!.toString())!.getArguments(test.id);
-        };
-
-        const runTestQueue = async () => {
-            const currentWorkspaceFolder = await getCurrentWorkspaceFolder();
-            if (!currentWorkspaceFolder) {
-                run.end();
-                return;
-            }
-            const options = { cwd: currentWorkspaceFolder.uri.fsPath };
-
-            const command = ((configuration.get('command') as string) ?? '').match(/docker|ssh/)
-                ? new RemoteCommand(configuration, options)
-                : new LocalCommand(configuration, options);
-
-            const runner = new TestRunner();
-            runner.observe(new TestResultObserver(queue, run, cancellation));
-            runner.observe(new OutputChannelObserver(outputChannel, configuration));
-
-            if (!request.include) {
-                await runner.run(command);
-
-                return;
-            }
-
-            await Promise.all(
-                request.include.map((test) => runner.run(command.setArguments(getArguments(test))))
-            );
-        };
-
-        return discoverTests(request.include ?? gatherTestItems(ctrl.items)).then(runTestQueue);
-    };
+    const handler = new Handler(testData, configuration, outputChannel, ctrl);
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
@@ -85,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const testRunProfile = ctrl.createRunProfile(
         'Run Tests',
         vscode.TestRunProfileKind.Run,
-        runHandler,
+        (request, cancellation) => handler.run(request, cancellation),
         true
     );
 
@@ -186,7 +133,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.rerun', () => {
             const request =
-                latestTestRunRequest ??
+                handler.getLatestTestRunRequest() ??
                 new vscode.TestRunRequest(undefined, undefined, testRunProfile);
 
             testRunProfile.runHandler(request, new vscode.CancellationTokenSource().token);
@@ -212,12 +159,6 @@ async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Ur
     const testFile = new TestFile(uri);
 
     testData.set(uri.toString(), await testFile.update(controller));
-}
-
-function gatherTestItems(collection: vscode.TestItemCollection) {
-    const items: vscode.TestItem[] = [];
-    collection.forEach((item) => items.push(item));
-    return items;
 }
 
 function getWorkspaceTestPatterns() {
@@ -275,18 +216,100 @@ function startWatchingWorkspace(controller: vscode.TestController) {
     });
 }
 
-const getCurrentWorkspaceFolder = async () => {
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-        return null;
+class Handler {
+    private latestTestRunRequest: vscode.TestRunRequest | undefined;
+
+    constructor(
+        private testData: Map<string, TestFile>,
+        private configuration: Configuration,
+        private outputChannel: vscode.OutputChannel,
+        private ctrl: vscode.TestController
+    ) {}
+
+    getLatestTestRunRequest() {
+        return this.latestTestRunRequest;
     }
 
-    if (vscode.workspace.workspaceFolders.length === 1) {
-        return vscode.workspace.workspaceFolders[0];
+    async run(request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) {
+        this.latestTestRunRequest = request;
+
+        const queue: { test: vscode.TestItem }[] = [];
+        const run = this.ctrl.createTestRun(request);
+
+        const discoverTests = async (tests: Iterable<vscode.TestItem>) => {
+            for (const test of tests) {
+                if (request.exclude?.includes(test)) {
+                    continue;
+                }
+
+                if (!test.canResolveChildren) {
+                    run.enqueued(test);
+                    queue.push({ test });
+                } else {
+                    await discoverTests(this.gatherTestItems(test.children));
+                }
+            }
+        };
+
+        const getArguments = (test: vscode.TestItem) => {
+            return !test.parent
+                ? test.uri!.fsPath
+                : this.testData.get(test.parent.uri!.toString())!.getArguments(test.id);
+        };
+
+        const runTestQueue = async () => {
+            const currentWorkspaceFolder = await this.getCurrentWorkspaceFolder();
+            if (!currentWorkspaceFolder) {
+                run.end();
+                return;
+            }
+            const options = { cwd: currentWorkspaceFolder.uri.fsPath };
+
+            const command = ((this.configuration.get('command') as string) ?? '').match(
+                /docker|ssh/
+            )
+                ? new RemoteCommand(this.configuration, options)
+                : new LocalCommand(this.configuration, options);
+
+            const runner = new TestRunner();
+            runner.observe(new TestResultObserver(queue, run, cancellation));
+            runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration));
+
+            if (!request.include) {
+                await runner.run(command);
+
+                return;
+            }
+
+            await Promise.all(
+                request.include.map((test) => runner.run(command.setArguments(getArguments(test))))
+            );
+        };
+
+        return discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items)).then(
+            runTestQueue
+        );
     }
 
-    if (vscode.window.activeTextEditor) {
-        return vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+    private async getCurrentWorkspaceFolder() {
+        if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+            return null;
+        }
+
+        if (vscode.workspace.workspaceFolders.length === 1) {
+            return vscode.workspace.workspaceFolders[0];
+        }
+
+        if (vscode.window.activeTextEditor) {
+            return vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+        }
+
+        return vscode.window.showWorkspaceFolderPick();
     }
 
-    return vscode.window.showWorkspaceFolderPick();
-};
+    private gatherTestItems(collection: vscode.TestItemCollection) {
+        const items: vscode.TestItem[] = [];
+        collection.forEach((item) => items.push(item));
+        return items;
+    }
+}
