@@ -33,39 +33,65 @@ export class Handler {
         this.latestTestRunRequest = request;
 
         const run = this.ctrl.createTestRun(request);
-        const queue: { test: TestItem }[] = [];
+        const queueHandler = new TestQueueHandler(request, run);
 
-        return this.discoverTests(
-            request.include ?? this.gatherTestItems(this.ctrl.items),
-            request,
-            run,
-            queue
-        ).then(async () => await this.runTestQueue(request, run, queue, cancellation));
+        return queueHandler
+            .discoverTests(request.include ?? gatherTestItems(this.ctrl.items))
+            .then(() =>
+                queueHandler.runQueue(
+                    cancellation,
+                    this.configuration,
+                    this.outputChannel,
+                    this.testData
+                )
+            );
+    }
+}
+
+class TestQueueHandler {
+    public queue: { test: TestItem }[] = [];
+
+    constructor(private request: TestRunRequest, private run: TestRun) {}
+
+    public async discoverTests(tests: Iterable<TestItem>) {
+        for (const test of tests) {
+            if (this.request.exclude?.includes(test)) {
+                continue;
+            }
+
+            if (!test.canResolveChildren) {
+                this.run.enqueued(test);
+                this.queue.push({ test });
+            } else {
+                await this.discoverTests(gatherTestItems(test.children));
+            }
+        }
     }
 
-    private async runTestQueue(
-        request: TestRunRequest,
-        run: TestRun,
-        queue: { test: TestItem }[],
-        cancellation: CancellationToken
+    public async runQueue(
+        cancellation: CancellationToken,
+        configuration: Configuration,
+        outputChannel: OutputChannel,
+        testData: Map<string, TestFile>
     ) {
-        const currentWorkspaceFolder = await this.getCurrentWorkspaceFolder();
+        const currentWorkspaceFolder = await getCurrentWorkspaceFolder();
+
         if (!currentWorkspaceFolder) {
-            run.end();
+            this.run.end();
             return;
         }
 
         const options = { cwd: currentWorkspaceFolder.uri.fsPath };
 
-        const command = ((this.configuration.get('command') as string) ?? '').match(/docker|ssh/)
-            ? new RemoteCommand(this.configuration, options)
-            : new LocalCommand(this.configuration, options);
+        const command = ((configuration.get('command') as string) ?? '').match(/docker|ssh/)
+            ? new RemoteCommand(configuration, options)
+            : new LocalCommand(configuration, options);
 
         const runner = new TestRunner();
-        runner.observe(new TestResultObserver(queue, run, cancellation));
-        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration));
+        runner.observe(new TestResultObserver(this.queue, this.run, cancellation));
+        runner.observe(new OutputChannelObserver(outputChannel, configuration));
 
-        if (!request.include) {
+        if (!this.request.include) {
             await runner.run(command);
 
             return;
@@ -74,53 +100,33 @@ export class Handler {
         const getArguments = (test: TestItem) => {
             return !test.parent
                 ? test.uri!.fsPath
-                : this.testData.get(test.parent.uri!.toString())!.getArguments(test.id);
+                : testData.get(test.parent.uri!.toString())!.getArguments(test.id);
         };
 
         await Promise.all(
-            request.include.map((test) => runner.run(command.setArguments(getArguments(test))))
+            this.request.include.map((test) => runner.run(command.setArguments(getArguments(test))))
         );
     }
+}
 
-    private async discoverTests(
-        tests: Iterable<TestItem>,
-        request: TestRunRequest,
-        run: TestRun,
-        queue: { test: TestItem }[]
-    ) {
-        for (const test of tests) {
-            if (request.exclude?.includes(test)) {
-                continue;
-            }
+function gatherTestItems(collection: TestItemCollection) {
+    const items: TestItem[] = [];
+    collection.forEach((item) => items.push(item));
+    return items;
+}
 
-            if (!test.canResolveChildren) {
-                run.enqueued(test);
-                queue.push({ test });
-            } else {
-                await this.discoverTests(this.gatherTestItems(test.children), request, run, queue);
-            }
-        }
+async function getCurrentWorkspaceFolder() {
+    if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
+        return null;
     }
 
-    private async getCurrentWorkspaceFolder() {
-        if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
-            return null;
-        }
-
-        if (workspace.workspaceFolders.length === 1) {
-            return workspace.workspaceFolders[0];
-        }
-
-        if (window.activeTextEditor) {
-            return workspace.getWorkspaceFolder(window.activeTextEditor.document.uri);
-        }
-
-        return window.showWorkspaceFolderPick();
+    if (workspace.workspaceFolders.length === 1) {
+        return workspace.workspaceFolders[0];
     }
 
-    private gatherTestItems(collection: TestItemCollection) {
-        const items: TestItem[] = [];
-        collection.forEach((item) => items.push(item));
-        return items;
+    if (window.activeTextEditor) {
+        return workspace.getWorkspaceFolder(window.activeTextEditor.document.uri);
     }
+
+    return window.showWorkspaceFolderPick();
 }
