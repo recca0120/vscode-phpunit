@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.17] - 2022-12-15
+
+- current workspace folder
+
 ## [3.0.16] - 2022-12-08
 
 - minify

@@ -45,7 +45,12 @@ export async function activate(context: vscode.ExtensionContext) {
         };
 
         const runTestQueue = async () => {
-            const options = { cwd: vscode.workspace.workspaceFolders![0].uri.fsPath };
+            const currentWorkspaceFolder = await getCurrentWorkspaceFolder();
+            if (!currentWorkspaceFolder) {
+                run.end();
+                return;
+            }
+            const options = { cwd: currentWorkspaceFolder.uri.fsPath };
 
             const command = ((configuration.get('command') as string) ?? '').match(/docker|ssh/)
                 ? new RemoteCommand(configuration, options)
@@ -269,3 +274,19 @@ function startWatchingWorkspace(controller: vscode.TestController) {
         return watcher;
     });
 }
+
+const getCurrentWorkspaceFolder = async () => {
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+        return null;
+    }
+
+    if (vscode.workspace.workspaceFolders.length === 1) {
+        return vscode.workspace.workspaceFolders[0];
+    }
+
+    if (vscode.window.activeTextEditor) {
+        return vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+    }
+
+    return vscode.window.showWorkspaceFolderPick();
+};
