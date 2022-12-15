@@ -160,7 +160,7 @@ describe('Extension Test', () => {
                 'phpunit.rerun',
                 expect.any(Function)
             );
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(8);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(9);
         });
 
         it('should run all tests', async () => {

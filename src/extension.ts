@@ -2,19 +2,22 @@ import * as vscode from 'vscode';
 import { Configuration } from './configuration';
 import { TestFile } from './test-file';
 import { Handler } from './handler';
+import { CommandHandler } from './command-handler';
 
 const testData = new Map<string, TestFile>();
-let configuration: Configuration;
-let outputChannel: vscode.OutputChannel;
-let ctrl: vscode.TestController;
 
 export async function activate(context: vscode.ExtensionContext) {
-    configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(() =>
+            configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))
+        )
+    );
 
-    outputChannel = vscode.window.createOutputChannel('PHPUnit');
+    const outputChannel = vscode.window.createOutputChannel('PHPUnit');
     context.subscriptions.push(outputChannel);
 
-    ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
+    const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
     const handler = new Handler(testData, configuration, outputChannel, ctrl);
@@ -67,6 +70,11 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
+        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document))
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.reload', async () => {
             await Promise.all(
                 getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
@@ -76,75 +84,11 @@ export async function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand('phpunit.run-all', () => {
-            testRunProfile.runHandler(
-                new vscode.TestRunRequest(undefined, undefined, testRunProfile),
-                new vscode.CancellationTokenSource().token
-            );
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('phpunit.run-file', () => {
-            if (!vscode.window.activeTextEditor) {
-                return;
-            }
-
-            const testFile = testData.get(vscode.window.activeTextEditor.document.uri.toString())!;
-
-            if (!testFile) {
-                return;
-            }
-
-            testRunProfile.runHandler(
-                new vscode.TestRunRequest(testFile.testItems, undefined, testRunProfile),
-                new vscode.CancellationTokenSource().token
-            );
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('phpunit.run-test-at-cursor', () => {
-            if (!vscode.window.activeTextEditor) {
-                return;
-            }
-
-            const activeTextEditor = vscode.window.activeTextEditor;
-            const testFile = testData.get(activeTextEditor.document.uri.toString())!;
-
-            if (!testFile) {
-                return;
-            }
-
-            testRunProfile.runHandler(
-                new vscode.TestRunRequest(
-                    [testFile.findTestItemByPosition(activeTextEditor.selection.active)!],
-                    undefined,
-                    testRunProfile
-                ),
-                new vscode.CancellationTokenSource().token
-            );
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('phpunit.rerun', () => {
-            const request =
-                handler.getLatestTestRunRequest() ??
-                new vscode.TestRunRequest(undefined, undefined, testRunProfile);
-
-            testRunProfile.runHandler(request, new vscode.CancellationTokenSource().token);
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(() =>
-            configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))
-        ),
-        vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
-        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document))
-    );
+    const commandHandler = new CommandHandler(testRunProfile, testData);
+    context.subscriptions.push(commandHandler.runAll());
+    context.subscriptions.push(commandHandler.runFile());
+    context.subscriptions.push(commandHandler.runTestAtCursor());
+    context.subscriptions.push(commandHandler.rerun(handler));
 }
 
 async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
@@ -213,4 +157,3 @@ function startWatchingWorkspace(controller: vscode.TestController) {
         return watcher;
     });
 }
-

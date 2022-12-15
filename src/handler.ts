@@ -103,7 +103,7 @@ class TestQueueHandler {
             return runner.run(command);
         }
 
-        return Promise.all(
+        return await Promise.all(
             this.request.include.map((test) =>
                 runner.run(command.setArguments(this.getArguments(test)))
             )
