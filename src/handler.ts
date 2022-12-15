@@ -11,7 +11,7 @@ import {
 } from 'vscode';
 import { TestFile } from './test-file';
 import { Configuration } from './configuration';
-import { LocalCommand, RemoteCommand } from './phpunit/command';
+import { Command, LocalCommand, RemoteCommand } from './phpunit/command';
 import { TestRunner } from './phpunit/test-runner';
 import { OutputChannelObserver, TestResultObserver } from './observers';
 
@@ -30,28 +30,58 @@ export class Handler {
     }
 
     async run(request: TestRunRequest, cancellation: CancellationToken) {
+        const command = await this.createCommand();
+
+        if (!command) {
+            return;
+        }
+
         this.latestTestRunRequest = request;
 
         const run = this.ctrl.createTestRun(request);
-        const queueHandler = new TestQueueHandler(request, run);
+        const queueHandler = new TestQueueHandler(request, run, this.testData);
+        const runner = this.createTestRunner(queueHandler, run, cancellation);
 
-        return queueHandler
-            .discoverTests(request.include ?? gatherTestItems(this.ctrl.items))
-            .then(() =>
-                queueHandler.runQueue(
-                    cancellation,
-                    this.configuration,
-                    this.outputChannel,
-                    this.testData
-                )
-            );
+        await queueHandler.discoverTests(request.include ?? gatherTestItems(this.ctrl.items));
+        await queueHandler.runQueue(runner, command);
+    }
+
+    private async createCommand() {
+        const workspaceFolder = await getCurrentWorkspaceFolder();
+        if (!workspaceFolder) {
+            return;
+        }
+
+        const options = { cwd: workspaceFolder!.uri.fsPath };
+
+        if (((this.configuration.get('command') as string) ?? '').match(/docker|ssh/)) {
+            return new RemoteCommand(this.configuration, options);
+        }
+
+        return new LocalCommand(this.configuration, options);
+    }
+
+    private createTestRunner(
+        queueHandler: TestQueueHandler,
+        run: TestRun,
+        cancellation: CancellationToken
+    ) {
+        const runner = new TestRunner();
+        runner.observe(new TestResultObserver(queueHandler.queue, run, cancellation));
+        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration));
+
+        return runner;
     }
 }
 
 class TestQueueHandler {
     public queue: { test: TestItem }[] = [];
 
-    constructor(private request: TestRunRequest, private run: TestRun) {}
+    constructor(
+        private request: TestRunRequest,
+        private run: TestRun,
+        private testData: Map<string, TestFile>
+    ) {}
 
     public async discoverTests(tests: Iterable<TestItem>) {
         for (const test of tests) {
@@ -68,44 +98,22 @@ class TestQueueHandler {
         }
     }
 
-    public async runQueue(
-        cancellation: CancellationToken,
-        configuration: Configuration,
-        outputChannel: OutputChannel,
-        testData: Map<string, TestFile>
-    ) {
-        const currentWorkspaceFolder = await getCurrentWorkspaceFolder();
-
-        if (!currentWorkspaceFolder) {
-            this.run.end();
-            return;
-        }
-
-        const options = { cwd: currentWorkspaceFolder.uri.fsPath };
-
-        const command = ((configuration.get('command') as string) ?? '').match(/docker|ssh/)
-            ? new RemoteCommand(configuration, options)
-            : new LocalCommand(configuration, options);
-
-        const runner = new TestRunner();
-        runner.observe(new TestResultObserver(this.queue, this.run, cancellation));
-        runner.observe(new OutputChannelObserver(outputChannel, configuration));
-
+    public async runQueue(runner: TestRunner, command: Command) {
         if (!this.request.include) {
-            await runner.run(command);
-
-            return;
+            return runner.run(command);
         }
 
-        const getArguments = (test: TestItem) => {
-            return !test.parent
-                ? test.uri!.fsPath
-                : testData.get(test.parent.uri!.toString())!.getArguments(test.id);
-        };
-
-        await Promise.all(
-            this.request.include.map((test) => runner.run(command.setArguments(getArguments(test))))
+        return Promise.all(
+            this.request.include.map((test) =>
+                runner.run(command.setArguments(this.getArguments(test)))
+            )
         );
+    }
+
+    private getArguments(test: TestItem) {
+        return !test.parent
+            ? test.uri!.fsPath
+            : this.testData.get(test.parent.uri!.toString())!.getArguments(test.id);
     }
 }
 
