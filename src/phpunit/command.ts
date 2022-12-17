@@ -178,6 +178,10 @@ export abstract class Command {
 
         const { _, ...argv } = yargsParser(args.join(' ').trim(), {
             alias: { configuration: ['c'] },
+            configuration: {
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                'camel-case-expansion': false,
+            },
         });
 
         return Object.entries(argv)

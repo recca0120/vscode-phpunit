@@ -49,6 +49,26 @@ describe('Command Test', () => {
                 '--colors=never',
             ]);
         });
+
+        it('should remove caml case parameters', () => {
+            const cwd = projectPath('');
+            const configuration = new Configuration({
+                php: 'php',
+                phpunit: 'vendor/bin/phpunit',
+                args: ['--repeat=2', '--order-by=random'],
+            });
+            const command = new LocalCommand(configuration, { cwd });
+
+            const { cmd, args } = command.apply();
+            expect(cmd).toEqual('php');
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                '--repeat=2',
+                '--order-by=random',
+                '--teamcity',
+                '--colors=never',
+            ]);
+        });
     });
 
     describe('RemoteCommand', () => {
