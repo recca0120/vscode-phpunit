@@ -17,14 +17,30 @@ export class EscapeValue {
     }
 
     public escape(value: string | number | object) {
-        return this.doEscape(value, this.patterns.unescape, this.values.escape);
+        return this.change(value, this.patterns.unescape, this.values.escape);
     }
 
     public unescape(value: string | number | object) {
-        return this.doEscape(value, this.patterns.escape, this.values.unescape);
+        return this.change(value, this.patterns.escape, this.values.unescape);
     }
 
-    private doEscape(value: string | number | object, from: RegExp[], to: string[]) {
+    public escapeSingleQuote(value: string | number | object) {
+        return this.change(value, [new RegExp("\\|'", 'g')], ['%%%SINGLE_QUOTE%%%']);
+    }
+
+    public unescapeSingleQuote(value: string | number | object) {
+        return this.change(value, [new RegExp('%%%SINGLE_QUOTE%%%', 'g')], ["'"]);
+    }
+
+    private change(value: string | number | any, from: RegExp[], to: string[]) {
+        if (typeof value === 'object') {
+            for (const x in value) {
+                value[x] = this.change(value[x], from, to);
+            }
+
+            return value;
+        }
+
         if (typeof value !== 'string') {
             return value;
         }
@@ -340,7 +356,7 @@ export class Parser implements IParser<Result | undefined> {
     }
 
     private toTeamcityArgv(text: string): Pick<Arguments, string | number> {
-        text = text.replace(/\|'/g, '%%%SINGLE_QUOTE%%%');
+        text = this.escapeValue.escapeSingleQuote(text) as string;
         text = this.escapeValue.unescape(text) as string;
 
         const [eventName, ...args] = yargsParser(text)._;
@@ -351,13 +367,7 @@ export class Parser implements IParser<Result | undefined> {
 
         const { _, $0, ...argv } = yargsParser(command);
 
-        for (const x in argv) {
-            if (typeof argv[x] === 'string') {
-                argv[x] = argv[x].replace(/%%%SINGLE_QUOTE%%%/g, "'");
-            }
-        }
-
-        return argv;
+        return this.escapeValue.unescapeSingleQuote(argv);
     }
 }
 

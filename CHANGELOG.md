@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.20] - 2022-12-18
+
+- fix #138
+
 ## [3.0.19] - 2022-12-16
 
 - disable camel-case-expansion
