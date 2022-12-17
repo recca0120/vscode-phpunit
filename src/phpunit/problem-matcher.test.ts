@@ -436,6 +436,47 @@ describe('Problem Matcher Test', () => {
                 flowId: 8024,
             });
         });
+
+        describe('should fix issue 138', () => {
+            it('case 1', () => {
+                const text = `##teamcity[testFailed name='testAddPost' message='Failed asserting that |'Der Eintrag wurde gespeichert.|' is in |'flash|' message.' details=' /U1/BACKEND/vendor/cakephp/cakephp/src/TestSuite/IntegrationTestTrait.php:1177|n /U1/BACKEND/tests/TestCase/Controller/CmsPagesControllerTest.php:169|n ' duration='247' flowId='3654']`;
+
+                expect(parser.parse(text)).toEqual({
+                    event: TestResultEvent.testFailed,
+                    kind: TestResultEvent.testFailed,
+                    name: 'testAddPost',
+                    details: [
+                        {
+                            file: '/U1/BACKEND/vendor/cakephp/cakephp/src/TestSuite/IntegrationTestTrait.php',
+                            line: 1177,
+                        },
+                        {
+                            file: '/U1/BACKEND/tests/TestCase/Controller/CmsPagesControllerTest.php',
+                            line: 169,
+                        },
+                    ],
+                    message:
+                        "Failed asserting that 'Der Eintrag wurde gespeichert.' is in 'flash' message.",
+                    duration: 247,
+                    flowId: 3654,
+                });
+            });
+
+            it('case 2', () => {
+                const text = `##teamcity[testFailed name='testCreateEntityWithExceptPathEmptyString' message='ROOT/tests/TestCase/Model/Table/Validation/CmsPagesTableValidationTest.php (line 264)|n########## DEBUG ##########|nobject(App\Model\Entity\CmsPage) id:0 {|n  |'page_name|' => |'cms_page_639ca3c184af3|'|n  |'valid_for_pages|' => (int) 1|n  |'except_path|' => null|n  |'regex_path|' => null|n  |'page_settings_hash|' => |'44a9453b57d228884223347359a4b1cc|'|n  |'|[new|]|' => true|n  |'|[accessible|]|' => |[|n    |'page_name|' => true,|n    |'valid_for_pages|' => true|n  |]|n  |'|[dirty|]|' => |[|n    |'page_name|' => true,|n    |'valid_for_pages|' => true,|n    |'except_path|' => true,|n    |'regex_path|' => true,|n    |'page_settings_hash|' => true|n  |]|n  |'|[original|]|' => |[|]|n  |'|[virtual|]|' => |[|]|n  |'|[hasErrors|] |' => true|n  |'|[errors|]|' => |[|n    |'page_settings_hash|' => |[|n      |'_isUnique|' => |'This value is already in use|'|n    |]|n  |]|n  |'|[invalid|]|' => |[|n    |'page_settings_hash|' => |'44a9453b57d228884223347359a4b1cc|'|n  |]|n  |'|[repository|]|' => |'CmsPa ges|'|n}|n###########################' details=' |n Caused by|n ErrorException: unserialize(): Error at offset 0 of 919 bytes|n |n ' duration='0' flowId='3580']`;
+
+                expect(parser.parse(text) as any).toEqual({
+                    event: TestResultEvent.testFailed,
+                    kind: TestResultEvent.testFailed,
+                    name: 'testCreateEntityWithExceptPathEmptyString',
+                    details: [],
+                    message:
+                        "ROOT/tests/TestCase/Model/Table/Validation/CmsPagesTableValidationTest.php (line 264)\n########## DEBUG ##########\nobject(AppModelEntityCmsPage) id:0 {\n  'page_name' => 'cms_page_639ca3c184af3'\n  'valid_for_pages' => (int) 1\n  'except_path' => null\n  'regex_path' => null\n  'page_settings_hash' => '44a9453b57d228884223347359a4b1cc'\n  '[new]' => true\n  '[accessible]' => [\n    'page_name' => true,\n    'valid_for_pages' => true\n  ]\n  '[dirty]' => [\n    'page_name' => true,\n    'valid_for_pages' => true,\n    'except_path' => true,\n    'regex_path' => true,\n    'page_settings_hash' => true\n  ]\n  '[original]' => []\n  '[virtual]' => []\n  '[hasErrors] ' => true\n  '[errors]' => [\n    'page_settings_hash' => [\n      '_isUnique' => 'This value is already in use'\n    ]\n  ]\n  '[invalid]' => [\n    'page_settings_hash' => '44a9453b57d228884223347359a4b1cc'\n  ]\n  '[repository]' => 'CmsPa ges'\n}\n###########################",
+                    duration: 0,
+                    flowId: 3580,
+                });
+            });
+        });
     });
 
     describe('ProblemMatcher Text', () => {

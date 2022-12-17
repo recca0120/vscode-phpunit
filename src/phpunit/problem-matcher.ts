@@ -279,7 +279,7 @@ export class Parser implements IParser<Result | undefined> {
             .replace(this.pattern, '')
             .replace(/^\[|]$/g, '');
 
-        const { _, $0, ...argv } = this.unescapeArgv(this.toTeamcityArgv(text));
+        const argv = this.toTeamcityArgv(text);
         argv.kind = argv.event;
 
         return {
@@ -339,26 +339,25 @@ export class Parser implements IParser<Result | undefined> {
         return { id, file, testId };
     }
 
-    private unescapeArgv(argv: Pick<Arguments, string | number>) {
-        for (const x in argv) {
-            argv[x] = this.escapeValue.unescape(argv[x]);
-        }
+    private toTeamcityArgv(text: string): Pick<Arguments, string | number> {
+        text = text.replace(/\|'/g, '%%%SINGLE_QUOTE%%%');
+        text = this.escapeValue.unescape(text) as string;
 
-        return argv;
-    }
-
-    private toTeamcityArgv(text: string) {
-        const [eventName, ...args] = this.parseArgv(text)._;
+        const [eventName, ...args] = yargsParser(text)._;
         const command = [
             `--event='${eventName}'`,
             ...args.map((parameter) => `--${parameter}`),
         ].join(' ');
 
-        return this.parseArgv(command);
-    }
+        const { _, $0, ...argv } = yargsParser(command);
 
-    private parseArgv(text: string): Arguments {
-        return yargsParser(text);
+        for (const x in argv) {
+            if (typeof argv[x] === 'string') {
+                argv[x] = argv[x].replace(/%%%SINGLE_QUOTE%%%/g, "'");
+            }
+        }
+
+        return argv;
     }
 }
 
