@@ -109,6 +109,43 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 }
 
+class PrintedOutput {
+    private current?: string;
+
+    private store: { [p: string]: string } = {};
+
+    setCurrent(current?: string) {
+        this.current = current;
+    }
+
+    append(text: string) {
+        if (!this.current || text.match(/^##teamcity\[/)) {
+            return;
+        }
+
+        if (!this.store[this.current]) {
+            this.store[this.current] = '';
+        }
+
+        this.store[this.current] = text;
+    }
+
+    get(name: string) {
+        if (!this.store[name]) {
+            return;
+        }
+
+        const text = this.store[name];
+        delete this.store[name];
+
+        return text;
+    }
+
+    clear() {
+        this.store = {};
+    }
+}
+
 export class OutputChannelObserver implements TestRunnerObserver {
     private testResultMessages = new Map<TestResultKind, string[]>([
         [TestExtraResultEvent.testVersion, ['🚀', 'STARTED']],
@@ -126,10 +163,11 @@ export class OutputChannelObserver implements TestRunnerObserver {
     };
 
     private latestInput = '';
-    private printedOutputs: { [p: string]: string } = {};
-    private currentTest?: string;
+    private printedOutput: PrintedOutput;
 
-    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {}
+    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {
+        this.printedOutput = new PrintedOutput();
+    }
 
     run(command: string): void {
         if (this.isClearOutputOnRun()) {
@@ -153,7 +191,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     line(line: string): void {
-        this.setPrintedOutput(line);
+        this.printedOutput.append(line);
     }
 
     testVersion(result: TestVersion) {
@@ -188,23 +226,23 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testStarted(result: TestResult): void {
-        this.setCurrentTest(result.name);
+        this.printedOutput.setCurrent(result.name);
     }
 
     testFinished(result: TestResult): void {
         this.printTestResult(result);
-        this.showPrintedOutput(result.name);
+        this.printPrintedOutput(result.name);
     }
 
     testFailed(result: TestResult): void {
         this.printTestResult(result);
         this.printErrorMessage(result);
-        this.showPrintedOutput(result.name);
+        this.printPrintedOutput(result.name);
     }
 
     testIgnored(result: TestResult): void {
         this.printTestResult(result);
-        this.showPrintedOutput(result.name);
+        this.printPrintedOutput(result.name);
     }
 
     testResultSummary(result: TestResultSummary) {
@@ -226,32 +264,16 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     close() {
-        this.printedOutputs = {};
+        this.printedOutput.clear();
     }
 
-    private setPrintedOutput(line: string) {
-        if (!this.currentTest || line.match(/^##teamcity\[/)) {
-            return;
+    private printPrintedOutput(name: string) {
+        const text = this.printedOutput.get(name);
+        if (text) {
+            this.outputChannel.appendLine(text);
         }
 
-        if (!this.printedOutputs[this.currentTest]) {
-            this.printedOutputs[this.currentTest] = '';
-        }
-
-        this.printedOutputs[this.currentTest] += line;
-    }
-
-    private showPrintedOutput(currentTest: string) {
-        if (this.printedOutputs[currentTest]) {
-            this.outputChannel.appendLine(this.printedOutputs[currentTest]);
-            delete this.printedOutputs[currentTest];
-        }
-
-        this.setCurrentTest(undefined);
-    }
-
-    private setCurrentTest(currentTest?: string) {
-        this.currentTest = currentTest;
+        this.printedOutput.setCurrent(undefined);
     }
 
     private printErrorMessage(result: TestResult) {
