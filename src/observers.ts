@@ -58,21 +58,21 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testStarted(result: TestResult): void {
-        this.doRun('started', result, (test) => this.testRun.started(test));
+        this.doRun(result, (test) => this.testRun.started(test));
     }
 
     testFinished(result: TestResult): void {
-        this.doRun('finished', result, (test) => this.testRun.passed(test));
+        this.doRun(result, (test) => this.testRun.passed(test));
     }
 
     testFailed(result: TestResult): void {
-        this.doRun('finished', result, (test) =>
+        this.doRun(result, (test) =>
             this.testRun.failed(test, this.message(result, test), result.duration)
         );
     }
 
     testIgnored(result: TestResult): void {
-        this.doRun('finished', result, (test) => this.testRun.skipped(test));
+        this.doRun(result, (test) => this.testRun.skipped(test));
     }
 
     private message(result: TestResult, test: TestItem) {
@@ -90,7 +90,7 @@ export class TestResultObserver implements TestRunnerObserver {
         return message;
     }
 
-    private doRun(type: 'started' | 'finished', result: TestResult, fn: (test: TestItem) => void) {
+    private doRun(result: TestResult, fn: (test: TestItem) => void) {
         const test = this.find(result);
         if (!test) {
             return;
@@ -101,15 +101,7 @@ export class TestResultObserver implements TestRunnerObserver {
             return;
         }
 
-        if (type === 'started') {
-            this.testRun.appendOutput(`Running ${result.id}${EOL}`);
-        }
-
         fn(test);
-
-        if (type === 'finished') {
-            this.testRun.appendOutput(`Completed ${result.id}${EOL}`);
-        }
     }
 
     private find(result: TestResult) {
@@ -134,6 +126,8 @@ export class OutputChannelObserver implements TestRunnerObserver {
     };
 
     private latestInput = '';
+    private printedOutputs: { [p: string]: string } = {};
+    private currentTest?: string;
 
     constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {}
 
@@ -142,7 +136,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
             this.outputChannel.clear();
         }
 
-        this.showOutput(ShowOutputState.always);
+        this.showOutputChannel(ShowOutputState.always);
 
         this.latestInput = command;
         this.outputChannel.appendLine(command);
@@ -155,7 +149,11 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine(this.latestInput);
         this.outputChannel.appendLine('');
         this.outputChannel.append(`${icon} ${error}`);
-        this.showOutput(ShowOutputState.onFailure);
+        this.showOutputChannel(ShowOutputState.onFailure);
+    }
+
+    line(line: string): void {
+        this.setPrintedOutput(line);
     }
 
     testVersion(result: TestVersion) {
@@ -189,17 +187,24 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine('');
     }
 
+    testStarted(result: TestResult): void {
+        this.setCurrentTest(result.name);
+    }
+
     testFinished(result: TestResult): void {
         this.printTestResult(result);
+        this.showPrintedOutput(result.name);
     }
 
     testFailed(result: TestResult): void {
         this.printTestResult(result);
         this.printErrorMessage(result);
+        this.showPrintedOutput(result.name);
     }
 
     testIgnored(result: TestResult): void {
         this.printTestResult(result);
+        this.showPrintedOutput(result.name);
     }
 
     testResultSummary(result: TestResultSummary) {
@@ -212,12 +217,41 @@ export class OutputChannelObserver implements TestRunnerObserver {
             result.incomplete ||
             result.risky
         ) {
-            this.showOutput(ShowOutputState.onFailure);
+            this.showOutputChannel(ShowOutputState.onFailure);
         }
     }
 
     timeAndMemory(result: TimeAndMemory) {
         this.outputChannel.appendLine(result.text);
+    }
+
+    close() {
+        this.printedOutputs = {};
+    }
+
+    private setPrintedOutput(line: string) {
+        if (!this.currentTest || line.match(/^##teamcity\[/)) {
+            return;
+        }
+
+        if (!this.printedOutputs[this.currentTest]) {
+            this.printedOutputs[this.currentTest] = '';
+        }
+
+        this.printedOutputs[this.currentTest] += line;
+    }
+
+    private showPrintedOutput(currentTest: string) {
+        if (this.printedOutputs[currentTest]) {
+            this.outputChannel.appendLine(this.printedOutputs[currentTest]);
+            delete this.printedOutputs[currentTest];
+        }
+
+        this.setCurrentTest(undefined);
+    }
+
+    private setCurrentTest(currentTest?: string) {
+        this.currentTest = currentTest;
     }
 
     private printErrorMessage(result: TestResult) {
@@ -262,7 +296,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine(`  ${icon} ${name} ${result.duration} ms`);
     }
 
-    private showOutput(state: ShowOutputState) {
+    private showOutputChannel(state: ShowOutputState) {
         const showAfterExecution =
             (this.configuration.get('showAfterExecution') as ShowOutputState) ??
             ShowOutputState.onFailure;

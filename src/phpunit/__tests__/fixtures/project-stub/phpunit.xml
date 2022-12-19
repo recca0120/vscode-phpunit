@@ -15,6 +15,7 @@
     <testsuites>
         <testsuite name="default">
             <directory>tests</directory>
+            <exclude>tests/Output</exclude>
         </testsuite>
     </testsuites>
 

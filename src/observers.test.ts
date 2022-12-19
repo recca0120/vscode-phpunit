@@ -280,4 +280,13 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).not.toHaveBeenCalled();
     });
+
+    it('should show printed output', async () => {
+        const testFile = projectPath('tests/Output/OutputTest.php');
+        const filter = 'test_echo';
+        await run(testFile, filter);
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.appendLine).toBeCalledWith('printed output');
+    });
 });

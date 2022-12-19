@@ -100,10 +100,9 @@ describe('Extension Test', () => {
         beforeEach(async () => {
             context.subscriptions.push.mockReset();
             cwd = normalPath(projectPath(''));
-            await vscode.workspace.getConfiguration('phpunit').update('php', 'php');
-            await vscode.workspace
-                .getConfiguration('phpunit')
-                .update('phpunit', 'vendor/bin/phpunit');
+            const configuration = vscode.workspace.getConfiguration('phpunit');
+            await configuration.update('php', 'php');
+            await configuration.update('phpunit', 'vendor/bin/phpunit');
         });
 
         it('should load tests', async () => {
@@ -180,7 +179,7 @@ describe('Extension Test', () => {
             );
 
             expectTestResultCalled(ctrl, {
-                enqueued: 34,
+                enqueued: 38,
                 started: 20,
                 passed: 10,
                 failed: 8,
