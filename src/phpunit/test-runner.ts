@@ -180,7 +180,6 @@ export class TestRunner {
             proc.stdout!.on('data', processOutput);
             proc.stderr!.on('data', processOutput);
             proc.stdout!.on('end', () => this.processLine(temp, command));
-            proc.stderr!.on('end', () => this.processLine(temp, command));
 
             proc.on('error', (err: Error) => {
                 const error = err.stack ?? err.message;
