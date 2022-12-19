@@ -137,8 +137,18 @@ class PrintedOutput {
 
         const text = this.store[name];
         delete this.store[name];
+        this.setCurrent(undefined);
 
         return text;
+    }
+
+    all() {
+        const text = [];
+        for (const name in this.store) {
+            text.push(this.get(name));
+        }
+
+        return text.join('\n');
     }
 
     clear() {
@@ -264,6 +274,11 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     close() {
+        const text = this.printedOutput.all();
+        if (text) {
+            this.outputChannel.appendLine(text);
+        }
+
         this.printedOutput.clear();
     }
 
@@ -272,8 +287,6 @@ export class OutputChannelObserver implements TestRunnerObserver {
         if (text) {
             this.outputChannel.appendLine(text);
         }
-
-        this.printedOutput.setCurrent(undefined);
     }
 
     private printErrorMessage(result: TestResult) {

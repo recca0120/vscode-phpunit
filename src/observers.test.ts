@@ -281,12 +281,21 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.clear).not.toHaveBeenCalled();
     });
 
-    it('should show printed output', async () => {
+    it('should print printed output', async () => {
         const testFile = projectPath('tests/Output/OutputTest.php');
         const filter = 'test_echo';
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toBeCalledWith('printed output');
+    });
+
+    it('should print printed output when die', async () => {
+        const testFile = projectPath('tests/Output/OutputTest.php');
+        const filter = 'test_die';
+        await run(testFile, filter);
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.appendLine).toBeCalledWith('printed output when die');
     });
 });
