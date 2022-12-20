@@ -127,7 +127,7 @@ class PrintedOutput {
             this.store[this.current] = '';
         }
 
-        this.store[this.current] = text;
+        this.store[this.current] += text;
     }
 
     get(name: string) {

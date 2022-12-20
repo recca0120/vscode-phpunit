@@ -4,7 +4,7 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [3.0.21] - 2022-12-19
+## [3.0.23] - 2022-12-19
 
 - fix #139
 
