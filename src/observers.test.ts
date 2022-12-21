@@ -288,6 +288,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toBeCalledWith('printed output');
+        expect(outputChannel.show).toHaveBeenCalled();
     });
 
     it('should print printed output when die', async () => {
@@ -297,5 +298,6 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toBeCalledWith('printed output when die');
+        expect(outputChannel.show).toHaveBeenCalled();
     });
 });

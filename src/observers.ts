@@ -139,7 +139,7 @@ class PrintedOutput {
         delete this.store[name];
         this.setCurrent(undefined);
 
-        return text;
+        return text.trim();
     }
 
     all() {
@@ -148,7 +148,7 @@ class PrintedOutput {
             text.push(this.get(name));
         }
 
-        return text.join('\n');
+        return text.join('\n').trim();
     }
 
     clear() {
@@ -256,6 +256,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testResultSummary(result: TestResultSummary) {
+        this.printedOutput.setCurrent(undefined);
         this.outputChannel.appendLine(result.text);
 
         if (
@@ -270,22 +271,20 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     timeAndMemory(result: TimeAndMemory) {
+        this.printedOutput.setCurrent(undefined);
         this.outputChannel.appendLine(result.text);
     }
 
     close() {
-        const text = this.printedOutput.all();
-        if (text) {
-            this.outputChannel.appendLine(text);
-        }
-
+        this.printPrintedOutput();
         this.printedOutput.clear();
     }
 
-    private printPrintedOutput(name: string) {
-        const text = this.printedOutput.get(name);
+    private printPrintedOutput(name: string | null = null) {
+        const text = name ? this.printedOutput.get(name) : this.printedOutput.all();
         if (text) {
-            this.outputChannel.appendLine(text);
+            this.outputChannel.appendLine(text.trim());
+            this.outputChannel.show();
         }
     }
 

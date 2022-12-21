@@ -205,7 +205,6 @@ export class TestRunner {
     }
 
     private processLine(line: string, command: Command) {
-        this.trigger(TestRunnerEvent.line, line);
         const result = problemMatcher.parse(line);
 
         if (result) {
@@ -216,6 +215,8 @@ export class TestRunner {
 
             this.trigger(TestRunnerEvent.result, mappingResult);
         }
+
+        this.trigger(TestRunnerEvent.line, line);
     }
 
     private trigger(
