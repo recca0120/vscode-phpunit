@@ -240,19 +240,19 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestResult): void {
-        this.printTestResult(result);
         this.printPrintedOutput(result.name);
+        this.printTestResult(result);
     }
 
     testFailed(result: TestResult): void {
+        this.printPrintedOutput(result.name);
         this.printTestResult(result);
         this.printErrorMessage(result);
-        this.printPrintedOutput(result.name);
     }
 
     testIgnored(result: TestResult): void {
-        this.printTestResult(result);
         this.printPrintedOutput(result.name);
+        this.printTestResult(result);
     }
 
     testResultSummary(result: TestResultSummary) {
@@ -283,7 +283,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
     private printPrintedOutput(name: string | null = null) {
         const text = name ? this.printedOutput.get(name) : this.printedOutput.all();
         if (text) {
-            this.outputChannel.appendLine(text.trim());
+            this.outputChannel.appendLine(`🟨 ${text}`);
             this.outputChannel.show();
         }
     }

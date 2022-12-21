@@ -287,7 +287,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toBeCalledWith('printed output');
+        expect(outputChannel.appendLine).toBeCalledWith('🟨 printed output');
         expect(outputChannel.show).toHaveBeenCalled();
     });
 
@@ -297,7 +297,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toBeCalledWith('printed output when die');
+        expect(outputChannel.appendLine).toBeCalledWith('🟨 printed output when die');
         expect(outputChannel.show).toHaveBeenCalled();
     });
 });
