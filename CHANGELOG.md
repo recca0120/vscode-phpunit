@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.26] - 2022-12-22
+
+- output add line break
+
 ## [3.0.25] - 2022-12-21
 
 - yellow square for output

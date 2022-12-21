@@ -127,7 +127,7 @@ class PrintedOutput {
             this.store[this.current] = '';
         }
 
-        this.store[this.current] += text;
+        this.store[this.current] += `${text}\r\n`;
     }
 
     get(name: string) {
@@ -240,19 +240,19 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestResult): void {
-        this.printPrintedOutput(result.name);
         this.printTestResult(result);
+        this.printPrintedOutput(result.name);
     }
 
     testFailed(result: TestResult): void {
-        this.printPrintedOutput(result.name);
         this.printTestResult(result);
         this.printErrorMessage(result);
+        this.printPrintedOutput(result.name);
     }
 
     testIgnored(result: TestResult): void {
-        this.printPrintedOutput(result.name);
         this.printTestResult(result);
+        this.printPrintedOutput(result.name);
     }
 
     testResultSummary(result: TestResultSummary) {
