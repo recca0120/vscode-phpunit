@@ -69,6 +69,26 @@ describe('Command Test', () => {
                 '--colors=never',
             ]);
         });
+
+        it('should not transform arguments prefixed with --no to boolean', () => {
+            const cwd = projectPath('');
+            const configuration = new Configuration({
+                php: 'php',
+                phpunit: 'vendor/bin/phpunit',
+                args: ['--no-coverage', '--no-logging'],
+            });
+            const command = new LocalCommand(configuration, { cwd });
+
+            const { cmd, args } = command.apply();
+            expect(cmd).toEqual('php');
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                '--no-coverage',
+                '--no-logging',
+                '--teamcity',
+                '--colors=never',
+            ]);
+        });
     });
 
     describe('RemoteCommand', () => {

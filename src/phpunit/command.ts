@@ -181,6 +181,7 @@ export abstract class Command {
             configuration: {
                 // eslint-disable-next-line @typescript-eslint/naming-convention
                 'camel-case-expansion': false,
+                'boolean-negation': false,
             },
         });
 
