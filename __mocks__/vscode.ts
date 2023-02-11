@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { glob } from 'glob';
 import { URI } from 'vscode-uri';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 
 enum TestRunProfileKind {
     Run = 1,

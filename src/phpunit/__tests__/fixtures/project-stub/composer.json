@@ -2,7 +2,7 @@
     "name": "recca0120/vscode-phpunit",
     "type": "project",
     "require-dev": {
-        "phpunit/phpunit": "^9.5 || ^7.5",
+        "phpunit/phpunit": "^10.0 || ^9.5 || ^7.5",
         "mockery/mockery": "^1.5 || 1.3",
         "brianium/paratest": "^6.6 || 3.1"
     },
