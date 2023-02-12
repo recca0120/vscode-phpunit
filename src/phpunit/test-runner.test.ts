@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { projectPath } from './__tests__/helper';
+import { getPhpUnitVersion, projectPath } from './__tests__/helper';
 import { TestRunner, TestRunnerEvent } from './test-runner';
 import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
 import { spawn } from 'child_process';
@@ -18,6 +18,12 @@ interface ExpectedData {
 }
 
 describe('TestRunner Test', () => {
+    let phpUnitVersion: number = 9;
+
+    beforeAll(async () => {
+        phpUnitVersion = await getPhpUnitVersion();
+    });
+
     const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
         [TestRunnerEvent.run, jest.fn()],
         [TestRunnerEvent.line, jest.fn()],
@@ -194,12 +200,18 @@ describe('TestRunner Test', () => {
             expect.objectContaining({ ...expected, locationHint })
         );
 
-        expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testConfiguration)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testResultSummary)).toHaveBeenCalled();
+        if (phpUnitVersion < 10) {
+            expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
+            expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
+            expect(
+                onTestResultEvents.get(TestExtraResultEvent.testConfiguration)
+            ).toHaveBeenCalled();
+            expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
+            expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
+            expect(
+                onTestResultEvents.get(TestExtraResultEvent.testResultSummary)
+            ).toHaveBeenCalled();
+        }
 
         expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();

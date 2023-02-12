@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.29] - 2023-02-12
+
+- compatible PHPUnit 10
+
 ## [3.0.27] - 2022-12-23
 
 - disable boolean-negation

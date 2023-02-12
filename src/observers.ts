@@ -241,33 +241,25 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     testFinished(result: TestResult): void {
         this.printTestResult(result);
-        this.printPrintedOutput(result.name);
+        this.printPrintedOutput(result);
     }
 
     testFailed(result: TestResult): void {
         this.printTestResult(result);
         this.printErrorMessage(result);
-        this.printPrintedOutput(result.name);
+        this.printPrintedOutput(result);
+        this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testIgnored(result: TestResult): void {
         this.printTestResult(result);
-        this.printPrintedOutput(result.name);
+        this.printPrintedOutput(result);
+        this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testResultSummary(result: TestResultSummary) {
         this.printedOutput.setCurrent(undefined);
         this.outputChannel.appendLine(result.text);
-
-        if (
-            result.failures ||
-            result.errors ||
-            result.skipped ||
-            result.incomplete ||
-            result.risky
-        ) {
-            this.showOutputChannel(ShowOutputState.onFailure);
-        }
     }
 
     timeAndMemory(result: TimeAndMemory) {
@@ -280,8 +272,19 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.printedOutput.clear();
     }
 
-    private printPrintedOutput(name: string | null = null) {
-        const text = name ? this.printedOutput.get(name) : this.printedOutput.all();
+    private printPrintedOutput(result: TestResult | null = null) {
+        let text: string | undefined;
+        if (!result) {
+            text = this.printedOutput.all();
+        } else {
+            let matched: RegExpMatchArray | null = null;
+            if (result.message) {
+                matched = result.message.match(/This\stest\sprinted\soutput:(.*)/);
+            }
+
+            text = !matched ? this.printedOutput.get(result.name) : matched[1].trim();
+        }
+
         if (text) {
             this.outputChannel.appendLine(`🟨 ${text}`);
             this.outputChannel.show();

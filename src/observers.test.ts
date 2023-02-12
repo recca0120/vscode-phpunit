@@ -2,12 +2,18 @@ import { describe } from '@jest/globals';
 import { TestRunner } from './phpunit/test-runner';
 import { LocalCommand } from './phpunit/command';
 import { Configuration } from './phpunit/configuration';
-import { projectPath } from './phpunit/__tests__/helper';
+import { getPhpUnitVersion, projectPath } from './phpunit/__tests__/helper';
 import { EOL, OutputChannelObserver } from './observers';
 import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
 
 describe('OutputChannelObserver', () => {
+    let phpUnitVersion: number = 9;
+
+    beforeAll(async () => {
+        phpUnitVersion = await getPhpUnitVersion();
+    });
+
     function getOutputChannel(): OutputChannel {
         return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
     }
@@ -59,6 +65,10 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testVersion', async () => {
+        if (phpUnitVersion > 9) {
+            return;
+        }
+
         const testFile = projectPath('tests/AssertionsTest.php');
         await run(testFile);
 
@@ -69,6 +79,10 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testRuntime', async () => {
+        if (phpUnitVersion > 9) {
+            return;
+        }
+
         const testFile = projectPath('tests/AssertionsTest.php');
         await run(testFile);
 
@@ -79,6 +93,10 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testConfiguration', async () => {
+        if (phpUnitVersion > 9) {
+            return;
+        }
+
         const testFile = projectPath('tests/AssertionsTest.php');
         await run(testFile);
 
@@ -180,6 +198,10 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testResultSummary', async () => {
+        if (phpUnitVersion > 9) {
+            return;
+        }
+
         const testFile = projectPath('tests/AssertionsTest.php');
         await run(testFile);
 
@@ -190,6 +212,10 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger timeAndMemory', async () => {
+        if (phpUnitVersion > 9) {
+            return;
+        }
+
         const testFile = projectPath('tests/AssertionsTest.php');
         await run(testFile);
 
@@ -206,9 +232,7 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching('❌'));
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(/Cannot open file .*NotFound\.php/)
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
     });
 
     it('always show output channel', async () => {
@@ -238,7 +262,7 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.show).toHaveBeenCalled();
     });
 
-    it('should show output channel when failure', async () => {
+    it('should show output channel when file not found', async () => {
         const testFile = projectPath('tests/NotFound.php');
         await run(testFile, undefined, { showAfterExecution: 'onFailure' });
 

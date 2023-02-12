@@ -201,7 +201,7 @@ export class TestRunner {
     }
 
     private isTestRunning(output: string) {
-        return this.phpUnitPattern.test(output) && this.teamcityPattern.test(output);
+        return this.teamcityPattern.test(output);
     }
 
     private processLine(line: string, command: Command) {
