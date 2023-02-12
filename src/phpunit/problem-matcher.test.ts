@@ -26,6 +26,16 @@ describe('Problem Matcher Test', () => {
             });
         });
 
+        it('parse processes', () => {
+            const text = `Processes:     8`;
+
+            expect(parser.parse(text)).toEqual({
+                kind: TestExtraResultEvent.testProcesses,
+                processes: '8',
+                text,
+            });
+        });
+
         it('parse runtime', () => {
             const text = `Runtime:       PHP 8.1.12`;
 

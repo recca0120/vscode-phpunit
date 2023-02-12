@@ -74,6 +74,7 @@ export enum TestExtraResultEvent {
     testVersion = 'testVersion',
     testRuntime = 'testRuntime',
     testConfiguration = 'testConfiguration',
+    testProcesses = 'testProcesses',
     testCount = 'testCount',
     timeAndMemory = 'timeAndMemory',
     testResultSummary = 'testResultSummary',
@@ -121,6 +122,8 @@ export type TestVersion = {
 };
 export type TestRuntime = { kind: TestResultKind; runtime: string; text: string };
 export type TestConfiguration = { kind: TestResultKind; configuration: string; text: string };
+export type TestProcesses = { kind: TestResultKind; processes: string; text: string };
+
 export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string; text: string };
 export type TestResultSummary = {
     kind: TestResultKind;
@@ -187,6 +190,12 @@ abstract class ValueParser<T> implements IParser<T> {
             [this.name.toLowerCase()]: groups[this.name],
             text,
         } as T;
+    }
+}
+
+class TestProcessesParser extends ValueParser<TestProcesses> {
+    constructor() {
+        super('Processes', TestExtraResultEvent.testProcesses);
     }
 }
 
@@ -273,6 +282,7 @@ export class Parser implements IParser<Result | undefined> {
         new TestVersionParser(),
         new TestRuntimeParser(),
         new TestConfigurationParser(),
+        new TestProcessesParser(),
         new TimeAndMemoryParser(),
         new TestResultSummaryParser(),
     ];

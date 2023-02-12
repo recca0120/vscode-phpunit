@@ -5,6 +5,7 @@ import {
     TestConfiguration,
     TestCount,
     TestExtraResultEvent,
+    TestProcesses,
     TestResult,
     TestResultEvent,
     TestResultKind,
@@ -32,6 +33,7 @@ export type TestRunnerObserver = {
     [TestRunnerEvent.error]?: (error: string) => void;
     [TestRunnerEvent.close]?: (code: number | null) => void;
     [TestExtraResultEvent.testVersion]?: (result: TestVersion) => void;
+    [TestExtraResultEvent.testProcesses]?: (result: TestProcesses) => void;
     [TestExtraResultEvent.testRuntime]?: (result: TestRuntime) => void;
     [TestExtraResultEvent.testConfiguration]?: (result: TestConfiguration) => void;
     [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
@@ -75,6 +77,10 @@ class DefaultObserver implements TestRunnerObserver {
 
     testVersion(result: TestVersion): void {
         this.trigger(TestExtraResultEvent.testVersion, result);
+    }
+
+    testProcesses(result: TestProcesses): void {
+        this.trigger(TestExtraResultEvent.testProcesses, result);
     }
 
     testRuntime(result: TestRuntime): void {

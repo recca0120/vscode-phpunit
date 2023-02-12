@@ -12,6 +12,7 @@ import {
 import {
     TestConfiguration,
     TestExtraResultEvent,
+    TestProcesses,
     TestResult,
     TestResultEvent,
     TestResultKind,
@@ -208,6 +209,10 @@ export class OutputChannelObserver implements TestRunnerObserver {
         const [icon] = this.testResultMessages.get(result.kind)!;
         this.outputChannel.appendLine(`${icon} ${result.text}`);
         this.outputChannel.appendLine('');
+    }
+
+    testProcesses(result: TestProcesses) {
+        this.outputChannel.appendLine(`${result.text}`);
     }
 
     testRuntime(result: TestRuntime) {
