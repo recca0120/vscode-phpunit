@@ -7,7 +7,7 @@ export const normalPath = (path: string) =>
     path.replace(/^\w:/, (matched) => matched.toLowerCase());
 
 export const getPhpUnitVersion = (): number => {
-    const output = execSync('vendor/bin/phpunit --version', {
+    const output = execSync('php vendor/bin/phpunit --version', {
         cwd: projectPath('')
     }).toString();
 
