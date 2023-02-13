@@ -179,9 +179,9 @@ describe('Extension Test', () => {
             );
 
             expectTestResultCalled(ctrl, {
-                enqueued: 38,
-                started: 20,
-                passed: 10,
+                enqueued: 40,
+                started: 21,
+                passed: 11,
                 failed: 8,
                 end: 1,
             });

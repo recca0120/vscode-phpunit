@@ -164,8 +164,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
-                    start: { line: 58, character: 4 },
-                    end: { line: 61, character: 5 },
+                    start: { line: 60, character: 4 },
+                    end: { line: 63, character: 5 },
                     // end: { line: 58, character: 52 },
                 })
             );
@@ -299,6 +299,33 @@ describe('Parser Test', () => {
                     start: { line: 12, character: 4 },
                     end: { line: 15, character: 5 },
                     // end: { line: 12, character: 27 },
+                })
+            );
+        });
+    });
+
+    describe('parse AttributeTest', () => {
+        const file = projectPath('tests/AttributeTest.php');
+        const namespace = 'Recca0120\\VSCode\\Tests';
+        const _class = 'AttributeTest';
+
+        beforeAll(async () => {
+            const buffer = await readFile(file);
+            suites = parse(buffer.toString(), file)!;
+        });
+
+        it('parse Test Attribute', () => {
+            const method = 'hi';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    start: { line: 11, character: 4 },
+                    end: { line: 14, character: 5 },
                 })
             );
         });

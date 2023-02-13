@@ -169,11 +169,23 @@ class Validator {
             return false;
         }
 
-        return this.isAnnotationTest(method) || getName(method).startsWith('test');
+        return (
+            getName(method).startsWith('test') ||
+            this.isAnnotationTest(method) ||
+            this.isAttributeTest(method)
+        );
     }
 
     private isAbstract(declaration: Class | Method) {
         return declaration.isAbstract;
+    }
+
+    private isAttributeTest(declaration: Method) {
+        return !declaration.attrGroups
+            ? false
+            : declaration.attrGroups.some((group: any) => {
+                  return group.attrs.some((attr: any) => attr.name.toLowerCase() === 'test');
+              });
     }
 
     private isAnnotationTest(declaration: Declaration) {

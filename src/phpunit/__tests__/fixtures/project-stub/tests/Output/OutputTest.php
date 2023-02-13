@@ -14,7 +14,7 @@ class OutputTest extends TestCase
 
     public function test_die()
     {
-        die('printed output when die');
+        exit('printed output when die');
         self::assertTrue(true);
     }
 }
