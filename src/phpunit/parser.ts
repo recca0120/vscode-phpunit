@@ -71,16 +71,15 @@ class AnnotationParser {
 }
 
 export class AttributeParser {
-    private static readonly parser = new AnnotationParser();
-
+    private static readonly annotationParser = new AnnotationParser();
     private readonly lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseClass,
         method: this.parseMethod,
     };
 
-    private get parser() {
-        return AttributeParser.parser;
+    private get annotationParser() {
+        return AttributeParser.annotationParser;
     }
 
     public uniqueId(namespace?: string, _class?: string, method?: string) {
@@ -103,7 +102,7 @@ export class AttributeParser {
     public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): Attribute {
         const fn = this.lookup[declaration.kind];
         const parsed = fn.apply(this, [declaration, namespace, _class]);
-        const annotations = this.parser.parse(declaration);
+        const annotations = this.annotationParser.parse(declaration);
         const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
         const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
