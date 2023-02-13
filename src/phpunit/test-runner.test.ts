@@ -18,7 +18,7 @@ interface ExpectedData {
 }
 
 describe('TestRunner Test', () => {
-    let phpUnitVersion: number = getPhpUnitVersion();
+    const phpUnitVersion: number = getPhpUnitVersion();
 
     const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
         [TestRunnerEvent.run, jest.fn()],

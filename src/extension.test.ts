@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, IOptions } from 'glob';
 import { readFileSync } from 'fs';
-import { normalPath, projectPath } from './phpunit/__tests__/helper';
+import { getPhpUnitVersion, normalPath, projectPath } from './phpunit/__tests__/helper';
 import * as path from 'path';
 import { spawn } from 'child_process';
 
@@ -86,6 +86,7 @@ const expectTestResultCalled = (ctrl: TestController, expected: any) => {
 
 describe('Extension Test', () => {
     const root = projectPath('');
+    const phpUnitVersion: number = getPhpUnitVersion();
 
     beforeEach(() => {
         setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
@@ -178,13 +179,13 @@ describe('Extension Test', () => {
                 { cwd }
             );
 
-            expectTestResultCalled(ctrl, {
-                enqueued: 46,
-                started: 28,
-                passed: 16,
-                failed: 10,
-                end: 1,
-            });
+            let expected;
+            if (phpUnitVersion > 9) {
+                expected = { enqueued: 46, started: 28, passed: 16, failed: 10, end: 1 };
+            } else {
+                expected = { enqueued: 46, started: 23, passed: 11, failed: 10, end: 1 };
+            }
+            expectTestResultCalled(ctrl, expected);
         });
 
         it('should run test suite', async () => {

@@ -8,11 +8,7 @@ import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
 
 describe('OutputChannelObserver', () => {
-    let phpUnitVersion: number = 9;
-
-    beforeAll(async () => {
-        phpUnitVersion = await getPhpUnitVersion();
-    });
+    const phpUnitVersion: number = getPhpUnitVersion();
 
     function getOutputChannel(): OutputChannel {
         return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
