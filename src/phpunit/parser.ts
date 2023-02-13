@@ -23,6 +23,7 @@ type TestAttr = {
 };
 
 type Annotations = {
+    [p: string]: unknown;
     depends?: string[];
     dataProvider?: string[];
 };
@@ -32,13 +33,19 @@ type Position = {
     line: number;
 };
 
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
 
 class AttributeParser {
-    parse(method: Method) {
-        return method.attrGroups.reduce((attributes: any[], group: any) => {
+    parse(declaration: any): any[] {
+        if (!declaration.hasOwnProperty('attrGroups')) {
+            return [];
+        }
+
+        return declaration.attrGroups.reduce((attributes: any[], group: any) => {
             return [
                 ...attributes,
                 ...group.attrs.map((attr: any) => {
@@ -53,6 +60,7 @@ class AttributeParser {
 }
 
 class AnnotationParser {
+    private static attributeParser = new AttributeParser();
     private readonly lookup = ['depends', 'dataProvider'];
     private readonly template = (annotation: string) =>
         `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
@@ -62,7 +70,33 @@ class AnnotationParser {
         'g'
     );
 
+    private get attributeParser() {
+        return AnnotationParser.attributeParser;
+    }
+
     public parse(declaration: Declaration): Annotations {
+        return { ...this.parseComments(declaration), ...this.parseAttributes(declaration) };
+    }
+
+    private parseAttributes(declaration: Declaration) {
+        const parsed = this.attributeParser.parse(declaration);
+        const annotations = {} as Annotations;
+
+        for (const property of this.lookup) {
+            const name = capitalize(property);
+            const values = parsed
+                .filter((attribute: any) => attribute.name === name)
+                .map((attribute: any) => attribute.args[0]);
+
+            if (values.length > 0) {
+                annotations[property] = values;
+            }
+        }
+
+        return annotations;
+    }
+
+    private parseComments(declaration: Declaration) {
         const comments = declaration.leadingComments ?? [];
 
         return comments

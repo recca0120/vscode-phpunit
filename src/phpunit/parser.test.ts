@@ -329,5 +329,39 @@ describe('Parser Test', () => {
                 })
             );
         });
+
+        it('parse DataProvider Attribute', () => {
+            const method = 'testAdd';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    annotations: { dataProvider: ['additionProvider'] },
+                    start: { line: 18, character: 4 },
+                    end: { line: 21, character: 5 },
+                })
+            );
+        });
+
+        it('parse Depends Attribute', () => {
+            const method = 'testPush';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    annotations: { depends: ['testEmpty'] },
+                    start: { line: 42, character: 4 },
+                    end: { line: 49, character: 5 },
+                })
+            );
+        });
     });
 });

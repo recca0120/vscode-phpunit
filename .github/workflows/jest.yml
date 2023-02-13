@@ -46,18 +46,8 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      - name: Install dependencies
-        uses: nick-invision/retry@v1
-        with:
-          timeout_minutes: 5
-          max_attempts: 5
-          command: cd ${{ env.project }} && composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress ${{ matrix.flags }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
+      - name: Install Composer dependencies
+        run: cd ${{ env.project }} && composer update --prefer-dist --no-interaction --no-progress
 
       # Install required deps for action
       - name: Install Dependencies
