@@ -1,14 +1,14 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import { projectPath } from './__tests__/helper';
-import { AttributeParser, parse, Test } from './parser';
+import { parse, Test, TestAttrParser } from './parser';
 
-const attributeParser = new AttributeParser();
+const testAttrParser = new TestAttrParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {
-    return attributeParser.uniqueId(namespace, _class, method);
+    return testAttrParser.uniqueId(namespace, _class, method);
 };
 const qualifiedClass = (namespace: string, _class: string) => {
-    return attributeParser.qualifiedClass(namespace, _class);
+    return testAttrParser.qualifiedClass(namespace, _class);
 };
 
 describe('Parser Test', () => {

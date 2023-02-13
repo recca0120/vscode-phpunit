@@ -11,7 +11,7 @@ const engine = new Engine({
     },
 });
 
-type Attribute = {
+type TestAttr = {
     id: string;
     qualifiedClass: string;
     namespace: string;
@@ -36,6 +36,22 @@ const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
 
+class AttributeParser {
+    parse(method: Method) {
+        return method.attrGroups.reduce((attributes: any[], group: any) => {
+            return [
+                ...attributes,
+                ...group.attrs.map((attr: any) => {
+                    return {
+                        name: attr.name,
+                        args: attr.args.map((arg: any) => arg.value),
+                    };
+                }),
+            ];
+        }, []);
+    }
+}
+
 class AnnotationParser {
     private readonly lookup = ['depends', 'dataProvider'];
     private readonly template = (annotation: string) =>
@@ -47,7 +63,6 @@ class AnnotationParser {
     );
 
     public parse(declaration: Declaration): Annotations {
-        console.log((declaration as Method).attrGroups);
         const comments = declaration.leadingComments ?? [];
 
         return comments
@@ -70,7 +85,7 @@ class AnnotationParser {
     }
 }
 
-export class AttributeParser {
+export class TestAttrParser {
     private static readonly annotationParser = new AnnotationParser();
     private readonly lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
@@ -79,7 +94,7 @@ export class AttributeParser {
     };
 
     private get annotationParser() {
-        return AttributeParser.annotationParser;
+        return TestAttrParser.annotationParser;
     }
 
     public uniqueId(namespace?: string, _class?: string, method?: string) {
@@ -99,7 +114,7 @@ export class AttributeParser {
         return [namespace, _class].filter((name) => !!name).join('\\');
     }
 
-    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): Attribute {
+    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): TestAttr {
         const fn = this.lookup[declaration.kind];
         const parsed = fn.apply(this, [declaration, namespace, _class]);
         const annotations = this.annotationParser.parse(declaration);
@@ -147,10 +162,15 @@ export class AttributeParser {
 }
 
 class Validator {
+    private static attributeParser = new AttributeParser();
     private lookup: { [p: string]: Function } = {
         class: this.validateClass,
         method: this.validateMethod,
     };
+
+    private get attributeParser() {
+        return Validator.attributeParser;
+    }
 
     public isTest(declaration: Declaration) {
         const fn = this.lookup[declaration.kind];
@@ -181,11 +201,13 @@ class Validator {
     }
 
     private isAttributeTest(declaration: Method) {
-        return !declaration.attrGroups
-            ? false
-            : declaration.attrGroups.some((group: any) => {
-                  return group.attrs.some((attr: any) => attr.name.toLowerCase() === 'test');
-              });
+        if (!declaration.attrGroups) {
+            return false;
+        }
+
+        return this.attributeParser
+            .parse(declaration)
+            .some((attribute: any) => attribute.name === 'Test');
     }
 
     private isAnnotationTest(declaration: Declaration) {
@@ -203,7 +225,7 @@ class Validator {
 
 class Parser {
     private static readonly validator = new Validator();
-    private static readonly attributeParser = new AttributeParser();
+    private static readonly testAttrParser = new TestAttrParser();
 
     private namespace?: Namespace;
     private lookup: { [p: string]: Function } = {
@@ -245,7 +267,7 @@ class Parser {
     }
 
     private parseAttributes(declaration: Declaration, _namespace?: Namespace, _class?: Class) {
-        return Parser.attributeParser.parse(declaration, _namespace, _class);
+        return Parser.testAttrParser.parse(declaration, _namespace, _class);
     }
 
     private parseAst(
@@ -298,7 +320,7 @@ class Parser {
     }
 }
 
-export class Test implements Attribute {
+export class Test implements TestAttr {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
@@ -310,7 +332,7 @@ export class Test implements Attribute {
     public parent?: Test;
     public children: Test[] = [];
 
-    constructor(public readonly file: string, attributes: Attribute) {
+    constructor(public readonly file: string, attributes: TestAttr) {
         Object.assign(this, attributes);
     }
 }
