@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.30] - 2023-02-13
+
+- Test Attribute
+
 ## [3.0.29] - 2023-02-12
 
 - compatible PHPUnit 10
