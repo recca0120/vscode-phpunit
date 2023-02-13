@@ -47,6 +47,7 @@ class AnnotationParser {
     );
 
     public parse(declaration: Declaration): Annotations {
+        console.log((declaration as Method).attrGroups);
         const comments = declaration.leadingComments ?? [];
 
         return comments

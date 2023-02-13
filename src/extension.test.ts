@@ -179,10 +179,10 @@ describe('Extension Test', () => {
             );
 
             expectTestResultCalled(ctrl, {
-                enqueued: 40,
-                started: 21,
-                passed: 11,
-                failed: 8,
+                enqueued: 46,
+                started: 28,
+                passed: 16,
+                failed: 10,
                 end: 1,
             });
         });

@@ -324,8 +324,8 @@ describe('Parser Test', () => {
                     namespace,
                     class: _class,
                     method,
-                    start: { line: 11, character: 4 },
-                    end: { line: 14, character: 5 },
+                    start: { line: 12, character: 4 },
+                    end: { line: 15, character: 5 },
                 })
             );
         });
