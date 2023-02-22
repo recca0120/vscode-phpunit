@@ -61,6 +61,23 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```json5
 {
+  "phpunit.command": 'docker exec -t [container_id] /bin/sh -c',
+  "phpunit.php": "php",
+  "phpunit.phpunit": "vendor/bin/phpunit",
+  "phpunit.args": [
+    "-c",
+    "phpunit.xml"
+  ],
+  "phpunit.paths": {
+    // ${pwd} (current directory) is mounted to /app
+    "${workspaceFolder}": '/app',
+    // ${workspaceFolder} is mapped to /app
+  },
+}
+```
+
+```json5
+{
   "phpunit.command": 'docker run --rm -t -v ${pwd}:/app -w /app php:latest php',
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
