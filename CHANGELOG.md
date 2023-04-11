@@ -4,99 +4,99 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [3.0.32] - 2023-04-12
+## [3.0.33] - 2023-04-12
 
-- allow lando to run remote command
+-   fix test suite without namespace
 
 ## [3.0.31] - 2023-02-15
 
-- parse Depends, DataProvider Attribute
+-   parse Depends, DataProvider Attribute
 
 ## [3.0.30] - 2023-02-13
 
-- parse Test Attribute
+-   parse Test Attribute
 
 ## [3.0.29] - 2023-02-12
 
-- compatible PHPUnit 10
+-   compatible PHPUnit 10
 
 ## [3.0.27] - 2022-12-23
 
-- disable boolean-negation
+-   disable boolean-negation
 
 ## [3.0.26] - 2022-12-22
 
-- output add line break
+-   output add line break
 
 ## [3.0.25] - 2022-12-21
 
-- yellow square for output
-- print output before result
+-   yellow square for output
+-   print output before result
 
 ## [3.0.24] - 2022-12-21
 
-- fix output bug
+-   fix output bug
 
 ## [3.0.23] - 2022-12-19
 
-- fix #139
+-   fix #139
 
 ## [3.0.20] - 2022-12-18
 
-- fix #138
+-   fix #138
 
 ## [3.0.19] - 2022-12-16
 
-- disable camel-case-expansion
+-   disable camel-case-expansion
 
 ## [3.0.17] - 2022-12-15
 
-- current workspace folder
+-   current workspace folder
 
 ## [3.0.16] - 2022-12-08
 
-- minify
+-   minify
 
 ## [3.0.15] - 2022-12-08
 
-- clearOutputOnRun
+-   clearOutputOnRun
 
 ## [3.0.14] - 2022-12-07
 
-- fix show output channel on failure
+-   fix show output channel on failure
 
 ## [3.0.13] - 2022-12-07
 
-- fix ${workspaceFolder} bug
+-   fix ${workspaceFolder} bug
 
 ## [3.0.12] - 2022-12-07
 
-- show teamcity in testing api terminal
+-   show teamcity in testing api terminal
 
 ## [3.0.11] - 2022-12-07
 
-- parse ParaTest and PHPUnit version
+-   parse ParaTest and PHPUnit version
 
 ## [3.0.10] - 2022-12-07
 
-- showAfterExecution
+-   showAfterExecution
 
 ## [3.0.9] - 2022-12-06
 
-- [ParaTest](https://github.com/paratestphp/paratest)
+-   [ParaTest](https://github.com/paratestphp/paratest)
 
 ## [3.0.8] - 2022-12-06
 
-- fix error rule
+-   fix error rule
 
 ## [3.0.7] - 2022-12-06
 
-- auto reload configuration
+-   auto reload configuration
 
 ## [3.0.6] - 2022-12-06
 
-- ssh
-- fix error output
+-   ssh
+-   fix error output
 
 ## [3.0.5] - 2022-12-05
 
@@ -104,12 +104,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [3.0.4] - 2022-12-05
 
-- when spawn error, receive close event
+-   when spawn error, receive close event
 
 ## [3.0.3] - 2022-12-05
 
-- beautiful output channel
+-   beautiful output channel
 
 ## [3.0.0] - 2022-12-04
 
-- Initial release
+-   Initial release
