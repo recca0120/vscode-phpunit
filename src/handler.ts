@@ -53,12 +53,17 @@ export class Handler {
         }
 
         const options = { cwd: workspaceFolder!.uri.fsPath };
-
-        if (((this.configuration.get('command') as string) ?? '').match(/docker|ssh/)) {
+        if (this.isRemote()) {
             return new RemoteCommand(this.configuration, options);
         }
 
         return new LocalCommand(this.configuration, options);
+    }
+
+    private isRemote() {
+        const command = (this.configuration.get('command') as string) ?? '';
+
+        return command.match(/docker|ssh|lando/) !== null;
     }
 
     private createTestRunner(

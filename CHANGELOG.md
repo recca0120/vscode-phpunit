@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.0.32] - 2023-04-12
+
+- allow lando to run remote command
+
 ## [3.0.31] - 2023-02-15
 
 - parse Depends, DataProvider Attribute

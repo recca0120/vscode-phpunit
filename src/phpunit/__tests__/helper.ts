@@ -12,5 +12,6 @@ export const getPhpUnitVersion = (): number => {
     }).toString();
 
     const matched = output.match(/PHPUnit\s(\d+)\./);
+
     return parseInt(matched![1], 10);
-}
+};

@@ -125,6 +125,7 @@ describe('Command Test', () => {
                 php: 'php',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
                     '${workspaceFolder}': '/var/www',
                 },
             });
@@ -155,6 +156,7 @@ describe('Command Test', () => {
                 php: 'php',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
                     '${workspaceFolder}': '/var/www',
                 },
             });
