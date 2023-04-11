@@ -118,16 +118,16 @@ export class AttributeParser {
     }
 
     private parseNamespace(declaration: Declaration) {
-        return { namespace: this.parseName(declaration) };
+        return { namespace: this.parseName(declaration) ?? '' };
     }
 
     private parseClass(declaration: Declaration, namespace?: Namespace) {
-        return { namespace: this.parseName(namespace), class: this.parseName(declaration) };
+        return { namespace: this.parseName(namespace) ?? '', class: this.parseName(declaration) };
     }
 
     private parseMethod(declaration: Declaration, namespace?: Namespace, _class?: Class) {
         return {
-            namespace: this.parseName(namespace),
+            namespace: this.parseName(namespace) ?? '',
             class: this.parseName(_class),
             method: this.parseName(declaration),
         };
@@ -202,16 +202,17 @@ class Validator {
 }
 
 class Parser {
+    private namespace?: Namespace;
     private static readonly validator = new Validator();
     private static readonly attributeParser = new AttributeParser();
 
-    private namespace?: Namespace;
     private lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseClass,
     };
 
     public parse(text: Buffer | string, file: string) {
+        this.namespace = undefined;
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170

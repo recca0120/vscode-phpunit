@@ -330,4 +330,35 @@ describe('Parser Test', () => {
             );
         });
     });
+
+    describe('parse NoNamespaceTest', () => {
+        const file = projectPath('tests/NoNamespaceTest.php');
+        const namespace = '';
+        const _class = 'NoNamespaceTest';
+
+        beforeAll(async () => {
+            const file2 = projectPath('tests/AttributeTest.php');
+            const buffer2 = await readFile(file2);
+            suites = parse(buffer2.toString(), file2)!;
+
+            const buffer = await readFile(file);
+            suites = parse(buffer.toString(), file)!;
+        });
+
+        it('parse NoNamespaceTest', () => {
+            const method = 'test_no_namespace';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    start: { line: 7, character: 4 },
+                    end: { line: 10, character: 5 },
+                })
+            );
+        });
+    });
 });
