@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {execSync} from "child_process";
+import { execSync } from 'child_process';
 
 export const fixturePath = (uri: string) => path.join(__dirname, 'fixtures', uri);
 export const projectPath = (uri: string) => fixturePath(path.join('project-stub', uri));
@@ -8,7 +8,7 @@ export const normalPath = (path: string) =>
 
 export const getPhpUnitVersion = (): number => {
     const output = execSync('php vendor/bin/phpunit --version', {
-        cwd: projectPath('')
+        cwd: projectPath(''),
     }).toString();
 
     const matched = output.match(/PHPUnit\s(\d+)\./);

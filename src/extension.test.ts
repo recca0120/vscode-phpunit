@@ -2,7 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 import { activate } from './extension';
 import * as vscode from 'vscode';
 import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
-import { glob, IOptions } from 'glob';
+import { glob, GlobOptions } from 'glob';
 import { readFileSync } from 'fs';
 import { getPhpUnitVersion, normalPath, projectPath } from './phpunit/__tests__/helper';
 import * as path from 'path';
@@ -22,7 +22,7 @@ const setWorkspaceFolders = (workspaceFolders: WorkspaceFolder[]) => {
     });
 };
 
-const globTextDocuments = (pattern: string, options?: IOptions) => {
+const globTextDocuments = (pattern: string, options?: GlobOptions) => {
     options = {
         absolute: true,
         ignore: ['**/node_modules/**', '**/.git/**', '**/vendor/**'],
@@ -31,7 +31,7 @@ const globTextDocuments = (pattern: string, options?: IOptions) => {
 
     return glob
         .sync(pattern, options)
-        .map((file) => Uri.file(file))
+        .map((file) => Uri.file(file as string))
         .map((uri) => ({
             uri,
             fileName: uri.fsPath,

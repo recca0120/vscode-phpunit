@@ -233,7 +233,6 @@ const workspace = {
                     absolute: true,
                     ignore: ['**/node_modules/**', '**/.git/**', '**/vendor/**'],
                     cwd: pattern.uri.fsPath,
-                    cache: true as any,
                 })
                 .map((file) => URI.parse(file))
         );

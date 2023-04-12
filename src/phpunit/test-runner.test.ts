@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { getPhpUnitVersion, projectPath } from './__tests__/helper';
 import { TestRunner, TestRunnerEvent } from './test-runner';
 import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
@@ -212,10 +212,6 @@ describe('TestRunner Test', () => {
         expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
     };
-
-    beforeEach(() => {
-        jest.restoreAllMocks();
-    });
 
     const generateExceptedByCommand = (command: Command, expected: any[], inputs: unknown[]) => {
         if (command instanceof RemoteCommand) {
