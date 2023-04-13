@@ -11,7 +11,7 @@ const engine = new Engine({
     },
 });
 
-type Attribute = {
+type TestAttr = {
     id: string;
     qualifiedClass: string;
     namespace: string;
@@ -23,6 +23,7 @@ type Attribute = {
 };
 
 type Annotations = {
+    [p: string]: unknown;
     depends?: string[];
     dataProvider?: string[];
 };
@@ -32,11 +33,34 @@ type Position = {
     line: number;
 };
 
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
 
+class AttributeParser {
+    parse(declaration: any): any[] {
+        if (!declaration.hasOwnProperty('attrGroups')) {
+            return [];
+        }
+
+        return declaration.attrGroups.reduce((attributes: any[], group: any) => {
+            return [
+                ...attributes,
+                ...group.attrs.map((attr: any) => {
+                    return {
+                        name: attr.name,
+                        args: attr.args.map((arg: any) => arg.value),
+                    };
+                }),
+            ];
+        }, []);
+    }
+}
+
 class AnnotationParser {
+    private static attributeParser = new AttributeParser();
     private readonly lookup = ['depends', 'dataProvider'];
     private readonly template = (annotation: string) =>
         `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
@@ -46,7 +70,33 @@ class AnnotationParser {
         'g'
     );
 
+    private get attributeParser() {
+        return AnnotationParser.attributeParser;
+    }
+
     public parse(declaration: Declaration): Annotations {
+        return { ...this.parseComments(declaration), ...this.parseAttributes(declaration) };
+    }
+
+    private parseAttributes(declaration: Declaration) {
+        const parsed = this.attributeParser.parse(declaration);
+        const annotations = {} as Annotations;
+
+        for (const property of this.lookup) {
+            const name = capitalize(property);
+            const values = parsed
+                .filter((attribute: any) => attribute.name === name)
+                .map((attribute: any) => attribute.args[0]);
+
+            if (values.length > 0) {
+                annotations[property] = values;
+            }
+        }
+
+        return annotations;
+    }
+
+    private parseComments(declaration: Declaration) {
         const comments = declaration.leadingComments ?? [];
 
         return comments
@@ -69,17 +119,16 @@ class AnnotationParser {
     }
 }
 
-export class AttributeParser {
-    private static readonly parser = new AnnotationParser();
-
+export class TestAttrParser {
+    private static readonly annotationParser = new AnnotationParser();
     private readonly lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseClass,
         method: this.parseMethod,
     };
 
-    private get parser() {
-        return AttributeParser.parser;
+    private get annotationParser() {
+        return TestAttrParser.annotationParser;
     }
 
     public uniqueId(namespace?: string, _class?: string, method?: string) {
@@ -99,10 +148,10 @@ export class AttributeParser {
         return [namespace, _class].filter((name) => !!name).join('\\');
     }
 
-    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): Attribute {
+    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): TestAttr {
         const fn = this.lookup[declaration.kind];
         const parsed = fn.apply(this, [declaration, namespace, _class]);
-        const annotations = this.parser.parse(declaration);
+        const annotations = this.annotationParser.parse(declaration);
         const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
         const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
@@ -147,10 +196,15 @@ export class AttributeParser {
 }
 
 class Validator {
+    private static attributeParser = new AttributeParser();
     private lookup: { [p: string]: Function } = {
         class: this.validateClass,
         method: this.validateMethod,
     };
+
+    private get attributeParser() {
+        return Validator.attributeParser;
+    }
 
     public isTest(declaration: Declaration) {
         const fn = this.lookup[declaration.kind];
@@ -181,11 +235,13 @@ class Validator {
     }
 
     private isAttributeTest(declaration: Method) {
-        return !declaration.attrGroups
-            ? false
-            : declaration.attrGroups.some((group: any) => {
-                  return group.attrs.some((attr: any) => attr.name.toLowerCase() === 'test');
-              });
+        if (!declaration.attrGroups) {
+            return false;
+        }
+
+        return this.attributeParser
+            .parse(declaration)
+            .some((attribute: any) => attribute.name === 'Test');
     }
 
     private isAnnotationTest(declaration: Declaration) {
@@ -204,7 +260,7 @@ class Validator {
 class Parser {
     private namespace?: Namespace;
     private static readonly validator = new Validator();
-    private static readonly attributeParser = new AttributeParser();
+    private static readonly testAttrParser = new TestAttrParser();
 
     private lookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
@@ -246,7 +302,7 @@ class Parser {
     }
 
     private parseAttributes(declaration: Declaration, _namespace?: Namespace, _class?: Class) {
-        return Parser.attributeParser.parse(declaration, _namespace, _class);
+        return Parser.testAttrParser.parse(declaration, _namespace, _class);
     }
 
     private parseAst(
@@ -299,7 +355,7 @@ class Parser {
     }
 }
 
-export class Test implements Attribute {
+export class Test implements TestAttr {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
@@ -311,7 +367,7 @@ export class Test implements Attribute {
     public parent?: Test;
     public children: Test[] = [];
 
-    constructor(public readonly file: string, attributes: Attribute) {
+    constructor(public readonly file: string, attributes: TestAttr) {
         Object.assign(this, attributes);
     }
 }

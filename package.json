@@ -4,7 +4,7 @@
     "displayName": "PHPUnit Test Explorer",
     "icon": "img/icon.png",
     "publisher": "recca0120",
-    "version": "3.0.33",
+    "version": "3.0.34",
     "private": true,
     "license": "MIT",
     "repository": {
@@ -166,7 +166,7 @@
         "typescript": "^5.0.4",
         "vscode-dts": "^0.3.3",
         "vscode-uri": "^3.0.7",
-        "webpack": "^5.78.0",
+        "webpack": "^5.79.0",
         "webpack-cli": "^5.0.1",
         "yargs-parser": "^21.1.1"
     }

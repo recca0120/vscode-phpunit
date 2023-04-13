@@ -1,14 +1,14 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import { projectPath } from './__tests__/helper';
-import { AttributeParser, parse, Test } from './parser';
+import { parse, Test, TestAttrParser } from './parser';
 
-const attributeParser = new AttributeParser();
+const testAttrParser = new TestAttrParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {
-    return attributeParser.uniqueId(namespace, _class, method);
+    return testAttrParser.uniqueId(namespace, _class, method);
 };
 const qualifiedClass = (namespace: string, _class: string) => {
-    return attributeParser.qualifiedClass(namespace, _class);
+    return testAttrParser.qualifiedClass(namespace, _class);
 };
 
 describe('Parser Test', () => {
@@ -326,6 +326,40 @@ describe('Parser Test', () => {
                     method,
                     start: { line: 12, character: 4 },
                     end: { line: 15, character: 5 },
+                })
+            );
+        });
+
+        it('parse DataProvider Attribute', () => {
+            const method = 'testAdd';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    annotations: { dataProvider: ['additionProvider'] },
+                    start: { line: 18, character: 4 },
+                    end: { line: 21, character: 5 },
+                })
+            );
+        });
+
+        it('parse Depends Attribute', () => {
+            const method = 'testPush';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    annotations: { depends: ['testEmpty'] },
+                    start: { line: 42, character: 4 },
+                    end: { line: 49, character: 5 },
                 })
             );
         });

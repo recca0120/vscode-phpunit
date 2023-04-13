@@ -14,7 +14,7 @@ class AttributeTest extends TestCase
         self::assertTrue(true);
     }
 
-     #[DataProvider('additionProvider')]
+    #[DataProvider('additionProvider')]
     public function testAdd(int $a, int $b, int $expected): void
     {
         $this->assertSame($expected, $a + $b);
