@@ -26,6 +26,7 @@ type Annotations = {
     [p: string]: unknown;
     depends?: string[];
     dataProvider?: string[];
+    testdox?: string[];
 };
 
 type Position = {

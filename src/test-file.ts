@@ -113,19 +113,24 @@ export class TestFile {
     }
 
     private asTestItem(ctrl: TestController, test: Test, sortText: number | string) {
-        const canResolveChildren = test.children.length > 0;
-        const label = canResolveChildren ? test.qualifiedClass : test.method!;
-
-        const testItem = ctrl.createTestItem(test.id, label, this.uri);
+        const testItem = ctrl.createTestItem(test.id, this.getLabel(test), this.uri);
         ctrl.items.add(testItem);
 
         testItem.sortText = `${sortText}`;
-        testItem.canResolveChildren = canResolveChildren;
+        testItem.canResolveChildren = test.children.length > 0;
         testItem.range = new Range(
             new Position(test.start.line - 1, test.start.character),
             new Position(test.end.line - 1, test.end.character)
         );
 
         return testItem;
+    }
+
+    private getLabel(test: Test) {
+        if (test.annotations.testdox && test.annotations.testdox.length > 0) {
+            return test.annotations.testdox[test.annotations.testdox.length - 1];
+        }
+
+        return test.children.length > 0 ? test.qualifiedClass : test.method!;
     }
 }

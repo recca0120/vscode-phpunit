@@ -4,7 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [3.0.34] - 2023-04-15
+## [3.1.0] - 2023-04-14
+
+- parse testdox
+
+## [3.0.34] - 2023-04-14
 
 - fix parse Depends, DataProvider Attribute
 
