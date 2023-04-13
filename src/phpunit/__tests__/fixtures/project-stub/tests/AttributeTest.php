@@ -2,9 +2,11 @@
 
 namespace Recca0120\VSCode\Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\TestDox;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class AttributeTest extends TestCase
 {
@@ -46,5 +48,12 @@ class AttributeTest extends TestCase
         $this->assertNotEmpty($stack);
 
         return $stack;
+    }
+
+    #[Test]
+    #[TestDox('has an initial balance of zero')]
+    public function balanceIsInitiallyZero(): void
+    {
+        $this->assertSame(0, 0);
     }
 }

@@ -324,8 +324,8 @@ describe('Parser Test', () => {
                     namespace,
                     class: _class,
                     method,
-                    start: { line: 12, character: 4 },
-                    end: { line: 15, character: 5 },
+                    start: { line: 14, character: 4 },
+                    end: { line: 17, character: 5 },
                 })
             );
         });
@@ -341,8 +341,8 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     annotations: { dataProvider: ['additionProvider'] },
-                    start: { line: 18, character: 4 },
-                    end: { line: 21, character: 5 },
+                    start: { line: 20, character: 4 },
+                    end: { line: 23, character: 5 },
                 })
             );
         });
@@ -358,8 +358,25 @@ describe('Parser Test', () => {
                     class: _class,
                     method,
                     annotations: { depends: ['testEmpty'] },
-                    start: { line: 42, character: 4 },
-                    end: { line: 49, character: 5 },
+                    start: { line: 44, character: 4 },
+                    end: { line: 51, character: 5 },
+                })
+            );
+        });
+
+        it('parse TestDox Attribute', () => {
+            const method = 'balanceIsInitiallyZero';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    annotations: { testdox: ['has an initial balance of zero'] },
+                    start: { line: 55, character: 4 },
+                    end: { line: 58, character: 5 },
                 })
             );
         });

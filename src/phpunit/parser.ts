@@ -33,7 +33,7 @@ type Position = {
     line: number;
 };
 
-const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+// const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
 const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
@@ -61,7 +61,7 @@ class AttributeParser {
 
 class AnnotationParser {
     private static attributeParser = new AttributeParser();
-    private readonly lookup = ['depends', 'dataProvider'];
+    private readonly lookup = ['depends', 'dataProvider', 'testdox'];
     private readonly template = (annotation: string) =>
         `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
 
@@ -83,9 +83,8 @@ class AnnotationParser {
         const annotations = {} as Annotations;
 
         for (const property of this.lookup) {
-            const name = capitalize(property);
             const values = parsed
-                .filter((attribute: any) => attribute.name === name)
+                .filter((attribute: any) => new RegExp(property, 'i').test(attribute.name))
                 .map((attribute: any) => attribute.args[0]);
 
             if (values.length > 0) {
@@ -248,8 +247,8 @@ class Validator {
         return !declaration.leadingComments
             ? false
             : new RegExp('@test').test(
-                  declaration.leadingComments.map((comment) => comment.value).join('\n')
-              );
+                declaration.leadingComments.map((comment) => comment.value).join('\n')
+            );
     }
 
     private acceptModifier(declaration: Method) {
