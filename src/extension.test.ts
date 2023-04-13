@@ -181,9 +181,9 @@ describe('Extension Test', () => {
 
             let expected;
             if (phpUnitVersion > 9) {
-                expected = { enqueued: 50, started: 30, passed: 18, failed: 10, end: 1 };
+                expected = { enqueued: 52, started: 31, passed: 19, failed: 10, end: 1 };
             } else {
-                expected = { enqueued: 50, started: 24, passed: 11, failed: 11, end: 1 };
+                expected = { enqueued: 52, started: 25, passed: 12, failed: 11, end: 1 };
             }
             expectTestResultCalled(ctrl, expected);
         });
@@ -211,9 +211,9 @@ describe('Extension Test', () => {
             );
 
             expectTestResultCalled(ctrl, {
-                enqueued: 8,
-                started: 11,
-                passed: 5,
+                enqueued: 9,
+                started: 12,
+                passed: 6,
                 failed: 4,
                 end: 1,
             });

@@ -63,7 +63,7 @@ class AnnotationParser {
     private static attributeParser = new AttributeParser();
     private readonly lookup = ['depends', 'dataProvider', 'testdox'];
     private readonly template = (annotation: string) =>
-        `@${annotation}\\s+(?<${annotation}>[^\\n\\s]+)`;
+        `@${annotation}\\s+(?<${annotation}>[^\\n]+)`;
 
     private readonly pattern: RegExp = new RegExp(
         this.lookup.map((name) => this.template(name)).join('|'),
@@ -109,7 +109,7 @@ class AnnotationParser {
             for (const property in groups) {
                 const value = groups[property];
                 if (value) {
-                    annotations[property] = [...(annotations[property] ?? []), value];
+                    annotations[property] = [...(annotations[property] ?? []), value.trim()];
                 }
             }
         }

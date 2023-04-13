@@ -170,6 +170,23 @@ describe('Parser Test', () => {
                 })
             );
         });
+
+        it('it should parse testdox annotation', () => {
+            const method = 'balanceIsInitiallyZero';
+            expect(givenTest(method)).toEqual(
+                expect.objectContaining({
+                    file,
+                    id: uniqueId(namespace, _class, method),
+                    qualifiedClass: qualifiedClass(namespace, _class),
+                    namespace,
+                    class: _class,
+                    method,
+                    annotations: { testdox: ['has an initial balance of zero'] },
+                    start: { line: 79, character: 4 },
+                    end: { line: 82, character: 5 },
+                })
+            );
+        });
     });
 
     describe('parse AbstractTest', () => {

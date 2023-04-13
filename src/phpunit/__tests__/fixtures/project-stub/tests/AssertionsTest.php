@@ -62,12 +62,22 @@ class AssertionsTest extends TestCase
         $this->assertEquals($expected, $a + $b);
     }
 
-    public function additionProvider()
+    public static function additionProvider()
     {
         return [
             '"foo-bar_%$' => [0, 0, 0],
             [0, 1, 1],
             [1, 0, 2],
         ];
+    }
+
+    /**
+     * @test
+     *
+     * @testdox has an initial balance of zero
+     */
+    public function balanceIsInitiallyZero(): void
+    {
+        $this->assertSame(0, 0);
     }
 }
