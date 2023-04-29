@@ -733,7 +733,7 @@ declare module 'vscode' {
 		 */
 		OpenOpen = 0,
 		/**
-		 * The decoration's range will not widen when edits occur at the start of end.
+		 * The decoration's range will not widen when edits occur at the start or end.
 		 */
 		ClosedClosed = 1,
 		/**
@@ -3710,7 +3710,18 @@ declare module 'vscode' {
 		 * the file is being created with.
 		 * @param metadata Optional metadata for the entry.
 		 */
-		createFile(uri: Uri, options?: { readonly overwrite?: boolean; readonly ignoreIfExists?: boolean; readonly contents?: Uint8Array }, metadata?: WorkspaceEditEntryMetadata): void;
+		createFile(uri: Uri, options?: {
+			readonly overwrite?: boolean;
+			readonly ignoreIfExists?: boolean;
+
+			/**
+			 * The initial contents of the new file.
+			 *
+			 * If creating a file from a {@link DocumentDropEditProvider drop operation}, you can
+			 * pass in a {@link DataTransferFile} to improve performance by avoiding extra data copying.
+			 */
+			readonly contents?: Uint8Array | DataTransferFile;
+		}, metadata?: WorkspaceEditEntryMetadata): void;
 
 		/**
 		 * Delete a file or folder.
@@ -10414,6 +10425,8 @@ declare module 'vscode' {
 
 	/**
 	 * A file associated with a {@linkcode DataTransferItem}.
+	 *
+	 * Instances of this type can only be created by the editor and not by extensions.
 	 */
 	export interface DataTransferFile {
 		/**
@@ -15640,11 +15653,18 @@ declare module 'vscode' {
 	 */
 	export interface AuthenticationGetSessionOptions {
 		/**
-		 * Whether the existing user session preference should be cleared.
+		 * Whether the existing session preference should be cleared.
 		 *
 		 * For authentication providers that support being signed into multiple accounts at once, the user will be
 		 * prompted to select an account to use when {@link authentication.getSession getSession} is called. This preference
 		 * is remembered until {@link authentication.getSession getSession} is called with this flag.
+		 *
+		 * Note:
+		 * The preference is extension specific. So if one extension calls {@link authentication.getSession getSession}, it will not
+		 * affect the session preference for another extension calling {@link authentication.getSession getSession}. Additionally,
+		 * the preference is set for the current workspace and also globally. This means that new workspaces will use the "global"
+		 * value at first and then when this flag is provided, a new value can be set for that workspace. This also means
+		 * that pre-existing workspaces will not lose their preference if a new workspace sets this flag.
 		 *
 		 * Defaults to false.
 		 */

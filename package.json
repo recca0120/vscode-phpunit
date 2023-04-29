@@ -1,173 +1,173 @@
 {
-    "name": "vscode-phpunit",
-    "description": "PHPUnit Test Explorer for VSCode",
-    "displayName": "PHPUnit Test Explorer",
-    "icon": "img/icon.png",
-    "publisher": "recca0120",
-    "version": "3.1.0",
-    "private": true,
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/recca0120/vscode-phpunit"
-    },
-    "engines": {
-        "vscode": "^1.71.0"
-    },
-    "categories": [
-        "Testing",
-        "Other",
-        "Debuggers"
+  "name": "vscode-phpunit",
+  "description": "PHPUnit Test Explorer for VSCode",
+  "displayName": "PHPUnit Test Explorer",
+  "icon": "img/icon.png",
+  "publisher": "recca0120",
+  "version": "3.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/recca0120/vscode-phpunit"
+  },
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "categories": [
+    "Testing",
+    "Other",
+    "Debuggers"
+  ],
+  "keywords": [
+    "php",
+    "phpunit",
+    "testing",
+    "unit test",
+    "unittest"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.php"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "phpunit.reload",
+        "title": "PHPUnit: Reload tests"
+      },
+      {
+        "command": "phpunit.run-all",
+        "title": "PHPUnit: Run all tests"
+      },
+      {
+        "command": "phpunit.run-file",
+        "title": "PHPUnit: Run tests in current file"
+      },
+      {
+        "command": "phpunit.run-test-at-cursor",
+        "title": "PHPUnit: Run the test at the current cursor position"
+      },
+      {
+        "command": "phpunit.rerun",
+        "title": "PHPUnit: Repeat the last test run"
+      }
     ],
-    "keywords": [
-        "php",
-        "phpunit",
-        "testing",
-        "unit test",
-        "unittest"
+    "keybindings": [
+      {
+        "key": "cmd+t cmd+s",
+        "command": "phpunit.run-all"
+      },
+      {
+        "key": "cmd+t cmd+f",
+        "command": "phpunit.run-file",
+        "when": "editorTextFocus && editorLangId == php"
+      },
+      {
+        "key": "cmd+t cmd+t",
+        "command": "phpunit.run-test-at-cursor",
+        "when": "editorTextFocus && editorLangId == php"
+      },
+      {
+        "key": "cmd+t cmd+l",
+        "command": "phpunit.rerun",
+        "when": "editorTextFocus && editorLangId == php"
+      }
     ],
-    "activationEvents": [
-        "workspaceContains:**/*.php"
-    ],
-    "contributes": {
-        "commands": [
-            {
-                "command": "phpunit.reload",
-                "title": "PHPUnit: Reload tests"
-            },
-            {
-                "command": "phpunit.run-all",
-                "title": "PHPUnit: Run all tests"
-            },
-            {
-                "command": "phpunit.run-file",
-                "title": "PHPUnit: Run tests in current file"
-            },
-            {
-                "command": "phpunit.run-test-at-cursor",
-                "title": "PHPUnit: Run the test at the current cursor position"
-            },
-            {
-                "command": "phpunit.rerun",
-                "title": "PHPUnit: Repeat the last test run"
-            }
-        ],
-        "keybindings": [
-            {
-                "key": "cmd+t cmd+s",
-                "command": "phpunit.run-all"
-            },
-            {
-                "key": "cmd+t cmd+f",
-                "command": "phpunit.run-file",
-                "when": "editorTextFocus && editorLangId == php"
-            },
-            {
-                "key": "cmd+t cmd+t",
-                "command": "phpunit.run-test-at-cursor",
-                "when": "editorTextFocus && editorLangId == php"
-            },
-            {
-                "key": "cmd+t cmd+l",
-                "command": "phpunit.rerun",
-                "when": "editorTextFocus && editorLangId == php"
-            }
-        ],
-        "configuration": {
-            "type": "object",
-            "title": "PHPUnit Configuration",
-            "properties": {
-                "phpunit.php": {
-                    "type": "string",
-                    "description": "Absolute path to php. Fallback to global php if it exists on the command line.",
-                    "default": "php"
-                },
-                "phpunit.phpunit": {
-                    "type": "string",
-                    "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line",
-                    "default": "vendor/bin/phpunit"
-                },
-                "phpunit.command": {
-                    "type": "string",
-                    "description": "Custom command to run. Ex: `docker exec -t container_name`.",
-                    "default": null
-                },
-                "phpunit.args": {
-                    "type": "array",
-                    "default": [],
-                    "description": "Any phpunit args (phpunit --help) E.g. --configuration ${workspaceFolder}/phpunit.xml.dist"
-                },
-                "phpunit.paths": {
-                    "type": "object",
-                    "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
-                },
-                "phpunit.clearOutputOnRun": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "True will clear the output when we run a new test. False will leave the output after every test."
-                },
-                "phpunit.showAfterExecution": {
-                    "type": "string",
-                    "enum": [
-                        "always",
-                        "onFailure",
-                        "never"
-                    ],
-                    "default": "onFailure",
-                    "description": "Specify if the test report will automatically be shown after execution",
-                    "scope": "application"
-                }
-            }
+    "configuration": {
+      "type": "object",
+      "title": "PHPUnit Configuration",
+      "properties": {
+        "phpunit.php": {
+          "type": "string",
+          "description": "Absolute path to php. Fallback to global php if it exists on the command line.",
+          "default": "php"
+        },
+        "phpunit.phpunit": {
+          "type": "string",
+          "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line",
+          "default": "vendor/bin/phpunit"
+        },
+        "phpunit.command": {
+          "type": "string",
+          "description": "Custom command to run. Ex: `docker exec -t container_name`.",
+          "default": null
+        },
+        "phpunit.args": {
+          "type": "array",
+          "default": [],
+          "description": "Any phpunit args (phpunit --help) E.g. --configuration ${workspaceFolder}/phpunit.xml.dist"
+        },
+        "phpunit.paths": {
+          "type": "object",
+          "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
+        },
+        "phpunit.clearOutputOnRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "True will clear the output when we run a new test. False will leave the output after every test."
+        },
+        "phpunit.showAfterExecution": {
+          "type": "string",
+          "enum": [
+            "always",
+            "onFailure",
+            "never"
+          ],
+          "default": "onFailure",
+          "description": "Specify if the test report will automatically be shown after execution",
+          "scope": "application"
         }
-    },
-    "main": "./dist/extension.js",
-    "prettier": {
-        "printWidth": 100,
-        "singleQuote": true,
-        "tabWidth": 4,
-        "useTabs": false
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run package",
-        "compile": "webpack",
-        "watch": "webpack --watch",
-        "package": "webpack --mode production --devtool hidden-source-map",
-        "compile-tests": "tsc -p . --outDir out",
-        "watch-tests": "tsc -p . -w --outDir out",
-        "pretest": "npm run compile-tests && npm run compile && npm run lint",
-        "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js ",
-        "jest": "jest",
-        "jest:watch": "jest --watch-all",
-        "download-api": "vscode-dts main && vscode-dts dev",
-        "postinstall": "npm run download-api"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.3.4",
-        "@types/glob": "^8.1.0",
-        "@types/jest": "^29.4.0",
-        "@types/mocha": "^10.0.1",
-        "@types/node": "16.x",
-        "@types/sinon": "^10.0.13",
-        "@types/yargs-parser": "^21.0.0",
-        "@typescript-eslint/eslint-plugin": "^5.58.0",
-        "@typescript-eslint/parser": "^5.58.0",
-        "@vscode/test-electron": "^2.3.0",
-        "chai": "^4.3.7",
-        "eslint": "^8.38.0",
-        "glob": "^10.0.0",
-        "jest": "^29.4.2",
-        "minimatch": "^9.0.0",
-        "mocha": "^10.2.0",
-        "php-parser": "^3.1.4",
-        "sinon": "^15.0.3",
-        "ts-jest": "^29.1.0",
-        "ts-loader": "^9.4.2",
-        "typescript": "^5.0.4",
-        "vscode-dts": "^0.3.3",
-        "vscode-uri": "^3.0.7",
-        "webpack": "^5.79.0",
-        "webpack-cli": "^5.0.1",
-        "yargs-parser": "^21.1.1"
+      }
     }
+  },
+  "main": "./dist/extension.js",
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "tabWidth": 4,
+    "useTabs": false
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js ",
+    "jest": "jest",
+    "jest:watch": "jest --watch-all",
+    "download-api": "vscode-dts main && vscode-dts dev",
+    "postinstall": "npm run download-api"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/glob": "^8.1.0",
+    "@types/jest": "^29.4.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/sinon": "^10.0.14",
+    "@types/yargs-parser": "^21.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
+    "@vscode/test-electron": "^2.3.0",
+    "chai": "^4.3.7",
+    "eslint": "^8.39.0",
+    "glob": "^10.2.2",
+    "jest": "^29.4.2",
+    "minimatch": "^9.0.0",
+    "mocha": "^10.2.0",
+    "php-parser": "^3.1.4",
+    "sinon": "^15.0.4",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "vscode-dts": "^0.3.3",
+    "vscode-uri": "^3.0.7",
+    "webpack": "^5.81.0",
+    "webpack-cli": "^5.0.2",
+    "yargs-parser": "^21.1.1"
+  }
 }
