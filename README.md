@@ -41,7 +41,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ### [ParaTest](https://github.com/paratestphp/paratest)
 
-```json5
+```jsonc
 {
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/paratest",
@@ -51,7 +51,7 @@ The following commands are available in VS Code's command palette, use the ID to
   ],
   "phpunit.paths": {
     // ${pwd} (current directory) is mounted to /app
-    "${workspaceFolder}": '/app',
+    "${workspaceFolder}": "/app",
     // ${workspaceFolder} is mapped to /app
   },
 }
@@ -59,9 +59,9 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ### Docker
 
-```json5
+```jsonc
 {
-  "phpunit.command": 'docker exec -t [container_id] /bin/sh -c',
+  "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -70,15 +70,15 @@ The following commands are available in VS Code's command palette, use the ID to
   ],
   "phpunit.paths": {
     // ${pwd} (current directory) is mounted to /app
-    "${workspaceFolder}": '/app',
+    "${workspaceFolder}": "/app",
     // ${workspaceFolder} is mapped to /app
   },
 }
 ```
 
-```json5
+```jsonc
 {
-  "phpunit.command": 'docker run --rm -t -v ${pwd}:/app -w /app php:latest php',
+  "phpunit.command": "docker run --rm -t -v ${pwd}:/app -w /app php:latest php",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -87,7 +87,7 @@ The following commands are available in VS Code's command palette, use the ID to
   ],
   "phpunit.paths": {
     // ${pwd} (current directory) is mounted to /app
-    "${workspaceFolder}": '/app',
+    "${workspaceFolder}": "/app",
     // ${workspaceFolder} is mapped to /app
   },
 }
@@ -95,7 +95,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ### SSH
 
-```json5
+```jsonc
 {
   "phpunit.command": "ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no",
   "phpunit.php": "php",
@@ -106,7 +106,7 @@ The following commands are available in VS Code's command palette, use the ID to
   ],
   "phpunit.paths": {
     // ${pwd} (current directory) is mounted to /app
-    "${workspaceFolder}": '/app',
+    "${workspaceFolder}": "/app",
     // ${workspaceFolder} is mapped to /app
   }
 }
