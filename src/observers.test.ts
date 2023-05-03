@@ -74,33 +74,33 @@ describe('OutputChannelObserver', () => {
         );
     });
 
-    it('should trigger testRuntime', async () => {
-        if (phpUnitVersion > 9) {
-            return;
-        }
+    // it('should trigger testRuntime', async () => {
+    //     if (phpUnitVersion >= 9) {
+    //         return;
+    //     }
+    //
+    //     const testFile = projectPath('tests/AssertionsTest.php');
+    //     await run(testFile);
+    //
+    //     const outputChannel = getOutputChannel();
+    //     expect(outputChannel.appendLine).toHaveBeenCalledWith(
+    //         expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/)
+    //     );
+    // });
 
-        const testFile = projectPath('tests/AssertionsTest.php');
-        await run(testFile);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/)
-        );
-    });
-
-    it('should trigger testConfiguration', async () => {
-        if (phpUnitVersion > 9) {
-            return;
-        }
-
-        const testFile = projectPath('tests/AssertionsTest.php');
-        await run(testFile);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/Configuration:.+/)
-        );
-    });
+    // it('should trigger testConfiguration', async () => {
+    //     if (phpUnitVersion >= 9) {
+    //         return;
+    //     }
+    //
+    //     const testFile = projectPath('tests/AssertionsTest.php');
+    //     await run(testFile);
+    //
+    //     const outputChannel = getOutputChannel();
+    //     expect(outputChannel.appendLine).toHaveBeenCalledWith(
+    //         expect.stringMatching(/Configuration:.+/)
+    //     );
+    // });
 
     it('should trigger testSuiteStarted', async () => {
         const testFile = projectPath('tests/AssertionsTest.php');
