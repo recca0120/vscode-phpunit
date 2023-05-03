@@ -720,4 +720,44 @@ describe('Problem Matcher Test', () => {
             });
         });
     });
+
+    it('parse test_throw_exception testFailed', () => {
+        const contents = [
+            "##teamcity[testStarted name='test_throw_exception' locationHint='php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/tests/CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception' flowId='28756']",
+            "##teamcity[testFailed name='test_throw_exception' message='Exception' details='/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/src/Calculator.php:21|n/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/tests/CalculatorTest.php:54|n' duration='0' flowId='28756']",
+            "##teamcity[testFailed name='test_throw_exception' message='This test did not perform any assertions' details='' duration='15' flowId='28756']",
+            "##teamcity[testFinished name='test_throw_exception' duration='15' flowId='28756']",
+        ];
+
+        let result;
+        for (const content of contents) {
+            result = problemMatcher.parse(content);
+        }
+
+        expect(result).toEqual(
+            expect.objectContaining({
+                event: TestResultEvent.testFailed,
+                name: 'test_throw_exception',
+                locationHint:
+                    'php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/tests/CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+                flowId: 28756,
+                kind: 'testFailed',
+                id: 'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+                file: '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/tests/CalculatorTest.php',
+                testId: 'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+                message: 'Exception\n\nThis test did not perform any assertions',
+                details: [
+                    {
+                        file: '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/src/Calculator.php',
+                        line: 21,
+                    },
+                    {
+                        file: '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/project-stub/tests/CalculatorTest.php',
+                        line: 54,
+                    },
+                ],
+                duration: 15,
+            })
+        );
+    });
 });

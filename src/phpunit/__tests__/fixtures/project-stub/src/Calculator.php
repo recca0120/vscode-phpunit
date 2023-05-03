@@ -18,6 +18,6 @@ class Calculator
 
     public function throwException()
     {
-        throw new Exception;
+        throw new Exception();
     }
 }

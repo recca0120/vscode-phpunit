@@ -400,13 +400,13 @@ class ProblemMatcher {
     ): TestResult | TestCount | TestResultSummary | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());
 
-        return !result || this.isTestResult(result)
+        return !result || !this.isTestResult(result)
             ? result
             : this.lookup[(result as TestResult).event]?.call(this, result as TestResult);
     }
 
     private isTestResult(result: any) {
-        return !('event' in result && 'name' in result && 'flowId' in result);
+        return 'event' in result && 'name' in result && 'flowId' in result;
     }
 
     private handleStarted(testResult: TestResult) {
@@ -419,7 +419,18 @@ class ProblemMatcher {
     private handleFault(testResult: TestResult) {
         const id = this.generateId(testResult);
         const prevData = this.collect.get(id);
-        this.collect.set(id, { ...prevData, ...testResult });
+
+        if (!prevData || prevData.kind === TestResultEvent.testStarted) {
+            this.collect.set(id, { ...(prevData ?? {}), ...testResult });
+            return;
+        }
+
+        if (testResult.message) {
+            prevData.message += '\n\n' + testResult.message;
+        }
+        prevData.details.push(...testResult.details);
+
+        this.collect.set(id, prevData);
     }
 
     private handleFinished(testResult: TestResult) {
