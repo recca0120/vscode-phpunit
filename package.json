@@ -4,7 +4,7 @@
   "displayName": "PHPUnit Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -150,8 +150,8 @@
     "@types/node": "16.x",
     "@types/sinon": "^10.0.14",
     "@types/yargs-parser": "^21.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
-    "@typescript-eslint/parser": "^5.59.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "@typescript-eslint/parser": "^5.59.2",
     "@vscode/test-electron": "^2.3.0",
     "chai": "^4.3.7",
     "eslint": "^8.39.0",
@@ -166,7 +166,7 @@
     "typescript": "^5.0.4",
     "vscode-dts": "^0.3.3",
     "vscode-uri": "^3.0.7",
-    "webpack": "^5.81.0",
+    "webpack": "^5.82.0",
     "webpack-cli": "^5.0.2",
     "yargs-parser": "^21.1.1"
   }
