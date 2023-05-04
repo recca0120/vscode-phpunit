@@ -1,6 +1,6 @@
 import { Class, Declaration, Namespace } from 'php-parser';
 import { getName } from './utils';
-import { annotationParser } from './annotation-parser';
+import { parse as parseAnnotation } from './annotation-parser';
 import { Attribute } from './parser';
 
 export class PropertyParser {
@@ -30,7 +30,7 @@ export class PropertyParser {
     public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): Attribute {
         const fn = this.lookup[declaration.kind];
         const parsed = fn.apply(this, [declaration, namespace, _class]);
-        const annotations = annotationParser.parse(declaration);
+        const annotations = parseAnnotation(declaration);
         const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
         const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);

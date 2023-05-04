@@ -85,3 +85,7 @@ export class AnnotationParser {
 }
 
 export const annotationParser = new AnnotationParser();
+
+export function parse(declaration: Declaration) {
+    return annotationParser.parse(declaration);
+}
