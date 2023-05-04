@@ -1,5 +1,5 @@
-import { IConfiguration } from './phpunit/configuration';
 import { WorkspaceConfiguration } from 'vscode';
+import { IConfiguration } from './phpunit';
 
 export class Configuration implements IConfiguration {
     constructor(private workspaceConfiguration: WorkspaceConfiguration) {}

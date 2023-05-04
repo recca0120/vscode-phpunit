@@ -1,11 +1,12 @@
 import { describe } from '@jest/globals';
-import { TestRunner } from './phpunit/test-runner';
-import { LocalCommand } from './phpunit/command';
-import { Configuration } from './phpunit/configuration';
-import { getPhpUnitVersion, phpUnitProject } from './phpunit/__tests__/helper';
-import { EOL, OutputChannelObserver } from './observers';
+import { TestRunner } from '../phpunit/test-runner';
+import { LocalCommand } from '../phpunit/command';
+import { Configuration } from '../phpunit/configuration';
+import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/helper';
 import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
+import {EOL} from "../phpunit/utils";
+import {OutputChannelObserver} from "./output-channel-observer";
 
 describe('OutputChannelObserver', () => {
     const phpUnitVersion: number = getPhpUnitVersion();

@@ -124,3 +124,6 @@ export class Parser {
         return;
     }
 }
+
+export const parser = new Parser();
+export const parse = (buffer: Buffer | string, file: string) => parser.parse(buffer, file);

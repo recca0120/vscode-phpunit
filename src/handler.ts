@@ -9,10 +9,9 @@ import {
     window,
     workspace,
 } from 'vscode';
+import { Command, LocalCommand, RemoteCommand, TestRunner } from './phpunit';
 import { TestFile } from './test-file';
 import { Configuration } from './configuration';
-import { Command, LocalCommand, RemoteCommand } from './phpunit/command';
-import { TestRunner } from './phpunit/test-runner';
 import { OutputChannelObserver, TestResultObserver } from './observers';
 
 export class Handler {

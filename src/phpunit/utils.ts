@@ -24,3 +24,4 @@ export const parseValue = (key: any, value: any): string[] => {
 
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
 };
+export const EOL = '\r\n';

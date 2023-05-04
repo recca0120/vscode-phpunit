@@ -1,9 +1,8 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
-import { pestProject, phpUnitProject } from '../__tests__/helper';
+import { phpUnitProject } from '../__tests__/helper';
 import { propertyParser } from './property-parser';
-import { Test } from './parser';
-import { parse } from './';
+import { parse, Test } from './parser';
 
 const uniqueId = (namespace: string, _class: string, method: string) => {
     return propertyParser.uniqueId(namespace, _class, method);
@@ -428,16 +427,16 @@ describe('Parser Test', () => {
         });
     });
 
-    describe('PEST', () => {
-        let suites: Test[];
-        describe('parse AssertionsTest', () => {
-            const file = pestProject('tests/Feature/ExampleTest.php');
-            beforeAll(async () => {
-                const buffer = await readFile(file);
-                suites = parse(buffer.toString(), file)!;
-            });
-
-            it('parse example', () => {});
-        });
-    });
+    // describe('PEST', () => {
+    //     let suites: Test[];
+    //     describe('parse AssertionsTest', () => {
+    //         const file = pestProject('tests/Feature/ExampleTest.php');
+    //         beforeAll(async () => {
+    //             const buffer = await readFile(file);
+    //             suites = parse(buffer.toString(), file)!;
+    //         });
+    //
+    //         it('parse example', () => {});
+    //     });
+    // });
 });

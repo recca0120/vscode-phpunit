@@ -1,12 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
-import { activate } from './extension';
 import * as vscode from 'vscode';
 import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, GlobOptions } from 'glob';
 import { readFileSync } from 'fs';
-import { getPhpUnitVersion, normalPath, phpUnitProject } from './phpunit/__tests__/helper';
 import * as path from 'path';
 import { spawn } from 'child_process';
+import { getPhpUnitVersion, normalPath, phpUnitProject } from './phpunit/__tests__/helper';
+import { activate } from './extension';
 
 jest.mock('child_process');
 
