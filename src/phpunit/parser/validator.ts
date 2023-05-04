@@ -1,17 +1,12 @@
 import { Class, Method } from 'php-parser';
 import { getName } from './utils';
-import { AttributeParser } from './annotation-parser';
+import { isTest } from './annotation-parser';
 
 export class Validator {
-    private static attributeParser = new AttributeParser();
     private lookup: { [p: string]: Function } = {
         class: this.validateClass,
         method: this.validateMethod,
     };
-
-    private get attributeParser() {
-        return Validator.attributeParser;
-    }
 
     public isTest(classOrMethod: Class | Method) {
         const fn = this.lookup[classOrMethod.kind];
@@ -28,33 +23,11 @@ export class Validator {
             return false;
         }
 
-        return (
-            getName(method).startsWith('test') ||
-            this.isAnnotationTest(method) ||
-            this.isAttributeTest(method)
-        );
+        return getName(method).startsWith('test') || isTest(method);
     }
 
     private isAbstract(classOrMethod: Class | Method) {
         return classOrMethod.isAbstract;
-    }
-
-    private isAttributeTest(method: Method) {
-        if (!method.attrGroups) {
-            return false;
-        }
-
-        return this.attributeParser
-            .parse(method)
-            .some((attribute: any) => attribute.name === 'Test');
-    }
-
-    private isAnnotationTest(method: Method) {
-        return !method.leadingComments
-            ? false
-            : new RegExp('@test').test(
-                  method.leadingComments.map((comment) => comment.value).join('\n')
-              );
     }
 
     private acceptModifier(method: Method) {
