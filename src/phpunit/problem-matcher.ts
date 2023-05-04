@@ -1,65 +1,6 @@
 import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
-
-export class EscapeValue {
-    private values = {
-        escape: ['||', "|'", '|n', '|r', '|]', '|['],
-        unescape: ['|', "'", '\n', '\r', ']', '['],
-    };
-
-    private patterns: { unescape: RegExp[]; escape: RegExp[] };
-
-    constructor() {
-        this.patterns = {
-            escape: this.toRegExp(this.values.escape),
-            unescape: this.toRegExp(this.values.unescape),
-        };
-    }
-
-    public escape(value: string | number | object) {
-        return this.change(value, this.patterns.unescape, this.values.escape);
-    }
-
-    public unescape(value: string | number | object) {
-        return this.change(value, this.patterns.escape, this.values.unescape);
-    }
-
-    public escapeSingleQuote(value: string | number | object) {
-        return this.change(value, [new RegExp("\\|'", 'g')], ['%%%SINGLE_QUOTE%%%']);
-    }
-
-    public unescapeSingleQuote(value: string | number | object) {
-        return this.change(value, [new RegExp('%%%SINGLE_QUOTE%%%', 'g')], ["'"]);
-    }
-
-    private change(value: string | number | any, from: RegExp[], to: string[]) {
-        if (typeof value === 'object') {
-            for (const x in value) {
-                value[x] = this.change(value[x], from, to);
-            }
-
-            return value;
-        }
-
-        if (typeof value !== 'string') {
-            return value;
-        }
-
-        for (const x in from) {
-            value = value.replace(from[x], to[x]);
-        }
-
-        return value;
-    }
-
-    private toRegExp(values: string[]) {
-        return values.map((str) => {
-            str = str.replace(/([|\]\[])/g, (m) => `\\${m}`);
-
-            return new RegExp(str, 'g');
-        });
-    }
-}
+import { escapeValue } from './utils';
 
 export enum TestResultEvent {
     testSuiteStarted = 'testSuiteStarted',
@@ -81,7 +22,6 @@ export enum TestExtraResultEvent {
 }
 
 export type TestResultKind = TestResultEvent | TestExtraResultEvent;
-
 type TestResultBase = {
     kind: TestResultKind;
     event: TestResultEvent;
@@ -97,17 +37,15 @@ type TestSuiteStarted = TestResultBase & {
 type TestSuiteFinished = TestResultBase;
 type TestStarted = TestResultBase & { id: string; file: string; locationHint: string };
 type TestFinished = TestResultBase & { duration: number };
-
 type TestFailed = TestFinished & {
     message: string;
     details: Array<{ file: string; line: number }>;
-
     type?: string;
     actual?: string;
     expected?: string;
 };
-
 type TestIgnored = TestFailed;
+
 export type TestCount = {
     kind: TestResultKind;
     event: TestResultEvent;
@@ -123,7 +61,6 @@ export type TestVersion = {
 export type TestRuntime = { kind: TestResultKind; runtime: string; text: string };
 export type TestConfiguration = { kind: TestResultKind; configuration: string; text: string };
 export type TestProcesses = { kind: TestResultKind; processes: string; text: string };
-
 export type TimeAndMemory = { kind: TestResultKind; time: string; memory: string; text: string };
 export type TestResultSummary = {
     kind: TestResultKind;
@@ -136,14 +73,12 @@ export type TestResultSummary = {
     risky?: number;
     text: string;
 };
-
 export type TestResult = TestSuiteStarted &
     TestSuiteFinished &
     TestStarted &
     TestFailed &
     TestIgnored &
     TestFinished;
-
 export type Result = TestResult | TestResultSummary | TestCount | TimeAndMemory;
 
 interface IParser<T> {
@@ -287,7 +222,7 @@ export class Parser implements IParser<Result | undefined> {
         new TestResultSummaryParser(),
     ];
 
-    constructor(private escapeValue: EscapeValue) {}
+    constructor() {}
 
     public parse(text: string): Result | undefined {
         return this.is(text)
@@ -366,8 +301,8 @@ export class Parser implements IParser<Result | undefined> {
     }
 
     private toTeamcityArgv(text: string): Pick<Arguments, string | number> {
-        text = this.escapeValue.escapeSingleQuote(text) as string;
-        text = this.escapeValue.unescape(text) as string;
+        text = escapeValue.escapeSingleQuote(text) as string;
+        text = escapeValue.unescape(text) as string;
 
         const [eventName, ...args] = yargsParser(text)._;
         const command = [
@@ -377,7 +312,7 @@ export class Parser implements IParser<Result | undefined> {
 
         const { _, $0, ...argv } = yargsParser(command);
 
-        return this.escapeValue.unescapeSingleQuote(argv);
+        return escapeValue.unescapeSingleQuote(argv);
     }
 }
 
@@ -454,5 +389,5 @@ class ProblemMatcher {
     }
 }
 
-export const parser = new Parser(new EscapeValue());
+export const parser = new Parser();
 export const problemMatcher = new ProblemMatcher(parser);

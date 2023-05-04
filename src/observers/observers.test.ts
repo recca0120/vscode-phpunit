@@ -1,12 +1,9 @@
 import { describe } from '@jest/globals';
-import { TestRunner } from '../phpunit/test-runner';
-import { LocalCommand } from '../phpunit/command';
-import { Configuration } from '../phpunit/configuration';
-import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/helper';
 import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
-import {EOL} from "../phpunit/utils";
-import {OutputChannelObserver} from "./output-channel-observer";
+import { Configuration, EOL, LocalCommand, TestRunner } from '../phpunit';
+import { OutputChannelObserver } from './output-channel-observer';
+import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/helper';
 
 describe('OutputChannelObserver', () => {
     const phpUnitVersion: number = getPhpUnitVersion();

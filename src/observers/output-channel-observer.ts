@@ -1,5 +1,7 @@
 import { OutputChannel } from 'vscode';
 import {
+    EOL,
+    IConfiguration,
     TestConfiguration,
     TestExtraResultEvent,
     TestProcesses,
@@ -7,13 +9,11 @@ import {
     TestResultEvent,
     TestResultKind,
     TestResultSummary,
+    TestRunnerObserver,
     TestRuntime,
     TestVersion,
     TimeAndMemory,
-} from '../phpunit/problem-matcher';
-import { TestRunnerObserver } from '../phpunit/test-runner-observer';
-import { IConfiguration } from '../phpunit/configuration';
-import { EOL } from '../phpunit/utils';
+} from '../phpunit';
 
 enum ShowOutputState {
     always = 'always',
