@@ -2,7 +2,7 @@ import { describe } from '@jest/globals';
 import { TestRunner } from './phpunit/test-runner';
 import { LocalCommand } from './phpunit/command';
 import { Configuration } from './phpunit/configuration';
-import { getPhpUnitVersion, projectPath } from './phpunit/__tests__/helper';
+import { getPhpUnitVersion, phpUnitProject } from './phpunit/__tests__/helper';
 import { EOL, OutputChannelObserver } from './observers';
 import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
@@ -40,7 +40,7 @@ describe('OutputChannelObserver', () => {
         const outputChannel = vscode.window.createOutputChannel('phpunit');
         const observer = new OutputChannelObserver(outputChannel, configuration);
 
-        const cwd = projectPath('');
+        const cwd = phpUnitProject('');
         const command = new LocalCommand(configuration, { cwd });
         command.setArguments([file, filter].join(' '));
 
@@ -51,7 +51,7 @@ describe('OutputChannelObserver', () => {
     }
 
     it('should trigger input', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         await run(testFile);
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
@@ -65,7 +65,7 @@ describe('OutputChannelObserver', () => {
             return;
         }
 
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         await run(testFile);
 
         const outputChannel = getOutputChannel();
@@ -79,7 +79,7 @@ describe('OutputChannelObserver', () => {
     //         return;
     //     }
     //
-    //     const testFile = projectPath('tests/AssertionsTest.php');
+    //     const testFile = phpUnitProject('tests/AssertionsTest.php');
     //     await run(testFile);
     //
     //     const outputChannel = getOutputChannel();
@@ -93,7 +93,7 @@ describe('OutputChannelObserver', () => {
     //         return;
     //     }
     //
-    //     const testFile = projectPath('tests/AssertionsTest.php');
+    //     const testFile = phpUnitProject('tests/AssertionsTest.php');
     //     await run(testFile);
     //
     //     const outputChannel = getOutputChannel();
@@ -103,7 +103,7 @@ describe('OutputChannelObserver', () => {
     // });
 
     it('should trigger testSuiteStarted', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter);
 
@@ -114,7 +114,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testSuiteStarted without method', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'addition_provider|test_passed';
         await run(testFile, filter);
 
@@ -125,7 +125,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testFinished', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter);
 
@@ -136,7 +136,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testFailed', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_failed|test_passed';
         await run(testFile, filter);
 
@@ -149,13 +149,13 @@ describe('OutputChannelObserver', () => {
                 `     ┐ ${EOL}` +
                     `     ├ Failed asserting that false is true.${EOL}` +
                     `     │ ${EOL}` +
-                    `     │ ${projectPath('tests/AssertionsTest.php')}:22${EOL}`
+                    `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`
             )
         );
     });
 
     it('should trigger testFailed with actual and expect', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_is_not_same';
         await run(testFile, filter);
 
@@ -177,13 +177,13 @@ describe('OutputChannelObserver', () => {
                     `     ┊     1 => 'h'${EOL}` +
                     `     ┊ )${EOL}` +
                     `     │ ${EOL}` +
-                    `     │ ${projectPath('tests/AssertionsTest.php')}:27${EOL}`
+                    `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`
             )
         );
     });
 
     it('should trigger testIgnored', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_skipped';
         await run(testFile, filter);
 
@@ -198,7 +198,7 @@ describe('OutputChannelObserver', () => {
             return;
         }
 
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         await run(testFile);
 
         const outputChannel = getOutputChannel();
@@ -212,7 +212,7 @@ describe('OutputChannelObserver', () => {
             return;
         }
 
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         await run(testFile);
 
         const outputChannel = getOutputChannel();
@@ -222,7 +222,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger error', async () => {
-        const testFile = projectPath('tests/NotFound.php');
+        const testFile = phpUnitProject('tests/NotFound.php');
         await run(testFile);
 
         const outputChannel = getOutputChannel();
@@ -232,7 +232,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('always show output channel', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter, { showAfterExecution: 'always' });
 
@@ -241,7 +241,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should not show output channel when successful', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter, { showAfterExecution: 'onFailure' });
 
@@ -250,7 +250,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should show output channel when failure', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_failed|test_passed';
         await run(testFile, filter, { showAfterExecution: 'onFailure' });
 
@@ -259,7 +259,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should show output channel when file not found', async () => {
-        const testFile = projectPath('tests/NotFound.php');
+        const testFile = phpUnitProject('tests/NotFound.php');
         await run(testFile, undefined, { showAfterExecution: 'onFailure' });
 
         const outputChannel = getOutputChannel();
@@ -267,7 +267,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('never show output channel when successful', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter, { showAfterExecution: 'never' });
 
@@ -276,7 +276,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('never show output channel when failure', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_failed|test_passed';
         await run(testFile, filter, { showAfterExecution: 'never' });
 
@@ -285,7 +285,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('never show output channel when failure', async () => {
-        const testFile = projectPath('tests/NotFound.php');
+        const testFile = phpUnitProject('tests/NotFound.php');
         await run(testFile, undefined, { showAfterExecution: 'never' });
 
         const outputChannel = getOutputChannel();
@@ -293,7 +293,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should not clear output channel', async () => {
-        const testFile = projectPath('tests/AssertionsTest.php');
+        const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter, { clearOutputOnRun: false });
 
@@ -302,7 +302,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should print printed output', async () => {
-        const testFile = projectPath('tests/Output/OutputTest.php');
+        const testFile = phpUnitProject('tests/Output/OutputTest.php');
         const filter = 'test_echo';
         await run(testFile, filter);
 
@@ -312,7 +312,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should print printed output when die', async () => {
-        const testFile = projectPath('tests/Output/OutputTest.php');
+        const testFile = phpUnitProject('tests/Output/OutputTest.php');
         const filter = 'test_die';
         await run(testFile, filter);
 

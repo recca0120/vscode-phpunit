@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
-import { projectPath } from './__tests__/helper';
+import { phpUnitProject } from './__tests__/helper';
 import { parse, Test, TestAttrParser } from './parser';
 
 const testAttrParser = new TestAttrParser();
@@ -16,7 +16,7 @@ describe('Parser Test', () => {
     const givenTest = (method: string) => suites[0].children.find((test) => test.method === method);
 
     describe('parse AssertionsTest', () => {
-        const file = projectPath('tests/AssertionsTest.php');
+        const file = phpUnitProject('tests/AssertionsTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests';
         const _class = 'AssertionsTest';
 
@@ -185,7 +185,7 @@ describe('Parser Test', () => {
     });
 
     describe('parse AbstractTest', () => {
-        const file = projectPath('tests/AbstractTest.php');
+        const file = phpUnitProject('tests/AbstractTest.php');
 
         beforeAll(async () => {
             const buffer = await readFile(file);
@@ -198,7 +198,7 @@ describe('Parser Test', () => {
     });
 
     describe('parse StaticMethodTest', () => {
-        const file = projectPath('tests/StaticMethodTest.php');
+        const file = phpUnitProject('tests/StaticMethodTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests';
         const _class = 'StaticMethodTest';
 
@@ -228,7 +228,7 @@ describe('Parser Test', () => {
     });
 
     describe('parse HasPropertyTest', () => {
-        const file = projectPath('tests/SubFolder/HasPropertyTest.php');
+        const file = phpUnitProject('tests/SubFolder/HasPropertyTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
         const _class = 'HasPropertyTest';
 
@@ -258,7 +258,7 @@ describe('Parser Test', () => {
     });
 
     describe('parse LeadingCommentsTest', () => {
-        const file = projectPath('tests/SubFolder/LeadingCommentsTest.php');
+        const file = phpUnitProject('tests/SubFolder/LeadingCommentsTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
         const _class = 'LeadingCommentsTest';
 
@@ -286,7 +286,7 @@ describe('Parser Test', () => {
     });
 
     describe('parse UseTraitTest', () => {
-        const file = projectPath('tests/SubFolder/UseTraitTest.php');
+        const file = phpUnitProject('tests/SubFolder/UseTraitTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
         const _class = 'UseTraitTest';
 
@@ -313,7 +313,7 @@ describe('Parser Test', () => {
     });
 
     describe('parse AttributeTest', () => {
-        const file = projectPath('tests/AttributeTest.php');
+        const file = phpUnitProject('tests/AttributeTest.php');
         const namespace = 'Recca0120\\VSCode\\Tests';
         const _class = 'AttributeTest';
 
@@ -391,12 +391,12 @@ describe('Parser Test', () => {
     });
 
     describe('parse NoNamespaceTest', () => {
-        const file = projectPath('tests/NoNamespaceTest.php');
+        const file = phpUnitProject('tests/NoNamespaceTest.php');
         const namespace = '';
         const _class = 'NoNamespaceTest';
 
         beforeAll(async () => {
-            const file2 = projectPath('tests/AttributeTest.php');
+            const file2 = phpUnitProject('tests/AttributeTest.php');
             const buffer2 = await readFile(file2);
             suites = parse(buffer2.toString(), file2)!;
 

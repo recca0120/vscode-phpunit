@@ -11,7 +11,7 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/phpunit/__tests__/fixtures/project-stub"
+                "${workspaceFolder}/src/phpunit/__tests__/fixtures/phpunit-stub"
             ],
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
