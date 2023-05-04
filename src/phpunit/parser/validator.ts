@@ -1,5 +1,5 @@
 import { Class, Method } from 'php-parser';
-import { getName } from './utils';
+import { getName } from '../utils';
 import { isTest } from './annotation-parser';
 
 export class Validator {

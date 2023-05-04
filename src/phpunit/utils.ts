@@ -15,3 +15,12 @@ export const getName = (ast: Namespace | Class | Declaration) => {
 };
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+export const parseValue = (key: any, value: any): string[] => {
+    if (value instanceof Array) {
+        return value.reduce((acc: string[], item: any) => acc.concat(parseValue(key, item)), []);
+    }
+    const dash = key.length === 1 ? '-' : '--';
+    const operator = key.length === 1 ? ' ' : '=';
+
+    return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
+};

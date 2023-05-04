@@ -1,5 +1,5 @@
 import { Class, Declaration, Namespace } from 'php-parser';
-import { getName } from './utils';
+import { getName } from '../utils';
 import { parse as parseAnnotation } from './annotation-parser';
 import { Attribute } from './parser';
 

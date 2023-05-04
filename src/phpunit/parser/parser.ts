@@ -1,7 +1,7 @@
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
-import { engine } from './utils';
+import { engine } from '../utils';
 import { validator } from './validator';
-import { propertyParser, parse as parseProperty } from './property-parser';
+import { parse as parseProperty } from './property-parser';
 import { Annotations } from './annotation-parser';
 
 export type Position = {

@@ -2,16 +2,7 @@ import { SpawnOptions } from 'child_process';
 import * as yargsParser from 'yargs-parser';
 import { Result } from './problem-matcher';
 import { Configuration, IConfiguration } from './configuration';
-
-const parseValue = (key: any, value: any): string[] => {
-    if (value instanceof Array) {
-        return value.reduce((acc: string[], item: any) => acc.concat(parseValue(key, item)), []);
-    }
-    const dash = key.length === 1 ? '-' : '--';
-    const operator = key.length === 1 ? ' ' : '=';
-
-    return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
-};
+import { parseValue } from './utils';
 
 type Path = { [p: string]: string };
 
