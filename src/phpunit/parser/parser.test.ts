@@ -1,14 +1,15 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
-import { pestProject, phpUnitProject } from './__tests__/helper';
-import { parse, Test, TestAttrParser } from './parser';
+import { pestProject, phpUnitProject } from '../__tests__/helper';
+import { parse } from './';
+import { propertyParser } from './property-parser';
+import { Test } from './parser';
 
-const testAttrParser = new TestAttrParser();
 const uniqueId = (namespace: string, _class: string, method: string) => {
-    return testAttrParser.uniqueId(namespace, _class, method);
+    return propertyParser.uniqueId(namespace, _class, method);
 };
 const qualifiedClass = (namespace: string, _class: string) => {
-    return testAttrParser.qualifiedClass(namespace, _class);
+    return propertyParser.qualifiedClass(namespace, _class);
 };
 
 describe('Parser Test', () => {
@@ -436,8 +437,7 @@ describe('Parser Test', () => {
                 suites = parse(buffer.toString(), file)!;
             });
 
-            it('parse example', () => {
-            });
+            it('parse example', () => {});
         });
     });
 });

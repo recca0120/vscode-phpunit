@@ -7,7 +7,8 @@ import {
     Uri,
     workspace,
 } from 'vscode';
-import { parse, Test } from './phpunit/parser';
+import { parse } from './phpunit/parser';
+import {Test} from "./phpunit/parser/parser";
 
 const textDecoder = new TextDecoder('utf-8');
 
