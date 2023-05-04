@@ -22,5 +22,10 @@
             "name": "recca0120",
             "email": "recca0120@gmail.com"
         }
-    ]
+    ],
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": false
+        }
+    }
 }
