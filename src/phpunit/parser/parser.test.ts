@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import { pestProject, phpUnitProject } from '../__tests__/helper';
-import { parse } from './';
 import { propertyParser } from './property-parser';
 import { Test } from './parser';
+import { parse } from './';
 
 const uniqueId = (namespace: string, _class: string, method: string) => {
     return propertyParser.uniqueId(namespace, _class, method);

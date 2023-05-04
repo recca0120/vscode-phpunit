@@ -75,3 +75,7 @@ export class PropertyParser {
 }
 
 export const propertyParser = new PropertyParser();
+
+export function parse(declaration: Declaration, namespace?: Namespace, _class?: Class) {
+    return propertyParser.parse(declaration, namespace, _class);
+}

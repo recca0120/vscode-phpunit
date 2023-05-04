@@ -1,7 +1,7 @@
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 import { engine } from './utils';
 import { validator } from './validator';
-import { propertyParser } from './property-parser';
+import { propertyParser, parse as parseProperty } from './property-parser';
 import { Annotations } from './annotation-parser';
 
 export type Position = {
@@ -97,13 +97,13 @@ export class Parser {
             return [];
         }
 
-        const attributes = propertyParser.parse(ast as Declaration, this.namespace);
+        const attributes = parseProperty(ast as Declaration, this.namespace);
         const suite = new Test(file, attributes);
 
         suite.children = _class.body
             .filter((method) => validator.isTest(method as Method))
             .map((method) => {
-                const attributes = propertyParser.parse(method, this.namespace, _class);
+                const attributes = parseProperty(method, this.namespace, _class);
                 const test = new Test(file, attributes);
                 test.parent = suite;
 
