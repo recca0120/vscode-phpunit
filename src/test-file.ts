@@ -7,7 +7,7 @@ import {
     Uri,
     workspace,
 } from 'vscode';
-import { parse, Test } from './phpunit/parser';
+import { parse, Test } from './phpunit';
 
 const textDecoder = new TextDecoder('utf-8');
 
@@ -131,6 +131,6 @@ export class TestFile {
             return test.annotations.testdox[test.annotations.testdox.length - 1];
         }
 
-        return test.children.length > 0 ? test.qualifiedClass : test.method!;
+        return (test.children.length > 0 ? test.qualifiedClass : test.method) ?? '';
     }
 }

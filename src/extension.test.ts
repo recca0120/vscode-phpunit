@@ -1,12 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
-import { activate } from './extension';
 import * as vscode from 'vscode';
 import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, GlobOptions } from 'glob';
 import { readFileSync } from 'fs';
-import { getPhpUnitVersion, normalPath, projectPath } from './phpunit/__tests__/helper';
 import * as path from 'path';
 import { spawn } from 'child_process';
+import { getPhpUnitVersion, normalPath, phpUnitProject } from './phpunit/__tests__/helper';
+import { activate } from './extension';
 
 jest.mock('child_process');
 
@@ -85,7 +85,7 @@ const expectTestResultCalled = (ctrl: TestController, expected: any) => {
 };
 
 describe('Extension Test', () => {
-    const root = projectPath('');
+    const root = phpUnitProject('');
     const phpUnitVersion: number = getPhpUnitVersion();
 
     beforeEach(() => {
@@ -100,7 +100,7 @@ describe('Extension Test', () => {
 
         beforeEach(async () => {
             context.subscriptions.push.mockReset();
-            cwd = normalPath(projectPath(''));
+            cwd = normalPath(phpUnitProject(''));
             const configuration = vscode.workspace.getConfiguration('phpunit');
             await configuration.update('php', 'php');
             await configuration.update('phpunit', 'vendor/bin/phpunit');
@@ -203,7 +203,7 @@ describe('Extension Test', () => {
                 'php',
                 [
                     'vendor/bin/phpunit',
-                    normalPath(projectPath('tests/AssertionsTest.php')),
+                    normalPath(phpUnitProject('tests/AssertionsTest.php')),
                     '--teamcity',
                     '--colors=never',
                 ],
@@ -238,7 +238,7 @@ describe('Extension Test', () => {
                 'php',
                 [
                     'vendor/bin/phpunit',
-                    normalPath(projectPath('tests/CalculatorTest.php')),
+                    normalPath(phpUnitProject('tests/CalculatorTest.php')),
                     expect.stringMatching(pattern),
                     '--teamcity',
                     '--colors=never',

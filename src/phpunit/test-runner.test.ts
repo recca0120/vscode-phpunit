@@ -1,10 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
-import { getPhpUnitVersion, projectPath } from './__tests__/helper';
-import { TestRunner, TestRunnerEvent } from './test-runner';
+import { getPhpUnitVersion, phpUnitProject } from './__tests__/helper';
+import { TestRunner } from './test-runner';
 import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
 import { spawn } from 'child_process';
 import { Command, LocalCommand, RemoteCommand } from './command';
 import { Configuration } from './configuration';
+import { TestRunnerEvent } from './test-runner-observer';
 
 jest.mock('child_process');
 
@@ -13,7 +14,7 @@ interface ExpectedData {
     expected: any[];
     configuration: Configuration;
     command: Command;
-    projectPath: (path: string) => string;
+    phpUnitProject: (path: string) => string;
     appPath: (path: string) => string;
 }
 
@@ -138,7 +139,7 @@ describe('TestRunner Test', () => {
     };
 
     const expectedRun = async (data: ExpectedData) => {
-        const { command, expected, projectPath } = data;
+        const { command, expected, phpUnitProject } = data;
         const testRunner = new TestRunner();
 
         onTestResultEvents.forEach((fn, eventName) => {
@@ -153,10 +154,10 @@ describe('TestRunner Test', () => {
 
         const [cmd, ...args] = expected;
 
-        expect(spawn).toBeCalledWith(cmd, args, { cwd: projectPath('') });
+        expect(spawn).toBeCalledWith(cmd, args, { cwd: phpUnitProject('') });
     };
 
-    const expectedTest = (expected: any, projectPath: (path: string) => string) => {
+    const expectedTest = (expected: any, phpUnitProject: (path: string) => string) => {
         const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
 
         const testResult = onTestRunnerEvents
@@ -176,7 +177,7 @@ describe('TestRunner Test', () => {
 
             if (hasFile('AssertionsTest', 5)) {
                 expected.details = [
-                    { file: projectPath('tests/AssertionsTest.php'), line: 5 },
+                    { file: phpUnitProject('tests/AssertionsTest.php'), line: 5 },
                     ...expected.details,
                 ];
             }
@@ -184,7 +185,7 @@ describe('TestRunner Test', () => {
             if (hasFile('phpunit', 60)) {
                 expected.details = [
                     ...expected.details,
-                    { file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 },
+                    { file: phpUnitProject('vendor/phpunit/phpunit/phpunit'), line: 60 },
                 ];
             }
             expect(testResult[0].details).toEqual(expected.details);
@@ -226,7 +227,7 @@ describe('TestRunner Test', () => {
     };
 
     async function shouldRunAllTests(data: ExpectedData) {
-        const { configuration, command, expected, projectPath, appPath } = data;
+        const { configuration, command, expected, phpUnitProject, appPath } = data;
 
         let inputs = [
             configuration.get('php'),
@@ -247,15 +248,15 @@ describe('TestRunner Test', () => {
                 name: 'test_passed',
                 flowId: expect.any(Number),
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-                file: projectPath('tests/AssertionsTest.php'),
+                file: phpUnitProject('tests/AssertionsTest.php'),
             },
-            projectPath
+            phpUnitProject
         );
     }
 
     async function shouldRunTestSuite(data: ExpectedData) {
-        let { configuration, expected, command, projectPath, appPath } = data;
-        const args = `${projectPath('tests/AssertionsTest.php')}`;
+        let { configuration, expected, command, phpUnitProject, appPath } = data;
+        const args = `${phpUnitProject('tests/AssertionsTest.php')}`;
 
         const inputs = [
             configuration.get('php'),
@@ -278,18 +279,18 @@ describe('TestRunner Test', () => {
                 name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 flowId: expect.any(Number),
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                file: projectPath('tests/AssertionsTest.php'),
+                file: phpUnitProject('tests/AssertionsTest.php'),
             },
-            projectPath
+            phpUnitProject
         );
     }
 
     async function shouldRunTestPassed(data: ExpectedData) {
-        let { configuration, expected, command, projectPath, appPath } = data;
+        let { configuration, expected, command, phpUnitProject, appPath } = data;
 
         const name = 'test_passed';
         const filter = `^.*::(${name})( with data set .*)?$`;
-        const file = projectPath('tests/AssertionsTest.php');
+        const file = phpUnitProject('tests/AssertionsTest.php');
         const args = `${file} --filter "${filter}"`;
 
         const inputs = [
@@ -314,18 +315,18 @@ describe('TestRunner Test', () => {
                 name,
                 flowId: expect.any(Number),
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
-                file: projectPath('tests/AssertionsTest.php'),
+                file: phpUnitProject('tests/AssertionsTest.php'),
             },
-            projectPath
+            phpUnitProject
         );
     }
 
     async function shouldRunTestFailed(data: ExpectedData) {
-        let { configuration, expected, command, projectPath, appPath } = data;
+        let { configuration, expected, command, phpUnitProject, appPath } = data;
 
         const name = 'test_failed';
         const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
-        const file = projectPath('tests/AssertionsTest.php');
+        const file = phpUnitProject('tests/AssertionsTest.php');
         const args = `${file} --filter "${filter}"`;
 
         const inputs = [
@@ -350,32 +351,32 @@ describe('TestRunner Test', () => {
                 name,
                 flowId: expect.any(Number),
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
-                file: projectPath('tests/AssertionsTest.php'),
+                file: phpUnitProject('tests/AssertionsTest.php'),
                 message: 'Failed asserting that false is true.',
-                details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+                details: [{ file: phpUnitProject('tests/AssertionsTest.php'), line: 22 }],
                 duration: expect.any(Number),
             },
-            projectPath
+            phpUnitProject
         );
     }
 
     it('run error command', async () => {
-        const appPath = projectPath;
+        const appPath = phpUnitProject;
         const configuration = new Configuration({
             php: 'foo',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '${PWD}/phpunit.xml'],
         });
-        const command = new LocalCommand(configuration, { cwd: projectPath('') });
+        const command = new LocalCommand(configuration, { cwd: phpUnitProject('') });
         const expected = [
             'foo',
             'vendor/bin/phpunit',
-            `--configuration=${projectPath('phpunit.xml')}`,
+            `--configuration=${phpUnitProject('phpunit.xml')}`,
             '--teamcity',
             '--colors=never',
         ];
 
-        await expectedRun({ configuration, command, expected, projectPath, appPath });
+        await expectedRun({ configuration, command, expected, phpUnitProject, appPath });
 
         expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalledTimes(1);
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)!).toHaveBeenCalledTimes(1);
@@ -383,7 +384,7 @@ describe('TestRunner Test', () => {
 
     const dataSet = [
         ((): [string, ExpectedData] => {
-            const appPath = (path: string) => projectPath(path);
+            const appPath = (path: string) => phpUnitProject(path);
 
             const configuration = new Configuration({
                 php: 'php',
@@ -396,9 +397,9 @@ describe('TestRunner Test', () => {
                 {
                     mock: false,
                     configuration,
-                    command: new LocalCommand(configuration, { cwd: projectPath('') }),
+                    command: new LocalCommand(configuration, { cwd: phpUnitProject('') }),
                     appPath,
-                    projectPath,
+                    phpUnitProject,
                     expected: [],
                 },
             ];
@@ -412,7 +413,7 @@ describe('TestRunner Test', () => {
                 php: 'php',
                 phpunit: appPath('vendor/bin/phpunit'),
                 args: ['-c', appPath('phpunit.xml')],
-                paths: { [projectPath('')]: '/app' },
+                paths: { [phpUnitProject('')]: '/app' },
             });
 
             return [
@@ -420,9 +421,9 @@ describe('TestRunner Test', () => {
                 {
                     mock: true,
                     configuration,
-                    command: new RemoteCommand(configuration, { cwd: projectPath('') }),
+                    command: new RemoteCommand(configuration, { cwd: phpUnitProject('') }),
                     appPath,
-                    projectPath,
+                    phpUnitProject,
                     expected: [
                         'ssh',
                         '-i',
@@ -440,11 +441,11 @@ describe('TestRunner Test', () => {
             const appPath = (path: string) => `/app/${path}`;
 
             const configuration = new Configuration({
-                command: 'docker run -i --rm -v ${PWD}:/app -w /app project-stub-phpunit',
+                command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
                 php: 'php',
                 phpunit: 'vendor/bin/phpunit',
                 args: ['-c', '${PWD}/phpunit.xml'],
-                paths: { [projectPath('')]: '/app' },
+                paths: { [phpUnitProject('')]: '/app' },
             });
 
             return [
@@ -452,35 +453,34 @@ describe('TestRunner Test', () => {
                 {
                     mock: true,
                     configuration,
-                    command: new RemoteCommand(configuration, { cwd: projectPath('') }),
+                    command: new RemoteCommand(configuration, { cwd: phpUnitProject('') }),
                     appPath,
-                    projectPath,
+                    phpUnitProject,
                     expected: [
                         'docker',
                         'run',
                         '-i',
                         '--rm',
                         '-v',
-                        `${projectPath('')}:/app`,
+                        `${phpUnitProject('')}:/app`,
                         '-w',
                         '/app',
-                        'project-stub-phpunit',
+                        'phpunit-stub',
                     ],
                 },
             ];
         })(),
         ((): [string, ExpectedData] => {
-            const projectPath = (path: string) =>
+            const phpUnitProject = (path: string) =>
                 `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
             const appPath = (path: string) => `./${path}`;
 
             const configuration = new Configuration({
-                command:
-                    'docker run -i --rm -v ${workspaceFolder}:/app -w /app project-stub-phpunit',
+                command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
                 php: 'php',
                 phpunit: 'vendor/bin/phpunit',
                 args: ['-c', '${PWD}/phpunit.xml'],
-                paths: { [projectPath('')]: '.' },
+                paths: { [phpUnitProject('')]: '.' },
             });
 
             return [
@@ -488,19 +488,19 @@ describe('TestRunner Test', () => {
                 {
                     mock: true,
                     configuration,
-                    command: new RemoteCommand(configuration, { cwd: projectPath('') }),
+                    command: new RemoteCommand(configuration, { cwd: phpUnitProject('') }),
                     appPath,
-                    projectPath,
+                    phpUnitProject,
                     expected: [
                         'docker',
                         'run',
                         '-i',
                         '--rm',
                         '-v',
-                        `${projectPath('')}:/app`,
+                        `${phpUnitProject('')}:/app`,
                         '-w',
                         '/app',
-                        'project-stub-phpunit',
+                        'phpunit-stub',
                     ],
                 },
             ];
