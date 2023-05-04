@@ -206,19 +206,17 @@ class Validator {
         return Validator.attributeParser;
     }
 
-    public isTest(declaration: Declaration) {
-        const fn = this.lookup[declaration.kind];
+    public isTest(classOrMethod: Class | Method) {
+        const fn = this.lookup[classOrMethod.kind];
 
-        return fn ? fn.apply(this, [declaration]) : false;
+        return fn ? fn.apply(this, [classOrMethod]) : false;
     }
 
-    private validateClass(declaration: Declaration) {
-        return !this.isAbstract(declaration as Class);
+    private validateClass(_class: Class) {
+        return !this.isAbstract(_class);
     }
 
-    private validateMethod(declaration: Declaration) {
-        const method = declaration as Method;
-
+    private validateMethod(method: Method) {
         if (this.isAbstract(method) || !this.acceptModifier(method)) {
             return false;
         }
@@ -230,30 +228,30 @@ class Validator {
         );
     }
 
-    private isAbstract(declaration: Class | Method) {
-        return declaration.isAbstract;
+    private isAbstract(classOrMethod: Class | Method) {
+        return classOrMethod.isAbstract;
     }
 
-    private isAttributeTest(declaration: Method) {
-        if (!declaration.attrGroups) {
+    private isAttributeTest(method: Method) {
+        if (!method.attrGroups) {
             return false;
         }
 
         return this.attributeParser
-            .parse(declaration)
+            .parse(method)
             .some((attribute: any) => attribute.name === 'Test');
     }
 
-    private isAnnotationTest(declaration: Declaration) {
-        return !declaration.leadingComments
+    private isAnnotationTest(method: Method) {
+        return !method.leadingComments
             ? false
             : new RegExp('@test').test(
-                declaration.leadingComments.map((comment) => comment.value).join('\n')
-            );
+                  method.leadingComments.map((comment) => comment.value).join('\n')
+              );
     }
 
-    private acceptModifier(declaration: Method) {
-        return ['', 'public'].indexOf(declaration.visibility) !== -1;
+    private acceptModifier(method: Method) {
+        return ['', 'public'].indexOf(method.visibility) !== -1;
     }
 }
 
@@ -297,8 +295,8 @@ class Parser {
         }
     }
 
-    private isTest(declaration: Declaration) {
-        return Parser.validator.isTest(declaration);
+    private isTest(classOrMethod: Class | Method) {
+        return Parser.validator.isTest(classOrMethod);
     }
 
     private parseAttributes(declaration: Declaration, _namespace?: Namespace, _class?: Class) {
@@ -314,14 +312,14 @@ class Parser {
         return fn.apply(this, [ast, file]);
     }
 
-    private parseNamespace(ast: Program | Namespace | UseGroup | Class | Node, file: string) {
+    private parseNamespace(ast: Namespace, file: string) {
         // new TestCase(file, this.parseAttributes(ast as Declaration, this.namespace));
 
-        return this.parseChildren((this.namespace = ast as Namespace), file);
+        return this.parseChildren((this.namespace = ast), file);
     }
 
-    private parseClass(ast: Program | Namespace | UseGroup | Class | Node, file: string) {
-        const _class = ast as Class;
+    private parseClass(ast: Class, file: string) {
+        const _class = ast;
 
         if (!this.isTest(_class)) {
             return [];
@@ -331,9 +329,9 @@ class Parser {
         const suite = new Test(file, attributes);
 
         suite.children = _class.body
-            .filter((declaration) => this.isTest(declaration))
-            .map((declaration) => {
-                const attributes = this.parseAttributes(declaration, this.namespace, _class);
+            .filter((method) => this.isTest(method as Method))
+            .map((method) => {
+                const attributes = this.parseAttributes(method, this.namespace, _class);
                 const test = new Test(file, attributes);
                 test.parent = suite;
 
