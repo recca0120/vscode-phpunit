@@ -3,6 +3,7 @@ import {execSync} from 'child_process';
 
 export const fixturePath = (uri: string) => path.join(__dirname, 'fixtures', uri);
 export const phpUnitProject = (uri: string) => fixturePath(path.join('phpunit-stub', uri));
+export const pestProject = (uri: string) => fixturePath(path.join('pest-stub', uri));
 export const normalPath = (path: string) =>
     path.replace(/^\w:/, (matched) => matched.toLowerCase());
 
