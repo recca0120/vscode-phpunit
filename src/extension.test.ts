@@ -5,8 +5,8 @@ import { glob, GlobOptions } from 'glob';
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
-import { getPhpUnitVersion, normalPath, phpUnitProject } from './phpunit/__tests__/helper';
 import { activate } from './extension';
+import { getPhpUnitVersion, normalPath, phpUnitProject } from './phpunit/__tests__/utils';
 
 jest.mock('child_process');
 

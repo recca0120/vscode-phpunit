@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
 import { Configuration, EOL, LocalCommand, TestRunner } from '../phpunit';
 import { OutputChannelObserver } from './output-channel-observer';
-import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/helper';
+import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/utils';
 
 describe('OutputChannelObserver', () => {
     const phpUnitVersion: number = getPhpUnitVersion();

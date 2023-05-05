@@ -1,7 +1,7 @@
 import { describe, it } from '@jest/globals';
 import { LocalCommand, RemoteCommand } from './command';
 import { Configuration } from './configuration';
-import { phpUnitProject } from './__tests__/helper';
+import { phpUnitProject } from './__tests__/utils';
 
 describe('Command Test', () => {
     describe('LocalCommand', () => {

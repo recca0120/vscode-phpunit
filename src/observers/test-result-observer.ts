@@ -9,7 +9,9 @@ import {
     TestRun,
 } from 'vscode';
 import { EOL } from '../phpunit/utils';
-import { TestResult } from '../phpunit/problem-matcher';
+
+
+import {TestResult} from "../phpunit/problem-matcher/parser/types";
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(

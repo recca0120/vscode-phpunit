@@ -1,11 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
-import { getPhpUnitVersion, phpUnitProject } from './__tests__/helper';
+import { spawn } from 'child_process';
 import { TestRunner } from './test-runner';
 import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
-import { spawn } from 'child_process';
 import { Command, LocalCommand, RemoteCommand } from './command';
 import { Configuration } from './configuration';
 import { TestRunnerEvent } from './test-runner-observer';
+import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
 
 jest.mock('child_process');
 
