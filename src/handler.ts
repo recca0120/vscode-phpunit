@@ -61,7 +61,7 @@ export class Handler {
     private isRemote() {
         const command = (this.configuration.get('command') as string) ?? '';
 
-        return command.match(/docker|ssh/) !== null;
+        return command.match(/docker|ssh|sail/) !== null;
     }
 
     private createTestRunner(
