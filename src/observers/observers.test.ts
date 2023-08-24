@@ -36,7 +36,7 @@ describe('OutputChannelObserver', () => {
         }
 
         const outputChannel = vscode.window.createOutputChannel('phpunit');
-        const observer = new OutputChannelObserver(outputChannel, configuration);
+        const observer = new OutputChannelObserver(outputChannel, configuration, { continuous: false } as any);
 
         const cwd = phpUnitProject('');
         const command = new LocalCommand(configuration, { cwd });
@@ -145,9 +145,9 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
-                    `     ├ Failed asserting that false is true.${EOL}` +
-                    `     │ ${EOL}` +
-                    `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`
+                `     ├ Failed asserting that false is true.${EOL}` +
+                `     │ ${EOL}` +
+                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`
             )
         );
     });
@@ -164,18 +164,18 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
-                    `     ├ Failed asserting that two arrays are identical.${EOL}` +
-                    `     ┊ ---·Expected Array &0 (${EOL}` +
-                    `     ┊     'a' => 'b'${EOL}` +
-                    `     ┊     'c' => 'd'${EOL}` +
-                    `     ┊ )${EOL}` +
-                    `     ┊ +++·Actual Array &0 (${EOL}` +
-                    `     ┊     'e' => 'f'${EOL}` +
-                    `     ┊     0 => 'g'${EOL}` +
-                    `     ┊     1 => 'h'${EOL}` +
-                    `     ┊ )${EOL}` +
-                    `     │ ${EOL}` +
-                    `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`
+                `     ├ Failed asserting that two arrays are identical.${EOL}` +
+                `     ┊ ---·Expected Array &0 (${EOL}` +
+                `     ┊     'a' => 'b'${EOL}` +
+                `     ┊     'c' => 'd'${EOL}` +
+                `     ┊ )${EOL}` +
+                `     ┊ +++·Actual Array &0 (${EOL}` +
+                `     ┊     'e' => 'f'${EOL}` +
+                `     ┊     0 => 'g'${EOL}` +
+                `     ┊     1 => 'h'${EOL}` +
+                `     ┊ )${EOL}` +
+                `     │ ${EOL}` +
+                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`
             )
         );
     });

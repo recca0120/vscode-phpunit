@@ -11,14 +11,14 @@ import {
 import { EOL } from '../phpunit/utils';
 
 
-import {TestResult} from "../phpunit/problem-matcher/parser/types";
+import { TestResult } from "../phpunit/problem-matcher/parser/types";
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
         private queue: { test: TestItem }[] = [],
         private testRun: TestRun,
         private cancellation: CancellationToken
-    ) {}
+    ) { }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);

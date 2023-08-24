@@ -47,7 +47,7 @@ const Uri = new Proxy(URI, {
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
 
-    constructor(private parent?: any) {}
+    constructor(private parent?: any) { }
 
     get size() {
         return this.items.size;
@@ -295,6 +295,13 @@ const commands = {
     }),
 };
 
+const EventEmitter = jest.fn().mockImplementation(() => {
+    return {
+        fire: jest.fn(),
+        event: jest.fn()
+    };
+});
+
 export {
     languages,
     workspace,
@@ -310,4 +317,5 @@ export {
     Uri,
     window,
     commands,
+    EventEmitter
 };

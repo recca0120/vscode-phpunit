@@ -20,7 +20,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
-    const handler = new Handler(testData, configuration, outputChannel, ctrl);
+    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
+    const handler = new Handler(testData, configuration, outputChannel, ctrl, fileChangedEmitter, getOrCreateFile);
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
@@ -34,12 +35,14 @@ export async function activate(context: vscode.ExtensionContext) {
         'Run Tests',
         vscode.TestRunProfileKind.Run,
         (request, cancellation) => handler.run(request, cancellation),
+        true,
+        undefined,
         true
     );
 
     ctrl.resolveHandler = async (item) => {
         if (!item) {
-            context.subscriptions.push(...startWatchingWorkspace(ctrl));
+            context.subscriptions.push(...startWatchingWorkspace(ctrl, fileChangedEmitter));
         }
     };
 
@@ -91,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(commandHandler.rerun(handler));
 }
 
-async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
+export async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
     const existing = testData.get(uri.toString());
 
     if (existing) {
@@ -127,11 +130,15 @@ async function findInitialFiles(
     });
 }
 
-function startWatchingWorkspace(controller: vscode.TestController) {
+function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
     return getWorkspaceTestPatterns().map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-        watcher.onDidCreate((uri) => getOrCreateFile(controller, uri));
+        watcher.onDidCreate((uri) => {
+            getOrCreateFile(controller, uri);
+            fileChangedEmitter.fire(uri);
+        });
+
         watcher.onDidChange((uri) => {
             const id = uri.toString();
             const testFile = testData.get(id);
@@ -139,8 +146,8 @@ function startWatchingWorkspace(controller: vscode.TestController) {
                 testFile.delete(controller);
                 testData.delete(id);
             }
-
-            return getOrCreateFile(controller, uri);
+            getOrCreateFile(controller, uri);
+            fileChangedEmitter.fire(uri);
         });
 
         watcher.onDidDelete((uri) => {

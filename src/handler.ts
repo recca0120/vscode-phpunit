@@ -8,11 +8,14 @@ import {
     TestRunRequest,
     window,
     workspace,
+    EventEmitter,
+    Uri
 } from 'vscode';
 import { Command, LocalCommand, RemoteCommand, TestRunner } from './phpunit';
 import { TestFile } from './test-file';
 import { Configuration } from './configuration';
 import { OutputChannelObserver, TestResultObserver } from './observers';
+import { getOrCreateFile } from './extension';
 
 export class Handler {
     private latestTestRunRequest: TestRunRequest | undefined;
@@ -21,14 +24,37 @@ export class Handler {
         private testData: Map<string, TestFile>,
         private configuration: Configuration,
         private outputChannel: OutputChannel,
-        private ctrl: TestController
-    ) {}
+        private ctrl: TestController,
+        private fileChangedEmitter: EventEmitter<Uri>,
+        private getOrCreateFile: Function
+    ) { }
 
     getLatestTestRunRequest() {
         return this.latestTestRunRequest;
     }
 
     async run(request: TestRunRequest, cancellation: CancellationToken) {
+        if (!request.continuous) {
+            return this.startTestRun(request, cancellation);
+        }
+
+        const l = this.fileChangedEmitter.event(async (uri) => {
+            await getOrCreateFile(this.ctrl, uri);
+
+            this.startTestRun(
+                new TestRunRequest(
+                    request.include ?? [],
+                    undefined,
+                    request.profile,
+                    true
+                ),
+                cancellation
+            );
+        });
+        cancellation.onCancellationRequested(() => l.dispose());
+    }
+
+    private async startTestRun(request: TestRunRequest, cancellation: CancellationToken) {
         const command = await this.createCommand();
 
         if (!command) {
@@ -39,7 +65,7 @@ export class Handler {
 
         const run = this.ctrl.createTestRun(request);
         const queueHandler = new TestQueueHandler(request, run, this.testData);
-        const runner = this.createTestRunner(queueHandler, run, cancellation);
+        const runner = this.createTestRunner(queueHandler, run, request, cancellation);
 
         await queueHandler.discoverTests(request.include ?? gatherTestItems(this.ctrl.items));
         await queueHandler.runQueue(runner, command);
@@ -67,11 +93,12 @@ export class Handler {
     private createTestRunner(
         queueHandler: TestQueueHandler,
         run: TestRun,
+        request: TestRunRequest,
         cancellation: CancellationToken
     ) {
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queueHandler.queue, run, cancellation));
-        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration));
+        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
 
         return runner;
     }
@@ -84,7 +111,7 @@ class TestQueueHandler {
         private request: TestRunRequest,
         private run: TestRun,
         private testData: Map<string, TestFile>
-    ) {}
+    ) { }
 
     public async discoverTests(tests: Iterable<TestItem>) {
         for (const test of tests) {
