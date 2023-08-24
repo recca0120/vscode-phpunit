@@ -57,7 +57,7 @@ describe('Teamcity Parser', () => {
     });
 
     it('parse testCount', () => {
-        const text = "##teamcity[testCount count='19' flowId='8024']";
+        const text = '##teamcity[testCount count=\'19\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestExtraResultEvent.testCount,
@@ -68,7 +68,7 @@ describe('Teamcity Parser', () => {
     });
 
     it('parse default testSuiteStarted', () => {
-        const text = "##teamcity[testSuiteStarted name='default' flowId='8024']";
+        const text = '##teamcity[testSuiteStarted name=\'default\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testSuiteStarted,
@@ -79,7 +79,7 @@ describe('Teamcity Parser', () => {
     });
 
     it('parse default testSuiteFinished', () => {
-        const text = "##teamcity[testSuiteFinished name='default' flowId='8024']";
+        const text = '##teamcity[testSuiteFinished name=\'default\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testSuiteFinished,
@@ -91,7 +91,7 @@ describe('Teamcity Parser', () => {
 
     it('parse testSuiteStarted with locationHint', () => {
         const text =
-            "##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\CalculatorTest' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest' flowId='8024']";
+            '##teamcity[testSuiteStarted name=\'Recca0120\\VSCode\\Tests\\CalculatorTest\' locationHint=\'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testSuiteStarted,
@@ -108,7 +108,7 @@ describe('Teamcity Parser', () => {
 
     it('parse test_passed testStarted', () => {
         const text =
-            "##teamcity[testStarted name='test_passed' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']";
+            '##teamcity[testStarted name=\'test_passed\' locationHint=\'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testStarted,
@@ -124,7 +124,7 @@ describe('Teamcity Parser', () => {
     });
 
     it('parse test_passed testFinished', () => {
-        const text = "##teamcity[testFinished name='test_passed' duration='0' flowId='8024']";
+        const text = '##teamcity[testFinished name=\'test_passed\' duration=\'0\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testFinished,
@@ -137,7 +137,7 @@ describe('Teamcity Parser', () => {
 
     it('parse test_failed testFailed', () => {
         const text =
-            "##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:22|n ' duration='0' flowId='8024'] ";
+            '##teamcity[testFailed name=\'test_failed\' message=\'Failed asserting that false is true.\' details=\' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:22|n \' duration=\'0\' flowId=\'8024\'] ';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testFailed,
@@ -157,7 +157,7 @@ describe('Teamcity Parser', () => {
 
     it('parse test_is_not_same testFailed', () => {
         const text =
-            "##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']";
+            '##teamcity[testFailed name=\'test_is_not_same\' message=\'Failed asserting that two arrays are identical.\' details=\' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:27|n \' duration=\'0\' type=\'comparisonFailure\' actual=\'Array &0 (|n    |\'e|\' => |\'f|\'|n    0 => |\'g|\'|n    1 => |\'h|\'|n)\' expected=\'Array &0 (|n    |\'a|\' => |\'b|\'|n    |\'c|\' => |\'d|\'|n)\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testFailed,
@@ -172,15 +172,15 @@ describe('Teamcity Parser', () => {
             ],
             duration: 0,
             type: 'comparisonFailure',
-            actual: "Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n)",
-            expected: "Array &0 (\n    'a' => 'b'\n    'c' => 'd'\n)",
+            actual: 'Array &0 (\n    \'e\' => \'f\'\n    0 => \'g\'\n    1 => \'h\'\n)',
+            expected: 'Array &0 (\n    \'a\' => \'b\'\n    \'c\' => \'d\'\n)',
             flowId: 8024,
         });
     });
 
     it('parse test_sum_item_method_not_call testFailed', () => {
         const text =
-            "##teamcity[testFailed name='test_sum_item_method_not_call' message='Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called|r|n exactly 1 times but called 0 times.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php:38|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php:308|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php:119|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:299|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:284|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery.php:204|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:68|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:43|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegrationAssertPostConditions.php:29|n ' duration='13' flowId='8024']";
+            '##teamcity[testFailed name=\'test_sum_item_method_not_call\' message=\'Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called|r|n exactly 1 times but called 0 times.\' details=\' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\CountValidator\\Exact.php:38|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Expectation.php:308|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\ExpectationDirector.php:119|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:299|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Container.php:284|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery.php:204|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:68|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegration.php:43|n C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\vendor\\mockery\\mockery\\library\\Mockery\\Adapter\\Phpunit\\MockeryPHPUnitIntegrationAssertPostConditions.php:29|n \' duration=\'13\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testFailed,
@@ -233,7 +233,7 @@ describe('Teamcity Parser', () => {
 
     it('parse test_skipped testIgnored', () => {
         const text =
-            "##teamcity[testIgnored name='test_skipped' message='The MySQLi extension is not available.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:45|n ' duration='0' flowId='8024']";
+            '##teamcity[testIgnored name=\'test_skipped\' message=\'The MySQLi extension is not available.\' details=\' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:45|n \' duration=\'0\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testIgnored,
@@ -253,7 +253,7 @@ describe('Teamcity Parser', () => {
 
     it('parse test_incomplete testIgnored', () => {
         const text =
-            "##teamcity[testIgnored name='test_incomplete' message='This test has not been implemented yet.' details=' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:50|n ' duration='0' flowId='8024']";
+            '##teamcity[testIgnored name=\'test_incomplete\' message=\'This test has not been implemented yet.\' details=\' C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:50|n \' duration=\'0\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testIgnored,
@@ -273,7 +273,7 @@ describe('Teamcity Parser', () => {
 
     it('parse test_risky testFailed', () => {
         const text =
-            "##teamcity[testFailed name='test_risky' message='This test did not perform any assertions|n|nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:30' details=' ' duration='0' flowId='8024']";
+            '##teamcity[testFailed name=\'test_risky\' message=\'This test did not perform any assertions|n|nC:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php:30\' details=\' \' duration=\'0\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testFailed,
@@ -414,7 +414,7 @@ describe('Teamcity Parser', () => {
 
     it('parse addition_provider with data set with number key', () => {
         const text =
-            "##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']";
+            '##teamcity[testStarted name=\'addition_provider with data set #2\' locationHint=\'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2\' flowId=\'8024\']';
 
         expect(parser.parse(text)).toEqual({
             event: TestResultEvent.testStarted,
@@ -465,7 +465,7 @@ describe('Teamcity Parser', () => {
                     },
                 ],
                 message:
-                    "Failed asserting that 'Der Eintrag wurde gespeichert.' is in 'flash' message.",
+                    'Failed asserting that \'Der Eintrag wurde gespeichert.\' is in \'flash\' message.',
                 duration: 247,
                 flowId: 3654,
             });
@@ -480,7 +480,7 @@ describe('Teamcity Parser', () => {
                 name: 'testCreateEntityWithExceptPathEmptyString',
                 details: [],
                 message:
-                    "ROOT/tests/TestCase/Model/Table/Validation/CmsPagesTableValidationTest.php (line 264)\n########## DEBUG ##########\nobject(AppModelEntityCmsPage) id:0 {\n  'page_name' => 'cms_page_639ca3c184af3'\n  'valid_for_pages' => (int) 1\n  'except_path' => null\n  'regex_path' => null\n  'page_settings_hash' => '44a9453b57d228884223347359a4b1cc'\n  '[new]' => true\n  '[accessible]' => [\n    'page_name' => true,\n    'valid_for_pages' => true\n  ]\n  '[dirty]' => [\n    'page_name' => true,\n    'valid_for_pages' => true,\n    'except_path' => true,\n    'regex_path' => true,\n    'page_settings_hash' => true\n  ]\n  '[original]' => []\n  '[virtual]' => []\n  '[hasErrors] ' => true\n  '[errors]' => [\n    'page_settings_hash' => [\n      '_isUnique' => 'This value is already in use'\n    ]\n  ]\n  '[invalid]' => [\n    'page_settings_hash' => '44a9453b57d228884223347359a4b1cc'\n  ]\n  '[repository]' => 'CmsPa ges'\n}\n###########################",
+                    'ROOT/tests/TestCase/Model/Table/Validation/CmsPagesTableValidationTest.php (line 264)\n########## DEBUG ##########\nobject(AppModelEntityCmsPage) id:0 {\n  \'page_name\' => \'cms_page_639ca3c184af3\'\n  \'valid_for_pages\' => (int) 1\n  \'except_path\' => null\n  \'regex_path\' => null\n  \'page_settings_hash\' => \'44a9453b57d228884223347359a4b1cc\'\n  \'[new]\' => true\n  \'[accessible]\' => [\n    \'page_name\' => true,\n    \'valid_for_pages\' => true\n  ]\n  \'[dirty]\' => [\n    \'page_name\' => true,\n    \'valid_for_pages\' => true,\n    \'except_path\' => true,\n    \'regex_path\' => true,\n    \'page_settings_hash\' => true\n  ]\n  \'[original]\' => []\n  \'[virtual]\' => []\n  \'[hasErrors] \' => true\n  \'[errors]\' => [\n    \'page_settings_hash\' => [\n      \'_isUnique\' => \'This value is already in use\'\n    ]\n  ]\n  \'[invalid]\' => [\n    \'page_settings_hash\' => \'44a9453b57d228884223347359a4b1cc\'\n  ]\n  \'[repository]\' => \'CmsPa ges\'\n}\n###########################',
                 duration: 0,
                 flowId: 3580,
             });

@@ -1,9 +1,9 @@
-import {IParser, TestExtraResultEvent, TestVersion} from './types';
+import { IParser, TestExtraResultEvent, TestVersion } from './types';
 
 export class TestVersionParser implements IParser<TestVersion> {
     private pattern = new RegExp(
         '^(ParaTest\\s(v)?(?<paratest>[\\d.]+).+)?PHPUnit\\s(?<phpunit>[\\d.]+)',
-        'i'
+        'i',
     );
 
     is(text: string): boolean {

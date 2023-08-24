@@ -12,7 +12,7 @@ class PathReplacer {
             pattern.replace(/[${}]/g, (matched) => {
                 return `\\${matched}` + (['{', '}'].includes(matched) ? '?' : '');
             }),
-            'g'
+            'g',
         );
     });
 
@@ -23,7 +23,7 @@ class PathReplacer {
             for (const local in paths) {
                 this.mapping.set(
                     this.replaceWorkspaceFolder(local),
-                    this.replaceWorkspaceFolder(paths[local])
+                    this.replaceWorkspaceFolder(paths[local]),
                 );
             }
         }
@@ -34,7 +34,7 @@ class PathReplacer {
 
         return this.workspaceFolderPatterns.reduce(
             (path, pattern) => path.replace(pattern, cwd),
-            path
+            path,
         );
     }
 
@@ -44,7 +44,7 @@ class PathReplacer {
 
     public localToRemote(path: string) {
         return this.toWindowsPath(
-            this.toPostfixPath(this.doLocalToRemote(this.replaceWorkspaceFolder(path)))
+            this.toPostfixPath(this.doLocalToRemote(this.replaceWorkspaceFolder(path))),
         );
     }
 
@@ -52,14 +52,14 @@ class PathReplacer {
         return this.replaceMapping(path, (localPath, remotePath) => {
             return path.replace(
                 new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}(\/)`, 'g'),
-                (_m, sep) => `${localPath}${sep}`
+                (_m, sep) => `${localPath}${sep}`,
             );
         });
     }
 
     private doLocalToRemote(path: string) {
         return this.replaceMapping(path, (localPath, remotePath) =>
-            path.replace(localPath, remotePath)
+            path.replace(localPath, remotePath),
         );
     }
 
@@ -84,7 +84,7 @@ class PathReplacer {
         }
 
         this.mapping.forEach(
-            (remotePath: string, localPath: string) => (path = fn(localPath, remotePath))
+            (remotePath: string, localPath: string) => (path = fn(localPath, remotePath)),
         );
 
         return path;
@@ -97,7 +97,7 @@ export abstract class Command {
 
     constructor(
         protected configuration: IConfiguration = new Configuration(),
-        private options: SpawnOptions = {}
+        private options: SpawnOptions = {},
     ) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
@@ -149,7 +149,7 @@ export abstract class Command {
 
     protected abstract resolvePathReplacer(
         options: SpawnOptions,
-        configuration: IConfiguration
+        configuration: IConfiguration,
     ): PathReplacer;
 
     private phpUnitPath() {
@@ -209,7 +209,7 @@ export class LocalCommand extends Command {
 export class RemoteCommand extends Command {
     protected resolvePathReplacer(
         options: SpawnOptions,
-        configuration: IConfiguration
+        configuration: IConfiguration,
     ): PathReplacer {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }

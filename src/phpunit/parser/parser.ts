@@ -77,7 +77,7 @@ export class Parser {
 
     private parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
-        file: string
+        file: string,
     ): Test[] | undefined {
         const fn: Function = this.lookup[ast.kind] ?? this.parseChildren;
 
@@ -117,7 +117,7 @@ export class Parser {
         if ('children' in ast) {
             return ast.children.reduce(
                 (tests, children: Node) => tests.concat(this.parseAst(children, file) ?? []),
-                [] as Test[]
+                [] as Test[],
             );
         }
 

@@ -1,12 +1,4 @@
-import {
-    Position,
-    Range,
-    TestController,
-    TestItem,
-    TestItemCollection,
-    Uri,
-    workspace,
-} from 'vscode';
+import { Position, Range, TestController, TestItem, TestItemCollection, Uri, workspace } from 'vscode';
 import { parse, Test } from './phpunit';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -15,7 +7,8 @@ export class TestFile {
     public tests: Test[] = [];
     public testItems: TestItem[] = [];
 
-    constructor(public uri: Uri) {}
+    constructor(public uri: Uri) {
+    }
 
     async update(ctrl: TestController) {
         const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
@@ -24,7 +17,7 @@ export class TestFile {
         this.testItems = this.tests.map((suite: Test) => {
             const parent = this.asTestItem(ctrl, suite, suite.id);
             parent.children.replace(
-                suite.children.map((test: Test, index) => this.asTestItem(ctrl, test, index))
+                suite.children.map((test: Test, index) => this.asTestItem(ctrl, test, index)),
             );
 
             return parent;
@@ -66,7 +59,7 @@ export class TestFile {
 
     private doFindTestItem(
         testItems: TestItem[],
-        filter: (testItem: TestItem) => boolean
+        filter: (testItem: TestItem) => boolean,
     ): TestItem | void {
         for (const testItem of testItems) {
             if (filter(testItem)) {
@@ -120,7 +113,7 @@ export class TestFile {
         testItem.canResolveChildren = test.children.length > 0;
         testItem.range = new Range(
             new Position(test.start.line - 1, test.start.character),
-            new Position(test.end.line - 1, test.end.character)
+            new Position(test.end.line - 1, test.end.character),
         );
 
         return testItem;

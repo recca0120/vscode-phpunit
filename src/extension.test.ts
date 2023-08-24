@@ -119,7 +119,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: testId,
                     uri: expect.objectContaining({ path: file.path }),
-                })
+                }),
             );
 
             expect(child).toEqual(
@@ -131,34 +131,34 @@ describe('Extension Test', () => {
                         end: { line: 14, character: 5 },
                         // end: {line: 11, character: 29},
                     },
-                })
+                }),
             );
 
             expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
             expect(vscode.window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
             expect(vscode.tests.createTestController).toBeCalledWith(
                 'phpUnitTestController',
-                'PHPUnit'
+                'PHPUnit',
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.reload',
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-all',
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-file',
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-test-at-cursor',
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.rerun',
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(context.subscriptions.push).toHaveBeenCalledTimes(9);
         });
@@ -176,7 +176,7 @@ describe('Extension Test', () => {
             expect(spawn).toBeCalledWith(
                 'php',
                 ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
-                { cwd }
+                { cwd },
             );
 
             let expected;
@@ -207,7 +207,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                     '--colors=never',
                 ],
-                { cwd }
+                { cwd },
             );
 
             expectTestResultCalled(ctrl, {
@@ -224,7 +224,7 @@ describe('Extension Test', () => {
             const testId = `Recca0120\\VSCode\\Tests\\CalculatorTest::${method}`;
 
             const pattern = new RegExp(
-                `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`
+                `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
             );
 
             await activate(context);
@@ -243,7 +243,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                     '--colors=never',
                 ],
-                { cwd }
+                { cwd },
             );
 
             expectTestResultCalled(ctrl, {
@@ -256,7 +256,7 @@ describe('Extension Test', () => {
 
             const { failed } = getTestRun(ctrl);
             const [, message] = (failed as jest.Mock).mock.calls.find(
-                ([test]) => test.id === testId
+                ([test]) => test.id === testId,
             );
 
             expect(message.location).toEqual(
@@ -265,7 +265,7 @@ describe('Extension Test', () => {
                         start: { line: 53, character: 0 },
                         end: { line: 53, character: 0 },
                     },
-                })
+                }),
             );
         });
 

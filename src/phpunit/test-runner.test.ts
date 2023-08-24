@@ -70,7 +70,7 @@ describe('TestRunner Test', () => {
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: ${appPath('phpunit.xml')}`,
-            "##teamcity[testCount count='1' flowId='8024']",
+            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
             `##teamcity[testStarted name='test_passed' locationHint='${locationHint}::test_passed' flowId='8024']`,
             `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
@@ -89,7 +89,7 @@ describe('TestRunner Test', () => {
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: ${appPath('phpunit.xml')}`,
-            "##teamcity[testCount count='1' flowId='8024']",
+            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${file}:22|n ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
@@ -110,7 +110,7 @@ describe('TestRunner Test', () => {
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: ${appPath('phpunit.xml')}`,
-            "##teamcity[testCount count='1' flowId='8024']",
+            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
             `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
@@ -130,7 +130,7 @@ describe('TestRunner Test', () => {
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: ${appPath('phpunit.xml')}`,
-            "##teamcity[testCount count='1' flowId='8024']",
+            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
             `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
             `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
@@ -163,7 +163,7 @@ describe('TestRunner Test', () => {
         const testResult = onTestRunnerEvents
             .get(TestRunnerEvent.result)!
             .mock.calls.find(
-                (call: any) => call[0].id === expected.id && call[0].event === expected.event
+                (call: any) => call[0].id === expected.id && call[0].event === expected.event,
             );
 
         expect(testResult).not.toBeUndefined();
@@ -171,7 +171,7 @@ describe('TestRunner Test', () => {
         if (expected.event === TestResultEvent.testFailed) {
             const hasFile = (pattern: string, l: number) => {
                 return (testResult[0].details as { file: string; line: number }[]).some(
-                    ({ file, line }) => !!file.match(new RegExp(pattern)) && line === l
+                    ({ file, line }) => !!file.match(new RegExp(pattern)) && line === l,
                 );
             };
 
@@ -194,7 +194,7 @@ describe('TestRunner Test', () => {
         expect(testResult[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
 
         expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
-            expect.objectContaining({ ...expected, locationHint })
+            expect.objectContaining({ ...expected, locationHint }),
         );
 
         if (phpUnitVersion < 9) {
@@ -206,7 +206,7 @@ describe('TestRunner Test', () => {
             expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
             expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
             expect(
-                onTestResultEvents.get(TestExtraResultEvent.testResultSummary)
+                onTestResultEvents.get(TestExtraResultEvent.testResultSummary),
             ).toHaveBeenCalled();
         }
 
@@ -250,7 +250,7 @@ describe('TestRunner Test', () => {
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
                 file: phpUnitProject('tests/AssertionsTest.php'),
             },
-            phpUnitProject
+            phpUnitProject,
         );
     }
 
@@ -281,7 +281,7 @@ describe('TestRunner Test', () => {
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
                 file: phpUnitProject('tests/AssertionsTest.php'),
             },
-            phpUnitProject
+            phpUnitProject,
         );
     }
 
@@ -317,7 +317,7 @@ describe('TestRunner Test', () => {
                 id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
                 file: phpUnitProject('tests/AssertionsTest.php'),
             },
-            phpUnitProject
+            phpUnitProject,
         );
     }
 
@@ -356,7 +356,7 @@ describe('TestRunner Test', () => {
                 details: [{ file: phpUnitProject('tests/AssertionsTest.php'), line: 22 }],
                 duration: expect.any(Number),
             },
-            phpUnitProject
+            phpUnitProject,
         );
     }
 

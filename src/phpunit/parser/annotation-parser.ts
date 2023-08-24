@@ -58,7 +58,7 @@ export class AnnotationParser {
 
     private readonly pattern: RegExp = new RegExp(
         lookup.map((name) => this.template(name)).join('|'),
-        'g'
+        'g',
     );
 
     public parse(declaration: Declaration): Annotations {
@@ -69,8 +69,8 @@ export class AnnotationParser {
         return !method.leadingComments
             ? false
             : new RegExp('@test').test(
-                  method.leadingComments.map((comment) => comment.value).join('\n')
-              );
+                method.leadingComments.map((comment) => comment.value).join('\n'),
+            );
     }
 
     private parseComments(declaration: Declaration) {

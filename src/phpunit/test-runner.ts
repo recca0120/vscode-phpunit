@@ -87,7 +87,7 @@ export class TestRunner {
 
     private trigger(
         eventName: TestRunnerEvent | TestResultKind,
-        result: Result | string | number | null
+        result: Result | string | number | null,
     ) {
         this.observers
             .filter((observer) => observer[eventName])

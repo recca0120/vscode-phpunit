@@ -1,8 +1,8 @@
-import {IParser, TestExtraResultEvent, TimeAndMemory} from './types';
+import { IParser, TestExtraResultEvent, TimeAndMemory } from './types';
 
 export class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     private readonly pattern = new RegExp(
-        'Time:\\s(?<time>[\\d+:.]+(\\s\\w+)?),\\sMemory:\\s(?<memory>[\\d.]+\\s\\w+)'
+        'Time:\\s(?<time>[\\d+:.]+(\\s\\w+)?),\\sMemory:\\s(?<memory>[\\d.]+\\s\\w+)',
     );
 
     public is(text: string) {
@@ -10,9 +10,9 @@ export class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     }
 
     public parse(text: string): TimeAndMemory {
-        const {time, memory} = text.match(this.pattern)!.groups!;
+        const { time, memory } = text.match(this.pattern)!.groups!;
         const kind = TestExtraResultEvent.timeAndMemory;
 
-        return {time, memory, kind, text};
+        return { time, memory, kind, text };
     }
 }

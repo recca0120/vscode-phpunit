@@ -1,19 +1,5 @@
-import { OutputChannel } from 'vscode';
-import {
-    EOL,
-    IConfiguration,
-    TestConfiguration,
-    TestExtraResultEvent,
-    TestProcesses,
-    TestResult,
-    TestResultEvent,
-    TestResultKind,
-    TestResultSummary,
-    TestRunnerObserver,
-    TestRuntime,
-    TestVersion,
-    TimeAndMemory,
-} from '../phpunit';
+import { OutputChannel, TestRunRequest } from 'vscode';
+import { EOL, IConfiguration, TestConfiguration, TestExtraResultEvent, TestProcesses, TestResult, TestResultEvent, TestResultKind, TestResultSummary, TestRunnerObserver, TestRuntime, TestVersion, TimeAndMemory } from '../phpunit';
 
 enum ShowOutputState {
     always = 'always',
@@ -87,7 +73,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
     private latestInput = '';
     private printedOutput: PrintedOutput;
 
-    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration) {
+    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration, private request: TestRunRequest) {
         this.printedOutput = new PrintedOutput();
     }
 
@@ -219,7 +205,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
                     return (msg += this.printMessage(this.decorated.default, `${file}:${line}`));
                 }, ''),
                 this.printMessage(this.decorated.last),
-            ].join('') + EOL
+            ].join('') + EOL,
         );
     }
 
@@ -254,7 +240,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
             (this.configuration.get('showAfterExecution') as ShowOutputState) ??
             ShowOutputState.onFailure;
 
-        if (showAfterExecution !== ShowOutputState.never && state === showAfterExecution) {
+        if (this.request.continuous === false && showAfterExecution !== ShowOutputState.never && state === showAfterExecution) {
             this.outputChannel.show();
         }
     }

@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.2.0] - 2023-08-25
+
+- Continuous test runs
+
 ## [3.1.1] - 2023-05-04
 
 - fix testFailed twice
