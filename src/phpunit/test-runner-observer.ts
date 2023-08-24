@@ -1,17 +1,4 @@
-import {
-    Result,
-    TestConfiguration,
-    TestCount,
-    TestExtraResultEvent,
-    TestProcesses,
-    TestResult,
-    TestResultEvent,
-    TestResultKind,
-    TestResultSummary,
-    TestRuntime,
-    TestVersion,
-    TimeAndMemory,
-} from './problem-matcher';
+import { Result, TestConfiguration, TestCount, TestExtraResultEvent, TestProcesses, TestResult, TestResultEvent, TestResultKind, TestResultSummary, TestRuntime, TestVersion, TimeAndMemory } from './problem-matcher';
 
 export enum TestRunnerEvent {
     run = 'run',
@@ -132,7 +119,7 @@ export class DefaultObserver implements TestRunnerObserver {
 
     private trigger(
         eventName: TestRunnerEvent | TestResultKind,
-        result: Result | string | number | null
+        result: Result | string | number | null,
     ) {
         this.listeners[eventName].forEach((fn) => fn(result));
     }

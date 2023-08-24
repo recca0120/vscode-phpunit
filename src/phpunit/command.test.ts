@@ -12,7 +12,7 @@ describe('Command Test', () => {
                 phpunit: 'vendor/bin/paratest',
             });
             const command = new LocalCommand(configuration, { cwd });
-            command.setArguments("--filter='^.*::(test_passed)( with data set .*)?$'");
+            command.setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
@@ -101,7 +101,7 @@ describe('Command Test', () => {
             });
             const command = new RemoteCommand(configuration, { cwd: cwd });
 
-            command.setArguments("--filter='^.*::(test_passed)( with data set .*)?$'");
+            command.setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
@@ -114,7 +114,7 @@ describe('Command Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                "php vendor/bin/paratest '--filter=^.*::(test_passed)( with data set .*)?$' '--teamcity' '--colors=never' '-f'",
+                'php vendor/bin/paratest \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--teamcity\' \'--colors=never\' \'-f\'',
             ]);
         });
 
@@ -142,7 +142,7 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                "php vendor/bin/phpunit /var/www/tests/AssertionsTest.php '--filter=^.*::(test_passed)( with data set .*)?$' '--teamcity' '--colors=never'",
+                'php vendor/bin/phpunit /var/www/tests/AssertionsTest.php \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--teamcity\' \'--colors=never\'',
             ]);
         });
 
@@ -173,7 +173,7 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                "php vendor/bin/phpunit /var/www/tests/AssertionsTest.php '--filter=^.*::(test_passed)( with data set .*)?$' '--teamcity' '--colors=never'",
+                'php vendor/bin/phpunit /var/www/tests/AssertionsTest.php \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--teamcity\' \'--colors=never\'',
             ]);
         });
     });

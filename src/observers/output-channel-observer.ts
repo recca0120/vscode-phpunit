@@ -1,19 +1,5 @@
 import { OutputChannel, TestRunRequest } from 'vscode';
-import {
-    EOL,
-    IConfiguration,
-    TestConfiguration,
-    TestExtraResultEvent,
-    TestProcesses,
-    TestResult,
-    TestResultEvent,
-    TestResultKind,
-    TestResultSummary,
-    TestRunnerObserver,
-    TestRuntime,
-    TestVersion,
-    TimeAndMemory,
-} from '../phpunit';
+import { EOL, IConfiguration, TestConfiguration, TestExtraResultEvent, TestProcesses, TestResult, TestResultEvent, TestResultKind, TestResultSummary, TestRunnerObserver, TestRuntime, TestVersion, TimeAndMemory } from '../phpunit';
 
 enum ShowOutputState {
     always = 'always',
@@ -219,7 +205,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
                     return (msg += this.printMessage(this.decorated.default, `${file}:${line}`));
                 }, ''),
                 this.printMessage(this.decorated.last),
-            ].join('') + EOL
+            ].join('') + EOL,
         );
     }
 

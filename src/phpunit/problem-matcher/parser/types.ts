@@ -121,7 +121,8 @@ export interface IParser<T> {
 }
 
 export abstract class ValueParser<T> implements IParser<T> {
-    protected constructor(private name: string, private kind: TestResultKind) {}
+    protected constructor(private name: string, private kind: TestResultKind) {
+    }
 
     private pattern = new RegExp(`^${this.name}:\\s+(?<${this.name}>.+)`, 'i');
 

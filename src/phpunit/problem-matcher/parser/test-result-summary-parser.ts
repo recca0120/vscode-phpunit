@@ -1,4 +1,4 @@
-import {IParser, TestExtraResultEvent, TestResultSummary} from './types';
+import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
@@ -9,7 +9,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
 
         return new RegExp(
             `^OK\\s+\\(\\d+\\stest(s)?|^${tests}${assertions}((${items.join('|')}):${end})*`,
-            'ig'
+            'ig',
         );
     })();
 
@@ -20,7 +20,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
     public parse(text: string) {
         const pattern = new RegExp(
             `((?<name>\\w+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
-            'ig'
+            'ig',
         );
         const kind = TestExtraResultEvent.testResultSummary;
 
@@ -34,7 +34,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
 
                 return result;
             },
-            {kind, text} as TestResultSummary
+            { kind, text } as TestResultSummary,
         );
     }
 

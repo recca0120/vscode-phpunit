@@ -1,7 +1,7 @@
 import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
 import { escapeValue } from '../../utils';
-import {IParser, Result, TestResult} from './types';
+import { IParser, Result, TestResult } from './types';
 import { TestVersionParser } from './test-version-parser';
 import { TestProcessesParser } from './test-processes-parser';
 import { TestRuntimeParser } from './test-runtime-parser';
@@ -21,7 +21,8 @@ export class TestResultParser implements IParser<Result | undefined> {
         new TestResultSummaryParser(),
     ];
 
-    constructor() {}
+    constructor() {
+    }
 
     public parse(text: string): Result | undefined {
         return this.is(text)

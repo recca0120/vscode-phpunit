@@ -1,12 +1,4 @@
-import {
-    parser,
-    TestCount,
-    TestResult,
-    TestResultEvent,
-    TestResultParser,
-    TestResultSummary,
-    TimeAndMemory,
-} from './parser';
+import { parser, TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from './parser';
 
 class ProblemMatcher {
     private collect = new Map<string, TestResult>();
@@ -20,10 +12,11 @@ class ProblemMatcher {
         [TestResultEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: TestResultParser) {}
+    constructor(private parser: TestResultParser) {
+    }
 
     parse(
-        input: string | Buffer
+        input: string | Buffer,
     ): TestResult | TestCount | TestResultSummary | TimeAndMemory | undefined {
         const result = this.parser.parse(input.toString());
 

@@ -40,7 +40,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 12, character: 4 },
                         end: { line: 15, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -59,7 +59,7 @@ describe('Parser Test', () => {
                         start: { line: 20, character: 4 },
                         end: { line: 23, character: 5 },
                         // end: { line: 20, character: 29 },
-                    })
+                    }),
                 );
             });
 
@@ -77,7 +77,7 @@ describe('Parser Test', () => {
                         start: { line: 25, character: 4 },
                         end: { line: 28, character: 5 },
                         // end: { line: 25, character: 34 },
-                    })
+                    }),
                 );
             });
 
@@ -95,7 +95,7 @@ describe('Parser Test', () => {
                         start: { line: 30, character: 4 },
                         end: { line: 33, character: 5 },
                         // end: { line: 30, character: 28 },
-                    })
+                    }),
                 );
             });
 
@@ -112,7 +112,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 38, character: 4 },
                         end: { line: 41, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -129,7 +129,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 43, character: 4 },
                         end: { line: 46, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -146,7 +146,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 48, character: 4 },
                         end: { line: 51, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -167,7 +167,7 @@ describe('Parser Test', () => {
                         },
                         start: { line: 60, character: 4 },
                         end: { line: 63, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -184,7 +184,7 @@ describe('Parser Test', () => {
                         annotations: { testdox: ['has an initial balance of zero'] },
                         start: { line: 79, character: 4 },
                         end: { line: 82, character: 5 },
-                    })
+                    }),
                 );
             });
         });
@@ -225,7 +225,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 9, character: 4 },
                         end: { line: 11, character: 5 },
-                    })
+                    }),
                 );
 
                 expect(suites).toHaveLength(1);
@@ -255,7 +255,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 17, character: 4 },
                         end: { line: 20, character: 5 },
-                    })
+                    }),
                 );
 
                 expect(suites).toHaveLength(1);
@@ -285,7 +285,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 10, character: 4 },
                         end: { line: 13, character: 5 },
-                    })
+                    }),
                 );
             });
         });
@@ -312,7 +312,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 12, character: 4 },
                         end: { line: 15, character: 5 },
-                    })
+                    }),
                 );
             });
         });
@@ -339,7 +339,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 14, character: 4 },
                         end: { line: 17, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -356,7 +356,7 @@ describe('Parser Test', () => {
                         annotations: { dataProvider: ['additionProvider'] },
                         start: { line: 20, character: 4 },
                         end: { line: 23, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -373,7 +373,7 @@ describe('Parser Test', () => {
                         annotations: { depends: ['testEmpty'] },
                         start: { line: 44, character: 4 },
                         end: { line: 51, character: 5 },
-                    })
+                    }),
                 );
             });
 
@@ -390,7 +390,7 @@ describe('Parser Test', () => {
                         annotations: { testdox: ['has an initial balance of zero'] },
                         start: { line: 55, character: 4 },
                         end: { line: 58, character: 5 },
-                    })
+                    }),
                 );
             });
         });
@@ -421,7 +421,7 @@ describe('Parser Test', () => {
                         method,
                         start: { line: 7, character: 4 },
                         end: { line: 10, character: 5 },
-                    })
+                    }),
                 );
             });
         });

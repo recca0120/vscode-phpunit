@@ -1,24 +1,13 @@
-import { TestRunnerObserver } from '../phpunit/test-runner-observer';
-import {
-    CancellationToken,
-    Location,
-    Position,
-    Range,
-    TestItem,
-    TestMessage,
-    TestRun,
-} from 'vscode';
-import { EOL } from '../phpunit/utils';
-
-
-import { TestResult } from "../phpunit/problem-matcher/parser/types";
+import { EOL, TestResult, TestRunnerObserver } from '../phpunit';
+import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
         private queue: { test: TestItem }[] = [],
         private testRun: TestRun,
-        private cancellation: CancellationToken
-    ) { }
+        private cancellation: CancellationToken,
+    ) {
+    }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -50,7 +39,7 @@ export class TestResultObserver implements TestRunnerObserver {
 
     testFailed(result: TestResult): void {
         this.doRun(result, (test) =>
-            this.testRun.failed(test, this.message(result, test), result.duration)
+            this.testRun.failed(test, this.message(result, test), result.duration),
         );
     }
 
@@ -67,7 +56,7 @@ export class TestResultObserver implements TestRunnerObserver {
 
             message.location = new Location(
                 test.uri!,
-                new Range(new Position(line, 0), new Position(line, 0))
+                new Range(new Position(line, 0), new Position(line, 0)),
             );
         }
         return message;

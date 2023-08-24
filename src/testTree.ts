@@ -40,7 +40,7 @@ export class TestFile {
     public updateFromContents(
         controller: vscode.TestController,
         content: string,
-        item: vscode.TestItem
+        item: vscode.TestItem,
     ) {
         const ancestors = [{ item, children: [] as vscode.TestItem[] }];
         const thisGeneration = generationCounter++;
@@ -83,7 +83,8 @@ export class TestFile {
 }
 
 export class TestHeading {
-    constructor(public generation: number) {}
+    constructor(public generation: number) {
+    }
 }
 
 type Operator = '+' | '-' | '*' | '/';
@@ -94,8 +95,9 @@ export class TestCase {
         private readonly operator: Operator,
         private readonly b: number,
         private readonly expected: number,
-        public generation: number
-    ) {}
+        public generation: number,
+    ) {
+    }
 
     getLabel() {
         return `${this.a} ${this.operator} ${this.b} = ${this.expected}`;
@@ -113,7 +115,7 @@ export class TestCase {
             const message = vscode.TestMessage.diff(
                 `Expected ${item.label}`,
                 String(this.expected),
-                String(actual)
+                String(actual),
             );
             message.location = new vscode.Location(item.uri!, item.range!);
             options.failed(item, message, duration);

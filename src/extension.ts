@@ -10,8 +10,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(() =>
-            configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))
-        )
+            configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit')),
+        ),
     );
 
     const outputChannel = vscode.window.createOutputChannel('PHPUnit');
@@ -26,8 +26,8 @@ export async function activate(context: vscode.ExtensionContext) {
     ctrl.refreshHandler = async () => {
         await Promise.all(
             getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
-                findInitialFiles(ctrl, pattern, exclude)
-            )
+                findInitialFiles(ctrl, pattern, exclude),
+            ),
         );
     };
 
@@ -37,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
         (request, cancellation) => handler.run(request, cancellation),
         true,
         undefined,
-        true
+        true,
     );
 
     ctrl.resolveHandler = async (item) => {
@@ -69,22 +69,22 @@ export async function activate(context: vscode.ExtensionContext) {
 
     testData.clear();
     await Promise.all(
-        vscode.workspace.textDocuments.map((document) => updateNodeForDocument(document))
+        vscode.workspace.textDocuments.map((document) => updateNodeForDocument(document)),
     );
 
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
-        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document))
+        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document)),
     );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.reload', async () => {
             await Promise.all(
                 getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
-                    findInitialFiles(ctrl, pattern, exclude)
-                )
+                    findInitialFiles(ctrl, pattern, exclude),
+                ),
             );
-        })
+        }),
     );
 
     const commandHandler = new CommandHandler(testRunProfile, testData);
@@ -121,7 +121,7 @@ function getWorkspaceTestPatterns() {
 async function findInitialFiles(
     controller: vscode.TestController,
     pattern: vscode.GlobPattern,
-    exclude: vscode.GlobPattern
+    exclude: vscode.GlobPattern,
 ) {
     testData.clear();
     controller.items.forEach((item) => controller.items.delete(item.id));

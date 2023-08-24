@@ -1,6 +1,6 @@
 import { describe } from '@jest/globals';
 import * as vscode from 'vscode';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, TestRunRequest } from 'vscode';
 import { Configuration, EOL, LocalCommand, TestRunner } from '../phpunit';
 import { OutputChannelObserver } from './output-channel-observer';
 import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/utils';
@@ -20,7 +20,7 @@ describe('OutputChannelObserver', () => {
     async function run(
         file?: string,
         filter?: string,
-        config: { [p: string]: string | string[] | boolean } = {}
+        config: { [p: string]: string | string[] | boolean } = {},
     ) {
         const configuration = new Configuration({
             php: 'php',
@@ -36,7 +36,11 @@ describe('OutputChannelObserver', () => {
         }
 
         const outputChannel = vscode.window.createOutputChannel('phpunit');
-        const observer = new OutputChannelObserver(outputChannel, configuration, { continuous: false } as any);
+        const observer = new OutputChannelObserver(
+            outputChannel,
+            configuration,
+            { continuous: false } as TestRunRequest,
+        );
 
         const cwd = phpUnitProject('');
         const command = new LocalCommand(configuration, { cwd });
@@ -54,7 +58,7 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            `php vendor/bin/phpunit ${testFile} --configuration=phpunit.xml --teamcity --colors=never`
+            `php vendor/bin/phpunit ${testFile} --configuration=phpunit.xml --teamcity --colors=never`,
         );
     });
 
@@ -68,7 +72,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/PHPUnit\s[\d.]+/)
+            expect.stringMatching(/PHPUnit\s[\d.]+/),
         );
     });
 
@@ -107,7 +111,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).not.toHaveBeenCalledWith(
-            'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::test_passed'
+            'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::test_passed',
         );
     });
 
@@ -118,7 +122,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).not.toHaveBeenCalledWith(
-            'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::addition_provider'
+            'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::addition_provider',
         );
     });
 
@@ -129,7 +133,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+✅\spassed\s\d+\sms/)
+            expect.stringMatching(/\s+✅\spassed\s\d+\sms/),
         );
     });
 
@@ -140,15 +144,15 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+❌\sfailed\s\d+\sms/)
+            expect.stringMatching(/\s+❌\sfailed\s\d+\sms/),
         );
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
                 `     ├ Failed asserting that false is true.${EOL}` +
                 `     │ ${EOL}` +
-                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`
-            )
+                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`,
+            ),
         );
     });
 
@@ -159,7 +163,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+❌\sis_not_same\s\d+\sms/)
+            expect.stringMatching(/\s+❌\sis_not_same\s\d+\sms/),
         );
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringContaining(
@@ -175,8 +179,8 @@ describe('OutputChannelObserver', () => {
                 `     ┊     1 => 'h'${EOL}` +
                 `     ┊ )${EOL}` +
                 `     │ ${EOL}` +
-                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`
-            )
+                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`,
+            ),
         );
     });
 
@@ -187,7 +191,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+➖\sskipped\s\d+\sms/)
+            expect.stringMatching(/\s+➖\sskipped\s\d+\sms/),
         );
     });
 
@@ -201,7 +205,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/Tests: \d+, Assertions: \d+/)
+            expect.stringMatching(/Tests: \d+, Assertions: \d+/),
         );
     });
 
@@ -215,7 +219,7 @@ describe('OutputChannelObserver', () => {
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/)
+            expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/),
         );
     });
 

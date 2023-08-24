@@ -1,16 +1,5 @@
 import { readFileSync } from 'fs';
-import {
-    CancellationToken,
-    DocumentFilter,
-    MarkdownString,
-    TestController,
-    TestItem,
-    TestItemCollection,
-    TestRunRequest,
-    TestTag,
-    TextDocument,
-    WorkspaceFolder,
-} from 'vscode';
+import { CancellationToken, DocumentFilter, MarkdownString, TestController, TestItem, TestItemCollection, TestRunRequest, TestTag, TextDocument, WorkspaceFolder } from 'vscode';
 import { glob } from 'glob';
 import { URI } from 'vscode-uri';
 import { minimatch } from 'minimatch';
@@ -47,7 +36,8 @@ const Uri = new Proxy(URI, {
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
 
-    constructor(private parent?: any) { }
+    constructor(private parent?: any) {
+    }
 
     get size() {
         return this.items.size;
@@ -75,7 +65,7 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
 
     forEach(
         callback: (item: TestItem, collection: TestItemCollection) => unknown,
-        _thisArg?: any
+        _thisArg?: any,
     ): void {
         for (const [, item] of this.items) {
             callback(item, Object.assign(this) as TestItemCollection);
@@ -104,11 +94,11 @@ const createRunProfile = jest
             kind: TestRunProfileKind,
             runHandler: (
                 request: TestRunRequest,
-                token: CancellationToken
+                token: CancellationToken,
             ) => Thenable<void> | void,
             isDefault?: boolean,
-            tag?: TestTag
-        ) => ({ label, kind, isDefault, tag, runHandler })
+            tag?: TestTag,
+        ) => ({ label, kind, isDefault, tag, runHandler }),
     );
 
 const createTestRun = jest
@@ -152,7 +142,7 @@ const TestMessage = {
         .mockImplementation(
             (message: string | MarkdownString, expected: string, actual: string) => {
                 return { message, expected, actual };
-            }
+            },
         ),
 };
 
@@ -223,7 +213,7 @@ const workspace = {
     }),
     getWorkspaceFolder: (uri: URI) => {
         return workspace.workspaceFolders.find((folder: WorkspaceFolder) =>
-            uri.toString().includes(folder.uri.toString())
+            uri.toString().includes(folder.uri.toString()),
         );
     },
     findFiles: jest.fn().mockImplementation((pattern) => {
@@ -234,7 +224,7 @@ const workspace = {
                     ignore: ['**/node_modules/**', '**/.git/**', '**/vendor/**'],
                     cwd: pattern.uri.fsPath,
                 })
-                .map((file) => URI.parse(file))
+                .map((file) => URI.parse(file)),
         );
     }),
     createFileSystemWatcher: jest.fn().mockImplementation(() => {
@@ -298,7 +288,7 @@ const commands = {
 const EventEmitter = jest.fn().mockImplementation(() => {
     return {
         fire: jest.fn(),
-        event: jest.fn()
+        event: jest.fn(),
     };
 });
 
@@ -317,5 +307,5 @@ export {
     Uri,
     window,
     commands,
-    EventEmitter
+    EventEmitter,
 };

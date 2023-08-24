@@ -1,4 +1,4 @@
-import {TestExtraResultEvent, TestProcesses, ValueParser} from './types';
+import { TestExtraResultEvent, TestProcesses, ValueParser } from './types';
 
 export class TestProcessesParser extends ValueParser<TestProcesses> {
     constructor() {

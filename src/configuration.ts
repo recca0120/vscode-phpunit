@@ -2,7 +2,8 @@ import { WorkspaceConfiguration } from 'vscode';
 import { IConfiguration } from './phpunit';
 
 export class Configuration implements IConfiguration {
-    constructor(private workspaceConfiguration: WorkspaceConfiguration) {}
+    constructor(private workspaceConfiguration: WorkspaceConfiguration) {
+    }
 
     updateWorkspaceConfiguration(workspaceConfiguration: WorkspaceConfiguration) {
         this.workspaceConfiguration = workspaceConfiguration;

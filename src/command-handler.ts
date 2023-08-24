@@ -1,16 +1,10 @@
-import {
-    CancellationTokenSource,
-    commands,
-    TestItem,
-    TestRunProfile,
-    TestRunRequest,
-    window,
-} from 'vscode';
+import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
 import { TestFile } from './test-file';
 import { Handler } from './handler';
 
 export class CommandHandler {
-    constructor(private testRunProfile: TestRunProfile, private testData: Map<string, TestFile>) {}
+    constructor(private testRunProfile: TestRunProfile, private testData: Map<string, TestFile>) {
+    }
 
     runAll() {
         return commands.registerCommand('phpunit.run-all', () => {

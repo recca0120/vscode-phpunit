@@ -1,16 +1,4 @@
-import {
-    CancellationToken,
-    OutputChannel,
-    TestController,
-    TestItem,
-    TestItemCollection,
-    TestRun,
-    TestRunRequest,
-    window,
-    workspace,
-    EventEmitter,
-    Uri
-} from 'vscode';
+import { CancellationToken, EventEmitter, OutputChannel, TestController, TestItem, TestItemCollection, TestRun, TestRunRequest, Uri, window, workspace } from 'vscode';
 import { Command, LocalCommand, RemoteCommand, TestRunner } from './phpunit';
 import { TestFile } from './test-file';
 import { Configuration } from './configuration';
@@ -26,8 +14,9 @@ export class Handler {
         private outputChannel: OutputChannel,
         private ctrl: TestController,
         private fileChangedEmitter: EventEmitter<Uri>,
-        private getOrCreateFile: Function
-    ) { }
+        private getOrCreateFile: Function,
+    ) {
+    }
 
     getLatestTestRunRequest() {
         return this.latestTestRunRequest;
@@ -46,9 +35,9 @@ export class Handler {
                     request.include ?? [],
                     undefined,
                     request.profile,
-                    true
+                    true,
                 ),
-                cancellation
+                cancellation,
             );
         });
         cancellation.onCancellationRequested(() => l.dispose());
@@ -94,7 +83,7 @@ export class Handler {
         queueHandler: TestQueueHandler,
         run: TestRun,
         request: TestRunRequest,
-        cancellation: CancellationToken
+        cancellation: CancellationToken,
     ) {
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queueHandler.queue, run, cancellation));
@@ -110,8 +99,9 @@ class TestQueueHandler {
     constructor(
         private request: TestRunRequest,
         private run: TestRun,
-        private testData: Map<string, TestFile>
-    ) { }
+        private testData: Map<string, TestFile>,
+    ) {
+    }
 
     public async discoverTests(tests: Iterable<TestItem>) {
         for (const test of tests) {
@@ -135,8 +125,8 @@ class TestQueueHandler {
 
         return await Promise.all(
             this.request.include.map((test) =>
-                runner.run(command.setArguments(this.getArguments(test)))
-            )
+                runner.run(command.setArguments(this.getArguments(test))),
+            ),
         );
     }
 
