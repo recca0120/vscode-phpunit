@@ -3,7 +3,6 @@ import { Command, LocalCommand, RemoteCommand, TestRunner } from './phpunit';
 import { TestFile } from './test-file';
 import { Configuration } from './configuration';
 import { OutputChannelObserver, TestResultObserver } from './observers';
-import { getOrCreateFile } from './extension';
 
 export class Handler {
     private latestTestRunRequest: TestRunRequest | undefined;
@@ -28,7 +27,7 @@ export class Handler {
         }
 
         const l = this.fileChangedEmitter.event(async (uri) => {
-            await getOrCreateFile(this.ctrl, uri);
+            await this.getOrCreateFile(this.ctrl, uri);
 
             this.startTestRun(
                 new TestRunRequest(

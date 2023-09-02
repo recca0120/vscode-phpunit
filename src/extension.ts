@@ -21,7 +21,14 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(ctrl);
 
     const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
-    const handler = new Handler(testData, configuration, outputChannel, ctrl, fileChangedEmitter, getOrCreateFile);
+    const handler = new Handler(
+        testData,
+        configuration,
+        outputChannel,
+        ctrl,
+        fileChangedEmitter,
+        getOrCreateFile
+    );
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
