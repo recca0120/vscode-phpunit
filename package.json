@@ -101,6 +101,16 @@
           "type": "object",
           "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
         },
+        "phpunit.exclude": {
+          "type": "string",
+          "description": "Glob patterns to exclude from the test explorer. Ex: \"**/vendor/**\"",
+          "default": "**/{.git,node_modules,vendor}/**"
+        },
+        "phpunit.include": {
+          "type": "string",
+          "description": "Glob patterns to include in the test explorer. Ex: \"**/tests/**\"",
+          "default": "**/*.php"
+        },
         "phpunit.clearOutputOnRun": {
           "type": "boolean",
           "default": true,
