@@ -189,7 +189,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
         if (text) {
             this.outputChannel.appendLine(`🟨 ${text}`);
-            this.outputChannel.show();
+            this.outputChannel.show(false);
         }
     }
 
@@ -241,7 +241,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
             ShowOutputState.onFailure;
 
         if (this.request.continuous === false && showAfterExecution !== ShowOutputState.never && state === showAfterExecution) {
-            this.outputChannel.show();
+            this.outputChannel.show(false);
         }
     }
 
