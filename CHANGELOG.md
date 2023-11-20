@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.2.1] - 2023-11-21
+
+- phpunit options before target
+
 ## [3.2.0] - 2023-08-25
 
 - Continuous test runs
