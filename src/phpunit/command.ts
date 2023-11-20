@@ -179,7 +179,10 @@ export abstract class Command {
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-            .reduce((args: any, [key, value]) => [...parseValue(key, value), ...args], _)
+            .reduce(
+                (args: any, [key, value]) => [...parseValue(key, value), ...args],
+                _.map((v) => typeof v === 'number' ? v : decodeURIComponent(v)),
+            )
             .map((input: string) => this.getPathReplacer().localToRemote(input))
             .concat('--colors=never', '--teamcity');
     }

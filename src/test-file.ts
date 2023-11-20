@@ -34,7 +34,7 @@ export class TestFile {
     getArguments(testId: string): string {
         const test = this.findTest(testId);
 
-        return test ? `${(this.asFilter(test) ?? '')} ${test.file}` : '';
+        return test ? `${(this.asFilter(test) ?? '')} ${encodeURIComponent(test.file)}` : '';
     }
 
     findTestItemByPosition(position: Position) {
