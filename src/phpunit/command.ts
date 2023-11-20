@@ -179,9 +179,9 @@ export abstract class Command {
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-            .reduce((args: any, [key, value]) => args.concat(parseValue(key, value)), _)
+            .reduce((args: any, [key, value]) => [...parseValue(key, value), ...args], _)
             .map((input: string) => this.getPathReplacer().localToRemote(input))
-            .concat('--teamcity', '--colors=never');
+            .concat('--colors=never', '--teamcity');
     }
 
     private getPathReplacer() {

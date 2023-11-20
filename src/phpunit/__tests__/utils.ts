@@ -6,7 +6,7 @@ export const phpUnitProject = (uri: string) => fixturePath(path.join('phpunit-st
 export const pestProject = (uri: string) => fixturePath(path.join('pest-stub', uri));
 export const normalPath = (path: string) => {
     return path.replace(/^\w:/, (matched) => matched.toLowerCase());
-}
+};
 
 export const getPhpUnitVersion = (): number => {
     const output = execSync('php vendor/bin/phpunit --version', {
@@ -14,6 +14,8 @@ export const getPhpUnitVersion = (): number => {
     }).toString();
 
     const matched = output.match(/PHPUnit\s(\d+)\./);
+
+    console.log(matched);
 
     return parseInt(matched![1], 10);
 };

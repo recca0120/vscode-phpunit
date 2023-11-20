@@ -25,8 +25,8 @@ describe('Command Test', () => {
             expect(args).toEqual([
                 'vendor/bin/paratest',
                 '--filter=^.*::(test_passed)( with data set .*)?$',
-                '--teamcity',
                 '--colors=never',
+                '--teamcity',
                 '-f',
             ]);
         });
@@ -42,10 +42,10 @@ describe('Command Test', () => {
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
-                `${phpUnitProjectForWindows('tests/AssertionsTest.php')}`,
                 '--filter=^.*::(test_passed)( with data set .*)?$',
-                '--teamcity',
+                `${phpUnitProjectForWindows('tests/AssertionsTest.php')}`,
                 '--colors=never',
+                '--teamcity',
             ]);
         });
 
@@ -59,10 +59,10 @@ describe('Command Test', () => {
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
-                '--repeat=2',
                 '--order-by=random',
-                '--teamcity',
+                '--repeat=2',
                 '--colors=never',
+                '--teamcity',
             ]);
         });
 
@@ -76,10 +76,10 @@ describe('Command Test', () => {
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
-                '--no-coverage',
                 '--no-logging',
-                '--teamcity',
+                '--no-coverage',
                 '--colors=never',
+                '--teamcity',
             ]);
         });
     });
@@ -109,7 +109,7 @@ describe('Command Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                'php vendor/bin/paratest \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--teamcity\' \'--colors=never\' \'-f\'',
+                'php vendor/bin/paratest \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--colors=never\' \'--teamcity\' \'-f\'',
             ]);
         });
 
@@ -132,7 +132,7 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                'php vendor/bin/phpunit /var/www/tests/AssertionsTest.php \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--teamcity\' \'--colors=never\'',
+                'php vendor/bin/phpunit \'--filter=^.*::(test_passed)( with data set .*)?$\' /var/www/tests/AssertionsTest.php \'--colors=never\' \'--teamcity\'',
             ]);
         });
 
@@ -156,7 +156,7 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                'php vendor/bin/phpunit /var/www/tests/AssertionsTest.php \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--teamcity\' \'--colors=never\'',
+                'php vendor/bin/phpunit \'--filter=^.*::(test_passed)( with data set .*)?$\' /var/www/tests/AssertionsTest.php \'--colors=never\' \'--teamcity\'',
             ]);
         });
     });

@@ -58,7 +58,7 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            `php vendor/bin/phpunit ${testFile} --configuration=phpunit.xml --teamcity --colors=never`,
+            `php vendor/bin/phpunit --configuration=phpunit.xml ${testFile} --colors=never --teamcity`,
         );
     });
 

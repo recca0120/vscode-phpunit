@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import 'jest';
 import * as vscode from 'vscode';
 import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, GlobOptions } from 'glob';
@@ -136,7 +136,7 @@ describe('Extension Test', () => {
 
             expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
             expect(vscode.window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
-            expect(vscode.tests.createTestController).toBeCalledWith(
+            expect(vscode.tests.createTestController).toHaveBeenCalledWith(
                 'phpUnitTestController',
                 'PHPUnit',
             );
@@ -175,7 +175,7 @@ describe('Extension Test', () => {
 
             expect(spawn).toBeCalledWith(
                 'php',
-                ['vendor/bin/phpunit', '--teamcity', '--colors=never'],
+                ['vendor/bin/phpunit', '--colors=never', '--teamcity'],
                 { cwd },
             );
 
@@ -204,8 +204,8 @@ describe('Extension Test', () => {
                 [
                     'vendor/bin/phpunit',
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
-                    '--teamcity',
                     '--colors=never',
+                    '--teamcity',
                 ],
                 { cwd },
             );
@@ -238,10 +238,10 @@ describe('Extension Test', () => {
                 'php',
                 [
                     'vendor/bin/phpunit',
-                    normalPath(phpUnitProject('tests/CalculatorTest.php')),
                     expect.stringMatching(pattern),
-                    '--teamcity',
+                    normalPath(phpUnitProject('tests/CalculatorTest.php')),
                     '--colors=never',
+                    '--teamcity',
                 ],
                 { cwd },
             );

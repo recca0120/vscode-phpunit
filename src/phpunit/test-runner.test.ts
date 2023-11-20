@@ -234,8 +234,8 @@ describe('TestRunner Test', () => {
             configuration.get('php'),
             configuration.get('phpunit'),
             `--configuration=${appPath('phpunit.xml')}`,
-            '--teamcity',
             '--colors=never',
+            '--teamcity',
         ];
 
         await expectedRun({
@@ -262,10 +262,10 @@ describe('TestRunner Test', () => {
         const inputs = [
             configuration.get('php'),
             configuration.get('phpunit'),
-            appPath('tests/AssertionsTest.php'),
             `--configuration=${appPath('phpunit.xml')}`,
-            '--teamcity',
+            appPath('tests/AssertionsTest.php'),
             '--colors=never',
+            '--teamcity',
         ];
 
         await expectedRun({
@@ -297,11 +297,11 @@ describe('TestRunner Test', () => {
         const inputs = [
             configuration.get('php'),
             configuration.get('phpunit'),
-            appPath('tests/AssertionsTest.php'),
-            `--filter=${filter}`,
             `--configuration=${appPath('phpunit.xml')}`,
-            '--teamcity',
+            `--filter=${filter}`,
+            appPath('tests/AssertionsTest.php'),
             '--colors=never',
+            '--teamcity',
         ];
 
         await expectedRun({
@@ -333,11 +333,11 @@ describe('TestRunner Test', () => {
         const inputs = [
             configuration.get('php'),
             configuration.get('phpunit'),
-            appPath('tests/AssertionsTest.php'),
-            `--filter=${filter}`,
             `--configuration=${appPath('phpunit.xml')}`,
-            '--teamcity',
+            `--filter=${filter}`,
+            appPath('tests/AssertionsTest.php'),
             '--colors=never',
+            '--teamcity',
         ];
 
         await expectedRun({
@@ -373,8 +373,8 @@ describe('TestRunner Test', () => {
             'foo',
             'vendor/bin/phpunit',
             `--configuration=${phpUnitProject('phpunit.xml')}`,
-            '--teamcity',
             '--colors=never',
+            '--teamcity',
         ];
 
         await expectedRun({ configuration, command, expected, phpUnitProject, appPath });
