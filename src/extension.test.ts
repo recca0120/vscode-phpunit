@@ -174,7 +174,7 @@ describe('Extension Test', () => {
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
-            expect(spawn).toBeCalledWith(
+            expect(spawn).toHaveBeenCalledWith(
                 'php',
                 ['vendor/bin/phpunit', '--colors=never', '--teamcity'],
                 { cwd },
@@ -200,7 +200,7 @@ describe('Extension Test', () => {
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
-            expect(spawn).toBeCalledWith(
+            expect(spawn).toHaveBeenCalledWith(
                 'php',
                 [
                     'vendor/bin/phpunit',
@@ -235,7 +235,7 @@ describe('Extension Test', () => {
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
-            expect(spawn).toBeCalledWith(
+            expect(spawn).toHaveBeenCalledWith(
                 'php',
                 [
                     'vendor/bin/phpunit',

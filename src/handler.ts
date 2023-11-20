@@ -124,12 +124,12 @@ class TestQueueHandler {
 
         return await Promise.all(
             this.request.include.map((test) =>
-                runner.run(command.setArguments(this.getArguments(test))),
+                runner.run(command.setArguments(this.getTestArguments(test))),
             ),
         );
     }
 
-    private getArguments(test: TestItem) {
+    private getTestArguments(test: TestItem) {
         return !test.parent
             ? test.uri!.fsPath
             : this.testData.get(test.parent.uri!.toString())!.getArguments(test.id);

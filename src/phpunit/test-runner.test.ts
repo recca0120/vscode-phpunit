@@ -156,7 +156,7 @@ describe('TestRunner Test', () => {
 
         const [cmd, ...args] = expected;
 
-        expect(spawn).toBeCalledWith(cmd, args, { cwd: phpUnitProject('') });
+        expect(spawn).toHaveBeenCalledWith(cmd, args, { cwd: phpUnitProject('') });
     };
 
     const expectedTest = (expected: any, phpUnitProject: (path: string) => string) => {
