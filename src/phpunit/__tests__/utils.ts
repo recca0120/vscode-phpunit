@@ -8,14 +8,12 @@ export const normalPath = (path: string) => {
     return path.replace(/^\w:/, (matched) => matched.toLowerCase());
 };
 
-export const getPhpUnitVersion = (): number => {
+export const getPhpUnitVersion = (): string => {
     const output = execSync('php vendor/bin/phpunit --version', {
         cwd: phpUnitProject(''),
     }).toString();
 
-    const matched = output.match(/PHPUnit\s(\d+)\./);
+    const matched = output.match(/PHPUnit\s([\d\.]+)\s/);
 
-    console.log(matched);
-
-    return parseInt(matched![1], 10);
+    return matched![1];
 };

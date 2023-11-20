@@ -1,4 +1,5 @@
 import 'jest';
+import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
 import { Configuration, EOL, LocalCommand, TestRunner } from '../phpunit';
@@ -6,7 +7,7 @@ import { OutputChannelObserver } from './output-channel-observer';
 import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/utils';
 
 describe('OutputChannelObserver', () => {
-    const phpUnitVersion: number = getPhpUnitVersion();
+    const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
     function getOutputChannel(): OutputChannel {
         return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
@@ -63,7 +64,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testVersion', async () => {
-        if (phpUnitVersion > 9) {
+        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
             return;
         }
 
@@ -157,6 +158,15 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testFailed with actual and expect', async () => {
+        let DOT = '';
+        let ARRAY_OPEN = '(';
+        let ARRAY_CLOSE = ')';
+        if (semver.gte(PHPUNIT_VERSION, '10.4.2')) {
+            DOT = ',';
+            ARRAY_OPEN = '[';
+            ARRAY_CLOSE = ']';
+        }
+
         const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_is_not_same';
         await run(testFile, filter);
@@ -169,15 +179,15 @@ describe('OutputChannelObserver', () => {
             expect.stringContaining(
                 `     ┐ ${EOL}` +
                 `     ├ Failed asserting that two arrays are identical.${EOL}` +
-                `     ┊ ---·Expected Array &0 (${EOL}` +
-                `     ┊     'a' => 'b'${EOL}` +
-                `     ┊     'c' => 'd'${EOL}` +
-                `     ┊ )${EOL}` +
-                `     ┊ +++·Actual Array &0 (${EOL}` +
-                `     ┊     'e' => 'f'${EOL}` +
-                `     ┊     0 => 'g'${EOL}` +
-                `     ┊     1 => 'h'${EOL}` +
-                `     ┊ )${EOL}` +
+                `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}${EOL}` +
+                `     ┊     'a' => 'b'${DOT}${EOL}` +
+                `     ┊     'c' => 'd'${DOT}${EOL}` +
+                `     ┊ ${ARRAY_CLOSE}${EOL}` +
+                `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}${EOL}` +
+                `     ┊     'e' => 'f'${DOT}${EOL}` +
+                `     ┊     0 => 'g'${DOT}${EOL}` +
+                `     ┊     1 => 'h'${DOT}${EOL}` +
+                `     ┊ ${ARRAY_CLOSE}${EOL}` +
                 `     │ ${EOL}` +
                 `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`,
             ),
@@ -196,7 +206,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testResultSummary', async () => {
-        if (phpUnitVersion > 9) {
+        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
             return;
         }
 
@@ -210,7 +220,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger timeAndMemory', async () => {
-        if (phpUnitVersion > 9) {
+        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
             return;
         }
 
@@ -309,7 +319,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toBeCalledWith('🟨 printed output');
+        expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output');
         expect(outputChannel.show).toHaveBeenCalled();
     });
 

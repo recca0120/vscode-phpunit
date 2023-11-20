@@ -7,6 +7,7 @@ import { Command, LocalCommand, RemoteCommand } from './command';
 import { Configuration } from './configuration';
 import { TestRunnerEvent } from './test-runner-observer';
 import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
+import * as semver from 'semver';
 
 jest.mock('child_process');
 
@@ -20,7 +21,7 @@ interface ExpectedData {
 }
 
 describe('TestRunner Test', () => {
-    const phpUnitVersion: number = getPhpUnitVersion();
+    const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
     const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
         [TestRunnerEvent.run, jest.fn()],
@@ -198,7 +199,7 @@ describe('TestRunner Test', () => {
             expect.objectContaining({ ...expected, locationHint }),
         );
 
-        if (phpUnitVersion < 9) {
+        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
             expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
             // expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
             // expect(

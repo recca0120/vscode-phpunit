@@ -1,4 +1,5 @@
 import 'jest';
+import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, GlobOptions } from 'glob';
@@ -85,8 +86,8 @@ const expectTestResultCalled = (ctrl: TestController, expected: any) => {
 };
 
 describe('Extension Test', () => {
+    const PHPUNIT_VERSION: string = getPhpUnitVersion();
     const root = phpUnitProject('');
-    const phpUnitVersion: number = getPhpUnitVersion();
 
     beforeEach(() => {
         setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
@@ -180,7 +181,7 @@ describe('Extension Test', () => {
             );
 
             let expected;
-            if (phpUnitVersion > 9) {
+            if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
                 expected = { enqueued: 52, started: 31, passed: 19, failed: 10, end: 1 };
             } else {
                 expected = { enqueued: 52, started: 25, passed: 12, failed: 11, end: 1 };
