@@ -29,7 +29,7 @@ export class Handler {
         const l = this.fileChangedEmitter.event(async (uri) => {
             await this.getOrCreateFile(this.ctrl, uri);
 
-            this.startTestRun(
+            await this.startTestRun(
                 new TestRunRequest(
                     request.include ?? [],
                     undefined,

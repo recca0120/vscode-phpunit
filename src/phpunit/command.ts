@@ -128,18 +128,18 @@ export abstract class Command {
     }
 
     apply() {
-        const [cmd, ...args] = this.doApply()
+        const [cmd, ...args] = this.getCommand()
             .filter((input: string) => !!input)
             .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input));
 
         return { cmd, args, options: this.options };
     }
 
-    protected doApply() {
-        return [...this.command(), ...this.getPhpUnitCommand()];
+    protected getCommand() {
+        return [...this.getCommendPrefix(), ...this.getPHPUnitWithArgs()];
     }
 
-    protected getPhpUnitCommand() {
+    protected getPHPUnitWithArgs() {
         return this.setParaTestFunctional([
             this.phpPath(),
             this.phpUnitPath(),
@@ -156,7 +156,7 @@ export abstract class Command {
         return (this.configuration.get('phpunit') as string) ?? '';
     }
 
-    private command() {
+    private getCommendPrefix() {
         return ((this.configuration.get('command') as string) ?? '').split(' ');
     }
 
@@ -214,10 +214,10 @@ export class RemoteCommand extends Command {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
-    protected getPhpUnitCommand() {
+    protected getPHPUnitWithArgs() {
         return [
             super
-                .getPhpUnitCommand()
+                .getPHPUnitWithArgs()
                 .map((input) => (/^-/.test(input) ? `'${input}'` : input))
                 .join(' '),
         ];
