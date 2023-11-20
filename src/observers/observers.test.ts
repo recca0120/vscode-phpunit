@@ -1,4 +1,4 @@
-import { describe } from '@jest/globals';
+import 'jest';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
 import { Configuration, EOL, LocalCommand, TestRunner } from '../phpunit';
@@ -319,7 +319,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toBeCalledWith('🟨 printed output when die');
+        expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output when die');
         expect(outputChannel.show).toHaveBeenCalled();
     });
 });

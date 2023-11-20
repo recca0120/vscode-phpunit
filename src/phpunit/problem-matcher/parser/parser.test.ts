@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import 'jest';
 import { TestExtraResultEvent, TestResultEvent } from './types';
 import { parser } from './';
 

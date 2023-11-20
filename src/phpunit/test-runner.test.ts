@@ -1,4 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
+import 'jest';
+import { describe } from '@jest/globals';
 import { spawn } from 'child_process';
 import { TestRunner } from './test-runner';
 import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';

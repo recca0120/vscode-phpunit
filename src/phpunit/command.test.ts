@@ -1,4 +1,4 @@
-import { describe, it } from '@jest/globals';
+import 'jest';
 import { LocalCommand, RemoteCommand } from './command';
 import { Configuration } from './configuration';
 import { phpUnitProject } from './__tests__/utils';

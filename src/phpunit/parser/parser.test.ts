@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import 'jest';
 import { readFile } from 'fs/promises';
 import { propertyParser } from './property-parser';
 import { parse, Test } from './parser';

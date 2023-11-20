@@ -1,4 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
+import 'jest';
+import { it } from '@jest/globals';
 import { problemMatcher } from './problem-matcher';
 import { TestExtraResultEvent, TestResultEvent } from './parser';
 
