@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.2.2] - 2023-11-21
+
+- output channel preserveFocus false
+- fix path has witespace
+
 ## [3.2.1] - 2023-11-21
 
 - phpunit options before target
