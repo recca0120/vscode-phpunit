@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
-            getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+            getWorkspaceTestPatterns(configuration).map(({ pattern, exclude }) =>
                 findInitialFiles(ctrl, pattern, exclude),
             ),
         );
@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.resolveHandler = async (item) => {
         if (!item) {
-            context.subscriptions.push(...startWatchingWorkspace(ctrl, fileChangedEmitter));
+            context.subscriptions.push(...startWatchingWorkspace(ctrl, fileChangedEmitter, configuration));
         }
     };
 
@@ -59,7 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-        const workspaceTestPattern = getWorkspaceTestPatterns().find(({ workspaceFolder }) => {
+        const workspaceTestPattern = getWorkspaceTestPatterns(configuration).find(({ workspaceFolder }) => {
             return currentWorkspaceFolder!.name === workspaceFolder.name;
         });
 
@@ -87,7 +87,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.reload', async () => {
             await Promise.all(
-                getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+                getWorkspaceTestPatterns(configuration).map(({ pattern, exclude }) =>
                     findInitialFiles(ctrl, pattern, exclude),
                 ),
             );
@@ -113,15 +113,15 @@ export async function getOrCreateFile(controller: vscode.TestController, uri: vs
     testData.set(uri.toString(), await testFile.update(controller));
 }
 
-function getWorkspaceTestPatterns() {
+function getWorkspaceTestPatterns(configuration: Configuration) {
     if (!vscode.workspace.workspaceFolders) {
         return [];
     }
 
     return vscode.workspace.workspaceFolders.map((workspaceFolder) => ({
         workspaceFolder,
-        pattern: new vscode.RelativePattern(workspaceFolder, '**/*.php'),
-        exclude: new vscode.RelativePattern(workspaceFolder, '**/{.git,node_modules,vendor}/**'),
+        pattern: new vscode.RelativePattern(workspaceFolder, configuration.get('include') as string),
+        exclude: new vscode.RelativePattern(workspaceFolder, configuration.get('exclude') as string),
     }));
 }
 
@@ -137,8 +137,8 @@ async function findInitialFiles(
     });
 }
 
-function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
-    return getWorkspaceTestPatterns().map(({ pattern, exclude }) => {
+function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>, configuration: Configuration) {
+    return getWorkspaceTestPatterns(configuration).map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {
