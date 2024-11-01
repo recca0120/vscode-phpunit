@@ -7,7 +7,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [3.2.2] - 2023-11-21
 
 - output channel preserveFocus false
-- fix path has witespace
+- fix path has whitespace
 
 ## [3.2.1] - 2023-11-21
 
