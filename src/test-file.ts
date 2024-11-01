@@ -4,17 +4,17 @@ import { parse, Test } from './phpunit';
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestFile {
-    public tests: Test[] = [];
-    public testItems: TestItem[] = [];
+    private suites: Test[] = [];
+    private testItems: TestItem[] = [];
 
     constructor(public uri: Uri) {
     }
 
     async update(ctrl: TestController) {
         const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
-        this.tests = parse(rawContent, this.uri.fsPath) ?? [];
+        this.suites = parse(rawContent, this.uri.fsPath) ?? [];
 
-        this.testItems = this.tests.map((suite: Test) => {
+        this.testItems = this.suites.map((suite: Test) => {
             const parent = this.asTestItem(ctrl, suite, suite.id);
             parent.children.replace(
                 suite.children.map((test: Test, index) => this.asTestItem(ctrl, test, index)),
@@ -37,6 +37,10 @@ export class TestFile {
         return test ? `${(this.asFilter(test) ?? '')} ${encodeURIComponent(test.file)}` : '';
     }
 
+    getTestItems() {
+        return this.testItems;
+    }
+
     findTestItemByPosition(position: Position) {
         return (
             this.doFindTestItem(this.testItems, (testItem: TestItem) => {
@@ -51,10 +55,7 @@ export class TestFile {
         );
     }
 
-    private doFindTestItem(
-        testItems: TestItem[],
-        filter: (testItem: TestItem) => boolean,
-    ): TestItem | void {
+    private doFindTestItem(testItems: TestItem[], filter: (testItem: TestItem) => boolean): TestItem | void {
         for (const testItem of testItems) {
             if (filter(testItem)) {
                 return testItem;
@@ -74,7 +75,7 @@ export class TestFile {
     }
 
     private findTest(testId: string) {
-        return this.doFindTest(this.tests, (test: Test) => testId === test.id);
+        return this.doFindTest(this.suites, (test: Test) => testId === test.id);
     }
 
     private doFindTest(tests: Test[], filter: (test: Test) => boolean): Test | void {
@@ -89,18 +90,8 @@ export class TestFile {
         }
     }
 
-    private asFilter(test: Test) {
-        return test.children.length > 0
-            ? ''
-            : `--filter '^.*::(${this.asDeps(test).join('|')})( with data set .*)?$'`;
-    }
-
-    private asDeps(test: Test) {
-        return [test.method, ...(test.annotations.depends ?? [])];
-    }
-
     private asTestItem(ctrl: TestController, test: Test, sortText: number | string) {
-        const testItem = ctrl.createTestItem(test.id, this.getLabel(test), this.uri);
+        const testItem = ctrl.createTestItem(test.id, test.label, this.uri);
         ctrl.items.add(testItem);
 
         testItem.sortText = `${sortText}`;
@@ -113,11 +104,9 @@ export class TestFile {
         return testItem;
     }
 
-    private getLabel(test: Test) {
-        if (test.annotations.testdox && test.annotations.testdox.length > 0) {
-            return test.annotations.testdox[test.annotations.testdox.length - 1];
-        }
+    private asFilter(test: Test) {
+        const deps = [test.method, ...(test.annotations.depends ?? [])].join('|');
 
-        return (test.children.length > 0 ? test.qualifiedClass : test.method) ?? '';
+        return test.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
     }
 }

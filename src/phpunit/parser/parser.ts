@@ -9,7 +9,7 @@ export type Position = {
     line: number;
 };
 
-export type Attribute = {
+export type TestDefinition = {
     id: string;
     qualifiedClass: string;
     namespace: string;
@@ -20,7 +20,7 @@ export type Attribute = {
     annotations: Annotations;
 };
 
-export class Test implements Attribute {
+export class Test implements TestDefinition {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
@@ -32,21 +32,26 @@ export class Test implements Attribute {
     public parent?: Test;
     public children: Test[] = [];
 
-    constructor(public readonly file: string, attributes: Attribute) {
+    constructor(public readonly file: string, attributes: TestDefinition) {
         Object.assign(this, attributes);
+    }
+
+    get label() {
+        if (this.annotations.testdox && this.annotations.testdox.length > 0) {
+            return this.annotations.testdox[this.annotations.testdox.length - 1];
+        }
+
+        return (this.children.length > 0 ? this.qualifiedClass : this.method) ?? '';
     }
 }
 
 export class Parser {
-    private namespace?: Namespace;
-
-    private lookup: { [p: string]: Function } = {
+    private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
-        class: this.parseClass,
+        class: this.parseTestSuite,
     };
 
     public parse(text: Buffer | string, file: string) {
-        this.namespace = undefined;
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
@@ -75,50 +80,49 @@ export class Parser {
         }
     }
 
-    private parseAst(
-        ast: Program | Namespace | UseGroup | Class | Node,
-        file: string,
-    ): Test[] | undefined {
-        const fn: Function = this.lookup[ast.kind] ?? this.parseChildren;
+    private parseAst(ast: Program | Namespace | UseGroup | Class | Node, file: string, namespace?: Namespace): Test[] | undefined {
+        const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
 
-        return fn.apply(this, [ast, file]);
+        return fn.apply(this, [ast, file, namespace]);
     }
 
     private parseNamespace(ast: Namespace, file: string) {
-        // new TestCase(file, this.parseAttributes(ast as Declaration, this.namespace));
-
-        return this.parseChildren((this.namespace = ast), file);
+        return this.parseChildren(ast, file, ast);
     }
 
-    private parseClass(ast: Class, file: string) {
+    private parseTestSuite(ast: Class, file: string, namespace?: Namespace) {
         const _class = ast;
 
         if (!validator.isTest(_class)) {
             return [];
         }
 
-        const attributes = parseProperty(ast as Declaration, this.namespace);
-        const suite = new Test(file, attributes);
+        const suite = new Test(file, parseProperty(ast as Declaration, namespace));
 
         suite.children = _class.body
             .filter((method) => validator.isTest(method as Method))
             .map((method) => {
-                const attributes = parseProperty(method, this.namespace, _class);
-                const test = new Test(file, attributes);
+                const test = this.parseTestCase(method as Method, file, _class, namespace);
                 test.parent = suite;
 
                 return test;
             });
 
-        return suite.children.length > 0 ? [suite] : undefined;
+
+        if (suite.children.length <= 0) {
+            return;
+        }
+
+        return [suite];
     }
 
-    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, file: string) {
+    private parseTestCase(method: Method, file: string, _class: Class, namespace?: Namespace) {
+        return new Test(file, parseProperty(method, namespace, _class));
+    }
+
+    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, file: string, namespace?: Namespace) {
         if ('children' in ast) {
-            return ast.children.reduce(
-                (tests, children: Node) => tests.concat(this.parseAst(children, file) ?? []),
-                [] as Test[],
-            );
+            return ast.children.reduce((tests, children) => tests.concat(this.parseAst(children, file, namespace) ?? []), [] as Test[]);
         }
 
         return;

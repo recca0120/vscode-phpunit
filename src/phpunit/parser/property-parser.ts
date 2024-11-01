@@ -1,7 +1,7 @@
 import { Class, Declaration, Namespace } from 'php-parser';
 import { getName } from '../utils';
 import { parse as parseAnnotation } from './annotation-parser';
-import { Attribute } from './parser';
+import { TestDefinition } from './parser';
 
 export class PropertyParser {
     private readonly lookup: { [p: string]: Function } = {
@@ -27,7 +27,7 @@ export class PropertyParser {
         return [namespace, _class].filter((name) => !!name).join('\\');
     }
 
-    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): Attribute {
+    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): TestDefinition {
         const fn = this.lookup[declaration.kind];
         const parsed = fn.apply(this, [declaration, namespace, _class]);
         const annotations = parseAnnotation(declaration);
