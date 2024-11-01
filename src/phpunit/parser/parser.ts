@@ -45,13 +45,18 @@ export class Test implements TestDefinition {
     }
 }
 
+export type Events = {
+    onSuite?: (suite: Test) => void
+    onTest?: (test: Test, index: number) => void
+}
+
 export class Parser {
     private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,
     };
 
-    public parse(text: Buffer | string, file: string) {
+    public parse(text: Buffer | string, file: string, events: Events = {}) {
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
@@ -74,23 +79,23 @@ export class Parser {
                 }
             });
 
-            return this.parseAst(ast, file);
+            return this.parseAst(ast, file, events);
         } catch (e) {
             return undefined;
         }
     }
 
-    private parseAst(ast: Program | Namespace | UseGroup | Class | Node, file: string, namespace?: Namespace): Test[] | undefined {
+    private parseAst(ast: Program | Namespace | UseGroup | Class | Node, file: string, events: Events = {}, namespace?: Namespace): Test[] | undefined {
         const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
 
-        return fn.apply(this, [ast, file, namespace]);
+        return fn.apply(this, [ast, file, events, namespace]);
     }
 
-    private parseNamespace(ast: Namespace, file: string) {
-        return this.parseChildren(ast, file, ast);
+    private parseNamespace(ast: Namespace, file: string, events: Events) {
+        return this.parseChildren(ast, file, events, ast);
     }
 
-    private parseTestSuite(ast: Class, file: string, namespace?: Namespace) {
+    private parseTestSuite(ast: Class, file: string, events: Events, namespace?: Namespace) {
         const _class = ast;
 
         if (!validator.isTest(_class)) {
@@ -100,29 +105,29 @@ export class Parser {
         const suite = new Test(file, parseProperty(ast as Declaration, namespace));
 
         suite.children = _class.body
-            .filter((method) => validator.isTest(method as Method))
-            .map((method) => {
-                const test = this.parseTestCase(method as Method, file, _class, namespace);
-                test.parent = suite;
-
-                return test;
-            });
-
+            .filter(method => validator.isTest(method as Method))
+            .map(method => new Test(file, parseProperty(method as Method, namespace, _class)));
 
         if (suite.children.length <= 0) {
             return;
         }
 
+        suite.children.forEach(test => test.parent = suite);
+
+        if (events.onSuite) {
+            events.onSuite(suite);
+        }
+
+        if (events.onTest) {
+            suite.children.forEach((test, index) => events.onTest!(test, index));
+        }
+
         return [suite];
     }
 
-    private parseTestCase(method: Method, file: string, _class: Class, namespace?: Namespace) {
-        return new Test(file, parseProperty(method, namespace, _class));
-    }
-
-    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, file: string, namespace?: Namespace) {
+    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, file: string, events: Events, namespace?: Namespace) {
         if ('children' in ast) {
-            return ast.children.reduce((tests, children) => tests.concat(this.parseAst(children, file, namespace) ?? []), [] as Test[]);
+            return ast.children.reduce((tests, children) => tests.concat(this.parseAst(children, file, events, namespace) ?? []), [] as Test[]);
         }
 
         return;
@@ -130,4 +135,4 @@ export class Parser {
 }
 
 export const parser = new Parser();
-export const parse = (buffer: Buffer | string, file: string) => parser.parse(buffer, file);
+export const parse = (buffer: Buffer | string, file: string, events: Events = {}) => parser.parse(buffer, file, events);

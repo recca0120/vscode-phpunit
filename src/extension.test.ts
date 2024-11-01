@@ -171,7 +171,6 @@ describe('Extension Test', () => {
             const runProfile = getRunProfile(ctrl);
 
             const request = { include: undefined, exclude: [], profile: runProfile };
-
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             expect(spawn).toHaveBeenCalledWith(
@@ -182,9 +181,9 @@ describe('Extension Test', () => {
 
             let expected;
             if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                expected = { enqueued: 52, started: 31, passed: 19, failed: 10, end: 1 };
+                expected = { enqueued: 26, started: 31, passed: 19, failed: 10, end: 1 };
             } else {
-                expected = { enqueued: 52, started: 25, passed: 12, failed: 11, end: 1 };
+                expected = { enqueued: 26, started: 25, passed: 12, failed: 11, end: 1 };
             }
             expectTestResultCalled(ctrl, expected);
         });

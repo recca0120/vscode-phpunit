@@ -12,15 +12,30 @@ export class TestFile {
 
     async update(ctrl: TestController) {
         const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
-        this.suites = parse(rawContent, this.uri.fsPath) ?? [];
+        parse(rawContent, this.uri.fsPath, {
+            onSuite: (suite: Test) => {
+                const testItem = ctrl.createTestItem(suite.id, suite.label, this.uri);
+                testItem.canResolveChildren = true;
+                testItem.sortText = suite.id;
+                testItem.range = new Range(
+                    new Position(suite.start.line - 1, suite.start.character),
+                    new Position(suite.end.line - 1, suite.end.character),
+                );
 
-        this.testItems = this.suites.map((suite: Test) => {
-            const parent = this.asTestItem(ctrl, suite, suite.id);
-            parent.children.replace(
-                suite.children.map((test: Test, index) => this.asTestItem(ctrl, test, index)),
-            );
+                ctrl.items.add(testItem);
+                this.suites.push(suite);
+            },
+            onTest: (test: Test, index) => {
+                const testItem = ctrl.createTestItem(test.id, test.label, this.uri);
+                testItem.canResolveChildren = false;
+                testItem.sortText = `${index}`;
+                testItem.range = new Range(
+                    new Position(test.start.line - 1, test.start.character),
+                    new Position(test.end.line - 1, test.end.character),
+                );
 
-            return parent;
+                ctrl.items.get(test.parent!.id)!.children.add(testItem);
+            },
         });
 
         return this;
@@ -88,20 +103,6 @@ export class TestFile {
                 return this.doFindTest(test.children, filter);
             }
         }
-    }
-
-    private asTestItem(ctrl: TestController, test: Test, sortText: number | string) {
-        const testItem = ctrl.createTestItem(test.id, test.label, this.uri);
-        ctrl.items.add(testItem);
-
-        testItem.sortText = `${sortText}`;
-        testItem.canResolveChildren = test.children.length > 0;
-        testItem.range = new Range(
-            new Position(test.start.line - 1, test.start.character),
-            new Position(test.end.line - 1, test.end.character),
-        );
-
-        return testItem;
     }
 
     private asFilter(test: Test) {

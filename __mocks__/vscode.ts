@@ -51,7 +51,20 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
     }
 
     get(itemId: string) {
-        return this.items.get(itemId);
+        if (this.items.has(itemId)) {
+            return this.items.get(itemId);
+        }
+
+        for (const item of this.items.values()) {
+            if (item.children.size > 0 && item.children.get(itemId)) {
+                const result = item.children.get(itemId);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+
+        return;
     }
 
     delete(itemId: string) {
