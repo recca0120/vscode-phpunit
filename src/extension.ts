@@ -3,6 +3,7 @@ import { Configuration } from './configuration';
 import { TestFile } from './test-file';
 import { Handler } from './handler';
 import { CommandHandler } from './command-handler';
+import { parseXML } from './phpunit/phpunit-xml-parser/parser';
 
 const testData = new Map<string, TestFile>();
 
@@ -27,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
         outputChannel,
         ctrl,
         fileChangedEmitter,
-        getOrCreateFile
+        getOrCreateFile,
     );
 
     ctrl.refreshHandler = async () => {
@@ -118,11 +119,35 @@ function getWorkspaceTestPatterns() {
         return [];
     }
 
-    return vscode.workspace.workspaceFolders.map((workspaceFolder) => ({
-        workspaceFolder,
-        pattern: new vscode.RelativePattern(workspaceFolder, '**/*.php'),
-        exclude: new vscode.RelativePattern(workspaceFolder, '**/{.git,node_modules,vendor}/**'),
-    }));
+    const results = [];
+    for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+        const includes = [];
+        const excludes = [
+            '**/.git/**',
+            '**/node_modules/**',
+            // '**/vendor/**',
+        ];
+
+        const xml = parseXML(workspaceFolder.uri.path + '/phpunit.xml');
+        for (const testSuite of xml.getTestSuites()) {
+            if (testSuite.tagName === 'directory') {
+                includes.push(testSuite.value.replace(/[\\|\/]+$/, '') + '/**/*.php');
+            } else if (testSuite.tagName === 'file') {
+                includes.push(testSuite.value);
+            } else if (testSuite.tagName === 'exclude') {
+                excludes.push(testSuite.value);
+            }
+        }
+        if (includes.length === 0) {
+            includes.push('tests/**/*.php');
+        }
+        results.push({
+            workspaceFolder,
+            pattern: new vscode.RelativePattern(workspaceFolder, `{${includes.join(',')}}`),
+            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludes.join(',')}}`),
+        });
+    }
+    return results;
 }
 
 async function findInitialFiles(
