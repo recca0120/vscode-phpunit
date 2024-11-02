@@ -1,4 +1,5 @@
 import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
+import { camel } from '../../utils';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
@@ -39,14 +40,10 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
     }
 
     private normalize(name: string) {
-        name = this.camel(name.trim());
+        name = camel(name.trim());
 
         return ['skipped', 'incomplete', 'risky'].includes(name)
             ? name
             : `${name}${name.match(/s$/) ? '' : 's'}`;
-    }
-
-    private camel(str: string) {
-        return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_m: string, chr: string) => chr.toUpperCase());
     }
 }

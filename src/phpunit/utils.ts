@@ -85,3 +85,7 @@ export const parseValue = (key: any, value: any): string[] => {
 
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
 };
+
+export const camel = (str: string) => {
+    return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_m: string, chr: string) => chr.toUpperCase());
+};
