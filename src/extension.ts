@@ -121,30 +121,51 @@ function getWorkspaceTestPatterns() {
 
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-        const includes = [];
-        const excludes = [
+        const includePatterns = [];
+        const excludePatterns = [
             '**/.git/**',
             '**/node_modules/**',
             // '**/vendor/**',
         ];
 
+        const trimPath = (path: string) => path.replace(/[\\|\/]+$/, '');
         const xml = parseXML(workspaceFolder.uri.path + '/phpunit.xml');
-        for (const testSuite of xml.getTestSuites()) {
-            if (testSuite.tagName === 'directory') {
-                includes.push(testSuite.value.replace(/[\\|\/]+$/, '') + '/**/*.php');
-            } else if (testSuite.tagName === 'file') {
-                includes.push(testSuite.value);
-            } else if (testSuite.tagName === 'exclude') {
-                excludes.push(testSuite.value);
+        for (const item of xml.getTestSuites()) {
+            if (item.tagName === 'directory') {
+                includePatterns.push(`${trimPath(item.value)}/**/*.php`);
+            } else if (item.tagName === 'file') {
+                includePatterns.push(item.value);
+            } else if (item.tagName === 'exclude') {
+                excludePatterns.push(item.value);
             }
         }
-        if (includes.length === 0) {
-            includes.push('tests/**/*.php');
+
+        for (const item of xml.getIncludes()) {
+            if (item.tagName === 'directory') {
+                const suffix = item.suffix ? `*${item.suffix}` : '*.php';
+                includePatterns.push(`${trimPath(item.value)}/**/${suffix}`);
+            } else if (item.tagName === 'file') {
+                includePatterns.push(item.value);
+            }
+        }
+
+        for (const item of xml.getExcludes()) {
+            if (item.tagName === 'directory') {
+                const suffix = item.suffix ? `*${item.suffix}` : '*.php';
+                excludePatterns.push(`${trimPath(item.value)}/**/${suffix}`);
+            } else if (item.tagName === 'file') {
+                excludePatterns.push(item.value);
+            }
+        }
+
+        if (includePatterns.length === 0) {
+            includePatterns.push('tests/**/*.php');
+            excludePatterns.push('**/vendor/**');
         }
         results.push({
             workspaceFolder,
-            pattern: new vscode.RelativePattern(workspaceFolder, `{${includes.join(',')}}`),
-            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludes.join(',')}}`),
+            pattern: new vscode.RelativePattern(workspaceFolder, `{${includePatterns.join(',')}}`),
+            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
         });
     }
     return results;

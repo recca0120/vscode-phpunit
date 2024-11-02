@@ -12,6 +12,13 @@ describe('PHPUnit XML Test', () => {
 </phpunit>`;
     };
 
+    it('without tags', () => {
+        const phpUnitXML = parse(generateXML(``));
+        expect(phpUnitXML.getTestSuites()).toEqual([]);
+        expect(phpUnitXML.getIncludes()).toEqual([]);
+        expect(phpUnitXML.getExcludes()).toEqual([]);
+    });
+
     it('get one testsuites one directory', () => {
         expect(parse(generateXML(`
             <testsuites>

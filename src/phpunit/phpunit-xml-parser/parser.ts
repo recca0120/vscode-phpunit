@@ -115,7 +115,7 @@ class PHPUnitXML {
     private getDirectoriesAndFiles<T>(key: string, callbacks: {
         [propName: string]: (tagName: string, node: any, parent: any) => T
     }) {
-        return ensureArray(this.get(key)).reduce((results: T[], parent: any) => {
+        return ensureArray(this.get(key, [])).reduce((results: T[], parent: any) => {
             for (const [type, callback] of Object.entries(callbacks)) {
                 const temp = ensureArray(parent[type] ?? []).map((node) => callback(type, node, parent));
 
