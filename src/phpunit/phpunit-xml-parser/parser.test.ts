@@ -92,6 +92,20 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
+    it('get one testsuites one directory and one exclude', () => {
+        expect(parse(generateXML(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory>tests/Unit</directory>
+                    <exclude>./tests/Integration/OldTests</exclude>
+                </testsuite>
+            </testsuites>
+        `)).getTestSuites()).toEqual([
+            { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
+            { tagName: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
+        ]);
+    });
+
     it('get source include one directory', () => {
         expect(parse(generateXML(`
             <source>

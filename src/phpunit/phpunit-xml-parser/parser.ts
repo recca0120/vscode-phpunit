@@ -73,6 +73,7 @@ class PHPUnitXML {
         return this.getDirectoriesAndFiles<TestSuite>('phpunit.testsuites.testsuite', {
             'directory': callback,
             'file': callback,
+            'exclude': callback,
         });
     }
 
