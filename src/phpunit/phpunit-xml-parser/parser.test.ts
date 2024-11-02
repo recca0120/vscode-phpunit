@@ -1,4 +1,4 @@
-import { parse } from './phpunit-xml-parser';
+import { parse } from './parser';
 
 describe('PHPUnit XML Test', () => {
     const generateXML = (xml: string) => {

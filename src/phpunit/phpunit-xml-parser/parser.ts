@@ -1,4 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
+import { PathOrFileDescriptor, readFileSync } from 'fs';
 
 function get(node: any, key: string, defaultValue: any) {
     const segments = key.split('.');
@@ -58,7 +59,7 @@ type Exclude = Include
 type IncludeOrExclude = Include | Exclude
 
 
-class Parser {
+class PHPUnitXML {
     constructor(private root: any) {
     }
 
@@ -127,8 +128,12 @@ class Parser {
     }
 }
 
-export const parse = (text: string) => {
-    const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
+const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
-    return new Parser(parser.parse(text));
+export const parse = (text: Buffer | string) => {
+    return new PHPUnitXML(parser.parse(text.toString()));
+};
+
+export const parseXML = (path: PathOrFileDescriptor) => {
+    return parse(readFileSync(path));
 };
