@@ -99,7 +99,7 @@ describe('PHPUnit XML Test', () => {
                     <directory suffix=".php">app</directory>
                 </include>
             </source>
-        `)).getSources()).toEqual([
+        `)).getIncludes()).toEqual([
             { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
         ]);
     });
@@ -112,7 +112,7 @@ describe('PHPUnit XML Test', () => {
                     <directory prefix="hello">app2</directory>
                 </include>
             </source>
-        `)).getSources()).toEqual([
+        `)).getIncludes()).toEqual([
             { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { type: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
         ]);
@@ -126,7 +126,7 @@ describe('PHPUnit XML Test', () => {
                     <file>src/autoload.php</file>
                 </include>
             </source>
-        `)).getSources()).toEqual([
+        `)).getIncludes()).toEqual([
             { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { type: 'file', value: 'src/autoload.php' },
         ]);
@@ -142,7 +142,7 @@ describe('PHPUnit XML Test', () => {
                     <file>src/autoload2.php</file>
                 </include>
             </source>
-        `)).getSources()).toEqual([
+        `)).getIncludes()).toEqual([
             { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { type: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
             { type: 'file', value: 'src/autoload.php' },

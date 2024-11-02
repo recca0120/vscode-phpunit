@@ -64,7 +64,7 @@ class Parser {
         });
     }
 
-    getSources() {
+    getIncludes() {
         return this.getDirectoriesAndFiles('phpunit.source.include', {
             'directory': (type: string, node: any) => {
                 const prefix = getAttribute(node, 'prefix');
