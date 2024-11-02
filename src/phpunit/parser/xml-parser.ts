@@ -72,13 +72,24 @@ class Parser {
         return this.getIncludesOrExcludes('phpunit.source.exclude');
     }
 
+    getSources() {
+        const appendType = (type: string, objs: {
+            tagName: string; value: string; prefix?: string; suffix?: string;
+        }[]) => objs.map(obj => ({ type, ...obj }));
+
+        return [
+            ...appendType('include', this.getIncludes()),
+            ...appendType('exclude', this.getExcludes()),
+        ];
+    }
+
     private getIncludesOrExcludes(key: string) {
-        return this.getDirectoriesAndFiles(key, {
+        return this.getDirectoriesAndFiles<{ tagName: string; value: string; prefix?: string; suffix?: string; }>(key, {
             'directory': (tagName: string, node: any) => {
                 const prefix = getAttribute(node, 'prefix');
                 const suffix = getAttribute(node, 'suffix');
 
-                return { tagName, prefix, suffix, value: getValue(node, tagName) };
+                return { tagName, value: getValue(node, tagName), prefix, suffix };
             },
             'file': (tagName: string, node: any) => {
                 return { tagName, value: getValue(node, tagName) };
@@ -90,10 +101,10 @@ class Parser {
         return get(this.root, key, defaultValue);
     }
 
-    private getDirectoriesAndFiles(key: string, callbacks: {
-        [propName: string]: (tagName: string, node: any, parent: any) => any
+    private getDirectoriesAndFiles<T>(key: string, callbacks: {
+        [propName: string]: (tagName: string, node: any, parent: any) => T
     }) {
-        return ensureArray(this.get(key)).reduce((results: TestSuite[], parent: any) => {
+        return ensureArray(this.get(key)).reduce((results: T[], parent: any) => {
             for (const [type, callback] of Object.entries(callbacks)) {
                 const temp = ensureArray(parent[type] ?? []).map((node) => callback(type, node, parent));
 

@@ -163,4 +163,30 @@ describe('PHPUnit XML Test', () => {
             { tagName: 'file', value: 'src/autoload.php' },
         ]);
     });
+
+    it('get sources', () => {
+        expect(parse(generateXML(`
+            <source>
+                <include>
+                    <directory suffix=".php">app</directory>
+                    <directory prefix="hello">app2</directory>
+                    <file>src/autoload.php</file>
+                    <file>src/autoload2.php</file>
+                </include>
+
+                <exclude>
+                    <directory suffix=".php">src/generated</directory>
+                    <file>src/autoload.php</file>
+                </exclude>
+            </source>
+        `)).getSources()).toEqual([
+            { type: 'include', tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { type: 'include', tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+            { type: 'include', tagName: 'file', value: 'src/autoload.php' },
+            { type: 'include', tagName: 'file', value: 'src/autoload2.php' },
+
+            { type: 'exclude', tagName: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
+            { type: 'exclude', tagName: 'file', value: 'src/autoload.php' },
+        ]);
+    });
 });
