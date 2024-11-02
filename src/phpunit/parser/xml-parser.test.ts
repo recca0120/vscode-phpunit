@@ -149,4 +149,18 @@ describe('PHPUnit XML Test', () => {
             { type: 'file', value: 'src/autoload2.php' },
         ]);
     });
+
+    it('get source exclude one directory and one file', () => {
+        expect(parse(generateXML(`
+            <source>
+                <exclude>
+                    <directory suffix=".php">src/generated</directory>
+                    <file>src/autoload.php</file>
+                </exclude>
+            </source>
+        `)).getExcludes()).toEqual([
+            { type: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
+            { type: 'file', value: 'src/autoload.php' },
+        ]);
+    });
 });

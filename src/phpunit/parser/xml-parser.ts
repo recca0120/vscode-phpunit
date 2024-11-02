@@ -65,7 +65,15 @@ class Parser {
     }
 
     getIncludes() {
-        return this.getDirectoriesAndFiles('phpunit.source.include', {
+        return this.getIncludesOrExcludes('phpunit.source.include');
+    }
+
+    getExcludes() {
+        return this.getIncludesOrExcludes('phpunit.source.exclude');
+    }
+
+    private getIncludesOrExcludes(key: string) {
+        return this.getDirectoriesAndFiles(key, {
             'directory': (type: string, node: any) => {
                 const prefix = getAttribute(node, 'prefix');
                 const suffix = getAttribute(node, 'suffix');
