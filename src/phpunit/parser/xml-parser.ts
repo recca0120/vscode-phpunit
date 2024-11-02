@@ -52,48 +52,50 @@ class Parser {
     }
 
     getTestSuites() {
-        return ensureArray(this.get('phpunit.testsuites.testsuite'))
-            .reduce((results: TestSuite[], node: any) => {
-                const name: string = getAttribute(node, 'name');
-                ['directory', 'file'].forEach((type) => {
-                    const temp = ensureArray(node[type] ?? []).map((node) => ({
-                        type, name, value: getValue(node, type),
-                    }));
+        const callback = (type: string, node: any, parent: any) => {
+            const name = getAttribute(parent, 'name') as string;
 
-                    if (temp) {
-                        results.push(...temp);
-                    }
-                });
+            return { type, name, value: getValue(node, type) };
+        };
 
-                return results;
-            }, []);
+        return this.getDirectoriesAndFiles('phpunit.testsuites.testsuite', {
+            'directory': callback,
+            'file': callback,
+        });
     }
 
     getSources() {
-        return ensureArray(this.get('phpunit.source.include'))
-            .reduce((results: any, node: any) => {
-                ['directory', 'file'].forEach((type) => {
-                    const temp = ensureArray(ensureArray(node[type] ?? [])).map((node) => {
-                        if (type === 'directory') {
-                            const prefix = getAttribute(node, 'prefix');
-                            const suffix = getAttribute(node, 'suffix');
-                            return { type, prefix, suffix, value: getValue(node, type) };
-                        } else {
-                            return { type, value: getValue(node, type) };
-                        }
-                    });
+        return this.getDirectoriesAndFiles('phpunit.source.include', {
+            'directory': (type: string, node: any) => {
+                const prefix = getAttribute(node, 'prefix');
+                const suffix = getAttribute(node, 'suffix');
 
-                    if (temp) {
-                        results.push(...temp);
-                    }
-                });
-
-                return results;
-            }, []);
+                return { type, prefix, suffix, value: getValue(node, type) };
+            },
+            'file': (type: string, node: any) => {
+                return { type, value: getValue(node, type) };
+            },
+        });
     }
 
     get(key: string, defaultValue: any = undefined) {
         return get(this.root, key, defaultValue);
+    }
+
+    private getDirectoriesAndFiles(key: string, callbacks: {
+        [propName: string]: (type: string, node: any, parent: any) => any
+    }) {
+        return ensureArray(this.get(key)).reduce((results: TestSuite[], parent: any) => {
+            for (const [type, callback] of Object.entries(callbacks)) {
+                const temp = ensureArray(parent[type] ?? []).map((node) => callback(type, node, parent));
+
+                if (temp) {
+                    results.push(...temp);
+                }
+            }
+
+            return results;
+        }, []);
     }
 }
 
