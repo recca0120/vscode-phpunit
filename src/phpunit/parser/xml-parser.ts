@@ -1,8 +1,8 @@
 import { XMLParser } from 'fast-xml-parser';
 
-function get(obj: any, key: string, defaultValue: any) {
+function get(node: any, key: string, defaultValue: any) {
     const segments = key.split('.');
-    let current = obj;
+    let current = node;
     while (segments.length > 0) {
         const segment = segments.shift()!;
         current = current[segment] ?? undefined;
@@ -15,10 +15,26 @@ function get(obj: any, key: string, defaultValue: any) {
     return current;
 }
 
-function getAttribute(obj: any, key: any, defaultValue?: any) {
+function getAttribute(node: any, key: any, defaultValue?: any) {
     const symbol = '@';
 
-    return obj[`${symbol}_${key}`] ?? defaultValue;
+    return node[`${symbol}_${key}`] ?? defaultValue;
+}
+
+function getValue(node: any, key: any, defaultValue?: any) {
+    if (typeof node === 'string') {
+        return node;
+    }
+
+    if (node.hasOwnProperty(key)) {
+        return node[key];
+    }
+
+    if (node.hasOwnProperty('#text')) {
+        return node['#text'];
+    }
+
+    return defaultValue;
 }
 
 function ensureArray(obj: any) {
@@ -37,18 +53,37 @@ class Parser {
 
     getTestSuites() {
         return ensureArray(this.get('phpunit.testsuites.testsuite'))
-            .reduce((testsuites: TestSuite[], node: any) => {
+            .reduce((results: TestSuite[], node: any) => {
                 const name: string = getAttribute(node, 'name');
                 ['directory', 'file'].forEach((type) => {
-                    const result = ensureArray(node[type] ?? [])
-                        .map((value: string) => ({ type, name, value }));
+                    const temp = ensureArray(node[type] ?? []).map((node) => ({
+                        type, name, value: getValue(node, type),
+                    }));
 
-                    if (result) {
-                        testsuites.push(...result);
+                    if (temp) {
+                        results.push(...temp);
                     }
                 });
 
-                return testsuites;
+                return results;
+            }, []);
+    }
+
+    getSources() {
+        return ensureArray(this.get('phpunit.source.include'))
+            .reduce((results: any, node: any) => {
+                ['directory', 'file'].forEach((type) => {
+                    const temp = ensureArray(ensureArray(node[type] ?? [])).map((node) => {
+                        const suffix = getAttribute(node, 'suffix');
+                        return { type, suffix, value: getValue(node, type) };
+                    });
+
+                    if (temp) {
+                        results.push(...temp);
+                    }
+                });
+
+                return results;
             }, []);
     }
 

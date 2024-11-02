@@ -91,4 +91,16 @@ describe('PHPUnit XML Test', () => {
             { type: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
         ]);
     });
+
+    it('parse one source', () => {
+        expect(parse(generateXML(`
+            <source>
+                <include>
+                    <directory suffix=".php">app</directory>
+                </include>
+            </source>
+        `)).getSources()).toEqual([
+            { type: 'directory', suffix: '.php', value: 'app' },
+        ]);
+    });
 });
