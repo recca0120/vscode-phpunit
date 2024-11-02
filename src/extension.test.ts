@@ -1,7 +1,7 @@
 import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import { TestController, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import { TestController, TestItem, TestItemCollection, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, GlobOptions } from 'glob';
 import { readFileSync } from 'fs';
 import * as path from 'path';
@@ -63,10 +63,27 @@ const getRunProfile = (ctrl: TestController) => {
     return (ctrl.createRunProfile as jest.Mock).mock.results[0].value;
 };
 
+
+const findTest = (items: TestItemCollection, testId: string): TestItem | undefined => {
+    let result = items.get(testId);
+    if (result) {
+        return result;
+    }
+
+    for (const [_id, item] of items) {
+        result = findTest(item.children, testId);
+        if (result) {
+            return result;
+        }
+    }
+
+    return;
+};
+
 const getTestFile = (ctrl: TestController, pattern: RegExp) => {
     const doc = vscode.workspace.textDocuments.find((doc) => doc.uri.fsPath.match(pattern))!;
 
-    return ctrl.items.get(doc.uri.toString());
+    return findTest(ctrl.items, doc.uri.toString());
 };
 
 const getTestRun = (ctrl: TestController) => {
@@ -171,7 +188,6 @@ describe('Extension Test', () => {
             const runProfile = getRunProfile(ctrl);
 
             const request = { include: undefined, exclude: [], profile: runProfile };
-
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             expect(spawn).toHaveBeenCalledWith(
@@ -182,9 +198,9 @@ describe('Extension Test', () => {
 
             let expected;
             if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                expected = { enqueued: 52, started: 31, passed: 19, failed: 10, end: 1 };
+                expected = { enqueued: 26, started: 31, passed: 19, failed: 10, end: 1 };
             } else {
-                expected = { enqueued: 52, started: 25, passed: 12, failed: 11, end: 1 };
+                expected = { enqueued: 26, started: 25, passed: 12, failed: 11, end: 1 };
             }
             expectTestResultCalled(ctrl, expected);
         });
@@ -196,7 +212,7 @@ describe('Extension Test', () => {
             const runProfile = getRunProfile(ctrl);
 
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
-            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
+            const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
@@ -231,7 +247,7 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-            const request = { include: [ctrl.items.get(testId)], exclude: [], profile: runProfile };
+            const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 

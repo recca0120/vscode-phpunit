@@ -4,23 +4,39 @@ import { parse, Test } from './phpunit';
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestFile {
-    public tests: Test[] = [];
-    public testItems: TestItem[] = [];
+    private suites: Test[] = [];
+    private testItems: TestItem[] = [];
 
     constructor(public uri: Uri) {
     }
 
     async update(ctrl: TestController) {
         const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
-        this.tests = parse(rawContent, this.uri.fsPath) ?? [];
+        parse(rawContent, this.uri.fsPath, {
+            onSuite: (suite: Test) => {
+                const testItem = ctrl.createTestItem(suite.id, suite.label, this.uri);
+                testItem.canResolveChildren = true;
+                testItem.sortText = suite.id;
+                testItem.range = new Range(
+                    new Position(suite.start.line - 1, suite.start.character),
+                    new Position(suite.end.line - 1, suite.end.character),
+                );
 
-        this.testItems = this.tests.map((suite: Test) => {
-            const parent = this.asTestItem(ctrl, suite, suite.id);
-            parent.children.replace(
-                suite.children.map((test: Test, index) => this.asTestItem(ctrl, test, index)),
-            );
+                ctrl.items.add(testItem);
+                this.suites.push(suite);
+            },
+            onTest: (test: Test, index) => {
+                const testItem = ctrl.createTestItem(test.id, test.label, this.uri);
+                testItem.canResolveChildren = false;
+                testItem.sortText = `${index}`;
+                testItem.range = new Range(
+                    new Position(test.start.line - 1, test.start.character),
+                    new Position(test.end.line - 1, test.end.character),
+                );
 
-            return parent;
+                ctrl.items.get(test.parent!.id)!.children.add(testItem);
+                this.testItems.push(testItem);
+            },
         });
 
         return this;
@@ -28,6 +44,7 @@ export class TestFile {
 
     delete(ctrl: TestController) {
         this.testItems.forEach((testItem) => ctrl.items.delete(testItem.id));
+        this.suites = [];
         this.testItems = [];
     }
 
@@ -35,6 +52,10 @@ export class TestFile {
         const test = this.findTest(testId);
 
         return test ? `${(this.asFilter(test) ?? '')} ${encodeURIComponent(test.file)}` : '';
+    }
+
+    getTestItems() {
+        return this.testItems;
     }
 
     findTestItemByPosition(position: Position) {
@@ -51,10 +72,7 @@ export class TestFile {
         );
     }
 
-    private doFindTestItem(
-        testItems: TestItem[],
-        filter: (testItem: TestItem) => boolean,
-    ): TestItem | void {
+    private doFindTestItem(testItems: TestItem[], filter: (testItem: TestItem) => boolean): TestItem | void {
         for (const testItem of testItems) {
             if (filter(testItem)) {
                 return testItem;
@@ -74,7 +92,7 @@ export class TestFile {
     }
 
     private findTest(testId: string) {
-        return this.doFindTest(this.tests, (test: Test) => testId === test.id);
+        return this.doFindTest(this.suites, (test: Test) => testId === test.id);
     }
 
     private doFindTest(tests: Test[], filter: (test: Test) => boolean): Test | void {
@@ -90,34 +108,8 @@ export class TestFile {
     }
 
     private asFilter(test: Test) {
-        return test.children.length > 0
-            ? ''
-            : `--filter '^.*::(${this.asDeps(test).join('|')})( with data set .*)?$'`;
-    }
+        const deps = [test.method, ...(test.annotations.depends ?? [])].join('|');
 
-    private asDeps(test: Test) {
-        return [test.method, ...(test.annotations.depends ?? [])];
-    }
-
-    private asTestItem(ctrl: TestController, test: Test, sortText: number | string) {
-        const testItem = ctrl.createTestItem(test.id, this.getLabel(test), this.uri);
-        ctrl.items.add(testItem);
-
-        testItem.sortText = `${sortText}`;
-        testItem.canResolveChildren = test.children.length > 0;
-        testItem.range = new Range(
-            new Position(test.start.line - 1, test.start.character),
-            new Position(test.end.line - 1, test.end.character),
-        );
-
-        return testItem;
-    }
-
-    private getLabel(test: Test) {
-        if (test.annotations.testdox && test.annotations.testdox.length > 0) {
-            return test.annotations.testdox[test.annotations.testdox.length - 1];
-        }
-
-        return (test.children.length > 0 ? test.qualifiedClass : test.method) ?? '';
+        return test.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
     }
 }

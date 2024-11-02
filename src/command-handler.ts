@@ -17,7 +17,7 @@ export class CommandHandler {
             const testFile = this.findTestFile();
 
             if (testFile) {
-                this.run(testFile.testItems);
+                this.run(testFile.getTestItems());
             }
         });
     }

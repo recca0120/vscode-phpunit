@@ -412,6 +412,20 @@ describe('Teamcity Parser', () => {
         });
     });
 
+    it('parse test result with PHPUnit Deprecations', () => {
+        const text =
+            'Tests: 1, Assertions: 1, PHPUnit Deprecations: 1, Risky: 1.';
+
+        expect(parser.parse(text)).toEqual({
+            kind: TestExtraResultEvent.testResultSummary,
+            tests: 1,
+            assertions: 1,
+            phpunitDeprecations: 1,
+            risky: 1,
+            text,
+        });
+    });
+
     it('parse addition_provider with data set with number key', () => {
         const text =
             '##teamcity[testStarted name=\'addition_provider with data set #2\' locationHint=\'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2\' flowId=\'8024\']';
@@ -443,6 +457,20 @@ describe('Teamcity Parser', () => {
             locationHint:
                 'php_qn://C:\\Users\\recca\\Desktop\\vscode-phpunit\\__tests__\\fixtures\\phpunit-stub\\tests\\AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"',
             flowId: 8024,
+        });
+    });
+
+    it('printed output', () => {
+        const text = `printed output##teamcity[testFailed name='test_echo' message='This test printed output: printed output' details='' duration='3' flowId='38813']`;
+
+        expect(parser.parse(text)).toEqual({
+            event: TestResultEvent.testFailed,
+            kind: TestResultEvent.testFailed,
+            name: 'test_echo',
+            details: [],
+            message: 'This test printed output: printed output',
+            duration: 3,
+            flowId: 38813,
         });
     });
 

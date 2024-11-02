@@ -1,8 +1,9 @@
 import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
+import { camel } from '../../utils';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
-        const items = ['Error(s)?', 'Failure(s)?', 'Skipped', 'Incomplete', 'Risky'];
+        const items = ['Error(s)?', 'Failure(s)?', 'Skipped', 'Incomplete', 'Risky', 'PHPUnit\sDeprecations'];
         const end = '\\s(\\d+)[\\.\\s,]\\s?';
         const tests = `Test(s)?:${end}`;
         const assertions = `Assertions:${end}`;
@@ -19,7 +20,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
 
     public parse(text: string) {
         const pattern = new RegExp(
-            `((?<name>\\w+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
+            `((?<name>[\\w\\s]+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
             'ig',
         );
         const kind = TestExtraResultEvent.testResultSummary;
@@ -39,7 +40,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
     }
 
     private normalize(name: string) {
-        name = name.toLowerCase();
+        name = camel(name.trim());
 
         return ['skipped', 'incomplete', 'risky'].includes(name)
             ? name

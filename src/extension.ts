@@ -3,6 +3,7 @@ import { Configuration } from './configuration';
 import { TestFile } from './test-file';
 import { Handler } from './handler';
 import { CommandHandler } from './command-handler';
+import { parseXML } from './phpunit/phpunit-xml-parser/parser';
 
 const testData = new Map<string, TestFile>();
 
@@ -27,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
         outputChannel,
         ctrl,
         fileChangedEmitter,
-        getOrCreateFile
+        getOrCreateFile,
     );
 
     ctrl.refreshHandler = async () => {
@@ -118,11 +119,56 @@ function getWorkspaceTestPatterns() {
         return [];
     }
 
-    return vscode.workspace.workspaceFolders.map((workspaceFolder) => ({
-        workspaceFolder,
-        pattern: new vscode.RelativePattern(workspaceFolder, '**/*.php'),
-        exclude: new vscode.RelativePattern(workspaceFolder, '**/{.git,node_modules,vendor}/**'),
-    }));
+    const results = [];
+    for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+        const includePatterns = [];
+        const excludePatterns = [
+            '**/.git/**',
+            '**/node_modules/**',
+            // '**/vendor/**',
+        ];
+
+        const trimPath = (path: string) => path.replace(/[\\|\/]+$/, '');
+        const xml = parseXML(workspaceFolder.uri.path + '/phpunit.xml');
+        for (const item of xml.getTestSuites()) {
+            if (item.tagName === 'directory') {
+                includePatterns.push(`${trimPath(item.value)}/**/*.php`);
+            } else if (item.tagName === 'file') {
+                includePatterns.push(item.value);
+            } else if (item.tagName === 'exclude') {
+                excludePatterns.push(item.value);
+            }
+        }
+
+        for (const item of xml.getIncludes()) {
+            if (item.tagName === 'directory') {
+                const suffix = item.suffix ? `*${item.suffix}` : '*.php';
+                includePatterns.push(`${trimPath(item.value)}/**/${suffix}`);
+            } else if (item.tagName === 'file') {
+                includePatterns.push(item.value);
+            }
+        }
+
+        for (const item of xml.getExcludes()) {
+            if (item.tagName === 'directory') {
+                const suffix = item.suffix ? `*${item.suffix}` : '*.php';
+                excludePatterns.push(`${trimPath(item.value)}/**/${suffix}`);
+            } else if (item.tagName === 'file') {
+                excludePatterns.push(item.value);
+            }
+        }
+
+        if (includePatterns.length === 0) {
+            includePatterns.push('tests/**/*.php');
+            excludePatterns.push('**/vendor/**');
+        }
+        results.push({
+            workspaceFolder,
+            pattern: new vscode.RelativePattern(workspaceFolder, `{${includePatterns.join(',')}}`),
+            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
+        });
+    }
+    return results;
 }
 
 async function findInitialFiles(
