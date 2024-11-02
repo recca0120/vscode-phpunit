@@ -35,6 +35,7 @@ export class TestFile {
                 );
 
                 ctrl.items.get(test.parent!.id)!.children.add(testItem);
+                this.testItems.push(testItem);
             },
         });
 
@@ -43,6 +44,7 @@ export class TestFile {
 
     delete(ctrl: TestController) {
         this.testItems.forEach((testItem) => ctrl.items.delete(testItem.id));
+        this.suites = [];
         this.testItems = [];
     }
 

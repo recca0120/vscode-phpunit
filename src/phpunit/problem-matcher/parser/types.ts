@@ -104,6 +104,7 @@ export type TestResultSummary = {
     skipped?: number;
     incomplete?: number;
     risky?: number;
+    phpunitDeprecations?: number;
 };
 
 export type TestResult = TestSuiteStarted &

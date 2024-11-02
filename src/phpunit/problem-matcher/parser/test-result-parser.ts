@@ -10,7 +10,7 @@ import { TestResultSummaryParser } from './test-result-summary-parser';
 import { TimeAndMemoryParser } from './time-and-memory-parser';
 
 export class TestResultParser implements IParser<Result | undefined> {
-    private readonly pattern = new RegExp('^\\s*#+teamcity');
+    private readonly pattern = new RegExp('^.*#+teamcity');
     private readonly filePattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
     private readonly parsers = [
         new TestVersionParser(),
