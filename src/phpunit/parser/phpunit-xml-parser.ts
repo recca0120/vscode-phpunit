@@ -21,7 +21,7 @@ function getAttribute(node: any, key: any, defaultValue?: any) {
     return node[`${symbol}_${key}`] ?? defaultValue;
 }
 
-function getValue(node: any, key: any, defaultValue?: any) {
+function getText(node: any, key: any, defaultValue?: any) {
     if (typeof node === 'string') {
         return node;
     }
@@ -41,11 +41,22 @@ function ensureArray(obj: any) {
     return Array.isArray(obj) ? obj : [obj];
 }
 
-interface TestSuite {
-    type: string;
+type TestSuite = {
+    tagName: string;
     name: string;
     value: string;
 }
+
+type Include = {
+    tagName: string;
+    value: string;
+    prefix?: string;
+    suffix?: string;
+}
+
+type Exclude = Include
+type IncludeOrExclude = Include | Exclude
+
 
 class Parser {
     constructor(private root: any) {
@@ -55,27 +66,25 @@ class Parser {
         const callback = (tagName: string, node: any, parent: any) => {
             const name = getAttribute(parent, 'name') as string;
 
-            return { tagName, name, value: getValue(node, tagName) };
+            return { tagName, name, value: getText(node, tagName) };
         };
 
-        return this.getDirectoriesAndFiles('phpunit.testsuites.testsuite', {
+        return this.getDirectoriesAndFiles<TestSuite>('phpunit.testsuites.testsuite', {
             'directory': callback,
             'file': callback,
         });
     }
 
-    getIncludes() {
+    getIncludes(): Include[] {
         return this.getIncludesOrExcludes('phpunit.source.include');
     }
 
-    getExcludes() {
+    getExcludes(): Exclude[] {
         return this.getIncludesOrExcludes('phpunit.source.exclude');
     }
 
     getSources() {
-        const appendType = (type: string, objs: {
-            tagName: string; value: string; prefix?: string; suffix?: string;
-        }[]) => objs.map(obj => ({ type, ...obj }));
+        const appendType = (type: string, objs: IncludeOrExclude[]) => objs.map(obj => ({ type, ...obj }));
 
         return [
             ...appendType('include', this.getIncludes()),
@@ -83,16 +92,16 @@ class Parser {
         ];
     }
 
-    private getIncludesOrExcludes(key: string) {
-        return this.getDirectoriesAndFiles<{ tagName: string; value: string; prefix?: string; suffix?: string; }>(key, {
+    private getIncludesOrExcludes(key: string): IncludeOrExclude[] {
+        return this.getDirectoriesAndFiles<IncludeOrExclude>(key, {
             'directory': (tagName: string, node: any) => {
                 const prefix = getAttribute(node, 'prefix');
                 const suffix = getAttribute(node, 'suffix');
 
-                return { tagName, value: getValue(node, tagName), prefix, suffix };
+                return { tagName, value: getText(node, tagName), prefix, suffix };
             },
             'file': (tagName: string, node: any) => {
-                return { tagName, value: getValue(node, tagName) };
+                return { tagName, value: getText(node, tagName) };
             },
         });
     }
