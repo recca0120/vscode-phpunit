@@ -92,7 +92,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('parse one source', () => {
+    it('get source include one directory', () => {
         expect(parse(generateXML(`
             <source>
                 <include>
@@ -100,7 +100,53 @@ describe('PHPUnit XML Test', () => {
                 </include>
             </source>
         `)).getSources()).toEqual([
-            { type: 'directory', suffix: '.php', value: 'app' },
+            { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+        ]);
+    });
+
+    it('get source include two directory', () => {
+        expect(parse(generateXML(`
+            <source>
+                <include>
+                    <directory suffix=".php">app</directory>
+                    <directory prefix="hello">app2</directory>
+                </include>
+            </source>
+        `)).getSources()).toEqual([
+            { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { type: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+        ]);
+    });
+
+    it('get source include one directory and one file', () => {
+        expect(parse(generateXML(`
+            <source>
+                <include>
+                    <directory suffix=".php">app</directory>
+                    <file>src/autoload.php</file>
+                </include>
+            </source>
+        `)).getSources()).toEqual([
+            { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { type: 'file', value: 'src/autoload.php' },
+        ]);
+    });
+
+    it('get source include two directory and two file', () => {
+        expect(parse(generateXML(`
+            <source>
+                <include>
+                    <directory suffix=".php">app</directory>
+                    <directory prefix="hello">app2</directory>
+                    <file>src/autoload.php</file>
+                    <file>src/autoload2.php</file>
+                </include>
+            </source>
+        `)).getSources()).toEqual([
+            { type: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { type: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+            { type: 'file', value: 'src/autoload.php' },
+            { type: 'file', value: 'src/autoload2.php' },
         ]);
     });
 });

@@ -74,8 +74,13 @@ class Parser {
             .reduce((results: any, node: any) => {
                 ['directory', 'file'].forEach((type) => {
                     const temp = ensureArray(ensureArray(node[type] ?? [])).map((node) => {
-                        const suffix = getAttribute(node, 'suffix');
-                        return { type, suffix, value: getValue(node, type) };
+                        if (type === 'directory') {
+                            const prefix = getAttribute(node, 'prefix');
+                            const suffix = getAttribute(node, 'suffix');
+                            return { type, prefix, suffix, value: getValue(node, type) };
+                        } else {
+                            return { type, value: getValue(node, type) };
+                        }
                     });
 
                     if (temp) {
@@ -93,10 +98,7 @@ class Parser {
 }
 
 export const parse = (text: string) => {
-    const parser = new XMLParser({
-        ignoreAttributes: false,
-        parseAttributeValue: true,
-    });
+    const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
     return new Parser(parser.parse(text));
 };
