@@ -129,7 +129,7 @@ function getWorkspaceTestPatterns() {
         ];
 
         const trimPath = (path: string) => path.replace(/[\\|\/]+$/, '');
-        const xml = parseXML(workspaceFolder.uri.path + '/phpunit.xml');
+        const xml = parseXML(workspaceFolder.uri.fsPath + '/phpunit.xml');
         for (const item of xml.getTestSuites()) {
             if (item.tagName === 'directory') {
                 includePatterns.push(`${trimPath(item.value)}/**/*.php`);
