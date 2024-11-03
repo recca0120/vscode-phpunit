@@ -4,9 +4,23 @@ import { TestFile } from './test-file';
 import { Handler } from './handler';
 import { CommandHandler } from './command-handler';
 import { parseXML } from './phpunit/phpunit-xml-parser/parser';
-import * as fs from 'node:fs';
+import { stat } from 'node:fs/promises';
 
 const testData = new Map<string, TestFile>();
+
+async function checkFileExists(filePath: string): Promise<boolean> {
+    try {
+        // 嘗試取得檔案狀態
+        await stat(filePath);
+        return true; // 檔案存在
+    } catch (error: any) {
+        if (error.code === 'ENOENT') {
+            return false; // 檔案不存在
+        } else {
+            throw error; // 其他錯誤
+        }
+    }
+}
 
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
@@ -34,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.refreshHandler = async () => {
         await Promise.all(
-            getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
                 findInitialFiles(ctrl, pattern, exclude),
             ),
         );
@@ -51,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.resolveHandler = async (item) => {
         if (!item) {
-            context.subscriptions.push(...startWatchingWorkspace(ctrl, fileChangedEmitter));
+            context.subscriptions.push(...(await startWatchingWorkspace(ctrl, fileChangedEmitter)));
         }
     };
 
@@ -61,7 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-        const workspaceTestPattern = getWorkspaceTestPatterns().find(({ workspaceFolder }) => {
+        const workspaceTestPattern = (await getWorkspaceTestPatterns()).find(({ workspaceFolder }) => {
             return currentWorkspaceFolder!.name === workspaceFolder.name;
         });
 
@@ -89,7 +103,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('phpunit.reload', async () => {
             await Promise.all(
-                getWorkspaceTestPatterns().map(({ pattern, exclude }) =>
+                (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
                     findInitialFiles(ctrl, pattern, exclude),
                 ),
             );
@@ -115,7 +129,7 @@ export async function getOrCreateFile(controller: vscode.TestController, uri: vs
     testData.set(uri.toString(), await testFile.update(controller));
 }
 
-function getWorkspaceTestPatterns() {
+async function getWorkspaceTestPatterns() {
     if (!vscode.workspace.workspaceFolders) {
         return [];
     }
@@ -128,34 +142,16 @@ function getWorkspaceTestPatterns() {
 
         const path = ['phpunit.xml', 'phpunit.dist.xml']
             .map((path) => workspaceFolder.uri.fsPath + '/' + path)
-            .find((path) => fs.existsSync(path));
+            .find(async (path) => await checkFileExists(path));
 
         if (path) {
-            const xml = parseXML(path);
+            const xml = await parseXML(path);
             for (const item of xml.getTestSuites()) {
                 if (item.tagName === 'directory') {
                     includePatterns.push(`${trimPath(item.value)}/**/*.php`);
                 } else if (item.tagName === 'file') {
                     includePatterns.push(item.value);
                 } else if (item.tagName === 'exclude') {
-                    excludePatterns.push(item.value);
-                }
-            }
-
-            for (const item of xml.getIncludes()) {
-                if (item.tagName === 'directory') {
-                    const suffix = item.suffix ? `*${item.suffix}` : '*.php';
-                    includePatterns.push(`${trimPath(item.value)}/**/${suffix}`);
-                } else if (item.tagName === 'file') {
-                    includePatterns.push(item.value);
-                }
-            }
-
-            for (const item of xml.getExcludes()) {
-                if (item.tagName === 'directory') {
-                    const suffix = item.suffix ? `*${item.suffix}` : '*.php';
-                    excludePatterns.push(`${trimPath(item.value)}/**/${suffix}`);
-                } else if (item.tagName === 'file') {
                     excludePatterns.push(item.value);
                 }
             }
@@ -187,8 +183,8 @@ async function findInitialFiles(
     });
 }
 
-function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
-    return getWorkspaceTestPatterns().map(({ pattern, exclude }) => {
+async function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
+    return (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {

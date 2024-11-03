@@ -1,5 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
-import { PathOrFileDescriptor, readFileSync } from 'fs';
+import { readFile } from 'node:fs/promises';
+import { PathLike } from 'node:fs';
 
 function get(node: any, key: string, defaultValue: any) {
     const segments = key.split('.');
@@ -135,6 +136,6 @@ export const parse = (text: Buffer | string) => {
     return new PHPUnitXML(parser.parse(text.toString()));
 };
 
-export const parseXML = (path: PathOrFileDescriptor) => {
-    return parse(readFileSync(path));
+export const parseXML = async (path: PathLike) => {
+    return parse(await readFile(path));
 };
