@@ -2,29 +2,23 @@ import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
 import { PathLike } from 'node:fs';
 
-class Document {
-    constructor(private readonly root: any) {
-    }
-
-    querySelectorAll(selector: string) {
-        const segments = selector.split(' ');
-        let current = this.root;
-        while (segments.length > 0) {
-            const segment = segments.shift()!;
-            current = current[segment] ?? undefined;
-
-            if (current === undefined) {
-                return [];
-            }
-        }
-
-        return this.ensureArray(current).map(node => new Element(node));
-    }
-
-    private ensureArray(obj: any) {
-        return Array.isArray(obj) ? obj : [obj];
-    }
+type TestSuite = {
+    tagName: string;
+    name: string;
+    value: string;
 }
+
+type Include = {
+    tagName: string;
+    value: string;
+    prefix?: string;
+    suffix?: string;
+}
+
+type Exclude = Include
+type IncludeOrExclude = Include | Exclude
+
+const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 class Element {
     constructor(private readonly node: any) {
@@ -43,32 +37,31 @@ class Element {
     }
 
     querySelectorAll(selector: string) {
-        return new Document(this.node).querySelectorAll(selector);
+        const segments = selector.split(' ');
+        let current = this.node;
+        while (segments.length > 0) {
+            const segment = segments.shift()!;
+            current = current[segment] ?? undefined;
+
+            if (current === undefined) {
+                return [];
+            }
+        }
+
+        return this.ensureArray(current).map(node => new Element(node));
+    }
+
+    private ensureArray(obj: any) {
+        return Array.isArray(obj) ? obj : [obj];
     }
 }
 
-type TestSuite = {
-    tagName: string;
-    name: string;
-    value: string;
-}
-
-type Include = {
-    tagName: string;
-    value: string;
-    prefix?: string;
-    suffix?: string;
-}
-
-type Exclude = Include
-type IncludeOrExclude = Include | Exclude
-
 
 class PHPUnitXML {
-    private readonly document: Document;
+    private readonly element: Element;
 
-    constructor(root: any) {
-        this.document = new Document(root);
+    constructor(text: string | Buffer) {
+        this.element = new Element(parser.parse(text.toString()));
     }
 
     getTestSuites() {
@@ -79,9 +72,7 @@ class PHPUnitXML {
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
-            'directory': callback,
-            'file': callback,
-            'exclude': callback,
+            'directory': callback, 'file': callback, 'exclude': callback,
         });
     }
 
@@ -96,10 +87,7 @@ class PHPUnitXML {
     getSources() {
         const appendType = (type: string, objs: IncludeOrExclude[]) => objs.map(obj => ({ type, ...obj }));
 
-        return [
-            ...appendType('include', this.getIncludes()),
-            ...appendType('exclude', this.getExcludes()),
-        ];
+        return [...appendType('include', this.getIncludes()), ...appendType('exclude', this.getExcludes())];
     }
 
     private getIncludesOrExcludes(key: string): IncludeOrExclude[] {
@@ -110,16 +98,14 @@ class PHPUnitXML {
 
                 return { tagName, value: node.getText(), prefix, suffix };
             },
-            'file': (tagName: string, node: Element) => {
-                return { tagName, value: node.getText() };
-            },
+            'file': (tagName: string, node: Element) => ({ tagName, value: node.getText() }),
         });
     }
 
     private getDirectoriesAndFiles<T>(selector: string, callbacks: {
         [propName: string]: (tagName: string, node: Element, parent: Element) => T
     }) {
-        return this.document.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
+        return this.element.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
             for (const [type, callback] of Object.entries(callbacks)) {
                 const temp = parent.querySelectorAll(type).map((node) => callback(type, node, parent));
 
@@ -133,12 +119,6 @@ class PHPUnitXML {
     }
 }
 
-const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
+export const parse = (text: Buffer | string) => new PHPUnitXML(text);
 
-export const parse = (text: Buffer | string) => {
-    return new PHPUnitXML(parser.parse(text.toString()));
-};
-
-export const parseXML = async (path: PathLike) => {
-    return parse(await readFile(path));
-};
+export const parseXML = async (path: PathLike) => parse(await readFile(path));
