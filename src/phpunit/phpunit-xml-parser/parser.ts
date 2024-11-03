@@ -2,45 +2,46 @@ import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
 import { PathLike } from 'node:fs';
 
-function get(node: any, key: string, defaultValue: any) {
-    const segments = key.split('.');
+function ensureArray(obj: any) {
+    return Array.isArray(obj) ? obj : [obj];
+}
+
+function $(node: any, selector: string) {
+    const segments = selector.split(' ');
     let current = node;
     while (segments.length > 0) {
         const segment = segments.shift()!;
         current = current[segment] ?? undefined;
 
         if (current === undefined) {
-            return defaultValue;
+            return [];
         }
     }
 
-    return current;
+    return ensureArray(current).map(node => new Element(node));
 }
 
-function getAttribute(node: any, key: any, defaultValue?: any) {
-    const symbol = '@';
-
-    return node[`${symbol}_${key}`] ?? defaultValue;
-}
-
-function getText(node: any, key: any, defaultValue?: any) {
-    if (typeof node === 'string') {
-        return node;
+class Element {
+    constructor(private node: any) {
     }
 
-    if (node.hasOwnProperty(key)) {
-        return node[key];
+    getAttribute(key: string) {
+        const symbol = '@';
+
+        return this.node[`${symbol}_${key}`] ?? undefined;
     }
 
-    if (node.hasOwnProperty('#text')) {
-        return node['#text'];
+    getText() {
+        if (typeof this.node === 'string') {
+            return this.node;
+        }
+
+        return this.node['#text'];
     }
 
-    return defaultValue;
-}
-
-function ensureArray(obj: any) {
-    return Array.isArray(obj) ? obj : [obj];
+    find(selector: string) {
+        return $(this.node, selector);
+    }
 }
 
 type TestSuite = {
@@ -65,13 +66,13 @@ class PHPUnitXML {
     }
 
     getTestSuites() {
-        const callback = (tagName: string, node: any, parent: any) => {
-            const name = getAttribute(parent, 'name') as string;
+        const callback = (tagName: string, node: Element, parent: Element) => {
+            const name = parent.getAttribute('name') as string;
 
-            return { tagName, name, value: getText(node, tagName) };
+            return { tagName, name, value: node.getText() };
         };
 
-        return this.getDirectoriesAndFiles<TestSuite>('phpunit.testsuites.testsuite', {
+        return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
             'directory': callback,
             'file': callback,
             'exclude': callback,
@@ -79,11 +80,11 @@ class PHPUnitXML {
     }
 
     getIncludes(): Include[] {
-        return this.getIncludesOrExcludes('phpunit.source.include');
+        return this.getIncludesOrExcludes('phpunit source include');
     }
 
     getExcludes(): Exclude[] {
-        return this.getIncludesOrExcludes('phpunit.source.exclude');
+        return this.getIncludesOrExcludes('phpunit source exclude');
     }
 
     getSources() {
@@ -97,28 +98,28 @@ class PHPUnitXML {
 
     private getIncludesOrExcludes(key: string): IncludeOrExclude[] {
         return this.getDirectoriesAndFiles<IncludeOrExclude>(key, {
-            'directory': (tagName: string, node: any) => {
-                const prefix = getAttribute(node, 'prefix');
-                const suffix = getAttribute(node, 'suffix');
+            'directory': (tagName: string, node: Element) => {
+                const prefix = node.getAttribute('prefix');
+                const suffix = node.getAttribute('suffix');
 
-                return { tagName, value: getText(node, tagName), prefix, suffix };
+                return { tagName, value: node.getText(), prefix, suffix };
             },
-            'file': (tagName: string, node: any) => {
-                return { tagName, value: getText(node, tagName) };
+            'file': (tagName: string, node: Element) => {
+                return { tagName, value: node.getText() };
             },
         });
     }
 
-    get(key: string, defaultValue: any = undefined) {
-        return get(this.root, key, defaultValue);
+    private find(key: string) {
+        return $(this.root, key);
     }
 
     private getDirectoriesAndFiles<T>(key: string, callbacks: {
-        [propName: string]: (tagName: string, node: any, parent: any) => T
+        [propName: string]: (tagName: string, node: Element, parent: Element) => T
     }) {
-        return ensureArray(this.get(key, [])).reduce((results: T[], parent: any) => {
+        return this.find(key).reduce((results: T[], parent: Element) => {
             for (const [type, callback] of Object.entries(callbacks)) {
-                const temp = ensureArray(parent[type] ?? []).map((node) => callback(type, node, parent));
+                const temp = parent.find(type).map((node) => callback(type, node, parent));
 
                 if (temp) {
                     results.push(...temp);
