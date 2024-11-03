@@ -2,33 +2,36 @@ import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
 import { PathLike } from 'node:fs';
 
-function ensureArray(obj: any) {
-    return Array.isArray(obj) ? obj : [obj];
-}
-
-function $(node: any, selector: string) {
-    const segments = selector.split(' ');
-    let current = node;
-    while (segments.length > 0) {
-        const segment = segments.shift()!;
-        current = current[segment] ?? undefined;
-
-        if (current === undefined) {
-            return [];
-        }
+class Document {
+    constructor(private readonly root: any) {
     }
 
-    return ensureArray(current).map(node => new Element(node));
+    querySelectorAll(selector: string) {
+        const segments = selector.split(' ');
+        let current = this.root;
+        while (segments.length > 0) {
+            const segment = segments.shift()!;
+            current = current[segment] ?? undefined;
+
+            if (current === undefined) {
+                return [];
+            }
+        }
+
+        return this.ensureArray(current).map(node => new Element(node));
+    }
+
+    private ensureArray(obj: any) {
+        return Array.isArray(obj) ? obj : [obj];
+    }
 }
 
 class Element {
-    constructor(private node: any) {
+    constructor(private readonly node: any) {
     }
 
     getAttribute(key: string) {
-        const symbol = '@';
-
-        return this.node[`${symbol}_${key}`] ?? undefined;
+        return this.node[`@_${key}`] ?? undefined;
     }
 
     getText() {
@@ -39,8 +42,8 @@ class Element {
         return this.node['#text'];
     }
 
-    find(selector: string) {
-        return $(this.node, selector);
+    querySelectorAll(selector: string) {
+        return new Document(this.node).querySelectorAll(selector);
     }
 }
 
@@ -62,7 +65,10 @@ type IncludeOrExclude = Include | Exclude
 
 
 class PHPUnitXML {
-    constructor(private root: any) {
+    private readonly document: Document;
+
+    constructor(root: any) {
+        this.document = new Document(root);
     }
 
     getTestSuites() {
@@ -110,16 +116,12 @@ class PHPUnitXML {
         });
     }
 
-    private find(key: string) {
-        return $(this.root, key);
-    }
-
-    private getDirectoriesAndFiles<T>(key: string, callbacks: {
+    private getDirectoriesAndFiles<T>(selector: string, callbacks: {
         [propName: string]: (tagName: string, node: Element, parent: Element) => T
     }) {
-        return this.find(key).reduce((results: T[], parent: Element) => {
+        return this.document.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
             for (const [type, callback] of Object.entries(callbacks)) {
-                const temp = parent.find(type).map((node) => callback(type, node, parent));
+                const temp = parent.querySelectorAll(type).map((node) => callback(type, node, parent));
 
                 if (temp) {
                     results.push(...temp);
