@@ -93,6 +93,21 @@ The following commands are available in VS Code's command palette, use the ID to
 }
 ```
 
+Use `phpSubdir` when your PHP files are in a subdirectory of your workspace folder:
+
+```jsonc
+{
+  "phpunit.php": "/usr/bin/php",
+  "phpunit.command": "docker exec -t my-container /bin/sh -c",
+  "phpunit.phpunit": "/var/www/html/vendor/bin/phpunit",
+  "phpunit.args": ["-c", "phpunit.xml"],
+  "phpunit.paths": {
+      "${workspaceFolder}/src": "/var/www/html",
+  },
+  "phpunit.phpSubdir": "src",
+}
+```
+
 ### SSH
 
 ```jsonc

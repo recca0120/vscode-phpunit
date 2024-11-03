@@ -4,7 +4,7 @@
   "displayName": "PHPUnit Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
-  "version": "3.3.3",
+  "version": "3.3.4",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -116,6 +116,11 @@
           "default": "onFailure",
           "description": "Specify if the test report will automatically be shown after execution",
           "scope": "application"
+        },
+        "phpunit.phpSubdir": {
+          "type": "string",
+          "default": "",
+          "description": "If present will use this subdirectory (relative to the workspace folder) when looking for phpunit.xml and test files."
         }
       }
     }
