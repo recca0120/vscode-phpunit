@@ -5,6 +5,7 @@ import { Handler } from './handler';
 import { CommandHandler } from './command-handler';
 import { parseXML } from './phpunit/phpunit-xml-parser/parser';
 import { stat } from 'node:fs/promises';
+import * as path from 'node:path';
 
 async function findAsyncSequential<T>(
     array: T[],
@@ -146,26 +147,32 @@ async function getWorkspaceTestPatterns() {
         return [];
     }
 
-    const directoryPath = (path: string) => path.replace(/[\\|\/]+$/, '') + '/';
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    const directoryPath = (path: string) => {
+        return path === '.' || !path ? '' : path.replace(/[\\|\/]+$/, '') + '/';
+    };
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
         const includePatterns = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
-        const file = await findAsyncSequential(
-            ['phpunit.xml', 'phpunit.dist.xml'].map((file) => workspaceFolder.uri.fsPath + '/' + file),
+        const configurationFile = await findAsyncSequential(
+            [configuration.getConfigurationFile(), 'phpunit.xml', 'phpunit.dist.xml']
+                .filter((file) => !!file)
+                .map((file) => path.join(workspaceFolder.uri.fsPath, file!)),
             async (file) => await checkFileExists(file),
         );
 
-        if (file) {
-            const xml = await parseXML(file);
+        if (configurationFile) {
+            const xml = await parseXML(configurationFile);
+            const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
             for (const item of xml.getTestSuites()) {
                 if (item.tagName === 'directory') {
-                    includePatterns.push(`${directoryPath(item.value)}**/*.php`);
+                    includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*.php`);
                 } else if (item.tagName === 'file') {
-                    includePatterns.push(item.value);
+                    includePatterns.push(`${baseDir}${item.value}`);
                 } else if (item.tagName === 'exclude') {
-                    excludePatterns.push(item.value);
+                    excludePatterns.push(`${baseDir}${item.value}`);
                 }
             }
         }
