@@ -140,17 +140,8 @@ async function getWorkspaceTestPatterns() {
         const includePatterns = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
-        let phpDir = workspaceFolder.uri.fsPath;
-
-        const config = vscode.workspace.getConfiguration();
-        const phpSubdir = config.get('phpunit.phpSubdir') as string;
-
-        if (phpSubdir) {
-            phpDir += '/' + phpSubdir;
-        }
-
         const path = ['phpunit.xml', 'phpunit.dist.xml']
-            .map((path) => phpDir + '/' + path)
+            .map((path) => workspaceFolder.uri.fsPath + '/' + path)
             .find(async (path) => await checkFileExists(path));
 
         if (path) {
@@ -167,14 +158,14 @@ async function getWorkspaceTestPatterns() {
         }
 
         if (includePatterns.length === 0) {
-            includePatterns.push('${phpDir}/tests/**/*.php');
-            excludePatterns.push('${phpDir}/**/vendor/**');
+            includePatterns.push('tests/**/*.php');
+            excludePatterns.push('**/vendor/**');
         }
 
         results.push({
             workspaceFolder,
-            pattern: new vscode.RelativePattern(vscode.Uri.file(phpDir), `{${includePatterns.join(',')}}`),
-            exclude: new vscode.RelativePattern(vscode.Uri.file(phpDir), `{${excludePatterns.join(',')}}`),
+            pattern: new vscode.RelativePattern(workspaceFolder, `{${includePatterns.join(',')}}`),
+            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
         });
     }
     return results;
