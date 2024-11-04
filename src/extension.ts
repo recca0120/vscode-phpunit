@@ -5,8 +5,19 @@ import { Handler } from './handler';
 import { CommandHandler } from './command-handler';
 import { parseXML } from './phpunit/phpunit-xml-parser/parser';
 import { stat } from 'node:fs/promises';
+import * as path from 'node:path';
 
-const testData = new Map<string, TestFile>();
+async function findAsyncSequential<T>(
+    array: T[],
+    predicate: (t: T) => Promise<boolean>,
+): Promise<T | undefined> {
+    for (const t of array) {
+        if (await predicate(t)) {
+            return t;
+        }
+    }
+    return undefined;
+}
 
 async function checkFileExists(filePath: string): Promise<boolean> {
     try {
@@ -21,6 +32,8 @@ async function checkFileExists(filePath: string): Promise<boolean> {
         }
     }
 }
+
+const testData = new Map<string, TestFile>();
 
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
@@ -134,25 +147,32 @@ async function getWorkspaceTestPatterns() {
         return [];
     }
 
-    const trimPath = (path: string) => path.replace(/[\\|\/]+$/, '');
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    const directoryPath = (path: string) => {
+        return path === '.' || !path ? '' : path.replace(/[\\|\/]+$/, '') + '/';
+    };
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
         const includePatterns = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
-        const path = ['phpunit.xml', 'phpunit.dist.xml']
-            .map((path) => workspaceFolder.uri.fsPath + '/' + path)
-            .find(async (path) => await checkFileExists(path));
+        const configurationFile = await findAsyncSequential(
+            [configuration.getConfigurationFile(), 'phpunit.xml', 'phpunit.dist.xml']
+                .filter((file) => !!file)
+                .map((file) => path.join(workspaceFolder.uri.fsPath, file!)),
+            async (file) => await checkFileExists(file),
+        );
 
-        if (path) {
-            const xml = await parseXML(path);
+        if (configurationFile) {
+            const xml = await parseXML(configurationFile);
+            const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
             for (const item of xml.getTestSuites()) {
                 if (item.tagName === 'directory') {
-                    includePatterns.push(`${trimPath(item.value)}/**/*.php`);
+                    includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*.php`);
                 } else if (item.tagName === 'file') {
-                    includePatterns.push(item.value);
+                    includePatterns.push(`${baseDir}${item.value}`);
                 } else if (item.tagName === 'exclude') {
-                    excludePatterns.push(item.value);
+                    excludePatterns.push(`${baseDir}${item.value}`);
                 }
             }
         }

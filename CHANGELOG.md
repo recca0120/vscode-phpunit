@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.3.4] - 2024-11-05
+
+- fix can not find phpunit.xml
+
 ## [3.3.0] - 2024-11-03
 
 - support phpunit.xml

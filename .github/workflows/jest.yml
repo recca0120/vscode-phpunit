@@ -1,5 +1,10 @@
 name: Jest
-on: push
+on:
+  push:
+    branches:
+      - main
+      - '*.x'
+  pull_request:
 jobs:
   test:
     runs-on: ${{ matrix.os }}

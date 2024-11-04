@@ -44,4 +44,16 @@ describe('Configuration Test', () => {
         expect(configuration.get('foo')).toEqual('bar');
         expect(configuration.has('buzz')).toBeFalsy();
     });
+
+    it('get phpunit.xml', () => {
+        const configuration = new Configuration({ args: ['-c', 'src/phpunit.xml'] });
+
+        expect(configuration.getConfigurationFile()).toEqual('src/phpunit.xml');
+    });
+
+    it('can not get phpunit.xml', () => {
+        const configuration = new Configuration({});
+
+        expect(configuration.getConfigurationFile()).toBeUndefined();
+    });
 });
