@@ -1,8 +1,9 @@
 import { WorkspaceConfiguration } from 'vscode';
-import { IConfiguration } from './phpunit';
+import { BaseConfiguration } from './phpunit';
 
-export class Configuration implements IConfiguration {
+export class Configuration extends BaseConfiguration {
     constructor(private workspaceConfiguration: WorkspaceConfiguration) {
+        super();
     }
 
     updateWorkspaceConfiguration(workspaceConfiguration: WorkspaceConfiguration) {
@@ -18,8 +19,6 @@ export class Configuration implements IConfiguration {
     }
 
     async update(key: string, value: any): Promise<void> {
-        console.log(this.workspaceConfiguration);
-
         return this.workspaceConfiguration.update(key, value);
     }
 }

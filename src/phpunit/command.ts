@@ -1,5 +1,4 @@
 import { SpawnOptions } from 'child_process';
-import * as yargsParser from 'yargs-parser';
 import { Result } from './problem-matcher';
 import { Configuration, IConfiguration } from './configuration';
 import { parseValue } from './utils';
@@ -165,17 +164,7 @@ export abstract class Command {
     }
 
     private getArguments(): string[] {
-        const args = [this.arguments, ...(this.configuration.get('args', []) as string[])];
-
-        const { _, ...argv } = yargsParser(args.join(' ').trim(), {
-            alias: { configuration: ['c'] },
-            configuration: {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'camel-case-expansion': false,
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'boolean-negation': false,
-            },
-        });
+        const { _, ...argv } = this.configuration.getArguments(this.arguments);
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
