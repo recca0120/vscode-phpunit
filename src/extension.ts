@@ -6,7 +6,17 @@ import { CommandHandler } from './command-handler';
 import { parseXML } from './phpunit/phpunit-xml-parser/parser';
 import { stat } from 'node:fs/promises';
 
-const testData = new Map<string, TestFile>();
+async function findAsyncSequential<T>(
+    array: T[],
+    predicate: (t: T) => Promise<boolean>,
+): Promise<T | undefined> {
+    for (const t of array) {
+        if (await predicate(t)) {
+            return t;
+        }
+    }
+    return undefined;
+}
 
 async function checkFileExists(filePath: string): Promise<boolean> {
     try {
@@ -21,6 +31,8 @@ async function checkFileExists(filePath: string): Promise<boolean> {
         }
     }
 }
+
+const testData = new Map<string, TestFile>();
 
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
@@ -134,21 +146,22 @@ async function getWorkspaceTestPatterns() {
         return [];
     }
 
-    const trimPath = (path: string) => path.replace(/[\\|\/]+$/, '');
+    const directoryPath = (path: string) => path.replace(/[\\|\/]+$/, '') + '/';
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
         const includePatterns = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
-        const path = ['phpunit.xml', 'phpunit.dist.xml']
-            .map((path) => workspaceFolder.uri.fsPath + '/' + path)
-            .find(async (path) => await checkFileExists(path));
+        const file = await findAsyncSequential(
+            ['phpunit.xml', 'phpunit.dist.xml'].map((file) => workspaceFolder.uri.fsPath + '/' + file),
+            async (file) => await checkFileExists(file),
+        );
 
-        if (path) {
-            const xml = await parseXML(path);
+        if (file) {
+            const xml = await parseXML(file);
             for (const item of xml.getTestSuites()) {
                 if (item.tagName === 'directory') {
-                    includePatterns.push(`${trimPath(item.value)}/**/*.php`);
+                    includePatterns.push(`${directoryPath(item.value)}**/*.php`);
                 } else if (item.tagName === 'file') {
                     includePatterns.push(item.value);
                 } else if (item.tagName === 'exclude') {
