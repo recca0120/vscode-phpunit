@@ -139,7 +139,7 @@
     "test": "node ./out/test/runTest.js ",
     "jest": "jest",
     "jest:watch": "jest --watch-all",
-    "download-api": "vscode-dts main && vscode-dts dev",
+    "download-api": "npx vscode-dts main && npx vscode-dts dev",
     "postinstall": "npm run download-api"
   },
   "devDependencies": {
@@ -150,11 +150,12 @@
     "@types/node": "^20",
     "@types/semver": "^7.5.8",
     "@types/sinon": "^17.0.3",
-    "@types/vscode": "^1.88.0",
     "@types/yargs-parser": "^21.0.3",
     "@typescript-eslint/eslint-plugin": "^8.12.2",
     "@typescript-eslint/parser": "^8.12.2",
+    "@vscode/dts": "^0.4.1",
     "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.1",
     "chai": "^5.1.2",
     "eslint": "^9.13.0",
     "fast-xml-parser": "^4.5.0",
@@ -168,13 +169,9 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.6.3",
-    "vscode-dts": "^0.3.3",
     "vscode-uri": "^3.0.8",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4",
     "yargs-parser": "^21.1.1"
-  },
-  "dependencies": {
-    "vsce": "^2.15.0"
   }
 }
