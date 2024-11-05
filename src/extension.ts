@@ -178,7 +178,7 @@ async function getWorkspaceTestPatterns() {
         }
 
         if (includePatterns.length === 0) {
-            includePatterns.push('tests/**/*.php');
+            includePatterns.push('**/*.php');
             excludePatterns.push('**/vendor/**');
         }
 
