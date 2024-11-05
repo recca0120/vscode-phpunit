@@ -1,7 +1,9 @@
 import { Position, Range, TestController, TestItem, TestItemCollection, Uri, workspace } from 'vscode';
-import { parse, Test } from './phpunit';
+import { Test, TestCaseParser } from './phpunit';
 
 const textDecoder = new TextDecoder('utf-8');
+
+const parser = new TestCaseParser();
 
 export class TestFile {
     private suites: Test[] = [];
@@ -12,7 +14,7 @@ export class TestFile {
 
     async update(ctrl: TestController) {
         const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
-        parse(rawContent, this.uri.fsPath, {
+        parser.parse(rawContent, this.uri.fsPath, {
             onSuite: (suite: Test) => {
                 const testItem = ctrl.createTestItem(suite.id, suite.label, this.uri);
                 testItem.canResolveChildren = true;

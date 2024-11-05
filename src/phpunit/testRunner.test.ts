@@ -1,11 +1,11 @@
 import 'jest';
 import { describe } from '@jest/globals';
 import { spawn } from 'child_process';
-import { TestRunner } from './test-runner';
-import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problem-matcher';
+import { TestRunner } from './testRunner';
+import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './problemMatcher';
 import { Command, LocalCommand, RemoteCommand } from './command';
 import { Configuration } from './configuration';
-import { TestRunnerEvent } from './test-runner-observer';
+import { TestRunnerEvent } from './testRunnerObserver';
 import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
 import * as semver from 'semver';
 

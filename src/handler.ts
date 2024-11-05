@@ -1,6 +1,6 @@
 import { CancellationToken, EventEmitter, OutputChannel, TestController, TestItem, TestItemCollection, TestRun, TestRunRequest, Uri, window, workspace } from 'vscode';
 import { Command, LocalCommand, RemoteCommand, TestRunner } from './phpunit';
-import { TestFile } from './test-file';
+import { TestFile } from './testFile';
 import { Configuration } from './configuration';
 import { OutputChannelObserver, TestResultObserver } from './observers';
 

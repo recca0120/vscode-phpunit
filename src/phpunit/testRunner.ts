@@ -1,12 +1,13 @@
 import { spawn } from 'child_process';
-import { problemMatcher, Result, TestResultKind } from './problem-matcher';
-import { DefaultObserver, TestRunnerEvent, TestRunnerObserver } from './test-runner-observer';
+import { ProblemMatcher, Result, TestResultKind } from './problemMatcher';
+import { DefaultObserver, TestRunnerEvent, TestRunnerObserver } from './testRunnerObserver';
 import { Command } from './command';
 
 export class TestRunner {
     private readonly defaultObserver: DefaultObserver;
+    private readonly problemMatcher = new ProblemMatcher();
+    private readonly teamcityPattern = new RegExp('##teamcity\\[', 'i');
     private observers: TestRunnerObserver[] = [];
-    private teamcityPattern = new RegExp('##teamcity\\[', 'i');
 
     constructor() {
         this.defaultObserver = new DefaultObserver();
@@ -71,7 +72,7 @@ export class TestRunner {
     }
 
     private processLine(line: string, command: Command) {
-        const result = problemMatcher.parse(line);
+        const result = this.problemMatcher.parse(line);
 
         if (result) {
             const mappingResult = command.mapping(result);

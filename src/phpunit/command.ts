@@ -1,5 +1,5 @@
 import { SpawnOptions } from 'child_process';
-import { Result } from './problem-matcher';
+import { Result } from './problemMatcher';
 import { Configuration, IConfiguration } from './configuration';
 import { parseValue } from './utils';
 

@@ -2,12 +2,12 @@ import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
 import { escapeValue } from '../../utils';
 import { IParser, Result, TestResult } from './types';
-import { TestVersionParser } from './test-version-parser';
-import { TestProcessesParser } from './test-processes-parser';
-import { TestRuntimeParser } from './test-runtime-parser';
-import { TestConfigurationParser } from './test-configuration-parser';
-import { TestResultSummaryParser } from './test-result-summary-parser';
-import { TimeAndMemoryParser } from './time-and-memory-parser';
+import { TestVersionParser } from './testVersionParser';
+import { TestProcessesParser } from './testProcessesParser';
+import { TestRuntimeParser } from './testRuntimeParser';
+import { TestConfigurationParser } from './testConfigurationParser';
+import { TestResultSummaryParser } from './testResultSummaryParser';
+import { TimeAndMemoryParser } from './timeAndMemoryParser';
 
 export class TestResultParser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^.*#+teamcity');
@@ -115,5 +115,3 @@ export class TestResultParser implements IParser<Result | undefined> {
         return escapeValue.unescapeSingleQuote(argv);
     }
 }
-
-export const parser = new TestResultParser();

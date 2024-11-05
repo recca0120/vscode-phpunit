@@ -1,5 +1,5 @@
 import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
-import { TestFile } from './test-file';
+import { TestFile } from './testFile';
 import { Handler } from './handler';
 
 export class CommandHandler {
