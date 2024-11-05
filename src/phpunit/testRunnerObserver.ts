@@ -1,4 +1,4 @@
-import { Result, TestConfiguration, TestCount, TestExtraResultEvent, TestProcesses, TestResult, TestResultEvent, TestResultKind, TestResultSummary, TestRuntime, TestVersion, TimeAndMemory } from './problem-matcher';
+import { Result, TestConfiguration, TestCount, TestExtraResultEvent, TestProcesses, TestResult, TestResultEvent, TestResultKind, TestResultSummary, TestRuntime, TestVersion, TimeAndMemory } from './problemMatcher';
 
 export enum TestRunnerEvent {
     run = 'run',

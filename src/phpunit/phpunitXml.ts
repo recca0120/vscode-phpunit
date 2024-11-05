@@ -1,6 +1,4 @@
 import { XMLParser } from 'fast-xml-parser';
-import { readFile } from 'node:fs/promises';
-import { PathLike } from 'node:fs';
 
 type TestSuite = {
     tagName: string;
@@ -18,7 +16,7 @@ type Include = {
 type Exclude = Include
 type IncludeOrExclude = Include | Exclude
 
-const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
+const phpunitXml = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 class Element {
     constructor(private readonly node: any) {
@@ -57,11 +55,11 @@ class Element {
 }
 
 
-class PHPUnitXML {
+export class PHPUnitXML {
     private readonly element: Element;
 
     constructor(text: string | Buffer) {
-        this.element = new Element(parser.parse(text.toString()));
+        this.element = new Element(phpunitXml.parse(text.toString()));
     }
 
     getTestSuites() {
@@ -118,7 +116,3 @@ class PHPUnitXML {
         }, []);
     }
 }
-
-export const parse = (text: Buffer | string) => new PHPUnitXML(text);
-
-export const parseXML = async (path: PathLike) => parse(await readFile(path));

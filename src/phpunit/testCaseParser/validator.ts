@@ -1,6 +1,6 @@
 import { Class, Method } from 'php-parser';
 import { getName } from '../utils';
-import { isTest } from './annotation-parser';
+import { isTest } from './annotationParser';
 
 export class Validator {
     private lookup: { [p: string]: Function } = {

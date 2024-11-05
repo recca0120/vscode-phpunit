@@ -1,7 +1,7 @@
 import { Class, Declaration, Namespace } from 'php-parser';
 import { getName } from '../utils';
-import { parse as parseAnnotation } from './annotation-parser';
-import { TestDefinition } from './parser';
+import { parse as parseAnnotation } from './annotationParser';
+import { TestDefinition } from './testCaseParser';
 
 export class PropertyParser {
     private readonly lookup: { [p: string]: Function } = {

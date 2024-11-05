@@ -1,6 +1,8 @@
-import { parse } from './parser';
+import 'jest';
+import { PHPUnitXML } from './phpunitXml';
 
 describe('PHPUnit XML Test', () => {
+    const parse = (text: Buffer | string) => new PHPUnitXML(text);
     const generateXML = (xml: string) => {
         return `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

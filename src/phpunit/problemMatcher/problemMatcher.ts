@@ -1,6 +1,6 @@
-import { parser, TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from './parser';
+import { TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from './parser';
 
-class ProblemMatcher {
+export class ProblemMatcher {
     private collect = new Map<string, TestResult>();
 
     private lookup: { [p: string]: Function } = {
@@ -12,7 +12,7 @@ class ProblemMatcher {
         [TestResultEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: TestResultParser) {
+    constructor(private parser: TestResultParser = new TestResultParser()) {
     }
 
     parse(
@@ -73,5 +73,3 @@ class ProblemMatcher {
         return `${testResult.name}-${testResult.flowId}`;
     }
 }
-
-export const problemMatcher = new ProblemMatcher(parser);

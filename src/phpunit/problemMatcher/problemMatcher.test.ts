@@ -1,8 +1,9 @@
 import 'jest';
 import { it } from '@jest/globals';
-import { problemMatcher } from './problem-matcher';
+import { ProblemMatcher } from './problemMatcher';
 import { TestExtraResultEvent, TestResultEvent } from './parser';
 
+const problemMatcher = new ProblemMatcher();
 describe('Problem Matcher Test', () => {
     describe('ProblemMatcher Text', () => {
         describe('Teamcity Life Cycle', () => {

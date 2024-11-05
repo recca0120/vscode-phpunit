@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { Configuration } from './configuration';
-import { TestFile } from './test-file';
+import { TestFile } from './testFile';
 import { Handler } from './handler';
-import { CommandHandler } from './command-handler';
-import { parseXML } from './phpunit/phpunit-xml-parser/parser';
-import { stat } from 'node:fs/promises';
+import { CommandHandler } from './commandHandler';
+import { PHPUnitXML } from './phpunit';
+import { readFile, stat } from 'node:fs/promises';
 import * as path from 'node:path';
 
 async function findAsyncSequential<T>(
@@ -164,7 +164,7 @@ async function getWorkspaceTestPatterns() {
         );
 
         if (configurationFile) {
-            const xml = await parseXML(configurationFile);
+            const xml = new PHPUnitXML(await readFile(configurationFile));
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
             for (const item of xml.getTestSuites()) {
                 if (item.tagName === 'directory') {
