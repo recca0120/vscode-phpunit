@@ -108,23 +108,22 @@ async function getWorkspaceTestPatterns() {
 
         results.push({
             workspaceFolder,
-            pattern: new vscode.RelativePattern(workspaceFolder, `{${includePatterns.join(',')}}`),
-            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
+            pattern: new vscode.RelativePattern(workspaceFolder, `${includePatterns.join(',')}`),
+            exclude: new vscode.RelativePattern(workspaceFolder, `${excludePatterns.join(',')}`),
         });
     }
     return results;
 }
 
 async function findInitialFiles(
-    controller: vscode.TestController,
+    ctrl: vscode.TestController,
     pattern: vscode.GlobPattern,
     exclude: vscode.GlobPattern,
 ) {
     testData.clear();
-    controller.items.forEach((item) => controller.items.delete(item.id));
-    await vscode.workspace.findFiles(pattern, exclude).then((files) => {
-        return Promise.all(files.map((file) => getOrCreateFile(controller, file)));
-    });
+    ctrl.items.forEach((item) => ctrl.items.delete(item.id));
+    const files = await vscode.workspace.findFiles(pattern, exclude);
+    await Promise.all(files.map((file) => getOrCreateFile(ctrl, file)));
 }
 
 async function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
@@ -504,34 +503,23 @@ export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
-    testData.clear();
-    await Promise.all(
-        vscode.workspace.textDocuments.map((document) => {
-            return updateNodeForDocument(document, ctrl);
-        }),
-    );
-
-    const reload = async () => {
-        await Promise.all(
-            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
-                findInitialFiles(ctrl, pattern, exclude),
-            ),
-        );
-    };
-
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument((document) => updateNodeForDocument(document, ctrl)),
         vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document, ctrl)),
     );
-
-    ctrl.refreshHandler = reload;
+    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
+    ctrl.refreshHandler = async () => {
+        const files = (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
+            return findInitialFiles(ctrl, pattern, exclude);
+        });
+        await Promise.all(files);
+    };
     ctrl.resolveHandler = async (item) => {
         if (!item) {
             context.subscriptions.push(...(await startWatchingWorkspace(ctrl, fileChangedEmitter)));
         }
     };
 
-    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
     const handler = new Handler(testData, configuration, outputChannel, ctrl, fileChangedEmitter, getOrCreateFile);
 
     const testRunProfile = ctrl.createRunProfile(
@@ -544,7 +532,13 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     const commandHandler = new CommandHandler(testRunProfile, testData);
-    context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', reload));
+    context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', async () => {
+        await Promise.all(
+            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
+                return findInitialFiles(ctrl, pattern, exclude);
+            }),
+        );
+    }));
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());

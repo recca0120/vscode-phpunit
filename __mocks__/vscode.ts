@@ -216,16 +216,16 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: jest.fn().mockImplementation((pattern) => {
-        return Promise.resolve(
-            glob
-                .sync(pattern.pattern, {
-                    absolute: true,
-                    ignore: ['**/node_modules/**', '**/.git/**', '**/vendor/**'],
-                    cwd: pattern.uri.fsPath,
-                })
-                .map((file) => URI.parse(file)),
-        );
+    findFiles: jest.fn().mockImplementation(async (pattern: any, exclude: any) => {
+        const splitPattern = (pattern: string) => {
+            return pattern.replace(/^{|}$/g, '').split(',').map((v: string) => v.trim());
+        };
+
+        return (await glob(splitPattern(pattern.pattern), {
+            absolute: true,
+            ignore: splitPattern(exclude.pattern),
+            cwd: pattern.base,
+        })).map((file) => URI.parse(file));
     }),
     createFileSystemWatcher: jest.fn().mockImplementation(() => {
         return {
