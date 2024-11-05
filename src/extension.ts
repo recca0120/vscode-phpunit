@@ -54,7 +54,7 @@ async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestCo
     await getOrCreateFile(ctrl, e.uri);
 }
 
-export async function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) {
+export async function getOrCreateFile(ctrl: vscode.TestController, uri: vscode.Uri) {
     const existing = testData.get(uri.toString());
 
     if (existing) {
@@ -63,7 +63,7 @@ export async function getOrCreateFile(controller: vscode.TestController, uri: vs
 
     const testFile = new TestFile(uri);
 
-    testData.set(uri.toString(), await testFile.update(controller));
+    testData.set(uri.toString(), await testFile.update(ctrl));
 }
 
 async function getWorkspaceTestPatterns() {
@@ -116,23 +116,23 @@ async function getWorkspaceTestPatterns() {
 }
 
 async function findInitialFiles(
-    controller: vscode.TestController,
+    ctrl: vscode.TestController,
     pattern: vscode.GlobPattern,
     exclude: vscode.GlobPattern,
 ) {
     testData.clear();
-    controller.items.forEach((item) => controller.items.delete(item.id));
+    ctrl.items.forEach((item) => ctrl.items.delete(item.id));
     await vscode.workspace.findFiles(pattern, exclude).then((files) => {
-        return Promise.all(files.map((file) => getOrCreateFile(controller, file)));
+        return Promise.all(files.map((file) => getOrCreateFile(ctrl, file)));
     });
 }
 
-async function startWatchingWorkspace(controller: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
+async function startWatchingWorkspace(ctrl: vscode.TestController, fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
     return (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {
-            getOrCreateFile(controller, uri);
+            getOrCreateFile(ctrl, uri);
             fileChangedEmitter.fire(uri);
         });
 
@@ -140,10 +140,10 @@ async function startWatchingWorkspace(controller: vscode.TestController, fileCha
             const id = uri.toString();
             const testFile = testData.get(id);
             if (testFile) {
-                testFile.delete(controller);
+                testFile.delete(ctrl);
                 testData.delete(id);
             }
-            getOrCreateFile(controller, uri);
+            getOrCreateFile(ctrl, uri);
             fileChangedEmitter.fire(uri);
         });
 
@@ -151,12 +151,12 @@ async function startWatchingWorkspace(controller: vscode.TestController, fileCha
             const id = uri.toString();
             const testFile = testData.get(id);
             if (testFile) {
-                testFile.delete(controller);
+                testFile.delete(ctrl);
                 testData.delete(id);
             }
         });
 
-        findInitialFiles(controller, pattern, exclude);
+        findInitialFiles(ctrl, pattern, exclude);
 
         return watcher;
     });
