@@ -1,2 +1,2 @@
-export { TestResultObserver } from './test-result-observer';
-export { OutputChannelObserver } from './output-channel-observer';
+export { TestResultObserver } from './testResultObserver';
+export { OutputChannelObserver } from './outputChannelObserver';

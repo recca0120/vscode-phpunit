@@ -126,11 +126,11 @@ describe('Extension Test', () => {
 
         it('should load tests', async () => {
             await activate(context);
-
+            const ctrl = getTestController();
             const file = Uri.file(path.join(root, 'tests/AssertionsTest.php'));
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
-            const parent = getTestController().items.get(testId);
+            const parent = ctrl.items.get(testId);
             const child = parent.children.get(`${testId}::test_passed`);
 
             expect(parent).toEqual(
@@ -183,11 +183,10 @@ describe('Extension Test', () => {
 
         it('should run all tests', async () => {
             await activate(context);
-
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-
             const request = { include: undefined, exclude: [], profile: runProfile };
+
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
             expect(spawn).toHaveBeenCalledWith(
@@ -207,25 +206,19 @@ describe('Extension Test', () => {
 
         it('should run test suite', async () => {
             await activate(context);
-
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
             const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
-            expect(spawn).toHaveBeenCalledWith(
-                'php',
-                [
-                    'vendor/bin/phpunit',
-                    normalPath(phpUnitProject('tests/AssertionsTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                { cwd },
-            );
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
 
             expectTestResultCalled(ctrl, {
                 enqueued: 9,
@@ -251,17 +244,13 @@ describe('Extension Test', () => {
 
             await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
 
-            expect(spawn).toHaveBeenCalledWith(
-                'php',
-                [
-                    'vendor/bin/phpunit',
-                    expect.stringMatching(pattern),
-                    normalPath(phpUnitProject('tests/CalculatorTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                { cwd },
-            );
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                expect.stringMatching(pattern),
+                normalPath(phpUnitProject('tests/CalculatorTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
 
             expectTestResultCalled(ctrl, {
                 enqueued: 1,
@@ -272,9 +261,7 @@ describe('Extension Test', () => {
             });
 
             const { failed } = getTestRun(ctrl);
-            const [, message] = (failed as jest.Mock).mock.calls.find(
-                ([test]) => test.id === testId,
-            );
+            const [, message] = (failed as jest.Mock).mock.calls.find(([test]) => test.id === testId);
 
             expect(message.location).toEqual(
                 expect.objectContaining({
