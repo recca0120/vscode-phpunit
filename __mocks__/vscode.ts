@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFile } from 'node:fs/promises';
 import { CancellationToken, DocumentFilter, MarkdownString, TestController, TestItem, TestItemCollection, TestRunRequest, TestTag, TextDocument, WorkspaceFolder } from 'vscode';
 import { glob } from 'glob';
 import { URI } from 'vscode-uri';
@@ -88,18 +88,16 @@ const createTestItem = jest
 
 const createRunProfile = jest
     .fn()
-    .mockImplementation(
-        (
-            label: string,
-            kind: TestRunProfileKind,
-            runHandler: (
-                request: TestRunRequest,
-                token: CancellationToken,
-            ) => Thenable<void> | void,
-            isDefault?: boolean,
-            tag?: TestTag,
-        ) => ({ label, kind, isDefault, tag, runHandler }),
-    );
+    .mockImplementation((
+        label: string,
+        kind: TestRunProfileKind,
+        runHandler: (
+            request: TestRunRequest,
+            token: CancellationToken,
+        ) => Thenable<void> | void,
+        isDefault?: boolean,
+        tag?: TestTag,
+    ) => ({ label, kind, isDefault, tag, runHandler }));
 
 const createTestRun = jest
     .fn()
@@ -216,17 +214,15 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: jest.fn().mockImplementation((pattern, exclude) => {
+    findFiles: jest.fn().mockImplementation(async (pattern, exclude) => {
         const splitPattern = (pattern: string) => {
             return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
         };
-        return Promise.resolve(
-            glob.sync(splitPattern(pattern.pattern), {
-                absolute: true,
-                ignore: splitPattern(exclude.pattern),
-                cwd: pattern.uri.fsPath,
-            }).map((file) => URI.parse(file)),
-        );
+        return (await glob(splitPattern(pattern.pattern), {
+            absolute: true,
+            ignore: splitPattern(exclude.pattern),
+            cwd: pattern.uri.fsPath,
+        })).map((file) => URI.parse(file));
     }),
     createFileSystemWatcher: jest.fn().mockImplementation(() => {
         return {
@@ -242,9 +238,7 @@ const workspace = {
     onDidOpenTextDocument: jest.fn().mockReturnValue(new Disposable()),
     onDidChangeTextDocument: jest.fn().mockReturnValue(new Disposable()),
     fs: {
-        readFile: jest.fn().mockImplementation((uri: URI) => {
-            return new Promise((resolve) => resolve(readFileSync(uri.fsPath)));
-        }),
+        readFile: jest.fn().mockImplementation((uri: URI) => readFile(uri.fsPath)),
     },
 };
 
