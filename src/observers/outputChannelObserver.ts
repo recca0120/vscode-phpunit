@@ -220,7 +220,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
                 this.printMessage(this.decorated.default),
                 result.details.reduce((msg, { file, line }) => {
-                    return (msg += this.printMessage(this.decorated.default, `${file}:${line}`));
+                    return (msg + this.printMessage(this.decorated.default, `${file}:${line}`));
                 }, ''),
                 this.printMessage(this.decorated.last),
             ].join('') + EOL,
@@ -242,7 +242,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
         const indent = '     ';
 
         return message.split(/\r\n|\n/g).reduce((msg, line, index) => {
-            return (msg += `${indent}${decorated} ${index === 0 ? prefix : ''}${line}${EOL}`);
+            return (msg + `${indent}${decorated} ${index === 0 ? prefix : ''}${line}${EOL}`);
         }, '');
     }
 
