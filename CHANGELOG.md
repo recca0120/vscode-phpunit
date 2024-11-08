@@ -4,6 +4,10 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.3.8] - 2024-11-08
+
+- support phpunit.xml testsuite directory suffix attribute
+
 ## [3.3.4] - 2024-11-05
 
 - fix can not find phpunit.xml

@@ -4,6 +4,8 @@ type TestSuite = {
     tagName: string;
     name: string;
     value: string;
+    prefix?: string;
+    suffix?: string;
 }
 
 type Include = {
@@ -65,8 +67,10 @@ export class PHPUnitXML {
     getTestSuites() {
         const callback = (tagName: string, node: Element, parent: Element) => {
             const name = parent.getAttribute('name') as string;
+            const prefix = node.getAttribute('prefix');
+            const suffix = node.getAttribute('suffix');
 
-            return { tagName, name, value: node.getText() };
+            return { tagName, name, value: node.getText(), prefix, suffix };
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
