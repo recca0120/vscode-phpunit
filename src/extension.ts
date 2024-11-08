@@ -94,7 +94,8 @@ async function getWorkspaceTestPatterns() {
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
             for (const item of xml.getTestSuites()) {
                 if (item.tagName === 'directory') {
-                    includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*.php`);
+                    const suffix = item.suffix ?? '.php';
+                    includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
                 } else if (item.tagName === 'file') {
                     includePatterns.push(`${baseDir}${item.value}`);
                 } else if (item.tagName === 'exclude') {

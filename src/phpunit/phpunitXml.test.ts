@@ -21,7 +21,7 @@ describe('PHPUnit XML Test', () => {
         expect(phpUnitXML.getExcludes()).toEqual([]);
     });
 
-    it('get one testsuites one directory', () => {
+    it('one testsuites one directory', () => {
         expect(parse(generateXML(`
             <testsuites>
                 <testsuite name="Unit">
@@ -33,7 +33,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get one testsuites two directories', () => {
+    it('one testsuites two directories', () => {
         expect(parse(generateXML(`
             <testsuites>
                 <testsuite name="Unit">
@@ -47,7 +47,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get two testsuites one directory', () => {
+    it('two testsuites one directory', () => {
         expect(parse(generateXML(`
             <testsuites>
                 <testsuite name="Unit">
@@ -63,7 +63,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get two testsuites two directory', () => {
+    it('two testsuites two directory', () => {
         expect(parse(generateXML(`
             <testsuites>
                 <testsuite name="Unit">
@@ -83,7 +83,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get one testsuites two directory two file', () => {
+    it('one testsuites two directory two file', () => {
         expect(parse(generateXML(`
             <testsuites>
                 <testsuite name="Unit">
@@ -101,7 +101,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get one testsuites one directory and one exclude', () => {
+    it('one testsuites one directory and one exclude', () => {
         expect(parse(generateXML(`
             <testsuites>
                 <testsuite name="Unit">
@@ -115,7 +115,20 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get source include one directory', () => {
+    it('testsuite directory has suffix', () => {
+        expect(parse(generateXML(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory suffix=".phpt">tests/Unit</directory>
+                </testsuite>
+            </testsuites>
+        `)).getTestSuites()).toEqual([
+            { tagName: 'directory', name: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
+        ]);
+    });
+
+
+    it('source include one directory', () => {
         expect(parse(generateXML(`
             <source>
                 <include>
@@ -127,7 +140,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get source include two directory', () => {
+    it('source include two directory', () => {
         expect(parse(generateXML(`
             <source>
                 <include>
@@ -141,7 +154,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get source include one directory and one file', () => {
+    it('source include one directory and one file', () => {
         expect(parse(generateXML(`
             <source>
                 <include>
@@ -155,7 +168,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get source include two directory and two file', () => {
+    it('source include two directory and two file', () => {
         expect(parse(generateXML(`
             <source>
                 <include>
@@ -173,7 +186,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get source exclude one directory and one file', () => {
+    it('source exclude one directory and one file', () => {
         expect(parse(generateXML(`
             <source>
                 <exclude>
@@ -187,7 +200,7 @@ describe('PHPUnit XML Test', () => {
         ]);
     });
 
-    it('get sources', () => {
+    it('sources', () => {
         expect(parse(generateXML(`
             <source>
                 <include>
