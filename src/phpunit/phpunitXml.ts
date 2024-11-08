@@ -21,7 +21,7 @@ type IncludeOrExclude = Include | Exclude;
 const phpunitXml = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 class Element {
-    constructor(private readonly node: any) {}
+    constructor(private readonly node: any) { }
 
     getAttribute(key: string) {
         return this.node[`@_${key}`] ?? undefined;
@@ -58,7 +58,7 @@ class Element {
 export class PHPUnitXML {
     private readonly element: Element;
 
-    constructor(text: string | Buffer) {
+    constructor(text: string | Buffer | Uint8Array) {
         this.element = new Element(phpunitXml.parse(text.toString()));
     }
 

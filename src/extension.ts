@@ -18,16 +18,8 @@ import {
     workspace,
 } from 'vscode';
 import { Configuration } from './configuration';
-import {
-    Command,
-    LocalCommand,
-    PHPUnitXML,
-    RemoteCommand,
-    Test,
-    TestCaseParser,
-    TestRunner,
-} from './phpunit';
-import { readFile, stat } from 'node:fs/promises';
+import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestCaseParser, TestRunner } from './phpunit';
+import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 import { OutputChannelObserver, TestResultObserver } from './observers';
 
@@ -63,7 +55,7 @@ async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestCo
     }
 
     const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-    const workspaceTestPattern = (await getWorkspaceTestPatterns()).find(({ workspaceFolder }) => {
+    const workspaceTestPattern = (await getWorkspaceTestPatterns()).find(({workspaceFolder}) => {
         return currentWorkspaceFolder!.name === workspaceFolder.name;
     });
 
@@ -71,7 +63,7 @@ async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestCo
         return;
     }
 
-    if (vscode.languages.match({ pattern: workspaceTestPattern.exclude.pattern }, e) !== 0) {
+    if (vscode.languages.match({pattern: workspaceTestPattern.exclude.pattern}, e) !== 0) {
         return;
     }
 
@@ -114,11 +106,10 @@ async function getWorkspaceTestPatterns() {
         );
 
         if (configurationFile) {
-            const xml = new PHPUnitXML(await readFile(configurationFile));
-            const baseDir = directoryPath(
-                path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)),
-            );
-            for (const item of xml.getTestSuites()) {
+            const xml = new PHPUnitXML(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
+            const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
+
+            xml.getTestSuites().forEach((item) => {
                 if (item.tagName === 'directory') {
                     const suffix = item.suffix ?? '.php';
                     includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
@@ -127,7 +118,7 @@ async function getWorkspaceTestPatterns() {
                 } else if (item.tagName === 'exclude') {
                     excludePatterns.push(`${baseDir}${item.value}`);
                 }
-            }
+            });
         }
 
         if (includePatterns.length === 0) {
@@ -160,7 +151,7 @@ async function startWatchingWorkspace(
     ctrl: vscode.TestController,
     fileChangedEmitter: vscode.EventEmitter<vscode.Uri>,
 ) {
-    return (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
+    return (await getWorkspaceTestPatterns()).map(({pattern, exclude}) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {
@@ -204,7 +195,8 @@ export class Handler {
         private ctrl: TestController,
         private fileChangedEmitter: EventEmitter<Uri>,
         private getOrCreateFile: Function,
-    ) {}
+    ) {
+    }
 
     getLatestTestRunRequest() {
         return this.latestTestRunRequest;
@@ -249,7 +241,7 @@ export class Handler {
             return;
         }
 
-        const options = { cwd: workspaceFolder!.uri.fsPath };
+        const options = {cwd: workspaceFolder!.uri.fsPath};
 
         return this.isRemote()
             ? new RemoteCommand(this.configuration, options)
@@ -283,7 +275,8 @@ class TestQueueHandler {
         private request: TestRunRequest,
         private run: TestRun,
         private testData: Map<string, TestFile>,
-    ) {}
+    ) {
+    }
 
     public async discoverTests(tests: Iterable<TestItem>) {
         for (const test of tests) {
@@ -293,7 +286,7 @@ class TestQueueHandler {
 
             if (!test.canResolveChildren) {
                 this.run.enqueued(test);
-                this.queue.push({ test });
+                this.queue.push({test});
             } else {
                 await this.discoverTests(gatherTestItems(test.children));
             }
@@ -349,7 +342,8 @@ export class TestFile {
     private suites: Test[] = [];
     private testItems: TestItem[] = [];
 
-    constructor(public uri: Uri) {}
+    constructor(public uri: Uri) {
+    }
 
     async update(ctrl: TestController) {
         const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
@@ -462,7 +456,8 @@ export class CommandHandler {
     constructor(
         private testRunProfile: TestRunProfile,
         private testData: Map<string, TestFile>,
-    ) {}
+    ) {
+    }
 
     runAll() {
         return commands.registerCommand('phpunit.run-all', () => {
@@ -548,7 +543,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const reload = async () => {
         await Promise.all(
-            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
+            (await getWorkspaceTestPatterns()).map(({pattern, exclude}) =>
                 findInitialFiles(ctrl, pattern, exclude),
             ),
         );
