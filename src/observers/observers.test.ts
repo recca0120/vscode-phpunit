@@ -37,11 +37,9 @@ describe('OutputChannelObserver', () => {
         }
 
         const outputChannel = vscode.window.createOutputChannel('phpunit');
-        const observer = new OutputChannelObserver(
-            outputChannel,
-            configuration,
-            { continuous: false } as TestRunRequest,
-        );
+        const observer = new OutputChannelObserver(outputChannel, configuration, {
+            continuous: false,
+        } as TestRunRequest);
 
         const cwd = phpUnitProject('');
         const command = new LocalCommand(configuration, { cwd });
@@ -150,9 +148,9 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
-                `     ├ Failed asserting that false is true.${EOL}` +
-                `     │ ${EOL}` +
-                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`,
+                    `     ├ Failed asserting that false is true.${EOL}` +
+                    `     │ ${EOL}` +
+                    `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22${EOL}`,
             ),
         );
     });
@@ -178,18 +176,18 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
-                `     ├ Failed asserting that two arrays are identical.${EOL}` +
-                `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}${EOL}` +
-                `     ┊     'a' => 'b'${DOT}${EOL}` +
-                `     ┊     'c' => 'd'${DOT}${EOL}` +
-                `     ┊ ${ARRAY_CLOSE}${EOL}` +
-                `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}${EOL}` +
-                `     ┊     'e' => 'f'${DOT}${EOL}` +
-                `     ┊     0 => 'g'${DOT}${EOL}` +
-                `     ┊     1 => 'h'${DOT}${EOL}` +
-                `     ┊ ${ARRAY_CLOSE}${EOL}` +
-                `     │ ${EOL}` +
-                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`,
+                    `     ├ Failed asserting that two arrays are identical.${EOL}` +
+                    `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}${EOL}` +
+                    `     ┊     'a' => 'b'${DOT}${EOL}` +
+                    `     ┊     'c' => 'd'${DOT}${EOL}` +
+                    `     ┊ ${ARRAY_CLOSE}${EOL}` +
+                    `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}${EOL}` +
+                    `     ┊     'e' => 'f'${DOT}${EOL}` +
+                    `     ┊     0 => 'g'${DOT}${EOL}` +
+                    `     ┊     1 => 'h'${DOT}${EOL}` +
+                    `     ┊ ${ARRAY_CLOSE}${EOL}` +
+                    `     │ ${EOL}` +
+                    `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27${EOL}`,
             ),
         );
     });

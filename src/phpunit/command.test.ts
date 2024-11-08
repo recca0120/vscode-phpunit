@@ -17,7 +17,7 @@ describe('Command Test', () => {
         it('should add -f when phpunit binary is paratest and has --filter', () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments("--filter='^.*::(test_passed)( with data set .*)?$'");
 
             const { cmd, args } = command.apply();
 
@@ -34,9 +34,12 @@ describe('Command Test', () => {
         it('should run Windows Path', () => {
             const cwd = phpUnitProjectForWindows('');
             const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
-            const command = givenCommand({
-                phpunit: `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
-            }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            const command = givenCommand(
+                {
+                    phpunit: `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
+                },
+                cwd,
+            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
@@ -96,7 +99,7 @@ describe('Command Test', () => {
             const command = givenCommand({
                 command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments("--filter='^.*::(test_passed)( with data set .*)?$'");
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
@@ -109,7 +112,7 @@ describe('Command Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                'php vendor/bin/paratest \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--colors=never\' \'--teamcity\' \'-f\'',
+                "php vendor/bin/paratest '--filter=^.*::(test_passed)( with data set .*)?$' '--colors=never' '--teamcity' '-f'",
             ]);
         });
 
@@ -132,21 +135,24 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                'php vendor/bin/phpunit \'--filter=^.*::(test_passed)( with data set .*)?$\' /var/www/tests/AssertionsTest.php \'--colors=never\' \'--teamcity\'',
+                "php vendor/bin/phpunit '--filter=^.*::(test_passed)( with data set .*)?$' /var/www/tests/AssertionsTest.php '--colors=never' '--teamcity'",
             ]);
         });
 
         it('should replace workspaceFolder for Windows Path', () => {
             const cwd = phpUnitProjectForWindows('');
             const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
-            const command = givenCommand({
-                command: 'docker exec --workdir=/var/www/ container_name bash -c',
-                phpunit: 'vendor/bin/phpunit',
-                paths: {
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
-                    '${workspaceFolder}': '/var/www',
+            const command = givenCommand(
+                {
+                    command: 'docker exec --workdir=/var/www/ container_name bash -c',
+                    phpunit: 'vendor/bin/phpunit',
+                    paths: {
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        '${workspaceFolder}': '/var/www',
+                    },
                 },
-            }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+                cwd,
+            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
@@ -156,7 +162,7 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                'php vendor/bin/phpunit \'--filter=^.*::(test_passed)( with data set .*)?$\' /var/www/tests/AssertionsTest.php \'--colors=never\' \'--teamcity\'',
+                "php vendor/bin/phpunit '--filter=^.*::(test_passed)( with data set .*)?$' /var/www/tests/AssertionsTest.php '--colors=never' '--teamcity'",
             ]);
         });
     });

@@ -21,8 +21,7 @@ export class TestResultParser implements IParser<Result | undefined> {
         new TestResultSummaryParser(),
     ];
 
-    constructor() {
-    }
+    constructor() {}
 
     public parse(text: string): Result | undefined {
         return this.is(text)
