@@ -17,7 +17,10 @@ class PathReplacer {
 
     private mapping = new Map<string, string>();
 
-    constructor(private options: SpawnOptions = {}, paths?: Path) {
+    constructor(
+        private options: SpawnOptions = {},
+        paths?: Path,
+    ) {
         if (paths) {
             for (const local in paths) {
                 this.mapping.set(
@@ -170,7 +173,7 @@ export abstract class Command {
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
             .reduce(
                 (args: any, [key, value]) => [...parseValue(key, value), ...args],
-                _.map((v) => typeof v === 'number' ? v : decodeURIComponent(v)),
+                _.map((v) => (typeof v === 'number' ? v : decodeURIComponent(v))),
             )
             .map((input: string) => this.getPathReplacer().localToRemote(input))
             .concat('--colors=never', '--teamcity');

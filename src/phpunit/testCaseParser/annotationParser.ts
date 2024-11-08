@@ -53,14 +53,6 @@ export class AttributeParser {
 }
 
 export class AnnotationParser {
-    private readonly template = (annotation: string) =>
-        `@${annotation}\\s+(?<${annotation}>[^\\n]+)`;
-
-    private readonly pattern: RegExp = new RegExp(
-        lookup.map((name) => this.template(name)).join('|'),
-        'g',
-    );
-
     public parse(declaration: Declaration): Annotations {
         return this.parseComments(declaration);
     }
@@ -69,9 +61,17 @@ export class AnnotationParser {
         return !method.leadingComments
             ? false
             : new RegExp('@test').test(
-                method.leadingComments.map((comment) => comment.value).join('\n'),
-            );
+                  method.leadingComments.map((comment) => comment.value).join('\n'),
+              );
     }
+
+    private readonly template = (annotation: string) =>
+        `@${annotation}\\s+(?<${annotation}>[^\\n]+)`;
+
+    private readonly pattern: RegExp = new RegExp(
+        lookup.map((name) => this.template(name)).join('|'),
+        'g',
+    );
 
     private parseComments(declaration: Declaration) {
         const comments = declaration.leadingComments ?? [];

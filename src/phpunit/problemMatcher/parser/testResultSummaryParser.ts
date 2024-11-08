@@ -3,7 +3,14 @@ import { camel } from '../../utils';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
-        const items = ['Error(s)?', 'Failure(s)?', 'Skipped', 'Incomplete', 'Risky', 'PHPUnit\sDeprecations'];
+        const items = [
+            'Error(s)?',
+            'Failure(s)?',
+            'Skipped',
+            'Incomplete',
+            'Risky',
+            'PHPUnitsDeprecations',
+        ];
         const end = '\\s(\\d+)[\\.\\s,]\\s?';
         const tests = `Test(s)?:${end}`;
         const assertions = `Assertions:${end}`;

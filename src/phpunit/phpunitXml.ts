@@ -6,23 +6,22 @@ type TestSuite = {
     value: string;
     prefix?: string;
     suffix?: string;
-}
+};
 
 type Include = {
     tagName: string;
     value: string;
     prefix?: string;
     suffix?: string;
-}
+};
 
-type Exclude = Include
-type IncludeOrExclude = Include | Exclude
+type Exclude = Include;
+type IncludeOrExclude = Include | Exclude;
 
 const phpunitXml = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 class Element {
-    constructor(private readonly node: any) {
-    }
+    constructor(private readonly node: any) {}
 
     getAttribute(key: string) {
         return this.node[`@_${key}`] ?? undefined;
@@ -48,14 +47,13 @@ class Element {
             }
         }
 
-        return this.ensureArray(current).map(node => new Element(node));
+        return this.ensureArray(current).map((node) => new Element(node));
     }
 
     private ensureArray(obj: any) {
         return Array.isArray(obj) ? obj : [obj];
     }
 }
-
 
 export class PHPUnitXML {
     private readonly element: Element;
@@ -74,7 +72,9 @@ export class PHPUnitXML {
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
-            'directory': callback, 'file': callback, 'exclude': callback,
+            directory: callback,
+            file: callback,
+            exclude: callback,
         });
     }
 
@@ -87,29 +87,38 @@ export class PHPUnitXML {
     }
 
     getSources() {
-        const appendType = (type: string, objs: IncludeOrExclude[]) => objs.map(obj => ({ type, ...obj }));
+        const appendType = (type: string, objs: IncludeOrExclude[]) =>
+            objs.map((obj) => ({ type, ...obj }));
 
-        return [...appendType('include', this.getIncludes()), ...appendType('exclude', this.getExcludes())];
+        return [
+            ...appendType('include', this.getIncludes()),
+            ...appendType('exclude', this.getExcludes()),
+        ];
     }
 
     private getIncludesOrExcludes(key: string): IncludeOrExclude[] {
         return this.getDirectoriesAndFiles<IncludeOrExclude>(key, {
-            'directory': (tagName: string, node: Element) => {
+            directory: (tagName: string, node: Element) => {
                 const prefix = node.getAttribute('prefix');
                 const suffix = node.getAttribute('suffix');
 
                 return { tagName, value: node.getText(), prefix, suffix };
             },
-            'file': (tagName: string, node: Element) => ({ tagName, value: node.getText() }),
+            file: (tagName: string, node: Element) => ({ tagName, value: node.getText() }),
         });
     }
 
-    private getDirectoriesAndFiles<T>(selector: string, callbacks: {
-        [propName: string]: (tagName: string, node: Element, parent: Element) => T
-    }) {
+    private getDirectoriesAndFiles<T>(
+        selector: string,
+        callbacks: {
+            [propName: string]: (tagName: string, node: Element, parent: Element) => T;
+        },
+    ) {
         return this.element.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
             for (const [type, callback] of Object.entries(callbacks)) {
-                const temp = parent.querySelectorAll(type).map((node) => callback(type, node, parent));
+                const temp = parent
+                    .querySelectorAll(type)
+                    .map((node) => callback(type, node, parent));
 
                 if (temp) {
                     results.push(...temp);

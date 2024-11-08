@@ -22,33 +22,37 @@ describe('PHPUnit XML Test', () => {
     });
 
     it('one testsuites one directory', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
         ]);
     });
 
     it('one testsuites two directories', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
                     <directory>tests/Unit2</directory>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit2' },
         ]);
     });
 
     it('two testsuites one directory', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
@@ -57,14 +61,16 @@ describe('PHPUnit XML Test', () => {
                     <directory>tests/Feature</directory>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tagName: 'directory', name: 'Feature', value: 'tests/Feature' },
         ]);
     });
 
     it('two testsuites two directory', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
@@ -75,7 +81,9 @@ describe('PHPUnit XML Test', () => {
                     <directory>tests/Feature2</directory>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit2' },
             { tagName: 'directory', name: 'Feature', value: 'tests/Feature' },
@@ -84,7 +92,7 @@ describe('PHPUnit XML Test', () => {
     });
 
     it('one testsuites two directory two file', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
@@ -93,7 +101,9 @@ describe('PHPUnit XML Test', () => {
                     <file>./vendor/someone/tests/MyClassTest2.php</file>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit2' },
             { tagName: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest.php' },
@@ -102,74 +112,89 @@ describe('PHPUnit XML Test', () => {
     });
 
     it('one testsuites one directory and one exclude', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
                     <exclude>./tests/Integration/OldTests</exclude>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
             { tagName: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tagName: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
         ]);
     });
 
     it('testsuite directory has suffix', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory suffix=".phpt">tests/Unit</directory>
                 </testsuite>
             </testsuites>
-        `)).getTestSuites()).toEqual([
-            { tagName: 'directory', name: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
+        `);
+
+        expect(parse(xml).getTestSuites()).toEqual([
+            {
+                tagName: 'directory',
+                name: 'Unit',
+                prefix: undefined,
+                suffix: '.phpt',
+                value: 'tests/Unit',
+            },
         ]);
     });
 
-
     it('source include one directory', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <source>
                 <include>
                     <directory suffix=".php">app</directory>
                 </include>
             </source>
-        `)).getIncludes()).toEqual([
+        `);
+
+        expect(parse(xml).getIncludes()).toEqual([
             { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
         ]);
     });
 
     it('source include two directory', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <source>
                 <include>
                     <directory suffix=".php">app</directory>
                     <directory prefix="hello">app2</directory>
                 </include>
             </source>
-        `)).getIncludes()).toEqual([
+        `);
+
+        expect(parse(xml).getIncludes()).toEqual([
             { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
         ]);
     });
 
     it('source include one directory and one file', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <source>
                 <include>
                     <directory suffix=".php">app</directory>
                     <file>src/autoload.php</file>
                 </include>
             </source>
-        `)).getIncludes()).toEqual([
+        `);
+
+        expect(parse(xml).getIncludes()).toEqual([
             { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { tagName: 'file', value: 'src/autoload.php' },
         ]);
     });
 
     it('source include two directory and two file', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <source>
                 <include>
                     <directory suffix=".php">app</directory>
@@ -178,7 +203,9 @@ describe('PHPUnit XML Test', () => {
                     <file>src/autoload2.php</file>
                 </include>
             </source>
-        `)).getIncludes()).toEqual([
+        `);
+
+        expect(parse(xml).getIncludes()).toEqual([
             { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
             { tagName: 'file', value: 'src/autoload.php' },
@@ -187,21 +214,23 @@ describe('PHPUnit XML Test', () => {
     });
 
     it('source exclude one directory and one file', () => {
-        expect(parse(generateXML(`
-            <source>
-                <exclude>
+        const xml = generateXML(`
+        <source>
+            <exclude>
                     <directory suffix=".php">src/generated</directory>
                     <file>src/autoload.php</file>
                 </exclude>
             </source>
-        `)).getExcludes()).toEqual([
+        `);
+
+        expect(parse(xml).getExcludes()).toEqual([
             { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
             { tagName: 'file', value: 'src/autoload.php' },
         ]);
     });
 
     it('sources', () => {
-        expect(parse(generateXML(`
+        const xml = generateXML(`
             <source>
                 <include>
                     <directory suffix=".php">app</directory>
@@ -215,13 +244,32 @@ describe('PHPUnit XML Test', () => {
                     <file>src/autoload.php</file>
                 </exclude>
             </source>
-        `)).getSources()).toEqual([
-            { type: 'include', tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
-            { type: 'include', tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+        `);
+
+        expect(parse(xml).getSources()).toEqual([
+            {
+                type: 'include',
+                tagName: 'directory',
+                prefix: undefined,
+                suffix: '.php',
+                value: 'app',
+            },
+            {
+                type: 'include',
+                tagName: 'directory',
+                prefix: 'hello',
+                suffix: undefined,
+                value: 'app2',
+            },
             { type: 'include', tagName: 'file', value: 'src/autoload.php' },
             { type: 'include', tagName: 'file', value: 'src/autoload2.php' },
-
-            { type: 'exclude', tagName: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
+            {
+                type: 'exclude',
+                tagName: 'directory',
+                prefix: undefined,
+                suffix: '.php',
+                value: 'src/generated',
+            },
             { type: 'exclude', tagName: 'file', value: 'src/autoload.php' },
         ]);
     });

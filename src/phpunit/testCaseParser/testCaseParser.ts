@@ -32,7 +32,10 @@ export class Test implements TestDefinition {
     public parent?: Test;
     public children: Test[] = [];
 
-    constructor(public readonly file: string, attributes: TestDefinition) {
+    constructor(
+        public readonly file: string,
+        attributes: TestDefinition,
+    ) {
         Object.assign(this, attributes);
     }
 
@@ -46,9 +49,9 @@ export class Test implements TestDefinition {
 }
 
 export type Events = {
-    onSuite?: (suite: Test) => void
-    onTest?: (test: Test, index: number) => void
-}
+    onSuite?: (suite: Test) => void;
+    onTest?: (test: Test, index: number) => void;
+};
 
 export class TestCaseParser {
     private parserLookup: { [p: string]: Function } = {
@@ -85,7 +88,12 @@ export class TestCaseParser {
         }
     }
 
-    private parseAst(ast: Program | Namespace | UseGroup | Class | Node, file: string, events: Events = {}, namespace?: Namespace): Test[] | undefined {
+    private parseAst(
+        ast: Program | Namespace | UseGroup | Class | Node,
+        file: string,
+        events: Events = {},
+        namespace?: Namespace,
+    ): Test[] | undefined {
         const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
 
         return fn.apply(this, [ast, file, events, namespace]);
@@ -105,14 +113,14 @@ export class TestCaseParser {
         const suite = new Test(file, parseProperty(ast as Declaration, namespace));
 
         suite.children = _class.body
-            .filter(method => validator.isTest(method as Method))
-            .map(method => new Test(file, parseProperty(method as Method, namespace, _class)));
+            .filter((method) => validator.isTest(method as Method))
+            .map((method) => new Test(file, parseProperty(method as Method, namespace, _class)));
 
         if (suite.children.length <= 0) {
             return;
         }
 
-        suite.children.forEach(test => test.parent = suite);
+        suite.children.forEach((test) => (test.parent = suite));
 
         if (events.onSuite) {
             events.onSuite(suite);
@@ -125,9 +133,18 @@ export class TestCaseParser {
         return [suite];
     }
 
-    private parseChildren(ast: Program | Namespace | UseGroup | Class | Node, file: string, events: Events, namespace?: Namespace) {
+    private parseChildren(
+        ast: Program | Namespace | UseGroup | Class | Node,
+        file: string,
+        events: Events,
+        namespace?: Namespace,
+    ) {
         if ('children' in ast) {
-            return ast.children.reduce((tests, children) => tests.concat(this.parseAst(children, file, events, namespace) ?? []), [] as Test[]);
+            return ast.children.reduce(
+                (tests, children) =>
+                    tests.concat(this.parseAst(children, file, events, namespace) ?? []),
+                [] as Test[],
+            );
         }
 
         return;

@@ -1,4 +1,17 @@
-import { Result, TestConfiguration, TestCount, TestExtraResultEvent, TestProcesses, TestResult, TestResultEvent, TestResultKind, TestResultSummary, TestRuntime, TestVersion, TimeAndMemory } from './problemMatcher';
+import {
+    Result,
+    TestConfiguration,
+    TestCount,
+    TestExtraResultEvent,
+    TestProcesses,
+    TestResult,
+    TestResultEvent,
+    TestResultKind,
+    TestResultSummary,
+    TestRuntime,
+    TestVersion,
+    TimeAndMemory,
+} from './problemMatcher';
 
 export enum TestRunnerEvent {
     run = 'run',
@@ -30,10 +43,13 @@ export class DefaultObserver implements TestRunnerObserver {
         ...Object.values(TestRunnerEvent),
         ...Object.values(TestResultEvent),
         ...Object.values(TestExtraResultEvent),
-    ].reduce((listeners, key) => {
-        listeners[key] = [];
-        return listeners;
-    }, {} as { [p: string]: Array<Function> });
+    ].reduce(
+        (listeners, key) => {
+            listeners[key] = [];
+            return listeners;
+        },
+        {} as { [p: string]: Array<Function> },
+    );
 
     run(command: string): void {
         this.trigger(TestRunnerEvent.run, command);
