@@ -110,12 +110,12 @@ async function getWorkspaceTestPatterns() {
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
 
             xml.getTestSuites().forEach((item) => {
-                if (item.tagName === 'directory') {
+                if (item.tag === 'directory') {
                     const suffix = item.suffix ?? '.php';
                     includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
-                } else if (item.tagName === 'file') {
+                } else if (item.tag === 'file') {
                     includePatterns.push(`${baseDir}${item.value}`);
-                } else if (item.tagName === 'exclude') {
+                } else if (item.tag === 'exclude') {
                     excludePatterns.push(`${baseDir}${item.value}`);
                 }
             });

@@ -91,3 +91,23 @@ export const camel = (str: string) => {
         .toLowerCase()
         .replace(/[^a-zA-Z0-9]+(.)/g, (_m: string, chr: string) => chr.toUpperCase());
 };
+
+export const groupBy = <T extends { [propName: string]: any }>(items: T[], key: string): {
+    [propName: string]: T[];
+} => {
+    if (!items) {
+        return {};
+    }
+
+    return items.reduce((acc, item: T) => {
+        const itemKey = item[key] as string;
+
+        if (!acc[itemKey]) {
+            acc[itemKey] = [];
+        }
+
+        acc[itemKey].push(item);
+
+        return acc;
+    }, {} as { [propName: string]: T[] });
+};

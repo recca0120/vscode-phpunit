@@ -1,22 +1,13 @@
 import { XMLParser } from 'fast-xml-parser';
 
-type TestSuite = {
-    tagName: string;
-    group: string;
+type Source = {
+    tag: string;
     value: string;
     prefix?: string;
     suffix?: string;
 };
 
-type Include = {
-    tagName: string;
-    value: string;
-    prefix?: string;
-    suffix?: string;
-};
-
-type Exclude = Include;
-type IncludeOrExclude = Include | Exclude;
+export type TestSuite = Source & { name: string };
 
 const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
@@ -64,12 +55,12 @@ export class PHPUnitXML {
     }
 
     getTestSuites() {
-        const callback = (tagName: string, node: Element, parent: Element) => {
-            const group = parent.getAttribute('name') as string;
+        const callback = (tag: string, node: Element, parent: Element) => {
+            const name = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
 
-            return { tagName, group, value: node.getText(), prefix, suffix };
+            return { tag, name, value: node.getText(), prefix, suffix };
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
@@ -79,16 +70,16 @@ export class PHPUnitXML {
         });
     }
 
-    getIncludes(): Include[] {
+    getIncludes(): Source[] {
         return this.getIncludesOrExcludes('phpunit source include');
     }
 
-    getExcludes(): Exclude[] {
+    getExcludes(): Source[] {
         return this.getIncludesOrExcludes('phpunit source exclude');
     }
 
     getSources() {
-        const appendType = (type: string, objs: IncludeOrExclude[]) =>
+        const appendType = (type: string, objs: Source[]) =>
             objs.map((obj) => ({ type, ...obj }));
 
         return [
@@ -97,22 +88,22 @@ export class PHPUnitXML {
         ];
     }
 
-    private getIncludesOrExcludes(key: string): IncludeOrExclude[] {
-        return this.getDirectoriesAndFiles<IncludeOrExclude>(key, {
-            directory: (tagName: string, node: Element) => {
+    private getIncludesOrExcludes(key: string): Source[] {
+        return this.getDirectoriesAndFiles<Source>(key, {
+            directory: (tag: string, node: Element) => {
                 const prefix = node.getAttribute('prefix');
                 const suffix = node.getAttribute('suffix');
 
-                return { tagName, value: node.getText(), prefix, suffix };
+                return { tag, value: node.getText(), prefix, suffix };
             },
-            file: (tagName: string, node: Element) => ({ tagName, value: node.getText() }),
+            file: (tag: string, node: Element) => ({ tag, value: node.getText() }),
         });
     }
 
     private getDirectoriesAndFiles<T>(
         selector: string,
         callbacks: {
-            [propName: string]: (tagName: string, node: Element, parent: Element) => T;
+            [propName: string]: (tag: string, node: Element, parent: Element) => T;
         },
     ) {
         return this.element.querySelectorAll(selector).reduce((results: T[], parent: Element) => {

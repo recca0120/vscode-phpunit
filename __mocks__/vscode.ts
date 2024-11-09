@@ -225,13 +225,13 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: jest.fn().mockImplementation(async (pattern, exclude) => {
+    findFiles: jest.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
         const splitPattern = (pattern: string) => {
             return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
         };
         return (await glob(splitPattern(pattern.pattern), {
             absolute: true,
-            ignore: splitPattern(exclude.pattern),
+            ignore: exclude ? splitPattern(exclude.pattern) : undefined,
             cwd: pattern.uri.fsPath,
         })).map((file) => URI.parse(file));
     }),
