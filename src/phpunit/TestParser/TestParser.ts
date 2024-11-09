@@ -1,8 +1,8 @@
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 import { engine } from '../utils';
-import { validator } from './validator';
-import { parse as parseProperty } from './propertyParser';
-import { Annotations } from './annotationParser';
+import { validator } from './Validator';
+import { parse as parseProperty } from './PropertyParser';
+import { Annotations } from './AnnotationParser';
 
 export type Position = {
     character: number;
@@ -53,7 +53,7 @@ export type Events = {
     onTest?: (test: Test, index: number) => void;
 };
 
-export class TestCaseParser {
+export class TestParser {
     private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,

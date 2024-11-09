@@ -2,7 +2,7 @@ import { XMLParser } from 'fast-xml-parser';
 
 type TestSuite = {
     tagName: string;
-    name: string;
+    group: string;
     value: string;
     prefix?: string;
     suffix?: string;
@@ -18,7 +18,7 @@ type Include = {
 type Exclude = Include;
 type IncludeOrExclude = Include | Exclude;
 
-const phpunitXml = new XMLParser({ ignoreAttributes: false, trimValues: true });
+const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 class Element {
     constructor(private readonly node: any) {
@@ -60,16 +60,16 @@ export class PHPUnitXML {
     private readonly element: Element;
 
     constructor(text: string | Buffer | Uint8Array) {
-        this.element = new Element(phpunitXml.parse(text.toString()));
+        this.element = new Element(parser.parse(text.toString()));
     }
 
     getTestSuites() {
         const callback = (tagName: string, node: Element, parent: Element) => {
-            const name = parent.getAttribute('name') as string;
+            const group = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
 
-            return { tagName, name, value: node.getText(), prefix, suffix };
+            return { tagName, group, value: node.getText(), prefix, suffix };
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {

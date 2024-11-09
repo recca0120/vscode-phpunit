@@ -11,7 +11,7 @@ import {
     TestRuntime,
     TestVersion,
     TimeAndMemory,
-} from './problemMatcher';
+} from './ProblemMatcher';
 
 export enum TestRunnerEvent {
     run = 'run',

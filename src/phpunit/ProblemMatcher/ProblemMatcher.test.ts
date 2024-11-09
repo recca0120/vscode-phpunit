@@ -1,6 +1,6 @@
 import 'jest';
 import { it } from '@jest/globals';
-import { ProblemMatcher } from './problemMatcher';
+import { ProblemMatcher } from './ProblemMatcher';
 import { TestExtraResultEvent, TestResultEvent } from './parser';
 
 const problemMatcher = new ProblemMatcher();

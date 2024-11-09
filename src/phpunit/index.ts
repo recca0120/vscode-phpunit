@@ -1,8 +1,8 @@
-export * from './configuration';
-export * from './command';
-export * from './testRunnerObserver';
-export * from './testRunner';
-export * from './testCaseParser';
-export * from './problemMatcher';
-export * from './phpunitXml';
+export * from './Configuration';
+export * from './Command';
+export * from './TestRunnerObserver';
+export * from './TestRunner';
+export * from './TestParser';
+export * from './ProblemMatcher';
+export * from './PHPUnitXML';
 export { EOL } from './utils';

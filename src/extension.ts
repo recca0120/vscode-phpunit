@@ -17,11 +17,11 @@ import {
     window,
     workspace,
 } from 'vscode';
-import { Configuration } from './configuration';
-import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestCaseParser, TestRunner } from './phpunit';
+import { Configuration } from './Configuration';
+import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './phpunit';
 import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
-import { OutputChannelObserver, TestResultObserver } from './observers';
+import { OutputChannelObserver, TestResultObserver } from './Observers';
 
 async function findAsyncSequential<T>(
     array: T[],
@@ -336,7 +336,7 @@ async function getCurrentWorkspaceFolder() {
 
 const textDecoder = new TextDecoder('utf-8');
 
-const parser = new TestCaseParser();
+const parser = new TestParser();
 
 export class TestFile {
     private suites: Test[] = [];

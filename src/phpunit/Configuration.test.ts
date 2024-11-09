@@ -1,5 +1,5 @@
 import 'jest';
-import { Configuration } from './configuration';
+import { Configuration } from './Configuration';
 
 describe('Configuration Test', () => {
     it('key not exists', () => {

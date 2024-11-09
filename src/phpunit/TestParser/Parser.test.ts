@@ -1,7 +1,7 @@
 import 'jest';
 import { readFile } from 'fs/promises';
-import { propertyParser } from './propertyParser';
-import { Events, Test, TestCaseParser } from './testCaseParser';
+import { propertyParser } from './PropertyParser';
+import { Events, Test, TestParser } from './TestParser';
 import { phpUnitProject } from '../__tests__/utils';
 
 const uniqueId = (namespace: string, _class: string, method: string) => {
@@ -12,7 +12,7 @@ const qualifiedClass = (namespace: string, _class: string) => {
 };
 
 export const parse = (buffer: Buffer | string, file: string, events: Events = {}) => {
-    return new TestCaseParser().parse(buffer, file, events);
+    return new TestParser().parse(buffer, file, events);
 };
 
 describe('Parser Test', () => {

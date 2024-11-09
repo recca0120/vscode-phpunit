@@ -1,6 +1,6 @@
 import { SpawnOptions } from 'child_process';
-import { Result } from './problemMatcher';
-import { Configuration, IConfiguration } from './configuration';
+import { Result } from './ProblemMatcher';
+import { Configuration, IConfiguration } from './Configuration';
 import { parseValue } from './utils';
 
 type Path = { [p: string]: string };

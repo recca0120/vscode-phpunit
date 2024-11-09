@@ -2,12 +2,12 @@ import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
 import { escapeValue } from '../../utils';
 import { IParser, Result, TestResult } from './types';
-import { TestVersionParser } from './testVersionParser';
-import { TestProcessesParser } from './testProcessesParser';
-import { TestRuntimeParser } from './testRuntimeParser';
-import { TestConfigurationParser } from './testConfigurationParser';
-import { TestResultSummaryParser } from './testResultSummaryParser';
-import { TimeAndMemoryParser } from './timeAndMemoryParser';
+import { TestVersionParser } from './TestVersionParser';
+import { TestProcessesParser } from './TestProcessesParser';
+import { TestRuntimeParser } from './TestRuntimeParser';
+import { TestConfigurationParser } from './TestConfigurationParser';
+import { TestResultSummaryParser } from './TestResultSummaryParser';
+import { TimeAndMemoryParser } from './TimeAndMemoryParser';
 
 export class TestResultParser implements IParser<Result | undefined> {
     private readonly pattern = new RegExp('^.*#+teamcity');
