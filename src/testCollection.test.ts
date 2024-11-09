@@ -1,19 +1,27 @@
 import { phpUnitProject } from './phpunit/__tests__/utils';
-import { PHPUnitXML, TestCaseParser } from './phpunit';
+import { PHPUnitXML } from './phpunit';
 import { TestCollection } from './testCollection';
-import { Uri } from 'vscode';
 import { readFile } from 'node:fs/promises';
+import * as vscode from 'vscode';
+
 
 describe('TestCollection', () => {
     const root = phpUnitProject('');
+    const workspaceFolder = { index: 0, name: 'phpunit', uri: vscode.Uri.file(root) };
+
+    let phpUnitXML: PHPUnitXML;
     let collection: TestCollection;
     beforeEach(async () => {
-        const parser = new TestCaseParser();
-        const phpunitXML = new PHPUnitXML(await readFile(phpUnitProject('phpunit.xml')));
-        return collection = new TestCollection(root, parser, phpunitXML);
+        phpUnitXML = new PHPUnitXML(await readFile(phpUnitProject('phpunit.xml')));
     });
+
     it('add test', async () => {
-        const uri = Uri.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.addUri(uri);
+        const includes: string[] = ['tests/**/*.php'];
+        const excludes: string[] = ['**/.git/**', '**/node_modules/**'];
+
+        const includePattern = new vscode.RelativePattern(workspaceFolder, `{${includes.join(',')}}`);
+        const excludePattern = new vscode.RelativePattern(workspaceFolder, `{${excludes.join(',')}}`);
+        const files = await vscode.workspace.findFiles(includePattern, excludePattern);
+        console.log(files);
     });
 });
