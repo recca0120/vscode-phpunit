@@ -1,5 +1,16 @@
 import { readFile } from 'node:fs/promises';
-import { CancellationToken, DocumentFilter, MarkdownString, TestController, TestItem, TestItemCollection, TestRunRequest, TestTag, TextDocument, WorkspaceFolder } from 'vscode';
+import {
+    CancellationToken,
+    DocumentFilter,
+    MarkdownString,
+    TestController,
+    TestItem,
+    TestItemCollection,
+    TestRunRequest,
+    TestTag,
+    TextDocument,
+    WorkspaceFolder,
+} from 'vscode';
 import { glob } from 'glob';
 import { URI } from 'vscode-uri';
 import { minimatch } from 'minimatch';
@@ -214,13 +225,13 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: jest.fn().mockImplementation(async (pattern, exclude) => {
+    findFiles: jest.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
         const splitPattern = (pattern: string) => {
             return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
         };
         return (await glob(splitPattern(pattern.pattern), {
             absolute: true,
-            ignore: splitPattern(exclude.pattern),
+            ignore: exclude ? splitPattern(exclude.pattern) : undefined,
             cwd: pattern.uri.fsPath,
         })).map((file) => URI.parse(file));
     }),

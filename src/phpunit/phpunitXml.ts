@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 
-type TestSuite = {
+export type TestSuite = {
     tagName: string;
     name: string;
     value: string;
@@ -18,7 +18,7 @@ type Include = {
 type Exclude = Include;
 type IncludeOrExclude = Include | Exclude;
 
-const phpunitXml = new XMLParser({ ignoreAttributes: false, trimValues: true });
+const phpunitXml = new XMLParser({ignoreAttributes: false, trimValues: true});
 
 class Element {
     constructor(private readonly node: any) {
@@ -69,7 +69,7 @@ export class PHPUnitXML {
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
 
-            return { tagName, name, value: node.getText(), prefix, suffix };
+            return {tagName, name, value: node.getText(), prefix, suffix};
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
@@ -89,7 +89,7 @@ export class PHPUnitXML {
 
     getSources() {
         const appendType = (type: string, objs: IncludeOrExclude[]) =>
-            objs.map((obj) => ({ type, ...obj }));
+            objs.map((obj) => ({type, ...obj}));
 
         return [
             ...appendType('include', this.getIncludes()),
@@ -103,9 +103,9 @@ export class PHPUnitXML {
                 const prefix = node.getAttribute('prefix');
                 const suffix = node.getAttribute('suffix');
 
-                return { tagName, value: node.getText(), prefix, suffix };
+                return {tagName, value: node.getText(), prefix, suffix};
             },
-            file: (tagName: string, node: Element) => ({ tagName, value: node.getText() }),
+            file: (tagName: string, node: Element) => ({tagName, value: node.getText()}),
         });
     }
 
