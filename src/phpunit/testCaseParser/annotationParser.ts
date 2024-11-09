@@ -61,8 +61,8 @@ export class AnnotationParser {
         return !method.leadingComments
             ? false
             : new RegExp('@test').test(
-                  method.leadingComments.map((comment) => comment.value).join('\n'),
-              );
+                method.leadingComments.map((comment) => comment.value).join('\n'),
+            );
     }
 
     private readonly template = (annotation: string) =>

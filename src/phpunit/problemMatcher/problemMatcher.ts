@@ -1,11 +1,4 @@
-import {
-    TestCount,
-    TestResult,
-    TestResultEvent,
-    TestResultParser,
-    TestResultSummary,
-    TimeAndMemory,
-} from './parser';
+import { TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from './parser';
 
 export class ProblemMatcher {
     private collect = new Map<string, TestResult>();
@@ -19,7 +12,8 @@ export class ProblemMatcher {
         [TestResultEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: TestResultParser = new TestResultParser()) {}
+    constructor(private parser: TestResultParser = new TestResultParser()) {
+    }
 
     parse(
         input: string | Buffer,

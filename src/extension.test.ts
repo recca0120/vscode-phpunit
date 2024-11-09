@@ -1,14 +1,7 @@
 import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import {
-    TestController,
-    TestItem,
-    TestItemCollection,
-    TextDocument,
-    Uri,
-    WorkspaceFolder,
-} from 'vscode';
+import { TestController, TestItem, TestItemCollection, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { glob, GlobOptions } from 'glob';
 import { readFileSync } from 'fs';
 import * as path from 'path';
@@ -202,10 +195,13 @@ describe('Extension Test', () => {
             );
 
             let expected;
-            if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                expected = { enqueued: 26, started: 31, passed: 19, failed: 10, end: 1 };
+
+            if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
+                expected = { enqueued: 28, started: 33, passed: 21, failed: 10, end: 1 };
+            } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
+                expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
             } else {
-                expected = { enqueued: 26, started: 25, passed: 12, failed: 11, end: 1 };
+                expected = { enqueued: 28, started: 27, passed: 14, failed: 11, end: 1 };
             }
             expectTestResultCalled(ctrl, expected);
         });

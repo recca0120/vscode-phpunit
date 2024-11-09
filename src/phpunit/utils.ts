@@ -2,8 +2,8 @@ import { Class, Declaration, Engine, Namespace } from 'php-parser';
 
 class EscapeValue {
     private values = {
-        escape: ['||', "|'", '|n', '|r', '|]', '|['],
-        unescape: ['|', "'", '\n', '\r', ']', '['],
+        escape: ['||', '|\'', '|n', '|r', '|]', '|['],
+        unescape: ['|', '\'', '\n', '\r', ']', '['],
     };
 
     private patterns: { unescape: RegExp[]; escape: RegExp[] };
@@ -24,11 +24,11 @@ class EscapeValue {
     }
 
     public escapeSingleQuote(value: string | number | object) {
-        return this.change(value, [new RegExp("\\|'", 'g')], ['%%%SINGLE_QUOTE%%%']);
+        return this.change(value, [new RegExp('\\|\'', 'g')], ['%%%SINGLE_QUOTE%%%']);
     }
 
     public unescapeSingleQuote(value: string | number | object) {
-        return this.change(value, [new RegExp('%%%SINGLE_QUOTE%%%', 'g')], ["'"]);
+        return this.change(value, [new RegExp('%%%SINGLE_QUOTE%%%', 'g')], ['\'']);
     }
 
     private change(value: string | number | any, from: RegExp[], to: string[]) {
