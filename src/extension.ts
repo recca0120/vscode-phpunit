@@ -55,7 +55,7 @@ async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestCo
     }
 
     const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-    const workspaceTestPattern = (await getWorkspaceTestPatterns()).find(({workspaceFolder}) => {
+    const workspaceTestPattern = (await getWorkspaceTestPatterns()).find(({ workspaceFolder }) => {
         return currentWorkspaceFolder!.name === workspaceFolder.name;
     });
 
@@ -63,7 +63,7 @@ async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestCo
         return;
     }
 
-    if (vscode.languages.match({pattern: workspaceTestPattern.exclude.pattern}, e) !== 0) {
+    if (vscode.languages.match({ pattern: workspaceTestPattern.exclude.pattern }, e) !== 0) {
         return;
     }
 
@@ -151,7 +151,7 @@ async function startWatchingWorkspace(
     ctrl: vscode.TestController,
     fileChangedEmitter: vscode.EventEmitter<vscode.Uri>,
 ) {
-    return (await getWorkspaceTestPatterns()).map(({pattern, exclude}) => {
+    return (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {
@@ -241,7 +241,7 @@ export class Handler {
             return;
         }
 
-        const options = {cwd: workspaceFolder!.uri.fsPath};
+        const options = { cwd: workspaceFolder!.uri.fsPath };
 
         return this.isRemote()
             ? new RemoteCommand(this.configuration, options)
@@ -286,7 +286,7 @@ class TestQueueHandler {
 
             if (!test.canResolveChildren) {
                 this.run.enqueued(test);
-                this.queue.push({test});
+                this.queue.push({ test });
             } else {
                 await this.discoverTests(gatherTestItems(test.children));
             }
@@ -543,7 +543,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const reload = async () => {
         await Promise.all(
-            (await getWorkspaceTestPatterns()).map(({pattern, exclude}) =>
+            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
                 findInitialFiles(ctrl, pattern, exclude),
             ),
         );

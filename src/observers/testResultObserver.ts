@@ -1,20 +1,13 @@
 import { EOL, TestResult, TestRunnerObserver } from '../phpunit';
-import {
-    CancellationToken,
-    Location,
-    Position,
-    Range,
-    TestItem,
-    TestMessage,
-    TestRun,
-} from 'vscode';
+import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
         private queue: { test: TestItem }[] = [],
         private testRun: TestRun,
         private cancellation: CancellationToken,
-    ) {}
+    ) {
+    }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);

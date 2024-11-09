@@ -127,7 +127,8 @@ export abstract class ValueParser<T> implements IParser<T> {
     protected constructor(
         private name: string,
         private kind: TestResultKind,
-    ) {}
+    ) {
+    }
 
     is(text: string): boolean {
         return !!text.match(this.pattern);
