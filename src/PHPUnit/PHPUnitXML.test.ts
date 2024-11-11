@@ -1,17 +1,11 @@
 import 'jest';
 import { PHPUnitXML } from './PHPUnitXML';
+import { generateXML } from './__tests__/utils';
 
 describe('PHPUnit XML Test', () => {
-    const parse = (text: Buffer | string) => new PHPUnitXML(text);
-    const generateXML = (xml: string) => {
-        return `<?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         colors="true"
->
-    ${xml.trim()}
-</phpunit>`;
+    const phpUnitXML = new PHPUnitXML();
+    const parse = (text: Buffer | string) => {
+        return phpUnitXML.load(text);
     };
 
     it('without tags', () => {
@@ -31,7 +25,7 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
         ]);
     });
 
@@ -46,8 +40,8 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit' },
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit2' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
         ]);
     });
 
@@ -64,8 +58,8 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit' },
-            { tagName: 'directory', group: 'Feature', value: 'tests/Feature' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
+            { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
         ]);
     });
 
@@ -84,10 +78,10 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit' },
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit2' },
-            { tagName: 'directory', group: 'Feature', value: 'tests/Feature' },
-            { tagName: 'directory', group: 'Feature', value: 'tests/Feature2' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
+            { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
+            { tag: 'directory', name: 'Feature', value: 'tests/Feature2' },
         ]);
     });
 
@@ -104,10 +98,10 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit' },
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit2' },
-            { tagName: 'file', group: 'Unit', value: './vendor/someone/tests/MyClassTest.php' },
-            { tagName: 'file', group: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
+            { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest.php' },
+            { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
         ]);
     });
 
@@ -122,8 +116,8 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', value: 'tests/Unit' },
-            { tagName: 'exclude', group: 'Unit', value: './tests/Integration/OldTests' },
+            { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
+            { tag: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
         ]);
     });
 
@@ -137,7 +131,7 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getTestSuites()).toEqual([
-            { tagName: 'directory', group: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
+            { tag: 'directory', name: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
         ]);
     });
 
@@ -151,7 +145,7 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getIncludes()).toEqual([
-            { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
         ]);
     });
 
@@ -166,8 +160,8 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getIncludes()).toEqual([
-            { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
-            { tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+            { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { tag: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
         ]);
     });
 
@@ -182,8 +176,8 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getIncludes()).toEqual([
-            { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
-            { tagName: 'file', value: 'src/autoload.php' },
+            { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { tag: 'file', value: 'src/autoload.php' },
         ]);
     });
 
@@ -200,10 +194,10 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getIncludes()).toEqual([
-            { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
-            { tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
-            { tagName: 'file', value: 'src/autoload.php' },
-            { tagName: 'file', value: 'src/autoload2.php' },
+            { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { tag: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+            { tag: 'file', value: 'src/autoload.php' },
+            { tag: 'file', value: 'src/autoload2.php' },
         ]);
     });
 
@@ -218,8 +212,8 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getExcludes()).toEqual([
-            { tagName: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
-            { tagName: 'file', value: 'src/autoload.php' },
+            { tag: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
+            { tag: 'file', value: 'src/autoload.php' },
         ]);
     });
 
@@ -241,12 +235,12 @@ describe('PHPUnit XML Test', () => {
         `);
 
         expect(parse(xml).getSources()).toEqual([
-            { type: 'include', tagName: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
-            { type: 'include', tagName: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
-            { type: 'include', tagName: 'file', value: 'src/autoload.php' },
-            { type: 'include', tagName: 'file', value: 'src/autoload2.php' },
-            { type: 'exclude', tagName: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
-            { type: 'exclude', tagName: 'file', value: 'src/autoload.php' },
+            { type: 'include', tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
+            { type: 'include', tag: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+            { type: 'include', tag: 'file', value: 'src/autoload.php' },
+            { type: 'include', tag: 'file', value: 'src/autoload2.php' },
+            { type: 'exclude', tag: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
+            { type: 'exclude', tag: 'file', value: 'src/autoload.php' },
         ]);
     });
 });

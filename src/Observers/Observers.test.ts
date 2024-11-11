@@ -2,9 +2,9 @@ import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
-import { Configuration, EOL, LocalCommand, TestRunner } from '../phpunit';
+import { Configuration, EOL, LocalCommand, TestRunner } from '../PHPUnit';
 import { OutputChannelObserver } from './OutputChannelObserver';
-import { getPhpUnitVersion, phpUnitProject } from '../phpunit/__tests__/utils';
+import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
 
 describe('OutputChannelObserver', () => {
     const PHPUNIT_VERSION: string = getPhpUnitVersion();

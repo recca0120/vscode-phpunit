@@ -28,12 +28,12 @@ describe('Problem Matcher Test', () => {
                 ],
                 [
                     'parse configuration',
-                    'Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/phpunit.xml',
+                    'Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/phpunit.xml',
                     {
                         kind: TestExtraResultEvent.testConfiguration,
                         configuration:
-                            '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/phpunit.xml',
-                        text: 'Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/phpunit.xml',
+                            '/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/phpunit.xml',
+                        text: 'Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/phpunit.xml',
                     },
                 ],
                 [
@@ -239,8 +239,8 @@ describe('Problem Matcher Test', () => {
 
     it('parse test_throw_exception testFailed', () => {
         const contents = [
-            '##teamcity[testStarted name=\'test_throw_exception\' locationHint=\'php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception\' flowId=\'28756\']',
-            '##teamcity[testFailed name=\'test_throw_exception\' message=\'Exception\' details=\'/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/src/Calculator.php:21|n/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php:54|n\' duration=\'0\' flowId=\'28756\']',
+            '##teamcity[testStarted name=\'test_throw_exception\' locationHint=\'php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception\' flowId=\'28756\']',
+            '##teamcity[testFailed name=\'test_throw_exception\' message=\'Exception\' details=\'/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/src/Calculator.php:21|n/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php:54|n\' duration=\'0\' flowId=\'28756\']',
             '##teamcity[testFailed name=\'test_throw_exception\' message=\'This test did not perform any assertions\' details=\'\' duration=\'15\' flowId=\'28756\']',
             '##teamcity[testFinished name=\'test_throw_exception\' duration=\'15\' flowId=\'28756\']',
         ];
@@ -255,20 +255,20 @@ describe('Problem Matcher Test', () => {
                 event: TestResultEvent.testFailed,
                 name: 'test_throw_exception',
                 locationHint:
-                    'php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+                    'php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
                 flowId: 28756,
                 kind: 'testFailed',
                 id: 'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
-                file: '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php',
+                file: '/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php',
                 testId: 'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
                 message: 'Exception\n\nThis test did not perform any assertions',
                 details: [
                     {
-                        file: '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/src/Calculator.php',
+                        file: '/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/src/Calculator.php',
                         line: 21,
                     },
                     {
-                        file: '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php',
+                        file: '/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/tests/CalculatorTest.php',
                         line: 54,
                     },
                 ],

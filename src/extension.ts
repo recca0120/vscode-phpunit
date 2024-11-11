@@ -18,10 +18,12 @@ import {
     workspace,
 } from 'vscode';
 import { Configuration } from './Configuration';
-import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './phpunit';
+import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './PHPUnit';
 import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
+
+const phpUnitXML = new PHPUnitXML();
 
 async function findAsyncSequential<T>(
     array: T[],
@@ -99,23 +101,23 @@ async function getWorkspaceTestPatterns() {
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
         const configurationFile = await findAsyncSequential(
-            [configuration.getConfigurationFile(), 'phpunit.xml', 'phpunit.dist.xml']
+            [configuration.getConfigurationFile(), 'phpunit.xml', 'PHPUnit.dist.xml']
                 .filter((file) => !!file)
                 .map((file) => path.join(workspaceFolder.uri.fsPath, file!)),
             async (file) => await checkFileExists(file),
         );
 
         if (configurationFile) {
-            const xml = new PHPUnitXML(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
+            phpUnitXML.load(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
 
-            xml.getTestSuites().forEach((item) => {
-                if (item.tagName === 'directory') {
+            phpUnitXML.getTestSuites().forEach((item) => {
+                if (item.tag === 'directory') {
                     const suffix = item.suffix ?? '.php';
                     includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
-                } else if (item.tagName === 'file') {
+                } else if (item.tag === 'file') {
                     includePatterns.push(`${baseDir}${item.value}`);
-                } else if (item.tagName === 'exclude') {
+                } else if (item.tag === 'exclude') {
                     excludePatterns.push(`${baseDir}${item.value}`);
                 }
             });
@@ -460,13 +462,13 @@ export class CommandHandler {
     }
 
     runAll() {
-        return commands.registerCommand('phpunit.run-all', () => {
+        return commands.registerCommand('PHPUnit.run-all', () => {
             this.run(undefined);
         });
     }
 
     runFile() {
-        return commands.registerCommand('phpunit.run-file', () => {
+        return commands.registerCommand('PHPUnit.run-file', () => {
             const testFile = this.findTestFile();
 
             if (testFile) {
@@ -476,7 +478,7 @@ export class CommandHandler {
     }
 
     runTestAtCursor() {
-        return commands.registerCommand('phpunit.run-test-at-cursor', () => {
+        return commands.registerCommand('PHPUnit.run-test-at-cursor', () => {
             const testFile = this.findTestFile();
 
             if (testFile) {
@@ -488,7 +490,7 @@ export class CommandHandler {
     }
 
     rerun(handler: Handler) {
-        return commands.registerCommand('phpunit.rerun', () => {
+        return commands.registerCommand('PHPUnit.rerun', () => {
             const latestTestRunRequest = handler.getLatestTestRunRequest();
 
             return latestTestRunRequest
@@ -581,7 +583,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     const commandHandler = new CommandHandler(testRunProfile, testData);
-    context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', reload));
+    context.subscriptions.push(vscode.commands.registerCommand('PHPUnit.reload', reload));
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());

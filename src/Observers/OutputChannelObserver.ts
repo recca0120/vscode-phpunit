@@ -13,7 +13,7 @@ import {
     TestRuntime,
     TestVersion,
     TimeAndMemory,
-} from '../phpunit';
+} from '../PHPUnit';
 
 enum ShowOutputState {
     always = 'always',

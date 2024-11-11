@@ -21,7 +21,7 @@ jobs:
     env:
       extensions: curl
       key: cache-v1 # can be any string, change to clear the extension cache.
-      project: src/phpunit/__tests__/fixtures/phpunit-stub
+      project: src/PHPUnit/__tests__/fixtures/phpunit-stub
       GITHUB_ACTIONS: true
 
     steps:

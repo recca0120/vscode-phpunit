@@ -6,6 +6,7 @@ describe('Teamcity Parser', () => {
     const parse = (text: string) => {
         return new TestResultParser().parse(text);
     };
+
     it('parse phpunit version', () => {
         const text = 'PHPUnit 9.5.25 #StandWithUkraine';
 
@@ -49,12 +50,12 @@ describe('Teamcity Parser', () => {
     });
 
     it('parse configuration', () => {
-        const text = `Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/phpunit.xml`;
+        const text = `Configuration: /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/phpunit.xml`;
 
         expect(parse(text)).toEqual({
             kind: TestExtraResultEvent.testConfiguration,
             configuration:
-                '/Users/recca0120/Desktop/vscode-phpunit/src/phpunit/__tests__/fixtures/phpunit-stub/phpunit.xml',
+                '/Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/phpunit-stub/phpunit.xml',
             text,
         });
     });

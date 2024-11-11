@@ -1,4 +1,4 @@
-import { EOL, TestResult, TestRunnerObserver } from '../phpunit';
+import { EOL, TestResult, TestRunnerObserver } from '../PHPUnit';
 import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
 
 export class TestResultObserver implements TestRunnerObserver {
