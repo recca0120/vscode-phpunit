@@ -1,4 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
+import { readFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 type Source = {
     tag: string;
@@ -48,14 +50,30 @@ class Element {
 }
 
 export class PHPUnitXML {
-    private readonly cached: Map<string, any> = new Map();
     private element?: Element;
+    private _file: string = '';
+    private readonly cached: Map<string, any> = new Map();
 
-    load(text: string | Buffer | Uint8Array) {
+    load(text: string | Buffer | Uint8Array, file: string) {
         this.cached.clear();
         this.element = new Element(parser.parse(text.toString()));
+        this._file = file;
 
         return this;
+    }
+
+    async loadFile(file: string) {
+        this.load(await readFile(file), file);
+
+        return this;
+    }
+
+    file() {
+        return this._file;
+    }
+
+    dirname() {
+        return dirname(this._file);
     }
 
     getTestSuites(): TestSuite[] {

@@ -1,14 +1,14 @@
-import { PHPUnitXML, Test, TestParser, TestSuite } from './index';
-import { Uri } from 'vscode';
-import * as path from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { dirname, extname, join, relative } from 'node:path';
+import { Uri } from 'vscode';
+import { PHPUnitXML, Test, TestParser, TestSuite } from './index';
 
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestCollection {
     private readonly _items: Map<string, Map<string, Test[]>>;
 
-    constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser, private root: string) {
+    constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser) {
         this._items = new Map<string, Map<string, Test[]>>();
     }
 
@@ -96,15 +96,16 @@ export class TestCollection {
     }
 
     private include(group: TestSuite, uri: Uri) {
-        const isFile = group.tag === 'file' || (group.tag === 'exclude' && path.extname(group.value));
+        const isFile = group.tag === 'file' || (group.tag === 'exclude' && extname(group.value));
+        const folder = this.phpUnitXML.dirname();
 
         if (isFile) {
-            return Uri.file(path.join(this.root, group.value)).fsPath === uri.fsPath;
+            return Uri.file(join(folder, group.value)).fsPath === uri.fsPath;
         }
 
-        return path.relative(
-            Uri.file(path.join(this.root, group.value)).fsPath,
-            Uri.file(path.dirname(uri.fsPath)).fsPath,
+        return relative(
+            Uri.file(join(folder, group.value)).fsPath,
+            Uri.file(dirname(uri.fsPath)).fsPath,
         ).indexOf('.') === -1;
     }
 }

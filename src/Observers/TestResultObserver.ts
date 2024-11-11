@@ -1,5 +1,5 @@
-import { EOL, TestResult, TestRunnerObserver } from '../PHPUnit';
 import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
+import { EOL, TestResult, TestRunnerObserver } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(

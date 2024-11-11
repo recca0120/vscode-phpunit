@@ -1,7 +1,7 @@
 import 'jest';
 import { it } from '@jest/globals';
-import { ProblemMatcher } from './ProblemMatcher';
 import { TestExtraResultEvent, TestResultEvent } from './parser';
+import { ProblemMatcher } from './ProblemMatcher';
 
 const problemMatcher = new ProblemMatcher();
 describe('Problem Matcher Test', () => {

@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
+import { Command } from './Command';
 import { ProblemMatcher, Result, TestResultKind } from './ProblemMatcher';
 import { DefaultObserver, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
-import { Command } from './Command';
 
 export class TestRunner {
     private readonly defaultObserver: DefaultObserver;

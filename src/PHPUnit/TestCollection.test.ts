@@ -1,8 +1,8 @@
+import { readFile } from 'node:fs/promises';
+import { Uri } from 'vscode';
 import { generateXML, phpUnitProject } from './__tests__/utils';
 import { PHPUnitXML, Test, TestParser } from './index';
 import { TestCollection } from './TestCollection';
-import { Uri } from 'vscode';
-import { readFile } from 'node:fs/promises';
 
 
 describe('TestCollection', () => {
@@ -11,9 +11,9 @@ describe('TestCollection', () => {
     const phpUnitXML = new PHPUnitXML();
 
     const givenTestCollection = (text: string) => {
-        phpUnitXML.load(generateXML(text));
+        phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
 
-        return new TestCollection(phpUnitXML, testParser, root);
+        return new TestCollection(phpUnitXML, testParser);
     };
 
     const shouldBe = async (collection: TestCollection, group: any) => {

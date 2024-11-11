@@ -1,11 +1,11 @@
 import 'jest';
+import { glob, GlobOptions } from 'glob';
+import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { TestController, TestItem, TestItemCollection, TextDocument, Uri, WorkspaceFolder } from 'vscode';
-import { glob, GlobOptions } from 'glob';
-import { readFileSync } from 'fs';
-import * as path from 'path';
-import { spawn } from 'child_process';
 import { activate } from './extension';
 import { getPhpUnitVersion, normalPath, phpUnitProject } from './PHPUnit/__tests__/utils';
 
@@ -126,7 +126,7 @@ describe('Extension Test', () => {
         it('should load tests', async () => {
             await activate(context);
             const ctrl = getTestController();
-            const file = Uri.file(path.join(root, 'tests/AssertionsTest.php'));
+            const file = Uri.file(join(root, 'tests/AssertionsTest.php'));
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
             const parent = ctrl.items.get(testId);

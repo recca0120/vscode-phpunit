@@ -1,3 +1,5 @@
+import { stat } from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
     CancellationToken,
@@ -18,10 +20,8 @@ import {
     workspace,
 } from 'vscode';
 import { Configuration } from './Configuration';
-import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './PHPUnit';
-import { stat } from 'node:fs/promises';
-import * as path from 'node:path';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
+import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './PHPUnit';
 
 const phpUnitXML = new PHPUnitXML();
 
@@ -108,7 +108,7 @@ async function getWorkspaceTestPatterns() {
         );
 
         if (configurationFile) {
-            phpUnitXML.load(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
+            await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath);
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
 
             phpUnitXML.getTestSuites().forEach((item) => {
