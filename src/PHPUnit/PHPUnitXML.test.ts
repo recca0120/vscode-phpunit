@@ -1,12 +1,17 @@
 import 'jest';
 import { PHPUnitXML } from './PHPUnitXML';
-import { generateXML } from './__tests__/utils';
+import { generateXML, phpUnitProject } from './__tests__/utils';
 
 describe('PHPUnit XML Test', () => {
     const phpUnitXML = new PHPUnitXML();
     const parse = (text: Buffer | string) => {
-        return phpUnitXML.load(text);
+        return phpUnitXML.load(text, phpUnitProject('phpunit.xml'));
     };
+
+    afterEach(() => {
+        expect(phpUnitXML.file()).toEqual(phpUnitProject('phpunit.xml'));
+        expect(phpUnitXML.dirname()).toEqual(phpUnitProject(''));
+    });
 
     it('without tags', () => {
         const phpUnitXml = parse(generateXML(``));
@@ -242,5 +247,11 @@ describe('PHPUnit XML Test', () => {
             { type: 'exclude', tag: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
             { type: 'exclude', tag: 'file', value: 'src/autoload.php' },
         ]);
+    });
+
+    it('load file', async () => {
+        await phpUnitXML.loadFile(phpUnitProject('phpunit.xml'));
+
+        expect(phpUnitXML.getTestSuites().length).not.toEqual(0);
     });
 });

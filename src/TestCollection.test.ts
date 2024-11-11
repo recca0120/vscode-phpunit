@@ -13,9 +13,9 @@ describe('vscode TestCollection', () => {
     const phpUnitXML = new PHPUnitXML();
 
     const givenTestCollection = (text: string) => {
-        phpUnitXML.load(generateXML(text));
+        phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
 
-        return new TestCollection(phpUnitXML, testParser, root);
+        return new TestCollection(phpUnitXML, testParser);
     };
 
     const shouldBe = async (collection: TestCollection, group: any) => {

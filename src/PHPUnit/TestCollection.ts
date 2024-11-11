@@ -8,7 +8,7 @@ const textDecoder = new TextDecoder('utf-8');
 export class TestCollection {
     private readonly _items: Map<string, Map<string, Test[]>>;
 
-    constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser, private root: string) {
+    constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser) {
         this._items = new Map<string, Map<string, Test[]>>();
     }
 
@@ -99,11 +99,11 @@ export class TestCollection {
         const isFile = group.tag === 'file' || (group.tag === 'exclude' && path.extname(group.value));
 
         if (isFile) {
-            return Uri.file(path.join(this.root, group.value)).fsPath === uri.fsPath;
+            return Uri.file(path.join(this.phpUnitXML.dirname(), group.value)).fsPath === uri.fsPath;
         }
 
         return path.relative(
-            Uri.file(path.join(this.root, group.value)).fsPath,
+            Uri.file(path.join(this.phpUnitXML.dirname(), group.value)).fsPath,
             Uri.file(path.dirname(uri.fsPath)).fsPath,
         ).indexOf('.') === -1;
     }

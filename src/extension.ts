@@ -108,7 +108,7 @@ async function getWorkspaceTestPatterns() {
         );
 
         if (configurationFile) {
-            phpUnitXML.load(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
+            await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath);
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
 
             phpUnitXML.getTestSuites().forEach((item) => {
