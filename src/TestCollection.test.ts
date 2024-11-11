@@ -1,5 +1,5 @@
 import { phpUnitProject } from './phpunit/__tests__/utils';
-import { PHPUnitXML } from './phpunit';
+import { PHPUnitXML, TestParser } from './phpunit';
 import { TestCollection } from './TestCollection';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
@@ -17,14 +17,15 @@ describe('TestCollection', () => {
 </phpunit>`;
     };
 
-    const root = phpUnitProject('');
-    const workspaceFolder = { index: 0, name: 'phpunit', uri: vscode.Uri.file(root) };
-
-    function givenTestCollection(text: string) {
+    const givenTestCollection = (text: string) => {
+        const testParser = new TestParser();
         const phpUnitXML = new PHPUnitXML(generateXML(text));
 
-        return new TestCollection(root, phpUnitXML);
-    }
+        return new TestCollection(phpUnitXML, testParser, root);
+    };
+
+    const root = phpUnitProject('');
+    const workspaceFolder = { index: 0, name: 'phpunit', uri: vscode.Uri.file(root) };
 
     it('match testsuite directory', async () => {
         const collection = givenTestCollection(`
@@ -40,7 +41,9 @@ describe('TestCollection', () => {
             Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
-        files.forEach((file) => collection.add(file));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         expect(collection.items()).toEqual({ default: files });
     });
@@ -58,12 +61,14 @@ describe('TestCollection', () => {
             Uri.file(phpUnitProject('tests/AssertionsTest.php')),
         ];
 
-        files.forEach((file) => collection.add(file));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         expect(collection.items()).toEqual({ default: files });
     });
 
-    it('match testsuite exclude directory', () => {
+    it('match testsuite exclude directory', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -78,12 +83,14 @@ describe('TestCollection', () => {
             Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
-        files.forEach((file) => collection.add(file));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         expect(collection.items()).toEqual({ default: [files[0]] });
     });
 
-    it('match testsuite exclude file', () => {
+    it('match testsuite exclude file', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -98,12 +105,14 @@ describe('TestCollection', () => {
             Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
-        files.forEach((file) => collection.add(file));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         expect(collection.items()).toEqual({ default: [files[0]] });
     });
 
-    it('match two testsuites', () => {
+    it('match two testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -123,7 +132,9 @@ describe('TestCollection', () => {
             Uri.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
 
-        files.forEach((file) => collection.add(file));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         expect(collection.items()).toEqual({
             'default': files,
@@ -134,6 +145,28 @@ describe('TestCollection', () => {
         });
     });
 
+    it('exclude no tests', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite> 
+            </testsuites>`,
+        );
+
+        const files = [
+            Uri.file(phpUnitProject('tests/AbstractTest.php')),
+            Uri.file(phpUnitProject('tests/AssertionsTest.php')),
+            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+        ];
+
+        for (const file of files) {
+            await collection.add(file);
+        }
+
+        expect(collection.items()).toEqual({ default: [files[1], files[2]] });
+    });
+
     it('add test', async () => {
         const collection = givenTestCollection(`
             <testsuites>
@@ -142,14 +175,26 @@ describe('TestCollection', () => {
                 </testsuite>
             </testsuites>`,
         );
-        const includes: string[] = ['tests/**/*.php'];
+        const includes: string[] = ['**/*.php'];
         const excludes: string[] = ['**/.git/**', '**/node_modules/**', '**/vendor/**'];
 
         const includePattern = new vscode.RelativePattern(workspaceFolder, `{${includes.join(',')}}`);
         const excludePattern = new vscode.RelativePattern(workspaceFolder, `{${excludes.join(',')}}`);
         const files = await vscode.workspace.findFiles(includePattern, excludePattern);
-        files.forEach(file => collection.add(file));
 
-        expect(collection.items()).toEqual({ default: files });
+        for (const file of files) {
+            await collection.add(file);
+        }
+
+        const skips = [
+            'phpunit-stub/src/',
+            'phpunit-stub\\src\\',
+            'AbstractTest.php',
+        ];
+        expect(collection.items()).toEqual({
+            default: files.filter((file) => !skips.find((skip) => {
+                return file.fsPath.indexOf(skip) !== -1;
+            })),
+        });
     });
 });
