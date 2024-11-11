@@ -1,13 +1,13 @@
 import 'jest';
 import { describe } from '@jest/globals';
 import { spawn } from 'child_process';
-import { TestRunner } from './TestRunner';
-import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './ProblemMatcher';
+import * as semver from 'semver';
+import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
 import { Command, LocalCommand, RemoteCommand } from './Command';
 import { Configuration } from './Configuration';
+import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './ProblemMatcher';
+import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
-import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
-import * as semver from 'semver';
 
 jest.mock('child_process');
 

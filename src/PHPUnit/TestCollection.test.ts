@@ -1,8 +1,8 @@
+import { readFile } from 'node:fs/promises';
+import { Uri } from 'vscode';
 import { generateXML, phpUnitProject } from './__tests__/utils';
 import { PHPUnitXML, Test, TestParser } from './index';
 import { TestCollection } from './TestCollection';
-import { Uri } from 'vscode';
-import { readFile } from 'node:fs/promises';
 
 
 describe('TestCollection', () => {

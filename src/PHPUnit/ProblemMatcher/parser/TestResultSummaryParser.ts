@@ -1,5 +1,5 @@
-import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
 import { camel } from '../../utils';
+import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {

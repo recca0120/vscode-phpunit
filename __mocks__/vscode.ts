@@ -1,3 +1,5 @@
+import { glob } from 'glob';
+import { minimatch } from 'minimatch';
 import { readFile } from 'node:fs/promises';
 import {
     CancellationToken,
@@ -11,9 +13,7 @@ import {
     TextDocument,
     WorkspaceFolder,
 } from 'vscode';
-import { glob } from 'glob';
 import { URI } from 'vscode-uri';
-import { minimatch } from 'minimatch';
 
 enum TestRunProfileKind {
     Run = 1,

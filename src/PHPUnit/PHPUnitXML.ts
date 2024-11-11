@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
-import * as path from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 type Source = {
     tag: string;
@@ -73,7 +73,7 @@ export class PHPUnitXML {
     }
 
     dirname() {
-        return path.dirname(this._file);
+        return dirname(this._file);
     }
 
     getTestSuites(): TestSuite[] {

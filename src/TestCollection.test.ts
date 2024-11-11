@@ -1,14 +1,13 @@
-import * as vscode from 'vscode';
-import { Uri } from 'vscode';
 import { readFile } from 'node:fs/promises';
-import { generateXML, phpUnitProject } from './PHPUnit/__tests__/utils';
+import { RelativePattern, Uri, workspace } from 'vscode';
 import { PHPUnitXML, Test, TestParser } from './PHPUnit';
+import { generateXML, phpUnitProject } from './PHPUnit/__tests__/utils';
 import { TestCollection } from './TestCollection';
 
 
 describe('vscode TestCollection', () => {
     const root = phpUnitProject('');
-    const workspaceFolder = { index: 0, name: 'phpunit', uri: vscode.Uri.file(root) };
+    const workspaceFolder = { index: 0, name: 'phpunit', uri: Uri.file(root) };
     const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
 
@@ -42,9 +41,9 @@ describe('vscode TestCollection', () => {
         const includes: string[] = ['**/*.php'];
         const excludes: string[] = ['**/.git/**', '**/node_modules/**', '**/vendor/**'];
 
-        const includePattern = new vscode.RelativePattern(workspaceFolder, `{${includes.join(',')}}`);
-        const excludePattern = new vscode.RelativePattern(workspaceFolder, `{${excludes.join(',')}}`);
-        const files = await vscode.workspace.findFiles(includePattern, excludePattern);
+        const includePattern = new RelativePattern(workspaceFolder, `{${includes.join(',')}}`);
+        const excludePattern = new RelativePattern(workspaceFolder, `{${excludes.join(',')}}`);
+        const files = await workspace.findFiles(includePattern, excludePattern);
 
         for (const file of files) {
             await collection.add(file);

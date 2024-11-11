@@ -1,6 +1,6 @@
 import 'jest';
-import { PHPUnitXML } from './PHPUnitXML';
 import { generateXML, phpUnitProject } from './__tests__/utils';
+import { PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {
     const phpUnitXML = new PHPUnitXML();

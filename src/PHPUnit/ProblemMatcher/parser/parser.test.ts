@@ -1,6 +1,6 @@
 import 'jest';
-import { TestExtraResultEvent, TestResultEvent } from './types';
 import { TestResultParser } from './';
+import { TestExtraResultEvent, TestResultEvent } from './types';
 
 describe('Teamcity Parser', () => {
     const parse = (text: string) => {

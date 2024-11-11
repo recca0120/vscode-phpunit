@@ -1,8 +1,8 @@
 import 'jest';
 import { readFile } from 'fs/promises';
+import { phpUnitProject } from '../__tests__/utils';
 import { propertyParser } from './PropertyParser';
 import { Events, Test, TestParser } from './TestParser';
-import { phpUnitProject } from '../__tests__/utils';
 
 const uniqueId = (namespace: string, _class: string, method: string) => {
     return propertyParser.uniqueId(namespace, _class, method);

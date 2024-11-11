@@ -3,8 +3,8 @@ import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
 import { Configuration, EOL, LocalCommand, TestRunner } from '../PHPUnit';
-import { OutputChannelObserver } from './OutputChannelObserver';
 import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { OutputChannelObserver } from './OutputChannelObserver';
 
 describe('OutputChannelObserver', () => {
     const PHPUNIT_VERSION: string = getPhpUnitVersion();
