@@ -1,12 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { Uri } from 'vscode';
+import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
 import { PHPUnitXML, Test, TestParser } from './index';
 import { TestCollection } from './TestCollection';
 
 
 describe('TestCollection', () => {
-    const root = phpUnitProject('');
     const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
 
@@ -20,7 +19,7 @@ describe('TestCollection', () => {
         const expected = new Map();
         for (const [name, files] of Object.entries(group)) {
             const map = new Map<string, Test[]>();
-            for (const uri of (files as Uri[])) {
+            for (const uri of (files as URI[])) {
                 map.set(uri.fsPath, testParser.parse(await readFile(uri.fsPath), uri.fsPath)!);
             }
             expected.set(name, map);
@@ -39,8 +38,8 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/AssertionsTest.php')),
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
         for (const file of files) {
@@ -60,7 +59,7 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/AssertionsTest.php')),
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
         ];
 
         for (const file of files) {
@@ -81,8 +80,8 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/AssertionsTest.php')),
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
         for (const file of files) {
@@ -103,8 +102,8 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/AssertionsTest.php')),
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
         for (const file of files) {
@@ -130,8 +129,8 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-            Uri.file(phpUnitProject('tests/Feature/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
 
         for (const file of files) {
@@ -157,9 +156,9 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/AbstractTest.php')),
-            Uri.file(phpUnitProject('tests/AssertionsTest.php')),
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/AbstractTest.php')),
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
         for (const file of files) {
@@ -179,8 +178,8 @@ describe('TestCollection', () => {
         );
 
         const files = [
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
 
         for (const file of files) {
@@ -199,7 +198,7 @@ describe('TestCollection', () => {
             </testsuites>`,
         );
 
-        const file = Uri.file(phpUnitProject('tests/Unit/ExampleTest.php'));
+        const file = URI.file(phpUnitProject('tests/Unit/ExampleTest.php'));
 
         await collection.add(file);
         expect(collection.has(file)).toBeTruthy();

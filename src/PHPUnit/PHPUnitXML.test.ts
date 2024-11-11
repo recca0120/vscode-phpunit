@@ -10,7 +10,7 @@ describe('PHPUnit XML Test', () => {
 
     afterEach(() => {
         expect(phpUnitXML.file()).toEqual(phpUnitProject('phpunit.xml'));
-        expect(phpUnitXML.dirname()).toEqual(phpUnitProject(''));
+        expect(phpUnitXML.root()).toEqual(phpUnitProject(''));
     });
 
     it('without tags', () => {
