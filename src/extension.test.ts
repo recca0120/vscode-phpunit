@@ -7,7 +7,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { activate } from './extension';
-import { getPhpUnitVersion, normalPath, phpUnitProject } from './phpunit/__tests__/utils';
+import { getPhpUnitVersion, normalPath, phpUnitProject } from './PHPUnit/__tests__/utils';
 
 jest.mock('child_process');
 
@@ -158,23 +158,23 @@ describe('Extension Test', () => {
                 'PHPUnit',
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-                'phpunit.reload',
+                'PHPUnit.reload',
                 expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-                'phpunit.run-all',
+                'PHPUnit.run-all',
                 expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-                'phpunit.run-file',
+                'PHPUnit.run-file',
                 expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-                'phpunit.run-test-at-cursor',
+                'PHPUnit.run-test-at-cursor',
                 expect.any(Function),
             );
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-                'phpunit.rerun',
+                'PHPUnit.rerun',
                 expect.any(Function),
             );
             expect(context.subscriptions.push).toHaveBeenCalledTimes(9);

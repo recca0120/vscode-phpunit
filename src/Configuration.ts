@@ -1,5 +1,5 @@
 import { WorkspaceConfiguration } from 'vscode';
-import { BaseConfiguration } from './phpunit';
+import { BaseConfiguration } from './PHPUnit';
 
 export class Configuration extends BaseConfiguration {
     constructor(private workspaceConfiguration: WorkspaceConfiguration) {

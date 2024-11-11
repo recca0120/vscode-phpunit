@@ -1,20 +1,11 @@
 import 'jest';
 import { PHPUnitXML } from './PHPUnitXML';
+import { generateXML } from './__tests__/utils';
 
 describe('PHPUnit XML Test', () => {
     const phpUnitXML = new PHPUnitXML();
     const parse = (text: Buffer | string) => {
         return phpUnitXML.load(text);
-    };
-    const generateXML = (text: string) => {
-        return `<?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         colors="true"
->
-    ${text.trim()}
-</phpunit>`;
     };
 
     it('without tags', () => {

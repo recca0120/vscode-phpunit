@@ -1,4 +1,4 @@
-import { TestCollection as BaseTestCollection } from './phpunit/TestCollection';
+import { TestCollection as BaseTestCollection } from './PHPUnit/TestCollection';
 
 
 export class TestCollection extends BaseTestCollection {

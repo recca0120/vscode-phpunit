@@ -14,7 +14,7 @@ describe('Command Test', () => {
             });
         };
 
-        it('should add -f when phpunit binary is paratest and has --filter', () => {
+        it('should add -f when PHPUnit binary is paratest and has --filter', () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
@@ -94,7 +94,7 @@ describe('Command Test', () => {
             });
         };
 
-        it('should add -f when phpunit binary is paratest and has --filter', () => {
+        it('should add -f when PHPUnit binary is paratest and has --filter', () => {
             const cwd = phpUnitProject('');
             const command = givenCommand({
                 command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',

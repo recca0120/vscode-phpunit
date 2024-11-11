@@ -1,23 +1,11 @@
-import { phpUnitProject } from './__tests__/utils';
+import { generateXML, phpUnitProject } from './__tests__/utils';
 import { PHPUnitXML, Test, TestParser } from './index';
 import { TestCollection } from './TestCollection';
-import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { readFile } from 'node:fs/promises';
 
 
 describe('TestCollection', () => {
-    const generateXML = (text: string) => {
-        return `<?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         colors="true"
->
-    ${text.trim()}
-</phpunit>`;
-    };
-
     const root = phpUnitProject('');
     const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
@@ -33,8 +21,7 @@ describe('TestCollection', () => {
         for (const [name, files] of Object.entries(group)) {
             const map = new Map<string, Test[]>();
             for (const uri of (files as Uri[])) {
-                const tests = testParser.parse(await readFile(uri.fsPath), uri.fsPath)!;
-                map.set(uri.fsPath, tests);
+                map.set(uri.fsPath, testParser.parse(await readFile(uri.fsPath), uri.fsPath)!);
             }
             expected.set(name, map);
         }

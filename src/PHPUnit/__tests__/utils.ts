@@ -17,3 +17,14 @@ export const getPhpUnitVersion = (): string => {
 
     return matched![1];
 };
+
+export const generateXML = (text: string) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    ${text.trim()}
+</phpunit>`;
+};
