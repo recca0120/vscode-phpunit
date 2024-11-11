@@ -72,7 +72,7 @@ export class PHPUnitXML {
         return this._file;
     }
 
-    dirname() {
+    root() {
         return dirname(this._file);
     }
 

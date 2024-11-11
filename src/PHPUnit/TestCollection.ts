@@ -1,62 +1,74 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, extname, join, relative } from 'node:path';
-import { Uri } from 'vscode';
+import { URI } from 'vscode-uri';
 import { PHPUnitXML, Test, TestParser, TestSuite } from './index';
+
+type Tests = Map<string, Test[]>
+type Group = Map<string, Tests>
+type Root = Map<string, Group>
 
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestCollection {
-    private readonly _items: Map<string, Map<string, Test[]>>;
+    private readonly _items: Root;
 
     constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser) {
-        this._items = new Map<string, Map<string, Test[]>>();
+        this._items = new Map<string, Group>();
     }
 
     items() {
-        return this._items;
+        const root = this.root();
+        if (!this._items.has(root)) {
+            this._items.set(root, new Map<string, Tests>());
+        }
+
+        return this._items.get(root)!;
     }
 
-    async add(uri: Uri) {
+    async add(uri: URI) {
         if (this.has(uri)) {
             return this;
         }
 
         const groups = this.groups(uri);
-
         if (groups.length === 0) {
             return this;
         }
 
-        const tests = this.testParser.parse(
-            textDecoder.decode(await readFile(uri.fsPath)),
-            uri.fsPath,
-        );
+        const items = this.items();
 
+        const tests = await this.parseTests(uri);
         if (!tests || tests.length === 0) {
             return this;
         }
 
         groups.forEach((name) => {
-            if (!this._items.has(name)) {
-                this._items.set(name, new Map<string, Test[]>());
+            if (!items.has(name)) {
+                items.set(name, new Map<string, Test[]>());
             }
-            this._items.get(name)!.set(uri.fsPath, tests);
+
+            items.get(name)!.set(uri.fsPath, tests);
         });
 
         return this;
     }
 
-    has(uri: Uri) {
+    has(uri: URI) {
         return this.find(uri).size > 0;
     }
 
-    delete(uri: Uri) {
+    delete(uri: URI) {
+        const items = this.items();
+
+        if (!items) {
+            return false;
+        }
+
         let deleted = false;
         const found = this.find(uri);
         for (const [name, fsPath] of found) {
-            const files = this._items.get(name);
-            if (files) {
-                files.delete(fsPath);
+            const files = items.get(name);
+            if (files?.delete(fsPath)) {
                 deleted = true;
             }
         }
@@ -64,19 +76,27 @@ export class TestCollection {
         return deleted;
     }
 
-    find(uri: Uri) {
+    find(uri: URI) {
         const found = new Map<string, string>();
-        for (const [name, group] of this._items) {
-            const files = group.get(uri.fsPath);
-            if (files) {
+        const items = this.items();
+
+        items.forEach((group, name) => {
+            if (group.has(uri.fsPath)) {
                 found.set(name, uri.fsPath);
             }
-        }
+        });
 
         return found;
     }
 
-    private groups(uri: Uri) {
+    protected async parseTests(uri: URI) {
+        return this.testParser.parse(
+            textDecoder.decode(await readFile(uri.fsPath)),
+            uri.fsPath,
+        );
+    }
+
+    private groups(uri: URI) {
         const includes: string[] = [];
         const excludes: string[] = [];
 
@@ -95,17 +115,16 @@ export class TestCollection {
         return includes.filter(group => !excludes.includes(group));
     }
 
-    private include(group: TestSuite, uri: Uri) {
+    private include(group: TestSuite, uri: URI) {
         const isFile = group.tag === 'file' || (group.tag === 'exclude' && extname(group.value));
-        const folder = this.phpUnitXML.dirname();
+        const root = this.root();
 
-        if (isFile) {
-            return Uri.file(join(folder, group.value)).fsPath === uri.fsPath;
-        }
+        return isFile
+            ? join(root, group.value) === uri.fsPath
+            : !relative(join(root, group.value), dirname(uri.fsPath)).startsWith('.');
+    }
 
-        return relative(
-            Uri.file(join(folder, group.value)).fsPath,
-            Uri.file(dirname(uri.fsPath)).fsPath,
-        ).indexOf('.') === -1;
+    private root() {
+        return URI.file(this.phpUnitXML.root()).fsPath;
     }
 }
