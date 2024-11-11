@@ -27,6 +27,14 @@ describe('TestCollection', () => {
     const root = phpUnitProject('');
     const workspaceFolder = { index: 0, name: 'phpunit', uri: vscode.Uri.file(root) };
 
+    const shouldBe = (collection: TestCollection, expected: any) => {
+        const map = new Map();
+        for (const [key, items] of Object.entries(expected)) {
+            map.set(key, items);
+        }
+        expect(collection.items()).toEqual(map);
+    };
+
     it('match testsuite directory', async () => {
         const collection = givenTestCollection(`
             <testsuites>
@@ -45,7 +53,7 @@ describe('TestCollection', () => {
             await collection.add(file);
         }
 
-        expect(collection.items()).toEqual({ default: files });
+        shouldBe(collection, { default: files });
     });
 
     it('match testsuite file', async () => {
@@ -65,7 +73,7 @@ describe('TestCollection', () => {
             await collection.add(file);
         }
 
-        expect(collection.items()).toEqual({ default: files });
+        shouldBe(collection, { default: files });
     });
 
     it('match testsuite exclude directory', async () => {
@@ -87,7 +95,7 @@ describe('TestCollection', () => {
             await collection.add(file);
         }
 
-        expect(collection.items()).toEqual({ default: [files[0]] });
+        shouldBe(collection, { default: [files[0]] });
     });
 
     it('match testsuite exclude file', async () => {
@@ -109,7 +117,7 @@ describe('TestCollection', () => {
             await collection.add(file);
         }
 
-        expect(collection.items()).toEqual({ default: [files[0]] });
+        shouldBe(collection, { default: [files[0]] });
     });
 
     it('match two testsuites', async () => {
@@ -136,12 +144,12 @@ describe('TestCollection', () => {
             await collection.add(file);
         }
 
-        expect(collection.items()).toEqual({
-            'default': files,
+        shouldBe(collection, {
+            default: files,
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            'Unit': [files[0]],
+            Unit: [files[0]],
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            'Feature': [files[1]],
+            Feature: [files[1]],
         });
     });
 
@@ -164,7 +172,48 @@ describe('TestCollection', () => {
             await collection.add(file);
         }
 
-        expect(collection.items()).toEqual({ default: [files[1], files[2]] });
+        shouldBe(collection, { default: [files[1], files[2]] });
+    });
+
+    it('unique file', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite> 
+            </testsuites>`,
+        );
+
+        const files = [
+            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            Uri.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+        ];
+
+        for (const file of files) {
+            await collection.add(file);
+        }
+
+        shouldBe(collection, { default: [files[0]] });
+    });
+
+    it('delete file', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite> 
+            </testsuites>`,
+        );
+
+        const file = Uri.file(phpUnitProject('tests/Unit/ExampleTest.php'));
+
+        await collection.add(file);
+        expect(collection.has(file)).toBeTruthy();
+
+        expect(collection.delete(file)).toBeTruthy();
+        expect(collection.delete(file)).toBeFalsy();
+
+        shouldBe(collection, { default: [] });
     });
 
     it('add test', async () => {
@@ -191,7 +240,8 @@ describe('TestCollection', () => {
             'phpunit-stub\\src\\',
             'AbstractTest.php',
         ];
-        expect(collection.items()).toEqual({
+
+        shouldBe(collection, {
             default: files.filter((file) => !skips.find((skip) => {
                 return file.fsPath.indexOf(skip) !== -1;
             })),

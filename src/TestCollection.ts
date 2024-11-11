@@ -6,10 +6,10 @@ import { readFile } from 'node:fs/promises';
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestCollection {
-    private readonly _items: any;
+    private readonly _items: Map<string, Uri[]>;
 
     constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser, private root: string) {
-        this._items = {};
+        this._items = new Map<string, Uri[]>();
     }
 
     items() {
@@ -17,26 +17,62 @@ export class TestCollection {
     }
 
     async add(uri: Uri) {
-        const groups = this.groups(uri);
+        if (this.has(uri)) {
+            return this;
+        }
 
+        const groups = this.groups(uri);
         if (groups.length > 0) {
             const tests = this.testParser.parse(
                 textDecoder.decode(await readFile(uri.fsPath)),
                 uri.fsPath,
             );
+
             if (!tests || tests.length === 0) {
                 return this;
             }
         }
 
         groups.forEach((name) => {
-            if (!this._items.hasOwnProperty(name)) {
-                this._items[name] = [];
+            if (!this._items.has(name)) {
+                this._items.set(name, []);
             }
-            this._items[name].push(uri);
+            const items = this._items.get(name)!;
+            items.push(uri);
         });
 
         return this;
+    }
+
+    has(uri: Uri) {
+        return this.findPos(uri).size > 0;
+    }
+
+    delete(uri: Uri) {
+        let deleted = false;
+        const found = this.findPos(uri);
+        for (const [name, position] of found) {
+            const current = this._items.get(name);
+            if (current && current[position.index]) {
+                delete current[position.index];
+                deleted = true;
+            }
+        }
+
+        return deleted;
+    }
+
+    private findPos(uri: Uri) {
+        const found = new Map<string, { index: number, uri: Uri }>();
+        for (const [name, items] of this._items) {
+            const files = items.map(item => item.fsPath);
+            const index = files.indexOf(uri.fsPath);
+            if (index !== -1) {
+                found.set(name, { index, uri });
+            }
+        }
+
+        return found;
     }
 
     private groups(uri: Uri) {
