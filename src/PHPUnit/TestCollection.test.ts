@@ -18,11 +18,11 @@ describe('TestCollection', () => {
     const shouldBe = async (collection: TestCollection, group: any) => {
         const expected = new Map();
         for (const [name, files] of Object.entries(group)) {
-            const map = new Map<string, Test[]>();
+            const tests = new Map<string, Test[]>();
             for (const uri of (files as URI[])) {
-                map.set(uri.fsPath, testParser.parse(await readFile(uri.fsPath), uri.fsPath)!);
+                tests.set(uri.fsPath, testParser.parse(await readFile(uri.fsPath), uri.fsPath)!);
             }
-            expected.set(name, map);
+            expected.set(name, tests);
         }
 
         expect(collection.items()).toEqual(expected);
@@ -113,22 +113,25 @@ describe('TestCollection', () => {
         await shouldBe(collection, { default: [files[0]] });
     });
 
-    it('match two testsuites', async () => {
+    it('match three testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite> 
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
                 </testsuite>
                 <testsuite name="Feature">
                     <directory>tests/Feature</directory>
                 </testsuite>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                    <exclude>tests/Unit/ExampleTest.php</exclude>
+                    <exclude>tests/Feature/ExampleTest.php</exclude>
+                </testsuite> 
             </testsuites>`,
         );
 
         const files = [
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
@@ -138,11 +141,11 @@ describe('TestCollection', () => {
         }
 
         await shouldBe(collection, {
-            default: files,
+            default: [files[0]],
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            Unit: [files[0]],
+            Unit: [files[1]],
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            Feature: [files[1]],
+            Feature: [files[2]],
         });
     });
 

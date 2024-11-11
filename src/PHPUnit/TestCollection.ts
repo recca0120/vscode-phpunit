@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, extname, join, relative } from 'node:path';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, Test, TestParser, TestSuite } from './index';
+import { groupBy } from './utils';
 
 type Tests = Map<string, Test[]>
 type Group = Map<string, Tests>
@@ -30,25 +31,22 @@ export class TestCollection {
             return this;
         }
 
-        const groups = this.groups(uri);
-        if (groups.length === 0) {
+        const group = this.group(uri);
+        if (!group) {
             return this;
         }
 
         const items = this.items();
-
         const tests = await this.parseTests(uri);
-        if (!tests || tests.length === 0) {
+        if (tests.length === 0) {
             return this;
         }
 
-        groups.forEach((name) => {
-            if (!items.has(name)) {
-                items.set(name, new Map<string, Test[]>());
-            }
+        if (!items.has(group)) {
+            items.set(group, new Map<string, Test[]>());
+        }
 
-            items.get(name)!.set(uri.fsPath, tests);
-        });
+        items.get(group)!.set(uri.fsPath, tests);
 
         return this;
     }
@@ -93,26 +91,37 @@ export class TestCollection {
         return this.testParser.parse(
             textDecoder.decode(await readFile(uri.fsPath)),
             uri.fsPath,
-        );
+        )!;
     }
 
-    private groups(uri: URI) {
-        const includes: string[] = [];
-        const excludes: string[] = [];
+    private group(uri: URI) {
+        let includes: string[] = [];
+        let excludes: string[] = [];
 
-        this.phpUnitXML.getTestSuites()
-            .filter((item) => this.include(item, uri))
-            .forEach((item) => {
-                if (item.tag !== 'exclude' && !includes.includes(item.name)) {
-                    includes.push(item.name);
-                }
+        const testSuites = this.phpUnitXML.getTestSuites().filter((item) => this.include(item, uri));
+        const group = groupBy<TestSuite>(testSuites, 'name');
+        for (const [name, items] of Object.entries(group)) {
+            if (includes.length !== 0) {
+                break;
+            }
+            includes = [];
+            excludes = [];
+            items
+                .filter((item) => this.include(item, uri))
+                .forEach((item) => {
+                    if (item.tag !== 'exclude' && includes.length === 0) {
+                        includes.push(name);
+                    }
 
-                if (item.tag === 'exclude' && !excludes.includes(item.name)) {
-                    excludes.push(item.name);
-                }
-            });
+                    if (item.tag === 'exclude' && !excludes.includes(name)) {
+                        excludes.push(name);
+                    }
+                });
 
-        return includes.filter(group => !excludes.includes(group));
+            includes = includes.filter(group => !excludes.includes(group));
+        }
+
+        return includes[0] ?? undefined;
     }
 
     private include(group: TestSuite, uri: URI) {
