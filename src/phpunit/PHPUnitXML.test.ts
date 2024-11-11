@@ -2,7 +2,10 @@ import 'jest';
 import { PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {
-    const parse = (text: Buffer | string) => new PHPUnitXML(text);
+    const phpUnitXML = new PHPUnitXML();
+    const parse = (text: Buffer | string) => {
+        return phpUnitXML.load(text);
+    };
     const generateXML = (text: string) => {
         return `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

@@ -23,6 +23,8 @@ import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
 
+const phpUnitXML = new PHPUnitXML();
+
 async function findAsyncSequential<T>(
     array: T[],
     predicate: (t: T) => Promise<boolean>,
@@ -106,10 +108,10 @@ async function getWorkspaceTestPatterns() {
         );
 
         if (configurationFile) {
-            const xml = new PHPUnitXML(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
+            phpUnitXML.load(await vscode.workspace.fs.readFile(Uri.file(configurationFile)));
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
 
-            xml.getTestSuites().forEach((item) => {
+            phpUnitXML.getTestSuites().forEach((item) => {
                 if (item.tag === 'directory') {
                     const suffix = item.suffix ?? '.php';
                     includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);

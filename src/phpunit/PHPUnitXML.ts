@@ -48,13 +48,17 @@ class Element {
 }
 
 export class PHPUnitXML {
-    private readonly element: Element;
+    private readonly cached: Map<string, any> = new Map();
+    private element?: Element;
 
-    constructor(text: string | Buffer | Uint8Array) {
+    load(text: string | Buffer | Uint8Array) {
+        this.cached.clear();
         this.element = new Element(parser.parse(text.toString()));
+
+        return this;
     }
 
-    getTestSuites() {
+    getTestSuites(): TestSuite[] {
         const callback = (tag: string, node: Element, parent: Element) => {
             const name = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
@@ -64,9 +68,7 @@ export class PHPUnitXML {
         };
 
         return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
-            directory: callback,
-            file: callback,
-            exclude: callback,
+            directory: callback, file: callback, exclude: callback,
         });
     }
 
@@ -88,6 +90,14 @@ export class PHPUnitXML {
         ];
     }
 
+    private fromCache<T>(key: string, callback: () => T[]) {
+        if (!this.cached.has(key)) {
+            this.cached.set(key, callback() ?? []);
+        }
+
+        return this.cached.get(key)!;
+    }
+
     private getIncludesOrExcludes(key: string): Source[] {
         return this.getDirectoriesAndFiles<Source>(key, {
             directory: (tag: string, node: Element) => {
@@ -106,18 +116,24 @@ export class PHPUnitXML {
             [propName: string]: (tag: string, node: Element, parent: Element) => T;
         },
     ) {
-        return this.element.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
-            for (const [type, callback] of Object.entries(callbacks)) {
-                const temp = parent
-                    .querySelectorAll(type)
-                    .map((node) => callback(type, node, parent));
+        if (!this.element) {
+            return [];
+        }
 
-                if (temp) {
-                    results.push(...temp);
+        return this.fromCache<T>(selector, () => {
+            return this.element!.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
+                for (const [type, callback] of Object.entries(callbacks)) {
+                    const temp = parent
+                        .querySelectorAll(type)
+                        .map((node) => callback(type, node, parent));
+
+                    if (temp) {
+                        results.push(...temp);
+                    }
                 }
-            }
 
-            return results;
-        }, []);
+                return results;
+            }, []);
+        });
     }
 }

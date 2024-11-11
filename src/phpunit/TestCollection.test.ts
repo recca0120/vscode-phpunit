@@ -19,11 +19,11 @@ describe('TestCollection', () => {
     };
 
     const root = phpUnitProject('');
-    const workspaceFolder = { index: 0, name: 'phpunit', uri: vscode.Uri.file(root) };
     const testParser = new TestParser();
+    const phpUnitXML = new PHPUnitXML();
 
     const givenTestCollection = (text: string) => {
-        const phpUnitXML = new PHPUnitXML(generateXML(text));
+        phpUnitXML.load(generateXML(text));
 
         return new TestCollection(phpUnitXML, testParser, root);
     };
