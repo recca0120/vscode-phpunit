@@ -46,8 +46,10 @@ const Uri = new Proxy(URI, {
 
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
+    private readonly parent: any;
 
-    constructor(private parent?: any) {
+    constructor(parent: any = undefined) {
+        this.parent = parent === undefined ? undefined : { ...parent };
     }
 
     get size() {

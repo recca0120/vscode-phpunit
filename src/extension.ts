@@ -1,4 +1,3 @@
-import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
@@ -21,35 +20,15 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
-import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './PHPUnit';
+import { Command, LocalCommand, PHPUnitXML, RemoteCommand, TestDefinition, TestParser, TestRunner } from './PHPUnit';
+import { TestCollection } from './TestCollection';
 
 const phpUnitXML = new PHPUnitXML();
+const testParser = new TestParser();
+let testCollection: TestCollection;
+const textDecoder = new TextDecoder('utf-8');
+const testData = new Map<string, TestFile>();
 
-async function findAsyncSequential<T>(
-    array: T[],
-    predicate: (t: T) => Promise<boolean>,
-): Promise<T | undefined> {
-    for (const t of array) {
-        if (await predicate(t)) {
-            return t;
-        }
-    }
-    return undefined;
-}
-
-async function checkFileExists(filePath: string): Promise<boolean> {
-    try {
-        // 嘗試取得檔案狀態
-        await stat(filePath);
-        return true; // 檔案存在
-    } catch (error: any) {
-        if (error.code === 'ENOENT') {
-            return false; // 檔案不存在
-        } else {
-            throw error; // 其他錯誤
-        }
-    }
-}
 
 async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestController) {
     if (e.uri.scheme !== 'file' || !e.uri.path.endsWith('.php')) {
@@ -100,13 +79,7 @@ async function getWorkspaceTestPatterns() {
         const includePatterns = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
-        const configurationFile = await findAsyncSequential(
-            [configuration.getConfigurationFile(), 'phpunit.xml', 'PHPUnit.dist.xml']
-                .filter((file) => !!file)
-                .map((file) => path.join(workspaceFolder.uri.fsPath, file!)),
-            async (file) => await checkFileExists(file),
-        );
-
+        const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
         if (configurationFile) {
             await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath);
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
@@ -336,21 +309,17 @@ async function getCurrentWorkspaceFolder() {
     return window.showWorkspaceFolderPick();
 }
 
-const textDecoder = new TextDecoder('utf-8');
-
-const parser = new TestParser();
 
 export class TestFile {
-    private suites: Test[] = [];
+    private suites: TestDefinition[] = [];
     private testItems: TestItem[] = [];
 
     constructor(public uri: Uri) {
     }
 
     async update(ctrl: TestController) {
-        const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
-        parser.parse(rawContent, this.uri.fsPath, {
-            onSuite: (suite: Test) => {
+        await testParser.parseFile(this.uri.fsPath, {
+            onSuite: (suite: TestDefinition) => {
                 const testItem = ctrl.createTestItem(suite.id, suite.label, this.uri);
                 testItem.canResolveChildren = true;
                 testItem.sortText = suite.id;
@@ -362,7 +331,7 @@ export class TestFile {
                 ctrl.items.add(testItem);
                 this.suites.push(suite);
             },
-            onTest: (test: Test, index) => {
+            onTest: (test: TestDefinition, index) => {
                 const testItem = ctrl.createTestItem(test.id, test.label, this.uri);
                 testItem.canResolveChildren = false;
                 testItem.sortText = `${index}`;
@@ -432,10 +401,10 @@ export class TestFile {
     }
 
     private findTest(testId: string) {
-        return this.doFindTest(this.suites, (test: Test) => testId === test.id);
+        return this.doFindTest(this.suites, (test: TestDefinition) => testId === test.id);
     }
 
-    private doFindTest(tests: Test[], filter: (test: Test) => boolean): Test | void {
+    private doFindTest(tests: TestDefinition[], filter: (test: TestDefinition) => boolean): TestDefinition | void {
         for (const test of tests) {
             if (filter(test)) {
                 return test;
@@ -447,7 +416,7 @@ export class TestFile {
         }
     }
 
-    private asFilter(test: Test) {
+    private asFilter(test: TestDefinition) {
         const deps = [test.method, ...(test.annotations.depends ?? [])].join('|');
 
         return test.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
@@ -518,8 +487,6 @@ export class CommandHandler {
     }
 }
 
-const testData = new Map<string, TestFile>();
-
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
     context.subscriptions.push(
@@ -535,6 +502,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
+
+    const configurationFile = await configuration.getConfigurationFile(vscode.workspace.workspaceFolders![0].uri.fsPath);
+    if (configurationFile) {
+        await phpUnitXML.loadFile(configurationFile);
+    }
+    testCollection = new TestCollection(ctrl, phpUnitXML, testParser);
 
     testData.clear();
     await Promise.all(

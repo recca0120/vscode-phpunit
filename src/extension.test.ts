@@ -4,21 +4,32 @@ import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as semver from 'semver';
-import * as vscode from 'vscode';
-import { TestController, TestItem, TestItemCollection, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import {
+    CancellationTokenSource,
+    commands,
+    TestController,
+    TestItem,
+    TestItemCollection,
+    tests,
+    TextDocument,
+    Uri,
+    window,
+    workspace,
+    WorkspaceFolder,
+} from 'vscode';
 import { activate } from './extension';
 import { getPhpUnitVersion, normalPath, phpUnitProject } from './PHPUnit/__tests__/utils';
 
 jest.mock('child_process');
 
 const setTextDocuments = (textDocuments: TextDocument[]) => {
-    Object.defineProperty(vscode.workspace, 'textDocuments', {
+    Object.defineProperty(workspace, 'textDocuments', {
         value: textDocuments,
     });
 };
 
 const setWorkspaceFolders = (workspaceFolders: WorkspaceFolder[]) => {
-    Object.defineProperty(vscode.workspace, 'workspaceFolders', {
+    Object.defineProperty(workspace, 'workspaceFolders', {
         value: workspaceFolders,
     });
 };
@@ -52,11 +63,11 @@ const useFakeTimers = (ms: number, fn: Function) => {
 };
 
 const getOutputChannel = () => {
-    return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
+    return (window.createOutputChannel as jest.Mock).mock.results[0].value;
 };
 
 const getTestController = () => {
-    return (vscode.tests.createTestController as jest.Mock).mock.results[0].value;
+    return (tests.createTestController as jest.Mock).mock.results[0].value;
 };
 
 const getRunProfile = (ctrl: TestController) => {
@@ -80,7 +91,7 @@ const findTest = (items: TestItemCollection, testId: string): TestItem | undefin
 };
 
 const getTestFile = (ctrl: TestController, pattern: RegExp) => {
-    const doc = vscode.workspace.textDocuments.find((doc) => doc.uri.fsPath.match(pattern))!;
+    const doc = workspace.textDocuments.find((doc) => doc.uri.fsPath.match(pattern))!;
 
     return findTest(ctrl.items, doc.uri.toString());
 };
@@ -118,7 +129,7 @@ describe('Extension Test', () => {
         beforeEach(async () => {
             context.subscriptions.push.mockReset();
             cwd = normalPath(phpUnitProject(''));
-            const configuration = vscode.workspace.getConfiguration('phpunit');
+            const configuration = workspace.getConfiguration('phpunit');
             await configuration.update('php', 'php');
             await configuration.update('phpunit', 'vendor/bin/phpunit');
         });
@@ -151,29 +162,29 @@ describe('Extension Test', () => {
                 }),
             );
 
-            expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
-            expect(vscode.window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
-            expect(vscode.tests.createTestController).toHaveBeenCalledWith(
+            expect(workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
+            expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
+            expect(tests.createTestController).toHaveBeenCalledWith(
                 'phpUnitTestController',
                 'PHPUnit',
             );
-            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'PHPUnit.reload',
                 expect.any(Function),
             );
-            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'PHPUnit.run-all',
                 expect.any(Function),
             );
-            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'PHPUnit.run-file',
                 expect.any(Function),
             );
-            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'PHPUnit.run-test-at-cursor',
                 expect.any(Function),
             );
-            expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
+            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'PHPUnit.rerun',
                 expect.any(Function),
             );
@@ -186,7 +197,7 @@ describe('Extension Test', () => {
             const runProfile = getRunProfile(ctrl);
             const request = { include: undefined, exclude: [], profile: runProfile };
 
-            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
+            await runProfile.runHandler(request, new CancellationTokenSource().token);
 
             expect(spawn).toHaveBeenCalledWith(
                 'php',
@@ -195,7 +206,6 @@ describe('Extension Test', () => {
             );
 
             let expected;
-
             if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
                 expected = { enqueued: 28, started: 33, passed: 21, failed: 10, end: 1 };
             } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
@@ -213,7 +223,7 @@ describe('Extension Test', () => {
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
             const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
 
-            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
+            await runProfile.runHandler(request, new CancellationTokenSource().token);
 
             expect(spawn).toHaveBeenCalledWith('php', [
                 'vendor/bin/phpunit',
@@ -242,7 +252,7 @@ describe('Extension Test', () => {
                 profile: runProfile,
             };
 
-            await runProfile.runHandler(request, new vscode.CancellationTokenSource().token);
+            await runProfile.runHandler(request, new CancellationTokenSource().token);
 
             expect(spawn).toHaveBeenCalledWith('php', [
                 'vendor/bin/phpunit',

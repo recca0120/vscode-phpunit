@@ -130,23 +130,15 @@ export abstract class Command {
     }
 
     apply() {
-        const [cmd, ...args] = this.getCommand()
+        const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
             .filter((input: string) => !!input)
             .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input));
 
         return { cmd, args, options: this.options };
     }
 
-    protected getCommand() {
-        return [...this.getCommendPrefix(), ...this.getPHPUnitWithArgs()];
-    }
-
-    protected getPHPUnitWithArgs() {
-        return this.setParaTestFunctional([
-            this.phpPath(),
-            this.phpUnitPath(),
-            ...this.getArguments(),
-        ]);
+    protected executable() {
+        return this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
     }
 
     protected abstract resolvePathReplacer(
@@ -154,15 +146,16 @@ export abstract class Command {
         configuration: IConfiguration,
     ): PathReplacer;
 
-    private phpUnitPath() {
-        return (this.configuration.get('phpunit') as string) ?? '';
-    }
 
-    private getCommendPrefix() {
+    private getPrefix() {
         return ((this.configuration.get('command') as string) ?? '').split(' ');
     }
 
-    private phpPath() {
+    private getPhpUnit() {
+        return (this.configuration.get('phpunit') as string) ?? '';
+    }
+
+    private getPhp() {
         return (this.configuration.get('php') as string) ?? '';
     }
 
@@ -189,7 +182,7 @@ export abstract class Command {
 
     private isParaTestFunctional(args: string[]) {
         return (
-            !!this.phpUnitPath().match(/paratest/) &&
+            !!this.getPhpUnit().match(/paratest/) &&
             args.some((arg: string) => !!arg.match(/--filter/))
         );
     }
@@ -209,10 +202,9 @@ export class RemoteCommand extends Command {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
-    protected getPHPUnitWithArgs() {
+    protected executable() {
         return [
-            super
-                .getPHPUnitWithArgs()
+            super.executable()
                 .map((input) => (/^-/.test(input) ? `'${input}'` : input))
                 .join(' '),
         ];

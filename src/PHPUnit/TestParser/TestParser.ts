@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 import { engine } from '../utils';
 import { Annotations } from './AnnotationParser';
@@ -13,14 +14,18 @@ export type TestDefinition = {
     id: string;
     qualifiedClass: string;
     namespace: string;
+    label: string;
     class?: string;
     method?: string;
+    parent?: TestDefinition;
+    children: TestDefinition[]
+    file: string;
     start: Position;
     end: Position;
     annotations: Annotations;
 };
 
-export class Test implements TestDefinition {
+class Test implements TestDefinition {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
@@ -29,8 +34,8 @@ export class Test implements TestDefinition {
     public readonly start!: Position;
     public readonly end!: Position;
     public readonly annotations!: Annotations;
-    public parent?: Test;
-    public children: Test[] = [];
+    public parent?: TestDefinition;
+    public children: TestDefinition[] = [];
 
     constructor(
         public readonly file: string,
@@ -53,13 +58,20 @@ export type Events = {
     onTest?: (test: Test, index: number) => void;
 };
 
+
+const textDecoder = new TextDecoder('utf-8');
+
 export class TestParser {
     private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,
     };
 
-    public parse(text: Buffer | string, file: string, events: Events = {}) {
+    async parseFile(file: string, events: Events = {}) {
+        return this.parse(textDecoder.decode(await readFile(file)), file, events);
+    }
+
+    parse(text: Buffer | string, file: string, events: Events = {}) {
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
@@ -93,7 +105,7 @@ export class TestParser {
         file: string,
         events: Events = {},
         namespace?: Namespace,
-    ): Test[] | undefined {
+    ): TestDefinition[] | undefined {
         const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
 
         return fn.apply(this, [ast, file, events, namespace]);
@@ -141,9 +153,9 @@ export class TestParser {
     ) {
         if ('children' in ast) {
             return ast.children.reduce(
-                (tests, children) =>
-                    tests.concat(this.parseAst(children, file, events, namespace) ?? []),
-                [] as Test[],
+                (testDefinitions, children) =>
+                    testDefinitions.concat(this.parseAst(children, file, events, namespace) ?? []),
+                [] as TestDefinition[],
             );
         }
 

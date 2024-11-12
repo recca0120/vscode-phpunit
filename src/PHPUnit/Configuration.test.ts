@@ -1,4 +1,6 @@
 import 'jest';
+import { join } from 'node:path';
+import { phpUnitProject } from './__tests__/utils';
 import { Configuration } from './Configuration';
 
 describe('Configuration Test', () => {
@@ -45,15 +47,16 @@ describe('Configuration Test', () => {
         expect(configuration.has('buzz')).toBeFalsy();
     });
 
-    it('get phpunit.xml', () => {
-        const configuration = new Configuration({ args: ['-c', 'src/phpunit.xml'] });
+    it('get phpunit.xml', async () => {
+        const configuration = new Configuration({});
+        const root = phpUnitProject('');
 
-        expect(configuration.getConfigurationFile()).toEqual('src/phpunit.xml');
+        expect(await configuration.getConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
     });
 
-    it('can not get phpunit.xml', () => {
-        const configuration = new Configuration({});
+    it('can not get phpunit.xml', async () => {
+        const configuration = new Configuration({ args: ['-c', 'src/phpunit.xml'] });
 
-        expect(configuration.getConfigurationFile()).toBeUndefined();
+        expect(await configuration.getConfigurationFile()).toBeUndefined();
     });
 });

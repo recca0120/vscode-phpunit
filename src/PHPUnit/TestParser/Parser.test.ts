@@ -2,7 +2,7 @@ import 'jest';
 import { readFile } from 'fs/promises';
 import { phpUnitProject } from '../__tests__/utils';
 import { propertyParser } from './PropertyParser';
-import { Events, Test, TestParser } from './TestParser';
+import { Events, TestDefinition, TestParser } from './TestParser';
 
 const uniqueId = (namespace: string, _class: string, method: string) => {
     return propertyParser.uniqueId(namespace, _class, method);
@@ -17,7 +17,7 @@ export const parse = (buffer: Buffer | string, file: string, events: Events = {}
 
 describe('Parser Test', () => {
     describe('PHPUnit', () => {
-        let suites: Test[];
+        let suites: TestDefinition[];
         const givenTest = (method: string) =>
             suites[0].children.find((test) => test.method === method);
 
