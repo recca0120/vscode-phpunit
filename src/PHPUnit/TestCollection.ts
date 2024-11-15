@@ -114,22 +114,29 @@ export abstract class BaseTestCollection<T> {
     }
 
     delete(uri: URI) {
-        const found = this.findFile(uri);
+        const file = this.findFile(uri);
 
-        return found
-            ? this.items().get(found.group)?.delete(found.file)
-            : false;
+        return file ? this.deleteFile(file) : false;
     }
 
     reset() {
+        for (const [group, files] of this.items().entries()) {
+            for (const [file, tests] of files.entries()) {
+                this.deleteFile({ group, file, tests });
+            }
+        }
         this._workspaces.delete(this.getWorkspace());
 
         return this;
     }
 
+    entries() {
+        return this.items().entries();
+    }
+
     protected abstract convertTests(testDefinitions: TestDefinition[]): Promise<T[]>
 
-    private findFile(uri: URI): File<T> | undefined {
+    protected findFile(uri: URI): File<T> | undefined {
         for (const [group, files] of this.items().entries()) {
             for (const [file, tests] of files.entries()) {
                 if (uri.fsPath === file) {
@@ -139,6 +146,10 @@ export abstract class BaseTestCollection<T> {
         }
 
         return undefined;
+    }
+
+    protected deleteFile(file: File<T>) {
+        return this.items().get(file.group)?.delete(file.file);
     }
 
     private async parseTests(uri: URI): Promise<TestDefinition[]> {

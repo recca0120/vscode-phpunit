@@ -29,6 +29,7 @@ class Test implements TestDefinition {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
+    public readonly label!: string;
     public readonly class?: string;
     public readonly method?: string;
     public readonly start!: Position;
@@ -37,19 +38,8 @@ class Test implements TestDefinition {
     public parent?: TestDefinition;
     public children: TestDefinition[] = [];
 
-    constructor(
-        public readonly file: string,
-        attributes: TestDefinition,
-    ) {
+    constructor(attributes: TestDefinition, public readonly file: string) {
         Object.assign(this, attributes);
-    }
-
-    get label() {
-        if (this.annotations.testdox && this.annotations.testdox.length > 0) {
-            return this.annotations.testdox[this.annotations.testdox.length - 1];
-        }
-
-        return (this.children.length > 0 ? this.qualifiedClass : this.method) ?? '';
     }
 }
 
@@ -57,7 +47,6 @@ export type Events = {
     onSuite?: (suite: Test) => void;
     onTest?: (test: Test, index: number) => void;
 };
-
 
 const textDecoder = new TextDecoder('utf-8');
 
@@ -122,27 +111,27 @@ export class TestParser {
             return [];
         }
 
-        const suite = new Test(file, parseProperty(ast as Declaration, namespace));
+        const parent = { ...parseProperty(ast as Declaration, namespace), file };
 
-        suite.children = _class.body
+        parent.children = _class.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => new Test(file, parseProperty(method as Method, namespace, _class)));
+            .map((method) => new Test(parseProperty(method as Method, namespace, _class), file));
 
-        if (suite.children.length <= 0) {
+        if (parent.children.length <= 0) {
             return;
         }
 
-        suite.children.forEach((test) => (test.parent = suite));
+        parent.children.forEach((child) => (child.parent = parent));
 
         if (events.onSuite) {
-            events.onSuite(suite);
+            events.onSuite(parent);
         }
 
         if (events.onTest) {
-            suite.children.forEach((test, index) => events.onTest!(test, index));
+            parent.children.forEach((child, index) => events.onTest!(child, index));
         }
 
-        return [suite];
+        return [parent];
     }
 
     private parseChildren(

@@ -137,7 +137,7 @@ describe('Extension Test', () => {
         it('should load tests', async () => {
             await activate(context);
             const ctrl = getTestController();
-            const file = Uri.file(join(root, 'tests/AssertionsTest.php'));
+            const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
             const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
             const parent = ctrl.items.get(testId);
@@ -146,14 +146,14 @@ describe('Extension Test', () => {
             expect(parent).toEqual(
                 expect.objectContaining({
                     id: testId,
-                    uri: expect.objectContaining({ path: file.path }),
+                    uri: expect.objectContaining({ fsPath: uri.fsPath }),
                 }),
             );
 
             expect(child).toEqual(
                 expect.objectContaining({
                     id: `${testId}::test_passed`,
-                    uri: expect.objectContaining({ path: file.path }),
+                    uri: expect.objectContaining({ fsPath: uri.fsPath }),
                     range: {
                         start: { line: 11, character: 4 },
                         end: { line: 14, character: 5 },
@@ -164,30 +164,12 @@ describe('Extension Test', () => {
 
             expect(workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
             expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
-            expect(tests.createTestController).toHaveBeenCalledWith(
-                'phpUnitTestController',
-                'PHPUnit',
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
-                'PHPUnit.reload',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
-                'PHPUnit.run-all',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
-                'PHPUnit.run-file',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
-                'PHPUnit.run-test-at-cursor',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
-                'PHPUnit.rerun',
-                expect.any(Function),
-            );
+            expect(tests.createTestController).toHaveBeenCalledWith('phpUnitTestController', 'PHPUnit');
+            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.reload', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.run-all', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.run-file', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.run-test-at-cursor', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.rerun', expect.any(Function));
             expect(context.subscriptions.push).toHaveBeenCalledTimes(9);
         });
 
@@ -207,11 +189,11 @@ describe('Extension Test', () => {
 
             let expected;
             if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
-                expected = { enqueued: 28, started: 33, passed: 21, failed: 10, end: 1 };
+                expected = { enqueued: 26, started: 33, passed: 21, failed: 10, end: 1 };
             } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
+                expected = { enqueued: 26, started: 35, passed: 23, failed: 10, end: 1 };
             } else {
-                expected = { enqueued: 28, started: 27, passed: 14, failed: 11, end: 1 };
+                expected = { enqueued: 26, started: 27, passed: 14, failed: 11, end: 1 };
             }
             expectTestResultCalled(ctrl, expected);
         });
