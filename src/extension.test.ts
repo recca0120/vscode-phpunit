@@ -147,6 +147,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: testId,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
+                    label: testId,
                 }),
             );
 
@@ -154,6 +155,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: `${testId}::test_passed`,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
+                    label: 'test_passed',
                     range: {
                         start: { line: 11, character: 4 },
                         end: { line: 14, character: 5 },

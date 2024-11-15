@@ -11,7 +11,6 @@ const phpUnitXML = new PHPUnitXML();
 const testParser = new TestParser();
 let testCollection: TestCollection;
 
-
 async function updateNodeForDocument(e: vscode.TextDocument) {
     if (!testCollection.has(e.uri)) {
         await testCollection.add(e.uri);
