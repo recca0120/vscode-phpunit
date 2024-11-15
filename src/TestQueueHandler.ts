@@ -40,7 +40,7 @@ export class TestQueueHandler {
             return testItem.uri!.fsPath;
         }
 
-        const testDefinition = this.findTest(testItem);
+        const testDefinition = this.testCollection.findTest(testItem.id);
 
         return testDefinition
             ? `${this.parseFilter(testDefinition) ?? ''} ${encodeURIComponent(testDefinition.file)}`
@@ -51,26 +51,6 @@ export class TestQueueHandler {
         const deps = [testDefinition.method, ...(testDefinition.annotations.depends ?? [])].join('|');
 
         return testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
-    }
-
-    private findTest(testItem: TestItem) {
-        for (const [_group, files] of this.testCollection.entries()) {
-            for (const [_file, tests] of files.entries()) {
-                for (const test of tests) {
-                    if (testItem.id === test.id) {
-                        return test;
-                    }
-
-                    for (const child of test.children) {
-                        if (testItem.id === child.id) {
-                            return child;
-                        }
-                    }
-                }
-            }
-        }
-
-        return;
     }
 
     private gatherTestItems(collection: TestItemCollection) {

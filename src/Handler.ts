@@ -10,7 +10,7 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
-import { LocalCommand, PHPUnitXML, RemoteCommand, TestRunner } from './PHPUnit';
+import { LocalCommand, RemoteCommand, TestRunner } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestQueueHandler } from './TestQueueHandler';
 
@@ -60,12 +60,8 @@ export class Handler {
     }
 
     private* gatherTestItems(): Generator<TestItem> {
-        for (const [_group, files] of this.testCollection.entries()) {
-            for (const [_file, tests] of files.entries()) {
-                for (const test of tests) {
-                    yield test.testItem;
-                }
-            }
+        for (const item of this.testCollection.gatherTestDefinitions()) {
+            yield item.testItem;
         }
     }
 

@@ -65,7 +65,7 @@ export class Workspace<T> extends Base<Files<T>> {
     }
 }
 
-export abstract class BaseTestCollection<T> {
+export abstract class BaseTestCollection<T extends { id: string, children: T[] }> {
     private readonly _workspaces: Workspace<T[]>;
 
     constructor(private phpUnitXML: PHPUnitXML, protected testParser: TestParser) {
@@ -136,6 +136,31 @@ export abstract class BaseTestCollection<T> {
 
     entries() {
         return this.items().entries();
+    }
+
+    findTest(testId: string) {
+        for (const testDefinitions of this.gatherTestDefinitions()) {
+            if (testId === testDefinitions.id) {
+                return testDefinitions;
+            }
+            for (const child of testDefinitions.children) {
+                if (testId === child.id) {
+                    return child;
+                }
+            }
+        }
+
+        return;
+    }
+
+    * gatherTestDefinitions(): Generator<T> {
+        for (const [_group, files] of this.entries()) {
+            for (const [_file, tests] of files.entries()) {
+                for (const test of tests) {
+                    yield test;
+                }
+            }
+        }
     }
 
     protected abstract convertTests(testDefinitions: TestDefinition[]): Promise<T[]>
