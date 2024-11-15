@@ -149,7 +149,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const runHandler = (testRunRequest: TestRunRequest, cancellation: CancellationToken) => handler.run(testRunRequest, cancellation);
     const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
-    context.subscriptions.push(vscode.commands.registerCommand('PHPUnit.reload', reload));
+    context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', reload));
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());

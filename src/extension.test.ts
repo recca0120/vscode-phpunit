@@ -167,11 +167,11 @@ describe('Extension Test', () => {
             expect(workspace.getConfiguration).toHaveBeenCalledWith('phpunit');
             expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit');
             expect(tests.createTestController).toHaveBeenCalledWith('phpUnitTestController', 'PHPUnit');
-            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.reload', expect.any(Function));
-            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.run-all', expect.any(Function));
-            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.run-file', expect.any(Function));
-            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.run-test-at-cursor', expect.any(Function));
-            expect(commands.registerCommand).toHaveBeenCalledWith('PHPUnit.rerun', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.reload', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-all', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-file', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-test-at-cursor', expect.any(Function));
+            expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.rerun', expect.any(Function));
             expect(context.subscriptions.push).toHaveBeenCalledTimes(9);
         });
 

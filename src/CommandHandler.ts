@@ -8,13 +8,13 @@ export class CommandHandler {
     }
 
     runAll() {
-        return commands.registerCommand('PHPUnit.run-all', () => {
+        return commands.registerCommand('phpunit.run-all', () => {
             this.run(undefined);
         });
     }
 
     runFile() {
-        return commands.registerCommand('PHPUnit.run-file', () => {
+        return commands.registerCommand('phpunit.run-file', () => {
             if (window.activeTextEditor?.document.uri) {
                 this.run(this.findTestItems(window.activeTextEditor.document.uri));
             }
@@ -22,7 +22,7 @@ export class CommandHandler {
     }
 
     runTestAtCursor() {
-        return commands.registerCommand('PHPUnit.run-test-at-cursor', () => {
+        return commands.registerCommand('phpunit.run-test-at-cursor', () => {
             if (window.activeTextEditor?.document.uri) {
                 this.run([this.findByPosition(
                     this.findTestItems(window.activeTextEditor.document.uri),
@@ -33,7 +33,7 @@ export class CommandHandler {
     }
 
     rerun(handler: Handler) {
-        return commands.registerCommand('PHPUnit.rerun', () => {
+        return commands.registerCommand('phpunit.rerun', () => {
             const latestTestRunRequest = handler.getLatestTestRunRequest();
 
             return latestTestRunRequest ? this.runRequest(latestTestRunRequest) : this.run(undefined);
