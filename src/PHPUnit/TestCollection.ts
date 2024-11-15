@@ -1,28 +1,84 @@
-import { readFile } from 'node:fs/promises';
 import { dirname, extname, join, relative } from 'node:path';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, Test, TestParser, TestSuite } from './index';
+import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from './index';
 
-type Tests = Map<string, Test[]>
-type Group = Map<string, Tests>
-type Root = Map<string, Group>
+interface File<T> {
+    group: string;
+    file: string;
+    tests: T[];
+}
 
-const textDecoder = new TextDecoder('utf-8');
+abstract class Base<T> {
+    protected _items: Map<string, T> = new Map();
 
-export class TestCollection {
-    private readonly _items: Root;
+    get size() {
+        return this._items.size;
+    }
 
-    constructor(private phpUnitXML: PHPUnitXML, private testParser: TestParser) {
-        this._items = new Map<string, Group>();
+    set(key: string, value: T) {
+        return this._items.set(key, value);
+    }
+
+    get(key: string) {
+        return this._items.get(key);
+    }
+
+    has(key: string) {
+        return this._items.has(key);
+    }
+
+    delete(key: string) {
+        return this._items.delete(key);
+    }
+
+    forEach(callback: (tests: T, key: string, map: Map<string, T>) => void, thisArg?: any) {
+        this._items.forEach(callback, thisArg);
+    }
+
+    entries() {
+        return this._items.entries();
+    }
+
+    toJSON() {
+        return this._items;
+    }
+}
+
+export class TestDefinitions<T> extends Base<T> {
+    constructor() {
+        super();
+        this._items = new Map<string, T>();
+    }
+}
+
+export class Files<T> extends Base<TestDefinitions<T>> {
+    constructor() {
+        super();
+        this._items = new Map<string, TestDefinitions<T>>();
+    }
+}
+
+export class Workspace<T> extends Base<Files<T>> {
+    constructor() {
+        super();
+        this._items = new Map<string, Files<T>>();
+    }
+}
+
+export abstract class BaseTestCollection<T> {
+    private readonly _workspaces: Workspace<T[]>;
+
+    constructor(private phpUnitXML: PHPUnitXML, protected testParser: TestParser) {
+        this._workspaces = new Workspace<T[]>;
     }
 
     items() {
-        const root = this.root();
-        if (!this._items.has(root)) {
-            this._items.set(root, new Map<string, Tests>());
+        const workspace = this.getWorkspace();
+        if (!this._workspaces.has(workspace)) {
+            this._workspaces.set(workspace, new Files);
         }
 
-        return this._items.get(root)!;
+        return this._workspaces.get(workspace)!;
     }
 
     async add(uri: URI) {
@@ -30,101 +86,112 @@ export class TestCollection {
             return this;
         }
 
-        const groups = this.groups(uri);
-        if (groups.length === 0) {
+        const group = this.getGroup(uri);
+        if (!group) {
             return this;
         }
 
-        const items = this.items();
-
-        const tests = await this.parseTests(uri);
-        if (!tests || tests.length === 0) {
+        const files = this.items();
+        const tests = await this.convertTests(await this.parseTests(uri));
+        if (tests.length === 0) {
             return this;
         }
 
-        groups.forEach((name) => {
-            if (!items.has(name)) {
-                items.set(name, new Map<string, Test[]>());
-            }
-
-            items.get(name)!.set(uri.fsPath, tests);
-        });
+        if (!files.has(group)) {
+            files.set(group, new TestDefinitions<T[]>());
+        }
+        files.get(group)!.set(uri.fsPath, tests);
 
         return this;
     }
 
+    get(uri: URI) {
+        return this.findFile(uri)?.tests;
+    }
+
     has(uri: URI) {
-        return this.find(uri).size > 0;
+        return !!this.findFile(uri);
     }
 
     delete(uri: URI) {
-        const items = this.items();
+        const file = this.findFile(uri);
 
-        if (!items) {
-            return false;
-        }
-
-        let deleted = false;
-        const found = this.find(uri);
-        for (const [name, fsPath] of found) {
-            const files = items.get(name);
-            if (files?.delete(fsPath)) {
-                deleted = true;
-            }
-        }
-
-        return deleted;
+        return file ? this.deleteFile(file) : false;
     }
 
-    find(uri: URI) {
-        const found = new Map<string, string>();
-        const items = this.items();
-
-        items.forEach((group, name) => {
-            if (group.has(uri.fsPath)) {
-                found.set(name, uri.fsPath);
+    reset() {
+        for (const [group, files] of this.items().entries()) {
+            for (const [file, tests] of files.entries()) {
+                this.deleteFile({ group, file, tests });
             }
+        }
+        this._workspaces.delete(this.getWorkspace());
+
+        return this;
+    }
+
+    entries() {
+        return this.items().entries();
+    }
+
+    protected abstract convertTests(testDefinitions: TestDefinition[]): Promise<T[]>
+
+    protected findFile(uri: URI): File<T> | undefined {
+        for (const [group, files] of this.items().entries()) {
+            for (const [file, tests] of files.entries()) {
+                if (uri.fsPath === file) {
+                    return { group, file, tests };
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    protected deleteFile(file: File<T>) {
+        return this.items().get(file.group)?.delete(file.file);
+    }
+
+    private async parseTests(uri: URI): Promise<TestDefinition[]> {
+        return await this.testParser.parseFile(uri.fsPath) ?? [];
+    }
+
+    private getGroup(uri: URI) {
+        const testSuites = this.phpUnitXML.getTestSuites().filter((item) => this.match(item, uri));
+
+        const group = testSuites.find(item => {
+            return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
         });
+        if (!group) {
+            return;
+        }
 
-        return found;
+        const exclude = testSuites.find((item) => {
+            return item.name === group.name && item.tag === 'exclude' && this.match(item, uri);
+        });
+        if (exclude) {
+            return;
+        }
+
+        return group.name;
     }
 
-    protected async parseTests(uri: URI) {
-        return this.testParser.parse(
-            textDecoder.decode(await readFile(uri.fsPath)),
-            uri.fsPath,
-        );
-    }
-
-    private groups(uri: URI) {
-        const includes: string[] = [];
-        const excludes: string[] = [];
-
-        this.phpUnitXML.getTestSuites()
-            .filter((item) => this.include(item, uri))
-            .forEach((item) => {
-                if (item.tag !== 'exclude' && !includes.includes(item.name)) {
-                    includes.push(item.name);
-                }
-
-                if (item.tag === 'exclude' && !excludes.includes(item.name)) {
-                    excludes.push(item.name);
-                }
-            });
-
-        return includes.filter(group => !excludes.includes(group));
-    }
-
-    private include(group: TestSuite, uri: URI) {
-        const isFile = group.tag === 'file' || (group.tag === 'exclude' && extname(group.value));
-        const root = this.root();
+    private match(testSuite: TestSuite, uri: URI) {
+        const workspace = this.getWorkspace();
+        const isFile = testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
 
         return isFile
-            ? join(root, group.value) === uri.fsPath
-            : !relative(join(root, group.value), dirname(uri.fsPath)).startsWith('.');
+            ? join(workspace, testSuite.value) === uri.fsPath
+            : !relative(join(workspace, testSuite.value), dirname(uri.fsPath)).startsWith('.');
     }
 
-    private root() {
+    private getWorkspace() {
         return URI.file(this.phpUnitXML.root()).fsPath;
+    }
+}
+
+export class TestCollection extends BaseTestCollection<TestDefinition> {
+    protected async convertTests(testDefinitions: TestDefinition[]) {
+        return testDefinitions;
     }
 }

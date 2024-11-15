@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
+import { expect } from '@jest/globals';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
-import { PHPUnitXML, Test, TestParser } from './index';
-import { TestCollection } from './TestCollection';
+import { PHPUnitXML, TestDefinition, TestParser } from './index';
+import { Files, TestCollection, TestDefinitions } from './TestCollection';
 
 
 describe('TestCollection', () => {
@@ -16,13 +16,13 @@ describe('TestCollection', () => {
     };
 
     const shouldBe = async (collection: TestCollection, group: any) => {
-        const expected = new Map();
+        const expected = new Files<TestDefinition[]>;
         for (const [name, files] of Object.entries(group)) {
-            const map = new Map<string, Test[]>();
+            const testDefinitions = new TestDefinitions<TestDefinition[]>();
             for (const uri of (files as URI[])) {
-                map.set(uri.fsPath, testParser.parse(await readFile(uri.fsPath), uri.fsPath)!);
+                testDefinitions.set(uri.fsPath, await testParser.parseFile(uri.fsPath) ?? []);
             }
-            expected.set(name, map);
+            expected.set(name, testDefinitions);
         }
 
         expect(collection.items()).toEqual(expected);
@@ -41,10 +41,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, { default: files });
     });
@@ -58,13 +55,8 @@ describe('TestCollection', () => {
             </testsuites>`,
         );
 
-        const files = [
-            URI.file(phpUnitProject('tests/AssertionsTest.php')),
-        ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, { default: files });
     });
@@ -83,10 +75,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, { default: [files[0]] });
     });
@@ -105,44 +94,41 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, { default: [files[0]] });
     });
 
-    it('match two testsuites', async () => {
+    it('match three testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite> 
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
                 </testsuite>
                 <testsuite name="Feature">
                     <directory>tests/Feature</directory>
                 </testsuite>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                    <exclude>tests/Unit/ExampleTest.php</exclude>
+                    <exclude>tests/Feature/ExampleTest.php</exclude>
+                </testsuite> 
             </testsuites>`,
         );
 
         const files = [
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, {
-            default: files,
+            default: [files[0]],
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            Unit: [files[0]],
+            Unit: [files[1]],
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            Feature: [files[1]],
+            Feature: [files[2]],
         });
     });
 
@@ -160,10 +146,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, { default: [files[1], files[2]] });
     });
@@ -181,10 +164,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-
-        for (const file of files) {
-            await collection.add(file);
-        }
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
         await shouldBe(collection, { default: [files[0]] });
     });
@@ -198,13 +178,36 @@ describe('TestCollection', () => {
             </testsuites>`,
         );
 
-        const file = URI.file(phpUnitProject('tests/Unit/ExampleTest.php'));
 
-        await collection.add(file);
-        expect(collection.has(file)).toBeTruthy();
+        const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
+        await Promise.all(files.map(async (file) => await collection.add(file)));
 
-        expect(collection.delete(file)).toBeTruthy();
-        expect(collection.delete(file)).toBeFalsy();
+        expect(collection.has(files[0])).toBeTruthy();
+        expect(collection.delete(files[0])).toBeTruthy();
+        expect(collection.delete(files[0])).toBeFalsy();
         await shouldBe(collection, { default: [] });
+    });
+
+    it('reset', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory>tests/Unit</directory>
+                </testsuite> 
+                <testsuite name="Feature">
+                    <directory>tests/Feature</directory>
+                </testsuite> 
+            </testsuites>`,
+        );
+
+        const files = [
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
+        ];
+        await Promise.all(files.map(async (file) => await collection.add(file)));
+        expect(collection.items().size).toEqual(2);
+
+        collection.reset();
+        expect(collection.items().size).toEqual(0);
     });
 });

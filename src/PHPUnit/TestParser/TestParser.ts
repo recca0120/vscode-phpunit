@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 import { engine } from '../utils';
 import { Annotations } from './AnnotationParser';
@@ -13,38 +14,32 @@ export type TestDefinition = {
     id: string;
     qualifiedClass: string;
     namespace: string;
+    label: string;
     class?: string;
     method?: string;
+    parent?: TestDefinition;
+    children: TestDefinition[]
+    file: string;
     start: Position;
     end: Position;
     annotations: Annotations;
 };
 
-export class Test implements TestDefinition {
+class Test implements TestDefinition {
     public readonly id!: string;
     public readonly qualifiedClass!: string;
     public readonly namespace!: string;
+    public readonly label!: string;
     public readonly class?: string;
     public readonly method?: string;
     public readonly start!: Position;
     public readonly end!: Position;
     public readonly annotations!: Annotations;
-    public parent?: Test;
-    public children: Test[] = [];
+    public parent?: TestDefinition;
+    public children: TestDefinition[] = [];
 
-    constructor(
-        public readonly file: string,
-        attributes: TestDefinition,
-    ) {
+    constructor(attributes: TestDefinition, public readonly file: string) {
         Object.assign(this, attributes);
-    }
-
-    get label() {
-        if (this.annotations.testdox && this.annotations.testdox.length > 0) {
-            return this.annotations.testdox[this.annotations.testdox.length - 1];
-        }
-
-        return (this.children.length > 0 ? this.qualifiedClass : this.method) ?? '';
     }
 }
 
@@ -53,13 +48,19 @@ export type Events = {
     onTest?: (test: Test, index: number) => void;
 };
 
+const textDecoder = new TextDecoder('utf-8');
+
 export class TestParser {
     private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,
     };
 
-    public parse(text: Buffer | string, file: string, events: Events = {}) {
+    async parseFile(file: string, events: Events = {}) {
+        return this.parse(textDecoder.decode(await readFile(file)), file, events);
+    }
+
+    parse(text: Buffer | string, file: string, events: Events = {}) {
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
@@ -93,7 +94,7 @@ export class TestParser {
         file: string,
         events: Events = {},
         namespace?: Namespace,
-    ): Test[] | undefined {
+    ): TestDefinition[] | undefined {
         const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
 
         return fn.apply(this, [ast, file, events, namespace]);
@@ -110,27 +111,27 @@ export class TestParser {
             return [];
         }
 
-        const suite = new Test(file, parseProperty(ast as Declaration, namespace));
+        const parent = { ...parseProperty(ast as Declaration, namespace), file };
 
-        suite.children = _class.body
+        parent.children = _class.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => new Test(file, parseProperty(method as Method, namespace, _class)));
+            .map((method) => new Test(parseProperty(method as Method, namespace, _class), file));
 
-        if (suite.children.length <= 0) {
+        if (parent.children.length <= 0) {
             return;
         }
 
-        suite.children.forEach((test) => (test.parent = suite));
+        parent.children.forEach((child) => (child.parent = parent));
 
         if (events.onSuite) {
-            events.onSuite(suite);
+            events.onSuite(parent);
         }
 
         if (events.onTest) {
-            suite.children.forEach((test, index) => events.onTest!(test, index));
+            parent.children.forEach((child, index) => events.onTest!(child, index));
         }
 
-        return [suite];
+        return [parent];
     }
 
     private parseChildren(
@@ -141,9 +142,9 @@ export class TestParser {
     ) {
         if ('children' in ast) {
             return ast.children.reduce(
-                (tests, children) =>
-                    tests.concat(this.parseAst(children, file, events, namespace) ?? []),
-                [] as Test[],
+                (testDefinitions, children) =>
+                    testDefinitions.concat(this.parseAst(children, file, events, namespace) ?? []),
+                [] as TestDefinition[],
             );
         }
 

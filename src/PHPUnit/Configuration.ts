@@ -1,5 +1,7 @@
+import { join } from 'node:path';
 import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
+import { checkFileExists, findAsyncSequential } from './utils';
 
 export interface IConfiguration {
     get(key: string, defaultValue?: unknown): unknown | undefined;
@@ -10,7 +12,7 @@ export interface IConfiguration {
 
     getArguments(input?: string): Arguments;
 
-    getConfigurationFile(): string | undefined;
+    getConfigurationFile(): Promise<string | undefined>;
 }
 
 interface ConfigurationItem {
@@ -38,13 +40,18 @@ export abstract class BaseConfiguration implements IConfiguration {
         });
     }
 
-    getConfigurationFile(): string | undefined {
+    async getConfigurationFile(root: string = ''): Promise<string | undefined> {
+        let files = ['phpunit.xml', 'phpunit.dist.xml'];
+
         const { _, ...argv } = this.getArguments();
         if (argv.hasOwnProperty('configuration')) {
-            return argv.configuration;
+            files = [argv.configuration, ...files];
         }
 
-        return;
+        return await findAsyncSequential<string>(
+            files.map((file) => join(root, file)),
+            async (file) => await checkFileExists(file),
+        );
     }
 }
 

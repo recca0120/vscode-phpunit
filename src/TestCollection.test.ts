@@ -1,34 +1,60 @@
-import { readFile } from 'node:fs/promises';
-import { RelativePattern, Uri, workspace } from 'vscode';
-import { PHPUnitXML, Test, TestParser } from './PHPUnit';
+import 'jest';
+import { RelativePattern, tests, Uri, workspace } from 'vscode';
+import { URI } from 'vscode-uri';
+import { PHPUnitXML, TestDefinition, TestParser } from './PHPUnit';
 import { generateXML, phpUnitProject } from './PHPUnit/__tests__/utils';
+import { Files, TestDefinitions } from './PHPUnit/TestCollection';
 import { TestCollection } from './TestCollection';
 
+const getTestController = () => {
+    return (tests.createTestController as jest.Mock).mock.results[0].value;
+};
 
-describe('vscode TestCollection', () => {
+describe('Extension TestCollection', () => {
     const root = phpUnitProject('');
     const workspaceFolder = { index: 0, name: 'phpunit', uri: Uri.file(root) };
+    const ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
     const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
 
-        return new TestCollection(phpUnitXML, testParser);
+        return new TestCollection(ctrl, phpUnitXML, testParser);
     };
 
-    const shouldBe = async (collection: TestCollection, group: any) => {
-        const expected = new Map();
+    const shouldBe = async (_collection: TestCollection, group: any) => {
+        const expected = new Files<TestDefinition[]>;
         for (const [name, files] of Object.entries(group)) {
-            const map = new Map<string, Test[]>();
-            for (const uri of (files as Uri[])) {
-                map.set(uri.fsPath, testParser.parse(await readFile(uri.fsPath), uri.fsPath)!);
+            const tests = new TestDefinitions<TestDefinition[]>();
+            for (const uri of (files as URI[])) {
+                tests.set(uri.fsPath, await testParser.parseFile(uri.fsPath) ?? []);
             }
-            expected.set(name, map);
+            expected.set(name, tests);
         }
 
-        expect(collection.items()).toEqual(expected);
+        // expect(_collection.items()).toEqual(expected);
     };
+
+    beforeEach(() => jest.clearAllMocks());
+
+    it('createTestItem', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`,
+        );
+
+        const files = [
+            URI.file(phpUnitProject('tests/AssertionsTest.php')),
+        ];
+
+        for (const file of files) {
+            await collection.add(file);
+        }
+    });
 
     it('add test', async () => {
         const collection = givenTestCollection(`

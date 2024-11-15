@@ -1,4 +1,3 @@
-import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
@@ -8,7 +7,6 @@ import {
     EventEmitter,
     OutputChannel,
     Position,
-    Range,
     TestController,
     TestItem,
     TestItemCollection,
@@ -19,69 +17,21 @@ import {
     window,
     workspace,
 } from 'vscode';
+import { URI } from 'vscode-uri';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
-import { Command, LocalCommand, PHPUnitXML, RemoteCommand, Test, TestParser, TestRunner } from './PHPUnit';
+import { Command, LocalCommand, PHPUnitXML, RemoteCommand, TestDefinition, TestParser, TestRunner } from './PHPUnit';
+import { TestCollection } from './TestCollection';
 
 const phpUnitXML = new PHPUnitXML();
+const testParser = new TestParser();
+let testCollection: TestCollection;
 
-async function findAsyncSequential<T>(
-    array: T[],
-    predicate: (t: T) => Promise<boolean>,
-): Promise<T | undefined> {
-    for (const t of array) {
-        if (await predicate(t)) {
-            return t;
-        }
+
+async function updateNodeForDocument(e: vscode.TextDocument) {
+    if (!testCollection.has(e.uri)) {
+        await testCollection.add(e.uri);
     }
-    return undefined;
-}
-
-async function checkFileExists(filePath: string): Promise<boolean> {
-    try {
-        // 嘗試取得檔案狀態
-        await stat(filePath);
-        return true; // 檔案存在
-    } catch (error: any) {
-        if (error.code === 'ENOENT') {
-            return false; // 檔案不存在
-        } else {
-            throw error; // 其他錯誤
-        }
-    }
-}
-
-async function updateNodeForDocument(e: vscode.TextDocument, ctrl: vscode.TestController) {
-    if (e.uri.scheme !== 'file' || !e.uri.path.endsWith('.php')) {
-        return;
-    }
-
-    const currentWorkspaceFolder = vscode.workspace.getWorkspaceFolder(e.uri);
-    const workspaceTestPattern = (await getWorkspaceTestPatterns()).find(({ workspaceFolder }) => {
-        return currentWorkspaceFolder!.name === workspaceFolder.name;
-    });
-
-    if (!workspaceTestPattern) {
-        return;
-    }
-
-    if (vscode.languages.match({ pattern: workspaceTestPattern.exclude.pattern }, e) !== 0) {
-        return;
-    }
-
-    await getOrCreateFile(ctrl, e.uri);
-}
-
-export async function getOrCreateFile(ctrl: vscode.TestController, uri: vscode.Uri) {
-    const existing = testData.get(uri.toString());
-
-    if (existing) {
-        return;
-    }
-
-    const testFile = new TestFile(uri);
-
-    testData.set(uri.toString(), await testFile.update(ctrl));
 }
 
 async function getWorkspaceTestPatterns() {
@@ -100,13 +50,7 @@ async function getWorkspaceTestPatterns() {
         const includePatterns = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
-        const configurationFile = await findAsyncSequential(
-            [configuration.getConfigurationFile(), 'phpunit.xml', 'PHPUnit.dist.xml']
-                .filter((file) => !!file)
-                .map((file) => path.join(workspaceFolder.uri.fsPath, file!)),
-            async (file) => await checkFileExists(file),
-        );
-
+        const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
         if (configurationFile) {
             await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath);
             const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
@@ -137,51 +81,33 @@ async function getWorkspaceTestPatterns() {
     return results;
 }
 
-async function findInitialFiles(
-    ctrl: vscode.TestController,
-    pattern: vscode.GlobPattern,
-    exclude: vscode.GlobPattern,
-) {
-    testData.clear();
-    ctrl.items.forEach((item) => ctrl.items.delete(item.id));
+async function findInitialFiles(pattern: vscode.GlobPattern, exclude: vscode.GlobPattern) {
+    testCollection.reset();
     await vscode.workspace.findFiles(pattern, exclude).then((files) => {
-        return Promise.all(files.map((file) => getOrCreateFile(ctrl, file)));
+        return Promise.all(files.map((file) => testCollection.add(file)));
     });
 }
 
-async function startWatchingWorkspace(
-    ctrl: vscode.TestController,
-    fileChangedEmitter: vscode.EventEmitter<vscode.Uri>,
-) {
+async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
     return (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {
-            getOrCreateFile(ctrl, uri);
+            testCollection.add(uri);
             fileChangedEmitter.fire(uri);
         });
 
         watcher.onDidChange((uri) => {
-            const id = uri.toString();
-            const testFile = testData.get(id);
-            if (testFile) {
-                testFile.delete(ctrl);
-                testData.delete(id);
-            }
-            getOrCreateFile(ctrl, uri);
+            testCollection.delete(uri);
+            testCollection.add(uri);
             fileChangedEmitter.fire(uri);
         });
 
         watcher.onDidDelete((uri) => {
-            const id = uri.toString();
-            const testFile = testData.get(id);
-            if (testFile) {
-                testFile.delete(ctrl);
-                testData.delete(id);
-            }
+            testCollection.delete(uri);
         });
 
-        findInitialFiles(ctrl, pattern, exclude);
+        findInitialFiles(pattern, exclude);
 
         return watcher;
     });
@@ -191,12 +117,11 @@ export class Handler {
     private latestTestRunRequest: TestRunRequest | undefined;
 
     constructor(
-        private testData: Map<string, TestFile>,
+        private testCollection: TestCollection,
         private configuration: Configuration,
         private outputChannel: OutputChannel,
         private ctrl: TestController,
         private fileChangedEmitter: EventEmitter<Uri>,
-        private getOrCreateFile: Function,
     ) {
     }
 
@@ -210,7 +135,7 @@ export class Handler {
         }
 
         const l = this.fileChangedEmitter.event(async (uri) => {
-            await this.getOrCreateFile(this.ctrl, uri);
+            await this.testCollection.add(uri);
 
             await this.startTestRun(
                 new TestRunRequest(request.include ?? [], undefined, request.profile, true),
@@ -222,19 +147,27 @@ export class Handler {
 
     private async startTestRun(request: TestRunRequest, cancellation: CancellationToken) {
         const command = await this.createCommand();
-
         if (!command) {
             return;
         }
 
         this.latestTestRunRequest = request;
-
         const run = this.ctrl.createTestRun(request);
-        const queueHandler = new TestQueueHandler(request, run, this.testData);
+        const queueHandler = new TestQueueHandler(this.testCollection, request, run);
         const runner = this.createTestRunner(queueHandler, run, request, cancellation);
 
-        await queueHandler.discoverTests(request.include ?? gatherTestItems(this.ctrl.items));
+        await queueHandler.discoverTests(request.include ?? this.gatherTestItems());
         await queueHandler.runQueue(runner, command);
+    }
+
+    private* gatherTestItems(): Generator<TestItem> {
+        for (const [_group, files] of this.testCollection.entries()) {
+            for (const [_file, tests] of files.entries()) {
+                for (const test of tests) {
+                    yield test.testItem;
+                }
+            }
+        }
     }
 
     private async createCommand() {
@@ -271,26 +204,22 @@ export class Handler {
 }
 
 class TestQueueHandler {
-    public queue: { test: TestItem }[] = [];
+    public queue: { testItem: TestItem }[] = [];
 
-    constructor(
-        private request: TestRunRequest,
-        private run: TestRun,
-        private testData: Map<string, TestFile>,
-    ) {
+    constructor(private testCollection: TestCollection, private request: TestRunRequest, private run: TestRun) {
     }
 
-    public async discoverTests(tests: Iterable<TestItem>) {
-        for (const test of tests) {
-            if (this.request.exclude?.includes(test)) {
+    public async discoverTests(testItems: Iterable<TestItem>) {
+        for (const testItem of testItems) {
+            if (this.request.exclude?.includes(testItem)) {
                 continue;
             }
 
-            if (!test.canResolveChildren) {
-                this.run.enqueued(test);
-                this.queue.push({ test });
+            if (!testItem.canResolveChildren) {
+                this.run.enqueued(testItem);
+                this.queue.push({ testItem: testItem });
             } else {
-                await this.discoverTests(gatherTestItems(test.children));
+                await this.discoverTests(this.gatherTestItems(testItem.children));
             }
         }
     }
@@ -301,23 +230,56 @@ class TestQueueHandler {
         }
 
         return await Promise.all(
-            this.request.include.map((test) =>
-                runner.run(command.setArguments(this.getTestArguments(test))),
+            this.request.include.map((testItem) =>
+                runner.run(command.setArguments(this.parseArguments(testItem))),
             ),
         );
     }
 
-    private getTestArguments(test: TestItem) {
-        return !test.parent
-            ? test.uri!.fsPath
-            : this.testData.get(test.parent.uri!.toString())!.getArguments(test.id);
-    }
-}
+    private parseArguments(testItem: TestItem): string {
+        if (!testItem.parent) {
+            return testItem.uri!.fsPath;
+        }
 
-function gatherTestItems(collection: TestItemCollection) {
-    const items: TestItem[] = [];
-    collection.forEach((item) => items.push(item));
-    return items;
+        const testDefinition = this.findTest(testItem);
+
+        return testDefinition
+            ? `${this.parseFilter(testDefinition) ?? ''} ${encodeURIComponent(testDefinition.file)}`
+            : '';
+    }
+
+    private parseFilter(testDefinition: TestDefinition) {
+        const deps = [testDefinition.method, ...(testDefinition.annotations.depends ?? [])].join('|');
+
+        return testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
+    }
+
+    private findTest(testItem: TestItem) {
+        for (const [_group, files] of this.testCollection.entries()) {
+            for (const [_file, tests] of files.entries()) {
+                for (const test of tests) {
+                    if (testItem.id === test.testItem.id) {
+                        return test;
+                    }
+
+                    for (const child of test.children) {
+                        if (testItem.id === child.testItem.id) {
+                            return child;
+                        }
+                    }
+                }
+            }
+        }
+
+        return;
+    }
+
+    private gatherTestItems(collection: TestItemCollection) {
+        const items: TestItem[] = [];
+        collection.forEach((item) => items.push(item));
+
+        return items;
+    }
 }
 
 async function getCurrentWorkspaceFolder() {
@@ -336,129 +298,9 @@ async function getCurrentWorkspaceFolder() {
     return window.showWorkspaceFolderPick();
 }
 
-const textDecoder = new TextDecoder('utf-8');
-
-const parser = new TestParser();
-
-export class TestFile {
-    private suites: Test[] = [];
-    private testItems: TestItem[] = [];
-
-    constructor(public uri: Uri) {
-    }
-
-    async update(ctrl: TestController) {
-        const rawContent = textDecoder.decode(await workspace.fs.readFile(this.uri));
-        parser.parse(rawContent, this.uri.fsPath, {
-            onSuite: (suite: Test) => {
-                const testItem = ctrl.createTestItem(suite.id, suite.label, this.uri);
-                testItem.canResolveChildren = true;
-                testItem.sortText = suite.id;
-                testItem.range = new Range(
-                    new Position(suite.start.line - 1, suite.start.character),
-                    new Position(suite.end.line - 1, suite.end.character),
-                );
-
-                ctrl.items.add(testItem);
-                this.suites.push(suite);
-            },
-            onTest: (test: Test, index) => {
-                const testItem = ctrl.createTestItem(test.id, test.label, this.uri);
-                testItem.canResolveChildren = false;
-                testItem.sortText = `${index}`;
-                testItem.range = new Range(
-                    new Position(test.start.line - 1, test.start.character),
-                    new Position(test.end.line - 1, test.end.character),
-                );
-
-                ctrl.items.get(test.parent!.id)!.children.add(testItem);
-                this.testItems.push(testItem);
-            },
-        });
-
-        return this;
-    }
-
-    delete(ctrl: TestController) {
-        this.testItems.forEach((testItem) => ctrl.items.delete(testItem.id));
-        this.suites = [];
-        this.testItems = [];
-    }
-
-    getArguments(testId: string): string {
-        const test = this.findTest(testId);
-
-        return test ? `${this.asFilter(test) ?? ''} ${encodeURIComponent(test.file)}` : '';
-    }
-
-    getTestItems() {
-        return this.testItems;
-    }
-
-    findTestItemByPosition(position: Position) {
-        return (
-            this.doFindTestItem(this.testItems, (testItem: TestItem) => {
-                if (testItem.canResolveChildren) {
-                    return false;
-                }
-
-                const range = testItem.range!;
-
-                return position.line >= range.start.line && position.line <= range.end.line;
-            }) ?? this.testItems[0]
-        );
-    }
-
-    private doFindTestItem(
-        testItems: TestItem[],
-        filter: (testItem: TestItem) => boolean,
-    ): TestItem | void {
-        for (const testItem of testItems) {
-            if (filter(testItem)) {
-                return testItem;
-            }
-
-            if (testItem.children.size > 0) {
-                return this.doFindTestItem(this.gatherTestItems(testItem.children), filter);
-            }
-        }
-    }
-
-    private gatherTestItems(collection: TestItemCollection) {
-        const items: TestItem[] = [];
-        collection.forEach((item) => items.push(item));
-
-        return items;
-    }
-
-    private findTest(testId: string) {
-        return this.doFindTest(this.suites, (test: Test) => testId === test.id);
-    }
-
-    private doFindTest(tests: Test[], filter: (test: Test) => boolean): Test | void {
-        for (const test of tests) {
-            if (filter(test)) {
-                return test;
-            }
-
-            if (test.children.length > 0) {
-                return this.doFindTest(test.children, filter);
-            }
-        }
-    }
-
-    private asFilter(test: Test) {
-        const deps = [test.method, ...(test.annotations.depends ?? [])].join('|');
-
-        return test.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
-    }
-}
 
 export class CommandHandler {
-    constructor(
-        private testRunProfile: TestRunProfile,
-        private testData: Map<string, TestFile>,
-    ) {
+    constructor(private testCollection: TestCollection, private testRunProfile: TestRunProfile) {
     }
 
     runAll() {
@@ -469,22 +311,19 @@ export class CommandHandler {
 
     runFile() {
         return commands.registerCommand('PHPUnit.run-file', () => {
-            const testFile = this.findTestFile();
-
-            if (testFile) {
-                this.run(testFile.getTestItems());
+            if (window.activeTextEditor?.document.uri) {
+                this.run(this.findTestItems(window.activeTextEditor.document.uri));
             }
         });
     }
 
     runTestAtCursor() {
         return commands.registerCommand('PHPUnit.run-test-at-cursor', () => {
-            const testFile = this.findTestFile();
-
-            if (testFile) {
-                this.run([
-                    testFile.findTestItemByPosition(window.activeTextEditor!.selection.active)!,
-                ]);
+            if (window.activeTextEditor?.document.uri) {
+                this.run([this.findByPosition(
+                    this.findTestItems(window.activeTextEditor.document.uri),
+                    window.activeTextEditor!.selection.active!,
+                )]);
             }
         });
     }
@@ -493,9 +332,7 @@ export class CommandHandler {
         return commands.registerCommand('PHPUnit.rerun', () => {
             const latestTestRunRequest = handler.getLatestTestRunRequest();
 
-            return latestTestRunRequest
-                ? this.runRequest(latestTestRunRequest)
-                : this.run(undefined);
+            return latestTestRunRequest ? this.runRequest(latestTestRunRequest) : this.run(undefined);
         });
     }
 
@@ -509,16 +346,43 @@ export class CommandHandler {
         this.testRunProfile.runHandler(request, cancellation);
     }
 
-    private findTestFile(): TestFile | null {
-        if (!window.activeTextEditor) {
-            return null;
+    private findByPosition(testItems: TestItem[], position: Position) {
+        const byPosition = (testItem: TestItem, position: Position) => {
+            if (testItem.canResolveChildren) {
+                return false;
+            }
+
+            const range = testItem.range!;
+
+            return position.line >= range.start.line && position.line <= range.end.line;
+        };
+
+        for (const testItem of testItems) {
+            if (byPosition(testItem, position)) {
+                return testItem;
+            }
+            for (const [_id, child] of testItem.children) {
+                if (byPosition(child, position)) {
+                    return child;
+                }
+            }
         }
 
-        return this.testData.get(window.activeTextEditor.document.uri.toString())!;
+        return testItems[0];
+    }
+
+    private findTestItems(uri: URI) {
+        for (const [_group, files] of this.testCollection.entries()) {
+            for (const [file, tests] of files.entries()) {
+                if (uri.fsPath === file) {
+                    return tests.map((testDefinition) => testDefinition.testItem);
+                }
+            }
+        }
+
+        return [];
     }
 }
-
-const testData = new Map<string, TestFile>();
 
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
@@ -536,42 +400,39 @@ export async function activate(context: vscode.ExtensionContext) {
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
     context.subscriptions.push(ctrl);
 
-    testData.clear();
-    await Promise.all(
-        vscode.workspace.textDocuments.map((document) => {
-            return updateNodeForDocument(document, ctrl);
-        }),
-    );
+    const configurationFile = await configuration.getConfigurationFile(vscode.workspace.workspaceFolders![0].uri.fsPath);
+    if (configurationFile) {
+        await phpUnitXML.loadFile(configurationFile);
+    }
+    testCollection = new TestCollection(ctrl, phpUnitXML, testParser);
+
+    testCollection.reset();
+    await Promise.all(vscode.workspace.textDocuments.map((document) => {
+        return updateNodeForDocument(document);
+    }));
 
     const reload = async () => {
         await Promise.all(
             (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
-                findInitialFiles(ctrl, pattern, exclude),
+                findInitialFiles(pattern, exclude),
             ),
         );
     };
 
     context.subscriptions.push(
-        vscode.workspace.onDidOpenTextDocument((document) => updateNodeForDocument(document, ctrl)),
-        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document, ctrl)),
+        vscode.workspace.onDidOpenTextDocument((document) => updateNodeForDocument(document)),
+        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document)),
     );
 
     ctrl.refreshHandler = reload;
     ctrl.resolveHandler = async (item) => {
         if (!item) {
-            context.subscriptions.push(...(await startWatchingWorkspace(ctrl, fileChangedEmitter)));
+            context.subscriptions.push(...(await startWatchingWorkspace(fileChangedEmitter)));
         }
     };
 
     const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
-    const handler = new Handler(
-        testData,
-        configuration,
-        outputChannel,
-        ctrl,
-        fileChangedEmitter,
-        getOrCreateFile,
-    );
+    const handler = new Handler(testCollection, configuration, outputChannel, ctrl, fileChangedEmitter);
 
     const testRunProfile = ctrl.createRunProfile(
         'Run Tests',
@@ -582,7 +443,7 @@ export async function activate(context: vscode.ExtensionContext) {
         true,
     );
 
-    const commandHandler = new CommandHandler(testRunProfile, testData);
+    const commandHandler = new CommandHandler(testCollection, testRunProfile);
     context.subscriptions.push(vscode.commands.registerCommand('PHPUnit.reload', reload));
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());

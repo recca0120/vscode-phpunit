@@ -10,15 +10,15 @@
          failOnWarning="true"
 >
     <testsuites>
-        <testsuite name="default">
-            <directory>tests</directory>
-            <exclude>tests/Output</exclude>
-        </testsuite>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="default">
+            <directory>tests</directory>
+            <exclude>tests/Output</exclude>
         </testsuite>
     </testsuites>
     <coverage/>

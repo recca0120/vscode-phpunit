@@ -34,6 +34,7 @@ export class PropertyParser {
         const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
         const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
+        const label = this.parseLabel(annotations, parsed, qualifiedClass);
 
         return {
             id,
@@ -42,6 +43,7 @@ export class PropertyParser {
             start,
             end,
             annotations,
+            label,
         };
     }
 
@@ -71,6 +73,18 @@ export class PropertyParser {
 
     private parseName(declaration?: Namespace | Class | Declaration) {
         return declaration ? getName(declaration) : undefined;
+    }
+
+    private parseLabel(parsed: any, annotations: any, qualifiedClass: string) {
+        if (annotations.testdox && annotations.testdox.length > 0) {
+            return annotations.testdox[annotations.testdox.length - 1];
+        }
+
+        if (parsed.children) {
+            return parsed.children.length > 0 ? qualifiedClass : parsed.method;
+        }
+
+        return '';
     }
 }
 

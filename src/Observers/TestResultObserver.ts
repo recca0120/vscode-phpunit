@@ -3,7 +3,7 @@ import { EOL, TestResult, TestRunnerObserver } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
-        private queue: { test: TestItem }[] = [],
+        private queue: { testItem: TestItem }[] = [],
         private testRun: TestRun,
         private cancellation: CancellationToken,
     ) {
@@ -77,6 +77,6 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        return this.queue.find(({ test }) => test.id === result.testId)?.test;
+        return this.queue.find(({ testItem }) => testItem.id === result.testId)?.testItem;
     }
 }

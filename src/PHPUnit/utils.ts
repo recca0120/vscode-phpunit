@@ -1,3 +1,4 @@
+import { stat } from 'node:fs/promises';
 import { Class, Declaration, Engine, Namespace } from 'php-parser';
 
 class EscapeValue {
@@ -111,3 +112,30 @@ export const groupBy = <T extends { [propName: string]: any }>(items: T[], key: 
         return acc;
     }, {} as { [propName: string]: T[] });
 };
+
+export async function checkFileExists(filePath: string): Promise<boolean> {
+    try {
+        // 嘗試取得檔案狀態
+        await stat(filePath);
+
+        return true;
+    } catch (error: any) {
+        if (error.code === 'ENOENT') {
+            return false;
+        } else {
+            throw error;
+        }
+    }
+}
+
+export async function findAsyncSequential<T>(
+    array: T[],
+    predicate: (t: T) => Promise<boolean>,
+): Promise<T | undefined> {
+    for (const t of array) {
+        if (await predicate(t)) {
+            return t;
+        }
+    }
+    return undefined;
+}
