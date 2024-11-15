@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { Uri } from 'vscode';
+import { CancellationToken, TestRunProfileKind, TestRunRequest, Uri } from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
@@ -147,15 +147,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
     const handler = new Handler(testCollection, configuration, outputChannel, ctrl, fileChangedEmitter);
 
-    const testRunProfile = ctrl.createRunProfile(
-        'Run Tests',
-        vscode.TestRunProfileKind.Run,
-        (request, cancellation) => handler.run(request, cancellation),
-        true,
-        undefined,
-        true,
-    );
-
+    const runHandler = (testRunRequest: TestRunRequest, cancellation: CancellationToken) => handler.run(testRunRequest, cancellation);
+    const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
     context.subscriptions.push(vscode.commands.registerCommand('PHPUnit.reload', reload));
     context.subscriptions.push(commandHandler.runAll());
