@@ -72,6 +72,10 @@ export abstract class BaseTestCollection<T> {
         this._workspaces = new Workspace<T[]>;
     }
 
+    public getWorkspace() {
+        return URI.file(this.phpUnitXML.root()).fsPath;
+    }
+
     items() {
         const workspace = this.getWorkspace();
         if (!this._workspaces.has(workspace)) {
@@ -185,9 +189,6 @@ export abstract class BaseTestCollection<T> {
             : !relative(join(workspace, testSuite.value), dirname(uri.fsPath)).startsWith('.');
     }
 
-    private getWorkspace() {
-        return URI.file(this.phpUnitXML.root()).fsPath;
-    }
 }
 
 export class TestCollection extends BaseTestCollection<TestDefinition> {
