@@ -14,6 +14,14 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         super(phpUnitXML, testParser);
     }
 
+    delete(uri: URI) {
+        this.findFile(uri)?.tests.forEach((test: TestDefinition) => {
+            this.ctrl.items.delete(test.id);
+        });
+
+        return super.delete(uri);
+    }
+
     protected async convertTests(testDefinitions: TestDefinition[], _group: string, _groups: string[]) {
         return testDefinitions.map((testDefinition: TestDefinition) => {
             const testItem = this.createTestItem(testDefinition, testDefinition.id);
@@ -55,14 +63,6 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
 
             return Object.assign(testDefinition, { testItem: testItem }) as TestDefinition;
         });
-    }
-
-    delete(uri: URI) {
-        this.findFile(uri)?.tests.forEach((test: TestDefinition) => {
-            this.ctrl.items.delete(test.id);
-        });
-
-        return super.delete(uri);
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {

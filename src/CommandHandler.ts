@@ -3,8 +3,7 @@ import { Handler } from './Handler';
 import { TestCollection } from './TestCollection';
 
 export class CommandHandler {
-    constructor(private testCollection: TestCollection, private testRunProfile: TestRunProfile) {
-    }
+    constructor(private testCollection: TestCollection, private testRunProfile: TestRunProfile) {}
 
     runAll() {
         return commands.registerCommand('phpunit.run-all', () => {

@@ -6,8 +6,7 @@ export class TestResultObserver implements TestRunnerObserver {
         private queue: { testItem: TestItem }[] = [],
         private testRun: TestRun,
         private cancellation: CancellationToken,
-    ) {
-    }
+    ) {}
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);

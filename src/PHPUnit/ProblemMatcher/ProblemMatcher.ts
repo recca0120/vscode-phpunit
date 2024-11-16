@@ -12,8 +12,7 @@ export class ProblemMatcher {
         [TestResultEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: TestResultParser = new TestResultParser()) {
-    }
+    constructor(private parser: TestResultParser = new TestResultParser()) {}
 
     parse(
         input: string | Buffer,

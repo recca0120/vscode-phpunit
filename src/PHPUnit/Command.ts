@@ -17,10 +17,7 @@ class PathReplacer {
 
     private mapping = new Map<string, string>();
 
-    constructor(
-        private options: SpawnOptions = {},
-        paths?: Path,
-    ) {
+    constructor(private options: SpawnOptions = {}, paths?: Path) {
         if (paths) {
             for (const local in paths) {
                 this.mapping.set(
@@ -197,18 +194,18 @@ export class LocalCommand extends Command {
 }
 
 export class RemoteCommand extends Command {
-    protected resolvePathReplacer(
-        options: SpawnOptions,
-        configuration: IConfiguration,
-    ): PathReplacer {
-        return new PathReplacer(options, configuration.get('paths') as Path);
-    }
-
     protected executable() {
         return [
             super.executable()
                 .map((input) => (/^-/.test(input) ? `'${input}'` : input))
                 .join(' '),
         ];
+    }
+
+    protected resolvePathReplacer(
+        options: SpawnOptions,
+        configuration: IConfiguration,
+    ): PathReplacer {
+        return new PathReplacer(options, configuration.get('paths') as Path);
     }
 }
