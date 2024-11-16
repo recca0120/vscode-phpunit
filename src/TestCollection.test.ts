@@ -101,6 +101,34 @@ describe('Extension TestCollection', () => {
         })]);
     });
 
+    xit('with groups', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory>tests/Unit</directory>
+                </testsuite>
+                <testsuite name="Feature">
+                    <directory>tests/Feature</directory>
+                </testsuite>
+            </testsuites>`,
+        );
+
+        await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+        await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+
+        // expect(toTree(ctrl.items)).toEqual([expect.objectContaining({
+        //     id: 'Recca0120\\VSCode\\Tests',
+        //     label: 'Recca0120\\VSCode\\Tests',
+        //     children: ([expect.objectContaining({
+        //         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        //         label: 'AssertionsTest',
+        //     }), expect.objectContaining({
+        //         id: 'Recca0120\\VSCode\\Tests\\AttributeTest',
+        //         label: 'AttributeTest',
+        //     })]),
+        // })]);
+    });
+
     it('add test', async () => {
         const collection = givenTestCollection(`
             <testsuites>

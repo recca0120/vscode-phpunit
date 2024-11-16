@@ -1,4 +1,4 @@
-import { Position, Range, TestController, TestItem, Uri } from 'vscode';
+import { Position, Range, TestController, TestItem, TestItemCollection, Uri } from 'vscode';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition as BaseTestDefinition, TestParser } from './PHPUnit';
 import { BaseTestCollection } from './PHPUnit/TestCollection';
@@ -14,7 +14,7 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         super(phpUnitXML, testParser);
     }
 
-    protected async convertTests(testDefinitions: TestDefinition[]) {
+    protected async convertTests(testDefinitions: TestDefinition[], _group: string, _groups: string[]) {
         return testDefinitions.map((testDefinition: TestDefinition) => {
             const testItem = this.createTestItem(testDefinition, testDefinition.id);
 
@@ -25,18 +25,31 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
                 Object.assign(testDefinition, { testItem: child });
             });
 
+            let parent: TestItemCollection = this.ctrl.items;
+
+            // if (groups.length > 1) {
+            //     let groupTestItem = parent.get(group);
+            //     if (!groupTestItem) {
+            //         groupTestItem = this.ctrl.createTestItem(group, group);
+            //         groupTestItem.canResolveChildren = true;
+            //         groupTestItem.sortText = group;
+            //         parent.add(groupTestItem);
+            //     }
+            //     parent = groupTestItem.children;
+            // }
+
             if (testDefinition.namespace) {
-                let namespaceTestItem = this.ctrl.items.get(testDefinition.namespace);
+                let namespaceTestItem = parent.get(testDefinition.namespace);
                 if (!namespaceTestItem) {
                     namespaceTestItem = this.ctrl.createTestItem(testDefinition.namespace, testDefinition.namespace);
                     namespaceTestItem.canResolveChildren = true;
                     namespaceTestItem.sortText = testDefinition.namespace;
-                    this.ctrl.items.add(namespaceTestItem);
+                    parent.add(namespaceTestItem);
                 }
-                namespaceTestItem.children.add(testItem);
-            } else {
-                this.ctrl.items.add(testItem);
+                parent = namespaceTestItem.children;
             }
+
+            parent.add(testItem);
 
             return Object.assign(testDefinition, { testItem: testItem }) as TestDefinition;
         });

@@ -1,5 +1,4 @@
 import { CancellationTokenSource, commands, Position, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
-import { URI } from 'vscode-uri';
 import { Handler } from './Handler';
 import { TestCollection } from './TestCollection';
 
@@ -15,20 +14,26 @@ export class CommandHandler {
 
     runFile() {
         return commands.registerCommand('phpunit.run-file', () => {
-            if (window.activeTextEditor?.document.uri) {
-                this.run(this.findTestItems(window.activeTextEditor.document.uri));
+            const uri = window.activeTextEditor?.document.uri;
+            if (!uri) {
+                return;
             }
+
+            this.run(this.testCollection.findFile(uri)?.tests.map((test) => test.testItem));
         });
     }
 
     runTestAtCursor() {
         return commands.registerCommand('phpunit.run-test-at-cursor', () => {
-            if (window.activeTextEditor?.document.uri) {
-                this.run([this.findByPosition(
-                    this.findTestItems(window.activeTextEditor.document.uri),
-                    window.activeTextEditor!.selection.active!,
-                )]);
+            const uri = window.activeTextEditor?.document.uri;
+            if (!uri) {
+                return;
             }
+
+            this.run([this.findByPosition(
+                this.testCollection.findFile(uri)?.tests.map((test) => test.testItem)!,
+                window.activeTextEditor!.selection.active!,
+            )]);
         });
     }
 
@@ -65,6 +70,7 @@ export class CommandHandler {
             if (byPosition(testItem, position)) {
                 return testItem;
             }
+
             for (const [_id, child] of testItem.children) {
                 if (byPosition(child, position)) {
                     return child;
@@ -73,17 +79,5 @@ export class CommandHandler {
         }
 
         return testItems[0];
-    }
-
-    private findTestItems(uri: URI) {
-        for (const [_group, files] of this.testCollection.entries()) {
-            for (const [file, tests] of files.entries()) {
-                if (uri.fsPath === file) {
-                    return tests.map((testDefinition) => testDefinition.testItem);
-                }
-            }
-        }
-
-        return [];
     }
 }

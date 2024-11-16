@@ -208,6 +208,6 @@ describe('TestCollection', () => {
         expect(collection.items().size).toEqual(2);
 
         collection.reset();
-        expect(collection.items().size).toEqual(0);
+        expect(collection.size).toEqual(0);
     });
 });
