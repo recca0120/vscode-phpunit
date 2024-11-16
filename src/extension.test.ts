@@ -103,11 +103,18 @@ const getTestRun = (ctrl: TestController) => {
 const expectTestResultCalled = (ctrl: TestController, expected: any) => {
     const { enqueued, started, passed, failed, end } = getTestRun(ctrl);
 
-    expect(enqueued).toHaveBeenCalledTimes(expected.enqueued);
-    expect(started).toHaveBeenCalledTimes(expected.started);
-    expect(passed).toHaveBeenCalledTimes(expected.passed);
-    expect(failed).toHaveBeenCalledTimes(expected.failed);
-    expect(end).toHaveBeenCalledTimes(expected.end);
+    expect({
+        enqueued: enqueued.mock.calls.length,
+        started: started.mock.calls.length,
+        passed: passed.mock.calls.length,
+        failed: failed.mock.calls.length,
+        end: end.mock.calls.length,
+    }).toEqual(expected);
+    // expect(enqueued).toHaveBeenCalledTimes(expected.enqueued);
+    // expect(started).toHaveBeenCalledTimes(expected.started);
+    // expect(passed).toHaveBeenCalledTimes(expected.passed);
+    // expect(failed).toHaveBeenCalledTimes(expected.failed);
+    // expect(end).toHaveBeenCalledTimes(expected.end);
 
     expect(getOutputChannel().appendLine).toHaveBeenCalled();
 };
@@ -138,9 +145,11 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
-            const testId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
+            const namespaceId = 'Recca0120\\VSCode\\Tests';
+            const testId = `${namespaceId}\\AssertionsTest`;
 
-            const parent = ctrl.items.get(testId);
+            const namespace = ctrl.items.get(namespaceId);
+            const parent = namespace.children.get(testId);
             const child = parent.children.get(`${testId}::test_passed`);
 
             expect(parent).toEqual(
@@ -196,6 +205,33 @@ describe('Extension Test', () => {
                 expected = { enqueued: 26, started: 35, passed: 23, failed: 10, end: 1 };
             } else {
                 expected = { enqueued: 26, started: 27, passed: 14, failed: 11, end: 1 };
+            }
+            expectTestResultCalled(ctrl, expected);
+        });
+
+        it('should run test by namespace', async () => {
+            await activate(context);
+            const ctrl = getTestController();
+            const runProfile = getRunProfile(ctrl);
+            const testId = `Recca0120\\VSCode\\Tests`;
+            const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
+
+            await runProfile.runHandler(request, new CancellationTokenSource().token);
+
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with data set .*)?$',
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
+
+            let expected;
+            if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
+                expected = { enqueued: 20, started: 27, passed: 16, failed: 9, end: 1 };
+            } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
+                expected = { enqueued: 20, started: 27, passed: 16, failed: 9, end: 1 };
+            } else {
+                expected = { enqueued: 20, started: 21, passed: 9, failed: 10, end: 1 };
             }
             expectTestResultCalled(ctrl, expected);
         });

@@ -63,8 +63,7 @@ describe('Extension TestCollection', () => {
             </testsuites>`,
         );
 
-        const files = [URI.file(phpUnitProject('tests/NoNamespaceTest.php'))];
-        await Promise.all(files.map(file => collection.add(file)));
+        await collection.add(URI.file(phpUnitProject('tests/NoNamespaceTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([{
             id: 'NoNamespaceTest',
@@ -86,18 +85,20 @@ describe('Extension TestCollection', () => {
             </testsuites>`,
         );
 
-        const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
-        await Promise.all(files.map(file => collection.add(file)));
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
 
-        expect(toTree(ctrl.items)).toEqual([{
-            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-            label: 'AssertionsTest',
-            children: expect.objectContaining([{
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-                label: 'test_passed',
-                children: [],
-            }]),
-        }]);
+        expect(toTree(ctrl.items)).toEqual([expect.objectContaining({
+            id: 'Recca0120\\VSCode\\Tests',
+            label: 'Recca0120\\VSCode\\Tests',
+            children: ([expect.objectContaining({
+                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                label: 'AssertionsTest',
+            }), expect.objectContaining({
+                id: 'Recca0120\\VSCode\\Tests\\AttributeTest',
+                label: 'AttributeTest',
+            })]),
+        })]);
     });
 
     it('add test', async () => {

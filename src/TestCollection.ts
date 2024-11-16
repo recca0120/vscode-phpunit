@@ -25,7 +25,18 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
                 Object.assign(testDefinition, { testItem: child });
             });
 
-            this.ctrl.items.add(testItem);
+            if (testDefinition.namespace) {
+                let namespaceTestItem = this.ctrl.items.get(testDefinition.namespace);
+                if (!namespaceTestItem) {
+                    namespaceTestItem = this.ctrl.createTestItem(testDefinition.namespace, testDefinition.namespace);
+                    namespaceTestItem.canResolveChildren = true;
+                    namespaceTestItem.sortText = testDefinition.namespace;
+                    this.ctrl.items.add(namespaceTestItem);
+                }
+                namespaceTestItem.children.add(testItem);
+            } else {
+                this.ctrl.items.add(testItem);
+            }
 
             return Object.assign(testDefinition, { testItem: testItem }) as TestDefinition;
         });
