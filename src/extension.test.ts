@@ -147,7 +147,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: testId,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: testId,
+                    label: 'AssertionsTest',
                 }),
             );
 
