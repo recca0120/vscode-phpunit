@@ -44,8 +44,8 @@ class Test implements TestDefinition {
 }
 
 export type Events = {
-    onSuite?: (suite: Test) => void;
-    onTest?: (test: Test, index: number) => void;
+    onSuite?: (suite: TestDefinition) => void;
+    onTest?: (test: TestDefinition, index: number) => void;
 };
 
 const textDecoder = new TextDecoder('utf-8');

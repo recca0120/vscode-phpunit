@@ -161,6 +161,8 @@ export abstract class Command {
 
     private getArguments(): string[] {
         const { _, ...argv } = this.configuration.getArguments(this.arguments);
+        // const filter = entries.find(([key]) => key === 'filter');
+        // console.log(filter);
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
@@ -168,7 +170,7 @@ export abstract class Command {
                 (args: any, [key, value]) => [...parseValue(key, value), ...args],
                 _.map((v) => (typeof v === 'number' ? v : decodeURIComponent(v))),
             )
-            .map((input: string) => this.getPathReplacer().localToRemote(input))
+            .map((arg: string) => /^--filter/.test(arg) ? arg : this.getPathReplacer().localToRemote(arg))
             .concat('--colors=never', '--teamcity');
     }
 

@@ -36,18 +36,26 @@ export class TestQueueHandler {
     }
 
     private parseArguments(testItem: TestItem): string {
+        if (!testItem.uri) {
+            return this.parseNamespaceFilter(testItem);
+        }
+
         if (!testItem.parent) {
-            return testItem.uri!.fsPath;
+            return testItem.uri.fsPath;
         }
 
         const testDefinition = this.testCollection.findTest(testItem.id);
 
         return testDefinition
-            ? `${this.parseFilter(testDefinition) ?? ''} ${encodeURIComponent(testDefinition.file)}`
+            ? `${this.parseDependsFilter(testDefinition) ?? ''} ${encodeURIComponent(testDefinition.file)}`
             : '';
     }
 
-    private parseFilter(testDefinition: TestDefinition) {
+    private parseNamespaceFilter(testItem: TestItem) {
+        return `--filter '^(${testItem.id.replace(/^namespace:/, '').replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
+    }
+
+    private parseDependsFilter(testDefinition: TestDefinition) {
         const deps = [testDefinition.method, ...(testDefinition.annotations.depends ?? [])].join('|');
 
         return testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;

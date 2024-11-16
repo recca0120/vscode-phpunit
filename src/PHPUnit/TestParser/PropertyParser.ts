@@ -34,17 +34,9 @@ export class PropertyParser {
         const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
         const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
-        const label = this.parseLabel(annotations, qualifiedClass, parsed.method);
+        const label = this.parseLabel(annotations, parsed.class, parsed.method);
 
-        return {
-            id,
-            qualifiedClass,
-            ...parsed,
-            start,
-            end,
-            annotations,
-            label,
-        };
+        return { id, qualifiedClass, ...parsed, start, end, annotations, label };
     }
 
     private parseNamespace(declaration: Declaration) {
