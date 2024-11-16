@@ -247,7 +247,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter, { showAfterExecution: 'always' });
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.show).toHaveBeenCalled();
+        expect(outputChannel.show).toHaveBeenCalledWith(true);
     });
 
     it('should not show output channel when successful', async () => {

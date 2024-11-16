@@ -263,7 +263,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
             showAfterExecution !== ShowOutputState.never &&
             state === showAfterExecution
         ) {
-            this.outputChannel.show(false);
+            this.outputChannel.show(true);
         }
     }
 
