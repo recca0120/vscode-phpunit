@@ -75,15 +75,13 @@ const getRunProfile = (ctrl: TestController) => {
 };
 
 const findTest = (items: TestItemCollection, testId: string): TestItem | undefined => {
-    let result = items.get(testId);
-    if (result) {
-        return result;
-    }
-
     for (const [_id, item] of items) {
-        result = findTest(item.children, testId);
-        if (result) {
-            return result;
+        if (item.id === testId) {
+            return item;
+        }
+        const child = findTest(item.children, testId);
+        if (child) {
+            return child;
         }
     }
 
@@ -233,6 +231,7 @@ describe('Extension Test', () => {
             } else {
                 expected = { enqueued: 20, started: 21, passed: 9, failed: 10, end: 1 };
             }
+
             expectTestResultCalled(ctrl, expected);
         });
 
@@ -266,6 +265,7 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
+
             const request = {
                 include: [findTest(ctrl.items, testId)],
                 exclude: [],

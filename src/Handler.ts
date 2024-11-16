@@ -61,7 +61,9 @@ export class Handler {
 
     private* gatherTestItems(): Generator<TestItem> {
         for (const item of this.testCollection.gatherTestDefinitions()) {
-            yield item.testItem;
+            if (item.class && !item.method) {
+                yield item.testItem;
+            }
         }
     }
 

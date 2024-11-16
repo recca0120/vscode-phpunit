@@ -29,9 +29,9 @@ export class TestQueueHandler {
         }
 
         return await Promise.all(
-            this.request.include.map((testItem) =>
-                runner.run(command.setArguments(this.parseArguments(testItem))),
-            ),
+            this.request.include.map((testItem) => {
+                return runner.run(command.setArguments(this.parseArguments(testItem)));
+            }),
         );
     }
 
@@ -40,14 +40,14 @@ export class TestQueueHandler {
             return this.parseNamespaceFilter(testItem);
         }
 
-        if (!testItem.parent) {
-            return testItem.uri.fsPath;
-        }
-
         const testDefinition = this.testCollection.findTest(testItem.id);
 
         if (!testDefinition) {
             return '';
+        }
+
+        if (testDefinition.class && !testDefinition.method) {
+            return testDefinition.file!;
         }
 
         return [

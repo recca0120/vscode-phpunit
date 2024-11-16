@@ -21,8 +21,7 @@ export class TestResultParser implements IParser<Result | undefined> {
         new TestResultSummaryParser(),
     ];
 
-    constructor() {
-    }
+    constructor() {}
 
     public is(text: string): boolean {
         return !!text.match(this.pattern);

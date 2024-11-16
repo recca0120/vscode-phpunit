@@ -1,4 +1,4 @@
-import { Position, Range, TestController, TestItem, TestItemCollection, Uri } from 'vscode';
+import { Position, Range, TestController, TestItem, Uri } from 'vscode';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition as BaseTestDefinition, TestParser } from './PHPUnit';
 import { BaseTestCollection } from './PHPUnit/TestCollection';
@@ -6,7 +6,7 @@ import { BaseTestCollection } from './PHPUnit/TestCollection';
 export type TestDefinition = BaseTestDefinition & {
     testItem: TestItem
     parent?: TestDefinition;
-    children?: TestDefinition[]
+    children: TestDefinition[]
 }
 
 export class TestCollection extends BaseTestCollection<TestDefinition> {
@@ -22,60 +22,85 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         return super.delete(uri);
     }
 
-    protected async convertTests(testDefinitions: TestDefinition[], _group: string, _groups: string[]) {
-        return testDefinitions.map((testDefinition: TestDefinition) => {
-            const testItem = this.createTestItem(testDefinition, testDefinition.id);
+    protected async parseTests(uri: URI) {
+        const ancestors: [{ item: TestController | TestItem, children: TestItem[] }] = [{
+            item: this.ctrl, children: [],
+        }];
 
-            testDefinition.children?.forEach((testDefinition: TestDefinition, index) => {
-                const child = this.createTestItem(testDefinition, `${index}`);
-                testItem.children.add(child);
-
-                Object.assign(testDefinition, { testItem: child });
-            });
-
-            let parent: TestItemCollection = this.ctrl.items;
-
-            // if (groups.length > 1) {
-            //     let groupTestItem = parent.get(group);
-            //     if (!groupTestItem) {
-            //         groupTestItem = this.ctrl.createTestItem(group, group);
-            //         groupTestItem.canResolveChildren = true;
-            //         groupTestItem.sortText = group;
-            //         parent.add(groupTestItem);
-            //     }
-            //     parent = groupTestItem.children;
-            // }
-
-            if (testDefinition.namespace) {
-                const itemId = `namespace:${testDefinition.namespace}`;
-                const label = testDefinition.namespace;
-                let parentTestItem = parent.get(itemId);
-                if (!parentTestItem) {
-                    parentTestItem = this.ctrl.createTestItem(itemId, label);
-                    parentTestItem.canResolveChildren = true;
-                    parentTestItem.sortText = label;
-                    parent.add(parentTestItem);
+        const ascend = (depth: number) => {
+            while (ancestors.length > depth) {
+                const finished = ancestors.pop()!;
+                if (finished.item.hasOwnProperty('items')) {
+                    for (const child of finished.children) {
+                        (finished.item as TestController).items.add(child);
+                    }
+                } else if (finished.item.hasOwnProperty('children')) {
+                    for (const child of finished.children) {
+                        (finished.item as TestItem).children.add(child);
+                    }
                 }
-                parent = parentTestItem.children;
             }
+        };
 
-            parent.add(testItem);
+        const testDefinitions: TestDefinition[] = [];
+        await this.testParser.parseFile(uri.fsPath, {
+            onTest: (testDefinition, index) => {
+                const parent = ancestors[ancestors.length - 1];
 
-            return Object.assign(testDefinition, { testItem: testItem }) as TestDefinition;
+                const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
+                test.sortText = `${index}`;
+                test.range = new Range(
+                    new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
+                    new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
+                );
+
+                parent.children.push(test);
+
+                testDefinitions.push(Object.assign(this.convertTest(testDefinition), {
+                    testItem: test,
+                }));
+            },
+            onSuite: (testDefinition) => {
+                ascend(2);
+                const parent = ancestors[ancestors.length - 1];
+
+                const suite = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
+                suite.sortText = testDefinition.id;
+                suite.canResolveChildren = true;
+                suite.range = new Range(
+                    new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
+                    new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
+                );
+
+                parent.children.push(suite);
+                ancestors.push({ item: suite, children: [] });
+                testDefinitions.push(Object.assign(this.convertTest(testDefinition), {
+                    testItem: suite,
+                }));
+            },
+            onNamespace: (testDefinition) => {
+                ascend(1);
+                const parent = ancestors[ancestors.length - 1];
+
+                let namespace = this.ctrl.items.get(testDefinition.id);
+                if (!namespace) {
+                    namespace = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
+                }
+                namespace.canResolveChildren = true;
+
+                parent.children.push(namespace);
+                ancestors.push({ item: namespace, children: [] });
+                testDefinitions.push(Object.assign(this.convertTest(testDefinition), {
+                    testItem: namespace,
+                }));
+            },
         });
+        ascend(0);
+
+        return testDefinitions;
     }
 
-    private createTestItem(testDefinition: TestDefinition, sortText: string) {
-        const testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
-        testItem.canResolveChildren = !!testDefinition.children && testDefinition.children.length > 0;
-        testItem.sortText = sortText;
-        if (testDefinition.start && testDefinition.end) {
-            testItem.range = new Range(
-                new Position(testDefinition.start.line - 1, testDefinition.start.character),
-                new Position(testDefinition.end.line - 1, testDefinition.end.character),
-            );
-        }
-
-        return testItem;
+    protected convertTest(testDefinition: BaseTestDefinition) {
+        return testDefinition as any;
     }
 }

@@ -13,8 +13,8 @@ export type Position = {
 export type TestDefinition = {
     id: string;
     label: string;
-    qualifiedClass: string;
     namespace?: string;
+    qualifiedClass?: string;
     class?: string;
     method?: string;
     parent?: TestDefinition;
@@ -98,18 +98,15 @@ export class TestParser {
 
         const tests = _class.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => ({ ...parseProperty(method as Method, namespace, _class), file }));
+            .map((method) => {
+                return {
+                    ...parseProperty(method as Method, namespace, _class),
+                    file,
+                };
+            });
 
         if (tests.length <= 0) {
             return;
-        }
-
-        if (events.onSuite) {
-            events.onSuite(suite);
-        }
-
-        if (events.onTest) {
-            tests.forEach((child, index) => events.onTest!(child, index));
         }
 
         if (suite.namespace && events.onNamespace) {
@@ -118,6 +115,14 @@ export class TestParser {
                 qualifiedClass: suite.namespace!,
                 label: suite.namespace,
             });
+        }
+
+        if (events.onSuite) {
+            events.onSuite(suite);
+        }
+
+        if (events.onTest) {
+            tests.forEach((child, index) => events.onTest!(child, index));
         }
 
         tests.forEach((child) => (child.parent = suite));
