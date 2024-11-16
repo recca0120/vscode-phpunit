@@ -57,6 +57,14 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         });
     }
 
+    delete(uri: URI) {
+        this.findFile(uri)?.tests.forEach((test: TestDefinition) => {
+            this.ctrl.items.delete(test.id);
+        });
+
+        return super.delete(uri);
+    }
+
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
         const testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
         testItem.canResolveChildren = testDefinition.children.length > 0;
@@ -67,13 +75,5 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         );
 
         return testItem;
-    }
-
-    delete(uri: URI) {
-        this.findFile(uri)?.tests.forEach((test: TestDefinition) => {
-            this.ctrl.items.delete(test.id);
-        });
-
-        return super.delete(uri);
     }
 }
