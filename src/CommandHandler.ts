@@ -41,18 +41,14 @@ export class CommandHandler {
         return commands.registerCommand('phpunit.rerun', () => {
             const latestTestRunRequest = handler.getLatestTestRunRequest();
 
-            return latestTestRunRequest ? this.runRequest(latestTestRunRequest) : this.run(undefined);
+            return latestTestRunRequest ? this.run(latestTestRunRequest.include) : this.run(undefined);
         });
     }
 
     private run(include: readonly TestItem[] | undefined) {
-        this.runRequest(new TestRunRequest(include, undefined, this.testRunProfile));
-    }
-
-    private runRequest(request: TestRunRequest) {
         const cancellation = new CancellationTokenSource().token;
 
-        this.testRunProfile.runHandler(request, cancellation);
+        this.testRunProfile.runHandler(new TestRunRequest(include, undefined, this.testRunProfile), cancellation);
     }
 
     private findByPosition(testItems: TestItem[], position: Position) {
