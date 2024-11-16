@@ -39,14 +39,16 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
             // }
 
             if (testDefinition.namespace) {
-                let namespaceTestItem = parent.get(testDefinition.namespace);
-                if (!namespaceTestItem) {
-                    namespaceTestItem = this.ctrl.createTestItem(testDefinition.namespace, testDefinition.namespace);
-                    namespaceTestItem.canResolveChildren = true;
-                    namespaceTestItem.sortText = testDefinition.namespace;
-                    parent.add(namespaceTestItem);
+                const itemId = `namespace:${testDefinition.namespace}`;
+                const label = testDefinition.namespace;
+                let parentTestItem = parent.get(itemId);
+                if (!parentTestItem) {
+                    parentTestItem = this.ctrl.createTestItem(itemId, label);
+                    parentTestItem.canResolveChildren = true;
+                    parentTestItem.sortText = label;
+                    parent.add(parentTestItem);
                 }
-                parent = namespaceTestItem.children;
+                parent = parentTestItem.children;
             }
 
             parent.add(testItem);

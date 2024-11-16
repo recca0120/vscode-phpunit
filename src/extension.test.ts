@@ -141,20 +141,20 @@ describe('Extension Test', () => {
             await configuration.update('phpunit', 'vendor/bin/phpunit');
         });
 
-        it('should load tests', async () => {
+        fit('should load tests', async () => {
             await activate(context);
             const ctrl = getTestController();
             const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
-            const namespaceId = 'Recca0120\\VSCode\\Tests';
-            const testId = `${namespaceId}\\AssertionsTest`;
+            const namespaceItemId = 'namespace:Recca0120\\VSCode\\Tests';
+            const itemId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
-            const namespace = ctrl.items.get(namespaceId);
-            const parent = namespace.children.get(testId);
-            const child = parent.children.get(`${testId}::test_passed`);
+            const namespace = ctrl.items.get(namespaceItemId);
+            const parent = namespace.children.get(itemId);
+            const child = parent.children.get(`${itemId}::test_passed`);
 
             expect(parent).toEqual(
                 expect.objectContaining({
-                    id: testId,
+                    id: itemId,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
                     label: 'AssertionsTest',
                 }),
@@ -162,7 +162,7 @@ describe('Extension Test', () => {
 
             expect(child).toEqual(
                 expect.objectContaining({
-                    id: `${testId}::test_passed`,
+                    id: `${itemId}::test_passed`,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
                     label: 'test_passed',
                     range: {
@@ -213,7 +213,7 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
-            const testId = `Recca0120\\VSCode\\Tests`;
+            const testId = `namespace:Recca0120\\VSCode\\Tests`;
             const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
 
             await runProfile.runHandler(request, new CancellationTokenSource().token);

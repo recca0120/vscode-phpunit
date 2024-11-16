@@ -89,7 +89,7 @@ describe('Extension TestCollection', () => {
         await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([expect.objectContaining({
-            id: 'Recca0120\\VSCode\\Tests',
+            id: 'namespace:Recca0120\\VSCode\\Tests',
             label: 'Recca0120\\VSCode\\Tests',
             children: ([expect.objectContaining({
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',

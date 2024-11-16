@@ -52,7 +52,7 @@ export class TestQueueHandler {
     }
 
     private parseNamespaceFilter(testItem: TestItem) {
-        return `--filter '^(${testItem.id.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
+        return `--filter '^(${testItem.id.replace(/^namespace:/, '').replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
     }
 
     private parseDependsFilter(testDefinition: TestDefinition) {
