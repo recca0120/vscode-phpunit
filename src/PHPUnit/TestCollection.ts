@@ -69,7 +69,7 @@ export class Workspace<T> extends Base<Files<T>> {
     }
 }
 
-export abstract class BaseTestCollection<T extends { id: string, children: T[] }> {
+export abstract class BaseTestCollection<T extends { id: string, children?: T[] }> {
     private readonly _workspaces: Workspace<T[]>;
 
     constructor(private phpUnitXML: PHPUnitXML, protected testParser: TestParser) {
@@ -144,7 +144,7 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
             if (testId === testDefinitions.id) {
                 return testDefinitions;
             }
-            for (const child of testDefinitions.children) {
+            for (const child of testDefinitions.children ?? []) {
                 if (testId === child.id) {
                     return child;
                 }

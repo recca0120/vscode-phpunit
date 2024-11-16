@@ -6,7 +6,7 @@ import { BaseTestCollection } from './PHPUnit/TestCollection';
 export type TestDefinition = BaseTestDefinition & {
     testItem: TestItem
     parent?: TestDefinition;
-    children: TestDefinition[]
+    children?: TestDefinition[]
 }
 
 export class TestCollection extends BaseTestCollection<TestDefinition> {
@@ -18,7 +18,7 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         return testDefinitions.map((testDefinition: TestDefinition) => {
             const testItem = this.createTestItem(testDefinition, testDefinition.id);
 
-            testDefinition.children.forEach((testDefinition: TestDefinition, index) => {
+            testDefinition.children?.forEach((testDefinition: TestDefinition, index) => {
                 const child = this.createTestItem(testDefinition, `${index}`);
                 testItem.children.add(child);
 
@@ -67,12 +67,14 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
         const testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
-        testItem.canResolveChildren = testDefinition.children.length > 0;
+        testItem.canResolveChildren = !!testDefinition.children && testDefinition.children.length > 0;
         testItem.sortText = sortText;
-        testItem.range = new Range(
-            new Position(testDefinition.start.line - 1, testDefinition.start.character),
-            new Position(testDefinition.end.line - 1, testDefinition.end.character),
-        );
+        if (testDefinition.start && testDefinition.end) {
+            testItem.range = new Range(
+                new Position(testDefinition.start.line - 1, testDefinition.start.character),
+                new Position(testDefinition.end.line - 1, testDefinition.end.character),
+            );
+        }
 
         return testItem;
     }

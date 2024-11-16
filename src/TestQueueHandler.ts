@@ -46,9 +46,14 @@ export class TestQueueHandler {
 
         const testDefinition = this.testCollection.findTest(testItem.id);
 
-        return testDefinition
-            ? `${this.parseDependsFilter(testDefinition) ?? ''} ${encodeURIComponent(testDefinition.file)}`
-            : '';
+        if (!testDefinition) {
+            return '';
+        }
+
+        return [
+            this.parseDependsFilter(testDefinition),
+            testDefinition.file ? encodeURIComponent(testDefinition.file) : undefined,
+        ].filter((value) => !!value).join(' ');
     }
 
     private parseNamespaceFilter(testItem: TestItem) {
@@ -56,9 +61,9 @@ export class TestQueueHandler {
     }
 
     private parseDependsFilter(testDefinition: TestDefinition) {
-        const deps = [testDefinition.method, ...(testDefinition.annotations.depends ?? [])].join('|');
+        const deps = [testDefinition.method, ...(testDefinition.annotations?.depends ?? [])].join('|');
 
-        return testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
+        return !!testDefinition.children && testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
     }
 
     private gatherTestItems(collection: TestItemCollection) {

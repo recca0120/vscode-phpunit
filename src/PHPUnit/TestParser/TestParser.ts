@@ -12,40 +12,23 @@ export type Position = {
 
 export type TestDefinition = {
     id: string;
-    qualifiedClass: string;
-    namespace: string;
     label: string;
+    qualifiedClass: string;
+    namespace?: string;
     class?: string;
     method?: string;
     parent?: TestDefinition;
-    children: TestDefinition[]
-    file: string;
-    start: Position;
-    end: Position;
-    annotations: Annotations;
+    children?: TestDefinition[]
+    file?: string;
+    start?: Position;
+    end?: Position;
+    annotations?: Annotations;
 };
 
-class Test implements TestDefinition {
-    public readonly id!: string;
-    public readonly qualifiedClass!: string;
-    public readonly namespace!: string;
-    public readonly label!: string;
-    public readonly class?: string;
-    public readonly method?: string;
-    public readonly start!: Position;
-    public readonly end!: Position;
-    public readonly annotations!: Annotations;
-    public parent?: TestDefinition;
-    public children: TestDefinition[] = [];
-
-    constructor(attributes: TestDefinition, public readonly file: string) {
-        Object.assign(this, attributes);
-    }
-}
-
 export type Events = {
-    onSuite?: (suite: TestDefinition) => void;
-    onTest?: (test: TestDefinition, index: number) => void;
+    onTest?: (testDefinition: TestDefinition, index: number) => void;
+    onSuite?: (testDefinition: TestDefinition) => void;
+    onNamespace?: (testDefinition: TestDefinition) => void;
 };
 
 const textDecoder = new TextDecoder('utf-8');
@@ -111,27 +94,35 @@ export class TestParser {
             return [];
         }
 
-        const parent = { ...parseProperty(ast as Declaration, namespace), file };
+        const suite = { ...parseProperty(ast as Declaration, namespace), file };
 
-        parent.children = _class.body
+        const tests = _class.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => new Test(parseProperty(method as Method, namespace, _class), file));
+            .map((method) => ({ ...parseProperty(method as Method, namespace, _class), file }));
 
-        if (parent.children.length <= 0) {
+        if (tests.length <= 0) {
             return;
         }
 
-        parent.children.forEach((child) => (child.parent = parent));
-
         if (events.onSuite) {
-            events.onSuite(parent);
+            events.onSuite(suite);
         }
 
         if (events.onTest) {
-            parent.children.forEach((child, index) => events.onTest!(child, index));
+            tests.forEach((child, index) => events.onTest!(child, index));
         }
 
-        return [parent];
+        if (suite.namespace && events.onNamespace) {
+            events.onNamespace({
+                id: `namespace:${suite.namespace}`,
+                qualifiedClass: suite.namespace!,
+                label: suite.namespace,
+            });
+        }
+
+        tests.forEach((child) => (child.parent = suite));
+
+        return [{ ...suite, children: tests }];
     }
 
     private parseChildren(

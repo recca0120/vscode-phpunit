@@ -141,7 +141,7 @@ describe('Extension Test', () => {
             await configuration.update('phpunit', 'vendor/bin/phpunit');
         });
 
-        fit('should load tests', async () => {
+        it('should load tests', async () => {
             await activate(context);
             const ctrl = getTestController();
             const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
