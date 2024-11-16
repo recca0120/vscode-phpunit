@@ -81,8 +81,7 @@ async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vs
         });
 
         watcher.onDidChange((uri) => {
-            testCollection.delete(uri);
-            testCollection.add(uri);
+            testCollection.change(uri);
             fileChangedEmitter.fire(uri);
         });
 

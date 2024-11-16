@@ -98,10 +98,10 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
     }
 
     async add(uri: URI) {
-        if (this.has(uri)) {
-            return this;
-        }
+        return this.has(uri) ? this : this.change(uri);
+    }
 
+    async change(uri: URI) {
         const group = this.getGroup(uri);
         if (!group) {
             return this;
