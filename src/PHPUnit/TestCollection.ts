@@ -73,11 +73,11 @@ export class Workspace<T> extends Base<Files<T>> {
     }
 }
 
-export abstract class BaseTestCollection<T extends { id: string, children?: T[] }> {
-    private readonly _workspaces: Workspace<T[]>;
+export class TestCollection {
+    private readonly _workspaces: Workspace<TestDefinition[]>;
 
     constructor(private phpUnitXML: PHPUnitXML, protected testParser: TestParser) {
-        this._workspaces = new Workspace<T[]>;
+        this._workspaces = new Workspace<TestDefinition[]>;
     }
 
     get size() {
@@ -91,9 +91,9 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
     items() {
         const workspace = this.getWorkspace();
         if (!this._workspaces.has(workspace)) {
-            const files = new Files<T[]>;
+            const files = new Files<TestDefinition[]>;
             this.phpUnitXML.getTestSuites().forEach((suite) => {
-                files.set(suite.name, new TestDefinitions<T[]>());
+                files.set(suite.name, new TestDefinitions<TestDefinition[]>());
             });
             this._workspaces.set(workspace, files);
         }
@@ -113,6 +113,9 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
 
         const files = this.items();
         const testDefinitions = await this.parseTests(uri);
+        if (testDefinitions.length === 0) {
+            this.delete(uri);
+        }
         files.get(group)!.set(uri.fsPath, testDefinitions);
 
         return this;
@@ -151,7 +154,7 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
         return;
     }
 
-    * gatherTestDefinitions(): Generator<T> {
+    * gatherTestDefinitions(): Generator<TestDefinition> {
         for (const { tests } of this.gatherFiles()) {
             for (const test of tests) {
                 yield test;
@@ -159,7 +162,7 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
         }
     }
 
-    findFile(uri: URI): File<T> | undefined {
+    findFile(uri: URI): File<TestDefinition> | undefined {
         for (const { group, file, tests } of this.gatherFiles()) {
             if (uri.fsPath === file) {
                 return { group, file, tests };
@@ -170,20 +173,18 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
     }
 
     protected async parseTests(uri: URI) {
-        const testDefinitions: T[] = [];
+        const testDefinitions: TestDefinition[] = [];
 
         await this.testParser.parseFile(uri.fsPath, {
-            onMethod: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
-            onClass: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
-            onNamespace: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
+            onMethod: (testDefinition) => testDefinitions.push(testDefinition),
+            onClass: (testDefinition) => testDefinitions.push(testDefinition),
+            onNamespace: (testDefinition) => testDefinitions.push(testDefinition),
         });
 
         return testDefinitions;
     }
 
-    protected abstract convertTest(testDefinition: TestDefinition): T
-
-    protected deleteFile(file: File<T>) {
+    protected deleteFile(file: File<TestDefinition>) {
         return this.items().get(file.group)?.delete(file.file);
     }
 
@@ -222,11 +223,5 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
         return isFile
             ? join(workspace, testSuite.value) === uri.fsPath
             : !relative(join(workspace, testSuite.value), dirname(uri.fsPath)).startsWith('.');
-    }
-}
-
-export class TestCollection extends BaseTestCollection<TestDefinition> {
-    protected convertTest(testDefinition: TestDefinition) {
-        return testDefinition;
     }
 }

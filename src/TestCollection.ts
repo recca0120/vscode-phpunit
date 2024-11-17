@@ -1,98 +1,164 @@
 import { Position, Range, TestController, TestItem, Uri } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, TestDefinition as BaseTestDefinition, TestParser } from './PHPUnit';
-import { BaseTestCollection } from './PHPUnit/TestCollection';
+import {
+    Command,
+    PHPUnitXML,
+    TestCollection as BaseTestCollection,
+    TestDefinition,
+    TestParser,
+    TestRunner,
+    TestType,
+} from './PHPUnit';
+import { CustomWeakMap } from './PHPUnit/utils';
 
-export type TestDefinition = BaseTestDefinition & {
-    testItem: TestItem
-    parent?: TestDefinition;
-    children: TestDefinition[]
+export class TestCase {
+    constructor(private testDefinition: TestDefinition) {}
+
+    get type() {
+        return this.testDefinition.type;
+    }
+
+    async run(runner: TestRunner, command: Command): Promise<unknown> {
+        return runner.run(command.setArguments(this.parseArguments()));
+    }
+
+    private parseArguments(): string {
+        if (this.testDefinition.type === TestType.namespace) {
+            return this.parseNamespaceFilter();
+        }
+
+        if (this.testDefinition.type === TestType.class) {
+            return this.testDefinition.file!;
+        }
+
+        return [
+            this.parseDependsFilter(),
+            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
+        ].filter((value) => !!value).join(' ');
+    }
+
+    private parseNamespaceFilter() {
+        return `--filter '^(${this.testDefinition.id.replace(/^namespace:/, '').replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
+    }
+
+    private parseDependsFilter() {
+        const deps = [this.testDefinition.method, ...(this.testDefinition.annotations?.depends ?? [])].join('|');
+
+        return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
+    }
 }
 
-export class TestCollection extends BaseTestCollection<TestDefinition> {
+export class TestCollection extends BaseTestCollection {
+    private testData = new Map<string, CustomWeakMap<TestItem, TestCase>>();
+
     constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML, testParser: TestParser) {
         super(phpUnitXML, testParser);
     }
 
+    getTestCase(test: TestItem): TestCase | undefined {
+        for (const [, testData] of this.testData) {
+            const testCase = testData.get(test);
+            if (testCase) {
+                return testCase;
+            }
+        }
+
+        return;
+    }
+
+    findTestsByFile(uri: URI): TestItem[] {
+        const tests = [] as TestItem[];
+        for (const [test, testCase] of this.testData.get(uri.fsPath) ?? []) {
+            if (testCase.type === TestType.class) {
+                tests.push(test);
+            }
+        }
+
+        return tests;
+    }
+
+    findTestByPosition(uri: URI, position: Position): TestItem | undefined {
+        const inRange = (test: TestItem, testCase: TestCase) => {
+            return testCase.type !== TestType.method
+                ? false
+                : position.line >= test.range!.start.line && position.line <= test.range!.end.line;
+        };
+
+        for (const [test, testCase] of this.testData.get(uri.fsPath) ?? []) {
+            if (inRange(test, testCase)) {
+                return test;
+            }
+        }
+
+        return;
+    }
+
     delete(uri: URI) {
-        this.findFile(uri)?.tests.forEach((test: TestDefinition) => {
-            this.ctrl.items.delete(test.id);
+        this.findTestsByFile(uri).forEach((test) => {
+            if (test.parent) {
+                test.parent.children.delete(test.id);
+            } else {
+                this.ctrl.items.delete(test.id);
+            }
         });
 
         return super.delete(uri);
     }
 
     protected async parseTests(uri: URI) {
-        const ancestors: [{ item: TestController | TestItem, children: TestItem[] }] = [{
-            item: this.ctrl, children: [],
+        const ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [{
+            item: this.proxyCtrl(), type: TestType.namespace, children: [],
         }];
 
         const ascend = (depth: number) => {
             while (ancestors.length > depth) {
                 const finished = ancestors.pop()!;
-                if (finished.item.hasOwnProperty('items')) {
+                if (finished.type === TestType.method) {
+                    finished.item.children.replace(finished.children);
+                } else {
                     for (const child of finished.children) {
-                        (finished.item as TestController).items.add(child);
-                    }
-                } else if (finished.item.hasOwnProperty('children')) {
-                    for (const child of finished.children) {
-                        (finished.item as TestItem).children.add(child);
+                        finished.item.children.add(child);
                     }
                 }
             }
         };
 
+        if (!this.testData.has(uri.fsPath)) {
+            this.testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
+        }
+        const testData = this.testData.get(uri.fsPath)!;
+
         const testDefinitions: TestDefinition[] = [];
         await this.testParser.parseFile(uri.fsPath, {
             onMethod: (testDefinition, index) => {
+                const test = this.createTestItem(testDefinition, `${index}`);
+                testData.set(test, new TestCase(testDefinition));
+
                 const parent = ancestors[ancestors.length - 1];
-
-                const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
-                test.sortText = `${index}`;
-                test.range = new Range(
-                    new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
-                    new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
-                );
-
                 parent.children.push(test);
-
-                testDefinitions.push(Object.assign(this.convertTest(testDefinition), {
-                    testItem: test,
-                }));
+                testDefinitions.push(testDefinition);
             },
             onClass: (testDefinition) => {
                 ascend(2);
+
+                const test = this.createTestItem(testDefinition, testDefinition.id);
+                testData.set(test, new TestCase(testDefinition));
+
                 const parent = ancestors[ancestors.length - 1];
-
-                const suite = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
-                suite.sortText = testDefinition.id;
-                suite.canResolveChildren = true;
-                suite.range = new Range(
-                    new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
-                    new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
-                );
-
-                parent.children.push(suite);
-                ancestors.push({ item: suite, children: [] });
-                testDefinitions.push(Object.assign(this.convertTest(testDefinition), {
-                    testItem: suite,
-                }));
+                parent.children.push(test);
+                ancestors.push({ item: test, type: testDefinition.type, children: [] });
+                testDefinitions.push(testDefinition);
             },
             onNamespace: (testDefinition) => {
                 ascend(1);
+
+                const test = this.createTestItem(testDefinition, testDefinition.id);
+                testData.set(test, new TestCase(testDefinition));
+
                 const parent = ancestors[ancestors.length - 1];
-
-                let namespace = this.ctrl.items.get(testDefinition.id);
-                if (!namespace) {
-                    namespace = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
-                }
-                namespace.canResolveChildren = true;
-
-                parent.children.push(namespace);
-                ancestors.push({ item: namespace, children: [] });
-                testDefinitions.push(Object.assign(this.convertTest(testDefinition), {
-                    testItem: namespace,
-                }));
+                parent.children.push(test);
+                ancestors.push({ item: test, type: testDefinition.type, children: [] });
+                testDefinitions.push(testDefinition);
             },
         });
         ascend(0);
@@ -100,7 +166,41 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
         return testDefinitions;
     }
 
-    protected convertTest(testDefinition: BaseTestDefinition) {
-        return testDefinition as any;
+    private proxyCtrl() {
+        return new Proxy(this.ctrl, {
+            get(target: any, prop) {
+                return prop === 'children' ? target.items : target[prop];
+            },
+        }) as TestItem;
+    }
+
+    private createTestItem(testDefinition: TestDefinition, sortText: string) {
+        if (testDefinition.type === TestType.namespace) {
+            let test = this.ctrl.items.get(testDefinition.id);
+            if (!test) {
+                test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
+                test.canResolveChildren = true;
+                test.sortText = sortText;
+            }
+
+            return test;
+        }
+
+        const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
+        if (testDefinition.type === TestType.class) {
+            test.canResolveChildren = true;
+        }
+
+        test.sortText = sortText;
+        test.range = this.createRange(testDefinition as any);
+
+        return test;
+    }
+
+    private createRange(testDefinition: TestDefinition) {
+        return new Range(
+            new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
+            new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
+        );
     }
 }

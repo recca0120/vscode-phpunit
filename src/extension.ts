@@ -1,6 +1,5 @@
-import * as path from 'node:path';
+import { dirname, relative } from 'node:path';
 import * as vscode from 'vscode';
-import { CancellationToken, TestRunProfileKind, TestRunRequest, Uri } from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
@@ -35,8 +34,8 @@ async function getWorkspaceTestPatterns() {
 
         const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
         if (configurationFile) {
-            await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath);
-            const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
+            await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
+            const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile)));
 
             phpUnitXML.getTestSuites().forEach((item) => {
                 if (item.tag === 'directory') {
@@ -139,6 +138,11 @@ export async function activate(context: vscode.ExtensionContext) {
     ctrl.resolveHandler = async (item) => {
         if (!item) {
             context.subscriptions.push(...(await startWatchingWorkspace(fileChangedEmitter)));
+            return;
+        }
+
+        if (item.uri) {
+            await testCollection.add(item.uri);
         }
     };
 
@@ -168,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    const runHandler = async (request: TestRunRequest, cancellation: CancellationToken) => {
+    const runHandler = async (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
         if (!request.continuous) {
             return handler.startTestRun(request, cancellation);
         }
@@ -181,9 +185,10 @@ export async function activate(context: vscode.ExtensionContext) {
             cancellation.onCancellationRequested(() => request.include!.forEach(item => watchingTests.delete(item)));
         }
     };
-    const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
+    const testRunProfile = ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run, runHandler, true, undefined, true);
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
-    context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', reload));
+
+    context.subscriptions.push(commandHandler.reload(reload));
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());

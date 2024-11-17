@@ -8,7 +8,7 @@ import {
     TestController,
     TestItem,
     TestItemCollection,
-    TestRunRequest,
+    TestRunRequest as BaseTestRunRequest,
     TestTag,
     TextDocument,
     WorkspaceFolder,
@@ -20,6 +20,12 @@ enum TestRunProfileKind {
     Debug = 2,
     Coverage = 3,
 }
+
+const TestRunRequest = jest.fn().mockImplementation((include: any) => {
+    return {
+        include,
+    };
+});
 
 const isWin = process.platform === 'win32';
 
@@ -105,7 +111,7 @@ const createRunProfile = jest
         label: string,
         kind: TestRunProfileKind,
         runHandler: (
-            request: TestRunRequest,
+            request: BaseTestRunRequest,
             token: CancellationToken,
         ) => Thenable<void> | void,
         isDefault?: boolean,
@@ -114,7 +120,7 @@ const createRunProfile = jest
 
 const createTestRun = jest
     .fn()
-    .mockImplementation((_request: TestRunRequest, name?: string, persist?: boolean) => {
+    .mockImplementation((_request: BaseTestRunRequest, name?: string, persist?: boolean) => {
         return {
             name: name,
             // token: CancellationToken;
@@ -287,11 +293,18 @@ const window = {
     }),
 };
 
-const commands = {
-    registerCommand: jest.fn().mockImplementation(() => {
-        return new Disposable();
-    }),
-};
+const commands = (function () {
+    const commands = new Map<string, (...rest: any[]) => void>();
+    return {
+        registerCommand: jest.fn().mockImplementation((command: string, callback: (...rest: any[]) => void) => {
+            commands.set(command, callback);
+            return new Disposable();
+        }),
+        executeCommand: async (command: string, ...rest: any[]) => {
+            return commands.get(command)!(...rest);
+        },
+    };
+})();
 
 const EventEmitter = jest.fn().mockImplementation(() => {
     return {
@@ -309,6 +322,7 @@ export {
     Location,
     tests,
     TestRunProfileKind,
+    TestRunRequest,
     TestMessage,
     CancellationTokenSource,
     RelativePattern,

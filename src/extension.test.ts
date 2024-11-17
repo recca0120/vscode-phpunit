@@ -310,5 +310,51 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
         });
+
+        it('run phpunit.run-file', async () => {
+            await activate(context);
+            Object.defineProperty(window, 'activeTextEditor', {
+                value: { document: { uri: Uri.file(phpUnitProject('tests/AssertionsTest.php')) } },
+                enumerable: true,
+                configurable: true,
+            });
+
+            await commands.executeCommand('phpunit.run-file');
+
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                // '--filter=^.*::(test_passed)( with data set .*)?$',
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
+        });
+
+        it('run phpunit.run-test-at-cursor', async () => {
+            await activate(context);
+
+            Object.defineProperty(window, 'activeTextEditor', {
+                value: {
+                    document: { uri: Uri.file(phpUnitProject('tests/AssertionsTest.php')) },
+                    selection: { active: { line: 13, character: 14 } },
+                },
+                enumerable: true,
+                configurable: true,
+            });
+
+            await commands.executeCommand('phpunit.run-test-at-cursor');
+
+            const method = 'test_passed';
+            const pattern = new RegExp(
+                `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+            );
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                expect.stringMatching(pattern),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
+        });
     });
 });
