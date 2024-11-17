@@ -1,8 +1,7 @@
-import { expect } from '@jest/globals';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
 import { PHPUnitXML, TestDefinition, TestParser } from './index';
-import { Files, TestCollection, TestDefinitions } from './TestCollection';
+import { TestCollection, TestDefinitions } from './TestCollection';
 
 
 describe('TestCollection', () => {
@@ -16,16 +15,22 @@ describe('TestCollection', () => {
     };
 
     const shouldBe = async (collection: TestCollection, group: any) => {
-        const expected = new Files<TestDefinition[]>;
+        // const expected = new Files<TestDefinition[]>;
         for (const [name, files] of Object.entries(group)) {
-            const testDefinitions = new TestDefinitions<TestDefinition[]>();
+            const items = new TestDefinitions<TestDefinition[]>();
+            const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
-                testDefinitions.set(uri.fsPath, await testParser.parseFile(uri.fsPath) ?? []);
+                await testParser.parseFile(uri.fsPath, {
+                    onMethod: (testDefinition) => expected.push(testDefinition),
+                    onClass: (testDefinition) => expected.push(testDefinition),
+                    onNamespace: (testDefinition) => expected.push(testDefinition),
+                });
+                items.set(uri.fsPath, expected);
             }
-            expected.set(name, testDefinitions);
+            const actual: TestDefinition[] = [];
+            collection.items().get(name)?.items().forEach((item) => actual.push(...item));
+            expect(actual).toEqual(expected);
         }
-
-        expect(collection.items()).toEqual(expected);
     };
 
     it('match testsuite directory', async () => {
@@ -41,7 +46,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, { default: files });
     });
@@ -56,7 +63,9 @@ describe('TestCollection', () => {
         );
 
         const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, { default: files });
     });
@@ -75,7 +84,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, { default: [files[0]] });
     });
@@ -94,7 +105,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, { default: [files[0]] });
     });
@@ -121,7 +134,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, {
             default: [files[0]],
@@ -146,7 +161,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, { default: [files[1], files[2]] });
     });
@@ -164,7 +181,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         await shouldBe(collection, { default: [files[0]] });
     });
@@ -180,7 +199,9 @@ describe('TestCollection', () => {
 
 
         const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
 
         expect(collection.has(files[0])).toBeTruthy();
         expect(collection.delete(files[0])).toBeTruthy();
@@ -204,7 +225,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
-        await Promise.all(files.map(async (file) => await collection.add(file)));
+        for (const file of files) {
+            await collection.add(file);
+        }
         expect(collection.items().size).toEqual(2);
 
         collection.reset();

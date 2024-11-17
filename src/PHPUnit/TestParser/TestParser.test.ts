@@ -2,7 +2,7 @@ import 'jest';
 import { readFile } from 'fs/promises';
 import { phpUnitProject } from '../__tests__/utils';
 import { propertyParser } from './PropertyParser';
-import { Events, TestDefinition, TestParser } from './TestParser';
+import { TestDefinition, TestParser } from './TestParser';
 
 const uniqueId = (namespace: string, _class: string, method: string) => {
     return propertyParser.uniqueId(namespace, _class, method);
@@ -11,15 +11,23 @@ const qualifiedClass = (namespace: string, _class: string) => {
     return propertyParser.qualifiedClass(namespace, _class);
 };
 
-export const parse = (buffer: Buffer | string, file: string, events: Events = {}) => {
-    return new TestParser().parse(buffer, file, events);
+export const parse = (buffer: Buffer | string, file: string) => {
+    const tests: TestDefinition[] = [];
+    let suite: TestDefinition | undefined;
+    new TestParser().parse(buffer, file, {
+        onMethod: (testDefinition: TestDefinition) => tests.push(testDefinition),
+        onClass: (testDefinition: TestDefinition) => suite = testDefinition,
+    });
+
+    return suite ? [{ ...suite, children: tests }] : [];
 };
 
 describe('Parser Test', () => {
     describe('PHPUnit', () => {
         let suites: TestDefinition[];
-        const givenTest = (method: string) =>
-            suites[0].children.find((test) => test.method === method);
+        const givenTest = (method: string) => {
+            return suites[0].children!.find((test) => test.method === method);
+        };
 
         describe('parse AssertionsTest', () => {
             const file = phpUnitProject('tests/AssertionsTest.php');

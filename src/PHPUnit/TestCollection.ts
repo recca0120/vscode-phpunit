@@ -15,6 +15,10 @@ abstract class Base<T> {
         return this._items.size;
     }
 
+    items() {
+        return this._items;
+    }
+
     set(key: string, value: T) {
         return this._items.set(key, value);
     }
@@ -69,11 +73,11 @@ export class Workspace<T> extends Base<Files<T>> {
     }
 }
 
-export abstract class BaseTestCollection<T extends { id: string, children: T[] }> {
-    private readonly _workspaces: Workspace<T[]>;
+export class TestCollection {
+    private readonly _workspaces: Workspace<TestDefinition[]>;
 
     constructor(private phpUnitXML: PHPUnitXML, protected testParser: TestParser) {
-        this._workspaces = new Workspace<T[]>;
+        this._workspaces = new Workspace<TestDefinition[]>;
     }
 
     get size() {
@@ -87,9 +91,9 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
     items() {
         const workspace = this.getWorkspace();
         if (!this._workspaces.has(workspace)) {
-            const files = new Files<T[]>;
+            const files = new Files<TestDefinition[]>;
             this.phpUnitXML.getTestSuites().forEach((suite) => {
-                files.set(suite.name, new TestDefinitions<T[]>());
+                files.set(suite.name, new TestDefinitions<TestDefinition[]>());
             });
             this._workspaces.set(workspace, files);
         }
@@ -108,10 +112,11 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
         }
 
         const files = this.items();
-        const tests = await this.parseTests(uri);
-        if (tests.length > 0) {
-            files.get(group)!.set(uri.fsPath, await this.convertTests(tests, group, files.keys()));
+        const testDefinitions = await this.parseTests(uri);
+        if (testDefinitions.length === 0) {
+            this.delete(uri);
         }
+        files.get(group)!.set(uri.fsPath, testDefinitions);
 
         return this;
     }
@@ -144,17 +149,12 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
             if (testId === testDefinitions.id) {
                 return testDefinitions;
             }
-            for (const child of testDefinitions.children) {
-                if (testId === child.id) {
-                    return child;
-                }
-            }
         }
 
         return;
     }
 
-    * gatherTestDefinitions(): Generator<T> {
+    * gatherTestDefinitions(): Generator<TestDefinition> {
         for (const { tests } of this.gatherFiles()) {
             for (const test of tests) {
                 yield test;
@@ -162,7 +162,7 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
         }
     }
 
-    findFile(uri: URI): File<T> | undefined {
+    findFile(uri: URI): File<TestDefinition> | undefined {
         for (const { group, file, tests } of this.gatherFiles()) {
             if (uri.fsPath === file) {
                 return { group, file, tests };
@@ -172,9 +172,19 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
         return undefined;
     }
 
-    protected abstract convertTests(testDefinitions: TestDefinition[], group: string, groups: string[]): Promise<T[]>
+    protected async parseTests(uri: URI) {
+        const testDefinitions: TestDefinition[] = [];
 
-    protected deleteFile(file: File<T>) {
+        await this.testParser.parseFile(uri.fsPath, {
+            onMethod: (testDefinition) => testDefinitions.push(testDefinition),
+            onClass: (testDefinition) => testDefinitions.push(testDefinition),
+            onNamespace: (testDefinition) => testDefinitions.push(testDefinition),
+        });
+
+        return testDefinitions;
+    }
+
+    protected deleteFile(file: File<TestDefinition>) {
         return this.items().get(file.group)?.delete(file.file);
     }
 
@@ -184,10 +194,6 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
                 yield { group, file, tests };
             }
         }
-    }
-
-    private async parseTests(uri: URI): Promise<TestDefinition[]> {
-        return await this.testParser.parseFile(uri.fsPath) ?? [];
     }
 
     private getGroup(uri: URI) {
@@ -217,11 +223,5 @@ export abstract class BaseTestCollection<T extends { id: string, children: T[] }
         return isFile
             ? join(workspace, testSuite.value) === uri.fsPath
             : !relative(join(workspace, testSuite.value), dirname(uri.fsPath)).startsWith('.');
-    }
-}
-
-export class TestCollection extends BaseTestCollection<TestDefinition> {
-    protected async convertTests(testDefinitions: TestDefinition[]) {
-        return testDefinitions;
     }
 }

@@ -1,6 +1,5 @@
-import * as path from 'node:path';
+import { dirname, relative } from 'node:path';
 import * as vscode from 'vscode';
-import { CancellationToken, TestRunProfileKind, TestRunRequest, Uri } from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
@@ -35,8 +34,8 @@ async function getWorkspaceTestPatterns() {
 
         const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
         if (configurationFile) {
-            await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath);
-            const baseDir = directoryPath(path.dirname(path.relative(workspaceFolder.uri.fsPath, configurationFile)));
+            await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
+            const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile)));
 
             phpUnitXML.getTestSuites().forEach((item) => {
                 if (item.tag === 'directory') {
@@ -139,16 +138,57 @@ export async function activate(context: vscode.ExtensionContext) {
     ctrl.resolveHandler = async (item) => {
         if (!item) {
             context.subscriptions.push(...(await startWatchingWorkspace(fileChangedEmitter)));
+            return;
+        }
+
+        if (item.uri) {
+            await testCollection.add(item.uri);
         }
     };
 
-    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
-    const handler = new Handler(testCollection, configuration, outputChannel, ctrl, fileChangedEmitter);
+    const handler = new Handler(ctrl, configuration, testCollection, outputChannel);
 
-    const runHandler = (testRunRequest: TestRunRequest, cancellation: CancellationToken) => handler.run(testRunRequest, cancellation);
-    const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
+    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
+    const watchingTests = new Map<vscode.TestItem | 'ALL', vscode.TestRunProfile | undefined>();
+
+    fileChangedEmitter.event(uri => {
+        if (watchingTests.has('ALL')) {
+            handler.startTestRun(new vscode.TestRunRequest(undefined, undefined, watchingTests.get('ALL'), true));
+            return;
+        }
+
+        const include: vscode.TestItem[] = [];
+        let profile: vscode.TestRunProfile | undefined;
+        for (const [item, thisProfile] of watchingTests) {
+            const cast = item as vscode.TestItem;
+            if (cast.uri?.toString() === uri.toString()) {
+                include.push(cast);
+                profile = thisProfile;
+            }
+        }
+
+        if (include.length) {
+            handler.startTestRun(new vscode.TestRunRequest(include, undefined, profile, true));
+        }
+    });
+
+    const runHandler = async (request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
+        if (!request.continuous) {
+            return handler.startTestRun(request, cancellation);
+        }
+
+        if (request.include === undefined) {
+            watchingTests.set('ALL', request.profile);
+            cancellation.onCancellationRequested(() => watchingTests.delete('ALL'));
+        } else {
+            request.include.forEach(item => watchingTests.set(item, request.profile));
+            cancellation.onCancellationRequested(() => request.include!.forEach(item => watchingTests.delete(item)));
+        }
+    };
+    const testRunProfile = ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run, runHandler, true, undefined, true);
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
-    context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', reload));
+
+    context.subscriptions.push(commandHandler.reload(reload));
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());

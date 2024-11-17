@@ -75,15 +75,13 @@ const getRunProfile = (ctrl: TestController) => {
 };
 
 const findTest = (items: TestItemCollection, testId: string): TestItem | undefined => {
-    let result = items.get(testId);
-    if (result) {
-        return result;
-    }
-
     for (const [_id, item] of items) {
-        result = findTest(item.children, testId);
-        if (result) {
-            return result;
+        if (item.id === testId) {
+            return item;
+        }
+        const child = findTest(item.children, testId);
+        if (child) {
+            return child;
         }
     }
 
@@ -141,7 +139,7 @@ describe('Extension Test', () => {
             await configuration.update('phpunit', 'vendor/bin/phpunit');
         });
 
-        fit('should load tests', async () => {
+        it('should load tests', async () => {
             await activate(context);
             const ctrl = getTestController();
             const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
@@ -233,6 +231,7 @@ describe('Extension Test', () => {
             } else {
                 expected = { enqueued: 20, started: 21, passed: 9, failed: 10, end: 1 };
             }
+
             expectTestResultCalled(ctrl, expected);
         });
 
@@ -266,6 +265,7 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const runProfile = getRunProfile(ctrl);
+
             const request = {
                 include: [findTest(ctrl.items, testId)],
                 exclude: [],
@@ -309,6 +309,52 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
 
             await ctrl.resolveHandler();
+        });
+
+        it('run phpunit.run-file', async () => {
+            await activate(context);
+            Object.defineProperty(window, 'activeTextEditor', {
+                value: { document: { uri: Uri.file(phpUnitProject('tests/AssertionsTest.php')) } },
+                enumerable: true,
+                configurable: true,
+            });
+
+            await commands.executeCommand('phpunit.run-file');
+
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                // '--filter=^.*::(test_passed)( with data set .*)?$',
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
+        });
+
+        it('run phpunit.run-test-at-cursor', async () => {
+            await activate(context);
+
+            Object.defineProperty(window, 'activeTextEditor', {
+                value: {
+                    document: { uri: Uri.file(phpUnitProject('tests/AssertionsTest.php')) },
+                    selection: { active: { line: 13, character: 14 } },
+                },
+                enumerable: true,
+                configurable: true,
+            });
+
+            await commands.executeCommand('phpunit.run-test-at-cursor');
+
+            const method = 'test_passed';
+            const pattern = new RegExp(
+                `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+            );
+            expect(spawn).toHaveBeenCalledWith('php', [
+                'vendor/bin/phpunit',
+                expect.stringMatching(pattern),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ], { cwd });
         });
     });
 });

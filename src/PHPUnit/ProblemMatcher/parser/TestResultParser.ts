@@ -21,17 +21,16 @@ export class TestResultParser implements IParser<Result | undefined> {
         new TestResultSummaryParser(),
     ];
 
-    constructor() {
+    constructor() {}
+
+    public is(text: string): boolean {
+        return !!text.match(this.pattern);
     }
 
     public parse(text: string): Result | undefined {
         return this.is(text)
             ? this.doParse(text)
             : this.parsers.find((parser) => parser.is(text))?.parse(text);
-    }
-
-    public is(text: string): boolean {
-        return !!text.match(this.pattern);
     }
 
     private doParse(text: string) {

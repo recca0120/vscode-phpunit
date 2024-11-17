@@ -1,68 +1,71 @@
 import {
     CancellationToken,
-    EventEmitter,
     OutputChannel,
     TestController,
     TestItem,
-    TestRun,
+    TestItemCollection,
     TestRunRequest,
-    Uri,
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
-import { LocalCommand, RemoteCommand, TestRunner } from './PHPUnit';
-import { TestCollection } from './TestCollection';
-import { TestQueueHandler } from './TestQueueHandler';
+import { LocalCommand, RemoteCommand, TestRunner, TestType } from './PHPUnit';
+import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
-    private latestTestRunRequest: TestRunRequest | undefined;
+    private lastRequest: TestRunRequest | undefined;
 
-    constructor(
-        private testCollection: TestCollection,
-        private configuration: Configuration,
-        private outputChannel: OutputChannel,
-        private ctrl: TestController,
-        private fileChangedEmitter: EventEmitter<Uri>,
-    ) {
+    constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) {}
+
+    getLastRequest() {
+        return this.lastRequest;
     }
 
-    getLatestTestRunRequest() {
-        return this.latestTestRunRequest;
-    }
-
-    async run(request: TestRunRequest, cancellation: CancellationToken) {
-        if (!request.continuous) {
-            return this.startTestRun(request, cancellation);
-        }
-
-        const l = this.fileChangedEmitter.event(async (uri) => {
-            await this.testCollection.add(uri);
-
-            const testRunRequest = new TestRunRequest(request.include ?? [], undefined, request.profile, true);
-            await this.startTestRun(testRunRequest, cancellation);
-        });
-        cancellation.onCancellationRequested(() => l.dispose());
-    }
-
-    private async startTestRun(request: TestRunRequest, cancellation: CancellationToken) {
+    async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
         const command = await this.createCommand();
-        if (!command) {
-            return;
-        }
-
-        this.latestTestRunRequest = request;
+        const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
-        const queueHandler = new TestQueueHandler(this.testCollection, request, run);
-        const runner = this.createTestRunner(queueHandler, run, request, cancellation);
 
-        await queueHandler.discoverTests(request.include ?? this.gatherTestItems());
-        await queueHandler.runQueue(runner, command);
+        const discoverTests = async (tests: Iterable<TestItem>) => {
+            for (const test of tests) {
+                if (request.exclude?.includes(test)) {
+                    continue;
+                }
+
+                const data = this.testCollection.getTestCase(test);
+                if (data?.type === TestType.method) {
+                    run.enqueued(test);
+                    queue.push({ test, data });
+                } else {
+                    await discoverTests(this.gatherTestItems(test.children));
+                }
+            }
+        };
+
+        const runTestQueue = async () => {
+            const runner = new TestRunner();
+            runner.observe(new TestResultObserver(queue, run, cancellation));
+            runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
+
+            if (!request.include) {
+                return runner.run(command);
+            }
+
+            await Promise.all(request.include
+                .map((test) => this.testCollection.getTestCase(test)!)
+                .map((testCase) => testCase.run(runner, command)),
+            );
+            return;
+        };
+
+        await discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items)).then(runTestQueue);
+        this.lastRequest = request;
     }
 
-    private* gatherTestItems(): Generator<TestItem> {
-        for (const item of this.testCollection.gatherTestDefinitions()) {
-            yield item.testItem;
-        }
+    private gatherTestItems(collection: TestItemCollection) {
+        const items: TestItem[] = [];
+        collection.forEach((item) => items.push(item));
+
+        return items;
     }
 
     private async createCommand() {
@@ -75,18 +78,5 @@ export class Handler {
         const command = (this.configuration.get('command') as string) ?? '';
 
         return command.match(/docker|ssh|sail/) !== null;
-    }
-
-    private createTestRunner(
-        queueHandler: TestQueueHandler,
-        run: TestRun,
-        request: TestRunRequest,
-        cancellation: CancellationToken,
-    ) {
-        const runner = new TestRunner();
-        runner.observe(new TestResultObserver(queueHandler.queue, run, cancellation));
-        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
-
-        return runner;
     }
 }

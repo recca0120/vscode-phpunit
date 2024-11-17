@@ -14,8 +14,7 @@ export type TestSuite = Source & { name: string };
 const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 class Element {
-    constructor(private readonly node: any) {
-    }
+    constructor(private readonly node: any) {}
 
     getAttribute(key: string) {
         return this.node[`@_${key}`] ?? undefined;
