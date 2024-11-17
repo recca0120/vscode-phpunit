@@ -1,5 +1,5 @@
 import { TestItem, TestItemCollection, TestRun, TestRunRequest } from 'vscode';
-import { Command, TestDefinition, TestRunner } from './PHPUnit';
+import { Command, TestDefinition, TestRunner, TestType } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 
 export class TestQueueHandler {
@@ -36,17 +36,17 @@ export class TestQueueHandler {
     }
 
     private parseArguments(testItem: TestItem): string {
-        if (!testItem.uri) {
-            return this.parseNamespaceFilter(testItem);
-        }
-
         const testDefinition = this.testCollection.findTest(testItem.id);
 
         if (!testDefinition) {
             return '';
         }
 
-        if (testDefinition.class && !testDefinition.method) {
+        if (testDefinition.type === TestType.namespace) {
+            return this.parseNamespaceFilter(testItem);
+        }
+
+        if (testDefinition.type === TestType.suite) {
             return testDefinition.file!;
         }
 

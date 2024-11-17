@@ -10,7 +10,14 @@ export type Position = {
     line: number;
 };
 
+export enum TestType {
+    namespace,
+    suite,
+    test
+}
+
 export type TestDefinition = {
+    type: TestType;
     id: string;
     label: string;
     namespace?: string;
@@ -94,13 +101,18 @@ export class TestParser {
             return [];
         }
 
-        const suite = { ...parseProperty(ast as Declaration, namespace), file };
+        const suite = {
+            ...parseProperty(ast as Declaration, namespace),
+            type: TestType.suite,
+            file,
+        };
 
         const tests = _class.body
             .filter((method) => validator.isTest(method as Method))
             .map((method) => {
                 return {
                     ...parseProperty(method as Method, namespace, _class),
+                    type: TestType.test,
                     file,
                 };
             });
@@ -111,6 +123,7 @@ export class TestParser {
 
         if (suite.namespace && events.onNamespace) {
             events.onNamespace({
+                type: TestType.namespace,
                 id: `namespace:${suite.namespace}`,
                 qualifiedClass: suite.namespace!,
                 label: suite.namespace,

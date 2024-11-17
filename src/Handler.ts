@@ -10,7 +10,7 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
-import { LocalCommand, RemoteCommand, TestRunner } from './PHPUnit';
+import { LocalCommand, RemoteCommand, TestRunner, TestType } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestQueueHandler } from './TestQueueHandler';
 
@@ -61,7 +61,7 @@ export class Handler {
 
     private* gatherTestItems(): Generator<TestItem> {
         for (const item of this.testCollection.gatherTestDefinitions()) {
-            if (item.class && !item.method) {
+            if (item.type === TestType.suite) {
                 yield item.testItem;
             }
         }
