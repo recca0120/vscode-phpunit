@@ -46,7 +46,7 @@ export class TestQueueHandler {
             return this.parseNamespaceFilter(testItem);
         }
 
-        if (testDefinition.type === TestType.suite) {
+        if (testDefinition.type === TestType.class) {
             return testDefinition.file!;
         }
 

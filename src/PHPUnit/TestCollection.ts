@@ -173,8 +173,8 @@ export abstract class BaseTestCollection<T extends { id: string, children?: T[] 
         const testDefinitions: T[] = [];
 
         await this.testParser.parseFile(uri.fsPath, {
-            onTest: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
-            onSuite: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
+            onMethod: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
+            onClass: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
             onNamespace: (testDefinition) => testDefinitions.push(this.convertTest(testDefinition)),
         });
 

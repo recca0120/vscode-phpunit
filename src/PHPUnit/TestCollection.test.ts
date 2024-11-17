@@ -21,8 +21,8 @@ describe('TestCollection', () => {
             const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
                 await testParser.parseFile(uri.fsPath, {
-                    onTest: (testDefinition) => expected.push(testDefinition),
-                    onSuite: (testDefinition) => expected.push(testDefinition),
+                    onMethod: (testDefinition) => expected.push(testDefinition),
+                    onClass: (testDefinition) => expected.push(testDefinition),
                     onNamespace: (testDefinition) => expected.push(testDefinition),
                 });
                 items.set(uri.fsPath, expected);

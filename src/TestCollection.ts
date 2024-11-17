@@ -44,7 +44,7 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
 
         const testDefinitions: TestDefinition[] = [];
         await this.testParser.parseFile(uri.fsPath, {
-            onTest: (testDefinition, index) => {
+            onMethod: (testDefinition, index) => {
                 const parent = ancestors[ancestors.length - 1];
 
                 const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
@@ -60,7 +60,7 @@ export class TestCollection extends BaseTestCollection<TestDefinition> {
                     testItem: test,
                 }));
             },
-            onSuite: (testDefinition) => {
+            onClass: (testDefinition) => {
                 ascend(2);
                 const parent = ancestors[ancestors.length - 1];
 

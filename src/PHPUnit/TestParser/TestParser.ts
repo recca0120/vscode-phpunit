@@ -12,8 +12,8 @@ export type Position = {
 
 export enum TestType {
     namespace,
-    suite,
-    test
+    class,
+    method
 }
 
 export type TestDefinition = {
@@ -33,8 +33,8 @@ export type TestDefinition = {
 };
 
 export type Events = {
-    onTest?: (testDefinition: TestDefinition, index: number) => void;
-    onSuite?: (testDefinition: TestDefinition) => void;
+    onMethod?: (testDefinition: TestDefinition, index: number) => void;
+    onClass?: (testDefinition: TestDefinition) => void;
     onNamespace?: (testDefinition: TestDefinition) => void;
 };
 
@@ -101,9 +101,9 @@ export class TestParser {
             return [];
         }
 
-        const suite = {
+        const clazz = {
             ...parseProperty(ast as Declaration, namespace),
-            type: TestType.suite,
+            type: TestType.class,
             file,
         };
 
@@ -112,7 +112,7 @@ export class TestParser {
             .map((method) => {
                 return {
                     ...parseProperty(method as Method, namespace, _class),
-                    type: TestType.test,
+                    type: TestType.method,
                     file,
                 };
             });
@@ -121,26 +121,24 @@ export class TestParser {
             return;
         }
 
-        if (suite.namespace && events.onNamespace) {
+        if (clazz.namespace && events.onNamespace) {
             events.onNamespace({
                 type: TestType.namespace,
-                id: `namespace:${suite.namespace}`,
-                qualifiedClass: suite.namespace!,
-                label: suite.namespace,
+                id: `namespace:${clazz.namespace}`,
+                qualifiedClass: clazz.namespace!,
+                label: clazz.namespace,
             });
         }
 
-        if (events.onSuite) {
-            events.onSuite(suite);
+        if (events.onClass) {
+            events.onClass(clazz);
         }
 
-        if (events.onTest) {
-            tests.forEach((child, index) => events.onTest!(child, index));
+        if (events.onMethod) {
+            tests.forEach((child, index) => events.onMethod!(child, index));
         }
 
-        tests.forEach((child) => (child.parent = suite));
-
-        return [{ ...suite, children: tests }];
+        return [{ ...clazz, children: tests }];
     }
 
     private parseChildren(

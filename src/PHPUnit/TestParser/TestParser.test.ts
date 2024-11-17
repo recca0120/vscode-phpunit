@@ -15,8 +15,8 @@ export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
     let suite: TestDefinition | undefined;
     new TestParser().parse(buffer, file, {
-        onTest: (testDefinition: TestDefinition) => tests.push(testDefinition),
-        onSuite: (testDefinition: TestDefinition) => suite = testDefinition,
+        onMethod: (testDefinition: TestDefinition) => tests.push(testDefinition),
+        onClass: (testDefinition: TestDefinition) => suite = testDefinition,
     });
 
     return suite ? [{ ...suite, children: tests }] : [];
