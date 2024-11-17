@@ -142,10 +142,45 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     };
 
-    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
-    const handler = new Handler(testCollection, configuration, outputChannel, ctrl, fileChangedEmitter);
+    const handler = new Handler(ctrl, configuration, testCollection, outputChannel);
 
-    const runHandler = (testRunRequest: TestRunRequest, cancellation: CancellationToken) => handler.run(testRunRequest, cancellation);
+    const fileChangedEmitter = new vscode.EventEmitter<vscode.Uri>();
+    const watchingTests = new Map<vscode.TestItem | 'ALL', vscode.TestRunProfile | undefined>();
+
+    fileChangedEmitter.event(uri => {
+        if (watchingTests.has('ALL')) {
+            handler.startTestRun(new vscode.TestRunRequest(undefined, undefined, watchingTests.get('ALL'), true));
+            return;
+        }
+
+        const include: vscode.TestItem[] = [];
+        let profile: vscode.TestRunProfile | undefined;
+        for (const [item, thisProfile] of watchingTests) {
+            const cast = item as vscode.TestItem;
+            if (cast.uri?.toString() === uri.toString()) {
+                include.push(cast);
+                profile = thisProfile;
+            }
+        }
+
+        if (include.length) {
+            handler.startTestRun(new vscode.TestRunRequest(include, undefined, profile, true));
+        }
+    });
+
+    const runHandler = async (request: TestRunRequest, cancellation: CancellationToken) => {
+        if (!request.continuous) {
+            return handler.startTestRun(request, cancellation);
+        }
+
+        if (request.include === undefined) {
+            watchingTests.set('ALL', request.profile);
+            cancellation.onCancellationRequested(() => watchingTests.delete('ALL'));
+        } else {
+            request.include.forEach(item => watchingTests.set(item, request.profile));
+            cancellation.onCancellationRequested(() => request.include!.forEach(item => watchingTests.delete(item)));
+        }
+    };
     const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
     context.subscriptions.push(vscode.commands.registerCommand('phpunit.reload', reload));

@@ -5,7 +5,7 @@ export class TestResultObserver implements TestRunnerObserver {
     constructor(
         private queue: { testItem: TestItem }[] = [],
         private testRun: TestRun,
-        private cancellation: CancellationToken,
+        private cancellation?: CancellationToken,
     ) {}
 
     line(line: string): void {
@@ -67,7 +67,7 @@ export class TestResultObserver implements TestRunnerObserver {
             return;
         }
 
-        if (this.cancellation.isCancellationRequested) {
+        if (this.cancellation?.isCancellationRequested) {
             this.testRun.skipped(test);
             return;
         }
