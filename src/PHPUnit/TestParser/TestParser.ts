@@ -10,12 +10,6 @@ export type Position = {
     line: number;
 };
 
-export enum TestType {
-    namespace,
-    class,
-    method
-}
-
 export type TestDefinition = {
     type: TestType;
     id: string;
@@ -32,10 +26,18 @@ export type TestDefinition = {
     annotations?: Annotations;
 };
 
+
+export enum TestType {
+    namespace,
+    class,
+    method
+}
+
 export type Events = {
-    onMethod?: (testDefinition: TestDefinition, index: number) => void;
-    onClass?: (testDefinition: TestDefinition) => void;
-    onNamespace?: (testDefinition: TestDefinition) => void;
+    [pName: number]: (testDefinition: TestDefinition, index?: number) => void;
+    // onMethod?: (testDefinition: TestDefinition, index: number) => void;
+    // onClass?: (testDefinition: TestDefinition) => void;
+    // onNamespace?: (testDefinition: TestDefinition) => void;
 };
 
 const textDecoder = new TextDecoder('utf-8');
@@ -107,7 +109,7 @@ export class TestParser {
             file,
         };
 
-        const tests = _class.body
+        const methods = _class.body
             .filter((method) => validator.isTest(method as Method))
             .map((method) => {
                 return {
@@ -117,12 +119,12 @@ export class TestParser {
                 };
             });
 
-        if (tests.length <= 0) {
+        if (methods.length <= 0) {
             return;
         }
 
-        if (clazz.namespace && events.onNamespace) {
-            events.onNamespace({
+        if (clazz.namespace && events[TestType.namespace]) {
+            events[TestType.namespace]({
                 type: TestType.namespace,
                 id: `namespace:${clazz.namespace}`,
                 qualifiedClass: clazz.namespace!,
@@ -130,15 +132,17 @@ export class TestParser {
             });
         }
 
-        if (events.onClass) {
-            events.onClass(clazz);
+        if (events[TestType.class]) {
+            events[TestType.class](clazz);
         }
 
-        if (events.onMethod) {
-            tests.forEach((child, index) => events.onMethod!(child, index));
+        if (events[TestType.method]) {
+            methods.forEach((method, index) => {
+                return events[TestType.method](method, index);
+            });
         }
 
-        return [{ ...clazz, children: tests }];
+        return [{ ...clazz, children: methods }];
     }
 
     private parseChildren(

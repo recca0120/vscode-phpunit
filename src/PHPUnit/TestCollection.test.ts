@@ -1,31 +1,31 @@
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
-import { PHPUnitXML, TestDefinition, TestParser } from './index';
-import { TestCollection, TestDefinitions } from './TestCollection';
+import { PHPUnitXML, TestDefinition, TestParser, TestType } from './index';
+import { TestCollection } from './TestCollection';
 
 
 describe('TestCollection', () => {
     const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
+    const testCollection = new TestCollection(phpUnitXML, testParser);
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
+        testCollection.reset();
 
-        return new TestCollection(phpUnitXML, testParser);
+        return testCollection;
     };
 
     const shouldBe = async (collection: TestCollection, group: any) => {
-        // const expected = new Files<TestDefinition[]>;
         for (const [name, files] of Object.entries(group)) {
-            const items = new TestDefinitions<TestDefinition[]>();
             const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
+                const testParser = new TestParser();
                 await testParser.parseFile(uri.fsPath, {
-                    onMethod: (testDefinition) => expected.push(testDefinition),
-                    onClass: (testDefinition) => expected.push(testDefinition),
-                    onNamespace: (testDefinition) => expected.push(testDefinition),
+                    [TestType.method]: (testDefinition) => expected.push(testDefinition),
+                    [TestType.class]: (testDefinition) => expected.push(testDefinition),
+                    [TestType.namespace]: (testDefinition) => expected.push(testDefinition),
                 });
-                items.set(uri.fsPath, expected);
             }
             const actual: TestDefinition[] = [];
             collection.items().get(name)?.items().forEach((item) => actual.push(...item));

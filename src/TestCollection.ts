@@ -11,6 +11,12 @@ import {
 } from './PHPUnit';
 import { CustomWeakMap } from './PHPUnit/utils';
 
+const inRange = (test: TestItem, testCase: TestCase, position: Position) => {
+    return testCase.type !== TestType.method
+        ? false
+        : position.line >= test.range!.start.line && position.line <= test.range!.end.line;
+};
+
 export class TestCase {
     constructor(private testDefinition: TestDefinition) {}
 
@@ -68,7 +74,7 @@ export class TestCollection extends BaseTestCollection {
 
     findTestsByFile(uri: URI): TestItem[] {
         const tests = [] as TestItem[];
-        for (const [test, testCase] of this.testData.get(uri.fsPath) ?? []) {
+        for (const [test, testCase] of this.getTestData(uri)) {
             if (testCase.type === TestType.class) {
                 tests.push(test);
             }
@@ -78,14 +84,8 @@ export class TestCollection extends BaseTestCollection {
     }
 
     findTestByPosition(uri: URI, position: Position): TestItem | undefined {
-        const inRange = (test: TestItem, testCase: TestCase) => {
-            return testCase.type !== TestType.method
-                ? false
-                : position.line >= test.range!.start.line && position.line <= test.range!.end.line;
-        };
-
-        for (const [test, testCase] of this.testData.get(uri.fsPath) ?? []) {
-            if (inRange(test, testCase)) {
+        for (const [test, testCase] of this.getTestData(uri)) {
+            if (inRange(test, testCase, position)) {
                 return test;
             }
         }
@@ -115,22 +115,19 @@ export class TestCollection extends BaseTestCollection {
                 const finished = ancestors.pop()!;
                 if (finished.type === TestType.method) {
                     finished.item.children.replace(finished.children);
-                } else {
-                    for (const child of finished.children) {
-                        finished.item.children.add(child);
-                    }
+                    continue;
+                }
+
+                for (const child of finished.children) {
+                    finished.item.children.add(child);
                 }
             }
         };
-
-        if (!this.testData.has(uri.fsPath)) {
-            this.testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
-        }
-        const testData = this.testData.get(uri.fsPath)!;
+        const testData = this.getTestData(uri);
 
         const testDefinitions: TestDefinition[] = [];
         await this.testParser.parseFile(uri.fsPath, {
-            onMethod: (testDefinition, index) => {
+            [TestType.method]: (testDefinition, index) => {
                 const test = this.createTestItem(testDefinition, `${index}`);
                 testData.set(test, new TestCase(testDefinition));
 
@@ -138,7 +135,7 @@ export class TestCollection extends BaseTestCollection {
                 parent.children.push(test);
                 testDefinitions.push(testDefinition);
             },
-            onClass: (testDefinition) => {
+            [TestType.class]: (testDefinition) => {
                 ascend(2);
 
                 const test = this.createTestItem(testDefinition, testDefinition.id);
@@ -149,7 +146,7 @@ export class TestCollection extends BaseTestCollection {
                 ancestors.push({ item: test, type: testDefinition.type, children: [] });
                 testDefinitions.push(testDefinition);
             },
-            onNamespace: (testDefinition) => {
+            [TestType.namespace]: (testDefinition) => {
                 ascend(1);
 
                 const test = this.createTestItem(testDefinition, testDefinition.id);
@@ -164,6 +161,14 @@ export class TestCollection extends BaseTestCollection {
         ascend(0);
 
         return testDefinitions;
+    }
+
+    private getTestData(uri: URI) {
+        if (!this.testData.has(uri.fsPath)) {
+            this.testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
+        }
+
+        return this.testData.get(uri.fsPath)!;
     }
 
     private proxyCtrl() {

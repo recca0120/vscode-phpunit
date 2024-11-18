@@ -1,6 +1,6 @@
 import { dirname, extname, join, relative } from 'node:path';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from './index';
+import { PHPUnitXML, TestDefinition, TestParser, TestSuite, TestType } from './index';
 
 interface File<T> {
     group: string;
@@ -84,7 +84,7 @@ export class TestCollection {
         return this._workspaces.size;
     }
 
-    public getWorkspace() {
+    getWorkspace() {
         return URI.file(this.phpUnitXML.root()).fsPath;
     }
 
@@ -144,24 +144,6 @@ export class TestCollection {
         return this;
     }
 
-    findTest(testId: string) {
-        for (const testDefinitions of this.gatherTestDefinitions()) {
-            if (testId === testDefinitions.id) {
-                return testDefinitions;
-            }
-        }
-
-        return;
-    }
-
-    * gatherTestDefinitions(): Generator<TestDefinition> {
-        for (const { tests } of this.gatherFiles()) {
-            for (const test of tests) {
-                yield test;
-            }
-        }
-    }
-
     findFile(uri: URI): File<TestDefinition> | undefined {
         for (const { group, file, tests } of this.gatherFiles()) {
             if (uri.fsPath === file) {
@@ -176,9 +158,9 @@ export class TestCollection {
         const testDefinitions: TestDefinition[] = [];
 
         await this.testParser.parseFile(uri.fsPath, {
-            onMethod: (testDefinition) => testDefinitions.push(testDefinition),
-            onClass: (testDefinition) => testDefinitions.push(testDefinition),
-            onNamespace: (testDefinition) => testDefinitions.push(testDefinition),
+            [TestType.method]: (testDefinition) => testDefinitions.push(testDefinition),
+            [TestType.class]: (testDefinition) => testDefinitions.push(testDefinition),
+            [TestType.namespace]: (testDefinition) => testDefinitions.push(testDefinition),
         });
 
         return testDefinitions;
