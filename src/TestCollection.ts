@@ -54,6 +54,80 @@ export class TestCase {
     }
 }
 
+class TestHierarchyBuilder {
+    private readonly ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }];
+
+    constructor(private ctrl: TestController) {
+        this.ancestors = [{
+            item: this.createProxyTestController(), type: TestType.namespace, children: [],
+        }];
+    }
+
+    ascend(depth: number) {
+        while (this.ancestors.length > depth) {
+            const finished = this.ancestors.pop()!;
+            if (finished.type === TestType.method) {
+                finished.item.children.replace(finished.children);
+                continue;
+            }
+
+            for (const child of finished.children) {
+                finished.item.children.add(child);
+            }
+        }
+    };
+
+    addTestItem(testDefinition: TestDefinition, sortText: string) {
+        const test = this.createTestItem(testDefinition, sortText);
+        const parent = this.ancestors[this.ancestors.length - 1];
+        parent.children.push(test);
+
+        if (testDefinition.type !== TestType.method) {
+            this.ancestors.push({ item: test, type: testDefinition.type, children: [] });
+        }
+
+        return test;
+    }
+
+    private createTestItem(testDefinition: TestDefinition, sortText: string) {
+        if (testDefinition.type === TestType.namespace) {
+            let test = this.ctrl.items.get(testDefinition.id);
+            if (!test) {
+                test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
+                test.canResolveChildren = true;
+                test.sortText = sortText;
+            }
+
+            return test;
+        }
+
+        const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
+        if (testDefinition.type === TestType.class) {
+            test.canResolveChildren = true;
+        }
+
+        test.sortText = sortText;
+        test.range = this.createRange(testDefinition as any);
+
+        return test;
+    }
+
+    private createRange(testDefinition: TestDefinition) {
+        return new Range(
+            new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
+            new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
+        );
+    }
+
+    private createProxyTestController() {
+        return new Proxy(this.ctrl, {
+            get(target: any, prop) {
+                return prop === 'children' ? target.items : target[prop];
+            },
+        }) as TestItem;
+    }
+}
+
 export class TestCollection extends BaseTestCollection {
     private testData = new Map<string, CustomWeakMap<TestItem, TestCase>>();
 
@@ -106,63 +180,34 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [{
-            item: this.createProxyTestController(), type: TestType.namespace, children: [],
-        }];
+        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl);
 
-        const ascend = (depth: number) => {
-            while (ancestors.length > depth) {
-                const finished = ancestors.pop()!;
-                if (finished.type === TestType.method) {
-                    finished.item.children.replace(finished.children);
-                    continue;
-                }
-
-                for (const child of finished.children) {
-                    finished.item.children.add(child);
-                }
-            }
-        };
         const testData = this.getTestData(uri);
         testData.clear();
 
         const testDefinitions: TestDefinition[] = [];
         await this.testParser.parseFile(uri.fsPath, {
             [TestType.method]: (testDefinition, index) => {
-                testDefinitions.push(testDefinition);
-
-                const test = this.createTestItem(testDefinition, `${index}`);
+                const test = testHierarchyBuilder.addTestItem(testDefinition, `${index}`);
                 testData.set(test, new TestCase(testDefinition));
-
-                const parent = ancestors[ancestors.length - 1];
-                parent.children.push(test);
+                testDefinitions.push(testDefinition);
             },
             [TestType.class]: (testDefinition) => {
-                testDefinitions.push(testDefinition);
+                testHierarchyBuilder.ascend(2);
 
-                ascend(2);
-
-                const test = this.createTestItem(testDefinition, testDefinition.id);
+                const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
                 testData.set(test, new TestCase(testDefinition));
-
-                const parent = ancestors[ancestors.length - 1];
-                parent.children.push(test);
-                ancestors.push({ item: test, type: testDefinition.type, children: [] });
+                testDefinitions.push(testDefinition);
             },
             [TestType.namespace]: (testDefinition) => {
-                testDefinitions.push(testDefinition);
+                testHierarchyBuilder.ascend(1);
 
-                ascend(1);
-
-                const test = this.createTestItem(testDefinition, testDefinition.id);
+                const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
                 testData.set(test, new TestCase(testDefinition));
-
-                const parent = ancestors[ancestors.length - 1];
-                parent.children.push(test);
-                ancestors.push({ item: test, type: testDefinition.type, children: [] });
+                testDefinitions.push(testDefinition);
             },
         });
-        ascend(0);
+        testHierarchyBuilder.ascend(0);
 
         return testDefinitions;
     }
@@ -173,43 +218,5 @@ export class TestCollection extends BaseTestCollection {
         }
 
         return this.testData.get(uri.fsPath)!;
-    }
-
-    private createProxyTestController() {
-        return new Proxy(this.ctrl, {
-            get(target: any, prop) {
-                return prop === 'children' ? target.items : target[prop];
-            },
-        }) as TestItem;
-    }
-
-    private createTestItem(testDefinition: TestDefinition, sortText: string) {
-        if (testDefinition.type === TestType.namespace) {
-            let test = this.ctrl.items.get(testDefinition.id);
-            if (!test) {
-                test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
-                test.canResolveChildren = true;
-                test.sortText = sortText;
-            }
-
-            return test;
-        }
-
-        const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
-        if (testDefinition.type === TestType.class) {
-            test.canResolveChildren = true;
-        }
-
-        test.sortText = sortText;
-        test.range = this.createRange(testDefinition as any);
-
-        return test;
-    }
-
-    private createRange(testDefinition: TestDefinition) {
-        return new Range(
-            new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
-            new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
-        );
     }
 }
