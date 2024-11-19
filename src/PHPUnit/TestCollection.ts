@@ -8,7 +8,7 @@ interface File<T> {
     tests: T[];
 }
 
-abstract class Base<T> {
+abstract class Base<T> implements Iterable<[string, T]> {
     protected _items: Map<string, T> = new Map();
 
     get size() {
@@ -43,12 +43,14 @@ abstract class Base<T> {
         this._items.forEach(callback, thisArg);
     }
 
-    entries() {
-        return this._items.entries();
-    }
-
     toJSON() {
         return this._items;
+    }
+
+    * [Symbol.iterator](): Generator<[string, T], void, unknown> {
+        for (const item of this._items.entries()) {
+            yield item;
+        }
     }
 }
 
@@ -171,8 +173,8 @@ export class TestCollection {
     }
 
     private* gatherFiles() {
-        for (const [group, files] of this.items().entries()) {
-            for (const [file, tests] of files.entries()) {
+        for (const [group, files] of this.items()) {
+            for (const [file, tests] of files) {
                 yield { group, file, tests };
             }
         }

@@ -107,7 +107,7 @@ export class TestCollection extends BaseTestCollection {
 
     protected async parseTests(uri: URI) {
         const ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [{
-            item: this.proxyCtrl(), type: TestType.namespace, children: [],
+            item: this.createProxyTestController(), type: TestType.namespace, children: [],
         }];
 
         const ascend = (depth: number) => {
@@ -124,18 +124,22 @@ export class TestCollection extends BaseTestCollection {
             }
         };
         const testData = this.getTestData(uri);
+        testData.clear();
 
         const testDefinitions: TestDefinition[] = [];
         await this.testParser.parseFile(uri.fsPath, {
             [TestType.method]: (testDefinition, index) => {
+                testDefinitions.push(testDefinition);
+
                 const test = this.createTestItem(testDefinition, `${index}`);
                 testData.set(test, new TestCase(testDefinition));
 
                 const parent = ancestors[ancestors.length - 1];
                 parent.children.push(test);
-                testDefinitions.push(testDefinition);
             },
             [TestType.class]: (testDefinition) => {
+                testDefinitions.push(testDefinition);
+
                 ascend(2);
 
                 const test = this.createTestItem(testDefinition, testDefinition.id);
@@ -144,9 +148,10 @@ export class TestCollection extends BaseTestCollection {
                 const parent = ancestors[ancestors.length - 1];
                 parent.children.push(test);
                 ancestors.push({ item: test, type: testDefinition.type, children: [] });
-                testDefinitions.push(testDefinition);
             },
             [TestType.namespace]: (testDefinition) => {
+                testDefinitions.push(testDefinition);
+
                 ascend(1);
 
                 const test = this.createTestItem(testDefinition, testDefinition.id);
@@ -155,7 +160,6 @@ export class TestCollection extends BaseTestCollection {
                 const parent = ancestors[ancestors.length - 1];
                 parent.children.push(test);
                 ancestors.push({ item: test, type: testDefinition.type, children: [] });
-                testDefinitions.push(testDefinition);
             },
         });
         ascend(0);
@@ -171,7 +175,7 @@ export class TestCollection extends BaseTestCollection {
         return this.testData.get(uri.fsPath)!;
     }
 
-    private proxyCtrl() {
+    private createProxyTestController() {
         return new Proxy(this.ctrl, {
             get(target: any, prop) {
                 return prop === 'children' ? target.items : target[prop];
