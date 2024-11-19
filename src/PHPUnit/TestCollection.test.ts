@@ -146,6 +146,26 @@ describe('TestCollection', () => {
         });
     });
 
+    it('match *', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests/*/SubFolder</directory>
+                </testsuite> 
+            </testsuites>`,
+        );
+        const files = [
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')),
+            URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
+        ];
+        for (const file of files) {
+            await collection.add(file);
+        }
+
+        await shouldBe(collection, { default: [files[1], files[2]] });
+    });
+
     it('exclude no tests', async () => {
         const collection = givenTestCollection(`
             <testsuites>

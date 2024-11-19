@@ -1,4 +1,5 @@
-import { dirname, extname, join, relative } from 'node:path';
+import { minimatch } from 'minimatch';
+import { extname, join } from 'node:path';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition, TestParser, TestSuite, TestType } from './index';
 
@@ -203,8 +204,14 @@ export class TestCollection {
         const workspace = this.getWorkspace();
         const isFile = testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
 
-        return isFile
-            ? join(workspace, testSuite.value) === uri.fsPath
-            : !relative(join(workspace, testSuite.value), dirname(uri.fsPath)).startsWith('.');
+        if (isFile) {
+            return join(workspace, testSuite.value) === uri.fsPath;
+        }
+
+        const suffix = testSuite.suffix ?? '.php';
+
+        return minimatch(uri.fsPath, join(workspace, testSuite.value, `**/*${suffix}`), {
+            matchBase: true, windowsPathsNoEscape: true,
+        });
     }
 }
