@@ -78,38 +78,39 @@ class TestHierarchyBuilder {
     };
 
     addTestItem(testDefinition: TestDefinition, sortText: string) {
-        const test = this.createTestItem(testDefinition, sortText);
+        const testItem = this.createTestItem(testDefinition, sortText);
         const parent = this.ancestors[this.ancestors.length - 1];
-        parent.children.push(test);
+        parent.children.push(testItem);
 
         if (testDefinition.type !== TestType.method) {
-            this.ancestors.push({ item: test, type: testDefinition.type, children: [] });
+            this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
         }
 
-        return test;
+        return testItem;
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
+        let testItem: TestItem | undefined;
         if (testDefinition.type === TestType.namespace) {
-            let test = this.ctrl.items.get(testDefinition.id);
-            if (!test) {
-                test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
-                test.canResolveChildren = true;
-                test.sortText = sortText;
+            testItem = this.ctrl.items.get(testDefinition.id);
+            if (!testItem) {
+                testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
+                testItem.canResolveChildren = true;
+                testItem.sortText = sortText;
             }
 
-            return test;
+            return testItem;
         }
 
-        const test = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
+        testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
         if (testDefinition.type === TestType.class) {
-            test.canResolveChildren = true;
+            testItem.canResolveChildren = true;
         }
 
-        test.sortText = sortText;
-        test.range = this.createRange(testDefinition as any);
+        testItem.sortText = sortText;
+        testItem.range = this.createRange(testDefinition as any);
 
-        return test;
+        return testItem;
     }
 
     private createRange(testDefinition: TestDefinition) {
@@ -181,7 +182,6 @@ export class TestCollection extends BaseTestCollection {
 
     protected async parseTests(uri: URI) {
         const testData = this.getTestData(uri);
-        testData.clear();
 
         const testParser = new TestParser();
         const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl);
