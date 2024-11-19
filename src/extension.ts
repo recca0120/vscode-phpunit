@@ -9,12 +9,6 @@ import { TestCollection } from './TestCollection';
 const phpUnitXML = new PHPUnitXML();
 let testCollection: TestCollection;
 
-async function updateNodeForDocument(e: vscode.TextDocument) {
-    if (!testCollection.has(e.uri)) {
-        await testCollection.add(e.uri);
-    }
-}
-
 async function getWorkspaceTestPatterns() {
     if (!vscode.workspace.workspaceFolders) {
         return [];
@@ -96,11 +90,7 @@ async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vs
 export async function activate(context: vscode.ExtensionContext) {
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
     context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(() =>
-            configuration.updateWorkspaceConfiguration(
-                vscode.workspace.getConfiguration('phpunit'),
-            ),
-        ),
+        vscode.workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))),
     );
 
     const outputChannel = vscode.window.createOutputChannel('PHPUnit');
@@ -116,21 +106,17 @@ export async function activate(context: vscode.ExtensionContext) {
     testCollection = new TestCollection(ctrl, phpUnitXML);
 
     testCollection.reset();
-    await Promise.all(vscode.workspace.textDocuments.map((document) => {
-        return updateNodeForDocument(document);
-    }));
+    await Promise.all(vscode.workspace.textDocuments.map((document) => testCollection.add(document.uri)));
 
     const reload = async () => {
         await Promise.all(
-            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) =>
-                findInitialFiles(pattern, exclude),
-            ),
+            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => findInitialFiles(pattern, exclude)),
         );
     };
 
     context.subscriptions.push(
-        vscode.workspace.onDidOpenTextDocument((document) => updateNodeForDocument(document)),
-        vscode.workspace.onDidChangeTextDocument((e) => updateNodeForDocument(e.document)),
+        vscode.workspace.onDidOpenTextDocument((document) => testCollection.add(document.uri)),
+        vscode.workspace.onDidChangeTextDocument((e) => testCollection.add(e.document.uri)),
     );
 
     ctrl.refreshHandler = reload;

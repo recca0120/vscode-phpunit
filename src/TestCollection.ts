@@ -138,7 +138,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     getTestCase(test: TestItem): TestCase | undefined {
-        for (const [, testData] of this.getTestItems()) {
+        for (const [, testData] of this.getTestData()) {
             const testCase = testData.get(test);
             if (testCase) {
                 return testCase;
@@ -150,7 +150,7 @@ export class TestCollection extends BaseTestCollection {
 
     findTestsByFile(uri: URI): TestItem[] {
         const tests = [] as TestItem[];
-        for (const [test, testCase] of this.getTestData(uri)) {
+        for (const [test, testCase] of this.getTestCases(uri)) {
             if (testCase.type === TestType.class) {
                 tests.push(test);
             }
@@ -160,7 +160,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     findTestByPosition(uri: URI, position: Position): TestItem | undefined {
-        for (const [test, testCase] of this.getTestData(uri)) {
+        for (const [test, testCase] of this.getTestCases(uri)) {
             if (inRange(test, testCase, position)) {
                 return test;
             }
@@ -170,7 +170,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     reset() {
-        for (const [, testData] of this.getTestItems()) {
+        for (const [, testData] of this.getTestData()) {
             for (const [testItem] of testData) {
                 testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
             }
@@ -188,28 +188,25 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const testData = this.getTestData(uri);
+        const testData = this.getTestCases(uri);
 
         const testParser = new TestParser();
         const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl);
         testParser.on(TestType.method, (testDefinition, index) => {
-            const test = testHierarchyBuilder.addTestItem(testDefinition, `${index}`);
-            testData.set(test, new TestCase(testDefinition));
-            testDefinitions.push(testDefinition);
+            const testItem = testHierarchyBuilder.addTestItem(testDefinition, `${index}`);
+            testData.set(testItem, new TestCase(testDefinition));
         });
         testParser.on(TestType.class, (testDefinition) => {
             testHierarchyBuilder.ascend(2);
 
-            const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
-            testData.set(test, new TestCase(testDefinition));
-            testDefinitions.push(testDefinition);
+            const testItem = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
+            testData.set(testItem, new TestCase(testDefinition));
         });
         testParser.on(TestType.namespace, (testDefinition) => {
             testHierarchyBuilder.ascend(1);
 
-            const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
-            testData.set(test, new TestCase(testDefinition));
-            testDefinitions.push(testDefinition);
+            const testItem = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
+            testData.set(testItem, new TestCase(testDefinition));
         });
 
         const testDefinitions: TestDefinition[] = [];
@@ -223,8 +220,8 @@ export class TestCollection extends BaseTestCollection {
         return testDefinitions;
     }
 
-    private getTestData(uri: URI) {
-        const testData = this.getTestItems();
+    private getTestCases(uri: URI) {
+        const testData = this.getTestData();
         if (!testData.has(uri.fsPath)) {
             testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
         }
@@ -232,7 +229,7 @@ export class TestCollection extends BaseTestCollection {
         return testData.get(uri.fsPath)!;
     }
 
-    private getTestItems() {
+    private getTestData() {
         const workspace = this.getWorkspace();
         if (!this.testItems.has(workspace)) {
             this.testItems.set(workspace, new Map<string, CustomWeakMap<TestItem, TestCase>>());
