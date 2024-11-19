@@ -2,6 +2,7 @@ import { Position, Range, TestController, TestItem, Uri } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
     Command,
+    File,
     PHPUnitXML,
     TestCollection as BaseTestCollection,
     TestDefinition,
@@ -130,14 +131,14 @@ class TestHierarchyBuilder {
 }
 
 export class TestCollection extends BaseTestCollection {
-    private testData = new Map<string, CustomWeakMap<TestItem, TestCase>>();
+    private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
 
     constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML) {
         super(phpUnitXML);
     }
 
     getTestCase(test: TestItem): TestCase | undefined {
-        for (const [, testData] of this.testData) {
+        for (const [, testData] of this.getTestItems()) {
             const testCase = testData.get(test);
             if (testCase) {
                 return testCase;
@@ -168,16 +169,22 @@ export class TestCollection extends BaseTestCollection {
         return;
     }
 
-    delete(uri: URI) {
-        this.findTestsByFile(uri).forEach((test) => {
-            if (test.parent) {
-                test.parent.children.delete(test.id);
-            } else {
-                this.ctrl.items.delete(test.id);
+    reset() {
+        for (const [, testData] of this.getTestItems()) {
+            for (const [testItem] of testData) {
+                testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
             }
+        }
+
+        return super.reset();
+    }
+
+    protected deleteFile(file: File<TestDefinition>) {
+        this.findTestsByFile(URI.file(file.file)).forEach((testItem) => {
+            testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
         });
 
-        return super.delete(uri);
+        return super.deleteFile(file);
     }
 
     protected async parseTests(uri: URI) {
@@ -217,10 +224,20 @@ export class TestCollection extends BaseTestCollection {
     }
 
     private getTestData(uri: URI) {
-        if (!this.testData.has(uri.fsPath)) {
-            this.testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
+        const testData = this.getTestItems();
+        if (!testData.has(uri.fsPath)) {
+            testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
         }
 
-        return this.testData.get(uri.fsPath)!;
+        return testData.get(uri.fsPath)!;
+    }
+
+    private getTestItems() {
+        const workspace = this.getWorkspace();
+        if (!this.testItems.has(workspace)) {
+            this.testItems.set(workspace, new Map<string, CustomWeakMap<TestItem, TestCase>>());
+        }
+
+        return this.testItems.get(workspace)!;
     }
 }

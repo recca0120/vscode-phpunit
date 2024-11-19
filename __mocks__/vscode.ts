@@ -55,7 +55,7 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
     private readonly parent: any;
 
     constructor(parent: any = undefined) {
-        this.parent = parent === undefined ? undefined : { ...parent };
+        this.parent = parent === undefined ? undefined : parent;
     }
 
     get size() {

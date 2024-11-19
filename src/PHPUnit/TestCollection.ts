@@ -3,7 +3,7 @@ import { extname, join } from 'node:path';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition, TestParser, TestSuite, TestType } from './index';
 
-interface File<T> {
+export interface File<T> {
     group: string;
     file: string;
     tests: T[];
