@@ -5,9 +5,8 @@ import { TestCollection } from './TestCollection';
 
 
 describe('TestCollection', () => {
-    const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
-    const testCollection = new TestCollection(phpUnitXML, testParser);
+    const testCollection = new TestCollection(phpUnitXML);
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
@@ -21,11 +20,11 @@ describe('TestCollection', () => {
             const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
                 const testParser = new TestParser();
-                await testParser.parseFile(uri.fsPath, {
-                    [TestType.method]: (testDefinition) => expected.push(testDefinition),
-                    [TestType.class]: (testDefinition) => expected.push(testDefinition),
-                    [TestType.namespace]: (testDefinition) => expected.push(testDefinition),
-                });
+                testParser.on(TestType.method, (testDefinition) => expected.push(testDefinition));
+                testParser.on(TestType.class, (testDefinition) => expected.push(testDefinition));
+                testParser.on(TestType.namespace, (testDefinition) => expected.push(testDefinition));
+
+                await testParser.parseFile(uri.fsPath);
             }
             const actual: TestDefinition[] = [];
             collection.items().get(name)?.items().forEach((item) => actual.push(...item));

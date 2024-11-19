@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 import { engine } from '../utils';
@@ -33,13 +34,6 @@ export enum TestType {
     method
 }
 
-export type Events = {
-    [pName: number]: (testDefinition: TestDefinition, index?: number) => void;
-    // onMethod?: (testDefinition: TestDefinition, index: number) => void;
-    // onClass?: (testDefinition: TestDefinition) => void;
-    // onNamespace?: (testDefinition: TestDefinition) => void;
-};
-
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestParser {
@@ -47,12 +41,17 @@ export class TestParser {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,
     };
+    private eventEmitter = new EventEmitter;
 
-    async parseFile(file: string, events: Events = {}) {
-        return this.parse(textDecoder.decode(await readFile(file)), file, events);
+    on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
+        this.eventEmitter.on(`${eventName}`, callback);
     }
 
-    parse(text: Buffer | string, file: string, events: Events = {}) {
+    async parseFile(file: string) {
+        return this.parse(textDecoder.decode(await readFile(file)), file);
+    }
+
+    parse(text: Buffer | string, file: string) {
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
@@ -75,7 +74,7 @@ export class TestParser {
                 }
             });
 
-            return this.parseAst(ast, file, events);
+            return this.parseAst(ast, file);
         } catch (e) {
             return undefined;
         }
@@ -84,19 +83,18 @@ export class TestParser {
     private parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
         file: string,
-        events: Events = {},
         namespace?: Namespace,
     ): TestDefinition[] | undefined {
         const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
 
-        return fn.apply(this, [ast, file, events, namespace]);
+        return fn.apply(this, [ast, file, namespace]);
     }
 
-    private parseNamespace(ast: Namespace, file: string, events: Events) {
-        return this.parseChildren(ast, file, events, ast);
+    private parseNamespace(ast: Namespace, file: string) {
+        return this.parseChildren(ast, file, ast);
     }
 
-    private parseTestSuite(ast: Class, file: string, events: Events, namespace?: Namespace) {
+    private parseTestSuite(ast: Class, file: string, namespace?: Namespace) {
         const _class = ast;
 
         if (!validator.isTest(_class)) {
@@ -123,8 +121,8 @@ export class TestParser {
             return;
         }
 
-        if (clazz.namespace && events[TestType.namespace]) {
-            events[TestType.namespace]({
+        if (clazz.namespace) {
+            this.eventEmitter.emit(`${TestType.namespace}`, {
                 type: TestType.namespace,
                 id: `namespace:${clazz.namespace}`,
                 qualifiedClass: clazz.namespace!,
@@ -132,15 +130,12 @@ export class TestParser {
             });
         }
 
-        if (events[TestType.class]) {
-            events[TestType.class](clazz);
-        }
 
-        if (events[TestType.method]) {
-            methods.forEach((method, index) => {
-                return events[TestType.method](method, index);
-            });
-        }
+        this.eventEmitter.emit(`${TestType.class}`, clazz);
+
+        methods.forEach((method, index) => {
+            this.eventEmitter.emit(`${TestType.method}`, method, index);
+        });
 
         return [{ ...clazz, children: methods }];
     }
@@ -148,13 +143,12 @@ export class TestParser {
     private parseChildren(
         ast: Program | Namespace | UseGroup | Class | Node,
         file: string,
-        events: Events,
         namespace?: Namespace,
     ) {
         if ('children' in ast) {
             return ast.children.reduce(
                 (testDefinitions, children) =>
-                    testDefinitions.concat(this.parseAst(children, file, events, namespace) ?? []),
+                    testDefinitions.concat(this.parseAst(children, file, namespace) ?? []),
                 [] as TestDefinition[],
             );
         }

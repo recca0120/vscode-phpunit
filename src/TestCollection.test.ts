@@ -14,13 +14,12 @@ describe('Extension TestCollection', () => {
     const root = phpUnitProject('');
     const workspaceFolder = { index: 0, name: 'phpunit', uri: Uri.file(root) };
     let ctrl: TestController;
-    const testParser = new TestParser();
     const phpUnitXML = new PHPUnitXML();
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
 
-        return new TestCollection(ctrl, phpUnitXML, testParser);
+        return new TestCollection(ctrl, phpUnitXML);
     };
 
     const toTree = (items: any) => {
@@ -37,6 +36,7 @@ describe('Extension TestCollection', () => {
     };
 
     const shouldBe = async (_collection: TestCollection, group: any) => {
+        const testParser = new TestParser();
         const expected = new Files<TestDefinition[]>;
         for (const [name, files] of Object.entries(group)) {
             const tests = new TestDefinitions<TestDefinition[]>();

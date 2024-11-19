@@ -131,8 +131,8 @@ class TestHierarchyBuilder {
 export class TestCollection extends BaseTestCollection {
     private testData = new Map<string, CustomWeakMap<TestItem, TestCase>>();
 
-    constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML, testParser: TestParser) {
-        super(phpUnitXML, testParser);
+    constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML) {
+        super(phpUnitXML);
     }
 
     getTestCase(test: TestItem): TestCase | undefined {
@@ -180,33 +180,37 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl);
-
         const testData = this.getTestData(uri);
         testData.clear();
 
-        const testDefinitions: TestDefinition[] = [];
-        await this.testParser.parseFile(uri.fsPath, {
-            [TestType.method]: (testDefinition, index) => {
-                const test = testHierarchyBuilder.addTestItem(testDefinition, `${index}`);
-                testData.set(test, new TestCase(testDefinition));
-                testDefinitions.push(testDefinition);
-            },
-            [TestType.class]: (testDefinition) => {
-                testHierarchyBuilder.ascend(2);
-
-                const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
-                testData.set(test, new TestCase(testDefinition));
-                testDefinitions.push(testDefinition);
-            },
-            [TestType.namespace]: (testDefinition) => {
-                testHierarchyBuilder.ascend(1);
-
-                const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
-                testData.set(test, new TestCase(testDefinition));
-                testDefinitions.push(testDefinition);
-            },
+        const testParser = new TestParser();
+        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl);
+        testParser.on(TestType.method, (testDefinition, index) => {
+            const test = testHierarchyBuilder.addTestItem(testDefinition, `${index}`);
+            testData.set(test, new TestCase(testDefinition));
+            testDefinitions.push(testDefinition);
         });
+        testParser.on(TestType.class, (testDefinition) => {
+            testHierarchyBuilder.ascend(2);
+
+            const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
+            testData.set(test, new TestCase(testDefinition));
+            testDefinitions.push(testDefinition);
+        });
+        testParser.on(TestType.namespace, (testDefinition) => {
+            testHierarchyBuilder.ascend(1);
+
+            const test = testHierarchyBuilder.addTestItem(testDefinition, testDefinition.id);
+            testData.set(test, new TestCase(testDefinition));
+            testDefinitions.push(testDefinition);
+        });
+
+        const testDefinitions: TestDefinition[] = [];
+        testParser.on(TestType.method, (testDefinition) => testDefinitions.push(testDefinition));
+        testParser.on(TestType.class, (testDefinition) => testDefinitions.push(testDefinition));
+        testParser.on(TestType.namespace, (testDefinition) => testDefinitions.push(testDefinition));
+        await testParser.parseFile(uri.fsPath);
+
         testHierarchyBuilder.ascend(0);
 
         return testDefinitions;

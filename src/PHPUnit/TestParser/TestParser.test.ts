@@ -14,10 +14,10 @@ const qualifiedClass = (namespace: string, _class: string) => {
 export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
     let suite: TestDefinition | undefined;
-    new TestParser().parse(buffer, file, {
-        [TestType.method]: (testDefinition: TestDefinition) => tests.push(testDefinition),
-        [TestType.class]: (testDefinition: TestDefinition) => suite = testDefinition,
-    });
+    const testParser = new TestParser();
+    testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
+    testParser.on(TestType.class, (testDefinition: TestDefinition) => suite = testDefinition);
+    testParser.parse(buffer, file);
 
     return suite ? [{ ...suite, children: tests }] : [];
 };

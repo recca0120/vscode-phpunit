@@ -78,7 +78,7 @@ export class Workspace<T> extends Base<Files<T>> {
 export class TestCollection {
     private readonly _workspaces: Workspace<TestDefinition[]>;
 
-    constructor(private phpUnitXML: PHPUnitXML, protected testParser: TestParser) {
+    constructor(private phpUnitXML: PHPUnitXML) {
         this._workspaces = new Workspace<TestDefinition[]>;
     }
 
@@ -157,13 +157,12 @@ export class TestCollection {
     }
 
     protected async parseTests(uri: URI) {
+        const testParser = new TestParser();
         const testDefinitions: TestDefinition[] = [];
-
-        await this.testParser.parseFile(uri.fsPath, {
-            [TestType.method]: (testDefinition) => testDefinitions.push(testDefinition),
-            [TestType.class]: (testDefinition) => testDefinitions.push(testDefinition),
-            [TestType.namespace]: (testDefinition) => testDefinitions.push(testDefinition),
-        });
+        testParser.on(TestType.method, (testDefinition) => testDefinitions.push(testDefinition));
+        testParser.on(TestType.class, (testDefinition) => testDefinitions.push(testDefinition));
+        testParser.on(TestType.namespace, (testDefinition) => testDefinitions.push(testDefinition));
+        await testParser.parseFile(uri.fsPath);
 
         return testDefinitions;
     }

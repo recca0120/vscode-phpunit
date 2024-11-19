@@ -3,11 +3,10 @@ import * as vscode from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
-import { PHPUnitXML, TestParser } from './PHPUnit';
+import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 
 const phpUnitXML = new PHPUnitXML();
-const testParser = new TestParser();
 let testCollection: TestCollection;
 
 async function updateNodeForDocument(e: vscode.TextDocument) {
@@ -114,7 +113,7 @@ export async function activate(context: vscode.ExtensionContext) {
     if (configurationFile) {
         await phpUnitXML.loadFile(configurationFile);
     }
-    testCollection = new TestCollection(ctrl, phpUnitXML, testParser);
+    testCollection = new TestCollection(ctrl, phpUnitXML);
 
     testCollection.reset();
     await Promise.all(vscode.workspace.textDocuments.map((document) => {
