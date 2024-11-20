@@ -211,7 +211,7 @@ export class TestCollection {
         const suffix = testSuite.suffix ?? '.php';
 
         return minimatch(uri.fsPath, join(workspace, testSuite.value, `**/*${suffix}`), {
-            matchBase: true, windowsPathsNoEscape: true,
+            matchBase: true, windowsPathsNoEscape: true, nocase: true,
         });
     }
 }

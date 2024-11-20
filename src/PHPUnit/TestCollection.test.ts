@@ -166,6 +166,27 @@ describe('TestCollection', () => {
         await shouldBe(collection, { default: [files[1], files[2]] });
     });
 
+    it('match three testsuites', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests/unit</directory>
+                </testsuite> 
+            </testsuites>`,
+        );
+
+        const files = [
+            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+        ];
+        for (const file of files) {
+            await collection.add(file);
+        }
+
+        await shouldBe(collection, {
+            default: [files[0]],
+        });
+    });
+
     it('exclude no tests', async () => {
         const collection = givenTestCollection(`
             <testsuites>
