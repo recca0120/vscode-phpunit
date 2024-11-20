@@ -1,6 +1,6 @@
 import { URI } from 'vscode-uri';
-import { generateXML, phpUnitProject } from './__tests__/utils';
-import { PHPUnitXML, TestDefinition, TestParser, TestType } from './index';
+import { generateXML, phpUnitProject } from '../__tests__/utils';
+import { PHPUnitXML, TestDefinition, TestParser, TestType } from '../index';
 import { TestCollection } from './TestCollection';
 
 
@@ -166,7 +166,7 @@ describe('TestCollection', () => {
         await shouldBe(collection, { default: [files[1], files[2]] });
     });
 
-    it('match three testsuites', async () => {
+    it('match no case', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -187,7 +187,7 @@ describe('TestCollection', () => {
         });
     });
 
-    it('exclude no tests', async () => {
+    it('exclude abstract class', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">

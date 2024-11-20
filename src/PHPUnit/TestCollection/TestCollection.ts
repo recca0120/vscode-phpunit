@@ -1,7 +1,8 @@
 import { minimatch } from 'minimatch';
 import { extname, join } from 'node:path';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, TestDefinition, TestParser, TestSuite, TestType } from './index';
+import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import { TestDefinitionBuilder } from './TestDefinitionBuilder';
 
 export interface File<T> {
     group: string;
@@ -95,9 +96,7 @@ export class TestCollection {
         const workspace = this.getWorkspace();
         if (!this._workspaces.has(workspace)) {
             const files = new Files<TestDefinition[]>;
-            this.phpUnitXML.getTestSuites().forEach((suite) => {
-                files.set(suite.name, new TestDefinitions<TestDefinition[]>());
-            });
+            this.phpUnitXML.getTestSuites().forEach((suite) => files.set(suite.name, new TestDefinitions<TestDefinition[]>()));
             this._workspaces.set(workspace, files);
         }
 
@@ -159,13 +158,10 @@ export class TestCollection {
 
     protected async parseTests(uri: URI) {
         const testParser = new TestParser();
-        const testDefinitions: TestDefinition[] = [];
-        testParser.on(TestType.method, (testDefinition) => testDefinitions.push(testDefinition));
-        testParser.on(TestType.class, (testDefinition) => testDefinitions.push(testDefinition));
-        testParser.on(TestType.namespace, (testDefinition) => testDefinitions.push(testDefinition));
+        const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
         await testParser.parseFile(uri.fsPath);
 
-        return testDefinitions;
+        return testDefinitionBuilder.get();
     }
 
     protected deleteFile(file: File<TestDefinition>) {
@@ -181,16 +177,15 @@ export class TestCollection {
     }
 
     private getGroup(uri: URI) {
-        const testSuites = this.phpUnitXML.getTestSuites().filter((item) => this.match(item, uri));
-
-        const group = testSuites.find(item => {
+        const testSuites = this.phpUnitXML.getTestSuites();
+        const group = testSuites.filter((item) => this.match(item, uri)).find(item => {
             return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
         });
         if (!group) {
             return;
         }
 
-        const exclude = testSuites.find((item) => {
+        const exclude = testSuites.filter((item) => this.match(item, uri)).find((item) => {
             return item.name === group.name && item.tag === 'exclude' && this.match(item, uri);
         });
         if (exclude) {

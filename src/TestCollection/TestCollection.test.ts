@@ -1,9 +1,9 @@
 import 'jest';
 import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, TestDefinition, TestParser } from './PHPUnit';
-import { generateXML, phpUnitProject } from './PHPUnit/__tests__/utils';
-import { Files, TestDefinitions } from './PHPUnit/TestCollection';
+import { PHPUnitXML, TestDefinition, TestParser } from '../PHPUnit';
+import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { Files, TestDefinitions } from '../PHPUnit/TestCollection/TestCollection';
 import { TestCollection } from './TestCollection';
 
 const getTestController = () => {

@@ -51,16 +51,16 @@ const globTextDocuments = (pattern: string, options?: GlobOptions) => {
         })) as TextDocument[];
 };
 
-const _setTimeout = global.setTimeout;
-
-const useFakeTimers = (ms: number, fn: Function) => {
-    (global as any).setTimeout = (fn: any, _ms?: number) => fn();
-
-    return new Promise((resolve) => {
-        fn();
-        _setTimeout(() => resolve(true), ms);
-    });
-};
+// const _setTimeout = global.setTimeout;
+//
+// const useFakeTimers = (ms: number, fn: Function) => {
+//     (global as any).setTimeout = (fn: any, _ms?: number) => fn();
+//
+//     return new Promise((resolve) => {
+//         fn();
+//         _setTimeout(() => resolve(true), ms);
+//     });
+// };
 
 const getOutputChannel = () => {
     return (window.createOutputChannel as jest.Mock).mock.results[0].value;
@@ -88,11 +88,11 @@ const findTest = (items: TestItemCollection, testId: string): TestItem | undefin
     return;
 };
 
-const getTestFile = (ctrl: TestController, pattern: RegExp) => {
-    const doc = workspace.textDocuments.find((doc) => doc.uri.fsPath.match(pattern))!;
-
-    return findTest(ctrl.items, doc.uri.toString());
-};
+// const getTestFile = (ctrl: TestController, pattern: RegExp) => {
+//     const doc = workspace.textDocuments.find((doc) => doc.uri.fsPath.match(pattern))!;
+//
+//     return findTest(ctrl.items, doc.uri.toString());
+// };
 
 const getTestRun = (ctrl: TestController) => {
     return (ctrl.createTestRun as jest.Mock).mock.results[0].value;
