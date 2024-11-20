@@ -22,30 +22,25 @@ async function getWorkspaceTestPatterns() {
     };
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-        const includePatterns = [];
+        const includePatterns: string[] = [];
         const excludePatterns = ['**/.git/**', '**/node_modules/**'];
 
         const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
         if (configurationFile) {
             await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
-            const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile)));
-
-            phpUnitXML.getTestSuites().forEach((item) => {
-                if (item.tag === 'directory') {
-                    const suffix = item.suffix ?? '.php';
-                    includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
-                } else if (item.tag === 'file') {
-                    includePatterns.push(`${baseDir}${item.value}`);
-                } else if (item.tag === 'exclude') {
-                    excludePatterns.push(`${baseDir}${item.value}`);
-                }
-            });
         }
 
-        if (includePatterns.length === 0) {
-            includePatterns.push('**/*.php');
-            excludePatterns.push('**/vendor/**');
-        }
+        const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile ?? './')));
+        phpUnitXML.getTestSuites().forEach((item) => {
+            if (item.tag === 'directory') {
+                const suffix = item.suffix ?? '.php';
+                includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
+            } else if (item.tag === 'file') {
+                includePatterns.push(`${baseDir}${item.value}`);
+            } else if (item.tag === 'exclude') {
+                excludePatterns.push(`${baseDir}${item.value}`);
+            }
+        });
 
         results.push({
             workspaceFolder,

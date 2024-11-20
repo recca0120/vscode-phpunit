@@ -84,9 +84,14 @@ export class PHPUnitXML {
             return { tag, name, value: node.getText(), prefix, suffix };
         };
 
-        return this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
+        const testSuites = this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
             directory: callback, file: callback, exclude: callback,
         });
+
+        return testSuites.length > 0 ? testSuites : [
+            { tag: 'directory', name: 'default', value: '', suffix: 'php' },
+            { tag: 'exclude', name: 'default', value: 'vendor' },
+        ];
     }
 
     getIncludes(): Source[] {
