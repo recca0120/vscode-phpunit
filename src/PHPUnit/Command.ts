@@ -15,14 +15,14 @@ class PathReplacer {
         );
     });
 
-    private mapping = new Map<string, string>();
+    private pathLookup = new Map<string, string>();
 
     constructor(private options: SpawnOptions = {}, paths?: Path) {
         if (paths) {
-            for (const local in paths) {
-                this.mapping.set(
-                    this.replaceWorkspaceFolder(local),
-                    this.replaceWorkspaceFolder(paths[local]),
+            for (const key in paths) {
+                this.pathLookup.set(
+                    this.replaceWorkspaceFolder(key),
+                    this.replaceWorkspaceFolder(paths[key]),
                 );
             }
         }
@@ -37,18 +37,18 @@ class PathReplacer {
         );
     }
 
-    public remoteToLocal(path: string) {
+    public toLocal(path: string) {
         return this.toWindowsPath(this.removePhpVfsComposer(this.doRemoteToLocal(path)));
     }
 
-    public localToRemote(path: string) {
+    public toRemote(path: string) {
         return this.toWindowsPath(
             this.toPostfixPath(this.doLocalToRemote(this.replaceWorkspaceFolder(path))),
         );
     }
 
     private doRemoteToLocal(path: string) {
-        return this.replaceMapping(path, (localPath, remotePath) => {
+        return this.replacePaths(path, (localPath, remotePath) => {
             return path.replace(
                 new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}(\/)`, 'g'),
                 (_m, sep) => `${localPath}${sep}`,
@@ -57,7 +57,7 @@ class PathReplacer {
     }
 
     private doLocalToRemote(path: string) {
-        return this.replaceMapping(path, (localPath, remotePath) =>
+        return this.replacePaths(path, (localPath, remotePath) =>
             path.replace(localPath, remotePath),
         );
     }
@@ -77,12 +77,12 @@ class PathReplacer {
         return path.replace(/phpvfscomposer:\/\//g, '');
     }
 
-    private replaceMapping(path: string, fn: (remotePath: string, localPath: string) => string) {
-        if (this.mapping.size === 0) {
+    private replacePaths(path: string, fn: (remotePath: string, localPath: string) => string) {
+        if (this.pathLookup.size === 0) {
             return path;
         }
 
-        this.mapping.forEach(
+        this.pathLookup.forEach(
             (remotePath: string, localPath: string) => (path = fn(localPath, remotePath)),
         );
 
@@ -94,10 +94,7 @@ export abstract class Command {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
 
-    constructor(
-        protected configuration: IConfiguration = new Configuration(),
-        private options: SpawnOptions = {},
-    ) {
+    constructor(protected configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
@@ -107,24 +104,25 @@ export abstract class Command {
         return this;
     }
 
-    mapping(result: Result) {
+    replacePaths(result: Result) {
         if ('locationHint' in result) {
-            result.locationHint = this.getPathReplacer().remoteToLocal(result.locationHint);
+            result.locationHint = this.getPathReplacer().toLocal(result.locationHint);
         }
 
         if ('file' in result) {
-            result.file = this.getPathReplacer().remoteToLocal(result.file);
+            result.file = this.getPathReplacer().toLocal(result.file);
         }
 
         if ('details' in result) {
             result.details = result.details.map(({ file, line }) => ({
-                file: this.getPathReplacer().remoteToLocal(file),
+                file: this.getPathReplacer().toLocal(file),
                 line,
             }));
         }
 
         return result;
     }
+
 
     apply() {
         const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
@@ -138,28 +136,22 @@ export abstract class Command {
         return this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
     }
 
-    protected abstract resolvePathReplacer(
-        options: SpawnOptions,
-        configuration: IConfiguration,
-    ): PathReplacer;
+    protected abstract resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer;
 
-
-    private getPrefix() {
+    protected getPrefix() {
         return ((this.configuration.get('command') as string) ?? '').split(' ');
     }
 
-    private getPhpUnit() {
+    protected getPhpUnit() {
         return (this.configuration.get('phpunit') as string) ?? '';
     }
 
-    private getPhp() {
+    protected getPhp() {
         return (this.configuration.get('php') as string) ?? '';
     }
 
-    private getArguments(): string[] {
+    protected getArguments(): string[] {
         const { _, ...argv } = this.configuration.getArguments(this.arguments);
-        // const filter = entries.find(([key]) => key === 'filter');
-        // console.log(filter);
 
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
@@ -167,11 +159,10 @@ export abstract class Command {
                 (args: any, [key, value]) => [...parseValue(key, value), ...args],
                 _.map((v) => (typeof v === 'number' ? v : decodeURIComponent(v))),
             )
-            .map((arg: string) => /^--filter/.test(arg) ? arg : this.getPathReplacer().localToRemote(arg))
             .concat('--colors=never', '--teamcity');
     }
 
-    private getPathReplacer() {
+    protected getPathReplacer() {
         return this.pathReplacer;
     }
 
@@ -197,15 +188,12 @@ export class RemoteCommand extends Command {
     protected executable() {
         return [
             super.executable()
-                .map((input) => (/^-/.test(input) ? `'${input}'` : input))
-                .join(' '),
+                .map((arg: string) => /^--filter/.test(arg) ? arg : this.getPathReplacer().toRemote(arg))
+                .map((input) => (/^-/.test(input) ? `'${input}'` : input)).join(' '),
         ];
     }
 
-    protected resolvePathReplacer(
-        options: SpawnOptions,
-        configuration: IConfiguration,
-    ): PathReplacer {
+    protected resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 }

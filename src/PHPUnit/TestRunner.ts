@@ -75,7 +75,7 @@ export class TestRunner {
         const result = this.problemMatcher.parse(line);
 
         if (result) {
-            const mappingResult = command.mapping(result);
+            const mappingResult = command.replacePaths(result);
             if ('kind' in result) {
                 this.trigger(result.kind, mappingResult);
             }
