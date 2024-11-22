@@ -1,7 +1,7 @@
 import 'jest';
-import { phpUnitProject } from './__tests__/utils';
+import { phpUnitProject } from '../__tests__/utils';
 import { LocalCommand, RemoteCommand } from './Command';
-import { Configuration } from './Configuration';
+import { Configuration } from '../Configuration';
 
 describe('Command Test', () => {
     const phpUnitProjectForWindows = (path: string) =>
