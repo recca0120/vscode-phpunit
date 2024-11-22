@@ -1,5 +1,9 @@
 import { SpawnOptions } from 'node:child_process';
 
+function escapeRegExp(str: string) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
 export type Path = { [p: string]: string };
 
 export class PathReplacer {
@@ -13,31 +17,36 @@ export class PathReplacer {
     });
 
     private pathLookup = new Map<string, string>();
+    private readonly cwd: string;
+    private pathVariables: Map<string, string>;
 
     constructor(private options: SpawnOptions = {}, paths?: Path) {
-        if (paths) {
-            for (const key in paths) {
-                this.pathLookup.set(this.replaceWorkspaceFolder(key), paths[key]);
-            }
+        this.cwd = (this.options?.cwd as string) ?? (process.env.cwd as string);
+        this.pathVariables = new Map<string, string>();
+        this.pathVariables.set('${PWD}', this.cwd);
+        this.pathVariables.set('${workspaceFolder}', this.cwd);
+        for (const [key, value] of Object.entries(paths ?? {})) {
+            this.pathVariables.has(key)
+                ? this.pathLookup.set(this.pathVariables.get(key)!, value)
+                : this.pathLookup.set(key, value);
         }
     }
 
-    public replaceWorkspaceFolder(path: string) {
-        const cwd = (this.options?.cwd as string) ?? (process.env.cwd as string);
+    replacePathVariables(path: string) {
+        for (const [key, value] of this.pathVariables) {
+            path = path.replace(new RegExp(escapeRegExp(key), 'g'), value);
+        }
 
-        return this.workspaceFolderPatterns.reduce(
-            (path, pattern) => path.replace(pattern, cwd),
-            path,
-        );
+        return path;
     }
 
-    public toLocal(path: string) {
+    toLocal(path: string) {
         return this.windowsPath(this.removePhpVfsComposer(this.remoteToLocal(path)));
     }
 
-    public toRemote(path: string) {
+    toRemote(path: string) {
         return this.windowsPath(
-            this.postfixPath(this.localToRemote(this.replaceWorkspaceFolder(path))),
+            this.postfixPath(this.localToRemote(this.replacePathVariables(path))),
         );
     }
 

@@ -43,7 +43,7 @@ export abstract class Command {
     apply() {
         const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
             .filter((input: string) => !!input)
-            .map((input: string) => this.getPathReplacer().replaceWorkspaceFolder(input));
+            .map((input: string) => this.getPathReplacer().replacePathVariables(input));
 
         return { cmd, args, options: this.options };
     }
