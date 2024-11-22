@@ -1,9 +1,9 @@
 import { SpawnOptions } from 'node:child_process';
 import { parseArgsStringToArgv } from 'string-argv';
 import { Configuration, IConfiguration } from '../Configuration';
-import { Path, PathReplacer } from './PathReplacer';
 import { Result } from '../ProblemMatcher';
 import { parseValue } from '../utils';
+import { PathReplacer } from './PathReplacer';
 
 
 export abstract class Command {
@@ -72,9 +72,10 @@ export abstract class Command {
         return Object.entries(argv)
             .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
             .reduce(
-                (args: any, [key, value]) => [...parseValue(key, value), ...args],
+                (argv: any, [key, value]) => [...parseValue(key, value), ...argv],
                 _.map((v) => (typeof v === 'number' ? v : decodeURIComponent(v))),
             )
+            .map((input: string) => /^--filter/.test(input) ? input : this.getPathReplacer().toRemote(input))
             .concat('--colors=never', '--teamcity');
     }
 
@@ -94,22 +95,3 @@ export abstract class Command {
     }
 }
 
-export class LocalCommand extends Command {
-    protected resolvePathReplacer(options: SpawnOptions): PathReplacer {
-        return new PathReplacer(options);
-    }
-}
-
-export class RemoteCommand extends Command {
-    protected executable() {
-        return [
-            super.executable()
-                .map((arg: string) => /^--filter/.test(arg) ? arg : this.getPathReplacer().toRemote(arg))
-                .map((input) => (/^-/.test(input) ? `'${input}'` : input)).join(' '),
-        ];
-    }
-
-    protected resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
-        return new PathReplacer(options, configuration.get('paths') as Path);
-    }
-}

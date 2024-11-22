@@ -8,3 +8,5 @@ export * from './PHPUnitXML';
 export * from './TestCollection';
 export { EOL } from './utils';
 export { PathReplacer } from './Command/PathReplacer';
+export { LocalCommand } from './Command';
+export { RemoteCommand } from './Command';
