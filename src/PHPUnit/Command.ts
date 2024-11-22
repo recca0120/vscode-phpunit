@@ -1,4 +1,5 @@
 import { SpawnOptions } from 'node:child_process';
+import { parseArgsStringToArgv } from 'string-argv';
 import { Configuration, IConfiguration } from './Configuration';
 import { Result } from './ProblemMatcher';
 import { parseValue } from './utils';
@@ -38,16 +39,16 @@ class PathReplacer {
     }
 
     public toLocal(path: string) {
-        return this.toWindowsPath(this.removePhpVfsComposer(this.doRemoteToLocal(path)));
+        return this.windowsPath(this.removePhpVfsComposer(this.remoteToLocal(path)));
     }
 
     public toRemote(path: string) {
-        return this.toWindowsPath(
-            this.toPostfixPath(this.doLocalToRemote(this.replaceWorkspaceFolder(path))),
+        return this.windowsPath(
+            this.postfixPath(this.localToRemote(this.replaceWorkspaceFolder(path))),
         );
     }
 
-    private doRemoteToLocal(path: string) {
+    private remoteToLocal(path: string) {
         return this.replacePaths(path, (localPath, remotePath) => {
             return path.replace(
                 new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}(\/)`, 'g'),
@@ -56,17 +57,17 @@ class PathReplacer {
         });
     }
 
-    private doLocalToRemote(path: string) {
+    private localToRemote(path: string) {
         return this.replacePaths(path, (localPath, remotePath) =>
             path.replace(localPath, remotePath),
         );
     }
 
-    private toPostfixPath(path: string) {
+    private postfixPath(path: string) {
         return path.replace(/\\/g, '/');
     }
 
-    private toWindowsPath(path: string) {
+    private windowsPath(path: string) {
         return path
             .replace(/php_qn:\/\//g, 'php_qn:||')
             .replace(/\w:[\\\/][^:]+/g, (matched) => matched.replace(/\//g, '\\'))
@@ -139,7 +140,7 @@ export abstract class Command {
     protected abstract resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer;
 
     protected getPrefix() {
-        return ((this.configuration.get('command') as string) ?? '').split(' ');
+        return parseArgsStringToArgv(this.configuration.get('command') as string ?? '');
     }
 
     protected getPhpUnit() {
