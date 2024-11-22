@@ -7,25 +7,16 @@ function escapeRegExp(str: string) {
 export type Path = { [p: string]: string };
 
 export class PathReplacer {
-    private workspaceFolderPatterns = ['${PWD}', '${workspaceFolder}'].map((pattern) => {
-        return new RegExp(
-            pattern.replace(/[${}]/g, (matched) => {
-                return `\\${matched}` + (['{', '}'].includes(matched) ? '?' : '');
-            }),
-            'g',
-        );
-    });
-
-    private pathLookup = new Map<string, string>();
     private readonly cwd: string;
-    private pathVariables: Map<string, string>;
+    private readonly pathVariables: Map<string, string>;
+    private pathLookup = new Map<string, string>();
 
     constructor(private options: SpawnOptions = {}, paths?: Path) {
         this.cwd = (this.options?.cwd as string) ?? (process.env.cwd as string);
         this.pathVariables = new Map<string, string>();
         this.pathVariables.set('${PWD}', this.cwd);
         this.pathVariables.set('${workspaceFolder}', this.cwd);
-        for (const [key, value] of Object.entries(paths ?? {})) {
+        for (let [key, value] of Object.entries(paths ?? {})) {
             this.pathVariables.has(key)
                 ? this.pathLookup.set(this.pathVariables.get(key)!, value)
                 : this.pathLookup.set(key, value);
@@ -41,54 +32,54 @@ export class PathReplacer {
     }
 
     toLocal(path: string) {
-        return this.windowsPath(this.removePhpVfsComposer(this.remoteToLocal(path)));
-    }
+        return this.removePhpVfsComposer(path).replace(/(php_qn:\/\/|)([^:]+)/, (_, prefix, path) => {
+            path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
+                return currentPath.replace(new RegExp(remotePath === '.' ? '\.[\\\\/]/' : escapeRegExp(remotePath), 'g'), localPath);
+            });
 
-    toRemote(path: string) {
-        return this.windowsPath(
-            this.postfixPath(this.localToRemote(this.replacePathVariables(path))),
-        );
-    }
+            path = this.replaceRelative(path);
+            path = this.windowsPath(path);
 
-    private remoteToLocal(path: string) {
-        return this.replacePaths(path, (localPath, remotePath) => {
-            return path.replace(
-                new RegExp(`${remotePath === '.' ? `\\${remotePath}` : remotePath}(\/)`, 'g'),
-                (_m, sep) => `${localPath}${sep}`,
-            );
+            return `${prefix}${path}`;
         });
     }
 
-    private localToRemote(path: string) {
-        return this.replacePaths(path, (localPath, remotePath) =>
-            path.replace(localPath, remotePath),
-        );
+    toRemote(path: string) {
+        path = this.replacePathVariables(path);
+
+        path = this.replaceRelative(path);
+
+        path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
+            return currentPath.replace(new RegExp(escapeRegExp(localPath), 'g'), remotePath);
+        });
+
+        path = this.posixPath(path);
+        path = this.windowsPath(path);
+
+        return path;
     }
 
-    private postfixPath(path: string) {
-        return path.replace(/\\/g, '/');
+    private posixPath(path: string) {
+        return !/^[a-zA-Z]:/.test(path) && path.indexOf('\\') !== -1
+            ? path.replace(/\\/g, '/')
+            : path;
     }
 
     private windowsPath(path: string) {
-        return path
-            .replace(/php_qn:\/\//g, 'php_qn:||')
-            .replace(/\w:[\\\/][^:]+/g, (matched) => matched.replace(/\//g, '\\'))
-            .replace(/php_qn:\|\|/g, 'php_qn://');
+        return /[a-zA-Z]:/.test(path) ? path.replace(/[a-zA-Z]:[^:]+/g, (path) => path.replace(/\//g, '\\')) : path;
+    }
+
+    private replaceRelative(path: string) {
+        return path.startsWith('./') ? path.replace(/^\./, this.pathVariables.get('${workspaceFolder}')!) : path;
     }
 
     private removePhpVfsComposer(path: string) {
-        return path.replace(/phpvfscomposer:\/\//g, '');
+        return path.replace(/phpvfscomposer:\/\//ig, '');
     }
 
-    private replacePaths(path: string, fn: (remotePath: string, localPath: string) => string) {
-        if (this.pathLookup.size === 0) {
-            return path;
-        }
-
-        this.pathLookup.forEach(
-            (remotePath: string, localPath: string) => (path = fn(localPath, remotePath)),
-        );
-
-        return path;
+    private replacePaths(path: string, fn: (currentPath: string, remotePath: string, localPath: string) => string) {
+        return Array.from(this.pathLookup.entries()).reduce((path, [remotePath, localPath]) => {
+            return fn(path, remotePath, localPath);
+        }, path);
     }
 }
