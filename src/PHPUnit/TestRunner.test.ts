@@ -1,375 +1,271 @@
 import 'jest';
-import { describe } from '@jest/globals';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
 import { Command, LocalCommand, RemoteCommand } from './Command';
 import { Configuration } from './Configuration';
-import { Result, TestExtraResultEvent, TestResultEvent, TestResultKind } from './ProblemMatcher';
+import { Result, TestExtraResultEvent, TestResult, TestResultEvent, TestResultKind } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
+import Mock = jest.Mock;
+
+const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
 jest.mock('child_process');
 
-interface ExpectedData {
-    mock?: boolean;
-    expected: any[];
-    configuration: Configuration;
-    command: Command;
-    phpUnitProject: (path: string) => string;
-    appPath: (path: string) => string;
+const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
+    [TestRunnerEvent.run, jest.fn()],
+    [TestRunnerEvent.line, jest.fn()],
+    [TestRunnerEvent.result, jest.fn()],
+    [TestRunnerEvent.close, jest.fn()],
+    [TestRunnerEvent.error, jest.fn()],
+]);
+
+const onTestResultEvents = new Map<TestResultKind, jest.Mock>([
+    [TestExtraResultEvent.testVersion, jest.fn()],
+    [TestExtraResultEvent.testRuntime, jest.fn()],
+    [TestExtraResultEvent.testConfiguration, jest.fn()],
+    [TestExtraResultEvent.testCount, jest.fn()],
+    [TestExtraResultEvent.timeAndMemory, jest.fn()],
+    [TestExtraResultEvent.testResultSummary, jest.fn()],
+    [TestResultEvent.testSuiteStarted, jest.fn()],
+    [TestResultEvent.testSuiteFinished, jest.fn()],
+    [TestResultEvent.testStarted, jest.fn()],
+    [TestResultEvent.testFailed, jest.fn()],
+    [TestResultEvent.testIgnored, jest.fn()],
+    [TestResultEvent.testFinished, jest.fn()],
+]);
+
+const fakeSpawn = (contents: string[]) => {
+    const stdout = jest.fn().mockImplementation((_event, fn: (data: string) => void) => {
+        contents.forEach((line) => fn(line + '\n'));
+    });
+
+    (spawn as jest.Mock).mockReturnValue({
+        stdout: { on: stdout },
+        stderr: { on: jest.fn() },
+        on: jest.fn().mockImplementation((_event, callback: (data: number) => void) => {
+            if (_event === 'close') {
+                callback(2);
+            }
+        }),
+    });
+};
+
+const hasFile = (
+    testResult: { details: { file: string; line: number }[] }[],
+    pattern: string,
+    l: number,
+) => (testResult[0].details).some(({ file, line }) => {
+    return !!file.match(new RegExp(pattern)) && line === l;
+});
+
+const phpUnitProjectForWindows = (path: string) => `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
+
+function expectedTestResult(expected: TestResult, projectPath: (path: string) => string): void {
+    const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
+        (call: any) => call[0].id === expected.id && call[0].event === expected.event,
+    );
+
+    expect(actual).not.toBeUndefined();
+
+    if (expected.event === TestResultEvent.testFailed) {
+        if (hasFile(actual, 'AssertionsTest', 5)) {
+            expected.details = [{
+                file: projectPath('tests/AssertionsTest.php'),
+                line: 5,
+            }, ...expected.details];
+        }
+
+        if (hasFile(actual, 'phpunit', 60)) {
+            expected.details = [...expected.details, {
+                file: projectPath('vendor/phpunit/phpunit/phpunit'),
+                line: 60,
+            }];
+        }
+        expect(actual[0].details).toEqual(expected.details);
+    }
+
+    const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
+    expect(actual[0]).toEqual(
+        expect.objectContaining({ ...expected, locationHint }),
+    );
+    expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
+        expect.objectContaining({ ...expected, locationHint }),
+    );
+
+    if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
+        // expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
+        // expect(onTestResultEvents.get(TestExtraResultEvent.testConfiguration)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestExtraResultEvent.testResultSummary)).toHaveBeenCalled();
+    }
+
+    expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
+    expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
 }
 
-describe('TestRunner Test', () => {
-    const PHPUNIT_VERSION: string = getPhpUnitVersion();
+const generateTestResult = (
+    testResult: { event: TestResultEvent; name?: string; file: string; id: string; phpVfsComposer?: boolean },
+    appPath: (path: string) => string,
+    phpVfsComposer: boolean = false,
+) => {
+    let { event, name, file, id } = testResult;
+    const locationHint = `php_qn://${file}::\\${id}`;
+    const phpUnitXml = `${appPath('phpunit.xml')}`;
 
-    const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
-        [TestRunnerEvent.run, jest.fn()],
-        [TestRunnerEvent.line, jest.fn()],
-        [TestRunnerEvent.result, jest.fn()],
-        [TestRunnerEvent.close, jest.fn()],
-        [TestRunnerEvent.error, jest.fn()],
-    ]);
-
-    const onTestResultEvents = new Map<TestResultKind, jest.Mock>([
-        [TestExtraResultEvent.testVersion, jest.fn()],
-        [TestExtraResultEvent.testRuntime, jest.fn()],
-        [TestExtraResultEvent.testConfiguration, jest.fn()],
-        [TestExtraResultEvent.testCount, jest.fn()],
-        [TestExtraResultEvent.timeAndMemory, jest.fn()],
-        [TestExtraResultEvent.testResultSummary, jest.fn()],
-        [TestResultEvent.testSuiteStarted, jest.fn()],
-        [TestResultEvent.testSuiteFinished, jest.fn()],
-        [TestResultEvent.testStarted, jest.fn()],
-        [TestResultEvent.testFailed, jest.fn()],
-        [TestResultEvent.testIgnored, jest.fn()],
-        [TestResultEvent.testFinished, jest.fn()],
-    ]);
-    const mockSpawn = (contents: string[]) => {
-        const stdout = jest.fn().mockImplementation((_event, fn: (data: string) => void) => {
-            contents.forEach((line) => fn(line + '\n'));
-        });
-
-        (spawn as jest.Mock).mockReturnValue({
-            stdout: { on: stdout },
-            stderr: { on: jest.fn() },
-            on: jest.fn().mockImplementation((_event, fn: (data: number) => void) => {
-                if (_event === 'close') {
-                    fn(2);
-                }
-            }),
-        });
-    };
-
-    const mockTestPassed = (data: ExpectedData) => {
-        const { appPath } = data;
-
-        const file = appPath('tests/AssertionsTest.php');
-        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
-        const locationHint = `php_qn://${file}::\\${id}`;
-
-        mockSpawn([
+    if ([TestResultEvent.testSuiteStarted, TestResultEvent.testSuiteFinished].includes(event)) {
+        fakeSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
-            `Configuration: ${appPath('phpunit.xml')}`,
-            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
-            `##teamcity[testStarted name='test_passed' locationHint='${locationHint}::test_passed' flowId='8024']`,
-            `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
-            'Time: 00:00.049, Memory: 6.00 MB',
-            'Tests: 1, Assertions: 1, Failures: 1',
-        ]);
-    };
-
-    const mockTestFailed = (data: ExpectedData) => {
-        const { appPath } = data;
-
-        const file = appPath('tests/AssertionsTest.php');
-        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
-        const locationHint = `php_qn://${file}::\\${id}`;
-
-        mockSpawn([
-            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
-            'Runtime:       PHP 8.1.12',
-            `Configuration: ${appPath('phpunit.xml')}`,
-            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
-            `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
-            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${file}:22|n ' duration='0' flowId='8024']`,
-            `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
-            'Time: 00:00.049, Memory: 6.00 MB',
-            'Tests: 1, Assertions: 1, Failures: 1',
-        ]);
-    };
-
-    const mockTestFailedWithPhpVfsComposer = (data: ExpectedData) => {
-        const { appPath } = data;
-
-        const file = appPath('tests/AssertionsTest.php');
-        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
-        const locationHint = `php_qn://${file}::\\${id}`;
-        const phpVfsComposer = `phpvfscomposer://${appPath('vendor/phpunit/phpunit/phpunit')}`;
-
-        mockSpawn([
-            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
-            'Runtime:       PHP 8.1.12',
-            `Configuration: ${appPath('phpunit.xml')}`,
-            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
-            `##teamcity[testStarted name='test_failed' locationHint='${locationHint}::test_failed' flowId='8024']`,
-            `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${file}:22|n ${phpVfsComposer}:60 ' duration='0' flowId='8024']`,
-            `##teamcity[testFinished name='test_failed' duration='0' flowId='8024']`,
-            'Time: 00:00.049, Memory: 6.00 MB',
-            'Tests: 1, Assertions: 1, Failures: 1',
-        ]);
-    };
-
-    const mockTestSuite = (data: ExpectedData) => {
-        const { appPath } = data;
-
-        const file = appPath('tests/AssertionsTest.php');
-        const id = 'Recca0120\\VSCode\\Tests\\AssertionsTest';
-        const locationHint = `php_qn://${file}::\\${id}`;
-
-        mockSpawn([
-            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
-            'Runtime:       PHP 8.1.12',
-            `Configuration: ${appPath('phpunit.xml')}`,
+            `Configuration: '${phpUnitXml}`,
             '##teamcity[testCount count=\'1\' flowId=\'8024\']',
             `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
             `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
             'OK (1 test, 1 assertion)',
         ]);
-    };
+    }
 
-    const expectedRun = async (data: ExpectedData) => {
-        const { command, expected, phpUnitProject } = data;
-        const testRunner = new TestRunner();
+    if ([TestResultEvent.testStarted, TestResultEvent.testFinished].includes(event)) {
+        fakeSpawn([
+            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            'Runtime:       PHP 8.1.12',
+            `Configuration: '${phpUnitXml}`,
+            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
+            `##teamcity[testStarted name='${name}' locationHint='${locationHint}::${name}' flowId='8024']`,
+            `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
+            'Time: 00:00.049, Memory: 6.00 MB',
+            'Tests: 1, Assertions: 1, Failures: 1',
+        ]);
+    }
 
-        onTestResultEvents.forEach((fn, eventName) => {
-            testRunner.on(eventName, (test: Result) => fn(test));
-        });
-
-        onTestRunnerEvents.forEach((fn, eventName) => {
-            testRunner.on(eventName, (test: Result) => fn(test));
-        });
-
-        await testRunner.run(command);
-
-        const [cmd, ...args] = expected;
-
-        expect(spawn).toHaveBeenCalledWith(cmd, args, { cwd: phpUnitProject('') });
-    };
-
-    const expectedTest = (expected: any, phpUnitProject: (path: string) => string) => {
-        const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
-
-        const testResult = onTestRunnerEvents
-            .get(TestRunnerEvent.result)!
-            .mock.calls.find(
-                (call: any) => call[0].id === expected.id && call[0].event === expected.event,
-            );
-
-        expect(testResult).not.toBeUndefined();
-
-        if (expected.event === TestResultEvent.testFailed) {
-            const hasFile = (pattern: string, l: number) => {
-                return (testResult[0].details as { file: string; line: number }[]).some(
-                    ({ file, line }) => !!file.match(new RegExp(pattern)) && line === l,
-                );
-            };
-
-            if (hasFile('AssertionsTest', 5)) {
-                expected.details = [
-                    { file: phpUnitProject('tests/AssertionsTest.php'), line: 5 },
-                    ...expected.details,
-                ];
-            }
-
-            if (hasFile('phpunit', 60)) {
-                expected.details = [
-                    ...expected.details,
-                    { file: phpUnitProject('vendor/phpunit/phpunit/phpunit'), line: 60 },
-                ];
-            }
-            expect(testResult[0].details).toEqual(expected.details);
+    if ([TestResultEvent.testFailed].includes(event)) {
+        let details = `${file}:22|n`;
+        if (phpVfsComposer) {
+            details += ` phpvfscomposer://${appPath('vendor/phpunit/phpunit/phpunit')}:60`;
         }
-
-        expect(testResult[0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
-
-        expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
-            expect.objectContaining({ ...expected, locationHint }),
-        );
-
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
-            expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
-            // expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
-            // expect(
-            //     onTestResultEvents.get(TestExtraResultEvent.testConfiguration)
-            // ).toHaveBeenCalled();
-            expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
-            expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
-            expect(
-                onTestResultEvents.get(TestExtraResultEvent.testResultSummary),
-            ).toHaveBeenCalled();
-        }
-
-        expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
-        expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
-    };
-
-    const generateExceptedByCommand = (command: Command, expected: any[], inputs: unknown[]) => {
-        if (command instanceof RemoteCommand) {
-            inputs = [
-                (inputs as string[])
-                    .map((input) => (/^-/.test(input) ? `'${input}'` : input))
-                    .join(' '),
-            ];
-        }
-
-        return [...expected, ...inputs];
-    };
-
-    async function shouldRunAllTests(data: ExpectedData) {
-        const { configuration, command, expected, phpUnitProject, appPath } = data;
-
-        let inputs = [
-            configuration.get('php'),
-            configuration.get('phpunit'),
-            `--configuration=${appPath('phpunit.xml')}`,
-            '--colors=never',
-            '--teamcity',
-        ];
-
-        await expectedRun({
-            ...data,
-            expected: generateExceptedByCommand(command, expected, inputs),
-        });
-
-        expectedTest(
-            {
-                event: TestResultEvent.testFinished,
-                name: 'test_passed',
-                flowId: expect.any(Number),
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-                file: phpUnitProject('tests/AssertionsTest.php'),
-            },
-            phpUnitProject,
-        );
+        fakeSpawn([
+            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+            'Runtime:       PHP 8.1.12',
+            `Configuration: '${phpUnitXml}`,
+            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
+            `##teamcity[testStarted name='${name}' locationHint='${locationHint}::test_failed' flowId='8024']`,
+            `##teamcity[testFailed name='${name}' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${details} ' duration='0' flowId='8024']`,
+            `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
+            'Time: 00:00.049, Memory: 6.00 MB',
+            'Tests: 1, Assertions: 1, Failures: 1',
+        ]);
     }
+};
 
-    async function shouldRunTestSuite(data: ExpectedData) {
-        let { configuration, expected, command, phpUnitProject, appPath } = data;
-        const args = `${phpUnitProject('tests/AssertionsTest.php')}`;
+const expectedCommand = async (command: Command, expected: string[]) => {
+    const testRunner = new TestRunner();
+    onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: Result) => fn(test)));
+    onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: Result) => fn(test)));
+    await testRunner.run(command);
 
-        const inputs = [
-            configuration.get('php'),
-            configuration.get('phpunit'),
-            `--configuration=${appPath('phpunit.xml')}`,
-            appPath('tests/AssertionsTest.php'),
-            '--colors=never',
-            '--teamcity',
-        ];
+    const call = (spawn as Mock).mock.calls[0];
+    expect([call[0], ...call[1]]).toEqual(expected);
+};
 
-        await expectedRun({
-            ...data,
-            command: command.setArguments(args),
-            expected: generateExceptedByCommand(command, expected, inputs),
-        });
+const shouldRunTest = async (
+    expected: string[],
+    command: Command,
+    projectPath: (path: string) => string,
+    appPath: (path: string) => string,
+    start: { event: TestResultEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
+    finished: TestResult,
+) => {
+    generateTestResult(start, appPath, start.phpVfsComposer);
 
-        expectedTest(
-            {
-                event: TestResultEvent.testSuiteFinished,
-                name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                flowId: expect.any(Number),
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                file: phpUnitProject('tests/AssertionsTest.php'),
-            },
-            phpUnitProject,
-        );
-    }
+    await expectedCommand(command, expected);
 
-    async function shouldRunTestPassed(data: ExpectedData) {
-        let { configuration, expected, command, phpUnitProject, appPath } = data;
+    expectedTestResult(finished, projectPath);
+};
 
-        const name = 'test_passed';
-        const filter = `^.*::(${name})( with data set .*)?$`;
-        const file = phpUnitProject('tests/AssertionsTest.php');
-        const args = `${file} --filter "${filter}"`;
+const shouldRunAllTest = async (expected: string[], command: Command, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+    await shouldRunTest(expected, command, projectPath, appPath, {
+        event: TestResultEvent.testStarted,
+        name: 'test_passed',
+        file: appPath('tests/AssertionsTest.php'),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+    }, {
+        event: TestResultEvent.testFinished,
+        name: 'test_passed',
+        flowId: expect.any(Number),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+        file: projectPath('tests/AssertionsTest.php'),
+    } as TestResult);
+};
 
-        const inputs = [
-            configuration.get('php'),
-            configuration.get('phpunit'),
-            `--configuration=${appPath('phpunit.xml')}`,
-            `--filter=${filter}`,
-            appPath('tests/AssertionsTest.php'),
-            '--colors=never',
-            '--teamcity',
-        ];
+const shouldRunTestSuite = async (expected: string[], command: Command, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
+    command.setArguments(projectPath('tests/AssertionsTest.php'));
 
-        await expectedRun({
-            ...data,
-            command: command.setArguments(args),
-            expected: generateExceptedByCommand(command, expected, inputs),
-        });
+    await shouldRunTest(expected, command, projectPath, appPath, {
+        event: TestResultEvent.testSuiteStarted,
+        file: appPath('tests/AssertionsTest.php'),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+    }, {
+        event: TestResultEvent.testSuiteFinished,
+        flowId: expect.any(Number),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        file: projectPath('tests/AssertionsTest.php'),
+    } as TestResult);
+};
 
-        expectedTest(
-            {
-                event: TestResultEvent.testFinished,
-                name,
-                flowId: expect.any(Number),
-                id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
-                file: phpUnitProject('tests/AssertionsTest.php'),
-            },
-            phpUnitProject,
-        );
-    }
+const shouldRunTestPassed = async (expected: string[], command: Command, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+    const filter = `^.*::(test_passed)( with data set .*)?$`;
+    command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
-    async function shouldRunTestFailed(data: ExpectedData) {
-        let { configuration, expected, command, phpUnitProject, appPath } = data;
+    await shouldRunTest(expected, command, projectPath, appPath, {
+        event: TestResultEvent.testStarted,
+        name: 'test_passed',
+        file: appPath('tests/AssertionsTest.php'),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+    }, {
+        event: TestResultEvent.testFinished,
+        flowId: expect.any(Number),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+        file: projectPath('tests/AssertionsTest.php'),
+    } as TestResult);
+};
 
-        const name = 'test_failed';
-        const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
-        const file = phpUnitProject('tests/AssertionsTest.php');
-        const args = `${file} --filter "${filter}"`;
+const shouldRunTestFailed = async (expected: string[], command: Command, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
+    const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
+    command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
-        const inputs = [
-            configuration.get('php'),
-            configuration.get('phpunit'),
-            `--configuration=${appPath('phpunit.xml')}`,
-            `--filter=${filter}`,
-            appPath('tests/AssertionsTest.php'),
-            '--colors=never',
-            '--teamcity',
-        ];
+    await shouldRunTest(expected, command, projectPath, appPath, {
+        event: TestResultEvent.testFailed,
+        name: 'test_failed',
+        file: appPath('tests/AssertionsTest.php'),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        phpVfsComposer,
+    }, {
+        event: TestResultEvent.testFailed,
+        flowId: expect.any(Number),
+        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
+        file: projectPath('tests/AssertionsTest.php'),
+        message: 'Failed asserting that false is true.',
+        details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+    } as TestResult);
+};
 
-        await expectedRun({
-            ...data,
-            command: command.setArguments(args),
-            expected: generateExceptedByCommand(command, expected, inputs),
-        });
-
-        expectedTest(
-            {
-                event: TestResultEvent.testFailed,
-                name,
-                flowId: expect.any(Number),
-                id: `Recca0120\\VSCode\\Tests\\AssertionsTest::${name}`,
-                file: phpUnitProject('tests/AssertionsTest.php'),
-                message: 'Failed asserting that false is true.',
-                details: [{ file: phpUnitProject('tests/AssertionsTest.php'), line: 22 }],
-                duration: expect.any(Number),
-            },
-            phpUnitProject,
-        );
-    }
+describe('TestRunner Test', () => {
+    beforeEach(() => jest.restoreAllMocks());
 
     it('run error command', async () => {
-        const appPath = phpUnitProject;
+        const cwd = phpUnitProject('');
+
         const configuration = new Configuration({
             php: 'foo',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '${PWD}/phpunit.xml'],
         });
-        const command = new LocalCommand(configuration, { cwd: phpUnitProject('') });
+
+        const command = new LocalCommand(configuration, { cwd });
         const expected = [
             'foo',
             'vendor/bin/phpunit',
@@ -377,180 +273,381 @@ describe('TestRunner Test', () => {
             '--colors=never',
             '--teamcity',
         ];
-
-        await expectedRun({ configuration, command, expected, phpUnitProject, appPath });
+        await expectedCommand(command, expected);
 
         expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalledTimes(1);
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)!).toHaveBeenCalledTimes(1);
     });
 
-    const dataSet = [
-        ((): [string, ExpectedData] => {
-            const appPath = (path: string) => phpUnitProject(path);
-
-            const configuration = new Configuration({
-                php: 'php',
-                phpunit: 'vendor/bin/phpunit',
-                args: ['-c', '${workspaceFolder}/phpunit.xml'],
-            });
-
-            return [
-                'PHPUnit',
-                {
-                    mock: false,
-                    configuration,
-                    command: new LocalCommand(configuration, { cwd: phpUnitProject('') }),
-                    appPath,
-                    phpUnitProject,
-                    expected: [],
-                },
-            ];
-        })(),
-        ((): [string, ExpectedData] => {
-            const appPath = (path: string) => `/app/${path}`;
-
-            const configuration = new Configuration({
-                command:
-                    'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no',
-                php: 'php',
-                phpunit: appPath('vendor/bin/phpunit'),
-                args: ['-c', appPath('phpunit.xml')],
-                paths: { [phpUnitProject('')]: '/app' },
-            });
-
-            return [
-                'ssh',
-                {
-                    mock: true,
-                    configuration,
-                    command: new RemoteCommand(configuration, { cwd: phpUnitProject('') }),
-                    appPath,
-                    phpUnitProject,
-                    expected: [
-                        'ssh',
-                        '-i',
-                        'dockerfiles/sshd/id_rsa',
-                        '-p',
-                        '2222',
-                        'root@localhost',
-                        '-o',
-                        'StrictHostKeyChecking=no',
-                    ],
-                },
-            ];
-        })(),
-        ((): [string, ExpectedData] => {
-            const appPath = (path: string) => `/app/${path}`;
-
-            const configuration = new Configuration({
-                command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
-                php: 'php',
-                phpunit: 'vendor/bin/phpunit',
-                args: ['-c', '${PWD}/phpunit.xml'],
-                paths: { [phpUnitProject('')]: '/app' },
-            });
-
-            return [
-                'Docker',
-                {
-                    mock: true,
-                    configuration,
-                    command: new RemoteCommand(configuration, { cwd: phpUnitProject('') }),
-                    appPath,
-                    phpUnitProject,
-                    expected: [
-                        'docker',
-                        'run',
-                        '-i',
-                        '--rm',
-                        '-v',
-                        `${phpUnitProject('')}:/app`,
-                        '-w',
-                        '/app',
-                        'phpunit-stub',
-                    ],
-                },
-            ];
-        })(),
-        ((): [string, ExpectedData] => {
-            const phpUnitProject = (path: string) =>
-                `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
-            const appPath = (path: string) => `./${path}`;
-
-            const configuration = new Configuration({
-                command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
-                php: 'php',
-                phpunit: 'vendor/bin/phpunit',
-                args: ['-c', '${PWD}/phpunit.xml'],
-                paths: { [phpUnitProject('')]: '.' },
-            });
-
-            return [
-                'Docker for Windows',
-                {
-                    mock: true,
-                    configuration,
-                    command: new RemoteCommand(configuration, { cwd: phpUnitProject('') }),
-                    appPath,
-                    phpUnitProject,
-                    expected: [
-                        'docker',
-                        'run',
-                        '-i',
-                        '--rm',
-                        '-v',
-                        `${phpUnitProject('')}:/app`,
-                        '-w',
-                        '/app',
-                        'phpunit-stub',
-                    ],
-                },
-            ];
-        })(),
-    ];
-    describe.each(dataSet)('%s', (_name, data) => {
-        const { mock } = data;
-
-        beforeEach(() => {
-            jest.restoreAllMocks();
+    describe('local', () => {
+        const projectPath = phpUnitProject;
+        const appPath = phpUnitProject;
+        const cwd = projectPath('');
+        const configuration = new Configuration({
+            php: 'php',
+            phpunit: 'vendor/bin/phpunit',
+            args: ['-c', '${workspaceFolder}/phpunit.xml'],
         });
+        const command = new LocalCommand(configuration, { cwd });
 
         it('should run all tests', async () => {
-            if (mock) {
-                mockTestPassed(data);
-            }
+            const expected = [
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${projectPath('phpunit.xml')}`,
+                '--colors=never',
+                '--teamcity',
+            ];
 
-            await shouldRunAllTests(data);
+            await shouldRunAllTest(expected, command, projectPath, appPath);
         });
 
         it('should run test suite', async () => {
-            if (mock) {
-                mockTestSuite(data);
-            }
+            const expected = [
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${projectPath('phpunit.xml')}`,
+                projectPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
+            ];
 
-            await shouldRunTestSuite(data);
+            await shouldRunTestSuite(expected, command, projectPath, appPath);
         });
 
         it('should run test passed', async () => {
-            if (mock) {
-                mockTestPassed(data);
-            }
+            const expected = [
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${projectPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                projectPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
+            ];
 
-            await shouldRunTestPassed(data);
+            await shouldRunTestPassed(expected, command, projectPath, appPath);
         });
 
         it('should run test failed', async () => {
-            if (mock) {
-                mockTestFailed(data);
-            }
+            const expected = [
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${projectPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                projectPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
+            ];
 
-            await shouldRunTestFailed(data);
+            await shouldRunTestFailed(expected, command, projectPath, appPath);
         });
 
-        it('should run test failed with phpvfscomposer', async () => {
-            mockTestFailedWithPhpVfsComposer(data);
+        it('should run test failed with phpvfscomposer for Docker', async () => {
+            const expected = [
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${projectPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                projectPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
+            ];
 
-            await shouldRunTestFailed(data);
+            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+        });
+    });
+
+    describe('SSH', () => {
+        const projectPath = phpUnitProject;
+        const appPath = (path?: string) => path ? `/app/${path}` : '/app';
+        const cwd = projectPath('');
+        const configuration = new Configuration({
+            command: 'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no',
+            php: 'php',
+            phpunit: '/app/vendor/bin/phpunit',
+            args: ['-c', '/app/phpunit.xml'],
+            paths: { [cwd]: appPath('') },
+        });
+        const command = new RemoteCommand(configuration, { cwd });
+
+        it('should run all tests for SSH', async () => {
+            const expected = [
+                'ssh',
+                '-i',
+                'dockerfiles/sshd/id_rsa',
+                '-p',
+                '2222',
+                'root@localhost',
+                '-o',
+                'StrictHostKeyChecking=no',
+                `php /app/vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunAllTest(expected, command, projectPath, appPath);
+        });
+
+        it('should run test suite for SSH', async () => {
+            const expected = [
+                'ssh',
+                '-i',
+                'dockerfiles/sshd/id_rsa',
+                '-p',
+                '2222',
+                'root@localhost',
+                '-o',
+                'StrictHostKeyChecking=no',
+                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestSuite(expected, command, projectPath, appPath);
+        });
+
+        it('should run test passed for SSH', async () => {
+            const expected = [
+                'ssh',
+                '-i',
+                'dockerfiles/sshd/id_rsa',
+                '-p',
+                '2222',
+                'root@localhost',
+                '-o',
+                'StrictHostKeyChecking=no',
+                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestPassed(expected, command, projectPath, appPath);
+        });
+
+        it('should run test failed for SSH', async () => {
+            const expected = [
+                'ssh',
+                '-i',
+                'dockerfiles/sshd/id_rsa',
+                '-p',
+                '2222',
+                'root@localhost',
+                '-o',
+                'StrictHostKeyChecking=no',
+                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath);
+        });
+
+        it('should run test failed with phpvfscomposer for Docker', async () => {
+            const expected = [
+                'ssh',
+                '-i',
+                'dockerfiles/sshd/id_rsa',
+                '-p',
+                '2222',
+                'root@localhost',
+                '-o',
+                'StrictHostKeyChecking=no',
+                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+        });
+    });
+
+    describe('Docker', () => {
+        const projectPath = phpUnitProject;
+        const appPath = (path?: string) => path ? `/app/${path}` : '/app';
+        const cwd = projectPath('');
+        const configuration = new Configuration({
+            command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
+            php: 'php',
+            phpunit: 'vendor/bin/phpunit',
+            args: ['-c', '${PWD}/phpunit.xml'],
+            paths: { [cwd]: appPath('') },
+        });
+
+        const command = new RemoteCommand(configuration, { cwd });
+
+        it('should run all tests for Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunAllTest(expected, command, projectPath, appPath);
+        });
+
+        it('should run test suite for Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestSuite(expected, command, projectPath, appPath);
+        });
+
+        it('should run test passed for Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestPassed(expected, command, projectPath, appPath);
+        });
+
+        it('should run test failed for Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath);
+        });
+
+        it('should run test failed with phpvfscomposer for Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+        });
+    });
+
+    describe('Windows Docker', () => {
+        const projectPath = phpUnitProjectForWindows;
+        const appPath = (path?: string) => (path ? `./${path}` : '.').replace(/\/g/, '\\');
+        const cwd = projectPath('');
+        const configuration = new Configuration({
+            command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
+            php: 'php',
+            phpunit: 'vendor/bin/phpunit',
+            args: ['-c', '${PWD}/phpunit.xml'],
+            paths: { [cwd]: appPath('') },
+        });
+        const command = new RemoteCommand(configuration, { cwd });
+
+        it('should run all tests for Windows Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunAllTest(expected, command, projectPath, appPath);
+        });
+
+        it('should run test suite for Windows Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestSuite(expected, command, projectPath, appPath);
+        });
+
+        it('should run test passed for Windows Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestPassed(expected, command, projectPath, appPath);
+        });
+
+        it('should run test failed for Windows Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath);
+        });
+
+        it('should run test failed with phpvfscomposer for Windows Docker', async () => {
+            const expected = [
+                'docker',
+                'run',
+                '-i',
+                '--rm',
+                '-v',
+                `${projectPath('')}:/app`,
+                '-w',
+                '/app',
+                'phpunit-stub',
+                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+            ];
+
+            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
         });
     });
 });
