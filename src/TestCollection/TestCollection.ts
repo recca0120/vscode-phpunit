@@ -106,14 +106,6 @@ export class TestCollection extends BaseTestCollection {
         return super.reset();
     }
 
-    protected deleteFile(file: File<TestDefinition>) {
-        this.findTestsByFile(URI.file(file.file)).forEach((testItem) => {
-            testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
-        });
-
-        return super.deleteFile(file);
-    }
-
     protected async parseTests(uri: URI) {
         const testParser = new TestParser();
         const testHierarchyBuilder = new TestHierarchyBuilder(testParser, this.ctrl);
@@ -126,6 +118,14 @@ export class TestCollection extends BaseTestCollection {
         }
 
         return testDefinitionBuilder.get();
+    }
+
+    protected deleteFile(file: File<TestDefinition>) {
+        this.findTestsByFile(URI.file(file.file)).forEach((testItem) => {
+            testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+        });
+
+        return super.deleteFile(file);
     }
 
     private getTestCases(uri: URI) {

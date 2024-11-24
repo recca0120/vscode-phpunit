@@ -36,6 +36,10 @@ export abstract class BaseConfiguration implements IConfiguration {
                 'camel-case-expansion': false,
                 // eslint-disable-next-line @typescript-eslint/naming-convention
                 'boolean-negation': false,
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                'short-option-groups': true,
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                'dot-notation': false,
             },
         });
     }

@@ -1,7 +1,7 @@
 import 'jest';
-import { phpUnitProject } from './__tests__/utils';
+import { phpUnitProject } from '../__tests__/utils';
+import { Configuration } from '../Configuration';
 import { LocalCommand, RemoteCommand } from './Command';
-import { Configuration } from './Configuration';
 
 describe('Command Test', () => {
     const phpUnitProjectForWindows = (path: string) =>
@@ -34,12 +34,9 @@ describe('Command Test', () => {
         it('should run Windows Path', () => {
             const cwd = phpUnitProjectForWindows('');
             const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
-            const command = givenCommand(
-                {
-                    phpunit: `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
-                },
-                cwd,
-            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            const command = givenCommand({
+                phpunit: `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
+            }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');

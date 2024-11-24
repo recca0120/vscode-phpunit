@@ -285,7 +285,7 @@ describe('TestRunner Test', () => {
         const cwd = projectPath('');
         const configuration = new Configuration({
             php: 'php',
-            phpunit: 'vendor/bin/phpunit',
+            phpunit: '${workspaceFolder}/vendor/bin/phpunit',
             args: ['-c', '${workspaceFolder}/phpunit.xml'],
         });
         const command = new LocalCommand(configuration, { cwd });
@@ -293,8 +293,8 @@ describe('TestRunner Test', () => {
         it('should run all tests', async () => {
             const expected = [
                 'php',
-                'vendor/bin/phpunit',
-                `--configuration=${projectPath('phpunit.xml')}`,
+                appPath('vendor/bin/phpunit'),
+                `--configuration=${appPath('phpunit.xml')}`,
                 '--colors=never',
                 '--teamcity',
             ];
@@ -305,9 +305,9 @@ describe('TestRunner Test', () => {
         it('should run test suite', async () => {
             const expected = [
                 'php',
-                'vendor/bin/phpunit',
-                `--configuration=${projectPath('phpunit.xml')}`,
-                projectPath('tests/AssertionsTest.php'),
+                appPath('vendor/bin/phpunit'),
+                `--configuration=${appPath('phpunit.xml')}`,
+                appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ];
@@ -318,10 +318,10 @@ describe('TestRunner Test', () => {
         it('should run test passed', async () => {
             const expected = [
                 'php',
-                'vendor/bin/phpunit',
-                `--configuration=${projectPath('phpunit.xml')}`,
+                appPath('vendor/bin/phpunit'),
+                `--configuration=${appPath('phpunit.xml')}`,
                 '--filter=^.*::(test_passed)( with data set .*)?$',
-                projectPath('tests/AssertionsTest.php'),
+                appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ];
@@ -332,10 +332,10 @@ describe('TestRunner Test', () => {
         it('should run test failed', async () => {
             const expected = [
                 'php',
-                'vendor/bin/phpunit',
-                `--configuration=${projectPath('phpunit.xml')}`,
+                appPath('vendor/bin/phpunit'),
+                `--configuration=${appPath('phpunit.xml')}`,
                 '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
-                projectPath('tests/AssertionsTest.php'),
+                appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ];
@@ -346,10 +346,10 @@ describe('TestRunner Test', () => {
         it('should run test failed with phpvfscomposer for Docker', async () => {
             const expected = [
                 'php',
-                'vendor/bin/phpunit',
-                `--configuration=${projectPath('phpunit.xml')}`,
+                appPath('vendor/bin/phpunit'),
+                `--configuration=${appPath('phpunit.xml')}`,
                 '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
-                projectPath('tests/AssertionsTest.php'),
+                appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ];
@@ -367,7 +367,8 @@ describe('TestRunner Test', () => {
             php: 'php',
             phpunit: '/app/vendor/bin/phpunit',
             args: ['-c', '/app/phpunit.xml'],
-            paths: { [cwd]: appPath('') },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            paths: { '${PWD}': appPath('') },
         });
         const command = new RemoteCommand(configuration, { cwd });
 
@@ -461,7 +462,8 @@ describe('TestRunner Test', () => {
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '${PWD}/phpunit.xml'],
-            paths: { [cwd]: appPath('') },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            paths: { '${PWD}': appPath('') },
         });
 
         const command = new RemoteCommand(configuration, { cwd });
@@ -561,7 +563,8 @@ describe('TestRunner Test', () => {
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '${PWD}/phpunit.xml'],
-            paths: { [cwd]: appPath('') },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            paths: { '${PWD}': appPath('') },
         });
         const command = new RemoteCommand(configuration, { cwd });
 

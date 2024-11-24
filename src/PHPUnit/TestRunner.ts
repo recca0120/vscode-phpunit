@@ -72,15 +72,15 @@ export class TestRunner {
     }
 
     private processLine(line: string, command: Command) {
-        const result = this.problemMatcher.parse(line);
+        let result = this.problemMatcher.parse(line);
 
         if (result) {
-            const mappingResult = command.mapping(result);
+            result = command.replacePath(result);
             if ('kind' in result) {
-                this.trigger(result.kind, mappingResult);
+                this.trigger(result.kind, result);
             }
 
-            this.trigger(TestRunnerEvent.result, mappingResult);
+            this.trigger(TestRunnerEvent.result, result);
         }
 
         this.trigger(TestRunnerEvent.line, line);
