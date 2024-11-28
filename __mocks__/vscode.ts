@@ -241,7 +241,7 @@ const workspace = {
             absolute: true,
             ignore: exclude ? splitPattern(exclude.pattern) : undefined,
             cwd: pattern.uri.fsPath,
-        })).map((file) => URI.parse(file));
+        })).map((file) => URI.file(file.replace(/^\w:/, (matched) => matched.toLowerCase())));
     }),
     createFileSystemWatcher: jest.fn().mockImplementation(() => {
         return {

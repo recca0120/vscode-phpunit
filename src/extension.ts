@@ -1,3 +1,4 @@
+import { relative } from 'node:path';
 import * as vscode from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
@@ -31,7 +32,7 @@ async function getWorkspaceTestPatterns() {
             phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
         }
 
-        const baseDir = directoryPath(phpUnitXML.root());
+        const baseDir = directoryPath(relative(workspaceFolder.uri.fsPath, phpUnitXML.root()));
         phpUnitXML.getTestSuites().forEach((item) => {
             if (item.tag === 'directory') {
                 const suffix = item.suffix ?? '.php';
