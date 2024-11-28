@@ -89,7 +89,7 @@ export class PHPUnitXML {
         });
 
         return testSuites.length > 0 ? testSuites : [
-            { tag: 'directory', name: 'default', value: '', suffix: 'php' },
+            { tag: 'directory', name: 'default', value: './', suffix: '.php' },
             { tag: 'exclude', name: 'default', value: 'vendor' },
         ];
     }

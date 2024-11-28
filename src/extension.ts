@@ -30,7 +30,7 @@ async function getWorkspaceTestPatterns() {
             await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
         }
 
-        const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile ?? './')));
+        const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile ?? workspaceFolder.uri.fsPath)));
         phpUnitXML.getTestSuites().forEach((item) => {
             if (item.tag === 'directory') {
                 const suffix = item.suffix ?? '.php';
