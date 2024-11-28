@@ -111,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument((document) => testCollection.add(document.uri)),
-        vscode.workspace.onDidChangeTextDocument((e) => testCollection.add(e.document.uri)),
+        vscode.workspace.onDidChangeTextDocument((e) => testCollection.change(e.document.uri)),
     );
 
     ctrl.refreshHandler = reload;
