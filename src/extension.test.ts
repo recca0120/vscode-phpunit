@@ -17,6 +17,7 @@ import {
     workspace,
     WorkspaceFolder,
 } from 'vscode';
+import { Configuration } from './Configuration';
 import { activate } from './extension';
 import { getPhpUnitVersion, normalPath, phpUnitProject } from './PHPUnit/__tests__/utils';
 
@@ -115,6 +116,14 @@ const expectTestResultCalled = (ctrl: TestController, expected: any) => {
     // expect(end).toHaveBeenCalledTimes(expected.end);
 
     expect(getOutputChannel().appendLine).toHaveBeenCalled();
+};
+
+const countItems = (testItemCollection: TestItemCollection) => {
+    let sum = 0;
+    testItemCollection.forEach((item) => sum += countItems(item.children));
+    sum += testItemCollection.size;
+
+    return sum;
 };
 
 describe('Extension Test', () => {
@@ -295,7 +304,7 @@ describe('Extension Test', () => {
             }));
         });
 
-        it('should refresh test', async () => {
+        it('should refresh tests', async () => {
             await activate(context);
 
             const ctrl = getTestController();
@@ -303,12 +312,31 @@ describe('Extension Test', () => {
             await ctrl.refreshHandler();
         });
 
-        it('should resolve test', async () => {
+        it('should resolve tests', async () => {
             await activate(context);
 
             const ctrl = getTestController();
 
             await ctrl.resolveHandler();
+
+            await new Promise(resolve => setTimeout(() => resolve(true), 3000));
+            expect(countItems(ctrl.items)).toEqual(46);
+        });
+
+        it('should resolve tests without phpunit.xml', async () => {
+            jest
+                .spyOn(Configuration.prototype, 'getConfigurationFile')
+                .mockImplementation(async () => {
+                    return undefined;
+                });
+            await activate(context);
+
+            const ctrl = getTestController();
+
+            await ctrl.resolveHandler();
+
+            await new Promise(resolve => setTimeout(() => resolve(true), 3000));
+            expect(countItems(ctrl.items)).toEqual(46);
         });
 
         it('run phpunit.run-file', async () => {

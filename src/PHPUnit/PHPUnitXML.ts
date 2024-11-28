@@ -51,12 +51,13 @@ class Element {
 export class PHPUnitXML {
     private element?: Element;
     private _file: string = '';
+    private _root: string = '';
     private readonly cached: Map<string, any> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
-        this.cached.clear();
-        this.element = new Element(parser.parse(text.toString()));
         this._file = file;
+        this.setRoot(dirname(file));
+        this.element = new Element(parser.parse(text.toString()));
 
         return this;
     }
@@ -67,12 +68,17 @@ export class PHPUnitXML {
         return this;
     }
 
+    setRoot(root: string) {
+        this.cached.clear();
+        this._root = root;
+    }
+
     file() {
         return this._file;
     }
 
     root() {
-        return dirname(this._file);
+        return this._root;
     }
 
     getTestSuites(): TestSuite[] {
@@ -89,7 +95,7 @@ export class PHPUnitXML {
         });
 
         return testSuites.length > 0 ? testSuites : [
-            { tag: 'directory', name: 'default', value: './', suffix: '.php' },
+            { tag: 'directory', name: 'default', value: '', suffix: '.php' },
             { tag: 'exclude', name: 'default', value: 'vendor' },
         ];
     }
