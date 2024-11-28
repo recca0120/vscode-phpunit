@@ -41,7 +41,7 @@ export abstract class Command {
     apply() {
         const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
             .filter((input: string) => !!input)
-            .map((input: string) => this.pathReplacer.replacePathVariables(input));
+            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
         return { cmd, args, options: this.options };
     }
@@ -59,11 +59,11 @@ export abstract class Command {
     }
 
     private getPhpUnit() {
-        return this.pathReplacer.toRemote(this.configuration.get('phpunit') as string) ?? '';
+        return this.pathReplacer.toRemote(this.configuration.get('phpunit') as string ?? '');
     }
 
     private getPhp() {
-        return this.pathReplacer.toRemote(this.configuration.get('php') as string) ?? '';
+        return this.pathReplacer.toRemote(this.configuration.get('php') as string ?? '');
     }
 
     private getArguments(): string[] {

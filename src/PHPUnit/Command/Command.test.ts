@@ -139,17 +139,14 @@ describe('Command Test', () => {
         it('should replace workspaceFolder for Windows Path', () => {
             const cwd = phpUnitProjectForWindows('');
             const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
-            const command = givenCommand(
-                {
-                    command: 'docker exec --workdir=/var/www/ container_name bash -c',
-                    phpunit: 'vendor/bin/phpunit',
-                    paths: {
-                        // eslint-disable-next-line @typescript-eslint/naming-convention
-                        '${workspaceFolder}': '/var/www',
-                    },
+            const command = givenCommand({
+                command: 'docker exec --workdir=/var/www/ container_name bash -c',
+                phpunit: 'vendor/bin/phpunit',
+                paths: {
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    '${workspaceFolder}': '/var/www',
                 },
-                cwd,
-            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
