@@ -16,7 +16,7 @@ describe('PHPUnit XML Test', () => {
     it('without tags', () => {
         const phpUnitXml = parse(generateXML(``));
         expect(phpUnitXml.getTestSuites()).toEqual([
-            { tag: 'directory', name: 'default', value: './', suffix: '.php' },
+            { tag: 'directory', name: 'default', value: '', suffix: '.php' },
             { tag: 'exclude', name: 'default', value: 'vendor' },
         ]);
         expect(phpUnitXml.getIncludes()).toEqual([]);
