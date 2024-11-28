@@ -1,4 +1,3 @@
-import { dirname, relative } from 'node:path';
 import * as vscode from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
@@ -28,9 +27,11 @@ async function getWorkspaceTestPatterns() {
         const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
         if (configurationFile) {
             await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
+        } else {
+            phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
         }
 
-        const baseDir = directoryPath(dirname(relative(workspaceFolder.uri.fsPath, configurationFile ?? workspaceFolder.uri.fsPath)));
+        const baseDir = directoryPath(phpUnitXML.root());
         phpUnitXML.getTestSuites().forEach((item) => {
             if (item.tag === 'directory') {
                 const suffix = item.suffix ?? '.php';
