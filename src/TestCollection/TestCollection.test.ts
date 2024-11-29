@@ -1,14 +1,9 @@
 import 'jest';
 import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, TestDefinition, TestParser } from '../PHPUnit';
+import { Files, PHPUnitXML, TestDefinition, TestDefinitions, TestParser } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
-import { Files, TestDefinitions } from '../PHPUnit/TestCollection/TestCollection';
 import { TestCollection } from './TestCollection';
-
-const getTestController = () => {
-    return (tests.createTestController as jest.Mock).mock.results[0].value;
-};
 
 describe('Extension TestCollection', () => {
     const root = phpUnitProject('');
