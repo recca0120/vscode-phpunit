@@ -45,17 +45,14 @@ export abstract class BaseConfiguration implements IConfiguration {
     }
 
     async getConfigurationFile(root: string = ''): Promise<string | undefined> {
-        let files = ['phpunit.xml', 'phpunit.dist.xml'];
+        let files = ['phpunit.xml', 'phpunit.xml.dist', 'phpunit.dist.xml'].map((file) => join(root, file));
 
         const { _, ...argv } = this.getArguments();
         if (argv.hasOwnProperty('configuration')) {
-            files = [argv.configuration, ...files];
+            files = [argv.configuration, join(root, argv.configuration), ...files];
         }
 
-        return await findAsyncSequential<string>(
-            files.map((file) => join(root, file)),
-            async (file) => await checkFileExists(file),
-        );
+        return await findAsyncSequential<string>(files, async (file) => await checkFileExists(file));
     }
 }
 

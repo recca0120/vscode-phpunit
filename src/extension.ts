@@ -61,7 +61,7 @@ async function findInitialFiles(pattern: vscode.GlobPattern, exclude: vscode.Glo
 }
 
 async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
-    return (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => {
+    return Promise.all((await getWorkspaceTestPatterns()).map(async ({ pattern, exclude }) => {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {
@@ -78,10 +78,10 @@ async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vs
             testCollection.delete(uri);
         });
 
-        findInitialFiles(pattern, exclude);
+        await findInitialFiles(pattern, exclude);
 
         return watcher;
-    });
+    }));
 }
 
 export async function activate(context: vscode.ExtensionContext) {

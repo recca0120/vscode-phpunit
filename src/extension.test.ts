@@ -146,7 +146,10 @@ describe('Extension Test', () => {
             const configuration = workspace.getConfiguration('phpunit');
             await configuration.update('php', 'php');
             await configuration.update('phpunit', 'vendor/bin/phpunit');
+            await configuration.update('args', []);
         });
+
+        afterEach(() => jest.clearAllMocks());
 
         it('should load tests', async () => {
             await activate(context);
@@ -319,33 +322,46 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            await new Promise(resolve => setTimeout(() => resolve(true), 3000));
             expect(countItems(ctrl.items)).toEqual(46);
         });
 
         it('should resolve tests without phpunit.xml', async () => {
-            jest
-                .spyOn(Configuration.prototype, 'getConfigurationFile')
-                .mockImplementation(async () => {
-                    return undefined;
-                });
+            // const original = Configuration.prototype.getConfigurationFile;
+            jest.spyOn(Configuration.prototype, 'getConfigurationFile')
+                .mockReturnValueOnce(undefined as any);
+
             await activate(context);
 
             const ctrl = getTestController();
 
             await ctrl.resolveHandler();
 
-            await new Promise(resolve => setTimeout(() => resolve(true), 3000));
             expect(countItems(ctrl.items)).toEqual(46);
+            // Configuration.prototype.getConfigurationFile = original;
+        });
+
+        it('should resolve tests with phpunit.xml.dist', async () => {
+            await workspace.getConfiguration('phpunit').update('args', [
+                '-c', phpUnitProject('phpunit.xml.dist'),
+            ]);
+
+            await activate(context);
+
+            const ctrl = getTestController();
+
+            await ctrl.resolveHandler();
+
+            expect(countItems(ctrl.items)).toEqual(6);
         });
 
         it('run phpunit.run-file', async () => {
-            await activate(context);
             Object.defineProperty(window, 'activeTextEditor', {
                 value: { document: { uri: Uri.file(phpUnitProject('tests/AssertionsTest.php')) } },
                 enumerable: true,
                 configurable: true,
             });
+
+            await activate(context);
 
             await commands.executeCommand('phpunit.run-file');
 
