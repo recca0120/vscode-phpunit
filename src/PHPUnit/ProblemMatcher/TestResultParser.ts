@@ -1,6 +1,6 @@
 import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
-import { escapeValue } from '../../utils';
+import { escapeValue } from '../utils';
 import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestProcessesParser } from './TestProcessesParser';
 import { TestResultSummaryParser } from './TestResultSummaryParser';

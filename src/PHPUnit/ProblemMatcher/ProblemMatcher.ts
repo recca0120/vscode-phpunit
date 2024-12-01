@@ -1,4 +1,4 @@
-import { TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from './parser';
+import { TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from '.';
 
 export class ProblemMatcher {
     private collect = new Map<string, TestResult>();

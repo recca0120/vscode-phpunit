@@ -1,2 +1,3 @@
+export * from './types';
 export * from './ProblemMatcher';
-export * from './parser';
+export * from './TestResultParser';

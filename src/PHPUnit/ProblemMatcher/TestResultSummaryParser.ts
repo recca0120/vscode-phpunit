@@ -1,4 +1,4 @@
-import { camel } from '../../utils';
+import { camel } from '../utils';
 import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
