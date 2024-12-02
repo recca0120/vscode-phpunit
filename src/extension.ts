@@ -16,9 +16,9 @@ async function getWorkspaceTestPatterns() {
 
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
     const directoryPath = (path: string) => {
-        return path === '.' || !path
+        return /^\.[\\\/]?$/.test(path) || !path
             ? ''
-            : path.replace(new RegExp(['^.[\\|/]', '[\\|/]+$/'].join('|'), 'g'), '') + '/';
+            : path.replace(new RegExp(['^\.[\\|/]', '[\\|/]+$/'].join('|'), 'g'), '') + '/';
     };
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
