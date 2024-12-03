@@ -155,11 +155,9 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
-            const namespaceItemId = 'namespace:Recca0120\\VSCode\\Tests';
             const itemId = `Recca0120\\VSCode\\Tests\\AssertionsTest`;
 
-            const namespace = ctrl.items.get(namespaceItemId);
-            const parent = namespace.children.get(itemId);
+            const parent = findTest(ctrl.items, itemId)!;
             const child = parent.children.get(`${itemId}::test_passed`);
 
             expect(parent).toEqual(
@@ -209,9 +207,7 @@ describe('Extension Test', () => {
             );
 
             let expected;
-            if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
-                expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
-            } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
+            if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
                 expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
             } else {
                 expected = { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
@@ -236,12 +232,10 @@ describe('Extension Test', () => {
             ], { cwd });
 
             let expected;
-            if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
-                expected = { enqueued: 20, started: 27, passed: 16, failed: 9, end: 1 };
-            } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                expected = { enqueued: 20, started: 27, passed: 16, failed: 9, end: 1 };
+            if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
+                expected = { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 };
             } else {
-                expected = { enqueued: 20, started: 21, passed: 9, failed: 10, end: 1 };
+                expected = { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
             }
 
             expectTestResultCalled(ctrl, expected);
@@ -322,7 +316,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(46);
+            expect(countItems(ctrl.items)).toEqual(48);
         });
 
         it('should resolve tests without phpunit.xml', async () => {
@@ -336,7 +330,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(46);
+            expect(countItems(ctrl.items)).toEqual(48);
             // Configuration.prototype.getConfigurationFile = original;
         });
 
@@ -351,7 +345,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(12);
+            expect(countItems(ctrl.items)).toEqual(15);
         });
 
         it('run phpunit.run-file', async () => {

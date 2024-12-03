@@ -39,20 +39,21 @@ export class TestHierarchyBuilder {
         let testItem: TestItem | undefined;
         const segments = testDefinition.namespace?.split('\\') ?? [];
         this.length = segments.length;
-        segments.forEach((segment) => {
-            const definition = {
+        segments.forEach((segment, index, segments) => {
+            const testDefinition = {
                 type: TestType.namespace,
-                id: `namespace:${segment}`,
+                id: `namespace:${segments.slice(0, index + 1).join('\\')}`,
                 namespace: segment,
                 label: segment,
             } as TestDefinition;
 
-            testItem = parentTestCollection.get(definition.id);
-
+            testItem = parentTestCollection.get(testDefinition.id);
             if (!testItem) {
-                testItem = this.ctrl.createTestItem(definition.id, definition.label);
+                testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
                 testItem.canResolveChildren = true;
-                testItem.sortText = definition.id;
+                testItem.sortText = testDefinition.id;
+                parentTestCollection.add(testItem);
+                this.testData.set(testItem, new TestCase(testDefinition));
             }
 
             const parent = this.ancestors[this.ancestors.length - 1];
@@ -76,28 +77,10 @@ export class TestHierarchyBuilder {
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
-        if (testDefinition.type === TestType.namespace) {
-            return this.createNamespaceTestItem(testDefinition, sortText);
-        }
-
         const testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label, Uri.file(testDefinition.file!));
         testItem.canResolveChildren = testDefinition.type === TestType.class;
         testItem.sortText = sortText;
         testItem.range = this.createRange(testDefinition);
-
-        return testItem;
-    }
-
-    private createNamespaceTestItem(testDefinition: TestDefinition, sortText: string) {
-        let testItem = this.ctrl.items.get(testDefinition.id);
-
-        if (testItem) {
-            return testItem;
-        }
-
-        testItem = this.ctrl.createTestItem(testDefinition.id, testDefinition.label);
-        testItem.canResolveChildren = true;
-        testItem.sortText = sortText;
 
         return testItem;
     }

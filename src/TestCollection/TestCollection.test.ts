@@ -1,4 +1,5 @@
 import 'jest';
+import { expect } from '@jest/globals';
 import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { Files, PHPUnitXML, TestDefinition, TestDefinitions, TestParser } from '../PHPUnit';
@@ -83,17 +84,36 @@ describe('Extension TestCollection', () => {
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
         await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
 
-        expect(toTree(ctrl.items)).toEqual([expect.objectContaining({
-            id: 'namespace:Recca0120\\VSCode\\Tests',
-            label: 'Recca0120\\VSCode\\Tests',
-            children: ([expect.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                label: 'AssertionsTest',
-            }), expect.objectContaining({
-                id: 'Recca0120\\VSCode\\Tests\\AttributeTest',
-                label: 'AttributeTest',
-            })]),
-        })]);
+        expect(toTree(ctrl.items)).toEqual([
+            expect.objectContaining(
+                {
+                    id: 'namespace:Recca0120',
+                    label: 'Recca0120',
+                    children: [
+                        expect.objectContaining({
+                            id: 'namespace:Recca0120\\VSCode',
+                            label: 'VSCode',
+                            children: [
+                                expect.objectContaining({
+                                    id: 'namespace:Recca0120\\VSCode\\Tests',
+                                    label: 'Tests',
+                                    children: [
+                                        expect.objectContaining({
+                                            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                                            label: 'AssertionsTest',
+                                        }),
+                                        expect.objectContaining({
+                                            id: 'Recca0120\\VSCode\\Tests\\AttributeTest',
+                                            label: 'AttributeTest',
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                },
+            ),
+        ]);
     });
 
     xit('with groups', async () => {

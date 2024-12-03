@@ -96,11 +96,11 @@ describe('TestHierarchyBuilder', () => {
                 label: 'Recca0120',
                 children: [
                     {
-                        id: 'namespace:VSCode',
+                        id: 'namespace:Recca0120\\VSCode',
                         label: 'VSCode',
                         children: [
                             {
-                                id: 'namespace:Tests',
+                                id: 'namespace:Recca0120\\VSCode\\Tests',
                                 label: 'Tests',
                                 children: [
                                     {
@@ -109,6 +109,67 @@ describe('TestHierarchyBuilder', () => {
                                         children: [
                                             {
                                                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                                                label: 'test_passed',
+                                                children: [],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]);
+    });
+
+    it('sibling namespace', () => {
+        givenCodes([{
+            file: 'tests/AssertionsTest.php',
+            code: givenPhp(
+                'namespace Recca0120\\VSCode\\Tests',
+                'AssertionsTest',
+                ['test_passed'],
+            ),
+        }, {
+            file: 'tests/AssertionsTest2.php',
+            code: givenPhp(
+                'namespace Recca0120\\VSCode\\Tests',
+                'AssertionsTest2',
+                ['test_passed'],
+            ),
+        }]);
+
+        expect(toTree(ctrl.items)).toEqual([
+            {
+                id: 'namespace:Recca0120',
+                label: 'Recca0120',
+                children: [
+                    {
+                        id: 'namespace:Recca0120\\VSCode',
+                        label: 'VSCode',
+                        children: [
+                            {
+                                id: 'namespace:Recca0120\\VSCode\\Tests',
+                                label: 'Tests',
+                                children: [
+                                    {
+                                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                                        label: 'AssertionsTest',
+                                        children: [
+                                            {
+                                                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                                                label: 'test_passed',
+                                                children: [],
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest2',
+                                        label: 'AssertionsTest2',
+                                        children: [
+                                            {
+                                                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest2::test_passed',
                                                 label: 'test_passed',
                                                 children: [],
                                             },
