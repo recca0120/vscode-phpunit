@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { TestController, tests } from 'vscode';
 import { TestParser } from '../PHPUnit';
 import { phpUnitProject } from '../PHPUnit/__tests__/utils';
@@ -19,11 +18,16 @@ ${methods.map((name) => `
 }
 
 describe('TestHierarchyBuilder', () => {
+    let ctrl: TestController;
+    let testParser: TestParser;
+    let builder: TestHierarchyBuilder;
+
     const toTree = (items: any) => {
         const results = [] as any[];
         items.forEach((item: any) => {
             results.push({
                 id: item.id,
+                label: item.label,
                 children: toTree(item.children),
             });
         });
@@ -31,46 +35,91 @@ describe('TestHierarchyBuilder', () => {
         return results;
     };
 
-    const parse = (files: { file: string, code: string }[]) => {
+    const givenCodes = (files: { file: string, code: string }[]) => {
         files.forEach(({ file, code }) => {
             testParser.parse(code, phpUnitProject(file));
         });
+
+        builder.get();
     };
 
-    let ctrl: TestController;
-    let testParser: TestParser;
-    let builder: TestHierarchyBuilder;
     beforeEach(() => {
         ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
         testParser = new TestParser();
         builder = new TestHierarchyBuilder(testParser, ctrl);
     });
 
-    it('has 1 node', () => {
-        parse([{
+    it('no namespace', () => {
+        givenCodes([{
             file: 'tests/AssertionsTest.php',
             code: givenPhp(
-                'namespace Recca0120\\VSCode\\Tests',
+                '',
                 'AssertionsTest',
                 ['test_passed', 'test_failed'],
             ),
         }]);
 
-        builder.get();
+        expect(toTree(ctrl.items)).toEqual([
+            {
+                id: 'AssertionsTest',
+                label: 'AssertionsTest',
+                children: [
+                    {
+                        id: 'AssertionsTest::test_passed',
+                        label: 'test_passed',
+                        children: [],
+                    },
+                    {
+                        id: 'AssertionsTest::test_failed',
+                        label: 'test_failed',
+                        children: [],
+                    },
+                ],
+            }
+            ,
+        ]);
+    });
 
-        expect(toTree(ctrl.items)).toEqual([{
-            id: 'namespace:Recca0120\\VSCode\\Tests',
-            children: [{
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                children: [{
-                    id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-                    children: [],
-                }, {
-                    id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
-                    children: [],
-                }],
-            },
-            ],
+    it('nested namespace', () => {
+        givenCodes([{
+            file: 'tests/AssertionsTest.php',
+            code: givenPhp(
+                'namespace Recca0120\\VSCode\\Tests',
+                'AssertionsTest',
+                ['test_passed'],
+            ),
         }]);
+
+        expect(toTree(ctrl.items)).toEqual([
+            {
+                id: 'namespace:Recca0120',
+                label: 'Recca0120',
+                children: [
+                    {
+                        id: 'namespace:VSCode',
+                        label: 'VSCode',
+                        children: [
+                            {
+                                id: 'namespace:Tests',
+                                label: 'Tests',
+                                children: [
+                                    {
+                                        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                                        label: 'AssertionsTest',
+                                        children: [
+                                            {
+                                                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                                                label: 'test_passed',
+                                                children: [],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]);
     });
 });

@@ -4,6 +4,7 @@ import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestCase } from './TestCollection';
 
 export class TestHierarchyBuilder {
+    private length = 1;
     private readonly ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [
         { item: this.createProxyTestController(), type: TestType.namespace, children: [] },
     ];
@@ -18,12 +19,12 @@ export class TestHierarchyBuilder {
             this.addTestItem(testDefinition, `${index}`);
         });
         this.testParser.on(TestType.class, (testDefinition) => {
-            this.ascend(2);
+            this.ascend(this.length + 1);
             this.addTestItem(testDefinition, testDefinition.id);
         });
         this.testParser.on(TestType.namespace, (testDefinition) => {
             this.ascend(1);
-            this.addTestItem(testDefinition, testDefinition.id);
+            this.addNamespaceTestItems(testDefinition);
         });
     }
 
@@ -31,6 +32,35 @@ export class TestHierarchyBuilder {
         this.ascend(0);
 
         return this.testData;
+    }
+
+    private addNamespaceTestItems(testDefinition: TestDefinition) {
+        let parentTestCollection = this.ctrl.items;
+        let testItem: TestItem | undefined;
+        const segments = testDefinition.namespace?.split('\\') ?? [];
+        this.length = segments.length;
+        segments.forEach((segment) => {
+            const definition = {
+                type: TestType.namespace,
+                id: `namespace:${segment}`,
+                namespace: segment,
+                label: segment,
+            } as TestDefinition;
+
+            testItem = parentTestCollection.get(definition.id);
+
+            if (!testItem) {
+                testItem = this.ctrl.createTestItem(definition.id, definition.label);
+                testItem.canResolveChildren = true;
+                testItem.sortText = definition.id;
+            }
+
+            const parent = this.ancestors[this.ancestors.length - 1];
+            parent.children.push(testItem);
+            this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
+
+            parentTestCollection = testItem.children;
+        });
     }
 
     private addTestItem(testDefinition: TestDefinition, sortText: string) {
@@ -85,7 +115,6 @@ export class TestHierarchyBuilder {
             }
         }
     };
-
 
     private createRange(testDefinition: TestDefinition) {
         return new Range(

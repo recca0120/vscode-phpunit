@@ -125,7 +125,7 @@ export class TestParser {
             this.eventEmitter.emit(`${TestType.namespace}`, {
                 type: TestType.namespace,
                 id: `namespace:${clazz.namespace}`,
-                qualifiedClass: clazz.namespace!,
+                namespace: clazz.namespace!,
                 label: clazz.namespace,
             });
         }
