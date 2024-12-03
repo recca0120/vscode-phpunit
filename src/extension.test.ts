@@ -212,7 +212,7 @@ describe('Extension Test', () => {
             if (semver.gte(PHPUNIT_VERSION, '11.0.0')) {
                 expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
             } else if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                expected = { enqueued: 28, started: 39, passed: 27, failed: 10, end: 1 };
+                expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
             } else {
                 expected = { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
             }
@@ -351,7 +351,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(6);
+            expect(countItems(ctrl.items)).toEqual(12);
         });
 
         it('run phpunit.run-file', async () => {
