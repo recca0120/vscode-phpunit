@@ -35,15 +35,15 @@ describe('Command Test', () => {
             const cwd = phpUnitProjectForWindows('');
             const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
             const command = givenCommand({
-                phpunit: `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
+                phpunit: phpUnitProjectForWindows('vendor/bin/phpunit'),
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
-                `${phpUnitProjectForWindows('vendor/bin/phpunit')}`,
+                phpUnitProjectForWindows('vendor/bin/phpunit'),
                 '--filter=^.*::(test_passed)( with data set .*)?$',
-                `${phpUnitProjectForWindows('tests/AssertionsTest.php')}`,
+                phpUnitProjectForWindows('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -109,7 +109,12 @@ describe('Command Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                'php vendor/bin/paratest \'--filter=^.*::(test_passed)( with data set .*)?$\' \'--colors=never\' \'--teamcity\' \'-f\'',
+                'php',
+                'vendor/bin/paratest',
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                '--colors=never',
+                '--teamcity',
+                '-f',
             ]);
         });
 
@@ -132,7 +137,12 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                'php vendor/bin/phpunit \'--filter=^.*::(test_passed)( with data set .*)?$\' /var/www/tests/AssertionsTest.php \'--colors=never\' \'--teamcity\'',
+                'php',
+                'vendor/bin/phpunit',
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                '/var/www/tests/AssertionsTest.php',
+                '--colors=never',
+                '--teamcity',
             ]);
         });
 
@@ -156,7 +166,12 @@ describe('Command Test', () => {
                 'container_name',
                 'bash',
                 '-c',
-                'php vendor/bin/phpunit \'--filter=^.*::(test_passed)( with data set .*)?$\' /var/www/tests/AssertionsTest.php \'--colors=never\' \'--teamcity\'',
+                'php',
+                'vendor/bin/phpunit',
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                '/var/www/tests/AssertionsTest.php',
+                '--colors=never',
+                '--teamcity',
             ]);
         });
     });
