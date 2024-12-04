@@ -53,9 +53,7 @@ The following commands are available in VS Code's command palette, use the ID to
     "phpunit.xml"
   ],
   "phpunit.paths": {
-    // ${pwd} (current directory) is mounted to /app
     "${workspaceFolder}": "/app",
-    // ${workspaceFolder} is mapped to /app
   },
 }
 ```
@@ -72,16 +70,14 @@ The following commands are available in VS Code's command palette, use the ID to
     "phpunit.xml"
   ],
   "phpunit.paths": {
-    // ${pwd} (current directory) is mounted to /app
     "${workspaceFolder}": "/app",
-    // ${workspaceFolder} is mapped to /app
   },
 }
 ```
 
 ```jsonc
 {
-  "phpunit.command": "docker run --rm -t -v ${pwd}:/app -w /app php:latest php",
+  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest php",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -89,9 +85,7 @@ The following commands are available in VS Code's command palette, use the ID to
     "phpunit.xml"
   ],
   "phpunit.paths": {
-    // ${pwd} (current directory) is mounted to /app
     "${workspaceFolder}": "/app",
-    // ${workspaceFolder} is mapped to /app
   },
 }
 ```
@@ -100,17 +94,15 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no",
+  "phpunit.command": "ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;",
   "phpunit.php": "php",
-  "phpunit.phpunit": "/app/vendor/bin/phpunit",
+  "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
     "-c",
     "/app/phpunit.xml"
   ],
   "phpunit.paths": {
-    // ${pwd} (current directory) is mounted to /app
     "${workspaceFolder}": "/app",
-    // ${workspaceFolder} is mapped to /app
   }
 }
 ```

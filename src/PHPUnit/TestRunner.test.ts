@@ -114,7 +114,7 @@ const generateTestResult = (
 ) => {
     let { event, name, file, id } = testResult;
     const locationHint = `php_qn://${file}::\\${id}`;
-    const phpUnitXml = `${appPath('phpunit.xml')}`;
+    const phpUnitXml = appPath('phpunit.xml');
 
     if ([TestResultEvent.testSuiteStarted, TestResultEvent.testSuiteFinished].includes(event)) {
         fakeSpawn([
@@ -363,9 +363,9 @@ describe('TestRunner Test', () => {
         const appPath = (path?: string) => path ? `/app/${path}` : '/app';
         const cwd = projectPath('');
         const configuration = new Configuration({
-            command: 'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no',
+            command: 'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
             php: 'php',
-            phpunit: '/app/vendor/bin/phpunit',
+            phpunit: 'vendor/bin/phpunit',
             args: ['-c', '/app/phpunit.xml'],
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
@@ -382,7 +382,13 @@ describe('TestRunner Test', () => {
                 'root@localhost',
                 '-o',
                 'StrictHostKeyChecking=no',
-                `php /app/vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--colors=never' '--teamcity'`,
+                'cd',
+                '/app;',
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunAllTest(expected, command, projectPath, appPath);
@@ -398,7 +404,14 @@ describe('TestRunner Test', () => {
                 'root@localhost',
                 '-o',
                 'StrictHostKeyChecking=no',
-                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'cd',
+                '/app;',
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestSuite(expected, command, projectPath, appPath);
@@ -414,7 +427,15 @@ describe('TestRunner Test', () => {
                 'root@localhost',
                 '-o',
                 'StrictHostKeyChecking=no',
-                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'cd',
+                '/app;',
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestPassed(expected, command, projectPath, appPath);
@@ -430,7 +451,15 @@ describe('TestRunner Test', () => {
                 'root@localhost',
                 '-o',
                 'StrictHostKeyChecking=no',
-                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'cd',
+                '/app;',
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath);
@@ -446,7 +475,15 @@ describe('TestRunner Test', () => {
                 'root@localhost',
                 '-o',
                 'StrictHostKeyChecking=no',
-                `php ${appPath('vendor/bin/phpunit')} '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'cd',
+                '/app;',
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath, true);
@@ -479,7 +516,11 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunAllTest(expected, command, projectPath, appPath);
@@ -496,7 +537,12 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestSuite(expected, command, projectPath, appPath);
@@ -513,7 +559,13 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestPassed(expected, command, projectPath, appPath);
@@ -530,7 +582,12 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php', 'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath);
@@ -547,7 +604,13 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath, true);
@@ -579,7 +642,11 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunAllTest(expected, command, projectPath, appPath);
@@ -596,7 +663,12 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestSuite(expected, command, projectPath, appPath);
@@ -613,7 +685,13 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestPassed(expected, command, projectPath, appPath);
@@ -630,7 +708,13 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath);
@@ -647,7 +731,13 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                `php vendor/bin/phpunit '--configuration=${appPath('phpunit.xml')}' '--filter=^.*::(test_passed|test_failed)( with data set .*)?$' ${appPath('tests/AssertionsTest.php')} '--colors=never' '--teamcity'`,
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${appPath('phpunit.xml')}`,
+                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                appPath('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath, true);
