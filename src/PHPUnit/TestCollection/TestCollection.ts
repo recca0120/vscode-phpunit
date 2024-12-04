@@ -4,12 +4,6 @@ import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
 import { TestDefinitionBuilder } from './TestDefinitionBuilder';
 
-export const toUNC = (path: string) => {
-    return path.replace(/^([a-zA-Z]:)(.*)/, (_, prefix, path) => {
-        return `//?/${prefix}${path.replace(/\\/g, '/')}`;
-    });
-};
-
 export interface File<T> {
     group: string;
     file: string;
@@ -211,9 +205,11 @@ export class TestCollection {
 
         const suffix = testSuite.suffix ?? '.php';
 
-        return minimatch(toUNC(uri.fsPath), toUNC(join(workspace, testSuite.value, `**/*${suffix}`)), {
-            matchBase: true, nocase: true,
-        });
+        return minimatch(
+            uri.toString(true),
+            URI.file(join(workspace, testSuite.value, `/**/*${suffix}`)).toString(true),
+            { matchBase: true, nocase: true },
+        );
     }
 }
 
