@@ -121,7 +121,7 @@ describe('Command Test', () => {
         it('should replace workspaceFolder', () => {
             const testFile = phpUnitProject('tests/AssertionsTest.php');
             const command = givenCommand({
-                command: 'docker exec --workdir=/var/www/ container_name bash -c',
+                command: 'docker exec --workdir=/var/www/ container_name',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
                     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -135,8 +135,6 @@ describe('Command Test', () => {
                 'exec',
                 '--workdir=/var/www/',
                 'container_name',
-                'bash',
-                '-c',
                 'php',
                 'vendor/bin/phpunit',
                 '--filter=^.*::(test_passed)( with data set .*)?$',
@@ -150,7 +148,7 @@ describe('Command Test', () => {
             const cwd = phpUnitProjectForWindows('');
             const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
             const command = givenCommand({
-                command: 'docker exec --workdir=/var/www/ container_name bash -c',
+                command: 'docker exec --workdir=/var/www/ container_name',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
                     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -164,8 +162,6 @@ describe('Command Test', () => {
                 'exec',
                 '--workdir=/var/www/',
                 'container_name',
-                'bash',
-                '-c',
                 'php',
                 'vendor/bin/phpunit',
                 '--filter=^.*::(test_passed)( with data set .*)?$',

@@ -62,7 +62,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
+  "phpunit.command": "docker exec -t [container_id]",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -77,7 +77,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest php",
+  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -99,7 +99,7 @@ The following commands are available in VS Code's command palette, use the ID to
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
     "-c",
-    "/app/phpunit.xml"
+    "phpunit.xml"
   ],
   "phpunit.paths": {
     "${workspaceFolder}": "/app",
