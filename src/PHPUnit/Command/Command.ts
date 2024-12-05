@@ -19,8 +19,8 @@ export class Command {
         return this;
     }
 
-    build() {
-        const [cmd, ...args] = this.getCommand()
+    apply() {
+        const [cmd, ...args] = this.build()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
@@ -46,18 +46,18 @@ export class Command {
         return result;
     }
 
-    private getCommand() {
-        const prefix = this.getPrefix();
-        const command = this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
+    private build() {
+        const command = this.getCommand();
+        const executable = this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
 
-        if (!/sh\s+-c/.test(prefix.slice(-2).join(' '))) {
-            return [...prefix, ...command];
+        if (!/^ssh/.test(command.join(' ')) && !/sh\s+-c/.test(command.slice(-2).join(' '))) {
+            return [...command, ...executable];
         }
 
-        return [...prefix, command.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' ')];
+        return [...command, executable.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' ')];
     }
 
-    private getPrefix() {
+    private getCommand() {
         return parseArgsStringToArgv((this.configuration.get('command') as string) ?? '');
     }
 

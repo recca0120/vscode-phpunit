@@ -26,7 +26,7 @@ export class TestRunner {
 
     run(command: Command) {
         return new Promise((resolve) => {
-            const { cmd, args, options } = command.build();
+            const { cmd, args, options } = command.apply();
             this.trigger(TestRunnerEvent.run, [cmd, ...args].join(' '));
 
             const proc = spawn(cmd, args, options);

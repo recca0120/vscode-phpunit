@@ -19,7 +19,7 @@ describe('Command Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
 
             expect(cmd).toEqual('php');
             expect(args).toEqual([
@@ -38,7 +38,7 @@ describe('Command Test', () => {
                 phpunit: phpUnitProjectForWindows('vendor/bin/phpunit'),
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 phpUnitProjectForWindows('vendor/bin/phpunit'),
@@ -55,7 +55,7 @@ describe('Command Test', () => {
                 args: ['--repeat=2', '--order-by=random'],
             });
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -72,7 +72,7 @@ describe('Command Test', () => {
                 args: ['--no-coverage', '--no-logging'],
             });
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -98,7 +98,7 @@ describe('Command Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'run',
@@ -125,7 +125,7 @@ describe('Command Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -155,7 +155,7 @@ describe('Command Test', () => {
                 },
             }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -182,7 +182,7 @@ describe('Command Test', () => {
                 },
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { cmd, args } = command.build();
+            const { cmd, args } = command.apply();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'exec',

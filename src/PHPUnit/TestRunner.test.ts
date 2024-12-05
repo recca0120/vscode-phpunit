@@ -384,11 +384,13 @@ describe('TestRunner Test', () => {
                 'StrictHostKeyChecking=no',
                 'cd',
                 '/app;',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                '--colors=never',
-                '--teamcity',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--configuration=${appPath('phpunit.xml')}'`,
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                ].join(' '),
             ];
 
             await shouldRunAllTest(expected, command, projectPath, appPath);
@@ -406,12 +408,14 @@ describe('TestRunner Test', () => {
                 'StrictHostKeyChecking=no',
                 'cd',
                 '/app;',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--configuration=${appPath('phpunit.xml')}'`,
+                    appPath('tests/AssertionsTest.php'),
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                ].join(' '),
             ];
 
             await shouldRunTestSuite(expected, command, projectPath, appPath);
@@ -429,13 +433,15 @@ describe('TestRunner Test', () => {
                 'StrictHostKeyChecking=no',
                 'cd',
                 '/app;',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed)( with data set .*)?$',
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--configuration=${appPath('phpunit.xml')}'`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    appPath('tests/AssertionsTest.php'),
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                ].join(' '),
             ];
 
             await shouldRunTestPassed(expected, command, projectPath, appPath);
@@ -453,13 +459,15 @@ describe('TestRunner Test', () => {
                 'StrictHostKeyChecking=no',
                 'cd',
                 '/app;',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--configuration=${appPath('phpunit.xml')}'`,
+                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
+                    appPath('tests/AssertionsTest.php'),
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                ].join(' '),
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath);
@@ -477,13 +485,15 @@ describe('TestRunner Test', () => {
                 'StrictHostKeyChecking=no',
                 'cd',
                 '/app;',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--configuration=${appPath('phpunit.xml')}'`,
+                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
+                    appPath('tests/AssertionsTest.php'),
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                ].join(' '),
             ];
 
             await shouldRunTestFailed(expected, command, projectPath, appPath, true);
