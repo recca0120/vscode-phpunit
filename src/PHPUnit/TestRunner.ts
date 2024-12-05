@@ -1,7 +1,25 @@
 import { spawn } from 'child_process';
+import { ChildProcess } from 'node:child_process';
 import { Command } from './Command';
 import { ProblemMatcher, Result, TestResultKind } from './ProblemMatcher';
 import { DefaultObserver, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
+
+export class TestRunnerProcess {
+    constructor(private proc: ChildProcess) {
+    }
+
+    wait() {
+        return new Promise((resolve) => {
+            this.proc.on('error', () => {
+                resolve({ proc: this.proc });
+            });
+
+            this.proc.on('close', () => {
+                resolve({ proc: this.proc });
+            });
+        });
+    }
+}
 
 export class TestRunner {
     private readonly defaultObserver: DefaultObserver;
@@ -25,46 +43,40 @@ export class TestRunner {
     }
 
     run(command: Command) {
-        return new Promise((resolve) => {
-            const { cmd, args, options } = command.apply();
-            this.trigger(TestRunnerEvent.run, [cmd, ...args].join(' '));
+        let temp = '';
+        let output = '';
+        const processOutput = (data: string) => {
+            const out = data.toString();
+            output += out;
+            temp += out;
+            const lines = temp.split(/\r\n|\n/);
+            while (lines.length > 1) {
+                this.processLine(lines.shift()!, command);
+            }
+            temp = lines.shift()!;
+        };
 
-            const proc = spawn(cmd, args, options);
+        const { cmd, args, options } = command.apply();
+        this.trigger(TestRunnerEvent.run, [cmd, ...args].join(' '));
 
-            let temp = '';
-            let output = '';
-            const processOutput = (data: string) => {
-                const out = data.toString();
-                output += out;
-                temp += out;
-                const lines = temp.split(/\r\n|\n/);
-                while (lines.length > 1) {
-                    this.processLine(lines.shift()!, command);
-                }
-                temp = lines.shift()!;
-            };
+        const proc = spawn(cmd, args, options);
+        proc.stdout!.on('data', processOutput);
+        proc.stderr!.on('data', processOutput);
+        proc.stdout!.on('end', () => this.processLine(temp, command));
 
-            proc.stdout!.on('data', processOutput);
-            proc.stderr!.on('data', processOutput);
-            proc.stdout!.on('end', () => this.processLine(temp, command));
-
-            proc.on('error', (err: Error) => {
-                const error = err.stack ?? err.message;
-                this.trigger(TestRunnerEvent.error, error);
-                this.trigger(TestRunnerEvent.close, 2);
-                resolve({ proc });
-            });
-
-            proc.on('close', (code) => {
-                const eventName = this.isTestRunning(output)
-                    ? TestRunnerEvent.output
-                    : TestRunnerEvent.error;
-
-                this.trigger(eventName, output);
-                this.trigger(TestRunnerEvent.close, code);
-                resolve({ proc });
-            });
+        proc.on('error', (err: Error) => {
+            const error = err.stack ?? err.message;
+            this.trigger(TestRunnerEvent.error, error);
+            this.trigger(TestRunnerEvent.close, 2);
         });
+
+        proc.on('close', (code) => {
+            const eventName = this.isTestRunning(output) ? TestRunnerEvent.output : TestRunnerEvent.error;
+            this.trigger(eventName, output);
+            this.trigger(TestRunnerEvent.close, code);
+        });
+
+        return new TestRunnerProcess(proc);
     }
 
     private isTestRunning(output: string) {

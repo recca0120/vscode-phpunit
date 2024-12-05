@@ -46,17 +46,13 @@ export class Handler {
             runner.observe(new TestResultObserver(queue, run, cancellation));
             runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
 
-            if (!request.include) {
-                await runner.run(command);
-
-                return;
-            }
-
-            await Promise.all(
-                request.include
+            const processes = !request.include
+                ? [runner.run(command)]
+                : request.include
                     .map((test) => this.testCollection.getTestCase(test)!)
-                    .map((testCase) => runner.run(command.setArguments(testCase.getArguments()))),
-            );
+                    .map((testCase) => runner.run(command.setArguments(testCase.getArguments())));
+
+            await Promise.all(processes.map((process) => process.wait()));
 
             return;
         };

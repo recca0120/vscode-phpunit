@@ -48,7 +48,7 @@ describe('OutputChannelObserver', () => {
         const testRunner = new TestRunner();
         testRunner.observe(observer);
 
-        await testRunner.run(command);
+        await testRunner.run(command).wait();
     }
 
     it('should trigger input', async () => {

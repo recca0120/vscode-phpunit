@@ -165,7 +165,7 @@ const expectedCommand = async (command: Command, expected: string[]) => {
     const testRunner = new TestRunner();
     onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: Result) => fn(test)));
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: Result) => fn(test)));
-    await testRunner.run(command);
+    await testRunner.run(command).wait();
 
     const call = (spawn as Mock).mock.calls[0];
     expect([call[0], ...call[1]]).toEqual(expected);
