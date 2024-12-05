@@ -109,7 +109,9 @@ export class TestResultParser implements IParser<Result | undefined> {
             ...args.map((parameter) => `--${parameter}`),
         ].join(' ');
 
-        const { _, $0, ...argv } = yargsParser(command);
+        const { _, $0, ...argv } = yargsParser(command, {
+            string: ['actual', 'expected'],
+        });
 
         return escapeValue.unescapeSingleQuote(argv);
     }

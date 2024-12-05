@@ -14,7 +14,7 @@ import { TestCase, TestCollection } from './TestCollection';
 export class Handler {
     private lastRequest: TestRunRequest | undefined;
 
-    constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) {}
+    constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) { }
 
     getLastRequest() {
         return this.lastRequest;

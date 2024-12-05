@@ -1,7 +1,7 @@
 import { TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from '.';
 
 export class ProblemMatcher {
-    private collect = new Map<string, TestResult>();
+    private results = new Map<string, TestResult>();
 
     private lookup: { [p: string]: Function } = {
         [TestResultEvent.testSuiteStarted]: this.handleStarted,
@@ -12,10 +12,10 @@ export class ProblemMatcher {
         [TestResultEvent.testIgnored]: this.handleFault,
     };
 
-    constructor(private parser: TestResultParser = new TestResultParser()) {}
+    constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
 
     parse(input: string | Buffer): TestResult | TestCount | TestResultSummary | TimeAndMemory | undefined {
-        const result = this.parser.parse(input.toString());
+        const result = this.testResultParser.parse(input.toString());
 
         return this.isTestResult(result)
             ? this.lookup[(result as TestResult).event]?.call(this, result as TestResult)
@@ -28,17 +28,17 @@ export class ProblemMatcher {
 
     private handleStarted(testResult: TestResult) {
         const id = this.generateId(testResult);
-        this.collect.set(id, { ...testResult });
+        this.results.set(id, { ...testResult });
 
-        return this.collect.get(id);
+        return this.results.get(id);
     }
 
     private handleFault(testResult: TestResult) {
         const id = this.generateId(testResult);
-        const prevData = this.collect.get(id);
+        const prevData = this.results.get(id);
 
         if (!prevData || prevData.kind === TestResultEvent.testStarted) {
-            this.collect.set(id, { ...(prevData ?? {}), ...testResult });
+            this.results.set(id, { ...(prevData ?? {}), ...testResult });
             return;
         }
 
@@ -47,17 +47,17 @@ export class ProblemMatcher {
         }
         prevData.details.push(...testResult.details);
 
-        this.collect.set(id, prevData);
+        this.results.set(id, prevData);
     }
 
     private handleFinished(testResult: TestResult) {
         const id = this.generateId(testResult);
 
-        const prevData = this.collect.get(id)!;
+        const prevData = this.results.get(id)!;
         const event = this.isFault(prevData) ? prevData.event : testResult.event;
         const kind = event;
         const result = { ...prevData, ...testResult, event, kind };
-        this.collect.delete(id);
+        this.results.delete(id);
 
         return result;
     }

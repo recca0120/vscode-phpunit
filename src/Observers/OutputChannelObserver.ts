@@ -7,10 +7,12 @@ import {
     TestResultSummary,
     TestRunnerObserver,
     TestRuntime,
+    TestSuiteFinished,
+    TestSuiteStarted,
     TestVersion,
     TimeAndMemory,
 } from '../PHPUnit';
-import { PrettyPrinter, Printer } from '../Printers';
+import { PrettyPrinter, Printer } from './Printers';
 
 enum ShowOutputState {
     always = 'always',
@@ -18,56 +20,8 @@ enum ShowOutputState {
     never = 'never',
 }
 
-class OutputBuffer {
-    private current?: string;
-
-    private store: { [p: string]: string } = {};
-
-    setCurrent(current?: string) {
-        this.current = current;
-    }
-
-    append(text: string) {
-        if (!this.current || text.match(/^##teamcity\[/)) {
-            return;
-        }
-
-        if (!this.store[this.current]) {
-            this.store[this.current] = '';
-        }
-
-        this.store[this.current] += `${text}\r\n`;
-    }
-
-    get(name: string) {
-        if (!this.store[name]) {
-            return;
-        }
-
-        const text = this.store[name];
-        delete this.store[name];
-        this.setCurrent(undefined);
-
-        return text.trim();
-    }
-
-    all() {
-        const text = [];
-        for (const name in this.store) {
-            text.push(this.get(name));
-        }
-
-        return text.join('\n').trim();
-    }
-
-    clear() {
-        this.store = {};
-    }
-}
-
 export class OutputChannelObserver implements TestRunnerObserver {
     private lastInput = '';
-    private outputBuffer: OutputBuffer = new OutputBuffer();
 
     constructor(
         private outputChannel: OutputChannel,
@@ -77,53 +31,46 @@ export class OutputChannelObserver implements TestRunnerObserver {
     ) {}
 
     run(command: string): void {
-        if (this.isClearOutputOnRun()) {
-            this.outputChannel.clear();
-        }
-
+        this.clearOutputOnRun();
         this.showOutputChannel(ShowOutputState.always);
 
-        this.lastInput = command;
-        this.outputChannel.appendLine(command);
-        this.outputChannel.appendLine('');
+        this.printer.start();
+        this.appendLine(this.lastInput = command);
     }
 
     error(error: string): void {
         this.outputChannel.clear();
-        this.outputChannel.appendLine(this.lastInput);
-        this.outputChannel.appendLine('');
-        this.outputChannel.append(this.printer.error(error));
+        this.appendLine(this.lastInput);
+        this.appendLine(this.printer.error(error));
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     line(line: string): void {
-        this.outputBuffer.append(line);
+        this.printer.append(line);
     }
 
     testVersion(result: TestVersion) {
-        this.outputChannel.appendLine(this.printer.version(result));
-        this.outputChannel.appendLine('');
+        this.appendLine(this.printer.testVersion(result));
     }
 
     testProcesses(result: TestProcesses) {
-        this.outputChannel.appendLine(result.text);
+        this.appendLine(this.printer.testProcesses(result));
     }
 
     testRuntime(result: TestRuntime) {
-        this.outputChannel.appendLine(result.text);
+        this.appendLine(this.printer.testRuntime(result));
     }
 
     testConfiguration(result: TestConfiguration) {
-        this.outputChannel.appendLine(result.text);
-        this.outputChannel.appendLine('');
+        this.appendLine(this.printer.testConfiguration(result));
     }
 
-    testSuiteStarted(result: TestResult): void {
+    testSuiteStarted(result: TestSuiteStarted): void {
         if (!result.id || result.id.match(/::/)) {
             return;
         }
 
-        this.outputChannel.appendLine(this.printer.suiteStarted(result));
+        this.appendLine(this.printer.testSuiteStarted(result));
     }
 
     testSuiteFinished(result: TestResult): void {
@@ -131,65 +78,55 @@ export class OutputChannelObserver implements TestRunnerObserver {
             return;
         }
 
-        this.outputChannel.appendLine(this.printer.suiteFinished(result));
+        this.appendLine(this.printer.testSuiteFinished(result));
     }
 
     testStarted(result: TestResult): void {
-        this.outputBuffer.setCurrent(result.name);
-        const output = this.printer.testStarted(result);
-        if (output) {
-            this.outputChannel.appendLine(output);
-        }
+        this.appendLine(this.printer.testStarted(result));
     }
 
     testFinished(result: TestResult): void {
-        this.outputChannel.appendLine(this.printer.testFinished(result));
-        this.printPrintedOutput(result);
+        this.appendLine(this.printer.testFinished(result));
+        this.printedOutput(result);
     }
 
     testFailed(result: TestResult): void {
-        this.outputChannel.appendLine(this.printer.testFinished(result));
-        this.printPrintedOutput(result);
+        this.appendLine(this.printer.testFinished(result));
+        this.printedOutput(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testIgnored(result: TestResult): void {
-        this.outputChannel.appendLine(this.printer.testFinished(result));
-        this.printPrintedOutput(result);
+        this.appendLine(this.printer.testFinished(result));
+        this.printedOutput(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
-    testResultSummary(result: TestResultSummary) {
-        this.outputBuffer.setCurrent(undefined);
-        this.outputChannel.appendLine(result.text);
+    timeAndMemory(result: TimeAndMemory) {
+        this.appendLine(this.printer.end());
+        this.appendLine(this.printer.timeAndMemory(result));
     }
 
-    timeAndMemory(result: TimeAndMemory) {
-        this.outputBuffer.setCurrent(undefined);
-        this.outputChannel.appendLine(result.text);
+    testResultSummary(result: TestResultSummary) {
+        this.appendLine(this.printer.testResultSummary(result));
     }
 
     close() {
-        this.printPrintedOutput();
-        this.outputBuffer.clear();
+        this.printedOutput();
+        this.printer.close();
     }
 
-    private printPrintedOutput(result: TestResult | null = null) {
-        let text: string | undefined;
-        if (!result) {
-            text = this.outputBuffer.all();
-        } else {
-            let matched: RegExpMatchArray | null = null;
-            if (result.message) {
-                matched = result.message.match(/This\stest\sprinted\soutput:(.*)/);
-            }
-
-            text = !matched ? this.outputBuffer.get(result.name) : matched[1].trim();
-        }
-
-        if (text) {
-            this.outputChannel.appendLine(`🟨 ${text}`);
+    private printedOutput(result: TestResult | undefined = undefined): void {
+        const output = this.printer.printedOutput(result);
+        if (output) {
+            this.appendLine(output);
             this.outputChannel.show(false);
+        }
+    }
+
+    private appendLine(text: string | undefined) {
+        if (text !== undefined) {
+            this.outputChannel.appendLine(text);
         }
     }
 
@@ -207,7 +144,9 @@ export class OutputChannelObserver implements TestRunnerObserver {
         }
     }
 
-    private isClearOutputOnRun() {
-        return this.configuration.get('clearOutputOnRun') === true;
+    private clearOutputOnRun() {
+        if (this.configuration.get('clearOutputOnRun') === true) {
+            this.outputChannel.clear();
+        }
     }
 }

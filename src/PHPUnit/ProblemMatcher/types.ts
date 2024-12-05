@@ -39,10 +39,15 @@ export type TestStarted = TestResultBase & {
     id: string;
     file: string;
     locationHint: string;
+    testId: string
 };
 
 export type TestFinished = TestResultBase & {
+    id: string;
     duration: number;
+    locationHint: string;
+    file: string;
+    testId: string;
 };
 
 export type TestFailed = TestFinished & {
@@ -101,6 +106,7 @@ export type TestResultSummary = {
     assertions?: number;
     errors?: number;
     failures?: number;
+    warnings?: number;
     skipped?: number;
     incomplete?: number;
     risky?: number;
