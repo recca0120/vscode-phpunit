@@ -50,7 +50,9 @@ export class Handler {
                 ? [runner.run(command)]
                 : request.include
                     .map((test) => this.testCollection.getTestCase(test)!)
-                    .map((testCase) => runner.run(command.setArguments(testCase.getArguments())));
+                    .map((testCase) => runner.run(testCase.update(command)));
+
+            cancellation?.onCancellationRequested(() => processes.forEach((process) => process.kill()));
 
             await Promise.all(processes.map((process) => process.wait()));
 

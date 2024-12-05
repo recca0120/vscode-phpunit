@@ -5,18 +5,21 @@ import { ProblemMatcher, Result, TestResultKind } from './ProblemMatcher';
 import { DefaultObserver, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
 
 export class TestRunnerProcess {
-    constructor(private proc: ChildProcess) {
+    constructor(private process: ChildProcess) {}
+
+    kill() {
+        if (!this.process.killed) {
+            this.process.stdin?.end();
+            this.process.kill();
+        }
+
+        return this.process.killed;
     }
 
     wait() {
         return new Promise((resolve) => {
-            this.proc.on('error', () => {
-                resolve({ proc: this.proc });
-            });
-
-            this.proc.on('close', () => {
-                resolve({ proc: this.proc });
-            });
+            this.process.on('error', () => resolve(true));
+            this.process.on('close', () => resolve(true));
         });
     }
 }

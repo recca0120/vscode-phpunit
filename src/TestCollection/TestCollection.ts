@@ -1,6 +1,7 @@
 import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
+    Command,
     File,
     PHPUnitXML,
     TestCollection as BaseTestCollection,
@@ -25,7 +26,11 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    getArguments(): string {
+    update(command: Command) {
+        return command.setArguments(this.getArguments());
+    }
+
+    private getArguments(): string {
         if (this.testDefinition.type === TestType.namespace) {
             return this.parseNamespaceFilter();
         }
