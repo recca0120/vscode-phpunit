@@ -62,7 +62,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker exec -t [container_id]",
+  "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [

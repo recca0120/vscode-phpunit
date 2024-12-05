@@ -20,7 +20,7 @@ export class Command {
     }
 
     build() {
-        const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
+        const [cmd, ...args] = this.getCommand()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
@@ -46,12 +46,15 @@ export class Command {
         return result;
     }
 
-    protected executable() {
-        return this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
-    }
+    private getCommand() {
+        const prefix = this.getPrefix();
+        const command = this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
 
-    protected resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
-        return new PathReplacer(options, configuration.get('paths') as Path);
+        if (!/sh\s+-c/.test(prefix.slice(-2).join(' '))) {
+            return [...prefix, ...command];
+        }
+
+        return [...prefix, command.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' ')];
     }
 
     private getPrefix() {
@@ -88,6 +91,10 @@ export class Command {
             !!this.getPhpUnit().match(/paratest/) &&
             args.some((arg: string) => !!arg.match(/--filter/))
         );
+    }
+
+    private resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
+        return new PathReplacer(options, configuration.get('paths') as Path);
     }
 }
 

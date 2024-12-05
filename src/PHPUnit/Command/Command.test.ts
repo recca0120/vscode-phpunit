@@ -118,6 +118,32 @@ describe('Command Test', () => {
             ]);
         });
 
+        it('docker with sh -c', () => {
+            const cwd = phpUnitProject('');
+            const command = givenCommand({
+                command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
+                phpunit: 'vendor/bin/paratest',
+            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+
+            const { cmd, args } = command.build();
+            expect(cmd).toEqual('docker');
+            expect(args).toEqual([
+                'exec',
+                '--workdir=/var/www/',
+                'container_name',
+                '/bin/sh',
+                '-c',
+                [
+                    'php',
+                    'vendor/bin/paratest',
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                    `'-f'`,
+                ].join(' '),
+            ]);
+        });
+
         it('should replace workspaceFolder', () => {
             const testFile = phpUnitProject('tests/AssertionsTest.php');
             const command = givenCommand({
