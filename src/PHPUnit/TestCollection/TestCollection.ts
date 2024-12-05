@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { extname, join } from 'node:path';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
@@ -205,11 +205,12 @@ export class TestCollection {
 
         const suffix = testSuite.suffix ?? '.php';
 
-        return minimatch(
-            uri.toString(true),
+        const minimatch = new Minimatch(
             URI.file(join(workspace, testSuite.value, `/**/*${suffix}`)).toString(true),
             { matchBase: true, nocase: true },
         );
+
+        return minimatch.match(uri.toString(true));
     }
 }
 
