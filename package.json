@@ -94,7 +94,10 @@
         },
         "phpunit.args": {
           "type": "array",
-          "default": [],
+          "default": [
+            "--colors=never",
+            "--teamcity"
+          ],
           "description": "Any phpunit args (phpunit --help) E.g. --configuration ${workspaceFolder}/phpunit.xml.dist"
         },
         "phpunit.paths": {
