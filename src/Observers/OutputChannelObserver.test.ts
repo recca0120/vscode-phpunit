@@ -145,7 +145,7 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
             expect.stringMatching(/\s+❌\sfailed\s\d+\sms/),
         );
-        expect(outputChannel.append).toHaveBeenCalledWith(
+        expect(outputChannel.appendLine).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
                 `     ├ Failed asserting that false is true.${EOL}` +
@@ -173,7 +173,7 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
             expect.stringMatching(/\s+❌\sis_not_same\s\d+\sms/),
         );
-        expect(outputChannel.append).toHaveBeenCalledWith(
+        expect(outputChannel.appendLine).toHaveBeenCalledWith(
             expect.stringContaining(
                 `     ┐ ${EOL}` +
                 `     ├ Failed asserting that two arrays are identical.${EOL}` +
