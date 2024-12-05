@@ -1,4 +1,4 @@
-import { relative } from 'node:path';
+import { normalize, relative } from 'node:path';
 import * as vscode from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
@@ -18,7 +18,7 @@ async function getWorkspaceTestPatterns() {
     const directoryPath = (path: string) => {
         return /^\.[\\\/]?$/.test(path) || !path
             ? ''
-            : path.replace(new RegExp(['^\.[\\|/]', '[\\|/]+$/'].join('|'), 'g'), '') + '/';
+            : normalize(path.replace(new RegExp(['^\.[\\|/]', '[\\|/]+$/'].join('|'), 'g'), '') + '/');
     };
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
