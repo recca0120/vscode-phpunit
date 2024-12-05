@@ -1,4 +1,4 @@
-import { relative } from 'node:path';
+import { normalize, relative } from 'node:path';
 import * as vscode from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
@@ -15,10 +15,8 @@ async function getWorkspaceTestPatterns() {
     }
 
     const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
-    const directoryPath = (path: string) => {
-        return /^\.[\\\/]?$/.test(path) || !path
-            ? ''
-            : path.replace(new RegExp(['^\.[\\|/]', '[\\|/]+$/'].join('|'), 'g'), '') + '/';
+    const normalizePosix = (...paths: string[]) => {
+        return normalize(paths.join('/')).replace(/\\/g, '/').replace(/\/+/g, '/');
     };
     const results = [];
     for (const workspaceFolder of vscode.workspace.workspaceFolders) {
@@ -32,15 +30,15 @@ async function getWorkspaceTestPatterns() {
             phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
         }
 
-        const baseDir = directoryPath(relative(workspaceFolder.uri.fsPath, phpUnitXML.root()));
+        const baseDir = normalizePosix(relative(workspaceFolder.uri.fsPath, phpUnitXML.root()));
         phpUnitXML.getTestSuites().forEach((item) => {
             if (item.tag === 'directory') {
                 const suffix = item.suffix ?? '.php';
-                includePatterns.push(`${baseDir}${directoryPath(item.value)}**/*${suffix}`);
+                includePatterns.push(normalizePosix(baseDir, item.value, `**/*${suffix}`));
             } else if (item.tag === 'file') {
-                includePatterns.push(`${baseDir}${item.value}`);
+                includePatterns.push(normalizePosix(baseDir, item.value));
             } else if (item.tag === 'exclude') {
-                excludePatterns.push(`${baseDir}${item.value}`);
+                excludePatterns.push(normalizePosix(baseDir, item.value, `**/*`));
             }
         });
 
