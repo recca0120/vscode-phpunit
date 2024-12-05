@@ -2,7 +2,7 @@ import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
-import { Configuration, EOL, LocalCommand, TestRunner } from '../PHPUnit';
+import { Command, Configuration, EOL, TestRunner } from '../PHPUnit';
 import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { OutputChannelObserver } from './OutputChannelObserver';
 
@@ -42,7 +42,7 @@ describe('OutputChannelObserver', () => {
         } as TestRunRequest);
 
         const cwd = phpUnitProject('');
-        const command = new LocalCommand(configuration, { cwd });
+        const command = new Command(configuration, { cwd });
         command.setArguments([file, filter].join(' '));
 
         const testRunner = new TestRunner();

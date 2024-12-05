@@ -5,7 +5,7 @@ import { Result } from '../ProblemMatcher';
 import { parseValue } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
 
-export abstract class Command {
+export class Command {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
 
@@ -17,6 +17,14 @@ export abstract class Command {
         this.arguments = args.trim();
 
         return this;
+    }
+
+    build() {
+        const [cmd, ...args] = this.getCommand()
+            .filter((input: string) => !!input)
+            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
+
+        return { cmd, args, options: this.options };
     }
 
     replacePath(result: Result) {
@@ -38,20 +46,15 @@ export abstract class Command {
         return result;
     }
 
-    apply() {
-        const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
-            .filter((input: string) => !!input)
-            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
+    private getCommand() {
+        const prefix = this.getPrefix();
+        const command = this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
 
-        return { cmd, args, options: this.options };
-    }
+        if (!/sh\s+-c/.test(prefix.slice(-2).join(' '))) {
+            return [...prefix, ...command];
+        }
 
-    protected executable() {
-        return this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
-    }
-
-    protected resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
-        return new PathReplacer(options, configuration.get('paths') as Path);
+        return [...prefix, command.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' ')];
     }
 
     private getPrefix() {
@@ -88,6 +91,10 @@ export abstract class Command {
             !!this.getPhpUnit().match(/paratest/) &&
             args.some((arg: string) => !!arg.match(/--filter/))
         );
+    }
+
+    private resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
+        return new PathReplacer(options, configuration.get('paths') as Path);
     }
 }
 
