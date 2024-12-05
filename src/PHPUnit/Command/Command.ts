@@ -78,8 +78,7 @@ export class Command {
                 (args: any, [key, value]) => [...parseValue(key, value), ...args],
                 _.map((v) => (typeof v === 'number' ? v : decodeURIComponent(v))),
             )
-            .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
-            .concat('--colors=never', '--teamcity');
+            .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg));
     }
 
     private setParaTestFunctional(args: string[]) {
