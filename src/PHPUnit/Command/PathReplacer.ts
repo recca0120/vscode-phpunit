@@ -12,7 +12,7 @@ export class PathReplacer {
     private pathLookup = new Map<string, string>();
 
     constructor(private options: SpawnOptions = {}, paths?: Path) {
-        this.cwd = (this.options?.cwd as string) ?? (process.env.cwd as string);
+        this.cwd = this.normalizePath((this.options?.cwd as string) ?? (process.env.cwd as string));
         this.pathVariables = new Map<string, string>();
         this.pathVariables.set('${PWD}', this.cwd);
         this.pathVariables.set('${workspaceFolder}', this.cwd);
@@ -81,5 +81,10 @@ export class PathReplacer {
         return Array.from(this.pathLookup.entries()).reduce((path, [remotePath, localPath]) => {
             return fn(path, remotePath, localPath);
         }, path);
+    }
+
+    private normalizePath(path: string) {
+        // fix windows path \Users\ -> c:\Users
+        return /^\\/.test(path) ? `c:${path}` : path;
     }
 }
