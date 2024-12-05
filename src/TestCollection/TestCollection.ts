@@ -1,14 +1,12 @@
 import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    Command,
     File,
     PHPUnitXML,
     TestCollection as BaseTestCollection,
     TestDefinition,
     TestDefinitionBuilder,
     TestParser,
-    TestRunner,
     TestType,
 } from '../PHPUnit';
 import { CustomWeakMap } from '../PHPUnit/utils';
@@ -27,11 +25,7 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    async run(runner: TestRunner, command: Command): Promise<unknown> {
-        return runner.run(command.setArguments(this.parseArguments()));
-    }
-
-    private parseArguments(): string {
+    getArguments(): string {
         if (this.testDefinition.type === TestType.namespace) {
             return this.parseNamespaceFilter();
         }

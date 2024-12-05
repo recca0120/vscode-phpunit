@@ -21,9 +21,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const command = new Command(this.configuration, {
-            cwd: this.testCollection.getWorkspace(),
-        });
+        const command = new Command(this.configuration, { cwd: this.testCollection.getWorkspace() });
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
 
@@ -49,13 +47,17 @@ export class Handler {
             runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
 
             if (!request.include) {
-                return runner.run(command);
+                await runner.run(command);
+
+                return;
             }
 
-            await Promise.all(request.include
-                .map((test) => this.testCollection.getTestCase(test)!)
-                .map((testCase) => testCase.run(runner, command)),
+            await Promise.all(
+                request.include
+                    .map((test) => this.testCollection.getTestCase(test)!)
+                    .map((testCase) => runner.run(command.setArguments(testCase.getArguments()))),
             );
+
             return;
         };
 
