@@ -21,9 +21,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const command = new Command(this.configuration, {
-            cwd: this.testCollection.getWorkspace(),
-        });
+        const command = new Command(this.configuration, { cwd: this.testCollection.getWorkspace() });
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
 
@@ -48,14 +46,16 @@ export class Handler {
             runner.observe(new TestResultObserver(queue, run, cancellation));
             runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
 
-            if (!request.include) {
-                return runner.run(command);
-            }
+            const processes = !request.include
+                ? [runner.run(command)]
+                : request.include
+                    .map((test) => this.testCollection.getTestCase(test)!)
+                    .map((testCase) => runner.run(testCase.update(command)));
 
-            await Promise.all(request.include
-                .map((test) => this.testCollection.getTestCase(test)!)
-                .map((testCase) => testCase.run(runner, command)),
-            );
+            cancellation?.onCancellationRequested(() => processes.forEach((process) => process.kill()));
+
+            await Promise.all(processes.map((process) => process.wait()));
+
             return;
         };
 

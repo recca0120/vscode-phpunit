@@ -8,7 +8,6 @@ import {
     TestDefinition,
     TestDefinitionBuilder,
     TestParser,
-    TestRunner,
     TestType,
 } from '../PHPUnit';
 import { CustomWeakMap } from '../PHPUnit/utils';
@@ -27,11 +26,11 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    async run(runner: TestRunner, command: Command): Promise<unknown> {
-        return runner.run(command.setArguments(this.parseArguments()));
+    update(command: Command) {
+        return command.setArguments(this.getArguments());
     }
 
-    private parseArguments(): string {
+    private getArguments(): string {
         if (this.testDefinition.type === TestType.namespace) {
             return this.parseNamespaceFilter();
         }
