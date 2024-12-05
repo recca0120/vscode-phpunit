@@ -8,7 +8,7 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, TestResultObserver } from './Observers';
-import { LocalCommand, RemoteCommand, TestRunner, TestType } from './PHPUnit';
+import { Command, TestRunner, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
@@ -21,7 +21,9 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const command = await this.createCommand();
+        const command = new Command(this.configuration, {
+            cwd: this.testCollection.getWorkspace(),
+        });
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
 
@@ -66,17 +68,5 @@ export class Handler {
         collection.forEach((item) => items.push(item));
 
         return items;
-    }
-
-    private async createCommand() {
-        const options = { cwd: this.testCollection.getWorkspace() };
-
-        return this.isRemote() ? new RemoteCommand(this.configuration, options) : new LocalCommand(this.configuration, options);
-    }
-
-    private isRemote() {
-        const command = (this.configuration.get('command') as string) ?? '';
-
-        return command.match(/docker|ssh|sail/) !== null;
     }
 }

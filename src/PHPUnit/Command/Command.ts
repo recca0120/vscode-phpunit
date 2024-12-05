@@ -5,7 +5,7 @@ import { Result } from '../ProblemMatcher';
 import { parseValue } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
 
-export abstract class Command {
+export class Command {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
 
@@ -17,6 +17,14 @@ export abstract class Command {
         this.arguments = args.trim();
 
         return this;
+    }
+
+    build() {
+        const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
+            .filter((input: string) => !!input)
+            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
+
+        return { cmd, args, options: this.options };
     }
 
     replacePath(result: Result) {
@@ -36,14 +44,6 @@ export abstract class Command {
         }
 
         return result;
-    }
-
-    apply() {
-        const [cmd, ...args] = [...this.getPrefix(), ...this.executable()]
-            .filter((input: string) => !!input)
-            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
-
-        return { cmd, args, options: this.options };
     }
 
     protected executable() {

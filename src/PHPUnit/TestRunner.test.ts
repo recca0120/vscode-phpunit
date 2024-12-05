@@ -2,7 +2,7 @@ import 'jest';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
-import { Command, LocalCommand, RemoteCommand } from './Command';
+import { Command } from './Command';
 import { Configuration } from './Configuration';
 import { Result, TestExtraResultEvent, TestResult, TestResultEvent, TestResultKind } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';
@@ -265,7 +265,7 @@ describe('TestRunner Test', () => {
             args: ['-c', '${PWD}/phpunit.xml'],
         });
 
-        const command = new LocalCommand(configuration, { cwd });
+        const command = new Command(configuration, { cwd });
         const expected = [
             'foo',
             'vendor/bin/phpunit',
@@ -288,7 +288,7 @@ describe('TestRunner Test', () => {
             phpunit: '${workspaceFolder}/vendor/bin/phpunit',
             args: ['-c', '${workspaceFolder}/phpunit.xml'],
         });
-        const command = new LocalCommand(configuration, { cwd });
+        const command = new Command(configuration, { cwd });
 
         it('should run all tests', async () => {
             const expected = [
@@ -370,7 +370,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const command = new RemoteCommand(configuration, { cwd });
+        const command = new Command(configuration, { cwd });
 
         it('should run all tests for SSH', async () => {
             const expected = [
@@ -503,7 +503,7 @@ describe('TestRunner Test', () => {
             paths: { '${PWD}': appPath('') },
         });
 
-        const command = new RemoteCommand(configuration, { cwd });
+        const command = new Command(configuration, { cwd });
 
         it('should run all tests for Docker', async () => {
             const expected = [
@@ -629,7 +629,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const command = new RemoteCommand(configuration, { cwd });
+        const command = new Command(configuration, { cwd });
 
         it('should run all tests for Windows Docker', async () => {
             const expected = [

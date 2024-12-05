@@ -1,7 +1,7 @@
 import 'jest';
 import { phpUnitProject } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
-import { LocalCommand, RemoteCommand } from './Command';
+import { Command } from './Command';
 
 describe('Command Test', () => {
     const phpUnitProjectForWindows = (path: string) =>
@@ -9,7 +9,7 @@ describe('Command Test', () => {
 
     describe('LocalCommand', () => {
         const givenCommand = (configuration: any, cwd?: string) => {
-            return new LocalCommand(new Configuration({ php: 'php', ...configuration }), {
+            return new Command(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
         };
@@ -19,7 +19,7 @@ describe('Command Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
 
             expect(cmd).toEqual('php');
             expect(args).toEqual([
@@ -38,7 +38,7 @@ describe('Command Test', () => {
                 phpunit: phpUnitProjectForWindows('vendor/bin/phpunit'),
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 phpUnitProjectForWindows('vendor/bin/phpunit'),
@@ -55,7 +55,7 @@ describe('Command Test', () => {
                 args: ['--repeat=2', '--order-by=random'],
             });
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -72,7 +72,7 @@ describe('Command Test', () => {
                 args: ['--no-coverage', '--no-logging'],
             });
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -86,7 +86,7 @@ describe('Command Test', () => {
 
     describe('RemoteCommand', () => {
         const givenCommand = (configuration: any, cwd?: string) => {
-            return new RemoteCommand(new Configuration({ php: 'php', ...configuration }), {
+            return new Command(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
         };
@@ -98,7 +98,7 @@ describe('Command Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'run',
@@ -129,7 +129,7 @@ describe('Command Test', () => {
                 },
             }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -156,7 +156,7 @@ describe('Command Test', () => {
                 },
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { cmd, args } = command.apply();
+            const { cmd, args } = command.build();
             expect(cmd).toEqual('docker');
             expect(args).toEqual([
                 'exec',
