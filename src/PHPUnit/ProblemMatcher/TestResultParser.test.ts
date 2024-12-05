@@ -1,7 +1,7 @@
 import { TestResultParser } from '.';
 import { TestExtraResultEvent, TestResultEvent } from './types';
 
-describe('Teamcity Parsers', () => {
+describe('TestResultParser', () => {
     const parse = (text: string) => {
         return new TestResultParser().parse(text);
     };
