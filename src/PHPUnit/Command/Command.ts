@@ -97,12 +97,3 @@ export class Command {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 }
-
-export class LocalCommand extends Command {
-}
-
-export class RemoteCommand extends Command {
-    // protected executable() {
-    //     return super.executable().map((input) => (/^-/.test(input) ? `'${input}'` : input));
-    // }
-}
