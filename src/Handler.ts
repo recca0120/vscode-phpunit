@@ -7,7 +7,7 @@ import {
     TestRunRequest,
 } from 'vscode';
 import { Configuration } from './Configuration';
-import { OutputChannelObserver, TestResultObserver } from './Observers';
+import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
 import { Command, TestRunner, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
@@ -44,7 +44,12 @@ export class Handler {
         const runTestQueue = async () => {
             const runner = new TestRunner();
             runner.observe(new TestResultObserver(queue, run, cancellation));
-            runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
+            runner.observe(new OutputChannelObserver(
+                this.outputChannel,
+                this.configuration,
+                request,
+                new CollisionPrinter()
+            ));
 
             const processes = !request.include
                 ? [runner.run(command)]

@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import { ChildProcess } from 'node:child_process';
 import { Command } from './Command';
-import { ProblemMatcher, Result, TestResultKind } from './ProblemMatcher';
-import { DefaultObserver, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
+import { ProblemMatcher, TestResult, TestResultEvent } from './ProblemMatcher';
+import { DefaultObserver, EventResultMap, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
 
 export class TestRunnerProcess {
     constructor(private process: ChildProcess) {}
@@ -39,8 +39,8 @@ export class TestRunner {
         this.observers.push(observer);
     }
 
-    on(eventName: TestRunnerEvent | TestResultKind, fn: Function) {
-        this.defaultObserver.on(eventName, fn);
+    on<K extends keyof EventResultMap>(eventName: K, callback: (result: EventResultMap[K]) => void): this {
+        this.defaultObserver.on(eventName, callback);
 
         return this;
     }
@@ -91,19 +91,19 @@ export class TestRunner {
 
         if (result) {
             result = command.replacePath(result);
-            if ('kind' in result) {
-                this.trigger(result.kind, result);
+            if ('event' in result!) {
+                this.trigger(result.event, result);
             }
 
-            this.trigger(TestRunnerEvent.result, result);
+            this.trigger(TestRunnerEvent.result, result!);
         }
 
         this.trigger(TestRunnerEvent.line, line);
     }
 
     private trigger(
-        eventName: TestRunnerEvent | TestResultKind,
-        result: Result | string | number | null,
+        eventName: TestRunnerEvent | TestResultEvent,
+        result: TestResult | string | number | null,
     ) {
         this.observers
             .filter((observer) => observer[eventName])

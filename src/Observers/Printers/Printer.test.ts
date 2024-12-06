@@ -1,4 +1,4 @@
-import { EOL, TestExtraResultEvent, TestFinished, TestResultEvent } from '../../PHPUnit';
+import { EOL, TestFinished, TestResultEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { Printer } from './Printer';
 
@@ -16,7 +16,7 @@ describe('Printer', () => {
 
     it('testVersion', () => {
         const output = printer.testVersion({
-            kind: TestExtraResultEvent.testVersion,
+            event: TestResultEvent.testVersion,
             phpunit: '11.5.0',
             paratest: undefined,
             text: 'PHPUnit 11.5.0 by Sebastian Bergmann and contributors.',
@@ -27,7 +27,7 @@ describe('Printer', () => {
 
     it('testRuntime', () => {
         const output = printer.testRuntime({
-            kind: TestExtraResultEvent.testRuntime,
+            event: TestResultEvent.testRuntime,
             runtime: 'PHP 8.3.14',
             text: 'Runtime:       PHP 8.3.14',
         });
@@ -37,7 +37,7 @@ describe('Printer', () => {
 
     it('testConfiguration', () => {
         const output = printer.testConfiguration({
-            kind: TestExtraResultEvent.testConfiguration,
+            event: TestResultEvent.testConfiguration,
             configuration: phpUnitProject('phpunit.xml'),
             text: `Configuration: ${phpUnitProject('phpunit.xml')}`,
         });
@@ -47,7 +47,7 @@ describe('Printer', () => {
 
     it('testResultSummary', () => {
         const output = printer.testResultSummary({
-            kind: TestExtraResultEvent.testResultSummary,
+            event: TestResultEvent.testResultSummary,
             text: 'Tests: 33, Assertions: 30, Errors: 2, Failures: 6, Warnings: 1, PHPUnit Deprecations: 8, Skipped: 1, Incomplete: 1, Risky: 2.',
             tests: 33,
             assertions: 30,
@@ -67,7 +67,7 @@ describe('Printer', () => {
         const output = printer.timeAndMemory({
             time: '00:00.055',
             memory: '10.00 MB',
-            kind: TestExtraResultEvent.timeAndMemory,
+            event: TestResultEvent.timeAndMemory,
             text: 'Time: 00:00.055, Memory: 10.00 MB',
         });
 
@@ -80,7 +80,6 @@ describe('Printer', () => {
             name: 'test_die',
             locationHint: `php_qn://${phpUnitProject('tests/Output/OutputTest.php')}::\\Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo`,
             flowId: 97825,
-            kind: TestResultEvent.testStarted,
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo',
             file: phpUnitProject('tests/Output/OutputTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo',
@@ -98,7 +97,6 @@ describe('Printer', () => {
             name: 'test_die',
             locationHint: `php_qn://${phpUnitProject('tests/Output/OutputTest.php')}::\\Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die`,
             flowId: 97825,
-            kind: TestResultEvent.testStarted,
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die',
             file: phpUnitProject('tests/Output/OutputTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die',

@@ -1,9 +1,19 @@
-import { TestCount, TestResult, TestResultEvent, TestResultParser, TestResultSummary, TimeAndMemory } from '.';
+import {
+    TestFailed,
+    TestFinished,
+    TestIgnored,
+    TestResult,
+    TestResultEvent,
+    TestResultParser,
+    TestStarted,
+    TestSuiteFinished,
+    TestSuiteStarted,
+} from '.';
 
 export class ProblemMatcher {
     private results = new Map<string, TestResult>();
 
-    private lookup: { [p: string]: Function } = {
+    private lookup: { [p: string]: (result: any) => TestResult | undefined } = {
         [TestResultEvent.testSuiteStarted]: this.handleStarted,
         [TestResultEvent.testStarted]: this.handleStarted,
         [TestResultEvent.testSuiteFinished]: this.handleFinished,
@@ -14,30 +24,28 @@ export class ProblemMatcher {
 
     constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
 
-    parse(input: string | Buffer): TestResult | TestCount | TestResultSummary | TimeAndMemory | undefined {
+    parse(input: string | Buffer): TestResult | undefined {
         const result = this.testResultParser.parse(input.toString());
 
-        return this.isTestResult(result)
-            ? this.lookup[(result as TestResult).event]?.call(this, result as TestResult)
-            : result;
+        return this.isResult(result) ? this.lookup[result!.event]?.call(this, result) : result;
     }
 
-    private isTestResult(result: any | undefined) {
-        return result && 'event' in result && 'name' in result && 'flowId' in result;
+    private isResult(result?: TestResult): boolean {
+        return !!(result && 'event' in result && 'name' in result && 'flowId' in result);
     }
 
-    private handleStarted(testResult: TestResult) {
+    private handleStarted(testResult: TestSuiteStarted | TestStarted) {
         const id = this.generateId(testResult);
         this.results.set(id, { ...testResult });
 
         return this.results.get(id);
     }
 
-    private handleFault(testResult: TestResult) {
+    private handleFault(testResult: TestFailed | TestIgnored): undefined {
         const id = this.generateId(testResult);
-        const prevData = this.results.get(id);
+        const prevData = this.results.get(id) as (TestFailed | TestIgnored);
 
-        if (!prevData || prevData.kind === TestResultEvent.testStarted) {
+        if (!prevData || prevData.event === TestResultEvent.testStarted) {
             this.results.set(id, { ...(prevData ?? {}), ...testResult });
             return;
         }
@@ -50,13 +58,12 @@ export class ProblemMatcher {
         this.results.set(id, prevData);
     }
 
-    private handleFinished(testResult: TestResult) {
+    private handleFinished(testResult: TestSuiteFinished | TestFinished) {
         const id = this.generateId(testResult);
 
         const prevData = this.results.get(id)!;
         const event = this.isFault(prevData) ? prevData.event : testResult.event;
-        const kind = event;
-        const result = { ...prevData, ...testResult, event, kind };
+        const result = { ...prevData, ...testResult, event };
         this.results.delete(id);
 
         return result;
@@ -66,7 +73,7 @@ export class ProblemMatcher {
         return [TestResultEvent.testFailed, TestResultEvent.testIgnored].includes(testResult.event);
     }
 
-    private generateId(testResult: TestResult) {
+    private generateId(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
         return `${testResult.name}-${testResult.flowId}`;
     }
 }

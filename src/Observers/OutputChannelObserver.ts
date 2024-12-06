@@ -2,11 +2,15 @@ import { OutputChannel, TestRunRequest } from 'vscode';
 import {
     IConfiguration,
     TestConfiguration,
+    TestFailed,
+    TestFinished,
+    TestIgnored,
     TestProcesses,
     TestResult,
     TestResultSummary,
     TestRunnerObserver,
     TestRuntime,
+    TestStarted,
     TestSuiteFinished,
     TestSuiteStarted,
     TestVersion,
@@ -66,40 +70,42 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        if (!result.id || result.id.match(/::/)) {
+        const id = result.id;
+        if (!id || id.match(/::/)) {
             return;
         }
 
         this.appendLine(this.printer.testSuiteStarted(result));
     }
 
-    testSuiteFinished(result: TestResult): void {
-        if (!result.id || result.id.match(/::/)) {
+    testStarted(result: TestStarted): void {
+        this.appendLine(this.printer.testStarted(result));
+    }
+
+    testFinished(result: TestFinished): void {
+        this.appendLine(this.printer.testFinished(result));
+        this.printedOutput(result);
+    }
+
+    testFailed(result: TestFailed): void {
+        this.appendLine(this.printer.testFinished(result));
+        this.printedOutput(result);
+        this.showOutputChannel(ShowOutputState.onFailure);
+    }
+
+    testIgnored(result: TestIgnored): void {
+        this.appendLine(this.printer.testFinished(result));
+        this.printedOutput(result);
+        this.showOutputChannel(ShowOutputState.onFailure);
+    }
+
+    testSuiteFinished(result: TestSuiteFinished): void {
+        const id = result.id;
+        if (!id || id.match(/::/)) {
             return;
         }
 
         this.appendLine(this.printer.testSuiteFinished(result));
-    }
-
-    testStarted(result: TestResult): void {
-        this.appendLine(this.printer.testStarted(result));
-    }
-
-    testFinished(result: TestResult): void {
-        this.appendLine(this.printer.testFinished(result));
-        this.printedOutput(result);
-    }
-
-    testFailed(result: TestResult): void {
-        this.appendLine(this.printer.testFinished(result));
-        this.printedOutput(result);
-        this.showOutputChannel(ShowOutputState.onFailure);
-    }
-
-    testIgnored(result: TestResult): void {
-        this.appendLine(this.printer.testFinished(result));
-        this.printedOutput(result);
-        this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     timeAndMemory(result: TimeAndMemory) {

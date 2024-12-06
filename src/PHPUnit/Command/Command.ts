@@ -1,7 +1,7 @@
 import { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
 import { Configuration, IConfiguration } from '../Configuration';
-import { Result } from '../ProblemMatcher';
+import { TestResult } from '../ProblemMatcher';
 import { parseValue } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
 
@@ -27,13 +27,13 @@ export class Command {
         return { cmd, args, options: this.options };
     }
 
-    replacePath(result: Result) {
+    replacePath(result: TestResult) {
         if ('locationHint' in result) {
-            result.locationHint = this.pathReplacer.toLocal(result.locationHint);
+            result.locationHint = this.pathReplacer.toLocal(result.locationHint!);
         }
 
         if ('file' in result) {
-            result.file = this.pathReplacer.toLocal(result.file);
+            result.file = this.pathReplacer.toLocal(result.file!);
         }
 
         if ('details' in result) {

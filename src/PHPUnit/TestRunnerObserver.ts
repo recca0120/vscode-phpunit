@@ -1,14 +1,17 @@
 import {
-    Result,
     TestConfiguration,
     TestCount,
-    TestExtraResultEvent,
+    TestFailed,
+    TestFinished,
+    TestIgnored,
     TestProcesses,
     TestResult,
     TestResultEvent,
-    TestResultKind,
     TestResultSummary,
     TestRuntime,
+    TestStarted,
+    TestSuiteFinished,
+    TestSuiteStarted,
     TestVersion,
     TimeAndMemory,
 } from './ProblemMatcher';
@@ -22,121 +25,122 @@ export enum TestRunnerEvent {
     close = 'close',
 }
 
-export type TestRunnerObserver = {
-    [TestRunnerEvent.run]?: (command: string) => void;
-    [TestRunnerEvent.line]?: (line: string) => void;
-    [TestRunnerEvent.result]?: (result: Result) => void;
-    [TestRunnerEvent.output]?: (output: string) => void;
-    [TestRunnerEvent.error]?: (error: string) => void;
-    [TestRunnerEvent.close]?: (code: number | null) => void;
-    [TestExtraResultEvent.testVersion]?: (result: TestVersion) => void;
-    [TestExtraResultEvent.testProcesses]?: (result: TestProcesses) => void;
-    [TestExtraResultEvent.testRuntime]?: (result: TestRuntime) => void;
-    [TestExtraResultEvent.testConfiguration]?: (result: TestConfiguration) => void;
-    [TestExtraResultEvent.testCount]?: (result: TestCount) => void;
-    [TestExtraResultEvent.testResultSummary]?: (result: TestResultSummary) => void;
-    [TestExtraResultEvent.timeAndMemory]?: (result: TimeAndMemory) => void;
-} & { [p in TestResultEvent]?: (result: TestResult) => void };
+export type EventResultMap = {
+    [TestRunnerEvent.run]: string;
+    [TestRunnerEvent.line]: string;
+    [TestRunnerEvent.result]: TestResult;
+    [TestRunnerEvent.output]: string;
+    [TestRunnerEvent.error]: string;
+    [TestRunnerEvent.close]: number | null;
+    [TestResultEvent.testVersion]: TestVersion;
+    [TestResultEvent.testProcesses]: TestProcesses;
+    [TestResultEvent.testRuntime]: TestRuntime;
+    [TestResultEvent.testConfiguration]: TestConfiguration;
+    [TestResultEvent.testSuiteStarted]: TestSuiteStarted;
+    [TestResultEvent.testCount]: TestCount;
+    [TestResultEvent.testStarted]: TestStarted;
+    [TestResultEvent.testFinished]: TestFinished;
+    [TestResultEvent.testFailed]: TestFailed;
+    [TestResultEvent.testIgnored]: TestIgnored;
+    [TestResultEvent.testSuiteFinished]: TestSuiteFinished;
+    [TestResultEvent.timeAndMemory]: TimeAndMemory;
+    [TestResultEvent.testResultSummary]: TestResultSummary;
+};
+
+export type TestRunnerObserver = Partial<{
+    [K in keyof EventResultMap]: (result: EventResultMap[K]) => void;
+} & { [p in TestResultEvent]: (result: EventResultMap[p]) => void }>
 
 export class DefaultObserver implements TestRunnerObserver {
-    private listeners = [
-        ...Object.values(TestRunnerEvent),
-        ...Object.values(TestResultEvent),
-        ...Object.values(TestExtraResultEvent),
-    ].reduce(
-        (listeners, key) => {
-            listeners[key] = [];
-            return listeners;
-        },
-        {} as { [p: string]: Array<Function> },
-    );
+    private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
+
 
     run(command: string): void {
-        this.trigger(TestRunnerEvent.run, command);
+        this.emit(TestRunnerEvent.run, command);
     }
 
     output(output: string): void {
-        this.trigger(TestRunnerEvent.output, output);
+        this.emit(TestRunnerEvent.output, output);
     }
 
     error(error: string): void {
-        this.trigger(TestRunnerEvent.error, error);
+        this.emit(TestRunnerEvent.error, error);
     }
 
     close(code: number | null): void {
-        this.trigger(TestRunnerEvent.close, code);
+        this.emit(TestRunnerEvent.close, code);
     }
 
     line(line: string): void {
-        this.trigger(TestRunnerEvent.line, line);
+        this.emit(TestRunnerEvent.line, line);
     }
 
-    result(result: Result): void {
-        this.trigger(TestRunnerEvent.result, result);
+    result(result: TestResult): void {
+        this.emit(TestRunnerEvent.result, result);
     }
 
     testVersion(result: TestVersion): void {
-        this.trigger(TestExtraResultEvent.testVersion, result);
+        this.emit(TestResultEvent.testVersion, result);
     }
 
     testProcesses(result: TestProcesses): void {
-        this.trigger(TestExtraResultEvent.testProcesses, result);
+        this.emit(TestResultEvent.testProcesses, result);
     }
 
     testRuntime(result: TestRuntime): void {
-        this.trigger(TestExtraResultEvent.testRuntime, result);
+        this.emit(TestResultEvent.testRuntime, result);
     }
 
     testConfiguration(result: TestConfiguration): void {
-        this.trigger(TestExtraResultEvent.testConfiguration, result);
+        this.emit(TestResultEvent.testConfiguration, result);
     }
 
-    testSuiteStarted(result: Result): void {
-        this.trigger(TestResultEvent.testSuiteStarted, result);
+    testSuiteStarted(result: TestSuiteStarted): void {
+        this.emit(TestResultEvent.testSuiteStarted, result);
     }
 
-    testSuiteFinished(result: Result): void {
-        this.trigger(TestResultEvent.testSuiteFinished, result);
+    testCount(result: TestCount): void {
+        this.emit(TestResultEvent.testCount, result);
     }
 
-    testStarted(result: Result): void {
-        this.trigger(TestResultEvent.testStarted, result);
+    testStarted(result: TestStarted): void {
+        this.emit(TestResultEvent.testStarted, result);
     }
 
-    testFinished(result: Result): void {
-        this.trigger(TestResultEvent.testFinished, result);
+    testFinished(result: TestFinished): void {
+        this.emit(TestResultEvent.testFinished, result);
     }
 
-    testFailed(result: Result): void {
-        this.trigger(TestResultEvent.testFailed, result);
+    testFailed(result: TestFailed): void {
+        this.emit(TestResultEvent.testFailed, result);
     }
 
-    testIgnored(result: Result): void {
-        this.trigger(TestResultEvent.testIgnored, result);
+    testIgnored(result: TestIgnored): void {
+        this.emit(TestResultEvent.testIgnored, result);
     }
 
-    testCount(result: Result): void {
-        this.trigger(TestExtraResultEvent.testCount, result);
+    testSuiteFinished(result: TestSuiteFinished): void {
+        this.emit(TestResultEvent.testSuiteFinished, result);
     }
 
     timeAndMemory(result: TimeAndMemory): void {
-        this.trigger(TestExtraResultEvent.timeAndMemory, result);
+        this.emit(TestResultEvent.timeAndMemory, result);
     }
 
     testResultSummary(result: TestResultSummary): void {
-        this.trigger(TestExtraResultEvent.testResultSummary, result);
+        this.emit(TestResultEvent.testResultSummary, result);
     }
 
-    on(eventName: TestRunnerEvent | TestResultKind, fn: Function) {
-        this.listeners[eventName].push(fn);
+    on<K extends keyof EventResultMap>(eventName: K, fn: (result: EventResultMap[K]) => void): this {
+        if (!this.listeners[eventName]) {
+            this.listeners[eventName] = [];
+        }
+        this.listeners[eventName]?.push(fn);
 
         return this;
     }
 
-    private trigger(
-        eventName: TestRunnerEvent | TestResultKind,
-        result: Result | string | number | null,
-    ) {
-        this.listeners[eventName].forEach((fn) => fn(result));
+    private emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void {
+        this.listeners[eventName]?.forEach(callback => callback(result));
     }
 }

@@ -1,13 +1,11 @@
 import {
     EOL,
     TestConfiguration,
-    TestExtraResultEvent,
     TestFailed,
     TestFinished,
     TestProcesses,
     TestResult,
     TestResultEvent,
-    TestResultKind,
     TestResultSummary,
     TestRuntime,
     TestStarted,
@@ -54,8 +52,8 @@ class OutputBuffer {
 
 export abstract class Printer {
     protected outputBuffer = new OutputBuffer;
-    protected messages = new Map<TestResultKind, string[]>([
-        [TestExtraResultEvent.testVersion, ['🚀', 'STARTED']],
+    protected messages = new Map<TestResultEvent, string[]>([
+        [TestResultEvent.testVersion, ['🚀', 'STARTED']],
         [TestResultEvent.testFinished, ['✅', 'PASSED']],
         [TestResultEvent.testFailed, ['❌', 'FAILED']],
         [TestResultEvent.testIgnored, ['➖', 'IGNORED']],
@@ -72,7 +70,7 @@ export abstract class Printer {
     }
 
     testVersion(result: TestVersion) {
-        const [icon] = this.messages.get(TestExtraResultEvent.testVersion)!;
+        const [icon] = this.messages.get(TestResultEvent.testVersion)!;
 
         return `${EOL}${icon} ${result.text}${EOL}`;
     }
@@ -93,10 +91,6 @@ export abstract class Printer {
         return result.id;
     }
 
-    testSuiteFinished(_result: TestSuiteFinished): string | undefined {
-        return undefined;
-    }
-
     testStarted(result: TestStarted): string | undefined {
         this.setCurrent(result.name);
 
@@ -105,13 +99,17 @@ export abstract class Printer {
 
     abstract testFinished(result: TestFinished | TestFailed): string | undefined;
 
-    testResultSummary(result: TestResultSummary) {
+    testSuiteFinished(_result: TestSuiteFinished): string | undefined {
+        return undefined;
+    }
+
+    timeAndMemory(result: TimeAndMemory) {
         this.setCurrent(undefined);
 
         return result.text;
     }
 
-    timeAndMemory(result: TimeAndMemory) {
+    testResultSummary(result: TestResultSummary) {
         this.setCurrent(undefined);
 
         return result.text;
@@ -132,8 +130,10 @@ export abstract class Printer {
             return text ? `${icon} ${text}` : undefined;
         }
 
-        const matched = result.message?.match(/This\stest\sprinted\soutput:(.*)/);
-        const text = !matched ? this.outputBuffer.get(result.name) : matched[1].trim();
+        const name = 'name' in result ? result.name : '';
+        const message = 'message' in result ? result.message : '';
+        const matched = message.match(/This\stest\sprinted\soutput:(.*)/);
+        const text = !matched ? this.outputBuffer.get(name) : matched[1].trim();
 
         return text ? `${icon} ${text}` : undefined;
     }

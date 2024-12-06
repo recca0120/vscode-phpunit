@@ -1,4 +1,4 @@
-import { EOL, TestFailed, TestFinished, TestResult, TestResultEvent, TestSuiteFinished } from '../../PHPUnit';
+import { EOL, TestFailed, TestFinished, TestResultEvent, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
 export class PrettyPrinter extends Printer {
@@ -16,11 +16,11 @@ export class PrettyPrinter extends Printer {
     }
 
     testFinished(result: TestFinished | TestFailed) {
-        const [icon] = this.messages.get(result.kind)!;
+        const [icon] = this.messages.get(result.event)!;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
         const messages = [`  ${icon} ${name} ${result.duration} ms`];
-        if (result.kind === TestResultEvent.testFailed) {
+        if (result.event === TestResultEvent.testFailed) {
             messages.push(this.formatError(result as TestFailed));
         }
 
@@ -39,13 +39,13 @@ export class PrettyPrinter extends Printer {
         ].join('');
     }
 
-    private formatDetails(result: TestResult) {
+    private formatDetails(result: TestFailed) {
         return result.details.reduce((msg, { file, line }) => {
             return (msg + this.formatMessage(this.decorated.default, `${file}:${line}`));
         }, '');
     }
 
-    private formatDiff(result: TestResult) {
+    private formatDiff(result: TestFailed) {
         if (!(result.expected && result.actual)) {
             return;
         }

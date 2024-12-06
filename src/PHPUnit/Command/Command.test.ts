@@ -1,12 +1,9 @@
 import 'jest';
-import { phpUnitProject } from '../__tests__/utils';
+import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
 import { Command } from './Command';
 
 describe('Command Test', () => {
-    const phpUnitProjectForWindows = (path: string) =>
-        `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
-
     describe('LocalCommand', () => {
         const givenCommand = (configuration: any, cwd?: string) => {
             return new Command(new Configuration({ php: 'php', ...configuration }), {
@@ -32,18 +29,18 @@ describe('Command Test', () => {
         });
 
         it('should run Windows Path', () => {
-            const cwd = phpUnitProjectForWindows('');
-            const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
+            const cwd = phpUnitProjectWin('');
+            const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
             const command = givenCommand({
-                phpunit: phpUnitProjectForWindows('vendor/bin/phpunit'),
+                phpunit: phpUnitProjectWin('vendor/bin/phpunit'),
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { cmd, args } = command.apply();
             expect(cmd).toEqual('php');
             expect(args).toEqual([
-                phpUnitProjectForWindows('vendor/bin/phpunit'),
+                phpUnitProjectWin('vendor/bin/phpunit'),
                 '--filter=^.*::(test_passed)( with data set .*)?$',
-                phpUnitProjectForWindows('tests/AssertionsTest.php'),
+                phpUnitProjectWin('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -171,8 +168,8 @@ describe('Command Test', () => {
         });
 
         it('should replace workspaceFolder for Windows Path', () => {
-            const cwd = phpUnitProjectForWindows('');
-            const testFile = phpUnitProjectForWindows('tests/AssertionsTest.php');
+            const cwd = phpUnitProjectWin('');
+            const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
             const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name',
                 phpunit: 'vendor/bin/phpunit',

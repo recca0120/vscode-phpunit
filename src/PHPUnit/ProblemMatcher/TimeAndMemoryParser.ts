@@ -1,4 +1,5 @@
-import { IParser, TestExtraResultEvent, TimeAndMemory } from './types';
+import { TestResultEvent, TimeAndMemory } from './types';
+import { IParser } from './ValueParser';
 
 export class TimeAndMemoryParser implements IParser<TimeAndMemory> {
     private readonly pattern = new RegExp(
@@ -11,8 +12,8 @@ export class TimeAndMemoryParser implements IParser<TimeAndMemory> {
 
     public parse(text: string): TimeAndMemory {
         const { time, memory } = text.match(this.pattern)!.groups!;
-        const kind = TestExtraResultEvent.timeAndMemory;
+        const event = TestResultEvent.timeAndMemory;
 
-        return { time, memory, kind, text };
+        return { time, memory, event, text };
     }
 }

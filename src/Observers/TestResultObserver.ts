@@ -1,5 +1,5 @@
 import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
-import { EOL, TestResult, TestRunnerObserver } from '../PHPUnit';
+import { EOL, TestFailed, TestIgnored, TestResult, TestRunnerObserver } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
@@ -38,7 +38,7 @@ export class TestResultObserver implements TestRunnerObserver {
 
     testFailed(result: TestResult): void {
         this.doRun(result, (test) =>
-            this.testRun.failed(test, this.message(result, test), result.duration),
+            this.testRun.failed(test, this.message((result as TestFailed), test), (result as TestFailed).duration),
         );
     }
 
@@ -46,7 +46,7 @@ export class TestResultObserver implements TestRunnerObserver {
         this.doRun(result, (test) => this.testRun.skipped(test));
     }
 
-    private message(result: TestResult, test: TestItem) {
+    private message(result: TestFailed | TestIgnored, test: TestItem) {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
@@ -76,6 +76,8 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        return this.queue.find(({ test }) => test.id === result.testId)?.test;
+        return 'testId' in result
+            ? this.queue.find(({ test }) => test.id === result.testId)?.test
+            : undefined;
     }
 }

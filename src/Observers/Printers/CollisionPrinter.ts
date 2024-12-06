@@ -1,35 +1,39 @@
 import { readFileSync } from 'node:fs';
-import { EOL, TestFailed, TestFinished, TestResult, TestResultEvent, TestSuiteFinished } from '../../PHPUnit';
+import { EOL, TestFailed, TestFinished, TestIgnored, TestResultEvent, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
 export class CollisionPrinter extends Printer {
-    private errors: TestResult[] = [];
+    private errors: TestFailed[] = [];
 
     start() {
         super.start();
         this.errors = [];
     }
 
-    testSuiteFinished(_result: TestSuiteFinished): string | undefined {
-        return '';
-    }
-
-    testFinished(result: TestFinished | TestFailed) {
-        const [icon] = this.messages.get(result.kind)!;
+    testFinished(result: TestFinished | TestFailed | TestIgnored) {
+        const [icon] = this.messages.get(result.event)!;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
-        if (result.kind === TestResultEvent.testFailed) {
-            this.errors.push(result as any);
+        if (result.event === TestResultEvent.testFailed) {
+            this.errors.push(result as TestFailed);
+        }
+
+        if (result.event === TestResultEvent.testIgnored) {
+            return `${icon} ${name} ➜ ${(result as TestIgnored).message} ${result.duration} ms`;
         }
 
         return `${icon} ${name} ${result.duration} ms`;
+    }
+
+    testSuiteFinished(_result: TestSuiteFinished): string | undefined {
+        return '';
     }
 
     end() {
         return this.errors.map((result) => this.formatError(result)).join(EOL);
     }
 
-    private formatError(result: TestResult) {
+    private formatError(result: TestFailed) {
         return [
             '',
             this.formatErrorTitle(result),
@@ -41,19 +45,19 @@ export class CollisionPrinter extends Printer {
         ].filter((content) => content !== undefined).join(EOL);
     }
 
-    private formatErrorTitle(result: TestResult) {
+    private formatErrorTitle(result: TestFailed) {
         let [className, method] = result.id.split('::');
         method = method.replace(/^test_/, '');
-        const [icon, message] = this.messages.get(result.kind)!;
+        const [icon, message] = this.messages.get(result.event)!;
 
         return `${icon} ${message}  ${className} > ${method}`;
     }
 
-    private formatMessage(result: TestResult) {
+    private formatMessage(result: TestFailed) {
         return result.message;
     }
 
-    private formatDiff(result: TestResult) {
+    private formatDiff(result: TestFailed) {
         if (!result.expected || !result.actual) {
             return undefined;
         }
@@ -67,7 +71,7 @@ export class CollisionPrinter extends Printer {
         ].join(EOL);
     }
 
-    private formatFile(result: TestResult) {
+    private formatFile(result: TestFailed) {
         const detail = result.details.find(({ file }) => {
             return file === result.file;
         })!;
@@ -76,25 +80,29 @@ export class CollisionPrinter extends Printer {
             return undefined;
         }
 
-        const data = readFileSync(detail.file, 'utf8');
-        const position = detail.line - 5;
-        const lines = data.split(/\r\n|\n/).splice(position, 10).map((line, index) => {
-            const currentPosition = position + index + 1;
-            const prefix = detail.line === currentPosition ? '➜ ' : '  ';
+        try {
+            const data = readFileSync(detail.file, 'utf8');
+            const position = detail.line - 5;
+            const lines = data.split(/\r\n|\n/).splice(position, 10).map((line, index) => {
+                const currentPosition = position + index + 1;
+                const prefix = detail.line === currentPosition ? '➜ ' : '  ';
 
-            return `${prefix}${String(currentPosition).padStart(2, ' ')} ▕ ${line}`;
-        });
+                return `${prefix}${String(currentPosition).padStart(2, ' ')} ▕ ${line}`;
+            });
 
-        return [
-            '',
-            `at ${detail.file}:${detail.line}`,
-            ...lines,
-        ].join(EOL);
+            return [
+                '',
+                `at ${detail.file}:${detail.line}`,
+                ...lines,
+            ].join(EOL);
+        } catch (e) {
+            return undefined;
+        }
     }
 
-    private formatDetails(result: TestResult) {
+    private formatDetails(result: TestFailed) {
         return EOL + result.details.map(({ file, line }, index) => {
-            return `${index + 1} ${file}:${line}`;
+            return `${index + 1}. ${file}:${line}`;
         }).join(EOL);
     }
 

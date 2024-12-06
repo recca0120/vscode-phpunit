@@ -1,7 +1,8 @@
-import { TestExtraResultEvent, TestRuntime, ValueParser } from './types';
+import { TestResultEvent, TestRuntime } from './types';
+import { ValueParser } from './ValueParser';
 
 export class TestRuntimeParser extends ValueParser<TestRuntime> {
     constructor() {
-        super('Runtime', TestExtraResultEvent.testRuntime);
+        super('Runtime', TestResultEvent.testRuntime);
     }
 }

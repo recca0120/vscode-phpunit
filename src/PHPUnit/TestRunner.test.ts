@@ -1,10 +1,10 @@
 import 'jest';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
-import { getPhpUnitVersion, phpUnitProject } from './__tests__/utils';
+import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
 import { Command } from './Command';
 import { Configuration } from './Configuration';
-import { Result, TestExtraResultEvent, TestResult, TestResultEvent, TestResultKind } from './ProblemMatcher';
+import { TestResultEvent } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import Mock = jest.Mock;
@@ -21,13 +21,13 @@ const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
     [TestRunnerEvent.error, jest.fn()],
 ]);
 
-const onTestResultEvents = new Map<TestResultKind, jest.Mock>([
-    [TestExtraResultEvent.testVersion, jest.fn()],
-    [TestExtraResultEvent.testRuntime, jest.fn()],
-    [TestExtraResultEvent.testConfiguration, jest.fn()],
-    [TestExtraResultEvent.testCount, jest.fn()],
-    [TestExtraResultEvent.timeAndMemory, jest.fn()],
-    [TestExtraResultEvent.testResultSummary, jest.fn()],
+const onTestResultEvents = new Map<TestResultEvent, jest.Mock>([
+    [TestResultEvent.testVersion, jest.fn()],
+    [TestResultEvent.testRuntime, jest.fn()],
+    [TestResultEvent.testConfiguration, jest.fn()],
+    [TestResultEvent.testCount, jest.fn()],
+    [TestResultEvent.timeAndMemory, jest.fn()],
+    [TestResultEvent.testResultSummary, jest.fn()],
     [TestResultEvent.testSuiteStarted, jest.fn()],
     [TestResultEvent.testSuiteFinished, jest.fn()],
     [TestResultEvent.testStarted, jest.fn()],
@@ -60,9 +60,7 @@ const hasFile = (
     return !!file.match(new RegExp(pattern)) && line === l;
 });
 
-const phpUnitProjectForWindows = (path: string) => `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
-
-function expectedTestResult(expected: TestResult, projectPath: (path: string) => string): void {
+function expectedTestResult(expected: any, projectPath: (path: string) => string): void {
     const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
         (call: any) => call[0].id === expected.id && call[0].event === expected.event,
     );
@@ -95,12 +93,12 @@ function expectedTestResult(expected: TestResult, projectPath: (path: string) =>
     );
 
     if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
-        expect(onTestResultEvents.get(TestExtraResultEvent.testVersion)).toHaveBeenCalled();
-        // expect(onTestResultEvents.get(TestExtraResultEvent.testRuntime)).toHaveBeenCalled();
-        // expect(onTestResultEvents.get(TestExtraResultEvent.testConfiguration)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testCount)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.timeAndMemory)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestExtraResultEvent.testResultSummary)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestResultEvent.testVersion)).toHaveBeenCalled();
+        // expect(onTestResultEvents.get(TestResultEvent.testRuntime)).toHaveBeenCalled();
+        // expect(onTestResultEvents.get(TestResultEvent.testConfiguration)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestResultEvent.testCount)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestResultEvent.timeAndMemory)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestResultEvent.testResultSummary)).toHaveBeenCalled();
     }
 
     expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
@@ -163,8 +161,8 @@ const generateTestResult = (
 
 const expectedCommand = async (command: Command, expected: string[]) => {
     const testRunner = new TestRunner();
-    onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: Result) => fn(test)));
-    onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: Result) => fn(test)));
+    onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
+    onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     await testRunner.run(command).wait();
 
     const call = (spawn as Mock).mock.calls[0];
@@ -177,7 +175,7 @@ const shouldRunTest = async (
     projectPath: (path: string) => string,
     appPath: (path: string) => string,
     start: { event: TestResultEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
-    finished: TestResult,
+    finished: any,
 ) => {
     generateTestResult(start, appPath, start.phpVfsComposer);
 
@@ -198,7 +196,7 @@ const shouldRunAllTest = async (expected: string[], command: Command, projectPat
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
         file: projectPath('tests/AssertionsTest.php'),
-    } as TestResult);
+    });
 };
 
 const shouldRunTestSuite = async (expected: string[], command: Command, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
@@ -213,7 +211,7 @@ const shouldRunTestSuite = async (expected: string[], command: Command, projectP
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
         file: projectPath('tests/AssertionsTest.php'),
-    } as TestResult);
+    });
 };
 
 const shouldRunTestPassed = async (expected: string[], command: Command, projectPath: (path: string) => string, appPath: (path: string) => string) => {
@@ -230,7 +228,7 @@ const shouldRunTestPassed = async (expected: string[], command: Command, project
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
         file: projectPath('tests/AssertionsTest.php'),
-    } as TestResult);
+    });
 };
 
 const shouldRunTestFailed = async (expected: string[], command: Command, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
@@ -250,7 +248,7 @@ const shouldRunTestFailed = async (expected: string[], command: Command, project
         file: projectPath('tests/AssertionsTest.php'),
         message: 'Failed asserting that false is true.',
         details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
-    } as TestResult);
+    });
 };
 
 describe('TestRunner Test', () => {
@@ -628,7 +626,7 @@ describe('TestRunner Test', () => {
     });
 
     describe('Windows Docker', () => {
-        const projectPath = phpUnitProjectForWindows;
+        const projectPath = phpUnitProjectWin;
         const appPath = (path?: string) => (path ? `./${path}` : '.').replace(/\/g/, '\\');
         const cwd = projectPath('');
         const configuration = new Configuration({

@@ -14,7 +14,6 @@ describe('CollisionPrinter', () => {
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest`,
             flowId: 22695,
-            kind: TestResultEvent.testSuiteStarted,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             file: phpUnitProject('tests/AssertionsTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -40,7 +39,6 @@ describe('CollisionPrinter', () => {
             name: 'test_is_not_same',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same`,
             flowId: 2369,
-            kind: TestResultEvent.testStarted,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
             file: phpUnitProject('tests/AssertionsTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
@@ -55,7 +53,6 @@ describe('CollisionPrinter', () => {
             name: 'test_passed',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed`,
             flowId: 2369,
-            kind: TestResultEvent.testFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
             file: phpUnitProject('tests/AssertionsTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
@@ -71,7 +68,6 @@ describe('CollisionPrinter', () => {
             name: 'test_failed',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed`,
             flowId: 2369,
-            kind: TestResultEvent.testFailed,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
             file: phpUnitProject('tests/AssertionsTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
@@ -104,7 +100,7 @@ describe('CollisionPrinter', () => {
             `  26 ▕     {`,
             `  27 ▕         $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);`,
             ``,
-            `1 ${phpUnitProject('tests/AssertionsTest.php')}:22`,
+            `1. ${phpUnitProject('tests/AssertionsTest.php')}:22`,
             ``,
         ].join(EOL));
     });
@@ -115,7 +111,6 @@ describe('CollisionPrinter', () => {
             name: 'test_is_not_same',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same`,
             flowId: 2369,
-            kind: TestResultEvent.testFailed,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
             file: phpUnitProject('tests/AssertionsTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
@@ -159,7 +154,38 @@ describe('CollisionPrinter', () => {
             `  31 ▕     {`,
             `  32 ▕         $a = 1;`,
             ``,
-            `1 ${phpUnitProject('tests/AssertionsTest.php')}:27`,
+            `1. ${phpUnitProject('tests/AssertionsTest.php')}:27`,
+            ``,
+        ].join(EOL));
+    });
+
+    it('testFailed and file not found', () => {
+        const output = printer.testFinished({
+            event: TestResultEvent.testFailed,
+            name: 'test_failed',
+            locationHint: `php_qn://${phpUnitProject('tests/NotFoundTest.php')}::\\Recca0120\\VSCode\\Tests\\NotFoundTest::test_failed`,
+            flowId: 2369,
+            id: 'Recca0120\\VSCode\\Tests\\NotFoundTest::test_failed',
+            file: phpUnitProject('tests/NotFoundTest.php'),
+            testId: 'Recca0120\\VSCode\\Tests\\NotFoundTest::test_failed',
+            message: 'Failed asserting that false is true.',
+            details: [
+                {
+                    file: phpUnitProject('tests/NotFoundTest.php'),
+                    line: 22,
+                },
+            ],
+            duration: 0,
+        });
+
+        expect(output).toEqual([`❌ failed 0 ms`].join(EOL));
+
+        expect(printer.end()).toEqual([
+            ``,
+            `❌ FAILED  Recca0120\\VSCode\\Tests\\NotFoundTest > failed`,
+            `Failed asserting that false is true.`,
+            ``,
+            `1. ${phpUnitProject('tests/NotFoundTest.php')}:22`,
             ``,
         ].join(EOL));
     });
@@ -170,7 +196,6 @@ describe('CollisionPrinter', () => {
             name: 'test_skipped',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped`,
             flowId: 2369,
-            kind: TestResultEvent.testIgnored,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
             file: phpUnitProject('tests/AssertionsTest.php'),
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
@@ -178,6 +203,6 @@ describe('CollisionPrinter', () => {
             duration: 0,
         });
 
-        expect(output).toEqual([`➖ skipped 0 ms`].join(EOL));
+        expect(output).toEqual([`➖ skipped ➜ The MySQLi extension is not available. 0 ms`].join(EOL));
     });
 });

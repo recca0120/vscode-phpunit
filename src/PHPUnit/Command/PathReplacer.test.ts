@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { phpUnitProject } from '../__tests__/utils';
+import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { PathReplacer } from './PathReplacer';
 
 describe('PathReplacer', () => {
@@ -11,10 +11,9 @@ describe('PathReplacer', () => {
     };
 
     const toWindows = (path: string) => path.replace(/\//g, '\\').replace(/\\$/g, '');
-    const phpUnitProjectForWindows = (path: string) => `C:\\vscode\\${path}`.replace(/\//g, '\\').replace(/\\$/g, '');
 
     const givenPathReplacerForWindows = (paths?: any, cwd?: string) => {
-        return new PathReplacer({ cwd: cwd ?? phpUnitProjectForWindows('') }, paths ?? {
+        return new PathReplacer({ cwd: cwd ?? phpUnitProjectWin('') }, paths ?? {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             '${workspaceFolder}': '/app',
         });
@@ -103,7 +102,7 @@ describe('PathReplacer', () => {
     it('to remote same path for windows', () => {
         const pathReplacer = givenPathReplacerForWindows();
 
-        const path = phpUnitProjectForWindows('tests/AssertionsTest.php');
+        const path = phpUnitProjectWin('tests/AssertionsTest.php');
 
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
@@ -127,7 +126,7 @@ describe('PathReplacer', () => {
     it('remote same path for windows', () => {
         const pathReplacer = givenPathReplacerForWindows();
 
-        const path = phpUnitProjectForWindows('tests/AssertionsTest.php');
+        const path = phpUnitProjectWin('tests/AssertionsTest.php');
 
         expect(pathReplacer.toLocal(path)).toEqual(path);
     });
@@ -137,7 +136,7 @@ describe('PathReplacer', () => {
 
         const path = './tests/AssertionsTest.php';
 
-        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectForWindows('tests/AssertionsTest.php'));
+        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectWin('tests/AssertionsTest.php'));
     });
 
     it('to local replace /app/ to project root for windows', () => {
@@ -145,7 +144,7 @@ describe('PathReplacer', () => {
 
         const path = '/app/tests/AssertionsTest.php';
 
-        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectForWindows('tests/AssertionsTest.php'));
+        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectWin('tests/AssertionsTest.php'));
     });
 
     it('to local replace /app/ to project root with php_qn for windows', () => {
@@ -153,7 +152,7 @@ describe('PathReplacer', () => {
 
         const path = 'php_qn:///app/tests/AssertionsTest.php::\\Recca0120\\VSCode\\Tests\\AssertionsTest';
 
-        expect(pathReplacer.toLocal(path)).toEqual(`php_qn://${phpUnitProjectForWindows('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest`);
+        expect(pathReplacer.toLocal(path)).toEqual(`php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest`);
     });
 
     it('to local replace /app/ to project root with phpvfscomposer for windows', () => {
@@ -161,7 +160,7 @@ describe('PathReplacer', () => {
 
         const path = 'phpvfscomposer:///app/vendor/phpunit/phpunit/phpunit';
 
-        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectForWindows('vendor/phpunit/phpunit/phpunit'));
+        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectWin('vendor/phpunit/phpunit/phpunit'));
     });
 
     it('to remote replace ${workspaceFolder} is . for windows', () => {
