@@ -7,9 +7,10 @@ import { TestResultSummaryParser } from './TestResultSummaryParser';
 import { TestRuntimeParser } from './TestRuntimeParser';
 import { TestVersionParser } from './TestVersionParser';
 import { TimeAndMemoryParser } from './TimeAndMemoryParser';
-import { IParser, Result, TestResult } from './types';
+import { TestResult } from './types';
+import { IParser } from './ValueParser';
 
-export class TestResultParser implements IParser<Result | undefined> {
+export class TestResultParser implements IParser<TestResult | undefined> {
     private readonly pattern = new RegExp('^.*#+teamcity');
     private readonly filePattern = new RegExp('(s+)?(?<file>.+):(?<line>\\d+)$');
     private readonly parsers = [
@@ -27,7 +28,7 @@ export class TestResultParser implements IParser<Result | undefined> {
         return !!text.match(this.pattern);
     }
 
-    public parse(text: string): Result | undefined {
+    public parse(text: string): TestResult | undefined {
         return this.is(text)
             ? this.doParse(text)
             : this.parsers.find((parser) => parser.is(text))?.parse(text);
@@ -40,7 +41,6 @@ export class TestResultParser implements IParser<Result | undefined> {
             .replace(/^\[|]$/g, '');
 
         const argv = this.toTeamcityArgv(text);
-        argv.kind = argv.event;
 
         return {
             ...argv,
@@ -109,7 +109,9 @@ export class TestResultParser implements IParser<Result | undefined> {
             ...args.map((parameter) => `--${parameter}`),
         ].join(' ');
 
-        const { _, $0, ...argv } = yargsParser(command);
+        const { _, $0, ...argv } = yargsParser(command, {
+            string: ['actual', 'expected'],
+        });
 
         return escapeValue.unescapeSingleQuote(argv);
     }

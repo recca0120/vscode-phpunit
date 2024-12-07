@@ -1,0 +1,29 @@
+import { TestResultEvent } from './types';
+
+export interface IParser<T> {
+    is: (text: string) => boolean;
+    parse: (text: string) => T;
+}
+
+export abstract class ValueParser<T> implements IParser<T> {
+    private pattern = new RegExp(`^${this.name}:\\s+(?<${this.name}>.+)`, 'i');
+
+    protected constructor(
+        private name: string,
+        private event: TestResultEvent,
+    ) {}
+
+    is(text: string): boolean {
+        return !!text.match(this.pattern);
+    }
+
+    parse(text: string) {
+        const groups = text.match(this.pattern)!.groups!;
+
+        return {
+            event: this.event,
+            [this.name.toLowerCase()]: groups[this.name],
+            text,
+        } as T;
+    }
+}

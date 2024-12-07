@@ -1,146 +1,123 @@
 export enum TestResultEvent {
-    testSuiteStarted = 'testSuiteStarted',
-    testSuiteFinished = 'testSuiteFinished',
-    testStarted = 'testStarted',
-    testFailed = 'testFailed',
-    testIgnored = 'testIgnored',
-    testFinished = 'testFinished',
-}
-
-export enum TestExtraResultEvent {
     testVersion = 'testVersion',
     testRuntime = 'testRuntime',
     testConfiguration = 'testConfiguration',
     testProcesses = 'testProcesses',
+
+    testSuiteStarted = 'testSuiteStarted',
     testCount = 'testCount',
+
+    testStarted = 'testStarted',
+    testFailed = 'testFailed',
+    testIgnored = 'testIgnored',
+    testFinished = 'testFinished',
+    testSuiteFinished = 'testSuiteFinished',
+
     timeAndMemory = 'timeAndMemory',
     testResultSummary = 'testResultSummary',
 }
 
-export type TestResultKind = TestResultEvent | TestExtraResultEvent;
-
-type TestResultBase = {
-    kind: TestResultKind;
+type BaseResult = {
     event: TestResultEvent;
     name: string;
     flowId: number;
-};
+}
 
-export type TestSuiteStarted = TestResultBase & {
-    id?: string;
-    file?: string;
-    locationHint?: string;
-    testId?: string;
-};
+type InfoResult = {
+    event: TestResultEvent;
+    text: string;
+}
 
-export type TestSuiteFinished = TestResultBase;
-
-export type TestStarted = TestResultBase & {
+export type TestSuiteStarted = BaseResult & Partial<{
+    locationHint: string;
     id: string;
     file: string;
+    testId: string;
+}>
+
+export type TestStarted = BaseResult & {
     locationHint: string;
-};
+    id: string;
+    file: string;
+    testId: string;
+}
 
-export type TestFinished = TestResultBase & {
+export type TestFinished = BaseResult & {
+    locationHint: string;
+    id: string;
+    file: string;
+    testId: string;
     duration: number;
-};
+}
 
-export type TestFailed = TestFinished & {
+export type TestFailed = BaseResult & {
+    locationHint: string;
+    id: string;
+    file: string;
+    testId: string;
     message: string;
-    details: Array<{ file: string; line: number }>;
-    type?: string;
+    details: { file: string, line: number }[];
+    duration: number;
+    type?: string; // comparisonFailure
     actual?: string;
     expected?: string;
-};
+}
 
 export type TestIgnored = TestFailed;
 
-export type TestCount = {
-    kind: TestResultKind;
-    event: TestResultEvent;
-    count: number;
-    flowId: number;
-};
+export type TestSuiteFinished = BaseResult & Partial<{
+    locationHint: string;
+    id: string;
+    file: string;
+    testId: string;
+}>;
 
-export type TestVersion = {
-    kind: TestResultKind;
-    text: string;
+export type TestVersion = InfoResult & {
     phpunit: string;
     paratest?: string;
-};
+}
 
-export type TestRuntime = {
-    kind: TestResultKind;
-    text: string;
+export type TestRuntime = InfoResult & {
     runtime: string;
-};
+}
 
-export type TestConfiguration = {
-    kind: TestResultKind;
-    text: string;
+export type TestConfiguration = InfoResult & {
     configuration: string;
-};
+}
 
-export type TestProcesses = {
-    kind: TestResultKind;
-    text: string;
+export type TestProcesses = InfoResult & {
     processes: string;
 };
 
-export type TimeAndMemory = {
-    kind: TestResultKind;
-    text: string;
+export type TestCount = Omit<(InfoResult & { count: number; flowId: number; }), 'text'>
+
+export type TimeAndMemory = InfoResult & {
     time: string;
     memory: string;
 };
 
-export type TestResultSummary = {
-    kind: TestResultKind;
-    text: string;
+export type TestResultSummary = InfoResult & {
     tests?: number;
     assertions?: number;
     errors?: number;
     failures?: number;
+    warnings?: number;
     skipped?: number;
     incomplete?: number;
     risky?: number;
     phpunitDeprecations?: number;
-};
-
-export type TestResult = TestSuiteStarted &
-    TestSuiteFinished &
-    TestStarted &
-    TestFailed &
-    TestIgnored &
-    TestFinished;
-
-export type Result = TestResult | TestResultSummary | TestCount | TimeAndMemory;
-
-export interface IParser<T> {
-    is: (text: string) => boolean;
-    parse: (text: string) => T;
 }
 
-export abstract class ValueParser<T> implements IParser<T> {
-    private pattern = new RegExp(`^${this.name}:\\s+(?<${this.name}>.+)`, 'i');
-
-    protected constructor(
-        private name: string,
-        private kind: TestResultKind,
-    ) {
-    }
-
-    is(text: string): boolean {
-        return !!text.match(this.pattern);
-    }
-
-    parse(text: string) {
-        const groups = text.match(this.pattern)!.groups!;
-
-        return {
-            kind: this.kind,
-            [this.name.toLowerCase()]: groups[this.name],
-            text,
-        } as T;
-    }
-}
+export type TestResult = TestSuiteStarted
+    | TestStarted
+    | TestFailed
+    | TestIgnored
+    | TestFinished
+    | TestSuiteFinished
+    | TestVersion
+    | TestRuntime
+    | TestConfiguration
+    | TestProcesses
+    | TestCount
+    | TimeAndMemory
+    | TestResultSummary;

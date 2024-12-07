@@ -7,14 +7,14 @@ import {
     TestRunRequest,
 } from 'vscode';
 import { Configuration } from './Configuration';
-import { OutputChannelObserver, TestResultObserver } from './Observers';
+import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
 import { Command, TestRunner, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
     private lastRequest: TestRunRequest | undefined;
 
-    constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) {}
+    constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) { }
 
     getLastRequest() {
         return this.lastRequest;
@@ -44,7 +44,12 @@ export class Handler {
         const runTestQueue = async () => {
             const runner = new TestRunner();
             runner.observe(new TestResultObserver(queue, run, cancellation));
-            runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request));
+            runner.observe(new OutputChannelObserver(
+                this.outputChannel,
+                this.configuration,
+                request,
+                new CollisionPrinter()
+            ));
 
             const processes = !request.include
                 ? [runner.run(command)]

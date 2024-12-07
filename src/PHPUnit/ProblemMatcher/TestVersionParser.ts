@@ -1,4 +1,5 @@
-import { IParser, TestExtraResultEvent, TestVersion } from './types';
+import { TestResultEvent, TestVersion } from './types';
+import { IParser } from './ValueParser';
 
 export class TestVersionParser implements IParser<TestVersion> {
     private pattern = new RegExp(
@@ -14,7 +15,7 @@ export class TestVersionParser implements IParser<TestVersion> {
         const groups = text.match(this.pattern)!.groups!;
 
         return {
-            kind: TestExtraResultEvent.testVersion,
+            event: TestResultEvent.testVersion,
             phpunit: groups.phpunit,
             paratest: groups.paratest,
             text,

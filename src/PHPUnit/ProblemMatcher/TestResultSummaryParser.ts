@@ -1,5 +1,6 @@
 import { camel } from '../utils';
-import { IParser, TestExtraResultEvent, TestResultSummary } from './types';
+import { TestResultEvent, TestResultSummary } from './types';
+import { IParser } from './ValueParser';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
@@ -30,7 +31,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
             `((?<name>[\\w\\s]+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
             'ig',
         );
-        const kind = TestExtraResultEvent.testResultSummary;
+        const event = TestResultEvent.testResultSummary;
 
         return [...text.matchAll(pattern)].reduce(
             (result: any, match) => {
@@ -42,7 +43,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
 
                 return result;
             },
-            { kind, text } as TestResultSummary,
+            { event, text } as TestResultSummary,
         );
     }
 

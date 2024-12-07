@@ -1,2 +1,3 @@
-export { TestResultObserver } from './TestResultObserver';
-export { OutputChannelObserver } from './OutputChannelObserver';
+export * from './TestResultObserver';
+export * from './OutputChannelObserver';
+export * from './Printers';
