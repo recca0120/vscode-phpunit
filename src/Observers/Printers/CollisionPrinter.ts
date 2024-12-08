@@ -39,7 +39,7 @@ export class CollisionPrinter extends Printer {
             this.formatErrorTitle(result),
             this.formatMessage(result),
             this.formatDiff(result),
-            this.formatFile(result),
+            this.getFileContent(result),
             this.formatDetails(result),
             '',
         ].filter((content) => content !== undefined).join(EOL);
@@ -71,7 +71,7 @@ export class CollisionPrinter extends Printer {
         ].join(EOL);
     }
 
-    private formatFile(result: TestFailed) {
+    private getFileContent(result: TestFailed) {
         const detail = result.details.find(({ file }) => {
             return file === result.file;
         })!;
@@ -92,7 +92,7 @@ export class CollisionPrinter extends Printer {
 
             return [
                 '',
-                `at ${detail.file}:${detail.line}`,
+                `at ${Printer.fileFormat(detail.file, detail.line)}`,
                 ...lines,
             ].join(EOL);
         } catch (e) {
@@ -101,9 +101,9 @@ export class CollisionPrinter extends Printer {
     }
 
     private formatDetails(result: TestFailed) {
-        return EOL + result.details.map(({ file, line }, index) => {
-            return `${index + 1}. ${file}:${line}`;
-        }).join(EOL);
+        return EOL + result.details
+            .map(({ file, line }) => Printer.fileFormat(file, line))
+            .map((file, index) => `${index + 1}. ${file}`).join(EOL);
     }
 
     private formatExpected(expected: string, prefix: string) {

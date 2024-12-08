@@ -1,6 +1,7 @@
 import { EOL, TestResultEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { PrettyPrinter } from './PrettyPrinter';
+import { Printer } from './Printer';
 
 describe('PrettyPrinter', () => {
     const printer = new PrettyPrinter();
@@ -75,7 +76,7 @@ describe('PrettyPrinter', () => {
             `     ┐ `,
             `     ├ Failed asserting that false is true.`,
             `     │ `,
-            `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22`,
+            `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
             `     ┴ `,
             ``,
         ].join(EOL));
@@ -117,7 +118,7 @@ describe('PrettyPrinter', () => {
             `     ┊     1 => 'h',`,
             `     ┊ ]`,
             `     │ `,
-            `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27`,
+            `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
             `     ┴ `,
             ``,
         ].join(EOL));

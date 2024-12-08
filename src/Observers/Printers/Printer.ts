@@ -145,4 +145,8 @@ export abstract class Printer {
     private setCurrent(current?: string) {
         this.outputBuffer.setCurrent(current);
     }
+
+    static fileFormat(file: string, line: number) {
+        return `${file}:${line}`;
+    }
 }
