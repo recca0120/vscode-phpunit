@@ -164,7 +164,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: itemId,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: 'AssertionsTest',
+                    label: '$(symbol-class) AssertionsTest',
                 }),
             );
 
@@ -172,7 +172,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: `${itemId}::test_passed`,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: 'test_passed',
+                    label: '$(symbol-method) test_passed',
                     range: {
                         start: { line: 11, character: 4 },
                         end: { line: 14, character: 5 },
