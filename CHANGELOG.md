@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.4.26] - 2024-12-08
+
+- set environment variables
+- new Result Printer
+
 ## [3.4.23] - 2024-12-05
 
 - fix cancel running tests

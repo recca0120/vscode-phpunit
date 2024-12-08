@@ -8,7 +8,7 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
-import { Command, TestRunner, TestType } from './PHPUnit';
+import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
@@ -21,7 +21,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const command = new Command(this.configuration, { cwd: this.testCollection.getWorkspace() });
+        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace() });
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
 
@@ -48,14 +48,14 @@ export class Handler {
                 this.outputChannel,
                 this.configuration,
                 request,
-                new CollisionPrinter()
+                new CollisionPrinter(),
             ));
 
             const processes = !request.include
-                ? [runner.run(command)]
+                ? [runner.run(builder)]
                 : request.include
                     .map((test) => this.testCollection.getTestCase(test)!)
-                    .map((testCase) => runner.run(testCase.update(command)));
+                    .map((testCase) => runner.run(testCase.update(builder)));
 
             cancellation?.onCancellationRequested(() => processes.forEach((process) => process.kill()));
 

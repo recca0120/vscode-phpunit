@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { ChildProcess } from 'node:child_process';
-import { Command } from './Command';
+import { CommandBuilder } from './Command';
 import { ProblemMatcher, TestResult, TestResultEvent } from './ProblemMatcher';
 import { DefaultObserver, EventResultMap, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
 
@@ -45,7 +45,7 @@ export class TestRunner {
         return this;
     }
 
-    run(command: Command) {
+    run(builder: CommandBuilder) {
         let temp = '';
         let output = '';
         const processOutput = (data: string) => {
@@ -54,18 +54,18 @@ export class TestRunner {
             temp += out;
             const lines = temp.split(/\r\n|\n/);
             while (lines.length > 1) {
-                this.processLine(lines.shift()!, command);
+                this.processLine(lines.shift()!, builder);
             }
             temp = lines.shift()!;
         };
 
-        const { cmd, args, options } = command.apply();
+        const { cmd, args, options } = builder.build();
         this.trigger(TestRunnerEvent.run, [cmd, ...args].join(' '));
 
         const proc = spawn(cmd, args, options);
         proc.stdout!.on('data', processOutput);
         proc.stderr!.on('data', processOutput);
-        proc.stdout!.on('end', () => this.processLine(temp, command));
+        proc.stdout!.on('end', () => this.processLine(temp, builder));
 
         proc.on('error', (err: Error) => {
             const error = err.stack ?? err.message;
@@ -86,11 +86,11 @@ export class TestRunner {
         return this.teamcityPattern.test(output);
     }
 
-    private processLine(line: string, command: Command) {
+    private processLine(line: string, builder: CommandBuilder) {
         let result = this.problemMatcher.parse(line);
 
         if (result) {
-            result = command.replacePath(result);
+            result = builder.replacePath(result);
             if ('event' in result!) {
                 this.trigger(result.event, result);
             }

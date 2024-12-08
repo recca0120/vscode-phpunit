@@ -26,6 +26,7 @@ This extension contributes the following settings:
   globally on the command line
 - `phpunit.command`: Custom command to run. Ex: `docker exec -t container_name`.
 - `phpunit.args`: Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist
+- `phpunit.environment`: Set environment variables before running the phpunit command, Ex: { "XDEBUG_MODE": "coverage" } or "XDEBUG_MODE=coverage"
 - `phpunit.clearOutputOnRun`: True will clear the output when we run a new test. False will leave the output after every
   test.
 - `phpunit.showAfterExecution` Specify if the test report will automatically be shown after execution
