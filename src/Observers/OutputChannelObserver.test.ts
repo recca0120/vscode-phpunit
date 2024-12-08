@@ -2,7 +2,7 @@ import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
-import { Command, Configuration, EOL, TestRunner } from '../PHPUnit';
+import { CommandBuilder, Configuration, EOL, TestRunner } from '../PHPUnit';
 import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { OutputChannelObserver } from './index';
 import { PrettyPrinter } from './Printers';
@@ -48,10 +48,10 @@ describe('OutputChannelObserver', () => {
         }
 
         const cwd = phpUnitProject('');
-        const command = new Command(configuration, { cwd });
-        command.setArguments([file, filter].join(' '));
+        const builder = new CommandBuilder(configuration, { cwd });
+        builder.setArguments([file, filter].join(' '));
 
-        await testRunner.run(command).wait();
+        await testRunner.run(builder).wait();
     }
 
     it('should trigger input', async () => {

@@ -1,7 +1,7 @@
 import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    Command,
+    CommandBuilder,
     File,
     PHPUnitXML,
     TestCollection as BaseTestCollection,
@@ -26,8 +26,8 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    update(command: Command) {
-        return command.setArguments(this.getArguments());
+    update(builder: CommandBuilder) {
+        return builder.setArguments(this.getArguments());
     }
 
     private getArguments(): string {

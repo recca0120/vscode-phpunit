@@ -4,7 +4,7 @@
   "displayName": "PHPUnit Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
-  "version": "3.4.25",
+  "version": "3.4.26",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -100,6 +100,10 @@
         "phpunit.paths": {
           "type": "object",
           "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
+        },
+        "phpunit.environment": {
+          "type": "object",
+          "title": "Set environment variables before running the phpunit command"
         },
         "phpunit.clearOutputOnRun": {
           "type": "boolean",

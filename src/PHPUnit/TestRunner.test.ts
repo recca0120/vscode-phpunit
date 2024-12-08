@@ -2,7 +2,7 @@ import 'jest';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
-import { Command } from './Command';
+import { CommandBuilder } from './Command';
 import { Configuration } from './Configuration';
 import { TestResultEvent } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';
@@ -159,11 +159,11 @@ const generateTestResult = (
     }
 };
 
-const expectedCommand = async (command: Command, expected: string[]) => {
+const expectedCommand = async (builder: CommandBuilder, expected: string[]) => {
     const testRunner = new TestRunner();
     onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
-    await testRunner.run(command).wait();
+    await testRunner.run(builder).wait();
 
     const call = (spawn as Mock).mock.calls[0];
     expect([call[0], ...call[1]]).toEqual(expected);
@@ -171,7 +171,7 @@ const expectedCommand = async (command: Command, expected: string[]) => {
 
 const shouldRunTest = async (
     expected: string[],
-    command: Command,
+    builder: CommandBuilder,
     projectPath: (path: string) => string,
     appPath: (path: string) => string,
     start: { event: TestResultEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
@@ -179,13 +179,13 @@ const shouldRunTest = async (
 ) => {
     generateTestResult(start, appPath, start.phpVfsComposer);
 
-    await expectedCommand(command, expected);
+    await expectedCommand(builder, expected);
 
     expectedTestResult(finished, projectPath);
 };
 
-const shouldRunAllTest = async (expected: string[], command: Command, projectPath: (path: string) => string, appPath: (path: string) => string) => {
-    await shouldRunTest(expected, command, projectPath, appPath, {
+const shouldRunAllTest = async (expected: string[], builder: CommandBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+    await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TestResultEvent.testStarted,
         name: 'test_passed',
         file: appPath('tests/AssertionsTest.php'),
@@ -199,10 +199,10 @@ const shouldRunAllTest = async (expected: string[], command: Command, projectPat
     });
 };
 
-const shouldRunTestSuite = async (expected: string[], command: Command, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
-    command.setArguments(projectPath('tests/AssertionsTest.php'));
+const shouldRunTestSuite = async (expected: string[], builder: CommandBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
+    builder.setArguments(projectPath('tests/AssertionsTest.php'));
 
-    await shouldRunTest(expected, command, projectPath, appPath, {
+    await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TestResultEvent.testSuiteStarted,
         file: appPath('tests/AssertionsTest.php'),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -214,7 +214,7 @@ const shouldRunTestSuite = async (expected: string[], command: Command, projectP
     });
 };
 
-const shouldRunTestPassed = async (expected: string[], command: Command, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestPassed = async (expected: string[], command: CommandBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
     const filter = `^.*::(test_passed)( with data set .*)?$`;
     command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
@@ -231,7 +231,7 @@ const shouldRunTestPassed = async (expected: string[], command: Command, project
     });
 };
 
-const shouldRunTestFailed = async (expected: string[], command: Command, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
+const shouldRunTestFailed = async (expected: string[], command: CommandBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
     const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
     command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
@@ -263,7 +263,7 @@ describe('TestRunner Test', () => {
             args: ['-c', '${PWD}/phpunit.xml'],
         });
 
-        const command = new Command(configuration, { cwd });
+        const builder = new CommandBuilder(configuration, { cwd });
         const expected = [
             'foo',
             'vendor/bin/phpunit',
@@ -271,7 +271,7 @@ describe('TestRunner Test', () => {
             '--colors=never',
             '--teamcity',
         ];
-        await expectedCommand(command, expected);
+        await expectedCommand(builder, expected);
 
         expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalledTimes(1);
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)!).toHaveBeenCalledTimes(1);
@@ -286,7 +286,7 @@ describe('TestRunner Test', () => {
             phpunit: '${workspaceFolder}/vendor/bin/phpunit',
             args: ['-c', '${workspaceFolder}/phpunit.xml'],
         });
-        const command = new Command(configuration, { cwd });
+        const builder = new CommandBuilder(configuration, { cwd });
 
         it('should run all tests', async () => {
             const expected = [
@@ -297,7 +297,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunAllTest(expected, command, projectPath, appPath);
+            await shouldRunAllTest(expected, builder, projectPath, appPath);
         });
 
         it('should run test suite', async () => {
@@ -310,7 +310,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestSuite(expected, command, projectPath, appPath);
+            await shouldRunTestSuite(expected, builder, projectPath, appPath);
         });
 
         it('should run test passed', async () => {
@@ -324,7 +324,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestPassed(expected, command, projectPath, appPath);
+            await shouldRunTestPassed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed', async () => {
@@ -338,7 +338,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed with phpvfscomposer for Docker', async () => {
@@ -352,7 +352,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
         });
     });
 
@@ -368,7 +368,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const command = new Command(configuration, { cwd });
+        const builder = new CommandBuilder(configuration, { cwd });
 
         it('should run all tests for SSH', async () => {
             const expected = [
@@ -391,7 +391,7 @@ describe('TestRunner Test', () => {
                 ].join(' '),
             ];
 
-            await shouldRunAllTest(expected, command, projectPath, appPath);
+            await shouldRunAllTest(expected, builder, projectPath, appPath);
         });
 
         it('should run test suite for SSH', async () => {
@@ -416,7 +416,7 @@ describe('TestRunner Test', () => {
                 ].join(' '),
             ];
 
-            await shouldRunTestSuite(expected, command, projectPath, appPath);
+            await shouldRunTestSuite(expected, builder, projectPath, appPath);
         });
 
         it('should run test passed for SSH', async () => {
@@ -442,7 +442,7 @@ describe('TestRunner Test', () => {
                 ].join(' '),
             ];
 
-            await shouldRunTestPassed(expected, command, projectPath, appPath);
+            await shouldRunTestPassed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed for SSH', async () => {
@@ -468,7 +468,7 @@ describe('TestRunner Test', () => {
                 ].join(' '),
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed with phpvfscomposer for Docker', async () => {
@@ -494,7 +494,7 @@ describe('TestRunner Test', () => {
                 ].join(' '),
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
         });
     });
 
@@ -511,7 +511,7 @@ describe('TestRunner Test', () => {
             paths: { '${PWD}': appPath('') },
         });
 
-        const command = new Command(configuration, { cwd });
+        const builder = new CommandBuilder(configuration, { cwd });
 
         it('should run all tests for Docker', async () => {
             const expected = [
@@ -531,7 +531,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunAllTest(expected, command, projectPath, appPath);
+            await shouldRunAllTest(expected, builder, projectPath, appPath);
         });
 
         it('should run test suite for Docker', async () => {
@@ -553,7 +553,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestSuite(expected, command, projectPath, appPath);
+            await shouldRunTestSuite(expected, builder, projectPath, appPath);
         });
 
         it('should run test passed for Docker', async () => {
@@ -576,7 +576,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestPassed(expected, command, projectPath, appPath);
+            await shouldRunTestPassed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed for Docker', async () => {
@@ -598,7 +598,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed with phpvfscomposer for Docker', async () => {
@@ -621,7 +621,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
         });
     });
 
@@ -637,7 +637,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const command = new Command(configuration, { cwd });
+        const builder = new CommandBuilder(configuration, { cwd });
 
         it('should run all tests for Windows Docker', async () => {
             const expected = [
@@ -657,7 +657,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunAllTest(expected, command, projectPath, appPath);
+            await shouldRunAllTest(expected, builder, projectPath, appPath);
         });
 
         it('should run test suite for Windows Docker', async () => {
@@ -679,7 +679,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestSuite(expected, command, projectPath, appPath);
+            await shouldRunTestSuite(expected, builder, projectPath, appPath);
         });
 
         it('should run test passed for Windows Docker', async () => {
@@ -702,7 +702,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestPassed(expected, command, projectPath, appPath);
+            await shouldRunTestPassed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed for Windows Docker', async () => {
@@ -725,7 +725,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath);
         });
 
         it('should run test failed with phpvfscomposer for Windows Docker', async () => {
@@ -748,7 +748,7 @@ describe('TestRunner Test', () => {
                 '--teamcity',
             ];
 
-            await shouldRunTestFailed(expected, command, projectPath, appPath, true);
+            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
         });
     });
 });

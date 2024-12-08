@@ -5,7 +5,7 @@ import { TestResult } from '../ProblemMatcher';
 import { parseValue } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
 
-export class Command {
+export class CommandBuilder {
     private arguments = '';
     private readonly pathReplacer: PathReplacer;
 
@@ -19,12 +19,14 @@ export class Command {
         return this;
     }
 
-    apply() {
-        const [cmd, ...args] = this.build()
+    build() {
+        const [cmd, ...args] = this.createCommand()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
-        return { cmd, args, options: this.options };
+        const options = { ...this.options, env: { ...process.env, ...this.getEnvironment() } };
+
+        return { cmd, args, options };
     }
 
     replacePath(result: TestResult) {
@@ -46,7 +48,7 @@ export class Command {
         return result;
     }
 
-    private build() {
+    private createCommand() {
         const command = this.getCommand();
         const executable = this.setParaTestFunctional([this.getPhp(), this.getPhpUnit(), ...this.getArguments()]);
 
@@ -55,6 +57,10 @@ export class Command {
         }
 
         return [...command, executable.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' ')];
+    }
+
+    private getEnvironment() {
+        return this.configuration.get('environment') ?? {};
     }
 
     private getCommand() {
