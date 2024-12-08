@@ -1,5 +1,5 @@
 export * from './Configuration';
-export * from './Command';
+export * from './CommandBuilder';
 export * from './TestRunnerObserver';
 export * from './TestRunner';
 export * from './TestParser';

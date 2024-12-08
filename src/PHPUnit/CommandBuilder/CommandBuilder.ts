@@ -20,13 +20,13 @@ export class CommandBuilder {
     }
 
     build() {
-        const [cmd, ...args] = this.createCommand()
+        const [command, ...args] = this.createCommand()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
         const options = { ...this.options, env: { ...process.env, ...this.getEnvironment() } };
 
-        return { cmd, args, options };
+        return { command, args, options };
     }
 
     replacePath(result: TestResult) {

@@ -2,7 +2,7 @@ import 'jest';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
-import { CommandBuilder } from './Command';
+import { CommandBuilder } from './CommandBuilder';
 import { Configuration } from './Configuration';
 import { TestResultEvent } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';

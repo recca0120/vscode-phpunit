@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
-import { ChildProcess } from 'node:child_process';
-import { CommandBuilder } from './Command';
+import { ChildProcess, SpawnOptions } from 'node:child_process';
+import { CommandBuilder } from './CommandBuilder';
 import { ProblemMatcher, TestResult, TestResultEvent } from './ProblemMatcher';
 import { DefaultObserver, EventResultMap, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
 
@@ -21,6 +21,10 @@ export class TestRunnerProcess {
             this.process.on('error', () => resolve(true));
             this.process.on('close', () => resolve(true));
         });
+    }
+
+    static create(command: string, args: readonly string[], options: SpawnOptions) {
+        return spawn(command, args, options);
     }
 }
 
@@ -59,24 +63,24 @@ export class TestRunner {
             temp = lines.shift()!;
         };
 
-        const { cmd, args, options } = builder.build();
-        this.trigger(TestRunnerEvent.run, [cmd, ...args].join(' '));
+        const { command, args, options } = builder.build();
+        this.emit(TestRunnerEvent.run, [command, ...args].join(' '));
 
-        const proc = spawn(cmd, args, options);
+        const proc = TestRunnerProcess.create(command, args, options);
         proc.stdout!.on('data', processOutput);
         proc.stderr!.on('data', processOutput);
         proc.stdout!.on('end', () => this.processLine(temp, builder));
 
         proc.on('error', (err: Error) => {
             const error = err.stack ?? err.message;
-            this.trigger(TestRunnerEvent.error, error);
-            this.trigger(TestRunnerEvent.close, 2);
+            this.emit(TestRunnerEvent.error, error);
+            this.emit(TestRunnerEvent.close, 2);
         });
 
         proc.on('close', (code) => {
             const eventName = this.isTestRunning(output) ? TestRunnerEvent.output : TestRunnerEvent.error;
-            this.trigger(eventName, output);
-            this.trigger(TestRunnerEvent.close, code);
+            this.emit(eventName, output);
+            this.emit(TestRunnerEvent.close, code);
         });
 
         return new TestRunnerProcess(proc);
@@ -88,23 +92,18 @@ export class TestRunner {
 
     private processLine(line: string, builder: CommandBuilder) {
         let result = this.problemMatcher.parse(line);
-
         if (result) {
             result = builder.replacePath(result);
             if ('event' in result!) {
-                this.trigger(result.event, result);
+                this.emit(result.event, result);
             }
 
-            this.trigger(TestRunnerEvent.result, result!);
+            this.emit(TestRunnerEvent.result, result!);
         }
-
-        this.trigger(TestRunnerEvent.line, line);
+        this.emit(TestRunnerEvent.line, line);
     }
 
-    private trigger(
-        eventName: TestRunnerEvent | TestResultEvent,
-        result: TestResult | string | number | null,
-    ) {
+    private emit(eventName: TestRunnerEvent | TestResultEvent, result: TestResult | string | number | null) {
         this.observers
             .filter((observer) => observer[eventName])
             .forEach((observer) => (observer[eventName] as Function)(result));
