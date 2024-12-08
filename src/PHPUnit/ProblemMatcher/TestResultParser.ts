@@ -22,7 +22,7 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         new TestResultSummaryParser(),
     ];
 
-    constructor() {}
+    constructor() { }
 
     public is(text: string): boolean {
         return !!text.match(this.pattern);
@@ -88,12 +88,12 @@ export class TestResultParser implements IParser<TestResult | undefined> {
 
         const locationHint = argv.locationHint;
         const split = locationHint
-            .replace(/^php_qn:\/\//, '')
+            .replace(/^(php_qn|pest_qn):\/\//, '')
             .replace(/::\\/g, '::')
             .split('::');
 
         const file = split.shift();
-        const id = split.join('::');
+        const id = [file, ...split].join('::');
         const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
 
         return { id, file, testId };

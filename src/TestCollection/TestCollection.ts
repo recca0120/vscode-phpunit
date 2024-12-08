@@ -7,9 +7,9 @@ import {
     TestCollection as BaseTestCollection,
     TestDefinition,
     TestDefinitionBuilder,
-    TestParser,
     TestType,
 } from '../PHPUnit';
+import { PestParser } from '../PHPUnit/TestParser/PestParser';
 import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
@@ -106,7 +106,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const testParser = new TestParser();
+        const testParser = new PestParser();
         const testHierarchyBuilder = new TestHierarchyBuilder(testParser, this.ctrl);
         const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
         await testParser.parseFile(uri.fsPath);

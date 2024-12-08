@@ -2,6 +2,7 @@ import { Minimatch } from 'minimatch';
 import { extname, join } from 'node:path';
 import { URI } from 'vscode-uri';
 import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import { PestParser } from '../TestParser/PestParser';
 import { TestDefinitionBuilder } from './TestDefinitionBuilder';
 
 export interface File<T> {
@@ -157,7 +158,7 @@ export class TestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const testParser = new TestParser();
+        const testParser = new PestParser();
         const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
         await testParser.parseFile(uri.fsPath);
 

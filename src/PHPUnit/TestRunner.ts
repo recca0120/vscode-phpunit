@@ -119,7 +119,6 @@ export class TestRunner {
             if ('event' in result!) {
                 this.emit(result.event, result);
             }
-
             this.emit(TestRunnerEvent.result, result!);
         }
         this.emit(TestRunnerEvent.line, line);

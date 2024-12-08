@@ -6,7 +6,7 @@ export class TestResultObserver implements TestRunnerObserver {
         private queue: { test: TestItem }[] = [],
         private testRun: TestRun,
         private cancellation?: CancellationToken,
-    ) {}
+    ) { }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -33,7 +33,10 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestResult): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (test) => {
+            console.log(test);
+            this.testRun.passed(test);
+        });
     }
 
     testFailed(result: TestResult): void {
