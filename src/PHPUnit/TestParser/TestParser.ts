@@ -80,7 +80,7 @@ export class TestParser {
         }
     }
 
-    private parseAst(
+    protected parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
         file: string,
         namespace?: Namespace,
@@ -94,7 +94,7 @@ export class TestParser {
         return this.parseChildren(ast, file, ast);
     }
 
-    private parseTestSuite(ast: Class, file: string, namespace?: Namespace) {
+    private parseTestSuite(ast: Class & Declaration, file: string, namespace?: Namespace) {
         const _class = ast;
 
         if (!validator.isTest(_class)) {
@@ -102,20 +102,18 @@ export class TestParser {
         }
 
         const clazz = {
-            ...parseProperty(ast as Declaration, namespace),
+            ...parseProperty(ast, namespace),
             type: TestType.class,
             file,
         };
 
         const methods = _class.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => {
-                return {
-                    ...parseProperty(method as Method, namespace, _class),
-                    type: TestType.method,
-                    file,
-                };
-            });
+            .map((method) => ({
+                ...parseProperty(method as Method, namespace, _class),
+                type: TestType.method,
+                file,
+            }));
 
         if (methods.length <= 0) {
             return;

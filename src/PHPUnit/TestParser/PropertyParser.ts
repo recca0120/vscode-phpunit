@@ -1,4 +1,4 @@
-import { Class, Declaration, Namespace } from 'php-parser';
+import { Call, Class, Declaration, Namespace, String } from 'php-parser';
 import { getName } from '../utils';
 import { parse as parseAnnotation } from './AnnotationParser';
 import { TestDefinition } from './TestParser';
@@ -8,6 +8,7 @@ export class PropertyParser {
         namespace: this.parseNamespace,
         class: this.parseClass,
         method: this.parseMethod,
+        call: this.parseCall,
     };
 
     public uniqueId(namespace?: string, _class?: string, method?: string) {
@@ -43,16 +44,22 @@ export class PropertyParser {
         return { namespace: this.parseName(declaration) ?? '' };
     }
 
-    private parseClass(declaration: Declaration, namespace?: Namespace) {
+    private parseClass(declaration: Declaration, namespace?: Namespace & Declaration) {
         return { namespace: this.parseName(namespace) ?? '', class: this.parseName(declaration) };
     }
 
-    private parseMethod(declaration: Declaration, namespace?: Namespace, _class?: Class) {
+    private parseMethod(declaration: Declaration, namespace?: Namespace & Declaration, _class?: Class) {
         return {
             namespace: this.parseName(namespace) ?? '',
             class: this.parseName(_class),
             method: this.parseName(declaration),
         };
+    }
+
+    private parseCall(declaration: Call & Declaration) {
+        const label = (declaration.arguments[0] as String).value;
+
+        return { label: label, method: label };
     }
 
     private parsePosition(declaration: Declaration) {
@@ -63,7 +70,7 @@ export class PropertyParser {
         return { start, end };
     }
 
-    private parseName(declaration?: Namespace | Class | Declaration) {
+    private parseName(declaration?: Declaration) {
         return declaration ? getName(declaration) : undefined;
     }
 
