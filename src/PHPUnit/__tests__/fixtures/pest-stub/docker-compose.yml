@@ -1,30 +1,18 @@
-version: '3.8'
 services:
   phpunit:
     build:
       context: ./dockerfiles/phpunit
       dockerfile: Dockerfile
-    container_name: PHPUnit
-    tty: true
-    volumes:
-      - .:/app
-    networks:
-      - app-network
-
-  sshd:
-    build:
-      context: ./dockerfiles/sshd
-      dockerfile: Dockerfile
-    container_name: sshd
+    container_name: phpunit
     tty: true
     ports:
       - ${SSH_PORT:-2222}:22
     volumes:
       - .:/app
-      - ./dockerfiles/sshd/id_rsa.pub:/root/.ssh/authorized_keys:ro
+      - ./dockerfiles/phpunit/id_rsa.pub:/root/.ssh/authorized_keys
     networks:
-      - app-network
+      - vscode-phpunit-network
 
 networks:
-  app-network:
+  vscode-phpunit-network:
     driver: "bridge"

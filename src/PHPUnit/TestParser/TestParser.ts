@@ -128,9 +128,7 @@ export class TestParser {
             });
         }
 
-
         this.eventEmitter.emit(`${TestType.class}`, clazz);
-
         methods.forEach((method, index) => {
             this.eventEmitter.emit(`${TestType.method}`, method, index);
         });
