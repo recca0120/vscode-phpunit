@@ -63,10 +63,10 @@ describe('Extension TestCollection', () => {
 
         expect(toTree(ctrl.items)).toEqual([{
             id: 'NoNamespaceTest',
-            label: 'NoNamespaceTest',
+            label: '$(symbol-class) NoNamespaceTest',
             children: [{
                 id: 'NoNamespaceTest::test_no_namespace',
-                label: 'test_no_namespace',
+                label: '$(symbol-method) test_no_namespace',
                 children: [],
             }],
         }]);
@@ -88,23 +88,23 @@ describe('Extension TestCollection', () => {
             expect.objectContaining(
                 {
                     id: 'namespace:Recca0120',
-                    label: 'Recca0120',
+                    label: '$(symbol-namespace) Recca0120',
                     children: [
                         expect.objectContaining({
                             id: 'namespace:Recca0120\\VSCode',
-                            label: 'VSCode',
+                            label: '$(symbol-namespace) VSCode',
                             children: [
                                 expect.objectContaining({
                                     id: 'namespace:Recca0120\\VSCode\\Tests',
-                                    label: 'Tests',
+                                    label: '$(symbol-namespace) Tests',
                                     children: [
                                         expect.objectContaining({
                                             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                                            label: 'AssertionsTest',
+                                            label: '$(symbol-class) AssertionsTest',
                                         }),
                                         expect.objectContaining({
                                             id: 'Recca0120\\VSCode\\Tests\\AttributeTest',
-                                            label: 'AttributeTest',
+                                            label: '$(symbol-class) AttributeTest',
                                         }),
                                     ],
                                 }),
