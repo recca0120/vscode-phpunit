@@ -32,7 +32,6 @@ export class PrettyPrinter extends Printer {
             this.formatMessage(this.decorated.start),
             this.formatMessage(this.decorated.message, result.message),
             this.formatDiff(result),
-
             this.formatMessage(this.decorated.default),
             this.formatDetails(result),
             this.formatMessage(this.decorated.last),
@@ -40,9 +39,9 @@ export class PrettyPrinter extends Printer {
     }
 
     private formatDetails(result: TestFailed) {
-        return result.details.reduce((msg, { file, line }) => {
-            return (msg + this.formatMessage(this.decorated.default, `${file}:${line}`));
-        }, '');
+        return result.details
+            .map(({ file, line }) => Printer.fileFormat(file, line))
+            .reduce((msg, file) => (msg + this.formatMessage(this.decorated.default, `${file}`)), '');
     }
 
     private formatDiff(result: TestFailed) {

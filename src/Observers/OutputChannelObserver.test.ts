@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
 import { CommandBuilder, Configuration, EOL, TestRunner } from '../PHPUnit';
 import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
-import { OutputChannelObserver } from './index';
+import { OutputChannelObserver, Printer } from './index';
 import { PrettyPrinter } from './Printers';
 
 describe('OutputChannelObserver', () => {
@@ -149,7 +149,7 @@ describe('OutputChannelObserver', () => {
                 `     ┐ `,
                 `     ├ Failed asserting that false is true.`,
                 `     │ `,
-                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:22`,
+                `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
             ].join(EOL)),
         );
     });
@@ -186,7 +186,7 @@ describe('OutputChannelObserver', () => {
                 `     ┊     1 => 'h'${DOT}`,
                 `     ┊ ${ARRAY_CLOSE}`,
                 `     │ `,
-                `     │ ${phpUnitProject('tests/AssertionsTest.php')}:27`,
+                `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
             ].join(EOL)),
         );
     });
