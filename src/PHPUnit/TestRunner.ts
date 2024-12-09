@@ -10,8 +10,11 @@ export class TestRunnerProcess {
     private emitter = new EventEmitter();
     private output = '';
     private temp = '';
+    private abortController: AbortController;
 
-    constructor(private builder: CommandBuilder) {}
+    constructor(private builder: CommandBuilder) {
+        this.abortController = new AbortController();
+    }
 
     on(eventName: string, callback: (...args: any[]) => void) {
         this.emitter.on(eventName, callback);
@@ -19,11 +22,8 @@ export class TestRunnerProcess {
         return this;
     }
 
-    kill() {
-        if (!this.child?.killed) {
-            this.child?.stdin?.end();
-            this.child?.kill();
-        }
+    abort() {
+        this.abortController.abort();
 
         return this.child?.killed;
     }
@@ -47,7 +47,7 @@ export class TestRunnerProcess {
         const { command, args, options } = this.builder.build();
         this.emitter.emit('start', command, args);
 
-        this.child = spawn(command, args, options);
+        this.child = spawn(command, args, { ...options, signal: this.abortController.signal });
         this.child.stdout!.on('data', (data) => this.appendOutput(data));
         this.child.stderr!.on('data', (data) => this.appendOutput(data));
         this.child.stdout!.on('end', () => this.emitLines(this.temp));
