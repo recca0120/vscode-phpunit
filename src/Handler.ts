@@ -59,7 +59,7 @@ export class Handler {
 
             cancellation?.onCancellationRequested(() => processes.forEach((process) => process.kill()));
 
-            await Promise.all(processes.map((process) => process.wait()));
+            await Promise.all(processes.map((process) => process.run()));
 
             return;
         };

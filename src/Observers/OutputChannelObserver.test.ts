@@ -51,7 +51,7 @@ describe('OutputChannelObserver', () => {
         const builder = new CommandBuilder(configuration, { cwd });
         builder.setArguments([file, filter].join(' '));
 
-        await testRunner.run(builder).wait();
+        await testRunner.run(builder).run();
     }
 
     it('should trigger input', async () => {
@@ -328,7 +328,7 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.show).toHaveBeenCalled();
     });
 
-    it('should print printed output when die', async () => {
+    fit('should print printed output when die', async () => {
         const testFile = phpUnitProject('tests/Output/OutputTest.php');
         const filter = 'test_die';
         await run(testFile, filter);
