@@ -22,12 +22,6 @@ export class TestRunnerProcess {
         return this;
     }
 
-    abort() {
-        this.abortController.abort();
-
-        return this.child?.killed;
-    }
-
     run() {
         return new Promise((resolve) => {
             this.execute();
@@ -36,8 +30,10 @@ export class TestRunnerProcess {
         });
     }
 
-    getOutput() {
-        return this.output;
+    abort() {
+        this.abortController.abort();
+
+        return this.child?.killed;
     }
 
     private execute() {
