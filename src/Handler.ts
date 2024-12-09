@@ -57,9 +57,9 @@ export class Handler {
                     .map((test) => this.testCollection.getTestCase(test)!)
                     .map((testCase) => runner.run(testCase.update(builder)));
 
-            cancellation?.onCancellationRequested(() => processes.forEach((process) => process.kill()));
+            cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
 
-            await Promise.all(processes.map((process) => process.wait()));
+            await Promise.all(processes.map((process) => process.run()));
 
             return;
         };

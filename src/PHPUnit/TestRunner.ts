@@ -1,30 +1,71 @@
 import { spawn } from 'child_process';
-import { ChildProcess, SpawnOptions } from 'node:child_process';
+import { ChildProcess } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { CommandBuilder } from './CommandBuilder';
 import { ProblemMatcher, TestResult, TestResultEvent } from './ProblemMatcher';
 import { DefaultObserver, EventResultMap, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
 
 export class TestRunnerProcess {
-    constructor(private process: ChildProcess) {}
+    private child?: ChildProcess;
+    private emitter = new EventEmitter();
+    private output = '';
+    private temp = '';
+    private abortController: AbortController;
 
-    kill() {
-        if (!this.process.killed) {
-            this.process.stdin?.end();
-            this.process.kill();
-        }
-
-        return this.process.killed;
+    constructor(private builder: CommandBuilder) {
+        this.abortController = new AbortController();
     }
 
-    wait() {
+    on(eventName: string, callback: (...args: any[]) => void) {
+        this.emitter.on(eventName, callback);
+
+        return this;
+    }
+
+    run() {
         return new Promise((resolve) => {
-            this.process.on('error', () => resolve(true));
-            this.process.on('close', () => resolve(true));
+            this.execute();
+            this.child?.on('error', () => resolve(true));
+            this.child?.on('close', () => resolve(true));
         });
     }
 
-    static create(command: string, args: readonly string[], options: SpawnOptions) {
-        return spawn(command, args, options);
+    abort() {
+        this.abortController.abort();
+
+        return this.child?.killed;
+    }
+
+    private execute() {
+        this.output = '';
+        this.temp = '';
+
+        const { command, args, options } = this.builder.build();
+        this.emitter.emit('start', command, args);
+
+        this.child = spawn(command, args, { ...options, signal: this.abortController.signal });
+        this.child.stdout!.on('data', (data) => this.appendOutput(data));
+        this.child.stderr!.on('data', (data) => this.appendOutput(data));
+        this.child.stdout!.on('end', () => this.emitLines(this.temp));
+        this.child.on('error', (err: Error) => this.emitter.emit('error', err));
+        this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
+    }
+
+    private appendOutput(data: string) {
+        const out = data.toString();
+        this.output += out;
+        this.temp += out;
+        const lines = this.emitLines(this.temp, 1);
+        this.temp = lines.shift()!;
+    };
+
+    private emitLines(temp: string, limit = 0) {
+        const lines = temp.split(/\r\n|\n/);
+        while (lines.length > limit) {
+            this.emitter.emit('line', lines.shift()!);
+        }
+
+        return lines;
     }
 }
 
@@ -50,40 +91,21 @@ export class TestRunner {
     }
 
     run(builder: CommandBuilder) {
-        let temp = '';
-        let output = '';
-        const processOutput = (data: string) => {
-            const out = data.toString();
-            output += out;
-            temp += out;
-            const lines = temp.split(/\r\n|\n/);
-            while (lines.length > 1) {
-                this.processLine(lines.shift()!, builder);
-            }
-            temp = lines.shift()!;
-        };
-
-        const { command, args, options } = builder.build();
-        this.emit(TestRunnerEvent.run, [command, ...args].join(' '));
-
-        const proc = TestRunnerProcess.create(command, args, options);
-        proc.stdout!.on('data', processOutput);
-        proc.stderr!.on('data', processOutput);
-        proc.stdout!.on('end', () => this.processLine(temp, builder));
-
-        proc.on('error', (err: Error) => {
+        const process = new TestRunnerProcess(builder);
+        process.on('start', (command: string, args: string[]) => this.emit(TestRunnerEvent.run, [command, ...args].join(' ')));
+        process.on('line', (line: string) => this.processLine(line, builder));
+        process.on('error', (err: Error) => {
             const error = err.stack ?? err.message;
             this.emit(TestRunnerEvent.error, error);
             this.emit(TestRunnerEvent.close, 2);
         });
-
-        proc.on('close', (code) => {
+        process.on('close', (code: number | null, output: string) => {
             const eventName = this.isTestRunning(output) ? TestRunnerEvent.output : TestRunnerEvent.error;
             this.emit(eventName, output);
             this.emit(TestRunnerEvent.close, code);
         });
 
-        return new TestRunnerProcess(proc);
+        return process;
     }
 
     private isTestRunning(output: string) {
