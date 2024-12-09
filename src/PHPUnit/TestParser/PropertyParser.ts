@@ -43,11 +43,11 @@ export class PropertyParser {
         return { namespace: this.parseName(declaration) ?? '' };
     }
 
-    private parseClass(declaration: Declaration, namespace?: Namespace) {
+    private parseClass(declaration: Declaration, namespace?: Namespace & Declaration) {
         return { namespace: this.parseName(namespace) ?? '', class: this.parseName(declaration) };
     }
 
-    private parseMethod(declaration: Declaration, namespace?: Namespace, _class?: Class) {
+    private parseMethod(declaration: Declaration, namespace?: Namespace & Declaration, _class?: Class) {
         return {
             namespace: this.parseName(namespace) ?? '',
             class: this.parseName(_class),
@@ -63,7 +63,7 @@ export class PropertyParser {
         return { start, end };
     }
 
-    private parseName(declaration?: Namespace | Class | Declaration) {
+    private parseName(declaration?: Declaration) {
         return declaration ? getName(declaration) : undefined;
     }
 
@@ -77,7 +77,3 @@ export class PropertyParser {
 }
 
 export const propertyParser = new PropertyParser();
-
-export function parse(declaration: Declaration, namespace?: Namespace, _class?: Class) {
-    return propertyParser.parse(declaration, namespace, _class);
-}

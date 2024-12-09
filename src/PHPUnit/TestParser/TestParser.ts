@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
 import { engine } from '../utils';
 import { Annotations } from './AnnotationParser';
-import { parse as parseProperty } from './PropertyParser';
+import { propertyParser } from './PropertyParser';
 import { validator } from './Validator';
 
 export type Position = {
@@ -94,28 +94,22 @@ export class TestParser {
         return this.parseChildren(ast, file, ast);
     }
 
-    private parseTestSuite(ast: Class, file: string, namespace?: Namespace) {
+    private parseTestSuite(ast: Class & Declaration, file: string, namespace?: Namespace) {
         const _class = ast;
 
         if (!validator.isTest(_class)) {
             return [];
         }
 
-        const clazz = {
-            ...parseProperty(ast as Declaration, namespace),
-            type: TestType.class,
-            file,
-        };
+        const clazz = { ...propertyParser.parse(ast, namespace), type: TestType.class, file };
 
         const methods = _class.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => {
-                return {
-                    ...parseProperty(method as Method, namespace, _class),
-                    type: TestType.method,
-                    file,
-                };
-            });
+            .map((method) => ({
+                ...propertyParser.parse(method as Method, namespace, _class),
+                type: TestType.method,
+                file,
+            }));
 
         if (methods.length <= 0) {
             return;
