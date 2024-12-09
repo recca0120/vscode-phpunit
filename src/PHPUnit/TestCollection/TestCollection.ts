@@ -157,11 +157,17 @@ export class TestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const testParser = new TestParser();
-        const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
+        const { testParser, testDefinitionBuilder } = this.createTestParser();
         await testParser.parseFile(uri.fsPath);
 
         return testDefinitionBuilder.get();
+    }
+
+    protected createTestParser() {
+        const testParser = new TestParser();
+        const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
+
+        return { testParser, testDefinitionBuilder };
     }
 
     protected deleteFile(file: File<TestDefinition>) {

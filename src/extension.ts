@@ -48,6 +48,7 @@ async function getWorkspaceTestPatterns() {
             exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
         });
     }
+
     return results;
 }
 

@@ -6,8 +6,6 @@ import {
     PHPUnitXML,
     TestCollection as BaseTestCollection,
     TestDefinition,
-    TestDefinitionBuilder,
-    TestParser,
     TestType,
 } from '../PHPUnit';
 import { CustomWeakMap } from '../PHPUnit/utils';
@@ -106,9 +104,8 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected async parseTests(uri: URI) {
-        const testParser = new TestParser();
+        const { testParser, testDefinitionBuilder } = this.createTestParser();
         const testHierarchyBuilder = new TestHierarchyBuilder(testParser, this.ctrl);
-        const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
         await testParser.parseFile(uri.fsPath);
 
         const testData = this.getTestCases(uri);
