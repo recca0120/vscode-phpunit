@@ -88,7 +88,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))),
     );
 
-    const outputChannel = vscode.window.createOutputChannel('PHPUnit');
+    const outputChannel = vscode.window.createOutputChannel('PHPUnit', 'phpunit');
     context.subscriptions.push(outputChannel);
 
     const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');

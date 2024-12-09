@@ -30,6 +30,23 @@
     "workspaceContains:**/*.php"
   ],
   "contributes": {
+    "languages": [
+      {
+        "id": "phpunit",
+        "aliases": [
+          "PHPUnit",
+          "phpunit"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "phpunit",
+        "scopeName": "source.phpunit",
+        "path": "./syntaxes/phpunit.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "phpunit.reload",
