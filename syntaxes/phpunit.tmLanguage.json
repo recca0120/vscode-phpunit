@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PHPUnit",
+  "patterns": [
+    {
+      "match": "\\s*(❌\\s*FAIL(ED)?|❌\\s*.*)",
+      "name": "invalid"
+    },
+    {
+      "match": "\\s*(➖\\s*.*|WARN)",
+      "name": "markup.deleted"
+    }
+  ],
+  "scopeName": "source.phpunit"
+}
