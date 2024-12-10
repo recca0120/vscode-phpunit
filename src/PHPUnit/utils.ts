@@ -185,11 +185,3 @@ export class CustomWeakMap<K extends object, V> {
         }
     }
 }
-
-export const basename = (str: string) => {
-    let base = str.substring(str.lastIndexOf('/') + 1);
-    if (base.lastIndexOf('.') !== -1) {
-        base = base.substring(0, base.lastIndexOf('.'));
-    }
-    return base;
-};

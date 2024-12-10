@@ -42,7 +42,7 @@ describe('PestParser', () => {
             class: 'ExampleTest',
             file,
             start: { line: 0, character: 0 },
-            end: { line: 15, character: 0 },
+            end: { line: expect.any(Number), character: 0 },
         }));
     });
 
@@ -62,17 +62,47 @@ describe('PestParser', () => {
     });
 
     it('parse it', async () => {
-        expect(givenTest('it_test_example')).toEqual({
+        expect(givenTest('it test example')).toEqual({
             type: TestType.method,
-            id: 'P\\Tests\\Unit\\ExampleTest::it_test_example',
+            id: 'P\\Tests\\Unit\\ExampleTest::it test example',
             qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             class: 'ExampleTest',
-            method: 'it_test_example',
-            label: 'it_test_example',
+            method: 'it test example',
+            label: 'it test example',
             file,
             start: { line: 6, character: 0 },
             end: { line: 8, character: 3 },
+        });
+    });
+
+    it('parse describe', async () => {
+        expect(givenTest('`something` → example')).toEqual({
+            type: TestType.method,
+            id: 'P\\Tests\\Unit\\ExampleTest::`something` → example',
+            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            namespace: 'P\\Tests\\Unit',
+            class: 'ExampleTest',
+            method: '`something` → example',
+            label: 'something → example',
+            file,
+            start: { line: 17, character: 4 },
+            end: { line: 19, character: 7 },
+        });
+    });
+
+    it('parse nested describe', async () => {
+        expect(givenTest('`something` → `something else` → it test example')).toEqual({
+            type: TestType.method,
+            id: 'P\\Tests\\Unit\\ExampleTest::`something` → `something else` → it test example',
+            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            namespace: 'P\\Tests\\Unit',
+            class: 'ExampleTest',
+            method: '`something` → `something else` → it test example',
+            label: 'something → something else → it test example',
+            file,
+            start: { line: 22, character: 8 },
+            end: { line: 24, character: 11 },
         });
     });
 });

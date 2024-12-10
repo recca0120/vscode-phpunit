@@ -10,7 +10,7 @@ export class PropertyParser {
         method: this.parseMethod,
     };
 
-    public uniqueId(namespace?: string, clazz?: string, method?: string) {
+    uniqueId(namespace?: string, clazz?: string, method?: string) {
         if (!clazz) {
             return namespace;
         }
@@ -23,20 +23,20 @@ export class PropertyParser {
         return uniqueId;
     }
 
-    public qualifiedClass(namespace?: string, clazz?: string) {
+    qualifiedClass(namespace?: string, clazz?: string) {
         return [namespace, clazz].filter((name) => !!name).join('\\');
     }
 
-    public parse(declaration: Declaration, namespace?: Namespace, clazz?: Class): TestDefinition {
-        const fn = this.lookup[declaration.kind];
-        const parsed = fn.apply(this, [declaration, namespace, clazz]);
+    parse(declaration: Declaration, namespace?: Namespace, clazz?: Class): TestDefinition {
+        const callback = this.lookup[declaration.kind];
+        const result = callback.apply(this, [declaration, namespace, clazz]);
         const annotations = parseAnnotation(declaration);
         const { start, end } = this.parsePosition(declaration);
-        const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
-        const qualifiedClass = this.qualifiedClass(parsed.namespace, parsed.class);
-        const label = this.parseLabel(annotations, parsed.class, parsed.method);
+        const id = this.uniqueId(result.namespace, result.class, result.method);
+        const qualifiedClass = this.qualifiedClass(result.namespace, result.class);
+        const label = this.parseLabel(annotations, result.class, result.method);
 
-        return { id, qualifiedClass, ...parsed, start, end, annotations, label };
+        return { id, qualifiedClass, ...result, start, end, annotations, label };
     }
 
     private parseNamespace(declaration: Declaration) {

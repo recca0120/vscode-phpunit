@@ -1,5 +1,5 @@
 import { basename, dirname, join, relative } from 'node:path';
-import { Call, ExpressionStatement, String } from 'php-parser';
+import { Call, Closure, String } from 'php-parser';
 import { capitalize } from '../utils';
 import { TestDefinition, TestParser, TestType } from './TestParser';
 
@@ -27,48 +27,15 @@ export class PestParser extends TestParser {
         const className = partsFQN.pop();
         const namespace = partsFQN.join('\\');
 
-        const loc = ast.loc;
-        const start = { line: loc.start.line - 1, character: loc.start.column };
-        const end = { line: loc.end.line - 1, character: loc.end.column };
-
-        const methods: TestDefinition[] = ast.children
-            .filter((expressionStatement: ExpressionStatement) => expressionStatement.expression)
-            .map((expressionStatement: ExpressionStatement) => expressionStatement.expression)
-            .filter((call: Call) => ['it', 'test'].includes(call.what.name as string))
-            .map((call: Call) => {
-                let method = (call.arguments[0] as String).value;
-
-                if (call.what.name as string === 'it') {
-                    method = 'it ' + method;
-                }
-
-                method = method
-                    .replace(/_/g, '__')
-                    .replace(/\s+/, '_')
-                    .replace(/[^a-zA-Z0-9_\x80-\xff]/, '_');
-
-                const loc = call.loc!;
-                const start = { line: loc.start.line - 1, character: loc.start.column };
-                const end = { line: loc.end.line - 1, character: loc.end.column };
-
-                return {
-                    type: TestType.method,
-                    id: `${classFQN}::${method}`,
-                    label: method,
-                    qualifiedClass: classFQN,
-                    namespace: namespace,
-                    class: className,
-                    method: method,
-                    file,
-                    start,
-                    end,
-                };
-            });
-
+        const methods: TestDefinition[] = this.parseDescribe(ast, file, classFQN, namespace, className);
 
         if (methods.length <= 0) {
             return;
         }
+
+        const loc = ast.loc;
+        const start = { line: loc.start.line - 1, character: loc.start.column };
+        const end = { line: loc.end.line - 1, character: loc.end.column };
 
         const clazz = {
             type: TestType.class,
@@ -96,5 +63,57 @@ export class PestParser extends TestParser {
         methods.forEach(method => this.eventEmitter.emit(`${method.type}`, method));
 
         return [clazz];
+    }
+
+    private parseDescribe(ast: any, file: string, classFQN: string, namespace: string, className?: string, prefixes: string[] = []): TestDefinition[] {
+        let children: any[];
+        if (ast.kind === 'program') {
+            children = ast.children;
+        } else {
+            children = (ast.arguments[1] as Closure).body!.children!;
+            prefixes = [...prefixes, (ast.arguments[0] as String).value];
+        }
+
+        return children
+            .filter((expressionStatement: any) => expressionStatement.expression)
+            .map((expressionStatement: any) => expressionStatement.expression)
+            .filter((call: Call) => ['describe', 'test', 'it'].includes(call.what.name as string))
+            .reduce((tests: TestDefinition[], call: Call) => {
+                return (call.what.name as string) === 'describe'
+                    ? [...tests, ...this.parseDescribe(call, file, classFQN, namespace, className, prefixes)]
+                    : [...tests, this.parseTestOrIt(file, call, classFQN, namespace, className, prefixes)];
+            }, []);
+    }
+
+    private parseTestOrIt(file: string, call: Call, classFQN: string, namespace: string, className?: string, prefixes: string[] = []) {
+        let label = (call.arguments[0] as String).value;
+
+        if (call.what.name as string === 'it') {
+            label = 'it ' + label;
+        }
+
+        let name = label;
+
+        if (prefixes.length > 0) {
+            label = [...prefixes, label].join(' → ');
+            name = [...prefixes.map((value) => '`' + value + '`'), name].join(' → ');
+        }
+
+        const loc = call.loc!;
+        const start = { line: loc.start.line - 1, character: loc.start.column };
+        const end = { line: loc.end.line - 1, character: loc.end.column };
+
+        return {
+            type: TestType.method,
+            id: `${classFQN}::${name}`,
+            label,
+            qualifiedClass: classFQN,
+            namespace: namespace,
+            class: className,
+            method: name,
+            file,
+            start,
+            end,
+        };
     }
 }
