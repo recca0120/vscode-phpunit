@@ -1,5 +1,15 @@
 import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
-import { EOL, TestFailed, TestIgnored, TestResult, TestRunnerObserver } from '../PHPUnit';
+import {
+    EOL,
+    TestFailed,
+    TestFinished,
+    TestIgnored,
+    TestResult,
+    TestRunnerObserver,
+    TestStarted,
+    TestSuiteFinished,
+    TestSuiteStarted,
+} from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
@@ -20,30 +30,30 @@ export class TestResultObserver implements TestRunnerObserver {
         this.testRun.end();
     }
 
-    testSuiteStarted(result: TestResult): void {
-        this.testStarted(result);
-    }
-
-    testSuiteFinished(result: TestResult): void {
-        this.testFinished(result);
-    }
-
-    testStarted(result: TestResult): void {
+    testSuiteStarted(result: TestSuiteStarted): void {
         this.doRun(result, (test) => this.testRun.started(test));
     }
 
-    testFinished(result: TestResult): void {
+    testStarted(result: TestStarted): void {
+        this.doRun(result, (test) => this.testRun.started(test));
+    }
+
+    testFinished(result: TestFinished): void {
         this.doRun(result, (test) => this.testRun.passed(test));
     }
 
-    testFailed(result: TestResult): void {
+    testFailed(result: TestFailed): void {
         this.doRun(result, (test) =>
-            this.testRun.failed(test, this.message((result as TestFailed), test), (result as TestFailed).duration),
+            this.testRun.failed(test, this.message(result, test), result.duration),
         );
     }
 
-    testIgnored(result: TestResult): void {
+    testIgnored(result: TestIgnored): void {
         this.doRun(result, (test) => this.testRun.skipped(test));
+    }
+
+    testSuiteFinished(result: TestSuiteFinished): void {
+        this.doRun(result, (test) => this.testRun.passed(test));
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {
@@ -61,7 +71,7 @@ export class TestResultObserver implements TestRunnerObserver {
         return message;
     }
 
-    private doRun(result: TestResult, fn: (test: TestItem) => void) {
+    private doRun(result: TestResult, callback: (test: TestItem) => void) {
         const test = this.find(result);
         if (!test) {
             return;
@@ -72,7 +82,7 @@ export class TestResultObserver implements TestRunnerObserver {
             return;
         }
 
-        fn(test);
+        callback(test);
     }
 
     private find(result: TestResult) {
