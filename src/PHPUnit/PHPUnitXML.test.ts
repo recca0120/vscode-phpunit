@@ -1,8 +1,10 @@
 import 'jest';
 import { generateXML, phpUnitProject } from './__tests__/utils';
-import { PHPUnitXML } from './PHPUnitXML';
+import { Pattern, PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {
+    const root = phpUnitProject('');
+
     const phpUnitXML = new PHPUnitXML();
     const parse = (text: Buffer | string) => {
         return phpUnitXML.load(text, phpUnitProject('phpunit.xml'));
@@ -10,7 +12,7 @@ describe('PHPUnit XML Test', () => {
 
     afterEach(() => {
         expect(phpUnitXML.file()).toEqual(phpUnitProject('phpunit.xml'));
-        expect(phpUnitXML.root()).toEqual(phpUnitProject(''));
+        expect(phpUnitXML.root()).toEqual(root);
     });
 
     it('without tags', () => {
@@ -47,10 +49,17 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
         ]);
+
+        expect(parsed.getGlobPatterns(root)).toEqual({
+            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
+            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Unit2/**/*.php']),
+        });
     });
 
     it('two testsuites one directory', () => {
@@ -65,10 +74,17 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
         ]);
+
+        expect(parsed.getGlobPatterns(root)).toEqual({
+            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
+            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Feature/**/*.php']),
+        });
     });
 
     it('two testsuites two directory', () => {
@@ -85,12 +101,19 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
             { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
             { tag: 'directory', name: 'Feature', value: 'tests/Feature2' },
         ]);
+
+        expect(parsed.getGlobPatterns(root)).toEqual({
+            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
+            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Unit2/**/*.php', 'tests/Feature/**/*.php', 'tests/Feature2/**/*.php']),
+        });
     });
 
     it('one testsuites two directory two file', () => {
@@ -105,12 +128,19 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
             { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest.php' },
             { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
         ]);
+
+        expect(parsed.getGlobPatterns(root)).toEqual({
+            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
+            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Unit2/**/*.php', 'vendor/someone/tests/MyClassTest.php', 'vendor/someone/tests/MyClassTest2.php']),
+        });
     });
 
     it('one testsuites one directory and one exclude', () => {
@@ -123,10 +153,17 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
         ]);
+
+        expect(parsed.getGlobPatterns(root)).toEqual({
+            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**', 'tests/Integration/OldTests/**/*']),
+            'includes': new Pattern('.', ['tests/Unit/**/*.php']),
+        });
     });
 
     it('testsuite directory has suffix', () => {
@@ -138,9 +175,16 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
             { tag: 'directory', name: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
         ]);
+
+        expect(parsed.getGlobPatterns(root)).toEqual({
+            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
+            'includes': new Pattern('.', ['tests/Unit/**/*.phpt']),
+        });
     });
 
     it('source include one directory', () => {

@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, normalize, relative } from 'node:path';
 
 type Source = {
     tag: string;
@@ -45,6 +45,31 @@ class Element {
 
     private ensureArray(obj: any) {
         return Array.isArray(obj) ? obj : [obj];
+    }
+}
+
+export class Pattern {
+    private readonly relativePath: string;
+
+    constructor(relativePath: string, private readonly patterns: string[] = []) {
+        this.relativePath = Pattern.normalizePath(relativePath);
+    }
+
+    push(item: TestSuite, extension: string = '') {
+        const args = [this.relativePath, item.value];
+        if (item.tag !== 'file') {
+            args.push('**/*' + (item.suffix ?? extension));
+        }
+
+        this.patterns.push(Pattern.normalizePath(...args));
+    }
+
+    toString() {
+        return `{${this.patterns}}`;
+    }
+
+    private static normalizePath(...paths: string[]) {
+        return normalize(paths.join('/')).replace(/\\|\/+/g, '/');
     }
 }
 
@@ -98,6 +123,17 @@ export class PHPUnitXML {
             { tag: 'directory', name: 'default', value: '', suffix: '.php' },
             { tag: 'exclude', name: 'default', value: 'vendor' },
         ];
+    }
+
+    getGlobPatterns(root: string) {
+        const includes = new Pattern(relative(root, this.root()));
+        const excludes = new Pattern(relative(root, this.root()), ['**/.git/**', '**/node_modules/**']);
+
+        this.getTestSuites().forEach((item) => {
+            (item.tag !== 'exclude') ? includes.push(item, '.php') : excludes.push(item);
+        });
+
+        return { includes, excludes };
     }
 
     getIncludes(): Source[] {
