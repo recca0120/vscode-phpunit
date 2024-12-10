@@ -184,14 +184,14 @@ export class TestCollection {
 
     private getGroup(uri: URI) {
         const testSuites = this.phpUnitXML.getTestSuites();
-        const group = testSuites.filter((item) => this.match(item, uri)).find(item => {
+        const group = testSuites.find(item => {
             return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
         });
         if (!group) {
             return;
         }
 
-        const exclude = testSuites.filter((item) => this.match(item, uri)).find((item) => {
+        const exclude = testSuites.find((item) => {
             return item.name === group.name && item.tag === 'exclude' && this.match(item, uri);
         });
         if (exclude) {

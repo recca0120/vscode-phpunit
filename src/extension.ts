@@ -9,99 +9,23 @@ import { TestCollection } from './TestCollection';
 const phpUnitXML = new PHPUnitXML();
 let testCollection: TestCollection;
 
-async function getWorkspaceTestPatterns() {
-    if (!vscode.workspace.workspaceFolders) {
-        return [];
-    }
-
-    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
-    const normalizePosix = (...paths: string[]) => {
-        return normalize(paths.join('/')).replace(/\\/g, '/').replace(/\/+/g, '/');
-    };
-    const results = [];
-    for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-        const includePatterns: string[] = [];
-        const excludePatterns = ['**/.git/**', '**/node_modules/**'];
-
-        const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
-        if (configurationFile) {
-            await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
-        } else {
-            phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
-        }
-
-        const baseDir = normalizePosix(relative(workspaceFolder.uri.fsPath, phpUnitXML.root()));
-        phpUnitXML.getTestSuites().forEach((item) => {
-            if (item.tag === 'directory') {
-                const suffix = item.suffix ?? '.php';
-                includePatterns.push(normalizePosix(baseDir, item.value, `**/*${suffix}`));
-            } else if (item.tag === 'file') {
-                includePatterns.push(normalizePosix(baseDir, item.value));
-            } else if (item.tag === 'exclude') {
-                excludePatterns.push(normalizePosix(baseDir, item.value, `**/*`));
-            }
-        });
-
-        results.push({
-            workspaceFolder,
-            pattern: new vscode.RelativePattern(workspaceFolder, `{${includePatterns.join(',')}}`),
-            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
-        });
-    }
-
-    return results;
-}
-
-async function findInitialFiles(pattern: vscode.GlobPattern, exclude: vscode.GlobPattern) {
-    testCollection.reset();
-    await vscode.workspace.findFiles(pattern, exclude).then((files) => {
-        return Promise.all(files.map((file) => testCollection.add(file)));
-    });
-}
-
-async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
-    return Promise.all((await getWorkspaceTestPatterns()).map(async ({ pattern, exclude }) => {
-        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-
-        watcher.onDidCreate((uri) => {
-            testCollection.add(uri);
-            fileChangedEmitter.fire(uri);
-        });
-
-        watcher.onDidChange((uri) => {
-            testCollection.change(uri);
-            fileChangedEmitter.fire(uri);
-        });
-
-        watcher.onDidDelete((uri) => {
-            testCollection.delete(uri);
-        });
-
-        await findInitialFiles(pattern, exclude);
-
-        return watcher;
-    }));
-}
-
 export async function activate(context: vscode.ExtensionContext) {
-    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))),
-    );
+    const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
+    context.subscriptions.push(ctrl);
+    testCollection = new TestCollection(ctrl, phpUnitXML);
 
     const outputChannel = vscode.window.createOutputChannel('PHPUnit', 'phpunit');
     context.subscriptions.push(outputChannel);
 
-    const ctrl = vscode.tests.createTestController('phpUnitTestController', 'PHPUnit');
-    context.subscriptions.push(ctrl);
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(vscode.workspace.getConfiguration('phpunit'))));
 
     const configurationFile = await configuration.getConfigurationFile(vscode.workspace.workspaceFolders![0].uri.fsPath);
     if (configurationFile) {
+        testCollection.reset();
         await phpUnitXML.loadFile(configurationFile);
     }
-    testCollection = new TestCollection(ctrl, phpUnitXML);
 
-    testCollection.reset();
     await Promise.all(vscode.workspace.textDocuments.map((document) => testCollection.add(document.uri)));
 
     const reload = async () => {
@@ -174,4 +98,76 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());
     context.subscriptions.push(commandHandler.rerun(handler));
+}
+
+async function getWorkspaceTestPatterns() {
+    if (!vscode.workspace.workspaceFolders) {
+        return [];
+    }
+
+    const configuration = new Configuration(vscode.workspace.getConfiguration('phpunit'));
+    const normalizePosix = (...paths: string[]) => normalize(paths.join('/')).replace(/\\/g, '/').replace(/\/+/g, '/');
+    const results = [];
+    for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+        const includePatterns: string[] = [];
+        const excludePatterns = ['**/.git/**', '**/node_modules/**'];
+
+        const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
+        if (configurationFile) {
+            await phpUnitXML.loadFile(vscode.Uri.file(configurationFile).fsPath);
+        } else {
+            phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
+        }
+
+        const baseDir = normalizePosix(relative(workspaceFolder.uri.fsPath, phpUnitXML.root()));
+        phpUnitXML.getTestSuites().forEach((item) => {
+            if (item.tag === 'directory') {
+                const suffix = item.suffix ?? '.php';
+                includePatterns.push(normalizePosix(baseDir, item.value, `**/*${suffix}`));
+            } else if (item.tag === 'file') {
+                includePatterns.push(normalizePosix(baseDir, item.value));
+            } else if (item.tag === 'exclude') {
+                excludePatterns.push(normalizePosix(baseDir, item.value, `**/*`));
+            }
+        });
+
+        results.push({
+            workspaceFolder,
+            pattern: new vscode.RelativePattern(workspaceFolder, `{${includePatterns.join(',')}}`),
+            exclude: new vscode.RelativePattern(workspaceFolder, `{${excludePatterns.join(',')}}`),
+        });
+    }
+
+    return results;
+}
+
+async function findInitialFiles(pattern: vscode.GlobPattern, exclude: vscode.GlobPattern) {
+    testCollection.reset();
+    await vscode.workspace.findFiles(pattern, exclude).then((files) => {
+        return Promise.all(files.map((file) => testCollection.add(file)));
+    });
+}
+
+async function startWatchingWorkspace(fileChangedEmitter: vscode.EventEmitter<vscode.Uri>) {
+    return Promise.all((await getWorkspaceTestPatterns()).map(async ({ pattern, exclude }) => {
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+        watcher.onDidCreate((uri) => {
+            testCollection.add(uri);
+            fileChangedEmitter.fire(uri);
+        });
+
+        watcher.onDidChange((uri) => {
+            testCollection.change(uri);
+            fileChangedEmitter.fire(uri);
+        });
+
+        watcher.onDidDelete((uri) => {
+            testCollection.delete(uri);
+        });
+
+        await findInitialFiles(pattern, exclude);
+
+        return watcher;
+    }));
 }
