@@ -41,7 +41,7 @@ export class TestParser {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,
     };
-    private eventEmitter = new EventEmitter;
+    protected eventEmitter = new EventEmitter;
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
         this.eventEmitter.on(`${eventName}`, callback);
