@@ -6,12 +6,12 @@ import { TestDefinitionBuilder } from './TestDefinitionBuilder';
 
 export interface File<T> {
     group: string;
-    file: string;
+    uri: URI;
     tests: T[];
 }
 
-abstract class Base<T> implements Iterable<[string, T]> {
-    protected _items: Map<string, T> = new Map();
+abstract class Base<K, V> implements Iterable<[K, V]> {
+    protected _items: Map<K, V> = new Map();
 
     get size() {
         return this._items.size;
@@ -21,19 +21,19 @@ abstract class Base<T> implements Iterable<[string, T]> {
         return this._items;
     }
 
-    set(key: string, value: T) {
+    set(key: K, value: V) {
         return this._items.set(key, value);
     }
 
-    get(key: string) {
+    get(key: K) {
         return this._items.get(key);
     }
 
-    has(key: string) {
+    has(key: K) {
         return this._items.has(key);
     }
 
-    delete(key: string) {
+    delete(key: K) {
         return this._items.delete(key);
     }
 
@@ -41,7 +41,7 @@ abstract class Base<T> implements Iterable<[string, T]> {
         return Array.from(this._items.entries()).map(([key]) => key);
     }
 
-    forEach(callback: (tests: T, key: string, map: Map<string, T>) => void, thisArg?: any) {
+    forEach(callback: (tests: V, key: K, map: Map<K, V>) => void, thisArg?: any) {
         this._items.forEach(callback, thisArg);
     }
 
@@ -49,32 +49,23 @@ abstract class Base<T> implements Iterable<[string, T]> {
         return this._items;
     }
 
-    * [Symbol.iterator](): Generator<[string, T], void, unknown> {
+    * [Symbol.iterator](): Generator<[K, V], void, unknown> {
         for (const item of this._items.entries()) {
             yield item;
         }
     }
 }
 
-export class TestDefinitions<T> extends Base<T> {
-    constructor() {
-        super();
-        this._items = new Map<string, T>();
-    }
+export class TestDefinitions<V> extends Base<URI, V> {
+    protected _items = new Map<URI, V>();
 }
 
-export class Files<T> extends Base<TestDefinitions<T>> {
-    constructor() {
-        super();
-        this._items = new Map<string, TestDefinitions<T>>();
-    }
+export class Files<V> extends Base<string, TestDefinitions<V>> {
+    protected _items = new Map<string, TestDefinitions<V>>();
 }
 
-export class Workspace<T> extends Base<Files<T>> {
-    constructor() {
-        super();
-        this._items = new Map<string, Files<T>>();
-    }
+export class Workspace<V> extends Base<string, Files<V>> {
+    protected _items = new Map<string, Files<V>>();
 }
 
 export class TestCollection {
@@ -89,18 +80,18 @@ export class TestCollection {
     }
 
     getWorkspace() {
-        return URI.file(this.phpUnitXML.root()).fsPath;
+        return URI.file(this.phpUnitXML.root());
     }
 
     items() {
         const workspace = this.getWorkspace();
-        if (!this._workspaces.has(workspace)) {
+        if (!this._workspaces.has(workspace.fsPath)) {
             const files = new Files<TestDefinition[]>;
             this.phpUnitXML.getTestSuites().forEach((suite) => files.set(suite.name, new TestDefinitions<TestDefinition[]>()));
-            this._workspaces.set(workspace, files);
+            this._workspaces.set(workspace.fsPath, files);
         }
 
-        return this._workspaces.get(workspace)!;
+        return this._workspaces.get(workspace.fsPath)!;
     }
 
     async add(uri: URI) {
@@ -118,7 +109,7 @@ export class TestCollection {
         if (testDefinitions.length === 0) {
             this.delete(uri);
         }
-        files.get(group)!.set(uri.fsPath, testDefinitions);
+        files.get(group)!.set(uri, testDefinitions);
 
         return this;
     }
@@ -138,18 +129,18 @@ export class TestCollection {
     }
 
     reset() {
-        for (const { group, file, tests } of this.gatherFiles()) {
-            this.deleteFile({ group, file, tests });
+        for (const file of this.gatherFiles()) {
+            this.deleteFile(file);
         }
-        this._workspaces.delete(this.getWorkspace());
+        this._workspaces.delete(this.getWorkspace().fsPath);
 
         return this;
     }
 
     findFile(uri: URI): File<TestDefinition> | undefined {
-        for (const { group, file, tests } of this.gatherFiles()) {
-            if (uri.fsPath === file) {
-                return { group, file, tests };
+        for (const file of this.gatherFiles()) {
+            if (uri.toString() === file.uri.toString()) {
+                return file;
             }
         }
 
@@ -171,13 +162,13 @@ export class TestCollection {
     }
 
     protected deleteFile(file: File<TestDefinition>) {
-        return this.items().get(file.group)?.delete(file.file);
+        return this.items().get(file.group)?.delete(file.uri);
     }
 
     private* gatherFiles() {
         for (const [group, files] of this.items()) {
-            for (const [file, tests] of files) {
-                yield { group, file, tests };
+            for (const [uri, tests] of files) {
+                yield { group, uri, tests };
             }
         }
     }
@@ -206,13 +197,13 @@ export class TestCollection {
         const isFile = testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
 
         if (isFile) {
-            return join(workspace, testSuite.value) === uri.fsPath;
+            return join(workspace.fsPath, testSuite.value) === uri.fsPath;
         }
 
         const suffix = testSuite.suffix ?? '.php';
 
         const minimatch = new Minimatch(
-            URI.file(join(workspace, testSuite.value, `/**/*${suffix}`)).toString(true),
+            URI.file(join(workspace.fsPath, testSuite.value, `/**/*${suffix}`)).toString(true),
             { matchBase: true, nocase: true },
         );
 

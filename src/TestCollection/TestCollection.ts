@@ -117,7 +117,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected deleteFile(file: File<TestDefinition>) {
-        this.findTestsByFile(URI.file(file.file)).forEach((testItem) => {
+        this.findTestsByFile(file.uri).forEach((testItem) => {
             testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
         });
 
@@ -126,19 +126,19 @@ export class TestCollection extends BaseTestCollection {
 
     private getTestCases(uri: URI) {
         const testData = this.getTestData();
-        if (!testData.has(uri.fsPath)) {
-            testData.set(uri.fsPath, new CustomWeakMap<TestItem, TestCase>());
+        if (!testData.has(uri.toString())) {
+            testData.set(uri.toString(), new CustomWeakMap<TestItem, TestCase>());
         }
 
-        return testData.get(uri.fsPath)!;
+        return testData.get(uri.toString())!;
     }
 
     private getTestData() {
         const workspace = this.getWorkspace();
-        if (!this.testItems.has(workspace)) {
-            this.testItems.set(workspace, new Map<string, CustomWeakMap<TestItem, TestCase>>());
+        if (!this.testItems.has(workspace.fsPath)) {
+            this.testItems.set(workspace.fsPath, new Map<string, CustomWeakMap<TestItem, TestCase>>());
         }
 
-        return this.testItems.get(workspace)!;
+        return this.testItems.get(workspace.fsPath)!;
     }
 }

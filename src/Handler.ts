@@ -21,7 +21,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace() });
+        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
 

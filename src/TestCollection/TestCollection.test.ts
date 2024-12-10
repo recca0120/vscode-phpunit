@@ -37,7 +37,7 @@ describe('Extension TestCollection', () => {
         for (const [name, files] of Object.entries(group)) {
             const tests = new TestDefinitions<TestDefinition[]>();
             for (const uri of (files as URI[])) {
-                tests.set(uri.fsPath, await testParser.parseFile(uri.fsPath) ?? []);
+                tests.set(uri, await testParser.parseFile(uri.fsPath) ?? []);
             }
             expected.set(name, tests);
         }

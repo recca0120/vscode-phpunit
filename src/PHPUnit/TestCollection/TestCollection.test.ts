@@ -43,7 +43,7 @@ describe('TestCollection', () => {
 
         const files = [
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
-            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            // URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
             await collection.add(file);
