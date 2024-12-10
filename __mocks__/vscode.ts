@@ -313,6 +313,8 @@ const EventEmitter = jest.fn().mockImplementation(() => {
     };
 });
 
+const TestMessageStackFrame = jest.fn();
+
 export {
     languages,
     workspace,
@@ -330,4 +332,5 @@ export {
     window,
     commands,
     EventEmitter,
+    TestMessageStackFrame,
 };

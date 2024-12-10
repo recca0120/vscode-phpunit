@@ -1,4 +1,14 @@
-import { CancellationToken, Location, Position, Range, TestItem, TestMessage, TestRun } from 'vscode';
+import {
+    CancellationToken,
+    Location,
+    Position,
+    Range,
+    TestItem,
+    TestMessage,
+    TestMessageStackFrame,
+    TestRun,
+} from 'vscode';
+import { URI } from 'vscode-uri';
 import {
     EOL,
     TestFailed,
@@ -67,7 +77,12 @@ export class TestResultObserver implements TestRunnerObserver {
                 test.uri!,
                 new Range(new Position(line, 0), new Position(line, 0)),
             );
+
+            message.stackTrace = details.map(({ file, line }) => {
+                return new TestMessageStackFrame(`${file}:${line}`, URI.file(file), new Position(line - 1, 0));
+            });
         }
+
         return message;
     }
 
