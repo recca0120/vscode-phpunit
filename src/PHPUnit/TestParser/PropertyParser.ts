@@ -10,12 +10,12 @@ export class PropertyParser {
         method: this.parseMethod,
     };
 
-    public uniqueId(namespace?: string, _class?: string, method?: string) {
-        if (!_class) {
+    public uniqueId(namespace?: string, clazz?: string, method?: string) {
+        if (!clazz) {
             return namespace;
         }
 
-        let uniqueId = this.qualifiedClass(namespace, _class);
+        let uniqueId = this.qualifiedClass(namespace, clazz);
         if (method) {
             uniqueId = `${uniqueId}::${method}`;
         }
@@ -23,13 +23,13 @@ export class PropertyParser {
         return uniqueId;
     }
 
-    public qualifiedClass(namespace?: string, _class?: string) {
-        return [namespace, _class].filter((name) => !!name).join('\\');
+    public qualifiedClass(namespace?: string, clazz?: string) {
+        return [namespace, clazz].filter((name) => !!name).join('\\');
     }
 
-    public parse(declaration: Declaration, namespace?: Namespace, _class?: Class): TestDefinition {
+    public parse(declaration: Declaration, namespace?: Namespace, clazz?: Class): TestDefinition {
         const fn = this.lookup[declaration.kind];
-        const parsed = fn.apply(this, [declaration, namespace, _class]);
+        const parsed = fn.apply(this, [declaration, namespace, clazz]);
         const annotations = parseAnnotation(declaration);
         const { start, end } = this.parsePosition(declaration);
         const id = this.uniqueId(parsed.namespace, parsed.class, parsed.method);
@@ -47,10 +47,10 @@ export class PropertyParser {
         return { namespace: this.parseName(namespace) ?? '', class: this.parseName(declaration) };
     }
 
-    private parseMethod(declaration: Declaration, namespace?: Namespace & Declaration, _class?: Class) {
+    private parseMethod(declaration: Declaration, namespace?: Namespace & Declaration, clazz?: Class) {
         return {
             namespace: this.parseName(namespace) ?? '',
-            class: this.parseName(_class),
+            class: this.parseName(clazz),
             method: this.parseName(declaration),
         };
     }

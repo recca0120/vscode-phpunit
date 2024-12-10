@@ -95,18 +95,16 @@ export class TestParser {
     }
 
     private parseTestSuite(ast: Class & Declaration, file: string, namespace?: Namespace) {
-        const _class = ast;
-
-        if (!validator.isTest(_class)) {
+        if (!validator.isTest(ast)) {
             return [];
         }
 
         const clazz = { ...propertyParser.parse(ast, namespace), type: TestType.class, file };
 
-        const methods = _class.body
+        const methods = ast.body
             .filter((method) => validator.isTest(method as Method))
             .map((method) => ({
-                ...propertyParser.parse(method as Method, namespace, _class),
+                ...propertyParser.parse(method as Method, namespace, ast),
                 type: TestType.method,
                 file,
             }));

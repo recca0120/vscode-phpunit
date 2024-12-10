@@ -14,8 +14,8 @@ export class Validator {
         return fn ? fn.apply(this, [classOrMethod]) : false;
     }
 
-    private validateClass(_class: Class) {
-        return !this.isAbstract(_class);
+    private validateClass(clazz: Class) {
+        return !this.isAbstract(clazz);
     }
 
     private validateMethod(method: Method) {
