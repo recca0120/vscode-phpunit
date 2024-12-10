@@ -75,7 +75,7 @@ export const engine = new Engine({
 export const getName = (ast: Namespace | Class | Declaration) => {
     return typeof ast.name === 'string' ? ast.name : ast.name.name;
 };
-// const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export const escapeValue = new EscapeValue();
 export const parseValue = (key: any, value: any): string[] => {
     if (Array.isArray(value)) {
@@ -185,3 +185,11 @@ export class CustomWeakMap<K extends object, V> {
         }
     }
 }
+
+export const basename = (str: string) => {
+    let base = str.substring(str.lastIndexOf('/') + 1);
+    if (base.lastIndexOf('.') !== -1) {
+        base = base.substring(0, base.lastIndexOf('.'));
+    }
+    return base;
+};

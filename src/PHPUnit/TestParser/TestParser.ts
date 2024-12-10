@@ -80,7 +80,7 @@ export class TestParser {
         }
     }
 
-    private parseAst(
+    protected parseAst(
         ast: Program | Namespace | UseGroup | Class | Node,
         file: string,
         namespace?: Namespace,
