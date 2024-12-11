@@ -97,10 +97,32 @@ export class TestResultParser implements IParser<TestResult | undefined> {
             const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
 
             return { id, file, testId };
-        } else {
-            console.log(locationHint);
         }
-        return { id: '', file: '', testId: '' };
+
+        let id = undefined;
+        let testId = undefined;
+        let method = undefined;
+        let file = '';
+
+        let matched = locationHint.match(/pest_qn:\/\/(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>[\w\s]+))?/);
+
+        if (matched) {
+            const classFQN = matched.groups['classFQN'];
+            if (matched.groups['method']) {
+                method = matched.groups['method'];
+                id = [classFQN, method].join('::');
+            } else {
+                id = argv.name;
+            }
+            testId = id;
+        } else {
+            const split = locationHint.replace(/pest_qn:\/\//, '').split('::');
+            file = split[0];
+            id = split.join('::');
+            testId = id;
+        }
+
+        return { id, testId, file };
     }
 
     private toTeamcityArgv(text: string): Pick<Arguments, string | number> {

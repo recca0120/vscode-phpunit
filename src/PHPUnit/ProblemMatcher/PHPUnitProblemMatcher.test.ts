@@ -40,7 +40,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             });
         });
 
-        it('testSuiteStarted', () => {
+        fit('testSuiteStarted default', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='default' flowId='8024']`, {
                 event: TestResultEvent.testSuiteStarted,
                 name: 'default',
@@ -56,7 +56,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             });
         });
 
-        it('testSuiteStarted group', () => {
+        it('testSuiteStarted Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
                 event: TestResultEvent.testSuiteStarted,
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -133,17 +133,14 @@ describe('PHPUnit ProblemMatcher Text', () => {
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
                 testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                locationHint:
-                    `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
+                locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                 flowId: 8024,
             });
         });
 
         it('testFailed addition_provider with failed', () => {
             resultShouldBe(`##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:60|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`, undefined);
-        });
 
-        it('testFinished addition_provider', () => {
             resultShouldBe(`##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`, {
                 event: TestResultEvent.testFailed,
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
@@ -165,7 +162,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             });
         });
 
-        it('testSuiteFinished', () => {
+        it('testSuiteFinished Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
                 event: TestResultEvent.testSuiteFinished,
                 id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
@@ -174,7 +171,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             });
         });
 
-        it('testSuiteFinished group', () => {
+        it('testSuiteFinished default', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='default' flowId='8024']`, {
                 event: TestResultEvent.testSuiteFinished,
                 name: 'default',

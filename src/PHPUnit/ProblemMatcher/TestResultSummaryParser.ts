@@ -17,7 +17,10 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
         const assertions = `Assertions:${end}`;
 
         return new RegExp(
-            `^OK\\s+\\(\\d+\\stest(s)?|^${tests}${assertions}((${items.join('|')}):${end})*`,
+            [
+                `^OK\\s+\\(\\d+\\stest(s)?`,
+                `^${tests}${assertions}((${items.join('|')}):${end})*`,
+            ].join('|'),
             'ig',
         );
     })();
