@@ -1,47 +1,34 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
+import { Declaration, Node } from 'php-parser';
+import { PHPUnitXML } from '../PHPUnitXML';
 import { engine } from '../utils';
-import { Annotations } from './AnnotationParser';
-import { propertyParser } from './PropertyParser';
-import { validator } from './Validator';
-
-export type Position = {
-    character: number;
-    line: number;
-};
-
-export type TestDefinition = {
-    type: TestType;
-    id: string;
-    label: string;
-    namespace?: string;
-    qualifiedClass?: string;
-    class?: string;
-    method?: string;
-    parent?: TestDefinition;
-    children?: TestDefinition[]
-    file?: string;
-    start?: Position;
-    end?: Position;
-    annotations?: Annotations;
-};
-
-
-export enum TestType {
-    namespace,
-    class,
-    method
-}
+import { PestParser } from './PestParser';
+import { PHPUnitParser } from './PHPUnitParser';
+import { TestDefinition, TestType } from './types';
 
 const textDecoder = new TextDecoder('utf-8');
 
+export const generateQualifiedClass = (namespace?: string, clazz?: string) => [namespace, clazz].filter((name) => !!name).join('\\');
+
+export const generateUniqueId = (namespace?: string, clazz?: string, method?: string) => {
+    if (!clazz) {
+        return namespace;
+    }
+
+    let uniqueId = generateQualifiedClass(namespace, clazz);
+    if (method) {
+        uniqueId = `${uniqueId}::${method}`;
+    }
+
+    return uniqueId;
+};
+
 export class TestParser {
-    private parserLookup: { [p: string]: Function } = {
-        namespace: this.parseNamespace,
-        class: this.parseTestSuite,
-    };
+    private parsers = [new PHPUnitParser(), new PestParser()];
     private eventEmitter = new EventEmitter;
+
+    constructor(private phpUnitXML?: PHPUnitXML) {}
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
         this.eventEmitter.on(`${eventName}`, callback);
@@ -80,73 +67,26 @@ export class TestParser {
         }
     }
 
-    private parseAst(
-        ast: Program | Namespace | UseGroup | Class | Node,
-        file: string,
-        namespace?: Namespace,
-    ): TestDefinition[] | undefined {
-        const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
-
-        return fn.apply(this, [ast, file, namespace]);
-    }
-
-    private parseNamespace(ast: Namespace, file: string) {
-        return this.parseChildren(ast, file, ast);
-    }
-
-    private parseTestSuite(ast: Class & Declaration, file: string, namespace?: Namespace) {
-        const _class = ast;
-
-        if (!validator.isTest(_class)) {
-            return [];
-        }
-
-        const clazz = { ...propertyParser.parse(ast, namespace), type: TestType.class, file };
-
-        const methods = _class.body
-            .filter((method) => validator.isTest(method as Method))
-            .map((method) => ({
-                ...propertyParser.parse(method as Method, namespace, _class),
-                type: TestType.method,
-                file,
-            }));
-
-        if (methods.length <= 0) {
-            return;
-        }
-
-        if (clazz.namespace) {
-            this.eventEmitter.emit(`${TestType.namespace}`, {
-                type: TestType.namespace,
-                id: `namespace:${clazz.namespace}`,
-                namespace: clazz.namespace!,
-                label: clazz.namespace,
-            });
-        }
-
-
-        this.eventEmitter.emit(`${TestType.class}`, clazz);
-
-        methods.forEach((method, index) => {
-            this.eventEmitter.emit(`${TestType.method}`, method, index);
-        });
-
-        return [{ ...clazz, children: methods }];
-    }
-
-    private parseChildren(
-        ast: Program | Namespace | UseGroup | Class | Node,
-        file: string,
-        namespace?: Namespace,
-    ) {
-        if ('children' in ast) {
-            return ast.children.reduce(
-                (testDefinitions, children) =>
-                    testDefinitions.concat(this.parseAst(children, file, namespace) ?? []),
-                [] as TestDefinition[],
-            );
+    private parseAst(declaration: Declaration | Node, file: string): TestDefinition[] | undefined {
+        for (const parser of this.parsers) {
+            parser.setRoot(this.phpUnitXML?.root() ?? '');
+            const tests = parser.parse(declaration, file);
+            if (tests) {
+                return this.emit(tests);
+            }
         }
 
         return;
+    }
+
+    private emit(tests: TestDefinition[]) {
+        tests.forEach(test => {
+            this.eventEmitter.emit(`${test.type}`, test);
+            if (test.children && test.children.length > 0) {
+                this.emit(test.children);
+            }
+        });
+
+        return tests;
     }
 }

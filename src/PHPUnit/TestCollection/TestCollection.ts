@@ -155,7 +155,7 @@ export class TestCollection {
     }
 
     protected createTestParser() {
-        const testParser = new TestParser();
+        const testParser = new TestParser(this.phpUnitXML);
         const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
 
         return { testParser, testDefinitionBuilder };

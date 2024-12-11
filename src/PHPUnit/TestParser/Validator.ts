@@ -1,5 +1,4 @@
-import { Class, Method } from 'php-parser';
-import { getName } from '../utils';
+import { Class, Declaration, Method } from 'php-parser';
 import { isTest } from './AnnotationParser';
 
 export class Validator {
@@ -8,14 +7,14 @@ export class Validator {
         method: this.validateMethod,
     };
 
-    public isTest(classOrMethod: Class | Method) {
-        const fn = this.lookup[classOrMethod.kind];
+    public isTest(declaration: Declaration) {
+        const fn = this.lookup[declaration.kind];
 
-        return fn ? fn.apply(this, [classOrMethod]) : false;
+        return fn ? fn.apply(this, [declaration]) : false;
     }
 
-    private validateClass(_class: Class) {
-        return !this.isAbstract(_class);
+    private validateClass(clazz: Class) {
+        return !this.isAbstract(clazz);
     }
 
     private validateMethod(method: Method) {
@@ -23,7 +22,7 @@ export class Validator {
             return false;
         }
 
-        return getName(method).startsWith('test') || isTest(method);
+        return (typeof method.name === 'string' ? method.name : method.name.name).startsWith('test') || isTest(method);
     }
 
     private isAbstract(classOrMethod: Class | Method) {

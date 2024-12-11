@@ -72,10 +72,7 @@ export const engine = new Engine({
         short_tags: true,
     },
 });
-export const getName = (ast: Namespace | Class | Declaration) => {
-    return typeof ast.name === 'string' ? ast.name : ast.name.name;
-};
-// const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export const escapeValue = new EscapeValue();
 export const parseValue = (key: any, value: any): string[] => {
     if (Array.isArray(value)) {
