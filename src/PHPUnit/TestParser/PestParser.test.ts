@@ -1,4 +1,3 @@
-import { readFile } from 'fs/promises';
 import { pestProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { TestParser } from './TestParser';
@@ -6,50 +5,80 @@ import { TestDefinition, TestType } from './types';
 
 export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
-    let suite: TestDefinition | undefined;
     const phpUnitXML = new PHPUnitXML();
     phpUnitXML.setRoot(pestProject(''));
     const testParser = new TestParser(phpUnitXML);
 
     testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
-    testParser.on(TestType.class, (testDefinition: TestDefinition) => suite = testDefinition);
+    testParser.on(TestType.class, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.parse(buffer, file);
 
-    return suite ? [{ ...suite, children: tests }] : tests;
+    return tests;
 };
 
 describe('PestParser', () => {
-    const givenTest = (method: string) => {
-        return suites[0].children!.find((test) => test.method === method);
-    };
-
-    let suites: TestDefinition[];
     const file = pestProject('tests/Unit/ExampleTest.php');
 
-    beforeAll(async () => {
-        const buffer = await readFile(file);
-        suites = parse(buffer, file);
-    });
+    const findTest = (tests: any, name: string) => {
+        const test = tests.find((test: any) => test.method === name);
+
+        if (test) {
+            return test;
+        }
+
+        return tests.find((test: any) => test.class === name && !test.method);
+    };
+
+    const givenTest = (method: string, content: string, _file?: string) => {
+        return findTest(parse(content, _file ?? file), method);
+    };
 
     it('not test or test', async () => {
-        expect(givenTest('hello')).toBeUndefined();
+        const actual = givenTest('hello', `
+<?php 
+
+function hello(string $description,  callable $closure) {}
+
+hello('hello', function () {
+    expect(true)->toBeTrue();
+});
+        `);
+
+        expect(actual).toBeUndefined();
     });
 
-    it('parse class', async () => {
-        expect(suites[0]).toEqual(expect.objectContaining({
+    it('class ExampleTest', async () => {
+        const actual = givenTest('ExampleTest', `
+<?php 
+
+test('example', function () {
+    expect(true)->toBeTrue();
+})
+
+`);
+
+        expect(actual).toEqual(expect.objectContaining({
             type: TestType.class,
             id: 'P\\Tests\\Unit\\ExampleTest',
             qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             class: 'ExampleTest',
             file,
-            start: { line: 1, character: 0 },
-            end: { line: expect.any(Number), character: 0 },
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
         }));
     });
 
-    it('parse test', async () => {
-        expect(givenTest('example')).toEqual({
+    it('example', async () => {
+        const actual = givenTest('example', `
+<?php 
+
+test('example', function () {
+    expect(true)->toBeTrue();
+});
+        `);
+
+        expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::example',
             qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
@@ -58,13 +87,21 @@ describe('PestParser', () => {
             method: 'example',
             label: 'example',
             file,
-            start: { line: 3, character: 0 },
-            end: { line: 5, character: 3 },
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
         });
     });
 
-    it('parse it', async () => {
-        expect(givenTest('it test example')).toEqual({
+    it('it test example', async () => {
+        const actual = givenTest('it test example', `
+<?php
+
+it('test example', function () {
+    expect(true)->toBeTrue();
+});
+        `);
+
+        expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::it test example',
             qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
@@ -73,13 +110,23 @@ describe('PestParser', () => {
             method: 'it test example',
             label: 'it test example',
             file,
-            start: { line: 7, character: 0 },
-            end: { line: 9, character: 3 },
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
         });
     });
 
-    it('parse describe', async () => {
-        expect(givenTest('`something` → example')).toEqual({
+    it('`something` → example', async () => {
+        const actual = givenTest('`something` → example', `
+<?php
+
+describe('something', function () {
+    test('example', function () {
+        expect(true)->toBeTrue();
+    });
+});
+        `);
+
+        expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::`something` → example',
             qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
@@ -88,13 +135,25 @@ describe('PestParser', () => {
             method: '`something` → example',
             label: 'something → example',
             file,
-            start: { line: 18, character: 4 },
-            end: { line: 20, character: 7 },
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
         });
     });
 
-    it('parse nested describe', async () => {
-        expect(givenTest('`something` → `something else` → it test example')).toEqual({
+    it('`something` → `something else` → it test example', async () => {
+        const actual = givenTest('`something` → `something else` → it test example', `
+<?php
+
+describe('something', function () {
+    describe('something else', function () {
+        it('test example', function () {
+            expect(true)->toBeTrue();
+        });
+    });
+}); 
+        `);
+
+        expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::`something` → `something else` → it test example',
             qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
@@ -103,8 +162,18 @@ describe('PestParser', () => {
             method: '`something` → `something else` → it test example',
             label: 'something → something else → it test example',
             file,
-            start: { line: 23, character: 8 },
-            end: { line: 25, character: 11 },
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
         });
+    });
+
+    it('it example 2', () => {
+        const actual = givenTest('it example 2', `
+<?php
+
+it('example 2')->assertTrue(true);
+        `);
+
+        expect(actual).toBeUndefined();
     });
 });

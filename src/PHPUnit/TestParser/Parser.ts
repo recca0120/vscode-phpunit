@@ -32,7 +32,6 @@ export abstract class Parser {
         return method ?? qualifiedClass;
     };
 
-
     protected parseName(declaration?: Namespace | Declaration | Call | Identifier | Variable): string | undefined {
         if (!declaration) {
             return undefined;
@@ -58,11 +57,15 @@ export abstract class Parser {
     }
 
     protected generateNamespace(namespace?: string): TestDefinition | undefined {
-        return namespace ? {
+        if (!namespace) {
+            return undefined;
+        }
+
+        return {
             type: TestType.namespace,
             id: `namespace:${namespace}`,
             namespace: namespace,
             label: namespace,
-        } : undefined;
+        };
     }
 }
