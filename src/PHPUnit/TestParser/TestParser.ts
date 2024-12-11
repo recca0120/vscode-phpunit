@@ -1,8 +1,8 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import { Class, Declaration, Method, Namespace, Node, Program, UseGroup } from 'php-parser';
+import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
 import { engine } from '../utils';
-import { Annotations } from './AnnotationParser';
+import { Annotations, parse as parseAnnotation } from './AnnotationParser';
 import { propertyParser } from './PropertyParser';
 import { validator } from './Validator';
 
@@ -27,7 +27,6 @@ export type TestDefinition = {
     annotations?: Annotations;
 };
 
-
 export enum TestType {
     namespace,
     class,
@@ -36,11 +35,106 @@ export enum TestType {
 
 const textDecoder = new TextDecoder('utf-8');
 
-export class TestParser {
+export class PHPUnitTestParser {
     private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseTestSuite,
     };
+
+    parse(ast: Program | Declaration | Node, file: string, namespace?: TestDefinition): TestDefinition[] | undefined {
+        const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
+
+        return fn.apply(this, [ast, file, namespace]);
+    }
+
+    private parseNamespace(ast: Namespace & Declaration, file: string) {
+        const name = propertyParser.parseName(ast);
+
+        return this.parseChildren(ast, file, {
+            type: TestType.namespace,
+            id: `namespace:${name}`,
+            namespace: name,
+            label: name,
+        } as TestDefinition);
+    }
+
+    private parseTestSuite(declaration: Class & Declaration, file: string, namespace?: TestDefinition) {
+        if (!validator.isTest(declaration)) {
+            return undefined;
+        }
+
+        const name = propertyParser.parseName(declaration)!;
+        const id = propertyParser.uniqueId(namespace?.namespace, name);
+        const qualifiedClass = propertyParser.qualifiedClass(namespace?.namespace, name);
+        const annotations = parseAnnotation(declaration);
+        const label = propertyParser.parseLabel(annotations, name);
+        const { start, end } = propertyParser.parsePosition(declaration);
+
+        const clazz = {
+            type: TestType.class,
+            id,
+            label,
+            qualifiedClass,
+            namespace: namespace?.namespace,
+            class: name,
+            annotations,
+            file,
+            start,
+            end,
+        } as TestDefinition;
+
+        const methods = declaration.body
+            .filter((method) => validator.isTest(method as Method))
+            .map((method) => {
+                return { ...this.parseTestCase(method, clazz, namespace), file };
+            });
+
+        if (methods.length <= 0) {
+            return undefined;
+        }
+
+        return [{ ...clazz, children: methods }];
+    }
+
+    private parseTestCase(method: Declaration, clazz: TestDefinition, namespace?: TestDefinition) {
+        const name = propertyParser.parseName(method)!;
+        const id = propertyParser.uniqueId(namespace?.namespace, clazz.class, name);
+        const label = propertyParser.parseLabel(method, clazz.class!, name);
+        const annotations = parseAnnotation(method);
+        const { start, end } = propertyParser.parsePosition(method);
+
+        return {
+            type: TestType.method,
+            id,
+            label,
+            qualifiedClass: clazz.qualifiedClass,
+            namespace: clazz.namespace,
+            class: clazz.class,
+            method: name,
+            annotations,
+            start,
+            end,
+        };
+    }
+
+    private parseChildren(ast: Program | Declaration | Node, file: string, namespace?: TestDefinition) {
+        if (!('children' in ast)) {
+            return undefined;
+        }
+
+        const tests = ast.children.reduce((testDefinitions, children) => {
+            return testDefinitions.concat(this.parse(children, file, namespace) ?? []);
+        }, [] as TestDefinition[]);
+
+        if (namespace && tests.length > 0) {
+            return [{ ...namespace, children: tests }];
+        }
+
+        return tests;
+    }
+}
+
+export class TestParser {
     protected eventEmitter = new EventEmitter;
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
@@ -80,71 +174,20 @@ export class TestParser {
         }
     }
 
-    protected parseAst(
-        ast: Program | Namespace | UseGroup | Class | Node,
-        file: string,
-        namespace?: Namespace,
-    ): TestDefinition[] | undefined {
-        const fn: Function = this.parserLookup[ast.kind] ?? this.parseChildren;
+    protected parseAst(ast: Program | Node, file: string): TestDefinition[] | undefined {
+        const parser = new PHPUnitTestParser();
 
-        return fn.apply(this, [ast, file, namespace]);
+        return this.emit(parser.parse(ast, file));
     }
 
-    private parseNamespace(ast: Namespace, file: string) {
-        return this.parseChildren(ast, file, ast);
-    }
-
-    private parseTestSuite(ast: Class & Declaration, file: string, namespace?: Namespace) {
-        if (!validator.isTest(ast)) {
-            return [];
-        }
-
-        const clazz = { ...propertyParser.parse(ast, namespace), type: TestType.class, file };
-
-        const methods = ast.body
-            .filter((method) => validator.isTest(method as Method))
-            .map((method) => ({
-                ...propertyParser.parse(method as Method, namespace, ast),
-                type: TestType.method,
-                file,
-            }));
-
-        if (methods.length <= 0) {
-            return;
-        }
-
-        if (clazz.namespace) {
-            this.eventEmitter.emit(`${TestType.namespace}`, {
-                type: TestType.namespace,
-                id: `namespace:${clazz.namespace}`,
-                namespace: clazz.namespace!,
-                label: clazz.namespace,
-            });
-        }
-
-
-        this.eventEmitter.emit(`${TestType.class}`, clazz);
-
-        methods.forEach((method, index) => {
-            this.eventEmitter.emit(`${TestType.method}`, method, index);
+    private emit(tests?: TestDefinition[]) {
+        tests?.forEach(test => {
+            this.eventEmitter.emit(`${test.type}`, test);
+            if (test.children && test.children.length > 0) {
+                this.emit(test.children);
+            }
         });
 
-        return [{ ...clazz, children: methods }];
-    }
-
-    private parseChildren(
-        ast: Program | Namespace | UseGroup | Class | Node,
-        file: string,
-        namespace?: Namespace,
-    ) {
-        if ('children' in ast) {
-            return ast.children.reduce(
-                (testDefinitions, children) =>
-                    testDefinitions.concat(this.parseAst(children, file, namespace) ?? []),
-                [] as TestDefinition[],
-            );
-        }
-
-        return;
+        return tests;
     }
 }

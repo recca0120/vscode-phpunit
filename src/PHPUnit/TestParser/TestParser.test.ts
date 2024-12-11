@@ -415,12 +415,13 @@ describe('Parser Test', () => {
 
             it('parse NoNamespaceTest', () => {
                 const method = 'test_no_namespace';
+
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
                         id: propertyParser.uniqueId(namespace, clazz, method),
                         qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
-                        namespace,
+                        namespace: undefined,
                         class: clazz,
                         method,
                         start: { line: 7, character: 4 },
