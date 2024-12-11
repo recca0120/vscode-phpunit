@@ -62,7 +62,7 @@ export class PestParser extends Parser {
     }
 
     private parseClass(declaration: Declaration | Node, file: string): TestDefinition {
-        let relativePath = relative(this.root, file);
+        let relativePath = relative(this.root(), file);
         let baseName = basename(file, '.php');
         const dotPos = baseName.lastIndexOf('.');
         if (dotPos !== -1) {

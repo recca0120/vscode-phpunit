@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { Declaration, Node } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { engine } from '../utils';
+import { Parser } from './Parser';
 import { PestParser } from './PestParser';
 import { PHPUnitParser } from './PHPUnitParser';
 import { TestDefinition, TestType } from './types';
@@ -25,10 +26,12 @@ export const generateUniqueId = (namespace?: string, clazz?: string, method?: st
 };
 
 export class TestParser {
-    private parsers = [new PHPUnitParser(), new PestParser()];
+    private parsers: Parser[] = [new PHPUnitParser(), new PestParser()];
     private eventEmitter = new EventEmitter;
 
-    constructor(private phpUnitXML?: PHPUnitXML) {}
+    constructor(private phpUnitXML?: PHPUnitXML) {
+        this.parsers.forEach(parser => parser.setPhpUnitXML(this.phpUnitXML));
+    }
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
         this.eventEmitter.on(`${eventName}`, callback);
@@ -69,7 +72,6 @@ export class TestParser {
 
     private parseAst(declaration: Declaration | Node, file: string): TestDefinition[] | undefined {
         for (const parser of this.parsers) {
-            parser.setRoot(this.phpUnitXML?.root() ?? '');
             const tests = parser.parse(declaration, file);
             if (tests) {
                 return this.emit(tests);

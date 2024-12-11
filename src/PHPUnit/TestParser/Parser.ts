@@ -1,12 +1,13 @@
 import { Call, Declaration, Identifier, Namespace, Node, Variable } from 'php-parser';
+import { PHPUnitXML } from '../PHPUnitXML';
 import { annotationParser, attributeParser } from './AnnotationParser';
 import { TestDefinition, TestType } from './types';
 
 export abstract class Parser {
-    protected root: string = '';
+    private phpUnitXML?: PHPUnitXML;
 
-    setRoot(root: string) {
-        this.root = root;
+    setPhpUnitXML(phpUnitXML?: PHPUnitXML) {
+        this.phpUnitXML = phpUnitXML;
     }
 
     abstract parse(declaration: Declaration | Node, file: string, namespace?: TestDefinition): TestDefinition[] | undefined;
@@ -18,6 +19,10 @@ export abstract class Parser {
 
         return { start, end };
     };
+
+    protected root() {
+        return this.phpUnitXML?.root() ?? '';
+    }
 
     protected parseLabel(annotations: { testdox?: string[] }, qualifiedClass: string, method?: string) {
         if (annotations?.testdox && annotations.testdox.length > 0) {
