@@ -174,6 +174,17 @@ describe('something', function () {
 it('example 2')->assertTrue(true);
         `);
 
-        expect(actual).toBeUndefined();
+        expect(actual).toEqual({
+            type: TestType.method,
+            id: 'P\\Tests\\Unit\\ExampleTest::it example 2',
+            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            namespace: 'P\\Tests\\Unit',
+            class: 'ExampleTest',
+            method: 'it example 2',
+            label: 'it example 2',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+        });
     });
 });

@@ -41,7 +41,11 @@ export class PestParser extends Parser {
             }, []);
     }
 
-    private parseTestOrIt(call: Call, clazz: TestDefinition, prefixes: string[] = []) {
+    private parseTestOrIt(call: Call, clazz: TestDefinition, prefixes: string[] = []): TestDefinition {
+        if (call.what.kind === 'propertylookup') {
+            return this.parseTestOrIt(((call.what as any).what) as Call, clazz, prefixes);
+        }
+
         let label = (call.arguments[0] as String).value;
 
         if (this.parseName(call) === 'it') {
@@ -55,7 +59,7 @@ export class PestParser extends Parser {
             name = [...prefixes.map((value) => '`' + value + '`'), name].join(' → ');
         }
 
-        const id = generateUniqueId(clazz.namespace, clazz.class, name);
+        const id = generateUniqueId(clazz.namespace, clazz.class, name)!;
         const { start, end } = this.parsePosition(call);
 
         return { ...clazz, type: TestType.method, id, label, method: name, start, end };
