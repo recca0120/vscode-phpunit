@@ -16,10 +16,10 @@ export class ProblemMatcher {
     private lookup: { [p: string]: (result: any) => TestResult | undefined } = {
         [TestResultEvent.testSuiteStarted]: this.handleStarted,
         [TestResultEvent.testStarted]: this.handleStarted,
-        [TestResultEvent.testSuiteFinished]: this.handleFinished,
         [TestResultEvent.testFinished]: this.handleFinished,
         [TestResultEvent.testFailed]: this.handleFault,
         [TestResultEvent.testIgnored]: this.handleFault,
+        [TestResultEvent.testSuiteFinished]: this.handleFinished,
     };
 
     constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
