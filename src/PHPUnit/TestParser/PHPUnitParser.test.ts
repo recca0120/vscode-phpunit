@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import { phpUnitProject } from '../__tests__/utils';
-import { propertyParser } from './PropertyParser';
-import { TestDefinition, TestParser, TestType } from './TestParser';
+import { generateQualifiedClass, generateUniqueId, TestParser } from './TestParser';
+import { TestDefinition, TestType } from './types';
 
 export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
@@ -14,7 +14,7 @@ export const parse = (buffer: Buffer | string, file: string) => {
     return suite ? [{ ...suite, children: tests }] : tests;
 };
 
-describe('Parser Test', () => {
+describe('PHPUnitParser Test', () => {
     describe('PHPUnit', () => {
         let suites: TestDefinition[];
         const givenTest = (method: string) => {
@@ -37,8 +37,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -54,8 +54,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -73,8 +73,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -91,8 +91,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -109,8 +109,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -126,8 +126,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -143,8 +143,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -160,8 +160,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -180,8 +180,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -222,8 +222,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -252,8 +252,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -282,8 +282,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -309,8 +309,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -336,8 +336,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -352,8 +352,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -369,8 +369,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -386,8 +386,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace,
                         class: clazz,
                         method,
@@ -419,8 +419,8 @@ describe('Parser Test', () => {
                 expect(givenTest(method)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: propertyParser.uniqueId(namespace, clazz, method),
-                        qualifiedClass: propertyParser.qualifiedClass(namespace, clazz),
+                        id: generateUniqueId(namespace, clazz, method),
+                        qualifiedClass: generateQualifiedClass(namespace, clazz),
                         namespace: undefined,
                         class: clazz,
                         method,

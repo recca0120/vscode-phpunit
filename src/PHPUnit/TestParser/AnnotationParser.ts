@@ -99,10 +99,6 @@ export class AnnotationParser {
 export const annotationParser = new AnnotationParser();
 export const attributeParser = new AttributeParser();
 
-export function parse(declaration: Declaration) {
-    return { ...annotationParser.parse(declaration), ...attributeParser.parse(declaration) };
-}
-
 export function isTest(method: Method) {
     return annotationParser.isTest(method) || attributeParser.isTest(method);
 }

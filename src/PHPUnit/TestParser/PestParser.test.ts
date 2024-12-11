@@ -1,13 +1,15 @@
 import { readFile } from 'fs/promises';
 import { pestProject } from '../__tests__/utils';
-import { PestParser } from './PestParser';
-import { TestDefinition, TestType } from './TestParser';
+import { PHPUnitXML } from '../PHPUnitXML';
+import { TestParser } from './TestParser';
+import { TestDefinition, TestType } from './types';
 
 export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
     let suite: TestDefinition | undefined;
-    const testParser = new PestParser();
-    testParser.setRoot(pestProject(''));
+    const phpUnitXML = new PHPUnitXML();
+    phpUnitXML.setRoot(pestProject(''));
+    const testParser = new TestParser(phpUnitXML);
 
     testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.class, (testDefinition: TestDefinition) => suite = testDefinition);
@@ -41,7 +43,7 @@ describe('PestParser', () => {
             namespace: 'P\\Tests\\Unit',
             class: 'ExampleTest',
             file,
-            start: { line: 0, character: 0 },
+            start: { line: 1, character: 0 },
             end: { line: expect.any(Number), character: 0 },
         }));
     });
@@ -56,8 +58,8 @@ describe('PestParser', () => {
             method: 'example',
             label: 'example',
             file,
-            start: { line: 2, character: 0 },
-            end: { line: 4, character: 3 },
+            start: { line: 3, character: 0 },
+            end: { line: 5, character: 3 },
         });
     });
 
@@ -71,8 +73,8 @@ describe('PestParser', () => {
             method: 'it test example',
             label: 'it test example',
             file,
-            start: { line: 6, character: 0 },
-            end: { line: 8, character: 3 },
+            start: { line: 7, character: 0 },
+            end: { line: 9, character: 3 },
         });
     });
 
@@ -86,8 +88,8 @@ describe('PestParser', () => {
             method: '`something` → example',
             label: 'something → example',
             file,
-            start: { line: 17, character: 4 },
-            end: { line: 19, character: 7 },
+            start: { line: 18, character: 4 },
+            end: { line: 20, character: 7 },
         });
     });
 
@@ -101,8 +103,8 @@ describe('PestParser', () => {
             method: '`something` → `something else` → it test example',
             label: 'something → something else → it test example',
             file,
-            start: { line: 22, character: 8 },
-            end: { line: 24, character: 11 },
+            start: { line: 23, character: 8 },
+            end: { line: 25, character: 11 },
         });
     });
 });
