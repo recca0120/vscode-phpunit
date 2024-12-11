@@ -1,6 +1,6 @@
 import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
 import { Parser } from './Parser';
-import { generateQualifiedClass, generateUniqueId } from './TestParser';
+import { generateClassFQN, generateUniqueId } from './TestParser';
 import { TestDefinition, TestType } from './types';
 import { validator } from './Validator';
 
@@ -25,19 +25,19 @@ export class PHPUnitParser extends Parser {
             return undefined;
         }
 
-        const name = this.parseName(declaration)!;
-        const id = generateUniqueId(namespace?.namespace, name);
-        const qualifiedClass = generateQualifiedClass(namespace?.namespace, name);
+        const className = this.parseName(declaration)!;
+        const id = generateUniqueId(namespace?.namespace, className);
+        const classFQN = generateClassFQN(namespace?.namespace, className);
         const annotations = this.parseAnnotations(declaration);
-        const label = this.parseLabel(annotations, name);
+        const label = this.parseLabel(annotations, className);
 
         const clazz = {
             type: TestType.class,
             id,
             label,
-            qualifiedClass: qualifiedClass,
+            classFQN,
             namespace: namespace?.namespace,
-            class: name,
+            className,
             annotations,
             file,
             ...this.parsePosition(declaration),
@@ -56,10 +56,10 @@ export class PHPUnitParser extends Parser {
         return [{ ...clazz, children: methods }];
     }
 
-    private parseMethod(declaration: Declaration, clazz: TestDefinition) {
-        const name = this.parseName(declaration);
-        const id = generateUniqueId(clazz.namespace, clazz.class, name);
-        const label = this.parseLabel({}, clazz.class!, name);
+    private parseMethod(declaration: Declaration, clazz: TestDefinition): TestDefinition {
+        const methodName = this.parseName(declaration);
+        const id = generateUniqueId(clazz.namespace, clazz.className, methodName)!;
+        const label = this.parseLabel({}, clazz.className!, methodName);
         const annotations = this.parseAnnotations(declaration);
 
         return {
@@ -67,7 +67,7 @@ export class PHPUnitParser extends Parser {
             type: TestType.method,
             id,
             label,
-            method: name,
+            methodName,
             annotations,
             ...this.parsePosition(declaration),
         };

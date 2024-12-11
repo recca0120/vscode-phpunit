@@ -10,14 +10,14 @@ import { TestDefinition, TestType } from './types';
 
 const textDecoder = new TextDecoder('utf-8');
 
-export const generateQualifiedClass = (namespace?: string, clazz?: string) => [namespace, clazz].filter((name) => !!name).join('\\');
+export const generateClassFQN = (namespace?: string, className?: string) => [namespace, className].filter((name) => !!name).join('\\');
 
-export const generateUniqueId = (namespace?: string, clazz?: string, method?: string) => {
-    if (!clazz) {
+export const generateUniqueId = (namespace?: string, className?: string, method?: string) => {
+    if (!className) {
         return namespace;
     }
 
-    let uniqueId = generateQualifiedClass(namespace, clazz);
+    let uniqueId = generateClassFQN(namespace, className);
     if (method) {
         uniqueId = `${uniqueId}::${method}`;
     }

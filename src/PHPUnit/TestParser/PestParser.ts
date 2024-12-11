@@ -59,10 +59,10 @@ export class PestParser extends Parser {
             name = [...prefixes.map((value) => '`' + value + '`'), name].join(' → ');
         }
 
-        const id = generateUniqueId(clazz.namespace, clazz.class, name)!;
+        const id = generateUniqueId(clazz.namespace, clazz.className, name)!;
         const { start, end } = this.parsePosition(call);
 
-        return { ...clazz, type: TestType.method, id, label, method: name, start, end };
+        return { ...clazz, type: TestType.method, id, label, methodName: name, start, end };
     }
 
     private parseClass(declaration: Declaration | Node, file: string): TestDefinition {
@@ -88,9 +88,9 @@ export class PestParser extends Parser {
             type: TestType.class,
             id: classFQN,
             label: className,
-            qualifiedClass: classFQN,
+            classFQN,
             namespace: namespace,
-            class: className,
+            className,
             file,
             start,
             end,

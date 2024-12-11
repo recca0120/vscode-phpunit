@@ -15,10 +15,10 @@ export type TestDefinition = {
     type: TestType;
     id: string;
     label: string;
+    classFQN?: string;
     namespace?: string;
-    qualifiedClass?: string;
-    class?: string;
-    method?: string;
+    className?: string;
+    methodName?: string;
     parent?: TestDefinition;
     children?: TestDefinition[]
     file?: string;

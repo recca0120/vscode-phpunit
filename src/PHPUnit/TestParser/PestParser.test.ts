@@ -19,18 +19,18 @@ export const parse = (buffer: Buffer | string, file: string) => {
 describe('PestParser', () => {
     const file = pestProject('tests/Unit/ExampleTest.php');
 
-    const findTest = (tests: any, name: string) => {
-        const test = tests.find((test: any) => test.method === name);
+    const findTest = (tests: TestDefinition[], methodName: string) => {
+        const test = tests.find((test: any) => test.methodName === methodName);
 
         if (test) {
             return test;
         }
 
-        return tests.find((test: any) => test.class === name && !test.method);
+        return tests.find((test: any) => test.className === methodName && !test.methodName);
     };
 
-    const givenTest = (method: string, content: string, _file?: string) => {
-        return findTest(parse(content, _file ?? file), method);
+    const givenTest = (methodName: string, content: string, _file?: string) => {
+        return findTest(parse(content, _file ?? file), methodName);
     };
 
     it('not test or test', async () => {
@@ -47,7 +47,7 @@ hello('hello', function () {
         expect(actual).toBeUndefined();
     });
 
-    it('class ExampleTest', async () => {
+    it('ExampleTest', async () => {
         const actual = givenTest('ExampleTest', `
 <?php 
 
@@ -60,9 +60,9 @@ test('example', function () {
         expect(actual).toEqual(expect.objectContaining({
             type: TestType.class,
             id: 'P\\Tests\\Unit\\ExampleTest',
-            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
-            class: 'ExampleTest',
+            className: 'ExampleTest',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
@@ -81,10 +81,10 @@ test('example', function () {
         expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::example',
-            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
-            class: 'ExampleTest',
-            method: 'example',
+            className: 'ExampleTest',
+            methodName: 'example',
             label: 'example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
@@ -104,10 +104,10 @@ it('test example', function () {
         expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::it test example',
-            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
-            class: 'ExampleTest',
-            method: 'it test example',
+            className: 'ExampleTest',
+            methodName: 'it test example',
             label: 'it test example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
@@ -129,10 +129,10 @@ describe('something', function () {
         expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::`something` → example',
-            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
-            class: 'ExampleTest',
-            method: '`something` → example',
+            className: 'ExampleTest',
+            methodName: '`something` → example',
             label: 'something → example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
@@ -156,10 +156,10 @@ describe('something', function () {
         expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::`something` → `something else` → it test example',
-            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
-            class: 'ExampleTest',
-            method: '`something` → `something else` → it test example',
+            className: 'ExampleTest',
+            methodName: '`something` → `something else` → it test example',
             label: 'something → something else → it test example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
@@ -177,10 +177,10 @@ it('example 2')->assertTrue(true);
         expect(actual).toEqual({
             type: TestType.method,
             id: 'P\\Tests\\Unit\\ExampleTest::it example 2',
-            qualifiedClass: 'P\\Tests\\Unit\\ExampleTest',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
-            class: 'ExampleTest',
-            method: 'it example 2',
+            className: 'ExampleTest',
+            methodName: 'it example 2',
             label: 'it example 2',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },

@@ -24,12 +24,12 @@ export abstract class Parser {
         return this.phpUnitXML?.root() ?? '';
     }
 
-    protected parseLabel(annotations: { testdox?: string[] }, qualifiedClass: string, method?: string) {
+    protected parseLabel(annotations: { testdox?: string[] }, classFQN: string, method?: string) {
         if (annotations?.testdox && annotations.testdox.length > 0) {
             return annotations.testdox[annotations.testdox.length - 1];
         }
 
-        return method ?? qualifiedClass;
+        return method ?? classFQN;
     };
 
     protected parseName(declaration?: Namespace | Declaration | Call | Identifier | Variable): string | undefined {
