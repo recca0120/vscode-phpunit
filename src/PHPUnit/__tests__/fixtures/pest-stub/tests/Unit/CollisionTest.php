@@ -6,4 +6,4 @@ test('error', function () {
 
 test('success', function () {
     expect(true)->toBeTrue();
-})->skip(! isset($_SERVER['COLLISION_TEST']));
+});

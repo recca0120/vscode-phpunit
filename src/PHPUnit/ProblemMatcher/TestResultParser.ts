@@ -85,16 +85,22 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         }
 
         const locationHint = argv.locationHint;
-        const split = locationHint
-            .replace(/^php_qn:\/\//, '')
-            .replace(/::\\/g, '::')
-            .split('::');
 
-        const file = split.shift();
-        const id = split.join('::');
-        const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
+        if (locationHint.startsWith('php_qn')) {
+            const split = locationHint
+                .replace(/^php_qn:\/\//, '')
+                .replace(/::\\/g, '::')
+                .split('::');
 
-        return { id, file, testId };
+            const file = split.shift();
+            const id = split.join('::');
+            const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
+
+            return { id, file, testId };
+        } else {
+            console.log(locationHint);
+        }
+        return { id: '', file: '', testId: '' };
     }
 
     private toTeamcityArgv(text: string): Pick<Arguments, string | number> {
