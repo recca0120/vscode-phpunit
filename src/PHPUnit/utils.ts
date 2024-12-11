@@ -1,5 +1,5 @@
 import { stat } from 'node:fs/promises';
-import { Class, Declaration, Engine, Namespace } from 'php-parser';
+import { Engine } from 'php-parser';
 
 class EscapeValue {
     private values = {
@@ -62,6 +62,7 @@ class EscapeValue {
 }
 
 export const EOL = '\r\n';
+
 export const engine = new Engine({
     ast: { withPositions: true, withSource: true },
     parser: { extractDoc: true, suppressErrors: false },
@@ -72,8 +73,9 @@ export const engine = new Engine({
         short_tags: true,
     },
 });
-export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 export const escapeValue = new EscapeValue();
+
 export const parseValue = (key: any, value: any): string[] => {
     if (Array.isArray(value)) {
         return value.reduce((acc: string[], item: any) => acc.concat(parseValue(key, item)), []);
@@ -82,12 +84,6 @@ export const parseValue = (key: any, value: any): string[] => {
     const operator = key.length === 1 ? ' ' : '=';
 
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
-};
-
-export const camel = (str: string) => {
-    return str
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9]+(.)/g, (_m: string, chr: string) => chr.toUpperCase());
 };
 
 export const groupBy = <T extends { [propName: string]: any }>(items: T[], key: string): {

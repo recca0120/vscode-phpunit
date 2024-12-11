@@ -1,6 +1,7 @@
 import { readFile } from 'fs/promises';
 import { phpUnitProject } from '../__tests__/utils';
-import { generateClassFQN, generateUniqueId, TestParser } from './TestParser';
+import { converter } from './Converter';
+import { TestParser } from './TestParser';
 import { TestDefinition, TestType } from './types';
 
 export const parse = (buffer: Buffer | string, file: string) => {
@@ -24,7 +25,9 @@ describe('PHPUnitParser Test', () => {
         describe('parse AssertionsTest', () => {
             const file = phpUnitProject('tests/AssertionsTest.php');
             const namespace = 'Recca0120\\VSCode\\Tests';
+            const type = TestType.method;
             const className = 'AssertionsTest';
+            const classFQN = `${namespace}\\${className}`;
 
             beforeAll(async () => {
                 const buffer = await readFile(file);
@@ -37,8 +40,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -54,8 +57,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -73,8 +76,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -91,8 +94,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -109,8 +112,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -126,8 +129,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -143,8 +146,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -160,8 +163,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -181,8 +184,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -210,7 +213,9 @@ describe('PHPUnitParser Test', () => {
         describe('parse StaticMethodTest', () => {
             const file = phpUnitProject('tests/StaticMethodTest.php');
             const namespace = 'Recca0120\\VSCode\\Tests';
+            const type = TestType.method;
             const className = 'StaticMethodTest';
+            const classFQN = `${namespace}\\${className}`;
 
             beforeAll(async () => {
                 const buffer = await readFile(file);
@@ -223,8 +228,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -240,7 +245,9 @@ describe('PHPUnitParser Test', () => {
         describe('parse HasPropertyTest', () => {
             const file = phpUnitProject('tests/SubFolder/HasPropertyTest.php');
             const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
+            const type = TestType.method;
             const className = 'HasPropertyTest';
+            const classFQN = `${namespace}\\${className}`;
 
             beforeAll(async () => {
                 const buffer = await readFile(file);
@@ -253,8 +260,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -270,7 +277,9 @@ describe('PHPUnitParser Test', () => {
         describe('parse LeadingCommentsTest', () => {
             const file = phpUnitProject('tests/SubFolder/LeadingCommentsTest.php');
             const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
+            const type = TestType.method;
             const className = 'LeadingCommentsTest';
+            const classFQN = `${namespace}\\${className}`;
 
             beforeAll(async () => {
                 const buffer = await readFile(file);
@@ -283,8 +292,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -298,7 +307,9 @@ describe('PHPUnitParser Test', () => {
         describe('parse UseTraitTest', () => {
             const file = phpUnitProject('tests/SubFolder/UseTraitTest.php');
             const namespace = 'Recca0120\\VSCode\\Tests\\SubFolder';
+            const type = TestType.method;
             const className = 'UseTraitTest';
+            const classFQN = `${namespace}\\${className}`;
 
             beforeAll(async () => {
                 const buffer = await readFile(file);
@@ -311,8 +322,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -326,7 +337,9 @@ describe('PHPUnitParser Test', () => {
         describe('parse AttributeTest', () => {
             const file = phpUnitProject('tests/AttributeTest.php');
             const namespace = 'Recca0120\\VSCode\\Tests';
+            const type = TestType.method;
             const className = 'AttributeTest';
+            const classFQN = `${namespace}\\${className}`;
 
             beforeAll(async () => {
                 const buffer = await readFile(file);
@@ -339,8 +352,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -356,8 +369,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -374,8 +387,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -392,8 +405,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace,
                         className,
                         methodName,
@@ -407,8 +420,9 @@ describe('PHPUnitParser Test', () => {
 
         describe('parse NoNamespaceTest', () => {
             const file = phpUnitProject('tests/NoNamespaceTest.php');
-            const namespace = '';
+            const type = TestType.method;
             const className = 'NoNamespaceTest';
+            const classFQN = className;
 
             beforeAll(async () => {
                 const file2 = phpUnitProject('tests/AttributeTest.php');
@@ -425,8 +439,8 @@ describe('PHPUnitParser Test', () => {
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: generateUniqueId(namespace, className, methodName),
-                        classFQN: generateClassFQN(namespace, className),
+                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        classFQN,
                         namespace: undefined,
                         className,
                         methodName,

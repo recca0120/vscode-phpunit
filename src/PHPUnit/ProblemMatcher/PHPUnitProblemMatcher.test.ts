@@ -40,7 +40,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             });
         });
 
-        fit('testSuiteStarted default', () => {
+        it('testSuiteStarted default', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='default' flowId='8024']`, {
                 event: TestResultEvent.testSuiteStarted,
                 name: 'default',

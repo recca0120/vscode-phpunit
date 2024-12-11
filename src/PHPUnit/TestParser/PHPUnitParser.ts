@@ -1,6 +1,6 @@
 import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
+import { converter } from './Converter';
 import { Parser } from './Parser';
-import { generateClassFQN, generateUniqueId } from './TestParser';
 import { TestDefinition, TestType } from './types';
 import { validator } from './Validator';
 
@@ -25,14 +25,15 @@ export class PHPUnitParser extends Parser {
             return undefined;
         }
 
+        const type = TestType.class;
         const className = this.parseName(declaration)!;
-        const id = generateUniqueId(namespace?.namespace, className);
-        const classFQN = generateClassFQN(namespace?.namespace, className);
+        const classFQN = [namespace?.namespace, className].filter((name) => !!name).join('\\');
         const annotations = this.parseAnnotations(declaration);
-        const label = this.parseLabel(annotations, className);
+        const id = converter.generateUniqueId({ type, classFQN });
+        const label = converter.generateLabel({ type, classFQN, className, annotations });
 
         const clazz = {
-            type: TestType.class,
+            type,
             id,
             label,
             classFQN,
@@ -45,9 +46,7 @@ export class PHPUnitParser extends Parser {
 
         const methods = declaration.body
             .filter((method) => validator.isTest(method as Method))
-            .map((method) => {
-                return this.parseMethod(method, clazz);
-            });
+            .map((method) => this.parseMethod(method, clazz));
 
         if (methods.length <= 0) {
             return undefined;
@@ -57,14 +56,15 @@ export class PHPUnitParser extends Parser {
     }
 
     private parseMethod(declaration: Declaration, clazz: TestDefinition): TestDefinition {
+        const type = TestType.method;
         const methodName = this.parseName(declaration);
-        const id = generateUniqueId(clazz.namespace, clazz.className, methodName)!;
-        const label = this.parseLabel({}, clazz.className!, methodName);
         const annotations = this.parseAnnotations(declaration);
+        const id = converter.generateUniqueId({ ...clazz, type, methodName });
+        const label = converter.generateLabel({ ...clazz, type, methodName, annotations });
 
         return {
             ...clazz,
-            type: TestType.method,
+            type,
             id,
             label,
             methodName,

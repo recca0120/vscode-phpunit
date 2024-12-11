@@ -395,7 +395,7 @@ describe('TestResultParser', () => {
             event: TestResultEvent.testResultSummary,
             tests: 1,
             assertions: 1,
-            phpunitDeprecations: 1,
+            phpUnitDeprecations: 1,
             risky: 1,
             text,
         });

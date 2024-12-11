@@ -55,6 +55,10 @@ export class Pattern {
         this.relativePath = Pattern.normalizePath(relativePath);
     }
 
+    private static normalizePath(...paths: string[]) {
+        return normalize(paths.join('/')).replace(/\\|\/+/g, '/');
+    }
+
     push(item: TestSuite, extension: string = '') {
         const args = [this.relativePath, item.value];
         if (item.tag !== 'file') {
@@ -66,10 +70,6 @@ export class Pattern {
 
     toString() {
         return `{${this.patterns}}`;
-    }
-
-    private static normalizePath(...paths: string[]) {
-        return normalize(paths.join('/')).replace(/\\|\/+/g, '/');
     }
 }
 
