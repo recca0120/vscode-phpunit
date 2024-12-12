@@ -8,13 +8,15 @@ export const pestProject = (uri: string) => fixturePath(join('pest-stub', uri));
 export const normalPath = (path: string) => path.replace(/^\w:/, (matched) => matched.toLowerCase());
 
 export const getPhpUnitVersion = (): string => {
-    const output = execSync('php vendor/bin/phpunit --version', {
-        cwd: phpUnitProject(''),
-    }).toString();
+    const output = execSync('php vendor/bin/phpunit --version', { cwd: phpUnitProject('') }).toString();
 
-    const matched = output.match(/PHPUnit\s([\d\.]+)\s/);
+    return output.match(/PHPUnit\s([\d.]+)/)![1];
+};
 
-    return matched![1];
+export const getPhpVersion = (): string => {
+    const output = execSync('php --version', { cwd: phpUnitProject('') }).toString();
+
+    return output.match(/PHP\s([\d.]+)/)![1];
 };
 
 export const generateXML = (text: string) => {

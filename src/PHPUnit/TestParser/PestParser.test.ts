@@ -18,7 +18,7 @@ export const parse = (buffer: Buffer | string, file: string) => {
 };
 
 describe('PestParser', () => {
-    const file = pestProject('tests/Unit/ExampleTest.php');
+    const file = pestProject('tests/Fixtures/ExampleTest.php');
 
     const findTest = (tests: TestDefinition[], methodName: string) => {
         const lookup = {
@@ -42,8 +42,8 @@ describe('PestParser', () => {
         return findTest(parse(content, _file ?? file), methodName);
     };
 
-    it('namespace:tests\\Unit', async () => {
-        const actual = givenTest('P\\Tests\\Unit', `
+    it('namespace:Tests\\Fixtures', async () => {
+        const actual = givenTest('P\\Tests\\Fixtures', `
 <?php 
 
 test('example', function () {
@@ -53,10 +53,10 @@ test('example', function () {
 
         expect(actual).toEqual(expect.objectContaining({
             type: TestType.namespace,
-            id: 'namespace:tests\\Unit.php',
-            classFQN: 'P\\Tests\\Unit',
-            namespace: 'P\\Tests\\Unit',
-            label: 'Tests\\Unit',
+            id: 'namespace:Tests\\Fixtures',
+            classFQN: 'P\\Tests\\Fixtures',
+            namespace: 'P\\Tests\\Fixtures',
+            label: 'Tests\\Fixtures',
         }));
     });
 
@@ -72,9 +72,9 @@ test('example', function () {
 
         expect(actual).toEqual(expect.objectContaining({
             type: TestType.class,
-            id: 'tests\\Unit\\ExampleTest.php',
-            classFQN: 'P\\Tests\\Unit\\ExampleTest',
-            namespace: 'P\\Tests\\Unit',
+            id: 'Tests\\Fixtures\\ExampleTest',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             label: 'ExampleTest',
             file,
@@ -94,9 +94,9 @@ test('example', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'tests\\Unit\\ExampleTest.php::example',
-            classFQN: 'P\\Tests\\Unit\\ExampleTest',
-            namespace: 'P\\Tests\\Unit',
+            id: 'tests/Fixtures/ExampleTest.php::example',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: 'example',
             label: 'example',
@@ -117,9 +117,9 @@ it('test example', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'tests\\Unit\\ExampleTest.php::it test example',
-            classFQN: 'P\\Tests\\Unit\\ExampleTest',
-            namespace: 'P\\Tests\\Unit',
+            id: 'tests/Fixtures/ExampleTest.php::it test example',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: 'it test example',
             label: 'it test example',
@@ -142,9 +142,9 @@ describe('something', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'tests\\Unit\\ExampleTest.php::`something` → example',
-            classFQN: 'P\\Tests\\Unit\\ExampleTest',
-            namespace: 'P\\Tests\\Unit',
+            id: 'tests/Fixtures/ExampleTest.php::`something` → example',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: '`something` → example',
             label: 'something → example',
@@ -169,9 +169,9 @@ describe('something', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'tests\\Unit\\ExampleTest.php::`something` → `something else` → it test example',
-            classFQN: 'P\\Tests\\Unit\\ExampleTest',
-            namespace: 'P\\Tests\\Unit',
+            id: 'tests/Fixtures/ExampleTest.php::`something` → `something else` → it test example',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: '`something` → `something else` → it test example',
             label: 'something → something else → it test example',
@@ -190,9 +190,9 @@ it('example 2')->assertTrue(true);
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'tests\\Unit\\ExampleTest.php::it example 2',
-            classFQN: 'P\\Tests\\Unit\\ExampleTest',
-            namespace: 'P\\Tests\\Unit',
+            id: 'tests/Fixtures/ExampleTest.php::it example 2',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: 'it example 2',
             label: 'it example 2',

@@ -5,6 +5,8 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests_
 import { CommandBuilder } from './CommandBuilder';
 import { Configuration } from './Configuration';
 import { TestResultEvent } from './ProblemMatcher';
+import { TestType } from './TestParser';
+import { converter } from './TestParser/Converter';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import Mock = jest.Mock;
@@ -61,9 +63,14 @@ const hasFile = (
 });
 
 function expectedTestResult(expected: any, projectPath: (path: string) => string): void {
-    const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
-        (call: any) => call[0].id === expected.id && call[0].event === expected.event,
-    );
+    const [classFQN, methodName] = expected.id.split('::');
+    const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
+    const type = !methodName ? TestType.class : TestType.method;
+    expected.id = converter.generateUniqueId({ type, classFQN, methodName });
+
+    const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find((call: any) => {
+        return call[0].id === expected.id && call[0].event === expected.event;
+    });
 
     expect(actual).not.toBeUndefined();
 
@@ -84,7 +91,7 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
         expect(actual[0].details).toEqual(expected.details);
     }
 
-    const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
+
     expect(actual[0]).toEqual(
         expect.objectContaining({ ...expected, locationHint }),
     );

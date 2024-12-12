@@ -1,7 +1,6 @@
 import { basename, dirname, join, relative } from 'node:path';
 import { Block, Call, Closure, Declaration, ExpressionStatement, Node, Program, String } from 'php-parser';
-import { capitalize } from 'string-ts';
-import { converter } from './Converter';
+import { capitalize, converter } from './Converter';
 import { Parser } from './Parser';
 import { TestDefinition, TestType } from './types';
 

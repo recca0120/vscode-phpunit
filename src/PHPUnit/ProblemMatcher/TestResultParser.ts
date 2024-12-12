@@ -1,5 +1,7 @@
 import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
+import { TestType } from '../TestParser';
+import { converter } from '../TestParser/Converter';
 import { escapeValue } from '../utils';
 import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestProcessesParser } from './TestProcessesParser';
@@ -73,7 +75,7 @@ export class TestResultParser implements IParser<TestResult | undefined> {
                 const { file, line } = input.match(this.filePattern)!.groups!;
 
                 return {
-                    file: file.replace(/^(-)+/, '').trim(),
+                    file: file.replace(/^(-)+|^at\s+/, '').trim(),
                     line: parseInt(line, 10),
                 };
             });
@@ -86,40 +88,39 @@ export class TestResultParser implements IParser<TestResult | undefined> {
 
         const locationHint = argv.locationHint;
 
-        if (locationHint.startsWith('php_qn')) {
-            const split = locationHint
-                .replace(/^php_qn:\/\//, '')
-                .replace(/::\\/g, '::')
-                .split('::');
+        const isPest = locationHint.startsWith('pest_qn');
 
-            const file = split.shift();
-            const id = split.join('::');
+        if (!isPest) {
+            const partsLocation = locationHint.replace(/^php_qn:\/\//, '').replace(/::\\/g, '::').split('::');
+            const file = partsLocation.shift();
+            const [classFQN, methodName] = partsLocation;
+
+            const type = !methodName ? TestType.class : TestType.method;
+            const id = converter.generateUniqueId({ type: type, classFQN, methodName });
             const testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
 
             return { id, file, testId };
         }
 
-        let id = undefined;
-        let testId = undefined;
-        let method = undefined;
+        const matched = locationHint.match(/pest_qn:\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
+        let id;
+        let testId;
         let file = '';
-
-        let matched = locationHint.match(/pest_qn:\/\/(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>[\w\s]+))?/);
-
         if (matched) {
-            const classFQN = matched.groups['classFQN'];
-            if (matched.groups['method']) {
-                method = matched.groups['method'];
-                id = [classFQN, method].join('::');
+            const methodName = matched.groups['method'];
+            if (methodName) {
+                const classFQN = matched.groups['classFQN'];
+                const type = !methodName ? TestType.class : TestType.method;
+                id = converter.generateUniqueId({ type: type, classFQN, methodName });
+                testId = id.replace(/\swith\sdata\sset\s[#"].+$/, '');
             } else {
                 id = argv.name;
+                testId = id;
             }
-            testId = id;
         } else {
-            const split = locationHint.replace(/pest_qn:\/\//, '').split('::');
-            file = split[0];
-            id = split.join('::');
+            id = locationHint.replace(/pest_qn:\/\//, '').replace(/\\/g, '/');
             testId = id;
+            file = id.split('::')[0];
         }
 
         return { id, testId, file };

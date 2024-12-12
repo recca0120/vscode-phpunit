@@ -1,4 +1,4 @@
-import { camelCase } from 'string-ts';
+import { camelCase } from '../TestParser/Converter';
 import { TestResultEvent, TestResultSummary } from './types';
 import { IParser } from './ValueParser';
 
