@@ -9,8 +9,9 @@ export const parse = (buffer: Buffer | string, file: string) => {
     phpUnitXML.setRoot(pestProject(''));
     const testParser = new TestParser(phpUnitXML);
 
-    testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
+    testParser.on(TestType.namespace, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.class, (testDefinition: TestDefinition) => tests.push(testDefinition));
+    testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.parse(buffer, file);
 
     return tests;
@@ -20,31 +21,43 @@ describe('PestParser', () => {
     const file = pestProject('tests/Unit/ExampleTest.php');
 
     const findTest = (tests: TestDefinition[], methodName: string) => {
-        const test = tests.find((test: any) => test.methodName === methodName);
+        const lookup = {
+            [TestType.method]: (test: TestDefinition) => test.methodName === methodName,
+            [TestType.class]: (test: TestDefinition) => test.className === methodName && !test.methodName,
+            [TestType.namespace]: (test: TestDefinition) => test.classFQN === methodName && !test.className && !test.methodName,
+        } as { [key: string]: Function };
 
-        if (test) {
-            return test;
+        for (const [, fn] of Object.entries(lookup)) {
+            const test = tests.find((test: TestDefinition) => fn(test));
+
+            if (test) {
+                return test;
+            }
         }
 
-        return tests.find((test: any) => test.className === methodName && !test.methodName);
+        return undefined;
     };
 
     const givenTest = (methodName: string, content: string, _file?: string) => {
         return findTest(parse(content, _file ?? file), methodName);
     };
 
-    it('not test or test', async () => {
-        const actual = givenTest('hello', `
+    it('namespace:tests\\Unit', async () => {
+        const actual = givenTest('P\\Tests\\Unit', `
 <?php 
 
-function hello(string $description,  callable $closure) {}
-
-hello('hello', function () {
+test('example', function () {
     expect(true)->toBeTrue();
 });
         `);
 
-        expect(actual).toBeUndefined();
+        expect(actual).toEqual(expect.objectContaining({
+            type: TestType.namespace,
+            id: 'namespace:tests\\Unit.php',
+            classFQN: 'P\\Tests\\Unit',
+            namespace: 'P\\Tests\\Unit',
+            label: 'Tests\\Unit',
+        }));
     });
 
     it('ExampleTest', async () => {
@@ -59,10 +72,11 @@ test('example', function () {
 
         expect(actual).toEqual(expect.objectContaining({
             type: TestType.class,
-            id: 'P\\Tests\\Unit\\ExampleTest',
+            id: 'tests\\Unit\\ExampleTest.php',
             classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             className: 'ExampleTest',
+            label: 'ExampleTest',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
@@ -80,7 +94,7 @@ test('example', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'P\\Tests\\Unit\\ExampleTest::example',
+            id: 'tests\\Unit\\ExampleTest.php::example',
             classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             className: 'ExampleTest',
@@ -103,7 +117,7 @@ it('test example', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'P\\Tests\\Unit\\ExampleTest::it test example',
+            id: 'tests\\Unit\\ExampleTest.php::it test example',
             classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             className: 'ExampleTest',
@@ -128,7 +142,7 @@ describe('something', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'P\\Tests\\Unit\\ExampleTest::`something` → example',
+            id: 'tests\\Unit\\ExampleTest.php::`something` → example',
             classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             className: 'ExampleTest',
@@ -155,7 +169,7 @@ describe('something', function () {
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'P\\Tests\\Unit\\ExampleTest::`something` → `something else` → it test example',
+            id: 'tests\\Unit\\ExampleTest.php::`something` → `something else` → it test example',
             classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             className: 'ExampleTest',
@@ -176,7 +190,7 @@ it('example 2')->assertTrue(true);
 
         expect(actual).toEqual({
             type: TestType.method,
-            id: 'P\\Tests\\Unit\\ExampleTest::it example 2',
+            id: 'tests\\Unit\\ExampleTest.php::it example 2',
             classFQN: 'P\\Tests\\Unit\\ExampleTest',
             namespace: 'P\\Tests\\Unit',
             className: 'ExampleTest',
@@ -186,5 +200,19 @@ it('example 2')->assertTrue(true);
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
         });
+    });
+
+    it('not test or test', async () => {
+        const actual = givenTest('hello', `
+<?php 
+
+function hello(string $description,  callable $closure) {}
+
+hello('hello', function () {
+    expect(true)->toBeTrue();
+});
+        `);
+
+        expect(actual).toBeUndefined();
     });
 });

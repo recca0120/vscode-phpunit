@@ -42,7 +42,7 @@ export class TestHierarchyBuilder {
     private addNamespaceTestItems(testDefinition: TestDefinition) {
         let parentTestCollection = this.ctrl.items;
         let testItem: TestItem | undefined;
-        const segments = testDefinition.namespace?.split('\\') ?? [];
+        const segments = testDefinition.label?.split('\\') ?? [];
         this.length = segments.length;
         segments.forEach((segment, index, segments) => {
             const testDefinition = {

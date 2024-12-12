@@ -1,3 +1,4 @@
+import { uncapitalize } from 'string-ts';
 import { TestDefinition, TestType } from './types';
 
 export class Converter {
@@ -6,22 +7,24 @@ export class Converter {
         let classFQN = testDefinition.classFQN!;
         let methodName = testDefinition.methodName;
 
-        // const isPest = /^P\\/.test(classFQN);
+        const isPest = /^P\\/.test(classFQN);
 
-        // if (isPest) {
-        //     classFQN = classFQN.replace(/^P\\/, '');
-        //     console.log(classFQN);
-        // }
+        if (isPest) {
+            const id = uncapitalize(classFQN.replace(/^P\\/, '')) + '.php';
+
+            if (type === TestType.namespace) {
+                return `namespace:${id}`;
+            }
+
+            return methodName ? `${id}::${methodName}` : id;
+        }
 
         if (type === TestType.namespace) {
             return `namespace:${classFQN}`;
         }
 
-        if (!methodName) {
-            return classFQN;
-        }
+        return methodName ? `${classFQN}::${methodName}` : classFQN;
 
-        return `${classFQN}::${methodName}`;
     };
 
     generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'>): string {
@@ -33,7 +36,7 @@ export class Converter {
             return testDefinition.methodName.replace(/`/g, '');
         }
 
-        return testDefinition.className!;
+        return testDefinition.className ?? testDefinition.classFQN!.replace(/^P\\/g, '');
     }
 }
 

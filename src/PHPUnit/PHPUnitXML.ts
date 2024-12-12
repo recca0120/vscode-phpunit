@@ -176,7 +176,7 @@ export class PHPUnitXML {
 
     private getDirectoriesAndFiles<T>(
         selector: string,
-        callbacks: { [propName: string]: (tag: string, node: Element, parent: Element) => T; },
+        callbacks: { [key: string]: (tag: string, node: Element, parent: Element) => T; },
     ) {
         if (!this.element) {
             return [];

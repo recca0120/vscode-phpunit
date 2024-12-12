@@ -8,8 +8,8 @@ export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
     let suite: TestDefinition | undefined;
     const testParser = new TestParser();
-    testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.class, (testDefinition: TestDefinition) => suite = testDefinition);
+    testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.parse(buffer, file);
 
     return suite ? [{ ...suite, children: tests }] : tests;
@@ -36,11 +36,13 @@ describe('PHPUnitParser Test', () => {
 
             it('it should parse test_passed', () => {
                 const methodName = 'test_passed';
+                const id = converter.generateUniqueId({ type, classFQN, methodName });
+                // Assertions (Recca0120\VSCode\Tests\Assertions)::Passed
 
                 expect(givenTest(methodName)).toEqual(
                     expect.objectContaining({
                         file,
-                        id: converter.generateUniqueId({ type, classFQN, methodName }),
+                        id,
                         classFQN,
                         namespace,
                         className,

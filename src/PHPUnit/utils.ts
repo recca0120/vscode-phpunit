@@ -86,9 +86,7 @@ export const parseValue = (key: any, value: any): string[] => {
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
 };
 
-export const groupBy = <T extends { [propName: string]: any }>(items: T[], key: string): {
-    [propName: string]: T[];
-} => {
+export const groupBy = <T extends { [key: string]: any }>(items: T[], key: string): { [key: string]: T[]; } => {
     if (!items) {
         return {};
     }
@@ -103,7 +101,7 @@ export const groupBy = <T extends { [propName: string]: any }>(items: T[], key: 
         acc[itemKey].push(item);
 
         return acc;
-    }, {} as { [propName: string]: T[] });
+    }, {} as { [key: string]: T[] });
 };
 
 export async function checkFileExists(filePath: string): Promise<boolean> {

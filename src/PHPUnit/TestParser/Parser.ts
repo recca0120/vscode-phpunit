@@ -57,10 +57,10 @@ export abstract class Parser {
         const type = TestType.namespace;
         const classFQN = namespace;
         const id = converter.generateUniqueId({ type, classFQN });
-        const label = converter.generateLabel({ classFQN });
+        const label = converter.generateLabel({ type, classFQN });
 
         return {
-            type: TestType.namespace,
+            type,
             id,
             namespace: namespace,
             classFQN,

@@ -39,7 +39,7 @@ export class PestParser extends Parser {
         const className = partsFQN.pop()!;
         const namespace = partsFQN.join('\\');
         const id = converter.generateUniqueId({ type, classFQN });
-        const label = converter.generateLabel({ type, classFQN });
+        const label = converter.generateLabel({ type, classFQN, className });
 
         const { start, end } = this.parsePosition(declaration);
 
