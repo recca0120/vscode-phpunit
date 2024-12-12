@@ -48,7 +48,7 @@ export class TestCase {
     }
 
     private parseDependsFilter() {
-        const deps = [this.testDefinition.method, ...(this.testDefinition.annotations?.depends ?? [])].join('|');
+        const deps = [this.testDefinition.methodName, ...(this.testDefinition.annotations?.depends ?? [])].join('|');
 
         return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
     }

@@ -10,21 +10,6 @@ import { TestDefinition, TestType } from './types';
 
 const textDecoder = new TextDecoder('utf-8');
 
-export const generateQualifiedClass = (namespace?: string, clazz?: string) => [namespace, clazz].filter((name) => !!name).join('\\');
-
-export const generateUniqueId = (namespace?: string, clazz?: string, method?: string) => {
-    if (!clazz) {
-        return namespace;
-    }
-
-    let uniqueId = generateQualifiedClass(namespace, clazz);
-    if (method) {
-        uniqueId = `${uniqueId}::${method}`;
-    }
-
-    return uniqueId;
-};
-
 export class TestParser {
     private parsers: Parser[] = [new PHPUnitParser(), new PestParser()];
     private eventEmitter = new EventEmitter;

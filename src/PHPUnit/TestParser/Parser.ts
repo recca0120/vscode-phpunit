@@ -1,6 +1,7 @@
 import { Call, Declaration, Identifier, Namespace, Node, Variable } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { annotationParser, attributeParser } from './AnnotationParser';
+import { converter } from './Converter';
 import { TestDefinition, TestType } from './types';
 
 export abstract class Parser {
@@ -23,14 +24,6 @@ export abstract class Parser {
     protected root() {
         return this.phpUnitXML?.root() ?? '';
     }
-
-    protected parseLabel(annotations: { testdox?: string[] }, qualifiedClass: string, method?: string) {
-        if (annotations?.testdox && annotations.testdox.length > 0) {
-            return annotations.testdox[annotations.testdox.length - 1];
-        }
-
-        return method ?? qualifiedClass;
-    };
 
     protected parseName(declaration?: Namespace | Declaration | Call | Identifier | Variable): string | undefined {
         if (!declaration) {
@@ -61,11 +54,17 @@ export abstract class Parser {
             return undefined;
         }
 
+        const type = TestType.namespace;
+        const classFQN = namespace;
+        const id = converter.generateUniqueId({ type, classFQN });
+        const label = converter.generateLabel({ type, classFQN });
+
         return {
-            type: TestType.namespace,
-            id: `namespace:${namespace}`,
+            type,
+            id,
             namespace: namespace,
-            label: namespace,
+            classFQN,
+            label,
         };
     }
 }

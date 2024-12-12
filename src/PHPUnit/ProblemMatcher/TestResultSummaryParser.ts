@@ -1,4 +1,4 @@
-import { camel } from '../utils';
+import { camelCase } from 'string-ts';
 import { TestResultEvent, TestResultSummary } from './types';
 import { IParser } from './ValueParser';
 
@@ -51,7 +51,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
     }
 
     private normalize(name: string) {
-        name = camel(name.trim());
+        name = camelCase(name.trim());
 
         return ['skipped', 'incomplete', 'risky'].includes(name)
             ? name
