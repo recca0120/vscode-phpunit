@@ -358,15 +358,22 @@ describe('Pest ProblemMatcher Text', () => {
             });
         });
 
-        xit('TestSummary', () => {
-            resultShouldBe('Tests:    1 failed, 1 skipped, 5 passed (5 assertions) ', {
-                tests: 1,
+        it('TestSummary', () => {
+            resultShouldBe('Tests:    1 failed, 1 skipped, 5 passed (5 assertions)', {
+                event: TestResultEvent.testResultSummary,
+                passed: 5,
                 failed: 1,
                 skipped: 1,
                 assertions: 5,
             });
+        });
 
-            `Duration: 0.04s`;
+        it('TestDuration', () => {
+            resultShouldBe('Duration: 0.04s', {
+                event: TestResultEvent.testDuration,
+                text: 'Duration: 0.04s',
+                time: '0.04s',
+            });
         });
     });
 

@@ -12,7 +12,7 @@ import {
     TestSuiteFinished,
     TestSuiteStarted,
     TestVersion,
-    TimeAndMemory,
+    TestDuration,
 } from '../../PHPUnit';
 
 class OutputBuffer {
@@ -103,7 +103,7 @@ export abstract class Printer {
         return undefined;
     }
 
-    timeAndMemory(result: TimeAndMemory) {
+    timeAndMemory(result: TestDuration) {
         this.setCurrent(undefined);
 
         return result.text;

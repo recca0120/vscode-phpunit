@@ -1,6 +1,7 @@
 import {
     TestConfiguration,
     TestCount,
+    TestDuration,
     TestFailed,
     TestFinished,
     TestIgnored,
@@ -13,7 +14,6 @@ import {
     TestSuiteFinished,
     TestSuiteStarted,
     TestVersion,
-    TimeAndMemory,
 } from './ProblemMatcher';
 
 export enum TestRunnerEvent {
@@ -43,7 +43,7 @@ export type EventResultMap = {
     [TestResultEvent.testFailed]: TestFailed;
     [TestResultEvent.testIgnored]: TestIgnored;
     [TestResultEvent.testSuiteFinished]: TestSuiteFinished;
-    [TestResultEvent.timeAndMemory]: TimeAndMemory;
+    [TestResultEvent.testDuration]: TestDuration;
     [TestResultEvent.testResultSummary]: TestResultSummary;
 };
 
@@ -123,8 +123,8 @@ export class DefaultObserver implements TestRunnerObserver {
         this.emit(TestResultEvent.testSuiteFinished, result);
     }
 
-    timeAndMemory(result: TimeAndMemory): void {
-        this.emit(TestResultEvent.timeAndMemory, result);
+    testDuration(result: TestDuration): void {
+        this.emit(TestResultEvent.testDuration, result);
     }
 
     testResultSummary(result: TestResultSummary): void {

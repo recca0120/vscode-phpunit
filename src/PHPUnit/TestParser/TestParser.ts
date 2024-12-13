@@ -11,7 +11,7 @@ import { TestDefinition, TestType } from './types';
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestParser {
-    private parsers: Parser[] = [new PHPUnitParser(), new PestParser()];
+    private parsers: Parser[] = [new PestParser(), new PHPUnitParser()];
     private eventEmitter = new EventEmitter;
 
     constructor(private phpUnitXML?: PHPUnitXML) {

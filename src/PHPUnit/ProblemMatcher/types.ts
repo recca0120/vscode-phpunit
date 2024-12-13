@@ -13,7 +13,7 @@ export enum TestResultEvent {
     testFinished = 'testFinished',
     testSuiteFinished = 'testSuiteFinished',
 
-    timeAndMemory = 'timeAndMemory',
+    testDuration = 'testDuration',
     testResultSummary = 'testResultSummary',
 }
 
@@ -28,33 +28,27 @@ type InfoResult = {
     text: string;
 }
 
-export type TestSuiteStarted = BaseResult & Partial<{
-    locationHint: string;
+export type TestResultIdentify = {
     id: string;
-    file: string;
     testId: string;
-}>
-
-export type TestStarted = BaseResult & {
-    locationHint: string;
-    id: string;
-    file: string;
-    testId: string;
+    file: string | undefined;
 }
 
-export type TestFinished = BaseResult & {
+export type TestSuiteStarted = BaseResult & TestResultIdentify & Partial<{
     locationHint: string;
-    id: string;
-    file: string;
-    testId: string;
+}>
+
+export type TestStarted = BaseResult & TestResultIdentify & {
+    locationHint: string;
+}
+
+export type TestFinished = BaseResult & TestResultIdentify & {
+    locationHint: string;
     duration: number;
 }
 
-export type TestFailed = BaseResult & {
+export type TestFailed = BaseResult & TestResultIdentify & {
     locationHint: string;
-    id: string;
-    file: string;
-    testId: string;
     message: string;
     details: { file: string, line: number }[];
     duration: number;
@@ -65,11 +59,8 @@ export type TestFailed = BaseResult & {
 
 export type TestIgnored = TestFailed;
 
-export type TestSuiteFinished = BaseResult & Partial<{
+export type TestSuiteFinished = BaseResult & Partial<TestResultIdentify & {
     locationHint: string;
-    id: string;
-    file: string;
-    testId: string;
 }>;
 
 export type TestVersion = InfoResult & {
@@ -91,7 +82,7 @@ export type TestProcesses = InfoResult & {
 
 export type TestCount = Omit<(InfoResult & { count: number; flowId: number; }), 'text'>
 
-export type TimeAndMemory = InfoResult & {
+export type TestDuration = InfoResult & {
     time: string;
     memory: string;
 };
@@ -119,5 +110,5 @@ export type TestResult = TestSuiteStarted
     | TestConfiguration
     | TestProcesses
     | TestCount
-    | TimeAndMemory
+    | TestDuration
     | TestResultSummary;
