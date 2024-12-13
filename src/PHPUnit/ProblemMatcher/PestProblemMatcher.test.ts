@@ -365,8 +365,14 @@ describe('Pest ProblemMatcher Text', () => {
                 skipped: 1,
                 assertions: 5,
             });
+        });
 
-            `Duration: 0.04s`;
+        it('TestDuration', () => {
+            resultShouldBe('Duration: 0.04s', {
+                event: TestResultEvent.testDuration,
+                text: 'Duration: 0.04s',
+                time: '0.04s',
+            });
         });
     });
 

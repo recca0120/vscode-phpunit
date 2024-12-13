@@ -189,6 +189,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('TestSummary', () => {
             resultShouldBe('Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.', {
+                event: TestResultEvent.testResultSummary,
+                text: 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
                 tests: 19,
                 assertions: 15,
                 errors: 2,

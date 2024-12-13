@@ -28,7 +28,7 @@ const onTestResultEvents = new Map<TestResultEvent, jest.Mock>([
     [TestResultEvent.testRuntime, jest.fn()],
     [TestResultEvent.testConfiguration, jest.fn()],
     [TestResultEvent.testCount, jest.fn()],
-    [TestResultEvent.timeAndMemory, jest.fn()],
+    [TestResultEvent.testDuration, jest.fn()],
     [TestResultEvent.testResultSummary, jest.fn()],
     [TestResultEvent.testSuiteStarted, jest.fn()],
     [TestResultEvent.testSuiteFinished, jest.fn()],
@@ -104,7 +104,7 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
         // expect(onTestResultEvents.get(TestResultEvent.testRuntime)).toHaveBeenCalled();
         // expect(onTestResultEvents.get(TestResultEvent.testConfiguration)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestResultEvent.testCount)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestResultEvent.timeAndMemory)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TestResultEvent.testDuration)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TestResultEvent.testResultSummary)).toHaveBeenCalled();
     }
 

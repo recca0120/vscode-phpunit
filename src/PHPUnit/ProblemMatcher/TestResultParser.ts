@@ -8,7 +8,7 @@ import { TestProcessesParser } from './TestProcessesParser';
 import { TestResultSummaryParser } from './TestResultSummaryParser';
 import { TestRuntimeParser } from './TestRuntimeParser';
 import { TestVersionParser } from './TestVersionParser';
-import { TimeAndMemoryParser } from './TimeAndMemoryParser';
+import { TestDurationParser } from './TestDurationParser';
 import { TestResult } from './types';
 import { IParser } from './ValueParser';
 
@@ -20,7 +20,7 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         new TestRuntimeParser(),
         new TestConfigurationParser(),
         new TestProcessesParser(),
-        new TimeAndMemoryParser(),
+        new TestDurationParser(),
         new TestResultSummaryParser(),
     ];
 

@@ -343,7 +343,7 @@ describe('TestResultParser', () => {
         const text = 'Time: 00:00.049, Memory: 6.00 MB';
 
         expect(parse(text)).toEqual({
-            event: TestResultEvent.timeAndMemory,
+            event: TestResultEvent.testDuration,
             time: '00:00.049',
             memory: '6.00 MB',
             text,
@@ -354,7 +354,7 @@ describe('TestResultParser', () => {
         const text = 'Time: 49 ms, Memory: 6.00 MB';
 
         expect(parse(text)).toEqual({
-            event: TestResultEvent.timeAndMemory,
+            event: TestResultEvent.testDuration,
             time: '49 ms',
             memory: '6.00 MB',
             text,

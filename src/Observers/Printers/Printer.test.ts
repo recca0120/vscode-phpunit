@@ -67,7 +67,7 @@ describe('Printer', () => {
         const output = printer.timeAndMemory({
             time: '00:00.055',
             memory: '10.00 MB',
-            event: TestResultEvent.timeAndMemory,
+            event: TestResultEvent.testDuration,
             text: 'Time: 00:00.055, Memory: 10.00 MB',
         });
 

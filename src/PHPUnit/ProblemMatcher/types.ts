@@ -13,7 +13,7 @@ export enum TestResultEvent {
     testFinished = 'testFinished',
     testSuiteFinished = 'testSuiteFinished',
 
-    timeAndMemory = 'timeAndMemory',
+    testDuration = 'testDuration',
     testResultSummary = 'testResultSummary',
 }
 
@@ -91,7 +91,7 @@ export type TestProcesses = InfoResult & {
 
 export type TestCount = Omit<(InfoResult & { count: number; flowId: number; }), 'text'>
 
-export type TimeAndMemory = InfoResult & {
+export type TestDuration = InfoResult & {
     time: string;
     memory: string;
 };
@@ -119,5 +119,5 @@ export type TestResult = TestSuiteStarted
     | TestConfiguration
     | TestProcesses
     | TestCount
-    | TimeAndMemory
+    | TestDuration
     | TestResultSummary;

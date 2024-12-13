@@ -2,6 +2,7 @@ import { OutputChannel, TestRunRequest } from 'vscode';
 import {
     IConfiguration,
     TestConfiguration,
+    TestDuration,
     TestFailed,
     TestFinished,
     TestIgnored,
@@ -14,7 +15,6 @@ import {
     TestSuiteFinished,
     TestSuiteStarted,
     TestVersion,
-    TimeAndMemory,
 } from '../PHPUnit';
 import { PrettyPrinter, Printer } from './Printers';
 
@@ -108,7 +108,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.appendLine(this.printer.testSuiteFinished(result));
     }
 
-    timeAndMemory(result: TimeAndMemory) {
+    testDuration(result: TestDuration) {
         this.appendLine(this.printer.end());
         this.appendLine(this.printer.timeAndMemory(result));
     }

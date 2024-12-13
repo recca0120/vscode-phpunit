@@ -216,7 +216,7 @@ describe('OutputChannelObserver', () => {
         );
     });
 
-    it('should trigger timeAndMemory', async () => {
+    it('should trigger testDuration', async () => {
         if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
             return;
         }
