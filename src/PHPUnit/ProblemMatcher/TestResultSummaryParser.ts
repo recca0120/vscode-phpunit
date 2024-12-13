@@ -12,9 +12,9 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
             'Risky',
             'PHPUnitsDeprecations',
         ];
-        const end = '\\s(\\d+)[\\.\\s,]\\s?';
+        const end = '\\s+(\\d+)[\\.\\s,]\\s?';
         const tests = `Test(s)?:${end}`;
-        const assertions = `Assertions:${end}`;
+        const assertions = `(Assertions:${end})?`;
 
         return new RegExp(
             [
@@ -53,7 +53,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private normalize(name: string) {
         name = camelCase(name.trim());
 
-        return ['skipped', 'incomplete', 'risky'].includes(name)
+        return name.endsWith('ed') || ['incomplete', 'risky'].includes(name)
             ? name
             : `${name}${name.match(/s$/) ? '' : 's'}`;
     }
