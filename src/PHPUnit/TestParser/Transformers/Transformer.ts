@@ -30,7 +30,7 @@ export abstract class Transformer {
 
     protected abstract normalizeMethodName(methodName: string): string
 
-    protected getMethodName(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>) {
+    protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>) {
         let { methodName, annotations } = testDefinition;
         let dataset = '';
         const matched = methodName!.match(/(?<methodName>.*)(?<dataset>\swith\sdata\sset\s[#"].+$)/);

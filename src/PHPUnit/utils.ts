@@ -106,7 +106,6 @@ export const groupBy = <T extends { [key: string]: any }>(items: T[], key: strin
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
     try {
-        // 嘗試取得檔案狀態
         await stat(filePath);
 
         return true;
