@@ -92,27 +92,21 @@ describe('TestHierarchyBuilder', () => {
 
         expect(toTree(ctrl.items)).toEqual([
             {
-                id: 'namespace:Recca0120',
-                label: '$(symbol-namespace) Recca0120',
+                id: 'namespace:VSCode (Recca0120\\VSCode)',
+                label: '$(symbol-namespace) Recca0120\\VSCode',
                 children: [
                     {
-                        id: 'namespace:VSCode (Recca0120\\VSCode)',
-                        label: '$(symbol-namespace) VSCode',
+                        id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
+                        label: '$(symbol-namespace) Tests',
                         children: [
                             {
-                                id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
-                                label: '$(symbol-namespace) Tests',
+                                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                                label: '$(symbol-class) AssertionsTest',
                                 children: [
                                     {
-                                        id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                                        label: '$(symbol-class) AssertionsTest',
-                                        children: [
-                                            {
-                                                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                                                label: '$(symbol-method) test_passed',
-                                                children: [],
-                                            },
-                                        ],
+                                        id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                                        label: '$(symbol-method) test_passed',
+                                        children: [],
                                     },
                                 ],
                             },
@@ -120,7 +114,8 @@ describe('TestHierarchyBuilder', () => {
                     },
                 ],
             },
-        ]);
+        ])
+        ;
     });
 
     it('sibling namespace', () => {
@@ -142,38 +137,32 @@ describe('TestHierarchyBuilder', () => {
 
         expect(toTree(ctrl.items)).toEqual([
             {
-                id: 'namespace:Recca0120',
-                label: '$(symbol-namespace) Recca0120',
+                id: 'namespace:VSCode (Recca0120\\VSCode)',
+                label: '$(symbol-namespace) Recca0120\\VSCode',
                 children: [
                     {
-                        id: 'namespace:VSCode (Recca0120\\VSCode)',
-                        label: '$(symbol-namespace) VSCode',
+                        id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
+                        label: '$(symbol-namespace) Tests',
                         children: [
                             {
-                                id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
-                                label: '$(symbol-namespace) Tests',
+                                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                                label: '$(symbol-class) AssertionsTest',
                                 children: [
                                     {
-                                        id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                                        label: '$(symbol-class) AssertionsTest',
-                                        children: [
-                                            {
-                                                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                                                label: '$(symbol-method) test_passed',
-                                                children: [],
-                                            },
-                                        ],
+                                        id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                                        label: '$(symbol-method) test_passed',
+                                        children: [],
                                     },
+                                ],
+                            },
+                            {
+                                id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)',
+                                label: `$(symbol-class) Assertions2Test`,
+                                children: [
                                     {
-                                        id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)',
-                                        label: `$(symbol-class) Assertions2Test`,
-                                        children: [
-                                            {
-                                                id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)::Passed',
-                                                label: '$(symbol-method) test_passed',
-                                                children: [],
-                                            },
-                                        ],
+                                        id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)::Passed',
+                                        label: '$(symbol-method) test_passed',
+                                        children: [],
                                     },
                                 ],
                             },

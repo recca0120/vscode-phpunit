@@ -321,7 +321,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(48);
+                expect(countItems(ctrl.items)).toEqual(47);
             });
 
             it('should resolve tests without phpunit.xml', async () => {
@@ -334,7 +334,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(48);
+                expect(countItems(ctrl.items)).toEqual(47);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {
@@ -348,7 +348,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(15);
+                expect(countItems(ctrl.items)).toEqual(14);
             });
 
             it('run phpunit.run-file', async () => {

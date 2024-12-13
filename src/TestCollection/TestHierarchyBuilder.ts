@@ -1,6 +1,5 @@
 import { Position, Range, TestController, TestItem, Uri } from 'vscode';
-import { TestDefinition, TestParser, TestType } from '../PHPUnit';
-import { TransformerFactory } from '../PHPUnit';
+import { TestDefinition, TestParser, TestType, TransformerFactory } from '../PHPUnit';
 import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestCase } from './TestCollection';
 
@@ -45,15 +44,17 @@ export class TestHierarchyBuilder {
 
         let parentTestCollection = this.ctrl.items;
         let testItem: TestItem | undefined;
-        const segments = testDefinition.label?.split('\\') ?? [];
-        this.length = segments.length;
+        let namespaceParts = testDefinition.label?.split('\\') ?? [];
+        const vendorNamespace = namespaceParts.splice(0, 2).join('\\');
+        namespaceParts = [vendorNamespace, ...namespaceParts].filter(value => !!value);
+        this.length = namespaceParts.length;
 
-        segments.forEach((segment, index, segments) => {
+        namespaceParts.forEach((namespacePart, index, namespaceParts) => {
             const type = TestType.namespace;
 
-            const classFQN = segments.slice(0, index + 1).join('\\');
+            const classFQN = namespaceParts.slice(0, index + 1).join('\\');
             const id = converter.uniqueId({ type, classFQN });
-            const label = converter.generateLabel({ type, classFQN: segment });
+            const label = converter.generateLabel({ type, classFQN: namespacePart });
             const testDefinition = { type, id, namespace: classFQN, label } as TestDefinition;
 
             testItem = parentTestCollection.get(testDefinition.id);
