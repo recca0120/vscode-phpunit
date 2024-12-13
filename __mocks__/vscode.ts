@@ -315,6 +315,12 @@ const EventEmitter = jest.fn().mockImplementation(() => {
 
 const TestMessageStackFrame = jest.fn();
 
+const extensions = {
+    getExtension: jest.fn().mockImplementation(() => {
+        return true;
+    }),
+};
+
 export {
     languages,
     workspace,
@@ -333,4 +339,5 @@ export {
     commands,
     EventEmitter,
     TestMessageStackFrame,
+    extensions,
 };

@@ -1,13 +1,14 @@
+import * as vscode from 'vscode';
 import {
     CancellationToken,
+    debug,
     OutputChannel,
     TestController,
     TestItem,
     TestItemCollection,
-    TestRunRequest,
     TestRunProfileKind,
+    TestRunRequest,
 } from 'vscode';
-import * as vscode from 'vscode';
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
 import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
@@ -23,9 +24,17 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath }, request.profile?.kind);
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
+        const runner = new TestRunner();
+
+        runner.observe(new TestResultObserver(queue, run, cancellation));
+        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request, new CollisionPrinter()));
+
+        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
+        if (request.profile?.kind === TestRunProfileKind.Debug) {
+            builder.setExtra(['-dxdebug.mode=debug', '-dxdebug.start_with_request=1']);
+        }
 
         const discoverTests = async (tests: Iterable<TestItem>) => {
             for (const test of tests) {
@@ -44,35 +53,25 @@ export class Handler {
         };
 
         const runTestQueue = async () => {
-            const runner = new TestRunner();
-            runner.observe(new TestResultObserver(queue, run, cancellation));
-            runner.observe(new OutputChannelObserver(
-                this.outputChannel,
-                this.configuration,
-                request,
-                new CollisionPrinter(),
-            ));
 
             const processes = !request.include
                 ? [runner.run(builder)]
                 : request.include
-                    .map((test) => {
-                        const testCase = this.testCollection.getTestCase(test)!
-                        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath }, request.profile?.kind);
-                        return runner.run(testCase.update(builder))
-                    });
+                    .map((test) => this.testCollection.getTestCase(test)!)
+                    .map((testCase) => runner.run(testCase.update(builder)));
+
             cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
 
-            if (request.profile?.kind == TestRunProfileKind.Debug) {
+            if (request.profile?.kind === TestRunProfileKind.Debug) {
                 const wsf = vscode.workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
-                await vscode.debug.startDebugging(wsf, { type: 'php', request: 'launch', name: 'PHPUnit' });
+                await debug.startDebugging(wsf, { type: 'php', request: 'launch', name: 'PHPUnit' });
                 // TODO: perhaps wait for the debug session
             }
 
             await Promise.all(processes.map((process) => process.run()));
 
-            if (request.profile?.kind == TestRunProfileKind.Debug && vscode.debug.activeDebugSession && vscode.debug.activeDebugSession.type === 'php') {
-                vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
+            if (request.profile?.kind === TestRunProfileKind.Debug && debug.activeDebugSession && debug.activeDebugSession.type === 'php') {
+                debug.stopDebugging(vscode.debug.activeDebugSession);
             }
 
             return;

@@ -4,18 +4,24 @@ import { Configuration, IConfiguration } from '../Configuration';
 import { TestResult } from '../ProblemMatcher';
 import { parseValue } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
-import { TestRunProfileKind } from 'vscode';
 
 export class CommandBuilder {
-    private arguments = '';
     private readonly pathReplacer: PathReplacer;
+    private arguments = '';
+    private extra: string[] = [];
 
-    constructor(protected configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}, private kind: TestRunProfileKind = TestRunProfileKind.Run ) {
+    constructor(protected configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
     setArguments(args: string) {
         this.arguments = args.trim();
+
+        return this;
+    }
+
+    setExtra(extra: string[]) {
+        this.extra = extra;
 
         return this;
     }
@@ -51,8 +57,7 @@ export class CommandBuilder {
 
     private createCommand() {
         const command = this.getCommand();
-        const extra = this.kind == TestRunProfileKind.Debug ? ['-dxdebug.mode=debug', '-dxdebug.start_with_request=1'] : []
-        const executable = this.setParaTestFunctional([this.getPhp(), ...extra, this.getPhpUnit(), ...this.getArguments()]);
+        const executable = this.setParaTestFunctional([this.getPhp(), ...this.getExtra(), this.getPhpUnit(), ...this.getArguments()]);
 
         if (!/^ssh/.test(command.join(' ')) && !/sh\s+-c/.test(command.slice(-2).join(' '))) {
             return [...command, ...executable];
@@ -75,6 +80,10 @@ export class CommandBuilder {
 
     private getPhp() {
         return this.pathReplacer.toRemote(this.configuration.get('php') as string ?? '');
+    }
+
+    private getExtra() {
+        return this.extra;
     }
 
     private getArguments(): string[] {

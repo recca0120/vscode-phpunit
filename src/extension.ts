@@ -2,6 +2,7 @@ import {
     CancellationToken,
     EventEmitter,
     ExtensionContext,
+    extensions,
     GlobPattern,
     RelativePattern,
     TestItem,
@@ -14,7 +15,6 @@ import {
     workspace,
     WorkspaceFolder,
 } from 'vscode';
-import * as vscode from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
@@ -106,8 +106,8 @@ export async function activate(context: ExtensionContext) {
         }
     };
     const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
-    if (vscode.extensions.getExtension('xdebug.php-debug') != undefined) {
-        const testDebugProfile = ctrl.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, false, undefined, false);
+    if (extensions.getExtension('xdebug.php-debug') !== undefined) {
+        ctrl.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, false, undefined, false);
     }
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
 
