@@ -1,5 +1,5 @@
 import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
-import { converter } from './Converter';
+import { TransformerFactory } from './Transformers';
 import { Parser } from './Parser';
 import { TestDefinition, TestType } from './types';
 import { validator } from './Validator';
@@ -9,6 +9,8 @@ export class PHPUnitParser extends Parser {
         namespace: this.parseNamespace,
         class: this.parseClass,
     };
+
+    private converter = TransformerFactory.factory('phpunit');
 
     parse(declaration: Declaration | Node, file: string, namespace?: TestDefinition): TestDefinition[] | undefined {
         const fn: Function = this.parserLookup[declaration.kind] ?? this.parseChildren;
@@ -30,8 +32,8 @@ export class PHPUnitParser extends Parser {
 
         const className = this.parseName(declaration)!;
         const classFQN = [namespace?.namespace, className].filter((name) => !!name).join('\\');
-        const id = converter.generateUniqueId({ type, classFQN, annotations });
-        const label = converter.generateLabel({ type, classFQN, className, annotations });
+        const id = this.converter.uniqueId({ type, classFQN, annotations });
+        const label = this.converter.generateLabel({ type, classFQN, className, annotations });
 
         const clazz = {
             type,
@@ -41,8 +43,7 @@ export class PHPUnitParser extends Parser {
             namespace: namespace?.namespace,
             className,
             annotations,
-            file,
-            ...this.parsePosition(declaration),
+            file, ...this.parsePosition(declaration),
         } as TestDefinition;
 
         const methods = declaration.body
@@ -61,18 +62,10 @@ export class PHPUnitParser extends Parser {
         const annotations = this.parseAnnotations(declaration);
 
         const methodName = this.parseName(declaration);
-        const id = converter.generateUniqueId({ ...clazz, type, methodName, annotations });
-        const label = converter.generateLabel({ ...clazz, type, methodName, annotations });
+        const id = this.converter.uniqueId({ ...clazz, type, methodName, annotations });
+        const label = this.converter.generateLabel({ ...clazz, type, methodName, annotations });
 
-        return {
-            ...clazz,
-            type,
-            id,
-            label,
-            methodName,
-            annotations,
-            ...this.parsePosition(declaration),
-        };
+        return { ...clazz, type, id, label, methodName, annotations, ...this.parsePosition(declaration) };
     }
 
     private parseChildren(declaration: Declaration | Program | Node, file: string, namespace?: TestDefinition) {
@@ -88,8 +81,6 @@ export class PHPUnitParser extends Parser {
             return undefined;
         }
 
-        return namespace
-            ? [{ ...namespace, children: tests }]
-            : tests;
+        return namespace ? [{ ...namespace, children: tests }] : tests;
     }
 }

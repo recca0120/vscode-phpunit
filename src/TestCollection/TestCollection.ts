@@ -2,13 +2,13 @@ import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
     CommandBuilder,
+    Transformer,
     File,
     PHPUnitXML,
     TestCollection as BaseTestCollection,
     TestDefinition,
     TestType,
 } from '../PHPUnit';
-import { converter } from '../PHPUnit/TestParser/Converter';
 import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
@@ -50,7 +50,7 @@ export class TestCase {
 
     private parseDependsFilter() {
         const deps = [
-            converter.generateSearchText(this.testDefinition.methodName!),
+            Transformer.generateSearchText(this.testDefinition.methodName!),
             ...(this.testDefinition.annotations?.depends ?? []),
         ].filter((value) => !!value).join('|');
 

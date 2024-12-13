@@ -1,7 +1,10 @@
-import { converter } from './Converter';
-import { TestType } from './types';
+import { TestType } from '../types';
 
-describe('Converter', () => {
+import { PestTransformer } from './PestTransformer';
+
+describe('PestTransformer', () => {
+    const transformer = new PestTransformer();
+
     describe('generateUniqueId', () => {
         it('test /** with comment */ should do', () => {
             const type = TestType.method;
@@ -10,7 +13,7 @@ describe('Converter', () => {
             const classFQN = className;
 
             const expected = 'tests/Unit/ExampleTest.php::test /** with comment {@*} should do';
-            expect(converter.generateUniqueId({ type, classFQN, methodName })).toEqual(expected);
+            expect(transformer.uniqueId({ type, classFQN, methodName })).toEqual(expected);
         });
 
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
@@ -20,7 +23,7 @@ describe('Converter', () => {
             const classFQN = className;
 
             const expected = 'tests/Unit/ExampleTest.php::ensures the given closures reports the correct class name and suggests the [pest()] function';
-            expect(converter.generateUniqueId({ type, classFQN, methodName })).toEqual(expected);
+            expect(transformer.uniqueId({ type, classFQN, methodName })).toEqual(expected);
         });
     });
 
@@ -28,13 +31,13 @@ describe('Converter', () => {
         it('test /** with comment */ should do', () => {
             const input = 'test /** with comment */ should do';
             const expected = 'test /\\*\\* with comment \\*/ should do';
-            expect(converter.generateSearchText(input)).toEqual(expected);
+            expect(input.replace(/([\[\]()*])/g, '\\$1')).toEqual(expected);
         });
 
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
             const input = 'ensures the given closures reports the correct class name and suggests the [pest()] function';
             const expected = 'ensures the given closures reports the correct class name and suggests the \\[pest\\(\\)\\] function';
-            expect(converter.generateSearchText(input)).toEqual(expected);
+            expect(input.replace(/([\[\]()*])/g, '\\$1')).toEqual(expected);
         });
     });
 });

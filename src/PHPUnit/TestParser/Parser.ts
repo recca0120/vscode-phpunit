@@ -1,7 +1,7 @@
 import { Call, Declaration, Identifier, Namespace, Node, Variable } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { annotationParser, attributeParser } from './AnnotationParser';
-import { converter } from './Converter';
+import { TransformerFactory } from './Transformers';
 import { TestDefinition, TestType } from './types';
 
 export abstract class Parser {
@@ -56,15 +56,10 @@ export abstract class Parser {
 
         const type = TestType.namespace;
         const classFQN = namespace;
-        const id = converter.generateUniqueId({ type, classFQN });
+        const converter = TransformerFactory.factory(classFQN);
+        const id = converter.uniqueId({ type, classFQN });
         const label = converter.generateLabel({ type, classFQN });
 
-        return {
-            type,
-            id,
-            namespace: namespace,
-            classFQN,
-            label,
-        };
+        return { type, id, namespace: namespace, classFQN, label };
     }
 }

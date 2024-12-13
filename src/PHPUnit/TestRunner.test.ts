@@ -5,8 +5,7 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests_
 import { CommandBuilder } from './CommandBuilder';
 import { Configuration } from './Configuration';
 import { TestResultEvent } from './ProblemMatcher';
-import { TestType } from './TestParser';
-import { converter } from './TestParser/Converter';
+import { TransformerFactory, TestType } from './TestParser';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import Mock = jest.Mock;
@@ -66,7 +65,8 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     const [classFQN, methodName] = expected.id.split('::');
     const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
     const type = !methodName ? TestType.class : TestType.method;
-    expected.id = converter.generateUniqueId({ type, classFQN, methodName });
+    const converter = TransformerFactory.factory(classFQN);
+    expected.id = converter.uniqueId({ type, classFQN, methodName });
 
     const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find((call: any) => {
         return call[0].id === expected.id && call[0].event === expected.event;
