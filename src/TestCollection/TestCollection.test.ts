@@ -62,10 +62,10 @@ describe('Extension TestCollection', () => {
         await collection.add(URI.file(phpUnitProject('tests/NoNamespaceTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([{
-            id: 'NoNamespaceTest',
+            id: 'No Namespace',
             label: '$(symbol-class) NoNamespaceTest',
             children: [{
-                id: 'NoNamespaceTest::test_no_namespace',
+                id: 'No Namespace::No namespace',
                 label: '$(symbol-method) test_no_namespace',
                 children: [],
             }],
@@ -91,19 +91,19 @@ describe('Extension TestCollection', () => {
                     label: '$(symbol-namespace) Recca0120',
                     children: [
                         expect.objectContaining({
-                            id: 'namespace:Recca0120\\VSCode',
+                            id: 'namespace:VSCode (Recca0120\\VSCode)',
                             label: '$(symbol-namespace) VSCode',
                             children: [
                                 expect.objectContaining({
-                                    id: 'namespace:Recca0120\\VSCode\\Tests',
+                                    id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
                                     label: '$(symbol-namespace) Tests',
                                     children: [
                                         expect.objectContaining({
-                                            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                                            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                                             label: '$(symbol-class) AssertionsTest',
                                         }),
                                         expect.objectContaining({
-                                            id: 'Recca0120\\VSCode\\Tests\\AttributeTest',
+                                            id: 'Attribute (Recca0120\\VSCode\\Tests\\Attribute)',
                                             label: '$(symbol-class) AttributeTest',
                                         }),
                                     ],

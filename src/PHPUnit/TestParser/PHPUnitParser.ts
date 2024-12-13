@@ -26,9 +26,10 @@ export class PHPUnitParser extends Parser {
         }
 
         const type = TestType.class;
+        const annotations = this.parseAnnotations(declaration);
+
         const className = this.parseName(declaration)!;
         const classFQN = [namespace?.namespace, className].filter((name) => !!name).join('\\');
-        const annotations = this.parseAnnotations(declaration);
         const id = converter.generateUniqueId({ type, classFQN, annotations });
         const label = converter.generateLabel({ type, classFQN, className, annotations });
 
@@ -57,8 +58,9 @@ export class PHPUnitParser extends Parser {
 
     private parseMethod(declaration: Declaration, clazz: TestDefinition): TestDefinition {
         const type = TestType.method;
-        const methodName = this.parseName(declaration);
         const annotations = this.parseAnnotations(declaration);
+
+        const methodName = this.parseName(declaration);
         const id = converter.generateUniqueId({ ...clazz, type, methodName, annotations });
         const label = converter.generateLabel({ ...clazz, type, methodName, annotations });
 

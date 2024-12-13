@@ -188,7 +188,6 @@
     "semver": "^7.6.3",
     "sinon": "^19.0.2",
     "string-argv": "^0.3.2",
-    "string-ts": "^2.2.0",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.7.2",

@@ -8,6 +8,7 @@ import {
     TestDefinition,
     TestType,
 } from '../PHPUnit';
+import { converter } from '../PHPUnit/TestParser/Converter';
 import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
@@ -44,11 +45,14 @@ export class TestCase {
     }
 
     private parseNamespaceFilter() {
-        return `--filter '^(${this.testDefinition.id.replace(/^namespace:/, '').replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
+        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
     }
 
     private parseDependsFilter() {
-        const deps = [this.testDefinition.methodName, ...(this.testDefinition.annotations?.depends ?? [])].join('|');
+        const deps = [
+            converter.generateSearchText(this.testDefinition.methodName!),
+            ...(this.testDefinition.annotations?.depends ?? []),
+        ].filter((value) => !!value).join('|');
 
         return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
     }

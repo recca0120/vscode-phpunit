@@ -59,8 +59,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testSuiteStarted Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
                 event: TestResultEvent.testSuiteStarted,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                 flowId: 8024,
             });
         });
@@ -68,8 +68,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testStarted passed', () => {
             resultShouldBe(`##teamcity[testStarted name='test_passed' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']`, {
                 event: TestResultEvent.testStarted,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
                 flowId: 8024,
             });
         });
@@ -77,8 +77,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testFinished', () => {
             resultShouldBe(`##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`, {
                 event: TestResultEvent.testFinished,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
                 flowId: 8024,
             });
         });
@@ -86,8 +86,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testStarted failed', () => {
             resultShouldBe(`##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='8024']`, {
                 event: TestResultEvent.testStarted,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
                 flowId: 8024,
             });
         });
@@ -99,8 +99,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testFinished failed', () => {
             resultShouldBe(`##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']`, {
                 event: TestResultEvent.testFailed,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
                 message: 'Failed asserting that two arrays are identical.',
                 details: [
                     {
@@ -119,8 +119,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testSuiteStarted addition_provider', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider' flowId='8024']`, {
                 event: TestResultEvent.testSuiteStarted,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
                 locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider`,
                 flowId: 8024,
@@ -130,8 +130,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testStarted addition_provider', () => {
             resultShouldBe(`##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`, {
                 event: TestResultEvent.testStarted,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
                 locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                 flowId: 8024,
@@ -143,8 +143,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`, {
                 event: TestResultEvent.testFailed,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
                 locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                 message: 'Failed asserting that 1 matches expected 2.',
@@ -165,8 +165,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testSuiteFinished Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
                 event: TestResultEvent.testSuiteFinished,
-                id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-                testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                 flowId: 8024,
             });
         });
@@ -223,9 +223,9 @@ describe('PHPUnit ProblemMatcher Text', () => {
                 name: 'test_throw_exception',
                 locationHint: `php_qn://${phpUnitProject('tests/CalculatorTest.php')}::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception`,
                 flowId: 28756,
-                id: 'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
+                id: 'Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception',
+                testId: 'Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception',
                 file: phpUnitProject('tests/CalculatorTest.php'),
-                testId: 'Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception',
                 message: 'Exception\n\nThis test did not perform any assertions',
                 details: [
                     {

@@ -54,7 +54,7 @@ describe('Printer', () => {
             errors: 2,
             failures: 6,
             warnings: 1,
-            phpUnitDeprecations: 8,
+            phpunitDeprecations: 8,
             skipped: 1,
             incomplete: 1,
             risky: 2,

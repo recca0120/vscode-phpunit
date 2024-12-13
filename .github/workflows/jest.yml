@@ -21,8 +21,9 @@ jobs:
     env:
       extensions: curl
       key: cache-v1 # can be any string, change to clear the extension cache.
-      project: src/PHPUnit/__tests__/fixtures/phpunit-stub
       GITHUB_ACTIONS: true
+      PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
+      PEST_PROJECT: src/PHPUnit/__tests__/fixtures/pest-stub
 
     steps:
       - name: Checkout
@@ -51,8 +52,12 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      - name: Install Composer dependencies
-        run: cd ${{ env.project }} && composer update --prefer-dist --no-interaction --no-progress
+      - name: Install Composer dependencies (PHPUnit)
+        run: cd ${{ env.PHPUNIT_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Install Composer dependencies (PEST)
+        if: matrix.php >= '8.2'
+        run: cd ${{ env.PEST_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress
 
       # Install required deps for action
       - name: Install Dependencies
@@ -68,3 +73,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           flags: unittests
 
+      # - name: RUN SSH
+      #   if: failure()
+      #   run: curl -sSf https://sshx.io/get | sh -s run
