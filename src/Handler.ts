@@ -54,9 +54,11 @@ export class Handler {
             const processes = !request.include
                 ? [runner.run(builder)]
                 : request.include
-                    .map((test) => this.testCollection.getTestCase(test)!)
-                    .map((testCase) => runner.run(testCase.update(builder)));
-
+                    .map((test) => {
+                        const testCase = this.testCollection.getTestCase(test)!
+                        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
+                        return runner.run(testCase.update(builder))
+                    });
             cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
 
             await Promise.all(processes.map((process) => process.run()));
