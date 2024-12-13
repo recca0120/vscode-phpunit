@@ -5,7 +5,9 @@ import {
     TestItem,
     TestItemCollection,
     TestRunRequest,
+    TestRunProfileKind,
 } from 'vscode';
+import * as vscode from 'vscode';
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
 import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
@@ -21,7 +23,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
+        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath }, request.profile?.kind);
         const queue: { test: TestItem; data: TestCase }[] = [];
         const run = this.ctrl.createTestRun(request);
 
@@ -56,12 +58,22 @@ export class Handler {
                 : request.include
                     .map((test) => {
                         const testCase = this.testCollection.getTestCase(test)!
-                        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
+                        const builder = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath }, request.profile?.kind);
                         return runner.run(testCase.update(builder))
                     });
             cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
 
+            if (request.profile?.kind == TestRunProfileKind.Debug) {
+                const wsf = vscode.workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
+                await vscode.debug.startDebugging(wsf, { type: 'php', request: 'launch', name: 'PHPUnit' });
+                // TODO: perhaps wait for the debug session
+            }
+
             await Promise.all(processes.map((process) => process.run()));
+
+            if (request.profile?.kind == TestRunProfileKind.Debug && vscode.debug.activeDebugSession && vscode.debug.activeDebugSession.type === 'php') {
+                vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
+            }
 
             return;
         };
