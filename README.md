@@ -1,9 +1,9 @@
-# PHPUnit for VSCode
+# PHPUnit & Pest Test Explorer
 
 [![version](https://img.shields.io/vscode-marketplace/v/recca0120.vscode-phpunit.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 [![downloads](https://img.shields.io/vscode-marketplace/d/recca0120.vscode-phpunit.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 
-Run your PHPUnit tests in Node using the Test Explorer UI.
+Run your PHPUnit OR Pest tests in Node using the Test Explorer UI.
 
 ![Screenshot](img/screenshot.gif)
 
@@ -26,7 +26,8 @@ This extension contributes the following settings:
   globally on the command line
 - `phpunit.command`: Custom command to run. Ex: `docker exec -t container_name`.
 - `phpunit.args`: Any phpunit args (phpunit --help) E.g. --configuration ./phpunit.xml.dist
-- `phpunit.environment`: Set environment variables before running the phpunit command, Ex: { "XDEBUG_MODE": "coverage" } or "XDEBUG_MODE=coverage"
+- `phpunit.environment`: Set environment variables before running the phpunit command, Ex: { "XDEBUG_MODE": "coverage" }
+  or "XDEBUG_MODE=coverage"
 - `phpunit.clearOutputOnRun`: True will clear the output when we run a new test. False will leave the output after every
   test.
 - `phpunit.showAfterExecution` Specify if the test report will automatically be shown after execution
@@ -43,19 +44,19 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ## Configuration
 
+### [Pest](https://pestphp.com/)
+
+```jsonc
+{
+  "phpunit.phpunit": "vendor/bin/pest"
+}
+```
+
 ### [ParaTest](https://github.com/paratestphp/paratest)
 
 ```jsonc
 {
-  "phpunit.php": "php",
-  "phpunit.phpunit": "vendor/bin/paratest",
-  "phpunit.args": [
-    "-c",
-    "phpunit.xml"
-  ],
-  "phpunit.paths": {
-    "${workspaceFolder}": "/app",
-  },
+  "phpunit.phpunit": "vendor/bin/paratest"
 }
 ```
 
@@ -65,7 +66,7 @@ The following commands are available in VS Code's command palette, use the ID to
 {
   "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
   "phpunit.php": "php",
-  "phpunit.phpunit": "vendor/bin/phpunit",
+  "phpunit.phpunit": "vendor/bin/phpunit", 
   "phpunit.args": [
     "-c",
     "phpunit.xml"
@@ -91,13 +92,62 @@ The following commands are available in VS Code's command palette, use the ID to
 }
 ```
 
+### Docker & Pest
+
+```jsonc
+{
+  "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
+  "phpunit.php": "php",
+  "phpunit.phpunit": "vendor/bin/pest", 
+  "phpunit.args": [
+    "-c",
+    "phpunit.xml"
+  ],
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app",
+  },
+}
+```
+
+```jsonc
+{
+  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest",
+  "phpunit.php": "php",
+  "phpunit.phpunit": "vendor/bin/pest",
+  "phpunit.args": [
+    "-c",
+    "phpunit.xml"
+  ],
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app",
+  },
+}
+```
+
 ### SSH
 
 ```jsonc
 {
-  "phpunit.command": "ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;",
+  "phpunit.command": "ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
+  "phpunit.args": [
+    "-c",
+    "phpunit.xml"
+  ],
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app",
+  }
+}
+```
+
+### SSH & Pest
+
+```jsonc
+{
+  "phpunit.command": "ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;",
+  "phpunit.php": "php",
+  "phpunit.phpunit": "vendor/bin/pest",
   "phpunit.args": [
     "-c",
     "phpunit.xml"

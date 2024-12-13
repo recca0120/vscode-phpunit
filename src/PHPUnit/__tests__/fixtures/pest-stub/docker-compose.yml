@@ -1,15 +1,15 @@
 services:
-  phpunit:
+  pest:
     build:
-      context: ./dockerfiles/phpunit
+      context: ./dockerfiles/pest
       dockerfile: Dockerfile
-    container_name: phpunit
+    container_name: pest
     tty: true
     ports:
       - ${SSH_PORT:-2222}:22
     volumes:
       - .:/app
-      - ./dockerfiles/phpunit/id_rsa.pub:/root/.ssh/authorized_keys
+      - ./dockerfiles/pest/id_rsa.pub:/root/.ssh/authorized_keys
     networks:
       - vscode-phpunit-network
 

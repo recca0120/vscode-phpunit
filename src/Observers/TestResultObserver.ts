@@ -70,7 +70,7 @@ export class TestResultObserver implements TestRunnerObserver {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
-            const current = details.find(({ file }) => file.endsWith(result.file))!;
+            const current = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
             const line = current ? current.line - 1 : test.range!.start.line;
 
             message.location = new Location(
@@ -80,7 +80,7 @@ export class TestResultObserver implements TestRunnerObserver {
 
             message.stackTrace = details
                 .filter(({ file, line }) => {
-                    return file.endsWith(result.file) && line !== current.line;
+                    return file.endsWith(result.file ?? '') && line !== current.line;
                 })
                 .map(({ file, line }) => {
                     return new TestMessageStackFrame(`${file}:${line}`, URI.file(file), new Position(line, 0));

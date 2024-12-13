@@ -4,7 +4,7 @@
   "displayName": "PHPUnit Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
-  "version": "3.4.30",
+  "version": "3.5.0",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -22,9 +22,8 @@
   "keywords": [
     "php",
     "phpunit",
-    "testing",
-    "unit test",
-    "unittest"
+    "pest",
+    "test"
   ],
   "activationEvents": [
     "workspaceContains:**/*.php"
