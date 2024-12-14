@@ -4,10 +4,10 @@ import {
     EOL, TestFailed, TestFinished, TestIgnored, TestResult, TestRunnerObserver, TestStarted, TestSuiteFinished,
     TestSuiteStarted,
 } from '../PHPUnit';
-import { Queue } from '../types';
+import { TestCase } from '../TestCollection';
 
 export class TestResultObserver implements TestRunnerObserver {
-    constructor(private queue: Queue[] = [], private testRun: TestRun) { }
+    constructor(private queue: Map<TestCase, TestItem>, private testRun: TestRun) { }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -18,7 +18,7 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     abort(): void {
-        this.queue.forEach(({ test }) => this.testRun.skipped(test));
+        this.queue.forEach((testItem) => this.testRun.skipped(testItem));
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
@@ -76,8 +76,14 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        return 'testId' in result
-            ? this.queue.find(({ test }) => test.id === result.testId)?.test
-            : undefined;
+        if ('testId' in result) {
+            for (const [_, testItem] of this.queue) {
+                if (testItem.id === result.testId) {
+                    return testItem;
+                }
+            }
+        }
+
+        return undefined;
     }
 }

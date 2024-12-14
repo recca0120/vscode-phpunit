@@ -5,8 +5,7 @@ import {
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
 import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
-import { TestCollection } from './TestCollection';
-import { Queue } from './types';
+import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
     private lastRequest: TestRunRequest | undefined;
@@ -19,8 +18,6 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const run = this.ctrl.createTestRun(request);
-
         const command = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
         if (request.profile?.kind === TestRunProfileKind.Debug) {
             command.setExtra(['-dxdebug.mode=debug', '-dxdebug.start_with_request=1']);
@@ -30,7 +27,8 @@ export class Handler {
             // TODO: perhaps wait for the debug session
         }
 
-        await this.runTestQueue(command, run, request, cancellation);
+        const testRun = this.ctrl.createTestRun(request);
+        await this.runTestQueue(command, testRun, request, cancellation);
 
         if (request.profile?.kind === TestRunProfileKind.Debug && debug.activeDebugSession?.type === 'php') {
             debug.stopDebugging(debug.activeDebugSession);
@@ -40,7 +38,8 @@ export class Handler {
     }
 
     private async runTestQueue(command: CommandBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
-        const queue = await this.discoverTests(testRun, request, request.include ?? this.gatherTestItems(this.ctrl.items));
+        const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request.exclude);
+        queue.forEach((testItem) => testRun.enqueued(testItem));
 
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queue, testRun));
@@ -49,7 +48,7 @@ export class Handler {
         const processes = !request.include
             ? [runner.run(command)]
             : request.include
-                .map((test) => this.testCollection.getTestCase(test)!)
+                .map((testItem) => this.testCollection.getTestCase(testItem)!)
                 .map((testCase) => runner.run(testCase.update(command)));
 
         cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
@@ -59,18 +58,17 @@ export class Handler {
         testRun.end();
     };
 
-    private async discoverTests(run: TestRun, request: TestRunRequest, tests: Iterable<TestItem>, queue: Queue[] = []) {
-        for (const test of tests) {
-            if (request.exclude?.includes(test)) {
+    private async discoverTests(tests: Iterable<TestItem>, exclude: readonly TestItem[] | undefined, queue: Map<TestCase, TestItem> = new Map<TestCase, TestItem>()) {
+        for (const testItem of tests) {
+            if (exclude?.includes(testItem)) {
                 continue;
             }
 
-            const data = this.testCollection.getTestCase(test);
-            if (data?.type === TestType.method) {
-                run.enqueued(test);
-                queue.push({ test, data });
+            const testCase = this.testCollection.getTestCase(testItem);
+            if (testCase?.type === TestType.method) {
+                queue.set(testCase, testItem);
             } else {
-                await this.discoverTests(run, request, this.gatherTestItems(test.children), queue);
+                await this.discoverTests(this.gatherTestItems(testItem.children), exclude, queue);
             }
         }
 
