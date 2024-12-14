@@ -38,7 +38,7 @@ export class Handler {
     }
 
     private async runTestQueue(command: CommandBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
-        const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request.exclude);
+        const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request);
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
         const runner = new TestRunner();
@@ -58,9 +58,9 @@ export class Handler {
         testRun.end();
     };
 
-    private async discoverTests(tests: Iterable<TestItem>, exclude: readonly TestItem[] | undefined, queue: Map<TestCase, TestItem> = new Map<TestCase, TestItem>()) {
+    private async discoverTests(tests: Iterable<TestItem>, request: TestRunRequest, queue = new Map<TestCase, TestItem>()) {
         for (const testItem of tests) {
-            if (exclude?.includes(testItem)) {
+            if (request.exclude?.includes(testItem)) {
                 continue;
             }
 
@@ -68,7 +68,7 @@ export class Handler {
             if (testCase?.type === TestType.method) {
                 queue.set(testCase, testItem);
             } else {
-                await this.discoverTests(this.gatherTestItems(testItem.children), exclude, queue);
+                await this.discoverTests(this.gatherTestItems(testItem.children), request, queue);
             }
         }
 

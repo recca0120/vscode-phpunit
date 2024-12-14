@@ -3,7 +3,7 @@ import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { CommandBuilder } from './CommandBuilder';
 import { ProblemMatcher, TestResult, TestResultEvent } from './ProblemMatcher';
-import { DefaultObserver, EventResultMap, TestRunnerEvent, TestRunnerObserver } from './TestRunnerObserver';
+import { EventResultMap, TestRunnerEvent, TestRunnerEventProxy, TestRunnerObserver } from './TestRunnerObserver';
 
 export class TestRunnerProcess {
     private child?: ChildProcess;
@@ -75,13 +75,13 @@ export class TestRunnerProcess {
 }
 
 export class TestRunner {
-    private readonly defaultObserver: DefaultObserver;
+    private readonly defaultObserver: TestRunnerEventProxy;
     private readonly problemMatcher = new ProblemMatcher();
     private readonly teamcityPattern = new RegExp('##teamcity\\[', 'i');
     private observers: TestRunnerObserver[] = [];
 
     constructor() {
-        this.defaultObserver = new DefaultObserver();
+        this.defaultObserver = new TestRunnerEventProxy();
         this.observe(this.defaultObserver);
     }
 

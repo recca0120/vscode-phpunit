@@ -40,7 +40,7 @@ export type TestRunnerObserver = Partial<{
     [K in keyof EventResultMap]: (result: EventResultMap[K]) => void;
 } & { [p in TestResultEvent]: (result: EventResultMap[p]) => void }>
 
-export class DefaultObserver implements TestRunnerObserver {
+export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
 
     run(command: string): void {
