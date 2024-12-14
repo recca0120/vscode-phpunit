@@ -234,7 +234,7 @@ describe('PHPUnitParser Test', () => {
 
             it('it should parse testdox annotation', async () => {
                 const methodName = 'balanceIsInitiallyZero';
-                const id = 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::has an initial balance of zero';
+                const id = 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Balance is initially zero';
 
                 expect(await givenTest(file, methodName)).toEqual(
                     expect.objectContaining({
@@ -438,7 +438,7 @@ describe('PHPUnitParser Test', () => {
 
             it('parse TestDox Attribute', async () => {
                 const methodName = 'balanceIsInitiallyZero';
-                const id = 'Attribute (Recca0120\\VSCode\\Tests\\Attribute)::has an initial balance of zero';
+                const id = 'Attribute (Recca0120\\VSCode\\Tests\\Attribute)::Balance is initially zero';
 
                 expect(await givenTest(file, methodName)).toEqual(
                     expect.objectContaining({

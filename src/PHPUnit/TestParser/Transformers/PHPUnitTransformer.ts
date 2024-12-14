@@ -16,7 +16,7 @@ export class PHPUnitTransformer extends Transformer {
     }
 
     uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
-        let { type, classFQN, annotations } = testDefinition;
+        let { type, classFQN } = testDefinition;
         classFQN = classFQN!.replace(/Test$/i, '');
         const partsFQN = classFQN.replace(/Test$/i, '').split('\\');
         let className = titleCase(partsFQN.pop() ?? '');
@@ -30,7 +30,7 @@ export class PHPUnitTransformer extends Transformer {
             return classFQN;
         }
 
-        return [classFQN, this.getMethodName(testDefinition)].join('::');
+        return [classFQN, this.getMethodName({ methodName: testDefinition.methodName })].join('::');
     };
 
     protected normalizeMethodName(methodName: string) {
