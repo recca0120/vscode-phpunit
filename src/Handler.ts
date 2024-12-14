@@ -4,17 +4,18 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
+import { MessageObserver } from './Observers/MessageObserver';
 import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
-    private lastRequest: TestRunRequest | undefined;
+    private previousRequest: TestRunRequest | undefined;
     private printer = new CollisionPrinter();
 
     constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) { }
 
-    getLastRequest() {
-        return this.lastRequest;
+    getPreviousRequest() {
+        return this.previousRequest;
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
@@ -34,7 +35,7 @@ export class Handler {
             debug.stopDebugging(debug.activeDebugSession);
         }
 
-        this.lastRequest = request;
+        this.previousRequest = request;
     }
 
     private async runTestQueue(command: CommandBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
@@ -44,6 +45,7 @@ export class Handler {
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queue, testRun));
         runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request, this.printer));
+        runner.observe(new MessageObserver(this.configuration));
 
         const processes = !request.include
             ? [runner.run(command)]
