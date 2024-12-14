@@ -37,7 +37,8 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     close(): void {
-        this.testRun.end();
+        // Do not call testRun.end() as this would prevent other test runners from reporting test results.
+        // this.testRun.end();
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {

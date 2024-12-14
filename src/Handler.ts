@@ -68,12 +68,15 @@ export class Handler {
                 // TODO: perhaps wait for the debug session
             }
 
-            await Promise.all(processes.map((process) => process.run()));
+            while (processes.length > 0) {
+                await processes.shift()?.run();
+            }
 
             if (request.profile?.kind === TestRunProfileKind.Debug && debug.activeDebugSession && debug.activeDebugSession.type === 'php') {
                 debug.stopDebugging(vscode.debug.activeDebugSession);
             }
 
+            run.end();
             return;
         };
 
