@@ -1,14 +1,6 @@
-import * as vscode from 'vscode';
 import {
-    CancellationToken,
-    debug,
-    OutputChannel,
-    TestController,
-    TestItem,
-    TestItemCollection,
-    TestRun,
-    TestRunProfileKind,
-    TestRunRequest,
+    CancellationToken, debug, OutputChannel, TestController, TestItem, TestItemCollection, TestRun, TestRunProfileKind,
+    TestRunRequest, workspace,
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
@@ -33,7 +25,7 @@ export class Handler {
         if (request.profile?.kind === TestRunProfileKind.Debug) {
             command.setExtra(['-dxdebug.mode=debug', '-dxdebug.start_with_request=1']);
 
-            const wsf = vscode.workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
+            const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
             await debug.startDebugging(wsf, { type: 'php', request: 'launch', name: 'PHPUnit' });
             // TODO: perhaps wait for the debug session
         }
@@ -41,7 +33,7 @@ export class Handler {
         await this.runTestQueue(command, run, request, cancellation);
 
         if (request.profile?.kind === TestRunProfileKind.Debug && debug.activeDebugSession?.type === 'php') {
-            debug.stopDebugging(vscode.debug.activeDebugSession);
+            debug.stopDebugging(debug.activeDebugSession);
         }
 
         this.lastRequest = request;

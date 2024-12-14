@@ -1,18 +1,6 @@
 import {
-    EOL,
-    TestConfiguration,
-    TestFailed,
-    TestFinished,
-    TestProcesses,
-    TestResult,
-    TestResultEvent,
-    TestResultSummary,
-    TestRuntime,
-    TestStarted,
-    TestSuiteFinished,
-    TestSuiteStarted,
-    TestVersion,
-    TestDuration,
+    EOL, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses, TestResult, TestResultEvent,
+    TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from '../../PHPUnit';
 
 class OutputBuffer {
@@ -58,6 +46,10 @@ export abstract class Printer {
         [TestResultEvent.testFailed, ['❌', 'FAILED']],
         [TestResultEvent.testIgnored, ['➖', 'IGNORED']],
     ]);
+
+    static fileFormat(file: string, line: number) {
+        return `${file}:${line}`;
+    }
 
     start() {
         this.outputBuffer.clear();
@@ -144,9 +136,5 @@ export abstract class Printer {
 
     private setCurrent(current?: string) {
         this.outputBuffer.setCurrent(current);
-    }
-
-    static fileFormat(file: string, line: number) {
-        return `${file}:${line}`;
     }
 }

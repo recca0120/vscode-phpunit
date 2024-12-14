@@ -5,7 +5,7 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests_
 import { CommandBuilder } from './CommandBuilder';
 import { Configuration } from './Configuration';
 import { TestResultEvent } from './ProblemMatcher';
-import { TransformerFactory, TestType } from './TestParser';
+import { TestType, TransformerFactory } from './TestParser';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import Mock = jest.Mock;

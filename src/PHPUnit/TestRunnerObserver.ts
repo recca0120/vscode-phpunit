@@ -1,19 +1,6 @@
 import {
-    TestConfiguration,
-    TestCount,
-    TestDuration,
-    TestFailed,
-    TestFinished,
-    TestIgnored,
-    TestProcesses,
-    TestResult,
-    TestResultEvent,
-    TestResultSummary,
-    TestRuntime,
-    TestStarted,
-    TestSuiteFinished,
-    TestSuiteStarted,
-    TestVersion,
+    TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses, TestResult,
+    TestResultEvent, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from './ProblemMatcher';
 
 export enum TestRunnerEvent {

@@ -3,18 +3,6 @@ import { TestDefinition, TestType } from '../types';
 import { Transformer } from './Transformer';
 
 export class PHPUnitTransformer extends Transformer {
-    fromLocationHit(locationHint: string, _name: string) {
-        const partsLocation = locationHint.replace(/^php_qn:\/\//, '').replace(/::\\/g, '::').split('::');
-        const file = partsLocation.shift();
-        const [classFQN, methodName] = partsLocation;
-
-        const type = !methodName ? TestType.class : TestType.method;
-        const id = this.uniqueId({ type: type, classFQN, methodName });
-        const testId = this.removeDataset(id);
-
-        return { id, testId, file };
-    }
-
     uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
         let { type, classFQN } = testDefinition;
         classFQN = classFQN!.replace(/Test$/i, '');
@@ -32,6 +20,18 @@ export class PHPUnitTransformer extends Transformer {
 
         return [classFQN, this.getMethodName({ methodName: testDefinition.methodName })].join('::');
     };
+
+    fromLocationHit(locationHint: string, _name: string) {
+        const partsLocation = locationHint.replace(/^php_qn:\/\//, '').replace(/::\\/g, '::').split('::');
+        const file = partsLocation.shift();
+        const [classFQN, methodName] = partsLocation;
+
+        const type = !methodName ? TestType.class : TestType.method;
+        const id = this.uniqueId({ type: type, classFQN, methodName });
+        const testId = this.removeDataset(id);
+
+        return { id, testId, file };
+    }
 
     protected normalizeMethodName(methodName: string) {
         return capitalize(snakeCase(

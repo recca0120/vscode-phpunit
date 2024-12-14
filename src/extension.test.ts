@@ -5,17 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as semver from 'semver';
 import {
-    CancellationTokenSource,
-    commands,
-    TestController,
-    TestItem,
-    TestItemCollection,
-    tests,
-    TextDocument,
-    Uri,
-    window,
-    workspace,
-    WorkspaceFolder,
+    CancellationTokenSource, commands, TestController, TestItem, TestItemCollection, tests, TextDocument, Uri, window,
+    workspace, WorkspaceFolder,
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { activate } from './extension';

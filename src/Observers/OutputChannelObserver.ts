@@ -1,20 +1,7 @@
 import { OutputChannel, TestRunRequest } from 'vscode';
 import {
-    IConfiguration,
-    TestConfiguration,
-    TestDuration,
-    TestFailed,
-    TestFinished,
-    TestIgnored,
-    TestProcesses,
-    TestResult,
-    TestResultSummary,
-    TestRunnerObserver,
-    TestRuntime,
-    TestStarted,
-    TestSuiteFinished,
-    TestSuiteStarted,
-    TestVersion,
+    IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses, TestResult,
+    TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from '../PHPUnit';
 import { PrettyPrinter, Printer } from './Printers';
 

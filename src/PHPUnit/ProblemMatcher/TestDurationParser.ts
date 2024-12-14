@@ -1,4 +1,4 @@
-import { TestResultEvent, TestDuration } from './types';
+import { TestDuration, TestResultEvent } from './types';
 import { IParser } from './ValueParser';
 
 export class TestDurationParser implements IParser<TestDuration> {

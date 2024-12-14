@@ -1,8 +1,8 @@
 import { basename, dirname, join, relative } from 'node:path';
 import { Block, Call, Closure, Declaration, ExpressionStatement, Node, Program, String } from 'php-parser';
 import { capitalize } from '../utils';
-import { TransformerFactory } from './Transformers';
 import { Parser } from './Parser';
+import { TransformerFactory } from './Transformers';
 import { TestDefinition, TestType } from './types';
 
 export class PestParser extends Parser {

@@ -1,13 +1,6 @@
 import {
-    TestFailed,
-    TestFinished,
-    TestIgnored,
-    TestResult,
-    TestResultEvent,
-    TestResultParser,
-    TestStarted,
-    TestSuiteFinished,
-    TestSuiteStarted,
+    TestFailed, TestFinished, TestIgnored, TestResult, TestResultEvent, TestResultParser, TestStarted,
+    TestSuiteFinished, TestSuiteStarted,
 } from '.';
 
 export class ProblemMatcher {

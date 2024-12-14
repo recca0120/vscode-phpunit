@@ -1,19 +1,6 @@
 import {
-    CancellationToken,
-    EventEmitter,
-    ExtensionContext,
-    extensions,
-    GlobPattern,
-    RelativePattern,
-    TestItem,
-    TestRunProfile,
-    TestRunProfileKind,
-    TestRunRequest,
-    tests,
-    Uri,
-    window,
-    workspace,
-    WorkspaceFolder,
+    CancellationToken, EventEmitter, ExtensionContext, extensions, GlobPattern, RelativePattern, TestItem,
+    TestRunProfile, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder,
 } from 'vscode';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';

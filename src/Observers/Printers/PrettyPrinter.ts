@@ -11,10 +11,6 @@ export class PrettyPrinter extends Printer {
         last: '┴',
     };
 
-    testSuiteFinished(_result: TestSuiteFinished): string | undefined {
-        return '';
-    }
-
     testFinished(result: TestFinished | TestFailed) {
         const [icon] = this.messages.get(result.event)!;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
@@ -25,6 +21,10 @@ export class PrettyPrinter extends Printer {
         }
 
         return messages.join(EOL);
+    }
+
+    testSuiteFinished(_result: TestSuiteFinished): string | undefined {
+        return '';
     }
 
     private formatError(result: TestFailed) {

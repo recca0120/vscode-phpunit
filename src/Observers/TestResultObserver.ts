@@ -1,14 +1,7 @@
 import { Location, Position, Range, TestItem, TestMessage, TestMessageStackFrame, TestRun } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    EOL,
-    TestFailed,
-    TestFinished,
-    TestIgnored,
-    TestResult,
-    TestRunnerObserver,
-    TestStarted,
-    TestSuiteFinished,
+    EOL, TestFailed, TestFinished, TestIgnored, TestResult, TestRunnerObserver, TestStarted, TestSuiteFinished,
     TestSuiteStarted,
 } from '../PHPUnit';
 import { Queue } from '../types';
