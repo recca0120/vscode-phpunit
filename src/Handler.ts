@@ -45,7 +45,7 @@ export class Handler {
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queue, testRun));
         runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request, this.printer));
-        runner.observe(new MessageObserver());
+        runner.observe(new MessageObserver(this.configuration));
 
         const processes = !request.include
             ? [runner.run(command)]
