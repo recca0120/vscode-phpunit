@@ -10,8 +10,12 @@ export class CommandBuilder {
     private arguments = '';
     private extra: string[] = [];
 
-    constructor(protected configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
+    constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
+    }
+
+    clone(): CommandBuilder {
+        return new CommandBuilder(this.configuration, this.options).setArguments(this.arguments).setExtra(this.extra);
     }
 
     setArguments(args: string) {

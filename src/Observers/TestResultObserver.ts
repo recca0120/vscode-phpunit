@@ -1,13 +1,4 @@
-import {
-    CancellationToken,
-    Location,
-    Position,
-    Range,
-    TestItem,
-    TestMessage,
-    TestMessageStackFrame,
-    TestRun,
-} from 'vscode';
+import { Location, Position, Range, TestItem, TestMessage, TestMessageStackFrame, TestRun } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
     EOL,
@@ -20,12 +11,12 @@ import {
     TestSuiteFinished,
     TestSuiteStarted,
 } from '../PHPUnit';
+import { Queue } from '../types';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
-        private queue: { test: TestItem }[] = [],
+        private queue: Queue[] = [],
         private testRun: TestRun,
-        private cancellation?: CancellationToken,
     ) { }
 
     line(line: string): void {
@@ -36,9 +27,8 @@ export class TestResultObserver implements TestRunnerObserver {
         this.testRun.appendOutput(error);
     }
 
-    close(): void {
-        // Do not call testRun.end() as this would prevent other test runners from reporting test results.
-        // this.testRun.end();
+    abort(): void {
+        this.queue.forEach(({ test }) => this.testRun.skipped(test));
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
@@ -89,11 +79,6 @@ export class TestResultObserver implements TestRunnerObserver {
     private doRun(result: TestResult, callback: (test: TestItem) => void) {
         const test = this.find(result);
         if (!test) {
-            return;
-        }
-
-        if (this.cancellation?.isCancellationRequested) {
-            this.testRun.skipped(test);
             return;
         }
 

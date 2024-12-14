@@ -33,7 +33,12 @@ export class TestRunnerProcess {
     abort() {
         this.abortController.abort();
 
-        return this.child?.killed;
+        const killed = this.child?.killed;
+        if (killed) {
+            this.emitter.emit('abort');
+        }
+
+        return killed;
     }
 
     private execute() {

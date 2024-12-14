@@ -23,6 +23,7 @@ export enum TestRunnerEvent {
     output = 'output',
     error = 'error',
     close = 'close',
+    abort = 'abort',
 }
 
 export type EventResultMap = {
@@ -32,6 +33,7 @@ export type EventResultMap = {
     [TestRunnerEvent.output]: string;
     [TestRunnerEvent.error]: string;
     [TestRunnerEvent.close]: number | null;
+    [TestRunnerEvent.abort]: undefined;
     [TestResultEvent.testVersion]: TestVersion;
     [TestResultEvent.testProcesses]: TestProcesses;
     [TestResultEvent.testRuntime]: TestRuntime;
@@ -54,7 +56,6 @@ export type TestRunnerObserver = Partial<{
 export class DefaultObserver implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
 
-
     run(command: string): void {
         this.emit(TestRunnerEvent.run, command);
     }
@@ -69,6 +70,10 @@ export class DefaultObserver implements TestRunnerObserver {
 
     close(code: number | null): void {
         this.emit(TestRunnerEvent.close, code);
+    }
+
+    abort(): void {
+        this.emit(TestRunnerEvent.abort, undefined);
     }
 
     line(line: string): void {

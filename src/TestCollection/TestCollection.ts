@@ -2,12 +2,12 @@ import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
     CommandBuilder,
-    Transformer,
     File,
     PHPUnitXML,
     TestCollection as BaseTestCollection,
     TestDefinition,
     TestType,
+    Transformer,
 } from '../PHPUnit';
 import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
@@ -25,8 +25,8 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    update(builder: CommandBuilder) {
-        return builder.setArguments(this.getArguments());
+    update(command: CommandBuilder) {
+        return command.clone().setArguments(this.getArguments());
     }
 
     private getArguments(): string {
