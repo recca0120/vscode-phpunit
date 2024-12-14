@@ -40,7 +40,7 @@ export class Handler {
 
         await this.runTestQueue(command, run, request, cancellation);
 
-        if (request.profile?.kind === TestRunProfileKind.Debug && debug.activeDebugSession && debug.activeDebugSession.type === 'php') {
+        if (request.profile?.kind === TestRunProfileKind.Debug && debug.activeDebugSession?.type === 'php') {
             debug.stopDebugging(vscode.debug.activeDebugSession);
         }
 

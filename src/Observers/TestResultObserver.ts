@@ -14,10 +14,7 @@ import {
 import { Queue } from '../types';
 
 export class TestResultObserver implements TestRunnerObserver {
-    constructor(
-        private queue: Queue[] = [],
-        private testRun: TestRun,
-    ) { }
+    constructor(private queue: Queue[] = [], private testRun: TestRun) { }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
