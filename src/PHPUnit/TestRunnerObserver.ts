@@ -11,6 +11,7 @@ export enum TestRunnerEvent {
     error = 'error',
     close = 'close',
     abort = 'abort',
+    done = 'done',
 }
 
 export type EventResultMap = {
@@ -21,6 +22,7 @@ export type EventResultMap = {
     [TestRunnerEvent.error]: string;
     [TestRunnerEvent.close]: number | null;
     [TestRunnerEvent.abort]: undefined;
+    [TestRunnerEvent.done]: undefined;
     [TestResultEvent.testVersion]: TestVersion;
     [TestResultEvent.testProcesses]: TestProcesses;
     [TestResultEvent.testRuntime]: TestRuntime;
@@ -47,6 +49,10 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
         this.emit(TestRunnerEvent.run, command);
     }
 
+    line(line: string): void {
+        this.emit(TestRunnerEvent.line, line);
+    }
+
     output(output: string): void {
         this.emit(TestRunnerEvent.output, output);
     }
@@ -63,8 +69,8 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
         this.emit(TestRunnerEvent.abort, undefined);
     }
 
-    line(line: string): void {
-        this.emit(TestRunnerEvent.line, line);
+    done(): void {
+        this.emit(TestRunnerEvent.done, undefined);
     }
 
     result(result: TestResult): void {

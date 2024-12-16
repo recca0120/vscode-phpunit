@@ -1,16 +1,16 @@
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import {
     CancellationToken, debug, OutputChannel, TestController, TestItem, TestItemCollection, TestRun, TestRunProfileKind,
     TestRunRequest, workspace,
 } from 'vscode';
+import { CloverParser } from './CloverParser';
 import { Configuration } from './Configuration';
 import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
 import { MessageObserver } from './Observers/MessageObserver';
-import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
+import { CommandBuilder, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
-import * as os from 'node:os';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path'
-import { CloverParser } from './CloverParser';
 
 export class Handler {
     private previousRequest: TestRunRequest | undefined;
@@ -55,7 +55,7 @@ export class Handler {
         runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request, this.printer));
         runner.observe(new MessageObserver(this.configuration));
 
-        let tmpd: string|undefined;
+        let tmpd: string | undefined;
         if (request.profile?.kind === TestRunProfileKind.Coverage) {
             tmpd = await fs.mkdtemp(path.join(os.tmpdir(), 'phpunit'));
             command.setExtraArguments(['--coverage-clover', path.join(tmpd, 'phpunit-0.xml')]);
@@ -77,10 +77,10 @@ export class Handler {
                 const covs = await CloverParser.parseClover(path.join(tmpd, `phpunit-${i}.xml`));
                 covs.map(c => testRun.addCoverage(c));
             }
-            await fs.rm(tmpd, { recursive: true, force: true })
+            await fs.rm(tmpd, { recursive: true, force: true });
         }
 
-        testRun.end();
+        runner.emit(TestRunnerEvent.done, null);
     };
 
     private async discoverTests(tests: Iterable<TestItem>, request: TestRunRequest, queue = new Map<TestCase, TestItem>()) {

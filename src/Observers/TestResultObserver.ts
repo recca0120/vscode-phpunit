@@ -21,6 +21,10 @@ export class TestResultObserver implements TestRunnerObserver {
         this.queue.forEach((testItem) => this.testRun.skipped(testItem));
     }
 
+    done(): void {
+        this.testRun.end();
+    }
+
     testSuiteStarted(result: TestSuiteStarted): void {
         this.doRun(result, (test) => this.testRun.started(test));
     }

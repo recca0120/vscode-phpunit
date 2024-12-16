@@ -22,6 +22,10 @@ export class TestRunnerProcess {
         return this;
     }
 
+    emit(eventName: string, ...args: any[]) {
+        this.emitter.emit(eventName, ...args);
+    }
+
     run() {
         return new Promise((resolve) => {
             this.execute();
@@ -113,6 +117,12 @@ export class TestRunner {
         return process;
     }
 
+    emit(eventName: TestRunnerEvent | TestResultEvent, result: TestResult | string | number | null) {
+        this.observers
+            .filter((observer) => observer[eventName])
+            .forEach((observer) => (observer[eventName] as Function)(result));
+    }
+
     private isTestRunning(output: string) {
         return this.teamcityPattern.test(output);
     }
@@ -128,11 +138,5 @@ export class TestRunner {
             this.emit(TestRunnerEvent.result, result!);
         }
         this.emit(TestRunnerEvent.line, line);
-    }
-
-    private emit(eventName: TestRunnerEvent | TestResultEvent, result: TestResult | string | number | null) {
-        this.observers
-            .filter((observer) => observer[eventName])
-            .forEach((observer) => (observer[eventName] as Function)(result));
     }
 }
