@@ -134,9 +134,8 @@ async function getWorkspaceTestPatterns() {
 
 async function findInitialFiles(pattern: GlobPattern, exclude: GlobPattern) {
     testCollection.reset();
-    await workspace.findFiles(pattern, exclude).then((files) => {
-        return Promise.all(files.map((file) => testCollection.add(file)));
-    });
+    const files = await workspace.findFiles(pattern, exclude);
+    await Promise.all(files.map((file) => testCollection.add(file)));
 }
 
 async function startWatchingWorkspace(fileChangedEmitter: EventEmitter<Uri>) {
