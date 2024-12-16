@@ -3,7 +3,6 @@ import { generateXML, phpUnitProject } from '../__tests__/utils';
 import { PHPUnitXML, TestDefinition, TestParser, TestType } from '../index';
 import { TestCollection } from './TestCollection';
 
-
 describe('TestCollection', () => {
     const phpUnitXML = new PHPUnitXML();
     const testCollection = new TestCollection(phpUnitXML);

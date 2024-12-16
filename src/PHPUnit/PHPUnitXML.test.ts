@@ -1,4 +1,3 @@
-import 'jest';
 import { generateXML, phpUnitProject } from './__tests__/utils';
 import { Pattern, PHPUnitXML } from './PHPUnitXML';
 

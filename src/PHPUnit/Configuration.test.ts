@@ -1,4 +1,3 @@
-import 'jest';
 import { join } from 'node:path';
 import { phpUnitProject } from './__tests__/utils';
 import { Configuration } from './Configuration';

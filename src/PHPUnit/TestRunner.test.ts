@@ -1,4 +1,3 @@
-import 'jest';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';

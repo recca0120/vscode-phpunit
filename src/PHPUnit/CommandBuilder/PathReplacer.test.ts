@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { PathReplacer } from './PathReplacer';
 

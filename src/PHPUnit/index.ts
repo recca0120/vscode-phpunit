@@ -6,4 +6,4 @@ export * from './TestParser';
 export * from './ProblemMatcher';
 export * from './PHPUnitXML';
 export * from './TestCollection';
-export { EOL } from './utils';
+export * from './utils';
