@@ -7,6 +7,7 @@ import { Configuration } from './Configuration';
 import { Handler } from './Handler';
 import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
+import { PHPUnitFileCoverage } from './CloverParser';
 
 const phpUnitXML = new PHPUnitXML();
 let testCollection: TestCollection;
@@ -94,7 +95,11 @@ export async function activate(context: ExtensionContext) {
     };
     const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
     if (extensions.getExtension('xdebug.php-debug') !== undefined) {
-        ctrl.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, false, undefined, false);
+        ctrl.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, undefined, false);
+    }
+    const coverageProfile = ctrl.createRunProfile('Run with Coverage', TestRunProfileKind.Coverage, runHandler, true, undefined, false); // TODO Continuous
+    coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
+        return (<PHPUnitFileCoverage>coverage).generateDetailedCoverage();
     }
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
 
