@@ -2,16 +2,8 @@ import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { readFile } from 'node:fs/promises';
 import {
-    CancellationToken,
-    DocumentFilter,
-    MarkdownString,
-    TestController,
-    TestItem,
-    TestItemCollection,
-    TestRunRequest as BaseTestRunRequest,
-    TestTag,
-    TextDocument,
-    WorkspaceFolder,
+    CancellationToken, DocumentFilter, MarkdownString, TestController, TestItem, TestItemCollection,
+    TestRunRequest as BaseTestRunRequest, TestTag, TextDocument, WorkspaceFolder,
 } from 'vscode';
 import { URI } from 'vscode-uri';
 
@@ -321,6 +313,9 @@ const extensions = {
     }),
 };
 
+class FileCoverage {
+}
+
 export {
     languages,
     workspace,
@@ -340,4 +335,5 @@ export {
     EventEmitter,
     TestMessageStackFrame,
     extensions,
+    FileCoverage,
 };
