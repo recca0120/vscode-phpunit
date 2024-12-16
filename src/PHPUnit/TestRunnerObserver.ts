@@ -5,6 +5,7 @@ import {
 } from './ProblemMatcher';
 
 export enum TestRunnerEvent {
+    start = 'start',
     run = 'run',
     line = 'line',
     result = 'result',
@@ -16,6 +17,7 @@ export enum TestRunnerEvent {
 }
 
 export type EventResultMap = {
+    [TestRunnerEvent.start]: undefined;
     [TestRunnerEvent.run]: CommandBuilder;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
@@ -45,6 +47,10 @@ export type TestRunnerObserver = Partial<{
 
 export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
+
+    start(): void {
+        this.emit(TestRunnerEvent.start, undefined);
+    }
 
     run(command: CommandBuilder): void {
         this.emit(TestRunnerEvent.run, command);

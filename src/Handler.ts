@@ -61,6 +61,8 @@ export class Handler {
             command.setExtraArguments(['--coverage-clover', path.join(tmpd, 'phpunit-0.xml')]);
         }
 
+        runner.emit(TestRunnerEvent.start, undefined);
+
         const processes = !request.include
             ? [runner.run(command)]
             : request.include
@@ -80,7 +82,7 @@ export class Handler {
             await fs.rm(tmpd, { recursive: true, force: true });
         }
 
-        runner.emit(TestRunnerEvent.done, null);
+        runner.emit(TestRunnerEvent.done, undefined);
     };
 
     private async discoverTests(tests: Iterable<TestItem>, request: TestRunRequest, queue = new Map<TestCase, TestItem>()) {
