@@ -7,6 +7,10 @@ import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './O
 import { MessageObserver } from './Observers/MessageObserver';
 import { CommandBuilder, TestRunner, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
+import * as os from 'node:os';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path'
+import { CloverParser } from './CloverParser';
 
 export class Handler {
     private previousRequest: TestRunRequest | undefined;
@@ -28,6 +32,10 @@ export class Handler {
             // TODO: perhaps wait for the debug session
         }
 
+        if (request.profile?.kind === TestRunProfileKind.Coverage) {
+            command.setExtra(['-dxdebug.mode=coverage']);
+        }
+
         const testRun = this.ctrl.createTestRun(request);
         await this.runTestQueue(command, testRun, request, cancellation);
 
@@ -47,15 +55,30 @@ export class Handler {
         runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request, this.printer));
         runner.observe(new MessageObserver(this.configuration));
 
+        let tmpd: string|undefined;
+        if (request.profile?.kind === TestRunProfileKind.Coverage) {
+            tmpd = await fs.mkdtemp(path.join(os.tmpdir(), 'phpunit'));
+            command.setExtraArguments(['--coverage-clover', path.join(tmpd, 'phpunit-0.xml')]);
+        }
+
         const processes = !request.include
             ? [runner.run(command)]
             : request.include
                 .map((testItem) => this.testCollection.getTestCase(testItem)!)
-                .map((testCase) => runner.run(testCase.update(command)));
+                .map((testCase, k) => testCase.update(tmpd ? command.setExtraArguments(['--coverage-clover', path.join(tmpd, `phpunit-${k}.xml`)]) : command))
+                .map((testCase) => runner.run(testCase));
 
         cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
 
         await Promise.all(processes.map((process) => process.run()));
+
+        if (tmpd) {
+            for (let i = 0; i < (!request.include ? 1 : request.include!.length); i++) {
+                const covs = await CloverParser.parseClover(path.join(tmpd, `phpunit-${i}.xml`));
+                covs.map(c => testRun.addCoverage(c));
+            }
+            await fs.rm(tmpd, { recursive: true, force: true })
+        }
 
         testRun.end();
     };

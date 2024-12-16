@@ -9,13 +9,14 @@ export class CommandBuilder {
     private readonly pathReplacer: PathReplacer;
     private arguments = '';
     private extra: string[] = [];
+    private extraArguments: string[] = [];
 
     constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
     clone(): CommandBuilder {
-        return new CommandBuilder(this.configuration, this.options).setArguments(this.arguments).setExtra(this.extra);
+        return new CommandBuilder(this.configuration, this.options).setArguments(this.arguments).setExtra(this.extra).setExtraArguments(this.extraArguments);
     }
 
     setArguments(args: string) {
@@ -26,6 +27,12 @@ export class CommandBuilder {
 
     setExtra(extra: string[]) {
         this.extra = extra;
+
+        return this;
+    }
+
+    setExtraArguments(extraArguments: string[]) {
+        this.extraArguments = extraArguments;
 
         return this;
     }
@@ -61,7 +68,7 @@ export class CommandBuilder {
 
     private createCommand() {
         const command = this.getCommand();
-        const executable = this.setParaTestFunctional([this.getPhp(), ...this.getExtra(), this.getPhpUnit(), ...this.getArguments()]);
+        const executable = this.setParaTestFunctional([this.getPhp(), ...this.getExtra(), this.getPhpUnit(), ...this.getArguments(), ...this.getExtraArguments()]);
 
         if (!/^ssh/.test(command.join(' ')) && !/sh\s+-c/.test(command.slice(-2).join(' '))) {
             return [...command, ...executable];
@@ -88,6 +95,10 @@ export class CommandBuilder {
 
     private getExtra() {
         return this.extra;
+    }
+
+    private getExtraArguments() {
+        return this.extraArguments;
     }
 
     private getArguments(): string[] {
