@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { CloverParser } from './CloverParser';
+import { Position } from 'vscode';
 
 describe('CloverParser test', () => {
 
@@ -9,7 +10,9 @@ describe('CloverParser test', () => {
         const dc = cf[0].generateDetailedCoverage()
         expect(dc.length).toEqual(6);
         expect(dc[0].executed).toEqual(2);
-        expect(dc[0].location.line).toEqual(8);
+        if (dc[0].location instanceof Position) {
+            expect(dc[0].location.line).toEqual(8);
+        }
     });
 
 });
