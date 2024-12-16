@@ -3,7 +3,7 @@ import { minimatch } from 'minimatch';
 import { readFile } from 'node:fs/promises';
 import {
     CancellationToken, DocumentFilter, MarkdownString, TestController, TestItem, TestItemCollection,
-    TestRunRequest as BaseTestRunRequest, TestTag, TextDocument, WorkspaceFolder,
+    TestRunRequest as BaseTestRunRequest, TestTag, TextDocument, WorkspaceFolder, TestCoverageCount,
 } from 'vscode';
 import { URI } from 'vscode-uri';
 
@@ -314,6 +314,15 @@ const extensions = {
 };
 
 class FileCoverage {
+    constructor(public uri:URI, public statementCoverage: TestCoverageCount) {}
+}
+
+class TestCoverageCount {
+    constructor(public covered: number, public total: number) {}
+}
+
+class StatementCoverage {
+    constructor(public executed: number | boolean, public location: any) {}
 }
 
 export {
@@ -336,4 +345,6 @@ export {
     TestMessageStackFrame,
     extensions,
     FileCoverage,
+    TestCoverageCount,
+    StatementCoverage,
 };
