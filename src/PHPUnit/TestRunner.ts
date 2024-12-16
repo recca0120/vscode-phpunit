@@ -49,9 +49,8 @@ export class TestRunnerProcess {
         this.output = '';
         this.temp = '';
 
+        this.emitter.emit('start', this.builder);
         const { command, args, options } = this.builder.build();
-        this.emitter.emit('start', command, args);
-
         this.child = spawn(command, args, { ...options, signal: this.abortController.signal });
         this.child.stdout!.on('data', (data) => this.appendOutput(data));
         this.child.stderr!.on('data', (data) => this.appendOutput(data));
@@ -99,10 +98,10 @@ export class TestRunner {
         return this;
     }
 
-    run(builder: CommandBuilder) {
-        const process = new TestRunnerProcess(builder);
-        process.on('start', (command: string, args: string[]) => this.emit(TestRunnerEvent.run, [command, ...args].join(' ')));
-        process.on('line', (line: string) => this.processLine(line, builder));
+    run(command: CommandBuilder) {
+        const process = new TestRunnerProcess(command);
+        process.on('start', (command: CommandBuilder) => this.emit(TestRunnerEvent.run, command));
+        process.on('line', (line: string) => this.processLine(line, command));
         process.on('error', (err: Error) => {
             const error = err.stack ?? err.message;
             this.emit(TestRunnerEvent.error, error);
@@ -117,7 +116,7 @@ export class TestRunner {
         return process;
     }
 
-    emit(eventName: TestRunnerEvent | TestResultEvent, result: TestResult | string | number | null) {
+    emit(eventName: TestRunnerEvent | TestResultEvent, result: TestResult | any) {
         this.observers
             .filter((observer) => observer[eventName])
             .forEach((observer) => (observer[eventName] as Function)(result));
@@ -127,10 +126,10 @@ export class TestRunner {
         return this.teamcityPattern.test(output);
     }
 
-    private processLine(line: string, builder: CommandBuilder) {
+    private processLine(line: string, command: CommandBuilder) {
         let result = this.problemMatcher.parse(line);
         if (result) {
-            result = builder.replacePath(result);
+            result = command.replacePath(result);
             if ('event' in result!) {
                 this.emit(result.event, result);
             }

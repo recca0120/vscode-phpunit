@@ -2,12 +2,12 @@ import {
     CancellationToken, EventEmitter, ExtensionContext, extensions, GlobPattern, RelativePattern, TestItem,
     TestRunProfile, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder,
 } from 'vscode';
+import { PHPUnitFileCoverage } from './CloverParser';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
 import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
-import { PHPUnitFileCoverage } from './CloverParser';
 
 const phpUnitXML = new PHPUnitXML();
 let testCollection: TestCollection;
@@ -100,7 +100,7 @@ export async function activate(context: ExtensionContext) {
     const coverageProfile = ctrl.createRunProfile('Run with Coverage', TestRunProfileKind.Coverage, runHandler, true, undefined, false); // TODO Continuous
     coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
         return (<PHPUnitFileCoverage>coverage).generateDetailedCoverage();
-    }
+    };
     const commandHandler = new CommandHandler(testCollection, testRunProfile);
 
     context.subscriptions.push(commandHandler.reload(reload));

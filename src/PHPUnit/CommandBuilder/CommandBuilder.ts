@@ -66,6 +66,12 @@ export class CommandBuilder {
         return result;
     }
 
+    toString() {
+        const { command, args } = this.build();
+
+        return `${command} ${args.join(' ')}`;
+    }
+
     private createCommand() {
         const command = this.getCommand();
         const executable = this.setParaTestFunctional([this.getPhp(), ...this.getExtra(), this.getPhpUnit(), ...this.getArguments(), ...this.getExtraArguments()]);

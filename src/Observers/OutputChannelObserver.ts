@@ -1,7 +1,8 @@
 import { OutputChannel, TestRunRequest } from 'vscode';
 import {
-    IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses, TestResult,
-    TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
+    CommandBuilder, IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored,
+    TestProcesses, TestResult, TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished,
+    TestSuiteStarted, TestVersion,
 } from '../PHPUnit';
 import { PrettyPrinter, Printer } from './Printers';
 
@@ -12,7 +13,7 @@ enum ShowOutputState {
 }
 
 export class OutputChannelObserver implements TestRunnerObserver {
-    private lastInput = '';
+    private lastCommand = '';
 
     constructor(
         private outputChannel: OutputChannel,
@@ -21,17 +22,17 @@ export class OutputChannelObserver implements TestRunnerObserver {
         private printer: Printer = new PrettyPrinter(),
     ) {}
 
-    run(command: string): void {
+    run(command: CommandBuilder): void {
         this.clearOutputOnRun();
         this.showOutputChannel(ShowOutputState.always);
 
         this.printer.start();
-        this.appendLine(this.lastInput = command);
+        this.appendLine(this.lastCommand = command.toString());
     }
 
     error(error: string): void {
         this.outputChannel.clear();
-        this.appendLine(this.lastInput);
+        this.appendLine(this.lastCommand);
         this.appendLine(this.printer.error(error));
         this.showOutputChannel(ShowOutputState.onFailure);
     }

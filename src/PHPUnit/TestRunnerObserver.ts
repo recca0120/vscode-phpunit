@@ -1,3 +1,4 @@
+import { CommandBuilder } from './CommandBuilder';
 import {
     TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses, TestResult,
     TestResultEvent, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
@@ -15,7 +16,7 @@ export enum TestRunnerEvent {
 }
 
 export type EventResultMap = {
-    [TestRunnerEvent.run]: string;
+    [TestRunnerEvent.run]: CommandBuilder;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;
@@ -45,7 +46,7 @@ export type TestRunnerObserver = Partial<{
 export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
 
-    run(command: string): void {
+    run(command: CommandBuilder): void {
         this.emit(TestRunnerEvent.run, command);
     }
 
