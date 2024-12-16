@@ -5,7 +5,9 @@
 
 Run your PHPUnit OR Pest tests in Node using the Test Explorer UI.
 
-![Screenshot](img/screenshot.gif)
+![PHPUnit](img/phpunit.gif)
+
+![PEST](img/pest.png)
 
 ## Features
 
