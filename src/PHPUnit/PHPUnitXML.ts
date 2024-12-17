@@ -71,20 +71,18 @@ export class Pattern {
 
     toGlobPattern() {
         const dirs = Array.from(new Set(this.items.map((value) => {
-            if (/^\*/.test(value)) {
-                return undefined;
-            }
-
-            const pos = value.indexOf('/');
-
-            return value.substring(0, pos);
+            return /^\*/.test(value)
+                ? undefined
+                : value.substring(0, value.indexOf('/'));
         })));
 
-        if (!(dirs.length === 1 && dirs.filter(value => !!value).length === 1)) {
+        const legalDirs = dirs.filter(value => !!value);
+        const isSingle = dirs.length === 1 && legalDirs.length === 1;
+        if (!isSingle) {
             return { uri: URI.file(this.root), pattern: `{${this.items}}` };
         }
 
-        const dir = dirs.filter(value => !!value)[0];
+        const dir = legalDirs[0];
         const items = this.items.map((value) => value.replace(new RegExp('^' + dir + '[\\/]?'), ''));
         const root = URI.file(join(this.root, dir!));
         const pattern = `{${items}}`;
