@@ -1,9 +1,9 @@
 import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    CommandBuilder, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType, Transformer,
+    CommandBuilder, CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
+    Transformer,
 } from '../PHPUnit';
-import { CustomWeakMap } from '../PHPUnit/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 const inRange = (test: TestItem, testCase: TestCase, position: Position) => {

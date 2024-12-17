@@ -6,13 +6,12 @@ export class MessageObserver implements TestRunnerObserver {
     constructor(private configuration: IConfiguration) {}
 
     async error(error: string) {
-        const matched = error.match(/(?<command>[^\[\]]+\/pest)/);
-        if (!matched) {
+        if (error.indexOf('Pest\\Exceptions\\InvalidPestCommand') === -1) {
             await window.showErrorMessage(error);
             return;
         }
 
-        const command = matched.groups!.command.replace(/^\.\//, '');
+        const command = 'vendor/bin/pest';
         const message = `Update "phpunit.phpunit" to ${command} ?`;
         const options = { modal: true, detail: error };
         const selection = await window.showWarningMessage(message, options, 'Yes');

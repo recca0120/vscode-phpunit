@@ -1,4 +1,3 @@
-import 'jest';
 import { spawnSync } from 'node:child_process';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';

@@ -15,12 +15,9 @@ export class PestParser extends Parser {
         if (clazz.children.length <= 0) {
             return;
         }
-
         const namespace = this.generateNamespace(clazz.namespace);
 
-        return namespace
-            ? [{ ...namespace, children: [clazz] }]
-            : [clazz];
+        return namespace ? [{ ...namespace, children: [clazz] }] : [clazz];
     }
 
     private parseClass(declaration: Declaration | Node, file: string): TestDefinition {
@@ -45,17 +42,7 @@ export class PestParser extends Parser {
 
         const { start, end } = this.parsePosition(declaration);
 
-        return {
-            type,
-            id,
-            label,
-            classFQN,
-            namespace,
-            className,
-            file,
-            start,
-            end,
-        };
+        return { type, id, label, classFQN, namespace, className, file, start, end, depth: 2 };
     }
 
     private parseDescribe(declaration: Call | Block | Node, clazz: any, prefixes: string[] = []): TestDefinition[] {
@@ -63,8 +50,9 @@ export class PestParser extends Parser {
         if (declaration.kind === 'program') {
             children = (declaration as Program).children;
         } else {
-            children = ((declaration as Call).arguments[1] as Closure).body!.children!;
+            const closure = (declaration as Call).arguments[1] as Closure;
             prefixes = [...prefixes, ((declaration as Call).arguments[0] as String).value];
+            children = closure.kind === 'arrowfunc' ? [{ expression: closure.body! }] : closure.body!.children!;
         }
 
         return children
@@ -98,6 +86,6 @@ export class PestParser extends Parser {
         const label = this.converter.generateLabel({ ...clazz, type, methodName });
         const { start, end } = this.parsePosition(call);
 
-        return { ...clazz, type, id, label, methodName, start, end };
+        return { ...clazz, type, id, label, methodName, start, end, depth: 3 };
     }
 }

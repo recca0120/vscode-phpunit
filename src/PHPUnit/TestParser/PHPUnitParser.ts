@@ -44,6 +44,7 @@ export class PHPUnitParser extends Parser {
             className,
             annotations,
             file, ...this.parsePosition(declaration),
+            depth: 2,
         } as TestDefinition;
 
         const methods = declaration.body
@@ -65,7 +66,16 @@ export class PHPUnitParser extends Parser {
         const id = this.converter.uniqueId({ ...clazz, type, methodName, annotations });
         const label = this.converter.generateLabel({ ...clazz, type, methodName, annotations });
 
-        return { ...clazz, type, id, label, methodName, annotations, ...this.parsePosition(declaration) };
+        return {
+            ...clazz,
+            type,
+            id,
+            label,
+            methodName,
+            annotations,
+            ...this.parsePosition(declaration),
+            depth: 3,
+        };
     }
 
     private parseChildren(declaration: Declaration | Program | Node, file: string, namespace?: TestDefinition) {
