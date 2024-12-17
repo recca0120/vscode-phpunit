@@ -6,7 +6,7 @@ import { PHPUnitFileCoverage } from './CloverParser';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
-import { PHPUnitXML } from './PHPUnit';
+import { Pattern, PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 
 const phpUnitXML = new PHPUnitXML();
@@ -122,21 +122,26 @@ async function getWorkspaceTestPatterns() {
         configurationFile
             ? await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath)
             : phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
-        const { includes, excludes } = phpUnitXML.getGlobPatterns(workspaceFolder.uri.fsPath);
+        const { includes, excludes } = phpUnitXML.getPatterns(workspaceFolder.uri.fsPath);
 
-        return ({
+        const generateRelativePattern = (includeOrExclude: Pattern) => {
+            const { uri, pattern } = includeOrExclude.toGlobPattern();
+
+            return new RelativePattern(uri, pattern);
+        };
+
+        return {
             workspaceFolder,
-            pattern: new RelativePattern(workspaceFolder, includes.toString()),
-            exclude: new RelativePattern(workspaceFolder, excludes.toString()),
-        });
+            pattern: generateRelativePattern(includes),
+            exclude: generateRelativePattern(excludes),
+        };
     }));
 }
 
 async function findInitialFiles(pattern: GlobPattern, exclude: GlobPattern) {
     testCollection.reset();
-    await workspace.findFiles(pattern, exclude).then((files) => {
-        return Promise.all(files.map((file) => testCollection.add(file)));
-    });
+    const files = await workspace.findFiles(pattern, exclude);
+    await Promise.all(files.map((file) => testCollection.add(file)));
 }
 
 async function startWatchingWorkspace(fileChangedEmitter: EventEmitter<Uri>) {
