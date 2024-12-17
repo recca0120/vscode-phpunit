@@ -45,17 +45,7 @@ export class PestParser extends Parser {
 
         const { start, end } = this.parsePosition(declaration);
 
-        return {
-            type,
-            id,
-            label,
-            classFQN,
-            namespace,
-            className,
-            file,
-            start,
-            end,
-        };
+        return { type, id, label, classFQN, namespace, className, file, start, end };
     }
 
     private parseDescribe(declaration: Call | Block | Node, clazz: any, prefixes: string[] = []): TestDefinition[] {

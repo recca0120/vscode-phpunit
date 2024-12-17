@@ -1,4 +1,3 @@
-import 'jest';
 import { expect } from '@jest/globals';
 import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';

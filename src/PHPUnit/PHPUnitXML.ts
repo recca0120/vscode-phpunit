@@ -3,12 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join, normalize, relative } from 'node:path';
 import { URI } from 'vscode-uri';
 
-type Source = {
-    tag: string;
-    value: string;
-    prefix?: string;
-    suffix?: string;
-};
+type Source = { tag: string; value: string; prefix?: string; suffix?: string; };
 
 export type TestSuite = Source & { name: string };
 

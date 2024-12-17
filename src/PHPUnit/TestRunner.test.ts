@@ -7,7 +7,6 @@ import { TestResultEvent } from './ProblemMatcher';
 import { TestType, TransformerFactory } from './TestParser';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
-import Mock = jest.Mock;
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
@@ -171,7 +170,7 @@ const expectedCommand = async (builder: CommandBuilder, expected: string[]) => {
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     await testRunner.run(builder).run();
 
-    const call = (spawn as Mock).mock.calls[0];
+    const call = (spawn as jest.Mock).mock.calls[0];
     expect([call[0], ...call[1]]).toEqual(expected);
 };
 
