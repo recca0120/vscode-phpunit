@@ -83,10 +83,9 @@ export class Pattern {
 
         const dir = legalDirs[0];
         const items = this.items.map((item) => item.replace(new RegExp('^' + dir + '[\\/]?'), ''));
-        const root = URI.file(join(this.root, dir!));
         const pattern = `{${items}}`;
 
-        return { uri: root, pattern };
+        return { uri: URI.file(join(this.root, dir!)), pattern };
     }
 }
 
