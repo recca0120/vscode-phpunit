@@ -23,10 +23,16 @@ export class CloverParser
             const clover = parser.parse(xml);
 
             const ret = [];
-            
-            for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.package.file)) {
-                ret.push(new PHPUnitFileCoverage(cloverFile));
 
+            if (clover.coverage?.project?.file) {
+                for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.file)) {
+                    ret.push(new PHPUnitFileCoverage(cloverFile));
+                }
+            }
+            if (clover.coverage?.project?.package?.file) {
+                for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.package.file)) {
+                    ret.push(new PHPUnitFileCoverage(cloverFile));
+                }
             }
 
             return ret;
@@ -37,7 +43,7 @@ export class CloverParser
 
 }
 
-export class PHPUnitFileCoverage extends vscode.FileCoverage  {
+export class PHPUnitFileCoverage extends vscode.FileCoverage {
     constructor(public readonly cloverFile: any) {
         super(vscode.Uri.file(cloverFile['@_name']), new vscode.TestCoverageCount(0, 0));
         this.statementCoverage.covered = cloverFile.metrics['@_coveredstatements'];
