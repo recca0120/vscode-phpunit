@@ -1,6 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
-import { dirname, normalize, relative } from 'node:path';
+import { dirname, join, normalize, relative } from 'node:path';
+import { URI } from 'vscode-uri';
 
 type Source = {
     tag: string;
@@ -51,8 +52,8 @@ class Element {
 export class Pattern {
     private readonly relativePath: string;
 
-    constructor(relativePath: string, private readonly patterns: string[] = []) {
-        this.relativePath = Pattern.normalizePath(relativePath);
+    constructor(private root: string, private testPath: string, private items: string[] = []) {
+        this.relativePath = Pattern.normalizePath(relative(this.root, this.testPath));
     }
 
     private static normalizePath(...paths: string[]) {
@@ -65,11 +66,34 @@ export class Pattern {
             args.push('**/*' + (item.suffix ?? extension));
         }
 
-        this.patterns.push(Pattern.normalizePath(...args));
+        this.items.push(Pattern.normalizePath(...args));
+    }
+
+    toGlobPattern() {
+        const dirs = Array.from(new Set(this.items.map((value) => {
+            if (/^\*/.test(value)) {
+                return undefined;
+            }
+
+            const pos = value.indexOf('/');
+
+            return value.substring(0, pos);
+        })));
+
+        if (!(dirs.length === 1 && dirs.filter(value => !!value).length === 1)) {
+            return { uri: URI.file(this.root), pattern: `{${this.items}}` };
+        }
+
+        const dir = dirs.filter(value => !!value)[0];
+        const items = this.items.map((value) => value.replace(new RegExp('^' + dir + '[\\/]?'), ''));
+        const root = URI.file(join(this.root, dir!));
+        const pattern = `{${items}}`;
+
+        return { uri: root, pattern };
     }
 
     toString() {
-        return `{${this.patterns}}`;
+        return `{${this.items}}`;
     }
 }
 
@@ -125,9 +149,9 @@ export class PHPUnitXML {
         ];
     }
 
-    getGlobPatterns(root: string) {
-        const includes = new Pattern(relative(root, this.root()));
-        const excludes = new Pattern(relative(root, this.root()), ['**/.git/**', '**/node_modules/**']);
+    getPatterns(root: string) {
+        const includes = new Pattern(root, this.root());
+        const excludes = new Pattern(root, this.root(), ['**/.git/**', '**/node_modules/**']);
 
         this.getTestSuites().forEach((item) => {
             (item.tag !== 'exclude') ? includes.push(item, '.php') : excludes.push(item);

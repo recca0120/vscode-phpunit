@@ -266,12 +266,14 @@ const languages = {
 
 const RelativePattern = jest
     .fn()
-    .mockImplementation((workspaceFolder: WorkspaceFolder, pattern: string) => {
-        return {
-            uri: workspaceFolder.uri,
-            base: workspaceFolder.uri.fsPath,
-            pattern,
-        };
+    .mockImplementation((workspaceFolder: WorkspaceFolder | URI | string, pattern: string) => {
+        if (typeof workspaceFolder === 'string') {
+            workspaceFolder = URI.file(workspaceFolder);
+        }
+
+        const uri = 'uri' in workspaceFolder ? workspaceFolder.uri : workspaceFolder;
+
+        return { uri, base: uri.fsPath, pattern };
     });
 
 const window = {

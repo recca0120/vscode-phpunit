@@ -1,5 +1,7 @@
+import { join } from 'node:path';
+import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
-import { Pattern, PHPUnitXML } from './PHPUnitXML';
+import { PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {
     const root = phpUnitProject('');
@@ -55,9 +57,14 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
         ]);
 
-        expect(parsed.getGlobPatterns(root)).toEqual({
-            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
-            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Unit2/**/*.php']),
+        const { includes, excludes } = parsed.getPatterns(root);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(phpUnitXML.root(), 'tests')),
+            pattern: '{Unit/**/*.php,Unit2/**/*.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**}',
         });
     });
 
@@ -80,9 +87,14 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
         ]);
 
-        expect(parsed.getGlobPatterns(root)).toEqual({
-            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
-            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Feature/**/*.php']),
+        const { includes, excludes } = parsed.getPatterns(root);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(phpUnitXML.root(), 'tests')),
+            pattern: '{Unit/**/*.php,Feature/**/*.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**}',
         });
     });
 
@@ -109,9 +121,14 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Feature', value: 'tests/Feature2' },
         ]);
 
-        expect(parsed.getGlobPatterns(root)).toEqual({
-            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
-            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Unit2/**/*.php', 'tests/Feature/**/*.php', 'tests/Feature2/**/*.php']),
+        const { includes, excludes } = parsed.getPatterns(root);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(phpUnitXML.root(), 'tests')),
+            pattern: '{Unit/**/*.php,Unit2/**/*.php,Feature/**/*.php,Feature2/**/*.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**}',
         });
     });
 
@@ -136,9 +153,14 @@ describe('PHPUnit XML Test', () => {
             { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
         ]);
 
-        expect(parsed.getGlobPatterns(root)).toEqual({
-            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
-            'includes': new Pattern('.', ['tests/Unit/**/*.php', 'tests/Unit2/**/*.php', 'vendor/someone/tests/MyClassTest.php', 'vendor/someone/tests/MyClassTest2.php']),
+        const { includes, excludes } = parsed.getPatterns(root);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{tests/Unit/**/*.php,tests/Unit2/**/*.php,vendor/someone/tests/MyClassTest.php,vendor/someone/tests/MyClassTest2.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**}',
         });
     });
 
@@ -159,9 +181,14 @@ describe('PHPUnit XML Test', () => {
             { tag: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
         ]);
 
-        expect(parsed.getGlobPatterns(root)).toEqual({
-            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**', 'tests/Integration/OldTests/**/*']),
-            'includes': new Pattern('.', ['tests/Unit/**/*.php']),
+        const { includes, excludes } = parsed.getPatterns(root);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(phpUnitXML.root(), 'tests')),
+            pattern: '{Unit/**/*.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**,tests/Integration/OldTests/**/*}',
         });
     });
 
@@ -180,9 +207,14 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
         ]);
 
-        expect(parsed.getGlobPatterns(root)).toEqual({
-            'excludes': new Pattern('.', ['**/.git/**', '**/node_modules/**']),
-            'includes': new Pattern('.', ['tests/Unit/**/*.phpt']),
+        const { includes, excludes } = parsed.getPatterns(root);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(phpUnitXML.root(), 'tests')),
+            pattern: '{Unit/**/*.phpt}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**}',
         });
     });
 
