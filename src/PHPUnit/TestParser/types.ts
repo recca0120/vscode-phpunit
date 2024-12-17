@@ -21,6 +21,7 @@ export type TestDefinition = {
     methodName?: string;
     parent?: TestDefinition;
     children?: TestDefinition[]
+    depth: number;
     file?: string;
     start?: Position;
     end?: Position;

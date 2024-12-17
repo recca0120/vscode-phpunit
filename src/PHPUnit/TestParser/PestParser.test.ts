@@ -57,6 +57,7 @@ test('example', function () {
             classFQN: 'P\\Tests\\Fixtures',
             namespace: 'P\\Tests\\Fixtures',
             label: 'Tests\\Fixtures',
+            depth: 1,
         }));
     });
 
@@ -80,6 +81,7 @@ test('example', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 2,
         }));
     });
 
@@ -103,6 +105,7 @@ test('example', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
         });
     });
 
@@ -126,6 +129,7 @@ it('test example', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
         });
     });
 
@@ -151,6 +155,7 @@ describe('something', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
         });
     });
 
@@ -178,6 +183,7 @@ describe('something', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
         });
     });
 
@@ -199,6 +205,7 @@ it('example 2')->assertTrue(true);
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
         });
     });
 

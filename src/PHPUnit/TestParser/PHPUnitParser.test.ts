@@ -60,6 +60,7 @@ describe('PHPUnitParser Test', () => {
                     id,
                     classFQN: methodName,
                     namespace: methodName,
+                    depth: 1,
                 }));
             });
 
@@ -76,6 +77,7 @@ describe('PHPUnitParser Test', () => {
                     className,
                     start: { line: 8, character: 0 },
                     end: { line: 83, character: 1 },
+                    depth: 2,
                 }));
             });
 
@@ -94,6 +96,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 12, character: 4 },
                         end: { line: 15, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -113,7 +116,7 @@ describe('PHPUnitParser Test', () => {
                         annotations: { depends: ['test_passed'] },
                         start: { line: 20, character: 4 },
                         end: { line: 23, character: 5 },
-                        // end: { line: 20, character: 29 },
+                        depth: 3,
                     }),
                 );
             });
@@ -132,7 +135,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 25, character: 4 },
                         end: { line: 28, character: 5 },
-                        // end: { line: 25, character: 34 },
+                        depth: 3,
                     }),
                 );
             });
@@ -151,7 +154,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 30, character: 4 },
                         end: { line: 33, character: 5 },
-                        // end: { line: 30, character: 28 },
+                        depth: 3,
                     }),
                 );
             });
@@ -170,6 +173,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 38, character: 4 },
                         end: { line: 41, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -188,6 +192,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 43, character: 4 },
                         end: { line: 46, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -206,6 +211,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 48, character: 4 },
                         end: { line: 51, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -228,6 +234,7 @@ describe('PHPUnitParser Test', () => {
                         },
                         start: { line: 60, character: 4 },
                         end: { line: 63, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -247,6 +254,7 @@ describe('PHPUnitParser Test', () => {
                         annotations: { testdox: ['has an initial balance of zero'] },
                         start: { line: 79, character: 4 },
                         end: { line: 82, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -282,6 +290,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 9, character: 4 },
                         end: { line: 11, character: 5 },
+                        depth: 3,
                     }),
                 );
 
@@ -311,6 +320,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 17, character: 4 },
                         end: { line: 20, character: 5 },
+                        depth: 3,
                     }),
                 );
 
@@ -340,6 +350,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 10, character: 4 },
                         end: { line: 13, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -367,6 +378,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 12, character: 4 },
                         end: { line: 15, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -394,6 +406,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 14, character: 4 },
                         end: { line: 17, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -413,6 +426,7 @@ describe('PHPUnitParser Test', () => {
                         annotations: { dataProvider: ['additionProvider'] },
                         start: { line: 20, character: 4 },
                         end: { line: 23, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -432,6 +446,7 @@ describe('PHPUnitParser Test', () => {
                         annotations: { depends: ['testEmpty'] },
                         start: { line: 44, character: 4 },
                         end: { line: 51, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -451,6 +466,7 @@ describe('PHPUnitParser Test', () => {
                         annotations: { testdox: ['has an initial balance of zero'] },
                         start: { line: 55, character: 4 },
                         end: { line: 58, character: 5 },
+                        depth: 3,
                     }),
                 );
             });
@@ -478,6 +494,7 @@ describe('PHPUnitParser Test', () => {
                         methodName,
                         start: { line: 7, character: 4 },
                         end: { line: 10, character: 5 },
+                        depth: 3,
                     }),
                 );
             });

@@ -21,10 +21,11 @@ export class TestHierarchyBuilder {
 
     onInit() {
         this.testParser.on(TestType.method, (testDefinition, index) => {
+            this.ascend(this.length + testDefinition.depth);
             this.addTestItem(testDefinition, `${index}`);
         });
         this.testParser.on(TestType.class, (testDefinition) => {
-            this.ascend(this.length + 1);
+            this.ascend(this.length + testDefinition.depth);
             this.addTestItem(testDefinition, testDefinition.id);
         });
         this.testParser.on(TestType.namespace, (testDefinition) => {
@@ -55,7 +56,7 @@ export class TestHierarchyBuilder {
             const classFQN = namespaceParts.slice(0, index + 1).join('\\');
             const id = converter.uniqueId({ type, classFQN });
             const label = converter.generateLabel({ type, classFQN: namespacePart });
-            const testDefinition = { type, id, namespace: classFQN, label } as TestDefinition;
+            const testDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
 
             testItem = parentTestCollection.get(testDefinition.id);
             if (!testItem) {

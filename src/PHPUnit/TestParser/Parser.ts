@@ -60,6 +60,6 @@ export abstract class Parser {
         const id = converter.uniqueId({ type, classFQN });
         const label = converter.generateLabel({ type, classFQN });
 
-        return { type, id, namespace: namespace, classFQN, label };
+        return { type, id, namespace: namespace, classFQN, label, depth: 1 };
     }
 }
