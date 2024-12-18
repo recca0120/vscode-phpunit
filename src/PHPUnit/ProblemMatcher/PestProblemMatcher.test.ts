@@ -389,7 +389,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set ""foo-bar_%$"' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"' flowId='53556']`, {
             event: TestResultEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             name: 'Addition provider with data set ""foo-bar_%$"',
             flowId: 53556,
         });
@@ -397,7 +397,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set ""foo-bar_%$"' duration='0' flowId='53556']`, {
             event: TestResultEvent.testFinished,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             name: 'Addition provider with data set ""foo-bar_%$"',
             flowId: 53556,
         });
@@ -405,7 +405,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set #0' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0' flowId='53556']`, {
             event: TestResultEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
             name: 'Addition provider with data set #0',
             flowId: 53556,
         });
@@ -413,7 +413,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set #0' duration='0' flowId='53556']`, {
             event: TestResultEvent.testFinished,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
             name: 'Addition provider with data set #0',
             flowId: 53556,
         });
@@ -421,7 +421,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set #1' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1' flowId='53556']`, {
             event: TestResultEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
             name: 'Addition provider with data set #1',
             flowId: 53556,
         });
@@ -431,7 +431,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set #1' duration='0' flowId='53556']`, {
             event: TestResultEvent.testFailed,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
             name: 'Addition provider with data set #1',
             flowId: 53556,
         });
