@@ -46,8 +46,8 @@ export class CloverParser
 export class PHPUnitFileCoverage extends vscode.FileCoverage {
     constructor(public readonly cloverFile: any) {
         super(vscode.Uri.file(cloverFile['@_name']), new vscode.TestCoverageCount(0, 0));
-        this.statementCoverage.covered = cloverFile.metrics['@_coveredstatements'];
-        this.statementCoverage.total = cloverFile.metrics['@_statements'];
+        this.statementCoverage.covered = parseInt(cloverFile.metrics['@_coveredstatements'], 10);
+        this.statementCoverage.total = parseInt(cloverFile.metrics['@_statements'], 10);
     }
 
     public generateDetailedCoverage(): vscode.FileCoverageDetail[] {
