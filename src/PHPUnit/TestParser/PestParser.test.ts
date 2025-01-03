@@ -18,13 +18,11 @@ export const parse = (buffer: Buffer | string, file: string) => {
 };
 
 describe('PestParser', () => {
-    const file = pestProject('tests/Fixtures/ExampleTest.php');
-
-    const findTest = (tests: TestDefinition[], methodName: string) => {
+    const findTest = (tests: TestDefinition[], id: string) => {
         const lookup = {
-            [TestType.method]: (test: TestDefinition) => test.methodName === methodName,
-            [TestType.class]: (test: TestDefinition) => test.className === methodName && !test.methodName,
-            [TestType.namespace]: (test: TestDefinition) => test.classFQN === methodName && !test.className && !test.methodName,
+            [TestType.method]: (test: TestDefinition) => test.methodName === id,
+            [TestType.class]: (test: TestDefinition) => test.className === id && !test.methodName,
+            [TestType.namespace]: (test: TestDefinition) => test.classFQN === id && !test.className && !test.methodName,
         } as { [key: string]: Function };
 
         for (const [, fn] of Object.entries(lookup)) {
@@ -38,20 +36,21 @@ describe('PestParser', () => {
         return undefined;
     };
 
-    const givenTest = (methodName: string, content: string, _file?: string) => {
-        return findTest(parse(content, _file ?? file), methodName);
+    const givenTest = (file: string, content: string, id: string) => {
+        return findTest(parse(content, file), id);
     };
 
+    const file = pestProject('tests/Fixtures/ExampleTest.php');
+
     it('namespace:Tests\\Fixtures', async () => {
-        const actual = givenTest('P\\Tests\\Fixtures', `
-<?php 
+        const content = `<?php 
 
 test('example', function () {
     expect(true)->toBeTrue();
 });
-        `);
+        `;
 
-        expect(actual).toEqual(expect.objectContaining({
+        expect(givenTest(file, content, 'P\\Tests\\Fixtures')).toEqual(expect.objectContaining({
             type: TestType.namespace,
             id: 'namespace:Tests\\Fixtures',
             classFQN: 'P\\Tests\\Fixtures',
@@ -62,16 +61,13 @@ test('example', function () {
     });
 
     it('ExampleTest', async () => {
-        const actual = givenTest('ExampleTest', `
-<?php 
+        const content = `<?php 
 
 test('example', function () {
     expect(true)->toBeTrue();
 })
-
-`);
-
-        expect(actual).toEqual(expect.objectContaining({
+`;
+        expect(givenTest(file, content, 'ExampleTest')).toEqual(expect.objectContaining({
             type: TestType.class,
             id: 'Tests\\Fixtures\\ExampleTest',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -86,15 +82,14 @@ test('example', function () {
     });
 
     it('example', async () => {
-        const actual = givenTest('example', `
-<?php 
+        const content = `<?php 
 
 test('example', function () {
     expect(true)->toBeTrue();
 });
-        `);
+        `;
 
-        expect(actual).toEqual({
+        expect(givenTest(file, content, 'example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -110,15 +105,14 @@ test('example', function () {
     });
 
     it('it test example', async () => {
-        const actual = givenTest('it test example', `
-<?php
+        const content = `<?php
 
 it('test example', function () {
     expect(true)->toBeTrue();
 });
-        `);
+        `;
 
-        expect(actual).toEqual({
+        expect(givenTest(file, content, 'it test example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::it test example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -134,17 +128,15 @@ it('test example', function () {
     });
 
     it('`something` → example', async () => {
-        const actual = givenTest('`something` → example', `
-<?php
+        const content = `<?php
 
 describe('something', function () {
     test('example', function () {
         expect(true)->toBeTrue();
     });
 });
-        `);
-
-        expect(actual).toEqual({
+        `;
+        expect(givenTest(file, content, '`something` → example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -160,12 +152,13 @@ describe('something', function () {
     });
 
     it('arrow function `something` → it example', async () => {
-        const actual = givenTest('`something` → it example', `
-<?php
+        const content = `<?php
+        
 describe('something', fn () => it('example', expect(true)->toBeTrue()));
-        `);
 
-        expect(actual).toEqual({
+        `;
+
+        expect(givenTest(file, content, '`something` → it example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → it example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -181,8 +174,7 @@ describe('something', fn () => it('example', expect(true)->toBeTrue()));
     });
 
     it('`something` → `something else` → it test example', async () => {
-        const actual = givenTest('`something` → `something else` → it test example', `
-<?php
+        const content = `<?php
 
 describe('something', function () {
     describe('something else', function () {
@@ -191,9 +183,9 @@ describe('something', function () {
         });
     });
 }); 
-        `);
+        `;
 
-        expect(actual).toEqual({
+        expect(givenTest(file, content, '`something` → `something else` → it test example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → `something else` → it test example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -209,13 +201,12 @@ describe('something', function () {
     });
 
     it('it example 2', () => {
-        const actual = givenTest('it example 2', `
-<?php
+        const content = `<?php
 
 it('example 2')->assertTrue(true);
-        `);
+        `;
 
-        expect(actual).toEqual({
+        expect(givenTest(file, content, 'it example 2')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::it example 2',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -231,16 +222,15 @@ it('example 2')->assertTrue(true);
     });
 
     it('not test or test', async () => {
-        const actual = givenTest('hello', `
-<?php 
+        const content = `<?php 
 
 function hello(string $description,  callable $closure) {}
 
 hello('hello', function () {
     expect(true)->toBeTrue();
 });
-        `);
+        `;
 
-        expect(actual).toBeUndefined();
+        expect(givenTest(file, content, 'hello')).toBeUndefined();
     });
 });
