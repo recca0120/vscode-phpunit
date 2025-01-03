@@ -12,7 +12,7 @@ export class PestParser extends Parser {
         const clazz = this.parseClass(declaration, file);
 
         clazz.children = this.parseDescribe(declaration, clazz);
-        if (clazz.children.length <= 0) {
+        if (!clazz.children || clazz.children.length <= 0) {
             return;
         }
         const namespace = this.generateNamespace(clazz.namespace);
