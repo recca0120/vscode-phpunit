@@ -38,7 +38,7 @@ export abstract class Parser {
             return declaration.name;
         }
 
-        if ('name' in declaration.name) {
+        if (declaration.name && 'name' in declaration.name) {
             return declaration.name.name;
         }
 

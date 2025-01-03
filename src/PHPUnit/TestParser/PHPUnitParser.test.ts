@@ -397,4 +397,29 @@ describe('PHPUnitParser Test', () => {
             }));
         });
     });
+
+    it('has require', () => {
+        const file = phpUnitProject('tests/PDF_testerTest.php');
+        const content = `<?php declare(strict_types=1);
+require_once "vendor/autoload.php";
+use PHPUnit\\Framework\\TestCase;
+final class PDF_testerTest extends TestCase {
+    public function test_hello() {
+        self::assertTrue(true);
+    }
+}
+`;
+        expect(givenTest(file, content, 'test_hello')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            file,
+            id: 'PDF Tester::Hello',
+            classFQN: 'PDF_testerTest',
+            namespace: undefined,
+            className: 'PDF_testerTest',
+            methodName: 'test_hello',
+            start: { line: 5, character: 4 },
+            end: { line: 7, character: 5 },
+            depth: 3,
+        }));
+    });
 });
