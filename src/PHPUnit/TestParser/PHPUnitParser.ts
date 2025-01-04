@@ -3,6 +3,7 @@ import { Parser } from './Parser';
 import { TransformerFactory } from './Transformers';
 import { TestDefinition, TestType } from './types';
 import { validator } from './Validator';
+import { AppState } from '../../AppState';
 
 export class PHPUnitParser extends Parser {
     private parserLookup: { [p: string]: Function } = {
@@ -33,6 +34,7 @@ export class PHPUnitParser extends Parser {
         const className = this.parseName(declaration)!;
         const classFQN = [namespace?.namespace, className].filter((name) => !!name).join('\\');
         const id = this.converter.uniqueId({ type, classFQN, annotations });
+        AppState.setParserTestType(id, false);
         const label = this.converter.generateLabel({ type, classFQN, className, annotations });
 
         const clazz = {

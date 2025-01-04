@@ -4,6 +4,7 @@ import { capitalize } from '../utils';
 import { Parser } from './Parser';
 import { TransformerFactory } from './Transformers';
 import { TestDefinition, TestType } from './types';
+import { AppState } from '../../AppState';
 
 export class PestParser extends Parser {
     private converter = TransformerFactory.factory('pest');
@@ -38,6 +39,7 @@ export class PestParser extends Parser {
         const className = partsFQN.pop()!;
         const namespace = partsFQN.join('\\');
         const id = this.converter.uniqueId({ type, classFQN });
+        AppState.setParserTestType(id, true);
         const label = this.converter.generateLabel({ type, classFQN, className });
 
         const { start, end } = this.parsePosition(declaration);
