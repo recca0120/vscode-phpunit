@@ -79,7 +79,10 @@ export class TestResultParser implements IParser<TestResult | undefined> {
             return {};
         }
 
-        return TransformerFactory.factory(argv.locationHint).fromLocationHit(argv.locationHint, argv.name);
+        return TransformerFactory.factory({
+            locationHint: argv.locationHint,
+            testResultName: argv.name,
+        }).fromLocationHit(argv.locationHint, argv.name);
     }
 
     private toTeamcityArgv(text: string): Pick<Arguments, string | number> {
