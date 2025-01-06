@@ -487,5 +487,139 @@ describe('Pest ProblemMatcher Text', () => {
                 flowId: 57317,
             });
         });
+
+        it('pest-v2 tests/Fixtures/CollisionTest.php', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='file://tests/Fixtures/CollisionTest.php' flowId='57317']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: 'tests/Fixtures/CollisionTest.php',
+                testId: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='success' locationHint='pest_qn://tests/Fixtures/CollisionTest.php::success' flowId='57317']`, {
+                event: TestResultEvent.testStarted,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                testId: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='success' duration='0' flowId='57317']`, {
+                event: TestResultEvent.testFinished,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                testId: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' flowId='57317']`, {
+                event: TestResultEvent.testSuiteFinished,
+                id: 'tests/Fixtures/CollisionTest.php',
+                testId: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+        });
+    });
+
+    describe('Pest v1', () => {
+        it('testStarted without flowId', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Feature\\ExampleTest' locationHint='pest_qn://Tests\\Feature\\ExampleTest' flowId='58024']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: 'Tests/Feature/ExampleTest',
+                testId: 'Tests/Feature/ExampleTest',
+                name: 'Tests\\Feature\\ExampleTest',
+                flowId: 58024,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='test_example' locationHint='php_qn://${pestProject('tests/Feature/ExampleTest.php')}::\\Tests\\Feature\\ExampleTest::test_example']`, {
+                event: TestResultEvent.testStarted,
+                id: 'Example (Tests\\Feature\\Example)::Example',
+                testId: 'Example (Tests\\Feature\\Example)::Example',
+                name: 'test_example',
+                flowId: 58024,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='test_example' duration='1' flowId='58024']`, {
+                event: TestResultEvent.testFinished,
+                id: 'Example (Tests\\Feature\\Example)::Example',
+                testId: 'Example (Tests\\Feature\\Example)::Example',
+                name: 'test_example',
+                flowId: 58024,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Feature\\ExampleTest' locationHint='pest_qn://Tests\\Feature\\ExampleTest' flowId='58024']`, {
+                event: TestResultEvent.testSuiteFinished,
+                id: 'Tests/Feature/ExampleTest',
+                testId: 'Tests/Feature/ExampleTest',
+                name: 'Tests\\Feature\\ExampleTest',
+                flowId: 58024,
+            });
+        });
+
+        it('pest-v1 tests/Fixtures/CollisionTest.php', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}' flowId='12667']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: 'tests/Fixtures/CollisionTest.php',
+                testId: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+
+            resultShouldBe(`##teamcity[testStarted name='error' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}::error' flowId='12667']`, {
+                event: TestResultEvent.testStarted,
+                id: 'tests/Fixtures/CollisionTest.php::error',
+                testId: 'tests/Fixtures/CollisionTest.php::error',
+                name: 'error',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testIgnored name='error' message='' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php:5|n ' duration='6']`, undefined);
+
+
+            resultShouldBe(`##teamcity[testFinished name='error' duration='6' flowId='12667']`, {
+                event: TestResultEvent.testIgnored,
+                id: 'tests/Fixtures/CollisionTest.php::error',
+                testId: 'tests/Fixtures/CollisionTest.php::error',
+                name: 'error',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='success' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}::success' flowId='12667']`, {
+                event: TestResultEvent.testStarted,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                testId: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='success' duration='0' flowId='12667']`, {
+                event: TestResultEvent.testFinished,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                testId: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}' flowId='12667']`, {
+                event: TestResultEvent.testSuiteFinished,
+                id: 'tests/Fixtures/CollisionTest.php',
+                testId: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+        });
     });
 });

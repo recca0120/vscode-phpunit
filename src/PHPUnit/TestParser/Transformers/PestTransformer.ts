@@ -1,3 +1,4 @@
+import { TestResult } from '../../ProblemMatcher';
 import { uncapitalize } from '../../utils';
 import { TestDefinition, TestType } from '../types';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
@@ -8,7 +9,8 @@ export class PestTransformer extends PHPUnitTransformer {
         let file = '';
         const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
-            const id = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
+            let location = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
+            const id = /^tests\//.test(location) ? location : location.substring(location.lastIndexOf('tests/'));
             const testId = id;
             file = id.split('::')[0];
 
@@ -50,6 +52,35 @@ export class PestTransformer extends PHPUnitTransformer {
 
         return [uncapitalize(classFQN).replace(/\\/g, '/') + '.php', this.getMethodName(testDefinition)].join('::');
     };
+
+    static fixPestV1(results = new Map<string, TestResult>(), testResult?: TestResult) {
+        if (!testResult) {
+            return;
+        }
+
+        const events = ['testStarted', 'testFailed', 'testIgnored'];
+        if ('event' in testResult && !events.includes(testResult.event)) {
+            return testResult;
+        }
+
+        if ((testResult as any).flowId) {
+            return testResult;
+        }
+
+        const result = Array.from(results.values()).reverse().find((result: TestResult) => {
+            if (testResult.event !== 'testStarted') {
+                return result.event === 'testStarted' && (result as any).name === (testResult as any).name;
+            }
+
+            const matched = (testResult as any).id?.match(/\((?<id>.+)\)/);
+
+            return matched && (result as any).id === matched.groups?.id.replace(/\\/g, '/') + 'Test';
+        });
+
+        (testResult as any).flowId = (result as any)?.flowId;
+
+        return;
+    }
 
     protected normalizeMethodName(methodName: string) {
         return methodName.replace(/\*\//g, '{@*}');

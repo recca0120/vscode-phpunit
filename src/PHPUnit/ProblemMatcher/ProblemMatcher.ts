@@ -2,6 +2,7 @@ import {
     TestFailed, TestFinished, TestIgnored, TestResult, TestResultEvent, TestResultParser, TestStarted,
     TestSuiteFinished, TestSuiteStarted,
 } from '.';
+import { PestTransformer } from '../TestParser';
 
 export class ProblemMatcher {
     private results = new Map<string, TestResult>();
@@ -19,12 +20,13 @@ export class ProblemMatcher {
 
     parse(input: string | Buffer): TestResult | undefined {
         const result = this.testResultParser.parse(input.toString());
+        PestTransformer.fixPestV1(this.results, result);
 
         return this.isResult(result) ? this.lookup[result!.event]?.call(this, result) : result;
     }
 
     private isResult(result?: TestResult): boolean {
-        return !!(result && 'event' in result && 'name' in result && 'flowId' in result);
+        return !!result && 'event' in result && 'name' in result && 'flowId' in result;
     }
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {

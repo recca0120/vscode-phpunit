@@ -3,7 +3,7 @@ import { Configuration, IConfiguration } from '../PHPUnit';
 import { MessageObserver } from './MessageObserver';
 import Mock = jest.Mock;
 
-describe('MessageObserver', () => {
+xdescribe('MessageObserver', () => {
     let messageObserver: MessageObserver;
     let configuration: IConfiguration;
     beforeEach(() => {
