@@ -3,7 +3,12 @@ import { PHPUnitTransformer } from './PHPUnitTransformer';
 
 export abstract class TransformerFactory {
     static isPest(text: string) {
-        return /^pest|^P\\|pest_qn:\/\//i.test(text);
+        return new RegExp([
+            '^pest',
+            '^P\\\\',
+            '^pest_qn:\/\/',
+            '^file:\/\/',
+        ].join('|'), 'i').test(text);
     }
 
     static factory(text: string) {
