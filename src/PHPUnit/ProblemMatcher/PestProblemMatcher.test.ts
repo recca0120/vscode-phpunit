@@ -85,11 +85,11 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         it('testSuiteStarted tests/Fixtures/CollisionTest.php', () => {
-            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Unit\\CollisionTest' locationHint='pest_qn://tests/Fixtures/CollisionTest.php' flowId='68573']`, {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://tests/Fixtures/CollisionTest.php' flowId='68573']`, {
                 event: TestResultEvent.testSuiteStarted,
                 id: 'tests/Fixtures/CollisionTest.php',
                 testId: 'tests/Fixtures/CollisionTest.php',
-                name: 'Tests\\Unit\\CollisionTest',
+                name: 'Tests\\Fixtures\\CollisionTest',
                 file: 'tests/Fixtures/CollisionTest.php',
                 flowId: 68573,
             });
@@ -149,22 +149,22 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         it('testSuiteFinished tests/Fixtures/CollisionTest.php', () => {
-            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Unit\\CollisionTest' flowId='68573']`, {
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' flowId='68573']`, {
                 event: TestResultEvent.testSuiteFinished,
                 id: 'tests/Fixtures/CollisionTest.php',
                 testId: 'tests/Fixtures/CollisionTest.php',
-                name: 'Tests\\Unit\\CollisionTest',
+                name: 'Tests\\Fixtures\\CollisionTest',
                 file: 'tests/Fixtures/CollisionTest.php',
                 flowId: 68573,
             });
         });
 
         it('testSuiteStarted tests/Fixtures/DirectoryWithTests/ExampleTest.php', () => {
-            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Unit\\DirectoryWithTests\\ExampleTest' locationHint='pest_qn://tests/Fixtures/DirectoryWithTests/ExampleTest.php' flowId='68573']`, {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\DirectoryWithTests\\ExampleTest' locationHint='pest_qn://tests/Fixtures/DirectoryWithTests/ExampleTest.php' flowId='68573']`, {
                 event: TestResultEvent.testSuiteStarted,
                 id: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 testId: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
-                name: 'Tests\\Unit\\DirectoryWithTests\\ExampleTest',
+                name: 'Tests\\Fixtures\\DirectoryWithTests\\ExampleTest',
                 file: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 flowId: 68573,
             });
@@ -192,12 +192,12 @@ describe('Pest ProblemMatcher Text', () => {
             });
         });
 
-        it('testSuiteFinished tests/Fixtures/CollisionTest.php', () => {
-            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Unit\\DirectoryWithTests\\ExampleTest' flowId='68573']`, {
+        it('testSuiteFinished tests/Fixtures/DirectoryWithTests/ExampleTest.php', () => {
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\DirectoryWithTests\\ExampleTest' flowId='68573']`, {
                 event: TestResultEvent.testSuiteFinished,
                 id: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 testId: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
-                name: 'Tests\\Unit\\DirectoryWithTests\\ExampleTest',
+                name: 'Tests\\Fixtures\\DirectoryWithTests\\ExampleTest',
                 file: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 flowId: 68573,
             });
@@ -464,6 +464,28 @@ describe('Pest ProblemMatcher Text', () => {
             name: 'it example 2',
             file: 'tests/Fixtures/ExampleTest.php',
             flowId: 68573,
+        });
+    });
+
+    describe('Pest v2', () => {
+        it('testSuiteStarted phpunit.xml and locationHint prefix is file://', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='${pestProject('phpunit.xml')}' locationHint='file://Example (Tests\\Feature\\Example)' flowId='57317']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: pestProject('phpunit.xml'),
+                testId: pestProject('phpunit.xml'),
+                name: pestProject('phpunit.xml'),
+                flowId: 57317,
+            });
+        });
+
+        it('testSuiteStarted Test Suite and locationHint prefix is file://', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Test Suite' locationHint='file://Example (Tests\\Feature\\Example)' flowId='57317']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: 'Test Suite',
+                testId: 'Test Suite',
+                name: 'Test Suite',
+                flowId: 57317,
+            });
         });
     });
 });

@@ -6,9 +6,9 @@ import { TransformerFactory } from './TransformerFactory';
 export class PestTransformer extends PHPUnitTransformer {
     fromLocationHit(locationHint: string, name: string) {
         let file = '';
-        const matched = locationHint.match(/pest_qn:\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
+        const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
-            const id = locationHint.replace(/pest_qn:\/\//, '').replace(/\\/g, '/');
+            const id = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
             const testId = id;
             file = id.split('::')[0];
 
