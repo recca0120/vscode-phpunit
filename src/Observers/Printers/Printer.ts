@@ -1,5 +1,5 @@
 import {
-    EOL, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses, TestResult, TestResultEvent,
+    EOL, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses, TestResult, TeamcityEvent,
     TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from '../../PHPUnit';
 
@@ -40,11 +40,11 @@ class OutputBuffer {
 
 export abstract class Printer {
     protected outputBuffer = new OutputBuffer;
-    protected messages = new Map<TestResultEvent, string[]>([
-        [TestResultEvent.testVersion, ['🚀', 'STARTED']],
-        [TestResultEvent.testFinished, ['✅', 'PASSED']],
-        [TestResultEvent.testFailed, ['❌', 'FAILED']],
-        [TestResultEvent.testIgnored, ['➖', 'IGNORED']],
+    protected messages = new Map<TeamcityEvent, string[]>([
+        [TeamcityEvent.testVersion, ['🚀', 'STARTED']],
+        [TeamcityEvent.testFinished, ['✅', 'PASSED']],
+        [TeamcityEvent.testFailed, ['❌', 'FAILED']],
+        [TeamcityEvent.testIgnored, ['➖', 'IGNORED']],
     ]);
 
     static fileFormat(file: string, line: number) {
@@ -56,13 +56,13 @@ export abstract class Printer {
     };
 
     error(text: string) {
-        const [icon] = this.messages.get(TestResultEvent.testFailed)!;
+        const [icon] = this.messages.get(TeamcityEvent.testFailed)!;
 
         return `${EOL}${icon} ${text}`;
     }
 
     testVersion(result: TestVersion) {
-        const [icon] = this.messages.get(TestResultEvent.testVersion)!;
+        const [icon] = this.messages.get(TeamcityEvent.testVersion)!;
 
         return `${EOL}${icon} ${result.text}${EOL}`;
     }

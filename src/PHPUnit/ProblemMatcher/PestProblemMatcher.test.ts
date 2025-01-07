@@ -1,6 +1,6 @@
 import { pestProject } from '../__tests__/utils';
 import { ProblemMatcher } from './ProblemMatcher';
-import { TestResultEvent } from './types';
+import { TeamcityEvent } from './types';
 
 const problemMatcher = new ProblemMatcher();
 
@@ -18,7 +18,7 @@ describe('Pest ProblemMatcher Text', () => {
     describe('Teamcity Life Cycle', () => {
         it('testSuiteStarted phpunit.xml', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='${pestProject('phpunit.xml')}' locationHint='pest_qn://Example (Tests\\Feature\\Example)' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: pestProject('phpunit.xml'),
                 testId: pestProject('phpunit.xml'),
                 name: pestProject('phpunit.xml'),
@@ -28,7 +28,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testCount', () => {
             resultShouldBe(`##teamcity[testCount count='7' flowId='68573']`, {
-                event: TestResultEvent.testCount,
+                event: TeamcityEvent.testCount,
                 count: 7,
                 flowId: 68573,
             });
@@ -36,7 +36,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted Test Suite', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Test Suite' locationHint='pest_qn://Example (Tests\\Feature\\Example)' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Test Suite',
                 testId: 'Test Suite',
                 name: 'Test Suite',
@@ -46,7 +46,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted Tests\\Feature\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Feature\\ExampleTest' locationHint='pest_qn://Example (Tests\\Feature\\Example)' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Tests\\Feature\\ExampleTest',
                 testId: 'Tests\\Feature\\ExampleTest',
                 name: 'Tests\\Feature\\ExampleTest',
@@ -56,7 +56,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted', () => {
             resultShouldBe(`##teamcity[testStarted name='Example' locationHint='pest_qn://Example (Tests\\Feature\\Example)::Example' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'Example (Tests\\Feature\\Example)::Example',
                 testId: 'Example (Tests\\Feature\\Example)::Example',
                 name: 'Example',
@@ -66,7 +66,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testFinished', () => {
             resultShouldBe(`##teamcity[testFinished name='Example' duration='1' flowId='68573']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'Example (Tests\\Feature\\Example)::Example',
                 testId: 'Example (Tests\\Feature\\Example)::Example',
                 name: 'Example',
@@ -76,7 +76,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished Tests\\Feature\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Feature\\ExampleTest' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'Tests\\Feature\\ExampleTest',
                 testId: 'Tests\\Feature\\ExampleTest',
                 name: 'Tests\\Feature\\ExampleTest',
@@ -86,7 +86,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted tests/Fixtures/CollisionTest.php', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://tests/Fixtures/CollisionTest.php' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'tests/Fixtures/CollisionTest.php',
                 testId: 'tests/Fixtures/CollisionTest.php',
                 name: 'Tests\\Fixtures\\CollisionTest',
@@ -97,7 +97,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted tests/Fixtures/CollisionTest.php::error', () => {
             resultShouldBe(`##teamcity[testStarted name='error' locationHint='pest_qn://tests/Fixtures/CollisionTest.php::error' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Fixtures/CollisionTest.php::error',
                 testId: 'tests/Fixtures/CollisionTest.php::error',
                 name: 'error',
@@ -110,7 +110,7 @@ describe('Pest ProblemMatcher Text', () => {
             resultShouldBe(`##teamcity[testFailed name='error' message='Exception: error' details='at tests/Fixtures/CollisionTest.php:4' flowId='68573']`, undefined);
 
             resultShouldBe(`##teamcity[testFinished name='error' duration='3' flowId='68573']`, {
-                event: TestResultEvent.testFailed,
+                event: TeamcityEvent.testFailed,
                 id: 'tests/Fixtures/CollisionTest.php::error',
                 testId: 'tests/Fixtures/CollisionTest.php::error',
                 name: 'error',
@@ -128,7 +128,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted tests/Fixtures/CollisionTest.php::success', () => {
             resultShouldBe(`##teamcity[testStarted name='success' locationHint='pest_qn://tests/Fixtures/CollisionTest.php::success' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Fixtures/CollisionTest.php::success',
                 testId: 'tests/Fixtures/CollisionTest.php::success',
                 name: 'success',
@@ -139,7 +139,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testFinished tests/Fixtures/CollisionTest.php::success', () => {
             resultShouldBe(`##teamcity[testFinished name='success' duration='0' flowId='68573']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'tests/Fixtures/CollisionTest.php::success',
                 testId: 'tests/Fixtures/CollisionTest.php::success',
                 name: 'success',
@@ -150,7 +150,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished tests/Fixtures/CollisionTest.php', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'tests/Fixtures/CollisionTest.php',
                 testId: 'tests/Fixtures/CollisionTest.php',
                 name: 'Tests\\Fixtures\\CollisionTest',
@@ -161,7 +161,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted tests/Fixtures/DirectoryWithTests/ExampleTest.php', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\DirectoryWithTests\\ExampleTest' locationHint='pest_qn://tests/Fixtures/DirectoryWithTests/ExampleTest.php' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 testId: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 name: 'Tests\\Fixtures\\DirectoryWithTests\\ExampleTest',
@@ -172,7 +172,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1', () => {
             resultShouldBe(`##teamcity[testStarted name='it example 1' locationHint='pest_qn://tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1',
                 testId: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1',
                 name: 'it example 1',
@@ -183,7 +183,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testFinished tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1', () => {
             resultShouldBe(`##teamcity[testFinished name='it example 1' duration='0' flowId='68573']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1',
                 testId: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1',
                 name: 'it example 1',
@@ -194,7 +194,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished tests/Fixtures/DirectoryWithTests/ExampleTest.php', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\DirectoryWithTests\\ExampleTest' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 testId: 'tests/Fixtures/DirectoryWithTests/ExampleTest.php',
                 name: 'Tests\\Fixtures\\DirectoryWithTests\\ExampleTest',
@@ -205,7 +205,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted tests/Fixtures/ExampleTest.php', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest' locationHint='pest_qn://tests/Fixtures/ExampleTest.php' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'tests/Fixtures/ExampleTest.php',
                 testId: 'tests/Fixtures/ExampleTest.php',
                 name: 'Tests\\Unit\\ExampleTest',
@@ -216,7 +216,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted tests/Fixtures/ExampleTest.php::it example 2', () => {
             resultShouldBe(`##teamcity[testStarted name='it example 2' locationHint='pest_qn://tests/Fixtures/ExampleTest.php::it example 2' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Fixtures/ExampleTest.php::it example 2',
                 testId: 'tests/Fixtures/ExampleTest.php::it example 2',
                 name: 'it example 2',
@@ -227,7 +227,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testFinished tests/Fixtures/ExampleTest.php::it example 2', () => {
             resultShouldBe(`##teamcity[testFinished name='it example 2' duration='0' flowId='68573']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'tests/Fixtures/ExampleTest.php::it example 2',
                 testId: 'tests/Fixtures/ExampleTest.php::it example 2',
                 name: 'it example 2',
@@ -238,7 +238,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished Tests\\Unit\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Unit\\ExampleTest' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'tests/Fixtures/ExampleTest.php',
                 testId: 'tests/Fixtures/ExampleTest.php',
                 name: 'Tests\\Unit\\ExampleTest',
@@ -249,7 +249,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted Tests\\Fixtures\\Inheritance\\Base\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\Inheritance\\Base\\ExampleTest' locationHint='pest_qn://Example (Tests\\Fixtures\\Inheritance\\Base\\Example)' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Tests\\Fixtures\\Inheritance\\Base\\ExampleTest',
                 testId: 'Tests\\Fixtures\\Inheritance\\Base\\ExampleTest',
                 name: 'Tests\\Fixtures\\Inheritance\\Base\\ExampleTest',
@@ -260,7 +260,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted Example (Tests\\Fixtures\\Inheritance\\Base\\Example)::Example', () => {
             resultShouldBe(`##teamcity[testStarted name='Example' locationHint='pest_qn://Example (Tests\\Fixtures\\Inheritance\\Base\\Example)::Example' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'Example (Tests\\Fixtures\\Inheritance\\Base\\Example)::Example',
                 testId: 'Example (Tests\\Fixtures\\Inheritance\\Base\\Example)::Example',
                 name: 'Example',
@@ -273,7 +273,7 @@ describe('Pest ProblemMatcher Text', () => {
             resultShouldBe(`##teamcity[testIgnored name='Example' message='This test was ignored.' details='' flowId='68573']`, undefined);
 
             resultShouldBe(`##teamcity[testFinished name='Example' duration='0' flowId='68573']`, {
-                event: TestResultEvent.testIgnored,
+                event: TeamcityEvent.testIgnored,
                 id: 'Example (Tests\\Fixtures\\Inheritance\\Base\\Example)::Example',
                 testId: 'Example (Tests\\Fixtures\\Inheritance\\Base\\Example)::Example',
                 name: 'Example',
@@ -284,7 +284,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished Tests\\Fixtures\\Inheritance\\Base\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\Inheritance\\Base\\ExampleTest' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'Tests\\Fixtures\\Inheritance\\Base\\ExampleTest',
                 name: 'Tests\\Fixtures\\Inheritance\\Base\\ExampleTest',
                 file: '',
@@ -294,7 +294,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted Tests\\Fixtures\\Inheritance\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\Inheritance\\ExampleTest' locationHint='pest_qn://Example (Tests\\Fixtures\\Inheritance\\Example)' flowId='68573']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Tests\\Fixtures\\Inheritance\\ExampleTest',
                 testId: 'Tests\\Fixtures\\Inheritance\\ExampleTest',
                 name: 'Tests\\Fixtures\\Inheritance\\ExampleTest',
@@ -305,7 +305,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testStarted Example (Tests\\Fixtures\\Inheritance\\Example)::Example', () => {
             resultShouldBe(`##teamcity[testStarted name='Example' locationHint='pest_qn://Example (Tests\\Fixtures\\Inheritance\\Example)::Example' flowId='68573']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'Example (Tests\\Fixtures\\Inheritance\\Example)::Example',
                 testId: 'Example (Tests\\Fixtures\\Inheritance\\Example)::Example',
                 name: 'Example',
@@ -316,7 +316,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testFinished Example (Tests\\Fixtures\\Inheritance\\Example)::Example', () => {
             resultShouldBe(`##teamcity[testFinished name='Example' duration='0' flowId='68573']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'Example (Tests\\Fixtures\\Inheritance\\Example)::Example',
                 testId: 'Example (Tests\\Fixtures\\Inheritance\\Example)::Example',
                 name: 'Example',
@@ -327,7 +327,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished Tests\\Fixtures\\Inheritance\\ExampleTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\Inheritance\\ExampleTest' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'Tests\\Fixtures\\Inheritance\\ExampleTest',
                 testId: 'Tests\\Fixtures\\Inheritance\\ExampleTest',
                 name: 'Tests\\Fixtures\\Inheritance\\ExampleTest',
@@ -338,7 +338,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished Test Suite', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Test Suite' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'Test Suite',
                 testId: 'Test Suite',
                 name: 'Test Suite',
@@ -349,7 +349,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteFinished phpunit.xml', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='${pestProject('phpunit.xml')}' flowId='68573']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: pestProject('phpunit.xml'),
                 testId: pestProject('phpunit.xml'),
                 name: pestProject('phpunit.xml'),
@@ -360,7 +360,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('TestSummary', () => {
             resultShouldBe('Tests:    1 failed, 1 skipped, 5 passed (5 assertions)', {
-                event: TestResultEvent.testResultSummary,
+                event: TeamcityEvent.testResultSummary,
                 passed: 5,
                 failed: 1,
                 skipped: 1,
@@ -370,7 +370,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('TestDuration', () => {
             resultShouldBe('Duration: 0.04s', {
-                event: TestResultEvent.testDuration,
+                event: TeamcityEvent.testDuration,
                 text: 'Duration: 0.04s',
                 time: '0.04s',
             });
@@ -379,7 +379,7 @@ describe('Pest ProblemMatcher Text', () => {
 
     it('with dataset', () => {
         resultShouldBe(`##teamcity[testSuiteStarted name='Addition provider' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider' flowId='53556']`, {
-            event: TestResultEvent.testSuiteStarted,
+            event: TeamcityEvent.testSuiteStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider',
@@ -387,7 +387,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set ""foo-bar_%$"' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"' flowId='53556']`, {
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             name: 'Addition provider with data set ""foo-bar_%$"',
@@ -395,7 +395,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set ""foo-bar_%$"' duration='0' flowId='53556']`, {
-            event: TestResultEvent.testFinished,
+            event: TeamcityEvent.testFinished,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             name: 'Addition provider with data set ""foo-bar_%$"',
@@ -403,7 +403,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set #0' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0' flowId='53556']`, {
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
             name: 'Addition provider with data set #0',
@@ -411,7 +411,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set #0' duration='0' flowId='53556']`, {
-            event: TestResultEvent.testFinished,
+            event: TeamcityEvent.testFinished,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
             name: 'Addition provider with data set #0',
@@ -419,7 +419,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set #1' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1' flowId='53556']`, {
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
             name: 'Addition provider with data set #1',
@@ -429,7 +429,7 @@ describe('Pest ProblemMatcher Text', () => {
         resultShouldBe(`##teamcity[testFailed name='Addition provider with data set #1' message='Failed asserting that 1 matches expected 2.' details='at tests/AssertionsTest.php:62' type='comparisonFailure' actual='1' expected='2' flowId='53556']`, undefined);
 
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set #1' duration='0' flowId='53556']`, {
-            event: TestResultEvent.testFailed,
+            event: TeamcityEvent.testFailed,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
             name: 'Addition provider with data set #1',
@@ -437,7 +437,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         resultShouldBe(`##teamcity[testSuiteFinished name='Addition provider' flowId='53556']`, {
-            event: TestResultEvent.testSuiteFinished,
+            event: TeamcityEvent.testSuiteFinished,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider',
@@ -447,7 +447,7 @@ describe('Pest ProblemMatcher Text', () => {
 
     it('For Windows testStarted tests\\Fixtures\\ExampleTest.php::it example 2', () => {
         resultShouldBe(`##teamcity[testStarted name='it example 2' locationHint='pest_qn://tests\\Fixtures\\ExampleTest.php::it example 2' flowId='68573']`, {
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             id: 'tests/Fixtures/ExampleTest.php::it example 2',
             testId: 'tests/Fixtures/ExampleTest.php::it example 2',
             name: 'it example 2',
@@ -458,7 +458,7 @@ describe('Pest ProblemMatcher Text', () => {
 
     it('For Windows testFinished tests/Fixtures/ExampleTest.php::it example 2', () => {
         resultShouldBe(`##teamcity[testFinished name='it example 2' duration='0' flowId='68573']`, {
-            event: TestResultEvent.testFinished,
+            event: TeamcityEvent.testFinished,
             id: 'tests/Fixtures/ExampleTest.php::it example 2',
             testId: 'tests/Fixtures/ExampleTest.php::it example 2',
             name: 'it example 2',
@@ -470,7 +470,7 @@ describe('Pest ProblemMatcher Text', () => {
     describe('Pest v2', () => {
         it('testSuiteStarted phpunit.xml and locationHint prefix is file://', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='${pestProject('phpunit.xml')}' locationHint='file://Example (Tests\\Feature\\Example)' flowId='57317']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: pestProject('phpunit.xml'),
                 testId: pestProject('phpunit.xml'),
                 name: pestProject('phpunit.xml'),
@@ -480,7 +480,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('testSuiteStarted Test Suite and locationHint prefix is file://', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Test Suite' locationHint='file://Example (Tests\\Feature\\Example)' flowId='57317']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Test Suite',
                 testId: 'Test Suite',
                 name: 'Test Suite',
@@ -490,7 +490,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('pest-v2 tests/Fixtures/CollisionTest.php', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='file://tests/Fixtures/CollisionTest.php' flowId='57317']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'tests/Fixtures/CollisionTest.php',
                 testId: 'tests/Fixtures/CollisionTest.php',
                 name: 'Tests\\Fixtures\\CollisionTest',
@@ -499,7 +499,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testStarted name='success' locationHint='pest_qn://tests/Fixtures/CollisionTest.php::success' flowId='57317']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Fixtures/CollisionTest.php::success',
                 testId: 'tests/Fixtures/CollisionTest.php::success',
                 name: 'success',
@@ -508,7 +508,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testFinished name='success' duration='0' flowId='57317']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'tests/Fixtures/CollisionTest.php::success',
                 testId: 'tests/Fixtures/CollisionTest.php::success',
                 name: 'success',
@@ -517,7 +517,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' flowId='57317']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'tests/Fixtures/CollisionTest.php',
                 testId: 'tests/Fixtures/CollisionTest.php',
                 name: 'Tests\\Fixtures\\CollisionTest',
@@ -528,7 +528,7 @@ describe('Pest ProblemMatcher Text', () => {
 
         it('pest-v2 data set', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' locationHint='file://tests/Unit/ExampleTest.php' flowId='57317']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'tests/Unit/ExampleTest.php::it has emails',
                 testId: 'tests/Unit/ExampleTest.php::it has emails',
                 name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
@@ -537,7 +537,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testStarted name='it has emails with data set "(|'enunomaduro@gmail.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'enunomaduro@gmail.com|')"' flowId='57317']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
@@ -546,7 +546,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testFinished name='it has emails with data set "(|'enunomaduro@gmail.com|')"' duration='1' flowId='57317']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
@@ -555,7 +555,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testStarted name='it has emails with data set "(|'other@example.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'other@example.com|')"' flowId='57317']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
                 testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
                 name: 'it has emails with data set "(\'other@example.com\')"',
@@ -564,7 +564,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testFinished name='it has emails with data set "(|'other@example.com|')"' duration='0' flowId='57317']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
                 testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
                 name: 'it has emails with data set "(\'other@example.com\')"',
@@ -573,7 +573,7 @@ describe('Pest ProblemMatcher Text', () => {
             });
 
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' flowId='57317']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'tests/Unit/ExampleTest.php::it has emails',
                 testId: 'tests/Unit/ExampleTest.php::it has emails',
                 name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',

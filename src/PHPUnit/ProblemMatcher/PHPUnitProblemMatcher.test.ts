@@ -1,4 +1,4 @@
-import { TestResultEvent } from '.';
+import { TeamcityEvent } from '.';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { ProblemMatcher } from './ProblemMatcher';
 
@@ -18,7 +18,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
     describe('Teamcity Life Cycle', () => {
         it('PHPUnit version', () => {
             resultShouldBe('PHPUnit 9.5.25 #StandWithUkraine', {
-                event: TestResultEvent.testVersion,
+                event: TeamcityEvent.testVersion,
                 phpunit: '9.5.25',
                 text: `PHPUnit 9.5.25 #StandWithUkraine`,
             });
@@ -26,7 +26,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('Runtime', () => {
             resultShouldBe('Runtime:       PHP 8.1.12', {
-                event: TestResultEvent.testRuntime,
+                event: TeamcityEvent.testRuntime,
                 runtime: 'PHP 8.1.12',
                 text: 'Runtime:       PHP 8.1.12',
             });
@@ -34,7 +34,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('Configuration', () => {
             resultShouldBe(`Configuration: ${phpUnitProject('phpunit.xml')}`, {
-                event: TestResultEvent.testConfiguration,
+                event: TeamcityEvent.testConfiguration,
                 configuration: phpUnitProject('phpunit.xml'),
                 text: `Configuration: ${phpUnitProject('phpunit.xml')}`,
             });
@@ -42,7 +42,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testSuiteStarted default', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='default' flowId='8024']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 name: 'default',
                 flowId: 8024,
             });
@@ -50,7 +50,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testCount', () => {
             resultShouldBe(`##teamcity[testCount count='19' flowId='8024']`, {
-                event: TestResultEvent.testCount,
+                event: TeamcityEvent.testCount,
                 count: 19,
                 flowId: 8024,
             });
@@ -58,7 +58,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testSuiteStarted Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                 flowId: 8024,
@@ -67,7 +67,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testStarted passed', () => {
             resultShouldBe(`##teamcity[testStarted name='test_passed' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
                 flowId: 8024,
@@ -76,7 +76,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testFinished', () => {
             resultShouldBe(`##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`, {
-                event: TestResultEvent.testFinished,
+                event: TeamcityEvent.testFinished,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
                 flowId: 8024,
@@ -85,7 +85,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testStarted failed', () => {
             resultShouldBe(`##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='8024']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
                 flowId: 8024,
@@ -98,7 +98,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testFinished failed', () => {
             resultShouldBe(`##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']`, {
-                event: TestResultEvent.testFailed,
+                event: TeamcityEvent.testFailed,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
                 message: 'Failed asserting that two arrays are identical.',
@@ -118,7 +118,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testSuiteStarted addition_provider', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider' flowId='8024']`, {
-                event: TestResultEvent.testSuiteStarted,
+                event: TeamcityEvent.testSuiteStarted,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
@@ -129,7 +129,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testStarted addition_provider', () => {
             resultShouldBe(`##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`, {
-                event: TestResultEvent.testStarted,
+                event: TeamcityEvent.testStarted,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
@@ -142,7 +142,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             resultShouldBe(`##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:60|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`, undefined);
 
             resultShouldBe(`##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`, {
-                event: TestResultEvent.testFailed,
+                event: TeamcityEvent.testFailed,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
@@ -164,7 +164,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testSuiteFinished Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                 testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
                 flowId: 8024,
@@ -173,7 +173,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testSuiteFinished default', () => {
             resultShouldBe(`##teamcity[testSuiteFinished name='default' flowId='8024']`, {
-                event: TestResultEvent.testSuiteFinished,
+                event: TeamcityEvent.testSuiteFinished,
                 name: 'default',
                 flowId: 8024,
             });
@@ -181,7 +181,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('TestCount', () => {
             resultShouldBe(`##teamcity[testCount count='19' flowId='8024']`, {
-                event: TestResultEvent.testCount,
+                event: TeamcityEvent.testCount,
                 count: 19,
                 flowId: 8024,
             });
@@ -189,7 +189,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('TestSummary', () => {
             resultShouldBe('Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.', {
-                event: TestResultEvent.testResultSummary,
+                event: TeamcityEvent.testResultSummary,
                 text: 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
                 tests: 19,
                 assertions: 15,
@@ -221,7 +221,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         expect(result).toEqual(
             expect.objectContaining({
-                event: TestResultEvent.testFailed,
+                event: TeamcityEvent.testFailed,
                 name: 'test_throw_exception',
                 locationHint: `php_qn://${phpUnitProject('tests/CalculatorTest.php')}::\\Recca0120\\VSCode\\Tests\\CalculatorTest::test_throw_exception`,
                 flowId: 28756,

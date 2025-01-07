@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { EOL, TestFailed, TestFinished, TestIgnored, TestResultEvent, TestSuiteFinished } from '../../PHPUnit';
+import { EOL, TestFailed, TestFinished, TestIgnored, TeamcityEvent, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
 export class CollisionPrinter extends Printer {
@@ -14,11 +14,11 @@ export class CollisionPrinter extends Printer {
         const [icon] = this.messages.get(result.event)!;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
-        if (result.event === TestResultEvent.testFailed) {
+        if (result.event === TeamcityEvent.testFailed) {
             this.errors.push(result as TestFailed);
         }
 
-        if (result.event === TestResultEvent.testIgnored) {
+        if (result.event === TeamcityEvent.testIgnored) {
             return `${icon} ${name} ➜ ${(result as TestIgnored).message} ${result.duration} ms`;
         }
 

@@ -1,5 +1,5 @@
 import {
-    TestFailed, TestFinished, TestIgnored, TestResult, TestResultEvent, TestResultParser, TestStarted,
+    TestFailed, TestFinished, TestIgnored, TestResult, TeamcityEvent, TestResultParser, TestStarted,
     TestSuiteFinished, TestSuiteStarted,
 } from '.';
 
@@ -7,12 +7,12 @@ export class ProblemMatcher {
     private results = new Map<string, TestResult>();
 
     private lookup: { [p: string]: (result: any) => TestResult | undefined } = {
-        [TestResultEvent.testSuiteStarted]: this.handleStarted,
-        [TestResultEvent.testStarted]: this.handleStarted,
-        [TestResultEvent.testFinished]: this.handleFinished,
-        [TestResultEvent.testFailed]: this.handleFault,
-        [TestResultEvent.testIgnored]: this.handleFault,
-        [TestResultEvent.testSuiteFinished]: this.handleFinished,
+        [TeamcityEvent.testSuiteStarted]: this.handleStarted,
+        [TeamcityEvent.testStarted]: this.handleStarted,
+        [TeamcityEvent.testFinished]: this.handleFinished,
+        [TeamcityEvent.testFailed]: this.handleFault,
+        [TeamcityEvent.testIgnored]: this.handleFault,
+        [TeamcityEvent.testSuiteFinished]: this.handleFinished,
     };
 
     constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
@@ -38,7 +38,7 @@ export class ProblemMatcher {
         const id = this.generateId(testResult);
         const prevData = this.results.get(id) as (TestFailed | TestIgnored);
 
-        if (!prevData || prevData.event === TestResultEvent.testStarted) {
+        if (!prevData || prevData.event === TeamcityEvent.testStarted) {
             this.results.set(id, { ...(prevData ?? {}), ...testResult });
             return;
         }
@@ -63,7 +63,7 @@ export class ProblemMatcher {
     }
 
     private isFault(testResult: TestResult) {
-        return [TestResultEvent.testFailed, TestResultEvent.testIgnored].includes(testResult.event);
+        return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
     }
 
     private generateId(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {

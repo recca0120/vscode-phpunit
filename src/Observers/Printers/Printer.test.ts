@@ -1,4 +1,4 @@
-import { EOL, TestFinished, TestResultEvent } from '../../PHPUnit';
+import { EOL, TestFinished, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { Printer } from './Printer';
 
@@ -16,7 +16,7 @@ describe('Printer', () => {
 
     it('testVersion', () => {
         const output = printer.testVersion({
-            event: TestResultEvent.testVersion,
+            event: TeamcityEvent.testVersion,
             phpunit: '11.5.0',
             paratest: undefined,
             text: 'PHPUnit 11.5.0 by Sebastian Bergmann and contributors.',
@@ -27,7 +27,7 @@ describe('Printer', () => {
 
     it('testRuntime', () => {
         const output = printer.testRuntime({
-            event: TestResultEvent.testRuntime,
+            event: TeamcityEvent.testRuntime,
             runtime: 'PHP 8.3.14',
             text: 'Runtime:       PHP 8.3.14',
         });
@@ -37,7 +37,7 @@ describe('Printer', () => {
 
     it('testConfiguration', () => {
         const output = printer.testConfiguration({
-            event: TestResultEvent.testConfiguration,
+            event: TeamcityEvent.testConfiguration,
             configuration: phpUnitProject('phpunit.xml'),
             text: `Configuration: ${phpUnitProject('phpunit.xml')}`,
         });
@@ -47,7 +47,7 @@ describe('Printer', () => {
 
     it('testResultSummary', () => {
         const output = printer.testResultSummary({
-            event: TestResultEvent.testResultSummary,
+            event: TeamcityEvent.testResultSummary,
             text: 'Tests: 33, Assertions: 30, Errors: 2, Failures: 6, Warnings: 1, PHPUnit Deprecations: 8, Skipped: 1, Incomplete: 1, Risky: 2.',
             tests: 33,
             assertions: 30,
@@ -67,7 +67,7 @@ describe('Printer', () => {
         const output = printer.timeAndMemory({
             time: '00:00.055',
             memory: '10.00 MB',
-            event: TestResultEvent.testDuration,
+            event: TeamcityEvent.testDuration,
             text: 'Time: 00:00.055, Memory: 10.00 MB',
         });
 
@@ -76,7 +76,7 @@ describe('Printer', () => {
 
     it('should print printed output', async () => {
         printer.testStarted({
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             name: 'test_die',
             locationHint: `php_qn://${phpUnitProject('tests/Output/OutputTest.php')}::\\Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo`,
             flowId: 97825,
@@ -93,7 +93,7 @@ describe('Printer', () => {
 
     it('should print printed output when die', () => {
         printer.testStarted({
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             name: 'test_die',
             locationHint: `php_qn://${phpUnitProject('tests/Output/OutputTest.php')}::\\Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die`,
             flowId: 97825,
@@ -110,7 +110,7 @@ describe('Printer', () => {
 
     it('testSuiteFinished', () => {
         const output = printer.testSuiteFinished({
-            event: TestResultEvent.testSuiteFinished,
+            event: TeamcityEvent.testSuiteFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,

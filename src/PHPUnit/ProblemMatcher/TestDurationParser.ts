@@ -1,4 +1,4 @@
-import { TestDuration, TestResultEvent } from './types';
+import { TestDuration, TeamcityEvent } from './types';
 import { IParser } from './ValueParser';
 
 export class TestDurationParser implements IParser<TestDuration> {
@@ -12,7 +12,7 @@ export class TestDurationParser implements IParser<TestDuration> {
 
     public parse(text: string): TestDuration {
         const { time, memory } = text.match(this.pattern)!.groups!;
-        const event = TestResultEvent.testDuration;
+        const event = TeamcityEvent.testDuration;
 
         return { time, memory, event, text };
     }

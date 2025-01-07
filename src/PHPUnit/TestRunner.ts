@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { CommandBuilder } from './CommandBuilder';
-import { ProblemMatcher, TestResult, TestResultEvent } from './ProblemMatcher';
+import { ProblemMatcher, TestResult, TeamcityEvent } from './ProblemMatcher';
 import { EventResultMap, TestRunnerEvent, TestRunnerEventProxy, TestRunnerObserver } from './TestRunnerObserver';
 
 export class TestRunnerProcess {
@@ -116,7 +116,7 @@ export class TestRunner {
         return process;
     }
 
-    emit(eventName: TestRunnerEvent | TestResultEvent, result: TestResult | any) {
+    emit(eventName: TestRunnerEvent | TeamcityEvent, result: TestResult | any) {
         this.observers
             .filter((observer) => observer[eventName])
             .forEach((observer) => (observer[eventName] as Function)(result));

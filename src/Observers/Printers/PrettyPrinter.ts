@@ -1,4 +1,4 @@
-import { EOL, TestFailed, TestFinished, TestResultEvent, TestSuiteFinished } from '../../PHPUnit';
+import { EOL, TestFailed, TestFinished, TeamcityEvent, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
 export class PrettyPrinter extends Printer {
@@ -16,7 +16,7 @@ export class PrettyPrinter extends Printer {
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
         const messages = [`  ${icon} ${name} ${result.duration} ms`];
-        if (result.event === TestResultEvent.testFailed) {
+        if (result.event === TeamcityEvent.testFailed) {
             messages.push(this.formatError(result as TestFailed));
         }
 

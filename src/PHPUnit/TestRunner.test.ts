@@ -3,7 +3,7 @@ import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
 import { CommandBuilder } from './CommandBuilder';
 import { Configuration } from './Configuration';
-import { TestResultEvent } from './ProblemMatcher';
+import { TeamcityEvent } from './ProblemMatcher';
 import { TestType, TransformerFactory } from './TestParser';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
@@ -20,19 +20,19 @@ const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
     [TestRunnerEvent.error, jest.fn()],
 ]);
 
-const onTestResultEvents = new Map<TestResultEvent, jest.Mock>([
-    [TestResultEvent.testVersion, jest.fn()],
-    [TestResultEvent.testRuntime, jest.fn()],
-    [TestResultEvent.testConfiguration, jest.fn()],
-    [TestResultEvent.testCount, jest.fn()],
-    [TestResultEvent.testDuration, jest.fn()],
-    [TestResultEvent.testResultSummary, jest.fn()],
-    [TestResultEvent.testSuiteStarted, jest.fn()],
-    [TestResultEvent.testSuiteFinished, jest.fn()],
-    [TestResultEvent.testStarted, jest.fn()],
-    [TestResultEvent.testFailed, jest.fn()],
-    [TestResultEvent.testIgnored, jest.fn()],
-    [TestResultEvent.testFinished, jest.fn()],
+const onTestResultEvents = new Map<TeamcityEvent, jest.Mock>([
+    [TeamcityEvent.testVersion, jest.fn()],
+    [TeamcityEvent.testRuntime, jest.fn()],
+    [TeamcityEvent.testConfiguration, jest.fn()],
+    [TeamcityEvent.testCount, jest.fn()],
+    [TeamcityEvent.testDuration, jest.fn()],
+    [TeamcityEvent.testResultSummary, jest.fn()],
+    [TeamcityEvent.testSuiteStarted, jest.fn()],
+    [TeamcityEvent.testSuiteFinished, jest.fn()],
+    [TeamcityEvent.testStarted, jest.fn()],
+    [TeamcityEvent.testFailed, jest.fn()],
+    [TeamcityEvent.testIgnored, jest.fn()],
+    [TeamcityEvent.testFinished, jest.fn()],
 ]);
 
 const fakeSpawn = (contents: string[]) => {
@@ -72,7 +72,7 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
 
     expect(actual).not.toBeUndefined();
 
-    if (expected.event === TestResultEvent.testFailed) {
+    if (expected.event === TeamcityEvent.testFailed) {
         if (hasFile(actual, 'AssertionsTest', 5)) {
             expected.details = [{
                 file: projectPath('tests/AssertionsTest.php'),
@@ -98,12 +98,12 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     );
 
     if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
-        expect(onTestResultEvents.get(TestResultEvent.testVersion)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TeamcityEvent.testVersion)).toHaveBeenCalled();
         // expect(onTestResultEvents.get(TestResultEvent.testRuntime)).toHaveBeenCalled();
         // expect(onTestResultEvents.get(TestResultEvent.testConfiguration)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestResultEvent.testCount)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestResultEvent.testDuration)).toHaveBeenCalled();
-        expect(onTestResultEvents.get(TestResultEvent.testResultSummary)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TeamcityEvent.testCount)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TeamcityEvent.testDuration)).toHaveBeenCalled();
+        expect(onTestResultEvents.get(TeamcityEvent.testResultSummary)).toHaveBeenCalled();
     }
 
     expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
@@ -111,7 +111,7 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
 }
 
 const generateTestResult = (
-    testResult: { event: TestResultEvent; name?: string; file: string; id: string; phpVfsComposer?: boolean },
+    testResult: { event: TeamcityEvent; name?: string; file: string; id: string; phpVfsComposer?: boolean },
     appPath: (path: string) => string,
     phpVfsComposer: boolean = false,
 ) => {
@@ -119,7 +119,7 @@ const generateTestResult = (
     const locationHint = `php_qn://${file}::\\${id}`;
     const phpUnitXml = appPath('phpunit.xml');
 
-    if ([TestResultEvent.testSuiteStarted, TestResultEvent.testSuiteFinished].includes(event)) {
+    if ([TeamcityEvent.testSuiteStarted, TeamcityEvent.testSuiteFinished].includes(event)) {
         fakeSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
@@ -132,7 +132,7 @@ const generateTestResult = (
         ]);
     }
 
-    if ([TestResultEvent.testStarted, TestResultEvent.testFinished].includes(event)) {
+    if ([TeamcityEvent.testStarted, TeamcityEvent.testFinished].includes(event)) {
         fakeSpawn([
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
@@ -145,7 +145,7 @@ const generateTestResult = (
         ]);
     }
 
-    if ([TestResultEvent.testFailed].includes(event)) {
+    if ([TeamcityEvent.testFailed].includes(event)) {
         let details = `${file}:22|n`;
         if (phpVfsComposer) {
             details += ` phpvfscomposer://${appPath('vendor/phpunit/phpunit/phpunit')}:60`;
@@ -179,7 +179,7 @@ const shouldRunTest = async (
     builder: CommandBuilder,
     projectPath: (path: string) => string,
     appPath: (path: string) => string,
-    start: { event: TestResultEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
+    start: { event: TeamcityEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
     finished: any,
 ) => {
     generateTestResult(start, appPath, start.phpVfsComposer);
@@ -191,12 +191,12 @@ const shouldRunTest = async (
 
 const shouldRunAllTest = async (expected: string[], builder: CommandBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
     await shouldRunTest(expected, builder, projectPath, appPath, {
-        event: TestResultEvent.testStarted,
+        event: TeamcityEvent.testStarted,
         name: 'test_passed',
         file: appPath('tests/AssertionsTest.php'),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
     }, {
-        event: TestResultEvent.testFinished,
+        event: TeamcityEvent.testFinished,
         name: 'test_passed',
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
@@ -208,11 +208,11 @@ const shouldRunTestSuite = async (expected: string[], builder: CommandBuilder, p
     builder.setArguments(projectPath('tests/AssertionsTest.php'));
 
     await shouldRunTest(expected, builder, projectPath, appPath, {
-        event: TestResultEvent.testSuiteStarted,
+        event: TeamcityEvent.testSuiteStarted,
         file: appPath('tests/AssertionsTest.php'),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
     }, {
-        event: TestResultEvent.testSuiteFinished,
+        event: TeamcityEvent.testSuiteFinished,
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
         file: projectPath('tests/AssertionsTest.php'),
@@ -224,12 +224,12 @@ const shouldRunTestPassed = async (expected: string[], command: CommandBuilder, 
     command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
     await shouldRunTest(expected, command, projectPath, appPath, {
-        event: TestResultEvent.testStarted,
+        event: TeamcityEvent.testStarted,
         name: 'test_passed',
         file: appPath('tests/AssertionsTest.php'),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
     }, {
-        event: TestResultEvent.testFinished,
+        event: TeamcityEvent.testFinished,
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
         file: projectPath('tests/AssertionsTest.php'),
@@ -241,13 +241,13 @@ const shouldRunTestFailed = async (expected: string[], command: CommandBuilder, 
     command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
     await shouldRunTest(expected, command, projectPath, appPath, {
-        event: TestResultEvent.testFailed,
+        event: TeamcityEvent.testFailed,
         name: 'test_failed',
         file: appPath('tests/AssertionsTest.php'),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
         phpVfsComposer,
     }, {
-        event: TestResultEvent.testFailed,
+        event: TeamcityEvent.testFailed,
         flowId: expect.any(Number),
         id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
         file: projectPath('tests/AssertionsTest.php'),

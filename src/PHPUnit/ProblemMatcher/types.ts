@@ -1,4 +1,4 @@
-export enum TestResultEvent {
+export enum TeamcityEvent {
     testVersion = 'testVersion',
     testRuntime = 'testRuntime',
     testConfiguration = 'testConfiguration',
@@ -18,13 +18,13 @@ export enum TestResultEvent {
 }
 
 type BaseResult = {
-    event: TestResultEvent;
+    event: TeamcityEvent;
     name: string;
     flowId: number;
 }
 
 type InfoResult = {
-    event: TestResultEvent;
+    event: TeamcityEvent;
     text: string;
 }
 

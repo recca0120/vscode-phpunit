@@ -1,4 +1,4 @@
-import { TestResultEvent, TestVersion } from './types';
+import { TeamcityEvent, TestVersion } from './types';
 import { IParser } from './ValueParser';
 
 export class TestVersionParser implements IParser<TestVersion> {
@@ -15,7 +15,7 @@ export class TestVersionParser implements IParser<TestVersion> {
         const groups = text.match(this.pattern)!.groups!;
 
         return {
-            event: TestResultEvent.testVersion,
+            event: TeamcityEvent.testVersion,
             phpunit: groups.phpunit,
             paratest: groups.paratest,
             text,

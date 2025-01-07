@@ -1,5 +1,5 @@
 import { camelCase } from '../utils';
-import { TestResultEvent, TestResultSummary } from './types';
+import { TeamcityEvent, TestResultSummary } from './types';
 import { IParser } from './ValueParser';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
@@ -34,7 +34,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
             `((?<name>[\\w\\s]+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
             'ig',
         );
-        const event = TestResultEvent.testResultSummary;
+        const event = TeamcityEvent.testResultSummary;
 
         return [...text.matchAll(pattern)].reduce(
             (result: any, match) => {

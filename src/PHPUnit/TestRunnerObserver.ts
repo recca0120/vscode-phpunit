@@ -1,7 +1,7 @@
 import { CommandBuilder } from './CommandBuilder';
 import {
     TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses, TestResult,
-    TestResultEvent, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
+    TeamcityEvent, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from './ProblemMatcher';
 
 export enum TestRunnerEvent {
@@ -26,24 +26,24 @@ export type EventResultMap = {
     [TestRunnerEvent.close]: number | null;
     [TestRunnerEvent.abort]: undefined;
     [TestRunnerEvent.done]: undefined;
-    [TestResultEvent.testVersion]: TestVersion;
-    [TestResultEvent.testProcesses]: TestProcesses;
-    [TestResultEvent.testRuntime]: TestRuntime;
-    [TestResultEvent.testConfiguration]: TestConfiguration;
-    [TestResultEvent.testSuiteStarted]: TestSuiteStarted;
-    [TestResultEvent.testCount]: TestCount;
-    [TestResultEvent.testStarted]: TestStarted;
-    [TestResultEvent.testFinished]: TestFinished;
-    [TestResultEvent.testFailed]: TestFailed;
-    [TestResultEvent.testIgnored]: TestIgnored;
-    [TestResultEvent.testSuiteFinished]: TestSuiteFinished;
-    [TestResultEvent.testDuration]: TestDuration;
-    [TestResultEvent.testResultSummary]: TestResultSummary;
+    [TeamcityEvent.testVersion]: TestVersion;
+    [TeamcityEvent.testProcesses]: TestProcesses;
+    [TeamcityEvent.testRuntime]: TestRuntime;
+    [TeamcityEvent.testConfiguration]: TestConfiguration;
+    [TeamcityEvent.testSuiteStarted]: TestSuiteStarted;
+    [TeamcityEvent.testCount]: TestCount;
+    [TeamcityEvent.testStarted]: TestStarted;
+    [TeamcityEvent.testFinished]: TestFinished;
+    [TeamcityEvent.testFailed]: TestFailed;
+    [TeamcityEvent.testIgnored]: TestIgnored;
+    [TeamcityEvent.testSuiteFinished]: TestSuiteFinished;
+    [TeamcityEvent.testDuration]: TestDuration;
+    [TeamcityEvent.testResultSummary]: TestResultSummary;
 };
 
 export type TestRunnerObserver = Partial<{
     [K in keyof EventResultMap]: (result: EventResultMap[K]) => void;
-} & { [p in TestResultEvent]: (result: EventResultMap[p]) => void }>
+} & { [p in TeamcityEvent]: (result: EventResultMap[p]) => void }>
 
 export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
@@ -85,55 +85,55 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
     }
 
     testVersion(result: TestVersion): void {
-        this.emit(TestResultEvent.testVersion, result);
+        this.emit(TeamcityEvent.testVersion, result);
     }
 
     testProcesses(result: TestProcesses): void {
-        this.emit(TestResultEvent.testProcesses, result);
+        this.emit(TeamcityEvent.testProcesses, result);
     }
 
     testRuntime(result: TestRuntime): void {
-        this.emit(TestResultEvent.testRuntime, result);
+        this.emit(TeamcityEvent.testRuntime, result);
     }
 
     testConfiguration(result: TestConfiguration): void {
-        this.emit(TestResultEvent.testConfiguration, result);
+        this.emit(TeamcityEvent.testConfiguration, result);
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        this.emit(TestResultEvent.testSuiteStarted, result);
+        this.emit(TeamcityEvent.testSuiteStarted, result);
     }
 
     testCount(result: TestCount): void {
-        this.emit(TestResultEvent.testCount, result);
+        this.emit(TeamcityEvent.testCount, result);
     }
 
     testStarted(result: TestStarted): void {
-        this.emit(TestResultEvent.testStarted, result);
+        this.emit(TeamcityEvent.testStarted, result);
     }
 
     testFinished(result: TestFinished): void {
-        this.emit(TestResultEvent.testFinished, result);
+        this.emit(TeamcityEvent.testFinished, result);
     }
 
     testFailed(result: TestFailed): void {
-        this.emit(TestResultEvent.testFailed, result);
+        this.emit(TeamcityEvent.testFailed, result);
     }
 
     testIgnored(result: TestIgnored): void {
-        this.emit(TestResultEvent.testIgnored, result);
+        this.emit(TeamcityEvent.testIgnored, result);
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        this.emit(TestResultEvent.testSuiteFinished, result);
+        this.emit(TeamcityEvent.testSuiteFinished, result);
     }
 
     testDuration(result: TestDuration): void {
-        this.emit(TestResultEvent.testDuration, result);
+        this.emit(TeamcityEvent.testDuration, result);
     }
 
     testResultSummary(result: TestResultSummary): void {
-        this.emit(TestResultEvent.testResultSummary, result);
+        this.emit(TeamcityEvent.testResultSummary, result);
     }
 
     on<K extends keyof EventResultMap>(eventName: K, fn: (result: EventResultMap[K]) => void): this {

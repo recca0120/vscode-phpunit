@@ -1,4 +1,4 @@
-import { EOL, TestResultEvent } from '../../PHPUnit';
+import { EOL, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { PrettyPrinter } from './PrettyPrinter';
 import { Printer } from './Printer';
@@ -11,7 +11,7 @@ describe('PrettyPrinter', () => {
 
     it('testSuiteStarted', () => {
         const output = printer.testSuiteStarted({
-            event: TestResultEvent.testSuiteStarted,
+            event: TeamcityEvent.testSuiteStarted,
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest`,
             flowId: 22695,
@@ -25,7 +25,7 @@ describe('PrettyPrinter', () => {
 
     it('testStarted', () => {
         const output = printer.testStarted({
-            event: TestResultEvent.testStarted,
+            event: TeamcityEvent.testStarted,
             name: 'test_is_not_same',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same`,
             flowId: 2369,
@@ -39,7 +39,7 @@ describe('PrettyPrinter', () => {
 
     it('testFinished', () => {
         const output = printer.testFinished({
-            event: TestResultEvent.testFinished,
+            event: TeamcityEvent.testFinished,
             name: 'test_passed',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed`,
             flowId: 2369,
@@ -54,7 +54,7 @@ describe('PrettyPrinter', () => {
 
     it('testFailed', () => {
         const output = printer.testFinished({
-            event: TestResultEvent.testFailed,
+            event: TeamcityEvent.testFailed,
             name: 'test_failed',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed`,
             flowId: 2369,
@@ -84,7 +84,7 @@ describe('PrettyPrinter', () => {
 
     it('testFailed with actual and expect', () => {
         const output = printer.testFinished({
-            event: TestResultEvent.testFailed,
+            event: TeamcityEvent.testFailed,
             name: 'test_is_not_same',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same`,
             flowId: 2369,
@@ -126,7 +126,7 @@ describe('PrettyPrinter', () => {
 
     it('testIgnored', () => {
         const output = printer.testFinished({
-            event: TestResultEvent.testIgnored,
+            event: TeamcityEvent.testIgnored,
             name: 'test_skipped',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped`,
             flowId: 2369,
