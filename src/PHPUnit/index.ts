@@ -6,4 +6,5 @@ export * from './TestParser';
 export * from './ProblemMatcher';
 export * from './PHPUnitXML';
 export * from './TestCollection';
+export * from './Transformer';
 export * from './utils';

@@ -1,6 +1,6 @@
 import * as yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs-parser';
-import { TransformerFactory } from '../TestParser';
+import { TransformerFactory } from '../Transformer';
 import { escapeValue } from '../utils';
 import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestDurationParser } from './TestDurationParser';
