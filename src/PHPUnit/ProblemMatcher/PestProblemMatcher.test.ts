@@ -487,5 +487,99 @@ describe('Pest ProblemMatcher Text', () => {
                 flowId: 57317,
             });
         });
+
+        it('pest-v2 tests/Fixtures/CollisionTest.php', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='file://tests/Fixtures/CollisionTest.php' flowId='57317']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: 'tests/Fixtures/CollisionTest.php',
+                testId: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='success' locationHint='pest_qn://tests/Fixtures/CollisionTest.php::success' flowId='57317']`, {
+                event: TestResultEvent.testStarted,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                testId: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='success' duration='0' flowId='57317']`, {
+                event: TestResultEvent.testFinished,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                testId: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' flowId='57317']`, {
+                event: TestResultEvent.testSuiteFinished,
+                id: 'tests/Fixtures/CollisionTest.php',
+                testId: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 57317,
+            });
+        });
+
+        it('pest-v2 data set', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' locationHint='file://tests/Unit/ExampleTest.php' flowId='57317']`, {
+                event: TestResultEvent.testSuiteStarted,
+                id: 'tests/Unit/ExampleTest.php::it has emails',
+                testId: 'tests/Unit/ExampleTest.php::it has emails',
+                name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='it has emails with data set "(|'enunomaduro@gmail.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'enunomaduro@gmail.com|')"' flowId='57317']`, {
+                event: TestResultEvent.testStarted,
+                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='it has emails with data set "(|'enunomaduro@gmail.com|')"' duration='1' flowId='57317']`, {
+                event: TestResultEvent.testFinished,
+                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='it has emails with data set "(|'other@example.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'other@example.com|')"' flowId='57317']`, {
+                event: TestResultEvent.testStarted,
+                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                name: 'it has emails with data set "(\'other@example.com\')"',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='it has emails with data set "(|'other@example.com|')"' duration='0' flowId='57317']`, {
+                event: TestResultEvent.testFinished,
+                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                testId: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                name: 'it has emails with data set "(\'other@example.com\')"',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 57317,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' flowId='57317']`, {
+                event: TestResultEvent.testSuiteFinished,
+                id: 'tests/Unit/ExampleTest.php::it has emails',
+                testId: 'tests/Unit/ExampleTest.php::it has emails',
+                name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 57317,
+            });
+        });
     });
 });

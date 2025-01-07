@@ -386,7 +386,7 @@ describe('Extension Test', () => {
         });
     });
 
-    if (semver.gte(PHP_VERSION, '8.2.0')) {
+    if (semver.gte(PHP_VERSION, '8.1.0')) {
         describe('PEST', () => {
             const root = pestProject('');
 

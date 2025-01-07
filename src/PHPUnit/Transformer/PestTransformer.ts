@@ -1,14 +1,16 @@
-import { uncapitalize } from '../../utils';
-import { TestDefinition, TestType } from '../types';
+import { uncapitalize } from '../utils';
+import { TestDefinition, TestType } from '../TestParser/types';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
 import { TransformerFactory } from './TransformerFactory';
 
 export class PestTransformer extends PHPUnitTransformer {
     fromLocationHit(locationHint: string, name: string) {
+        locationHint = this.fixPestV2DataSet(locationHint, name);
+
         let file = '';
         const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
-            const id = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
+            let id = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
             const testId = id;
             file = id.split('::')[0];
 
@@ -53,5 +55,14 @@ export class PestTransformer extends PHPUnitTransformer {
 
     protected normalizeMethodName(methodName: string) {
         return methodName.replace(/\*\//g, '{@*}');
+    }
+
+    private fixPestV2DataSet(locationHint: string, name: string) {
+        const matched = name.match(/__pest_evaluable_(?<name>.+)/);
+        if (matched && matched.groups?.name) {
+            locationHint += '::' + matched.groups.name.replace(/_/g, ' ');
+        }
+
+        return locationHint;
     }
 }
