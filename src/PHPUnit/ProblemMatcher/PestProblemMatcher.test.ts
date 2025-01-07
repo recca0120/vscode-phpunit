@@ -484,7 +484,7 @@ describe('Pest ProblemMatcher Text', () => {
         it('pest-v2 data set', () => {
             resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' locationHint='file://tests/Unit/ExampleTest.php' flowId='57317']`, {
                 event: TeamcityEvent.testSuiteStarted,
-                id: 'tests/Unit/ExampleTest.php::it has emails',
+                id: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                 name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,
@@ -524,7 +524,7 @@ describe('Pest ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' flowId='57317']`, {
                 event: TeamcityEvent.testSuiteFinished,
-                id: 'tests/Unit/ExampleTest.php::it has emails',
+                id: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                 name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,

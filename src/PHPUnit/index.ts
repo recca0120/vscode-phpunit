@@ -8,3 +8,4 @@ export * from './PHPUnitXML';
 export * from './TestCollection';
 export * from './Transformer';
 export * from './utils';
+export * from './types';

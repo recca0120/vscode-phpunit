@@ -1,4 +1,4 @@
-import { TestDuration, TeamcityEvent } from './types';
+import { TeamcityEvent, TestDuration } from './types';
 import { IParser } from './ValueParser';
 
 export class TestDurationParser implements IParser<TestDuration> {

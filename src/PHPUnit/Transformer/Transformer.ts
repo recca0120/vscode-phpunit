@@ -1,5 +1,5 @@
 import { TestResultIdentify } from '../ProblemMatcher';
-import { TestDefinition, TestType } from '../TestParser/types';
+import { TestDefinition, TestType } from '../types';
 
 export abstract class Transformer {
     static generateSearchText(input: string) {

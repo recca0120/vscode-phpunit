@@ -1,8 +1,8 @@
 import { Call, Declaration, Identifier, Namespace, Node, Variable } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
-import { annotationParser, attributeParser } from './AnnotationParser';
 import { TransformerFactory } from '../Transformer';
-import { TestDefinition, TestType } from './types';
+import { TestDefinition, TestType } from '../types';
+import { annotationParser, attributeParser } from './AnnotationParser';
 
 export abstract class Parser {
     private phpUnitXML?: PHPUnitXML;

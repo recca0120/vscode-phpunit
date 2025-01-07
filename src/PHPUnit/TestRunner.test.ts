@@ -4,10 +4,10 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests_
 import { CommandBuilder } from './CommandBuilder';
 import { Configuration } from './Configuration';
 import { TeamcityEvent } from './ProblemMatcher';
-import { TestType } from './TestParser';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import { TransformerFactory } from './Transformer';
+import { TestType } from './types';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
 

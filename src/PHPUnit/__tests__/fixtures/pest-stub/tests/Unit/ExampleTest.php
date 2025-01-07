@@ -196,7 +196,6 @@ test('test /** with comment */ should do', function () {
     expect(true)->toBe(false);
 });
 
-
 test('ensures the given closures reports the correct class name and suggests the [pest()] function', function () {
     expect(true)->toBe(false);
 });

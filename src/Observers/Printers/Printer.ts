@@ -1,5 +1,5 @@
 import {
-    EOL, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses, TestResult, TeamcityEvent,
+    EOL, TeamcityEvent, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses, TestResult,
     TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from '../../PHPUnit';
 

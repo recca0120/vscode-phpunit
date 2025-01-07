@@ -1,4 +1,4 @@
-import { EOL, TestFailed, TestFinished, TeamcityEvent, TestSuiteFinished } from '../../PHPUnit';
+import { EOL, TeamcityEvent, TestFailed, TestFinished, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
 export class PrettyPrinter extends Printer {

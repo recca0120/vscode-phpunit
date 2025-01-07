@@ -1,7 +1,7 @@
 import { pestProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';
+import { TestDefinition, TestType } from '../types';
 import { TestParser } from './TestParser';
-import { TestDefinition, TestType } from './types';
 
 export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];

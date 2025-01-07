@@ -1,6 +1,6 @@
 import {
-    TestFailed, TestFinished, TestIgnored, TestResult, TeamcityEvent, TestResultParser, TestStarted,
-    TestSuiteFinished, TestSuiteStarted,
+    TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestResult, TestResultParser, TestStarted, TestSuiteFinished,
+    TestSuiteStarted,
 } from '.';
 
 export class ProblemMatcher {
@@ -24,7 +24,7 @@ export class ProblemMatcher {
     }
 
     private isResult(result?: TestResult): boolean {
-        return !!(result && 'event' in result && 'name' in result && 'flowId' in result);
+        return !!result && 'event' in result && 'name' in result && 'flowId' in result;
     }
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
