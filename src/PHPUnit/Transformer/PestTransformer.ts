@@ -1,5 +1,5 @@
-import { uncapitalize } from '../../utils';
-import { TestDefinition, TestType } from '../types';
+import { uncapitalize } from '../utils';
+import { TestDefinition, TestType } from '../TestParser/types';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
 import { TransformerFactory } from './TransformerFactory';
 

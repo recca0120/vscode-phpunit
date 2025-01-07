@@ -1,6 +1,6 @@
 import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
 import { Parser } from './Parser';
-import { TransformerFactory } from './Transformers';
+import { TransformerFactory } from '../Transformer';
 import { TestDefinition, TestType } from './types';
 import { validator } from './Validator';
 
