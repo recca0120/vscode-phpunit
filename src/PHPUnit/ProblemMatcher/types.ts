@@ -30,7 +30,6 @@ type InfoResult = {
 
 export type TestResultIdentify = {
     id: string;
-    testId: string;
     file: string | undefined;
 }
 

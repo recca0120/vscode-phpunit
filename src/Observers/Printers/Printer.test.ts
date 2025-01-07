@@ -1,4 +1,4 @@
-import { EOL, TestFinished, TeamcityEvent } from '../../PHPUnit';
+import { EOL, TeamcityEvent, TestFinished } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { Printer } from './Printer';
 
@@ -82,7 +82,6 @@ describe('Printer', () => {
             flowId: 97825,
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo',
             file: phpUnitProject('tests/Output/OutputTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo',
         });
         printer.append('printed output');
 
@@ -99,7 +98,6 @@ describe('Printer', () => {
             flowId: 97825,
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die',
             file: phpUnitProject('tests/Output/OutputTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die',
         });
         printer.append('printed output when die');
 
@@ -112,7 +110,6 @@ describe('Printer', () => {
         const output = printer.testSuiteFinished({
             event: TeamcityEvent.testSuiteFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,
         } as any);
 

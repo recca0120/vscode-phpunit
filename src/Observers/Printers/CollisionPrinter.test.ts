@@ -17,7 +17,6 @@ describe('CollisionPrinter', () => {
             flowId: 22695,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             file: phpUnitProject('tests/AssertionsTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
         });
 
         expect(output).toEqual('Recca0120\\VSCode\\Tests\\AssertionsTest');
@@ -27,7 +26,6 @@ describe('CollisionPrinter', () => {
         const output = printer.testSuiteFinished({
             event: TeamcityEvent.testSuiteFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,
         } as any);
 
@@ -42,7 +40,6 @@ describe('CollisionPrinter', () => {
             flowId: 2369,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
             file: phpUnitProject('tests/AssertionsTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
         });
 
         expect(output).toBeUndefined();
@@ -56,7 +53,6 @@ describe('CollisionPrinter', () => {
             flowId: 2369,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
             file: phpUnitProject('tests/AssertionsTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
             duration: 0,
         });
 
@@ -71,7 +67,6 @@ describe('CollisionPrinter', () => {
             flowId: 2369,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
             file: phpUnitProject('tests/AssertionsTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
             message: 'Failed asserting that false is true.',
             details: [
                 {
@@ -114,7 +109,6 @@ describe('CollisionPrinter', () => {
             flowId: 2369,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
             file: phpUnitProject('tests/AssertionsTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same',
             message: 'Failed asserting that two arrays are identical.',
             details: [
                 {
@@ -168,7 +162,6 @@ describe('CollisionPrinter', () => {
             flowId: 2369,
             id: 'Recca0120\\VSCode\\Tests\\NotFoundTest::test_failed',
             file: phpUnitProject('tests/NotFoundTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\NotFoundTest::test_failed',
             message: 'Failed asserting that false is true.',
             details: [
                 {
@@ -199,7 +192,6 @@ describe('CollisionPrinter', () => {
             flowId: 2369,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
             file: phpUnitProject('tests/AssertionsTest.php'),
-            testId: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
             message: 'The MySQLi extension is not available.',
             duration: 0,
         });

@@ -80,9 +80,9 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        if ('testId' in result) {
+        if ('id' in result) {
             for (const [_, testItem] of this.queue) {
-                if (testItem.id === result.testId) {
+                if (testItem.id === result.id) {
                     return testItem;
                 }
             }

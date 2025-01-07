@@ -95,7 +95,6 @@ describe('TestResultParser', () => {
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testSuiteStarted,
             id: 'Calculator (Recca0120\\VSCode\\Tests\\Calculator)',
-            testId: 'Calculator (Recca0120\\VSCode\\Tests\\Calculator)',
             file: phpUnitProjectWin('tests/CalculatorTest.php'),
             name: 'Recca0120\\VSCode\\Tests\\CalculatorTest',
             locationHint: `php_qn://${phpUnitProjectWin('tests/CalculatorTest.php')}::\\Recca0120\\VSCode\\Tests\\CalculatorTest`,
@@ -110,7 +109,6 @@ describe('TestResultParser', () => {
             event: TeamcityEvent.testStarted,
             name: 'test_passed',
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
             file: phpUnitProjectWin('tests/AssertionsTest.php'),
             locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed`,
             flowId: 8024,
@@ -407,7 +405,6 @@ describe('TestResultParser', () => {
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
             file: phpUnitProjectWin('tests/AssertionsTest.php'),
             name: 'addition_provider with data set #2',
             locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
@@ -421,7 +418,6 @@ describe('TestResultParser', () => {
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testStarted,
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
-            testId: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             file: phpUnitProjectWin('tests/AssertionsTest.php'),
             name: 'addition_provider with data set ""foo-bar_%$"',
             locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"`,

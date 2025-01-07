@@ -66,12 +66,12 @@ const getRunProfile = (ctrl: TestController) => {
     return (ctrl.createRunProfile as jest.Mock).mock.results[0].value;
 };
 
-const findTest = (items: TestItemCollection, testId: string): TestItem | undefined => {
+const findTest = (items: TestItemCollection, id: string): TestItem | undefined => {
     for (const [_id, item] of items) {
-        if (item.id === testId) {
+        if (item.id === id) {
             return item;
         }
-        const child = findTest(item.children, testId);
+        const child = findTest(item.children, id);
         if (child) {
             return child;
         }
@@ -214,8 +214,8 @@ describe('Extension Test', () => {
                 await activate(context);
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
-                const testId = `namespace:Tests (Recca0120\\VSCode\\Tests)`;
-                const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
+                const id = `namespace:Tests (Recca0120\\VSCode\\Tests)`;
+                const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
@@ -240,8 +240,8 @@ describe('Extension Test', () => {
                 await activate(context);
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
-                const testId = `Assertions (Recca0120\\VSCode\\Tests\\Assertions)`;
-                const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
+                const id = `Assertions (Recca0120\\VSCode\\Tests\\Assertions)`;
+                const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
@@ -261,13 +261,13 @@ describe('Extension Test', () => {
                 const runProfile = getRunProfile(ctrl);
 
                 const method = 'test_throw_exception';
-                const testId = `Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception`;
+                const id = `Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception`;
 
                 const pattern = new RegExp(
                     `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
                 );
 
-                const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
+                const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
@@ -282,7 +282,7 @@ describe('Extension Test', () => {
                 expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 0, failed: 1, end: 1 });
 
                 const { failed } = getTestRun(ctrl);
-                const [, message] = (failed as jest.Mock).mock.calls.find(([test]) => test.id === testId);
+                const [, message] = (failed as jest.Mock).mock.calls.find(([test]) => test.id === id);
 
                 expect(message.location).toEqual(expect.objectContaining({
                     range: {
@@ -433,13 +433,13 @@ describe('Extension Test', () => {
                     const runProfile = getRunProfile(ctrl);
 
                     const method = 'it has emails';
-                    const testId = `tests/Unit/ExampleTest.php::it has emails`;
+                    const id = `tests/Unit/ExampleTest.php::it has emails`;
 
                     const pattern = new RegExp(
                         `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
                     );
 
-                    const request = { include: [findTest(ctrl.items, testId)], exclude: [], profile: runProfile };
+                    const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                     await runProfile.runHandler(request, new CancellationTokenSource().token);
 

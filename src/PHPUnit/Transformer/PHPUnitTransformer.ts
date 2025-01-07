@@ -28,10 +28,8 @@ export class PHPUnitTransformer extends Transformer {
 
         const type = !methodName ? TestType.class : TestType.method;
         const id = this.uniqueId({ type: type, classFQN, methodName });
-        const testId = id;
-        // const testId = this.removeDataset(id);
 
-        return { id, testId, file };
+        return { id, file };
     }
 
     protected normalizeMethodName(methodName: string) {
