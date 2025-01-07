@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { EOL, TestFailed, TestFinished, TestIgnored, TeamcityEvent, TestSuiteFinished } from '../../PHPUnit';
+import { EOL, TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
 export class CollisionPrinter extends Printer {

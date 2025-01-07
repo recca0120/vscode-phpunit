@@ -2,11 +2,11 @@ import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
 import { Declaration, Node } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
+import { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
 import { Parser } from './Parser';
 import { PestParser } from './PestParser';
 import { PHPUnitParser } from './PHPUnitParser';
-import { TestDefinition, TestType } from './types';
 
 const textDecoder = new TextDecoder('utf-8');
 

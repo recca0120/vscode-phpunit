@@ -1,4 +1,4 @@
-import { TestType } from '../TestParser/types';
+import { TestType } from '../types';
 import { PestTransformer } from './PestTransformer';
 
 describe('PestTransformer', () => {

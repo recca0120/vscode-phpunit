@@ -1,5 +1,3 @@
-import { Annotations } from './AnnotationParser';
-
 export type Position = {
     character: number;
     line: number;
@@ -11,6 +9,12 @@ export enum TestType {
     method
 }
 
+export type Annotations = {
+    [p: string]: unknown;
+    depends?: string[];
+    dataProvider?: string[];
+    testdox?: string[];
+};
 export type TestDefinition = {
     type: TestType;
     id: string;

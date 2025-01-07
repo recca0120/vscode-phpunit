@@ -1,13 +1,7 @@
 import { Declaration, Method } from 'php-parser';
+import { Annotations } from '../types';
 
 const lookup = ['depends', 'dataProvider', 'testdox'];
-
-export type Annotations = {
-    [p: string]: unknown;
-    depends?: string[];
-    dataProvider?: string[];
-    testdox?: string[];
-};
 
 export class AttributeParser {
     public parse(declaration: Declaration) {

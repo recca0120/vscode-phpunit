@@ -1,4 +1,3 @@
-import 'jest';
 import { glob, GlobOptions } from 'glob';
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';

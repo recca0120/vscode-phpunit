@@ -1,5 +1,5 @@
+import { TestDefinition, TestType } from '../types';
 import { capitalize, snakeCase, titleCase } from '../utils';
-import { TestDefinition, TestType } from '../TestParser/types';
 import { Transformer } from './Transformer';
 
 export class PHPUnitTransformer extends Transformer {

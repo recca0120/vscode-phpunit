@@ -1,4 +1,5 @@
-import { TestDefinition, TestParser, TestType } from '../TestParser';
+import { TestParser } from '../TestParser';
+import { TestDefinition, TestType } from '../types';
 
 export class TestDefinitionBuilder {
     private readonly testDefinitions: TestDefinition[] = [];
