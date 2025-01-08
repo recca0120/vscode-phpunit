@@ -1,0 +1,351 @@
+
+Pest 1.23.1
+PHPUnit 9.6.22 by Sebastian Bergmann and contributors.
+
+  
+
+##teamcity[testCount count='60' flowId='12667']
+##teamcity[testSuiteStarted name='' locationHint='pest_qn://' flowId='12667']
+  Test Suite
+
+##teamcity[testSuiteStarted name='Test Suite' locationHint='pest_qn://Test Suite' flowId='12667']
+  Tests\Feature\ExampleTest
+
+##teamcity[testSuiteStarted name='Tests\Feature\ExampleTest' locationHint='pest_qn://Tests\Feature\ExampleTest' flowId='12667']
+
+##teamcity[testStarted name='test_example' locationHint='php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Feature/ExampleTest.php::\Tests\Feature\ExampleTest::test_example']
+##teamcity[testFinished name='test_example' duration='3' flowId='12667']
+✓ test_example
+
+
+##teamcity[testSuiteFinished name='Tests\Feature\ExampleTest' locationHint='pest_qn://Tests\Feature\ExampleTest' flowId='12667']
+  Tests\Fixtures\Inheritance\Base\ExampleTest
+
+##teamcity[testSuiteStarted name='Tests\Fixtures\Inheritance\Base\ExampleTest' locationHint='pest_qn://Tests\Fixtures\Inheritance\Base\ExampleTest' flowId='12667']
+
+##teamcity[testStarted name='test_example' locationHint='php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/Inheritance/Base/ExampleTest.php::\Tests\Fixtures\Inheritance\Base\ExampleTest::test_example']
+- test_example
+
+##teamcity[testIgnored name='test_example' message='' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/Inheritance/Base/ExampleTest.php:11|n ' duration='1']
+##teamcity[testFinished name='test_example' duration='1' flowId='12667']
+
+
+##teamcity[testSuiteFinished name='Tests\Fixtures\Inheritance\Base\ExampleTest' locationHint='pest_qn://Tests\Fixtures\Inheritance\Base\ExampleTest' flowId='12667']
+  Tests\Fixtures\Inheritance\ExampleTest
+
+##teamcity[testSuiteStarted name='Tests\Fixtures\Inheritance\ExampleTest' locationHint='pest_qn://Tests\Fixtures\Inheritance\ExampleTest' flowId='12667']
+
+##teamcity[testStarted name='test_example' locationHint='php_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/Inheritance/ExampleTest.php::\Tests\Fixtures\Inheritance\ExampleTest::test_example']
+##teamcity[testFinished name='test_example' duration='0' flowId='12667']
+✓ test_example
+
+
+##teamcity[testSuiteFinished name='Tests\Fixtures\Inheritance\ExampleTest' locationHint='pest_qn://Tests\Fixtures\Inheritance\ExampleTest' flowId='12667']
+
+
+##teamcity[testSuiteFinished name='Test Suite' locationHint='pest_qn://Test Suite' flowId='12667']
+  Tests\Fixtures\CollisionTest
+
+##teamcity[testSuiteStarted name='Tests\Fixtures\CollisionTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php' flowId='12667']
+##teamcity[testStarted name='error' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php::error' flowId='12667']
+- error
+
+##teamcity[testIgnored name='error' message='' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php:5|n ' duration='6']
+##teamcity[testFinished name='error' duration='6' flowId='12667']
+##teamcity[testStarted name='success' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php::success' flowId='12667']
+##teamcity[testFinished name='success' duration='0' flowId='12667']
+✓ success
+
+
+##teamcity[testSuiteFinished name='Tests\Fixtures\CollisionTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php' flowId='12667']
+  Tests\Fixtures\DirectoryWithTests\ExampleTest
+
+##teamcity[testSuiteStarted name='Tests\Fixtures\DirectoryWithTests\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/DirectoryWithTests/ExampleTest.php' flowId='12667']
+##teamcity[testStarted name='it example 1' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/DirectoryWithTests/ExampleTest.php::it example 1' flowId='12667']
+##teamcity[testFinished name='it example 1' duration='0' flowId='12667']
+✓ it example 1
+
+
+##teamcity[testSuiteFinished name='Tests\Fixtures\DirectoryWithTests\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/DirectoryWithTests/ExampleTest.php' flowId='12667']
+  Tests\Fixtures\ExampleTest
+
+##teamcity[testSuiteStarted name='Tests\Fixtures\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/ExampleTest.php' flowId='12667']
+##teamcity[testStarted name='it example 2' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/ExampleTest.php::it example 2' flowId='12667']
+##teamcity[testFinished name='it example 2' duration='0' flowId='12667']
+✓ it example 2
+
+
+##teamcity[testSuiteFinished name='Tests\Fixtures\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/ExampleTest.php' flowId='12667']
+  Tests\Unit\ExampleTest
+
+##teamcity[testSuiteStarted name='Tests\Unit\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php' flowId='12667']
+##teamcity[testStarted name='test description' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::test description' flowId='12667']
+⨯ test description
+
+##teamcity[testFailed name='test description' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:4|n ' duration='1']
+##teamcity[testFinished name='test description' duration='1' flowId='12667']
+##teamcity[testStarted name='test_description' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::test_description' flowId='12667']
+⨯ test_description
+
+##teamcity[testFailed name='test_description' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:8|n ' duration='0']
+##teamcity[testFinished name='test_description' duration='0' flowId='12667']
+##teamcity[testStarted name='ふ+が+' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::ふ+が+' flowId='12667']
+⨯ ふ+が+
+
+##teamcity[testFailed name='ふ+が+' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:12|n ' duration='0']
+##teamcity[testFinished name='ふ+が+' duration='0' flowId='12667']
+##teamcity[testStarted name='ほげ' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::ほげ' flowId='12667']
+⨯ ほげ
+
+##teamcity[testFailed name='ほげ' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:16|n ' duration='0']
+##teamcity[testFinished name='ほげ' duration='0' flowId='12667']
+##teamcity[testStarted name='卜竹弓一十山' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::卜竹弓一十山' flowId='12667']
+⨯ 卜竹弓一十山
+
+##teamcity[testFailed name='卜竹弓一十山' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:20|n ' duration='0']
+##teamcity[testFinished name='卜竹弓一十山' duration='0' flowId='12667']
+##teamcity[testStarted name='アゴデヸ' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::アゴデヸ' flowId='12667']
+⨯ アゴデヸ
+
+##teamcity[testFailed name='アゴデヸ' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:24|n ' duration='0']
+##teamcity[testFinished name='アゴデヸ' duration='0' flowId='12667']
+##teamcity[testStarted name='!p8VrB' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::!p8VrB' flowId='12667']
+⨯ !p8VrB
+
+##teamcity[testFailed name='!p8VrB' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:28|n ' duration='0']
+##teamcity[testFinished name='!p8VrB' duration='0' flowId='12667']
+##teamcity[testStarted name='&amp;xe6VeKWF#n4' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::&amp;xe6VeKWF#n4' flowId='12667']
+⨯ &amp;xe6VeKWF#n4
+
+##teamcity[testFailed name='&amp;xe6VeKWF#n4' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:32|n ' duration='0']
+##teamcity[testFinished name='&amp;xe6VeKWF#n4' duration='0' flowId='12667']
+##teamcity[testStarted name='%%HurHUnw7zM!' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::%%HurHUnw7zM!' flowId='12667']
+⨯ %%HurHUnw7zM!
+
+##teamcity[testFailed name='%%HurHUnw7zM!' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:36|n ' duration='0']
+##teamcity[testFinished name='%%HurHUnw7zM!' duration='0' flowId='12667']
+##teamcity[testStarted name='rundeliekend' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::rundeliekend' flowId='12667']
+⨯ rundeliekend
+
+##teamcity[testFailed name='rundeliekend' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:40|n ' duration='0']
+##teamcity[testFinished name='rundeliekend' duration='0' flowId='12667']
+##teamcity[testStarted name='g%%c!Jt9$fy#Kf' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::g%%c!Jt9$fy#Kf' flowId='12667']
+⨯ g%%c!Jt9$fy#Kf
+
+##teamcity[testFailed name='g%%c!Jt9$fy#Kf' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:44|n ' duration='0']
+##teamcity[testFinished name='g%%c!Jt9$fy#Kf' duration='0' flowId='12667']
+##teamcity[testStarted name='NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX' flowId='12667']
+⨯ NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX
+
+##teamcity[testFailed name='NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:48|n ' duration='0']
+##teamcity[testFinished name='NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX' duration='0' flowId='12667']
+##teamcity[testStarted name='ÀÄ¤{¼÷' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::ÀÄ¤{¼÷' flowId='12667']
+⨯ ÀÄ¤{¼÷
+
+##teamcity[testFailed name='ÀÄ¤{¼÷' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:52|n ' duration='0']
+##teamcity[testFinished name='ÀÄ¤{¼÷' duration='0' flowId='12667']
+##teamcity[testStarted name='ìèéàòç' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::ìèéàòç' flowId='12667']
+⨯ ìèéàòç
+
+##teamcity[testFailed name='ìèéàòç' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:56|n ' duration='0']
+##teamcity[testFinished name='ìèéàòç' duration='0' flowId='12667']
+##teamcity[testStarted name='زهراء المعادي' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::زهراء المعادي' flowId='12667']
+⨯ زهراء المعادي
+
+##teamcity[testFailed name='زهراء المعادي' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:60|n ' duration='0']
+##teamcity[testFinished name='زهراء المعادي' duration='0' flowId='12667']
+##teamcity[testStarted name='الجبيهه' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::الجبيهه' flowId='12667']
+⨯ الجبيهه
+
+##teamcity[testFailed name='الجبيهه' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:64|n ' duration='0']
+##teamcity[testFinished name='الجبيهه' duration='0' flowId='12667']
+##teamcity[testStarted name='الظهران' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::الظهران' flowId='12667']
+⨯ الظهران
+
+##teamcity[testFailed name='الظهران' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:68|n ' duration='0']
+##teamcity[testFinished name='الظهران' duration='0' flowId='12667']
+##teamcity[testStarted name='Каролин' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Каролин' flowId='12667']
+⨯ Каролин
+
+##teamcity[testFailed name='Каролин' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:72|n ' duration='0']
+##teamcity[testFinished name='Каролин' duration='0' flowId='12667']
+##teamcity[testStarted name='অ্যান্টার্কটিকা' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::অ্যান্টার্কটিকা' flowId='12667']
+⨯ অ্যান্টার্কটিকা
+
+##teamcity[testFailed name='অ্যান্টার্কটিকা' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:76|n ' duration='0']
+##teamcity[testFinished name='অ্যান্টার্কটিকা' duration='0' flowId='12667']
+##teamcity[testStarted name='Frýdek-Místek"' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Frýdek-Místek"' flowId='12667']
+⨯ Frýdek-Místek"
+
+##teamcity[testFailed name='Frýdek-Místek"' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:80|n ' duration='0']
+##teamcity[testFinished name='Frýdek-Místek"' duration='0' flowId='12667']
+##teamcity[testStarted name='Allingåbro&amp;' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Allingåbro&amp;' flowId='12667']
+⨯ Allingåbro&amp;
+
+##teamcity[testFailed name='Allingåbro&amp;' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:84|n ' duration='0']
+##teamcity[testFinished name='Allingåbro&amp;' duration='0' flowId='12667']
+##teamcity[testStarted name='Κεντροαφρικανική Δημοκρατία' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Κεντροαφρικανική Δημοκρατία' flowId='12667']
+⨯ Κεντροαφρικανική Δημοκρατία
+
+##teamcity[testFailed name='Κεντροαφρικανική Δημοκρατία' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:88|n ' duration='0']
+##teamcity[testFinished name='Κεντροαφρικανική Δημοκρατία' duration='0' flowId='12667']
+##teamcity[testStarted name='آذربایجان غربی' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::آذربایجان غربی' flowId='12667']
+⨯ آذربایجان غربی
+
+##teamcity[testFailed name='آذربایجان غربی' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:92|n ' duration='0']
+##teamcity[testFinished name='آذربایجان غربی' duration='0' flowId='12667']
+##teamcity[testStarted name='זימבבואה' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::זימבבואה' flowId='12667']
+⨯ זימבבואה
+
+##teamcity[testFailed name='זימבבואה' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:96|n ' duration='0']
+##teamcity[testFinished name='זימבבואה' duration='0' flowId='12667']
+##teamcity[testStarted name='Belišće' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Belišće' flowId='12667']
+⨯ Belišće
+
+##teamcity[testFailed name='Belišće' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:100|n ' duration='0']
+##teamcity[testFinished name='Belišće' duration='0' flowId='12667']
+##teamcity[testStarted name='Գվատեմալա' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Գվատեմալա' flowId='12667']
+⨯ Գվատեմալա
+
+##teamcity[testFailed name='Գվատեմալա' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:104|n ' duration='0']
+##teamcity[testFinished name='Գվատեմալա' duration='0' flowId='12667']
+##teamcity[testStarted name='パプアニューギニア' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::パプアニューギニア' flowId='12667']
+⨯ パプアニューギニア
+
+##teamcity[testFailed name='パプアニューギニア' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:108|n ' duration='0']
+##teamcity[testFinished name='パプアニューギニア' duration='0' flowId='12667']
+##teamcity[testStarted name='富山県' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::富山県' flowId='12667']
+⨯ 富山県
+
+##teamcity[testFailed name='富山県' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:112|n ' duration='0']
+##teamcity[testFinished name='富山県' duration='0' flowId='12667']
+##teamcity[testStarted name='Қарағанды' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Қарағанды' flowId='12667']
+⨯ Қарағанды
+
+##teamcity[testFailed name='Қарағанды' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:116|n ' duration='0']
+##teamcity[testFinished name='Қарағанды' duration='0' flowId='12667']
+##teamcity[testStarted name='Қостанай' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Қостанай' flowId='12667']
+⨯ Қостанай
+
+##teamcity[testFailed name='Қостанай' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:120|n ' duration='0']
+##teamcity[testFinished name='Қостанай' duration='0' flowId='12667']
+##teamcity[testStarted name='안양시 동안구' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::안양시 동안구' flowId='12667']
+⨯ 안양시 동안구
+
+##teamcity[testFailed name='안양시 동안구' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:124|n ' duration='0']
+##teamcity[testFinished name='안양시 동안구' duration='0' flowId='12667']
+##teamcity[testStarted name='Itālija' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Itālija' flowId='12667']
+⨯ Itālija
+
+##teamcity[testFailed name='Itālija' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:128|n ' duration='0']
+##teamcity[testFinished name='Itālija' duration='0' flowId='12667']
+##teamcity[testStarted name='Honningsvåg' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Honningsvåg' flowId='12667']
+⨯ Honningsvåg
+
+##teamcity[testFailed name='Honningsvåg' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:132|n ' duration='0']
+##teamcity[testFinished name='Honningsvåg' duration='0' flowId='12667']
+##teamcity[testStarted name='Águeda' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Águeda' flowId='12667']
+⨯ Águeda
+
+##teamcity[testFailed name='Águeda' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:136|n ' duration='0']
+##teamcity[testFinished name='Águeda' duration='0' flowId='12667']
+##teamcity[testStarted name='Râșcani' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Râșcani' flowId='12667']
+⨯ Râșcani
+
+##teamcity[testFailed name='Râșcani' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:140|n ' duration='0']
+##teamcity[testFinished name='Râșcani' duration='0' flowId='12667']
+##teamcity[testStarted name='Năsăud' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Năsăud' flowId='12667']
+⨯ Năsăud
+
+##teamcity[testFailed name='Năsăud' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:144|n ' duration='0']
+##teamcity[testFinished name='Năsăud' duration='0' flowId='12667']
+##teamcity[testStarted name='Орехово-Зуево' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Орехово-Зуево' flowId='12667']
+⨯ Орехово-Зуево
+
+##teamcity[testFailed name='Орехово-Зуево' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:148|n ' duration='0']
+##teamcity[testFinished name='Орехово-Зуево' duration='0' flowId='12667']
+##teamcity[testStarted name='Čereňany' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Čereňany' flowId='12667']
+⨯ Čereňany
+
+##teamcity[testFailed name='Čereňany' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:152|n ' duration='0']
+##teamcity[testFinished name='Čereňany' duration='0' flowId='12667']
+##teamcity[testStarted name='Moravče' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Moravče' flowId='12667']
+⨯ Moravče
+
+##teamcity[testFailed name='Moravče' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:156|n ' duration='0']
+##teamcity[testFinished name='Moravče' duration='0' flowId='12667']
+##teamcity[testStarted name='Šentjernej' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Šentjernej' flowId='12667']
+⨯ Šentjernej
+
+##teamcity[testFailed name='Šentjernej' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:160|n ' duration='0']
+##teamcity[testFinished name='Šentjernej' duration='0' flowId='12667']
+##teamcity[testStarted name='Врање' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Врање' flowId='12667']
+⨯ Врање
+
+##teamcity[testFailed name='Врање' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:164|n ' duration='0']
+##teamcity[testFinished name='Врање' duration='0' flowId='12667']
+##teamcity[testStarted name='Крушевац' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Крушевац' flowId='12667']
+⨯ Крушевац
+
+##teamcity[testFailed name='Крушевац' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:168|n ' duration='0']
+##teamcity[testFinished name='Крушевац' duration='0' flowId='12667']
+##teamcity[testStarted name='Åkersberga' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Åkersberga' flowId='12667']
+⨯ Åkersberga
+
+##teamcity[testFailed name='Åkersberga' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:172|n ' duration='0']
+##teamcity[testFinished name='Åkersberga' duration='0' flowId='12667']
+##teamcity[testStarted name='บอสเนียและเฮอร์เซโกวีนา' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::บอสเนียและเฮอร์เซโกวีนา' flowId='12667']
+⨯ บอสเนียและเฮอร์เซโกวีนา
+
+##teamcity[testFailed name='บอสเนียและเฮอร์เซโกวีนา' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:176|n ' duration='0']
+##teamcity[testFinished name='บอสเนียและเฮอร์เซโกวีนา' duration='0' flowId='12667']
+##teamcity[testStarted name='Birleşik Arap Emirlikleri' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Birleşik Arap Emirlikleri' flowId='12667']
+⨯ Birleşik Arap Emirlikleri
+
+##teamcity[testFailed name='Birleşik Arap Emirlikleri' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:180|n ' duration='0']
+##teamcity[testFinished name='Birleşik Arap Emirlikleri' duration='0' flowId='12667']
+##teamcity[testStarted name='Німеччина' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Німеччина' flowId='12667']
+⨯ Німеччина
+
+##teamcity[testFailed name='Німеччина' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:184|n ' duration='0']
+##teamcity[testFinished name='Німеччина' duration='0' flowId='12667']
+##teamcity[testStarted name='Nam Định' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::Nam Định' flowId='12667']
+⨯ Nam Định
+
+##teamcity[testFailed name='Nam Định' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:188|n ' duration='0']
+##teamcity[testFinished name='Nam Định' duration='0' flowId='12667']
+##teamcity[testStarted name='呼和浩特' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::呼和浩特' flowId='12667']
+⨯ 呼和浩特
+
+##teamcity[testFailed name='呼和浩特' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:192|n ' duration='0']
+##teamcity[testFinished name='呼和浩特' duration='0' flowId='12667']
+##teamcity[testStarted name='test /** with comment */ should do' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::test /** with comment */ should do' flowId='12667']
+⨯ test /** with comment */ should do
+
+##teamcity[testFailed name='test /** with comment */ should do' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:196|n ' duration='0']
+##teamcity[testFinished name='test /** with comment */ should do' duration='0' flowId='12667']
+##teamcity[testStarted name='ensures the given closures reports the correct class name and suggests the |[pest()|] function' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::ensures the given closures reports the correct class name and suggests the |[pest()|] function' flowId='12667']
+⨯ ensures the given closures reports the correct class name and suggests the [pest()] function
+
+##teamcity[testFailed name='ensures the given closures reports the correct class name and suggests the |[pest()|] function' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:201|n ' duration='0']
+##teamcity[testFinished name='ensures the given closures reports the correct class name and suggests the |[pest()|] function' duration='0' flowId='12667']
+##teamcity[testStarted name='adds coverage if --min exist' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::adds coverage if --min exist' flowId='12667']
+⨯ adds coverage if --min exist
+
+##teamcity[testFailed name='adds coverage if --min exist' message='Failed asserting that true is identical to false.' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:205|n ' duration='0']
+##teamcity[testFinished name='adds coverage if --min exist' duration='0' flowId='12667']
+##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']
+##teamcity[testFinished name='it has emails with (|'enunomaduro@gmail.com|')' duration='1' flowId='12667']
+✓ it has emails with ('enunomaduro@gmail.com')
+##teamcity[testStarted name='it has emails with (|'other@example.com|')' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::it has emails with (|'other@example.com|')' flowId='12667']
+##teamcity[testFinished name='it has emails with (|'other@example.com|')' duration='0' flowId='12667']
+✓ it has emails with ('other@example.com')
+
+
+##teamcity[testSuiteFinished name='Tests\Unit\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php' flowId='12667']
+
+
+##teamcity[testSuiteFinished name='' locationHint='pest_qn://' flowId='12667']
+Tests:  51 failed, 2 skipped, 7 passed
+Assertions:  58
+Time:  0.013558585s
