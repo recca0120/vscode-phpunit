@@ -117,12 +117,13 @@ const countItems = (testItemCollection: TestItemCollection) => {
 };
 
 describe('Extension Test', () => {
-    const PHP_VERSION: string = getPhpVersion();
 
     const context: any = { subscriptions: { push: jest.fn() } };
     let cwd: string;
 
     describe('PHPUnit', () => {
+        const phpBinary = 'php';
+        const PHP_VERSION: string = getPhpVersion(phpBinary);
         const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
         const root = phpUnitProject('');
@@ -138,7 +139,7 @@ describe('Extension Test', () => {
                 context.subscriptions.push.mockReset();
                 cwd = normalPath(root);
                 const configuration = workspace.getConfiguration('phpunit');
-                await configuration.update('php', 'php');
+                await configuration.update('php', phpBinary);
                 await configuration.update('phpunit', 'vendor/bin/phpunit');
                 await configuration.update('args', []);
             });
@@ -195,7 +196,7 @@ describe('Extension Test', () => {
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
                 expect(spawn).toHaveBeenCalledWith(
-                    'php',
+                    phpBinary,
                     ['vendor/bin/phpunit', '--colors=never', '--teamcity'],
                     expect.objectContaining({ cwd }),
                 );
@@ -218,7 +219,7 @@ describe('Extension Test', () => {
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
-                expect(spawn).toHaveBeenCalledWith('php', [
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
                     '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with data set .*)?$',
                     '--colors=never',
@@ -244,7 +245,7 @@ describe('Extension Test', () => {
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
-                expect(spawn).toHaveBeenCalledWith('php', [
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
                     '--colors=never',
@@ -270,7 +271,7 @@ describe('Extension Test', () => {
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
-                expect(spawn).toHaveBeenCalledWith('php', [
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
                     expect.stringMatching(pattern),
                     normalPath(phpUnitProject('tests/CalculatorTest.php')),
@@ -347,7 +348,7 @@ describe('Extension Test', () => {
 
                 await commands.executeCommand('phpunit.run-file');
 
-                expect(spawn).toHaveBeenCalledWith('php', [
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
                     // '--filter=^.*::(test_passed)( with data set .*)?$',
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
@@ -374,7 +375,7 @@ describe('Extension Test', () => {
                 const pattern = new RegExp(
                     `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
                 );
-                expect(spawn).toHaveBeenCalledWith('php', [
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
                     expect.stringMatching(pattern),
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
@@ -385,74 +386,120 @@ describe('Extension Test', () => {
         });
     });
 
-    if (semver.gte(PHP_VERSION, '8.1.0')) {
-        describe('PEST', () => {
-            const root = pestProject('');
+    describe('PEST', () => {
+        const phpBinary = 'php';
+        // const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
+        const PHP_VERSION: string = getPhpVersion(phpBinary);
+        const isPestV1 = semver.gte(PHP_VERSION, '8.0.0') && semver.lt(PHP_VERSION, '8.1.0');
+        const isPestV2 = semver.gte(PHP_VERSION, '8.1.0') && semver.lt(PHP_VERSION, '8.2.0');
+        const isPestV3 = semver.gte(PHP_VERSION, '8.2.0');
+        const isPest = isPestV1 || isPestV2 || isPestV3;
 
-            beforeEach(() => {
-                setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
-                setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
-                jest.clearAllMocks();
+        if (!isPest) {
+            return;
+        }
+
+        const root = pestProject('');
+
+        beforeEach(() => {
+            setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
+            setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
+            jest.clearAllMocks();
+        });
+
+        describe('PEST activate()', () => {
+            beforeEach(async () => {
+                context.subscriptions.push.mockReset();
+                cwd = normalPath(root);
+                const configuration = workspace.getConfiguration('phpunit');
+                await configuration.update('php', phpBinary);
+                await configuration.update('phpunit', 'vendor/bin/pest');
+                await configuration.update('args', []);
             });
 
-            describe('PEST activate()', () => {
-                beforeEach(async () => {
-                    context.subscriptions.push.mockReset();
-                    cwd = normalPath(root);
-                    const configuration = workspace.getConfiguration('phpunit');
-                    await configuration.update('php', 'php');
-                    await configuration.update('phpunit', 'vendor/bin/pest');
-                    await configuration.update('args', []);
-                });
+            afterEach(() => jest.clearAllMocks());
 
-                afterEach(() => jest.clearAllMocks());
+            it('should run all tests', async () => {
+                await activate(context);
+                const ctrl = getTestController();
+                const runProfile = getRunProfile(ctrl);
+                const request = { include: undefined, exclude: [], profile: runProfile };
 
-                it('should run all tests', async () => {
-                    await activate(context);
-                    const ctrl = getTestController();
-                    const runProfile = getRunProfile(ctrl);
-                    const request = { include: undefined, exclude: [], profile: runProfile };
+                await runProfile.runHandler(request, new CancellationTokenSource().token);
 
-                    await runProfile.runHandler(request, new CancellationTokenSource().token);
+                expect(spawn).toHaveBeenCalledWith(
+                    phpBinary,
+                    ['vendor/bin/pest', '--colors=never', '--teamcity'],
+                    expect.objectContaining({ cwd }),
+                );
 
-                    expect(spawn).toHaveBeenCalledWith(
-                        'php',
-                        ['vendor/bin/pest', '--colors=never', '--teamcity'],
-                        expect.objectContaining({ cwd }),
-                    );
+                let expected;
+                if (!isPestV1) {
+                    expected = { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
+                } else {
+                    expected = { enqueued: 59, started: 58, passed: 5, failed: 51, end: 1 };
+                }
 
-                    const expected = { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
+                expectTestResultCalled(ctrl, expected);
+            });
 
-                    expectTestResultCalled(ctrl, expected);
-                });
+            it('should run test case', async () => {
+                await activate(context);
+                const ctrl = getTestController();
+                const runProfile = getRunProfile(ctrl);
 
-                it('should run test case', async () => {
-                    await activate(context);
-                    const ctrl = getTestController();
-                    const runProfile = getRunProfile(ctrl);
+                const method = 'test_description';
+                const id = `tests/Unit/ExampleTest.php::test_description`;
 
-                    const method = 'it has emails';
-                    const id = `tests/Unit/ExampleTest.php::it has emails`;
+                const pattern = new RegExp(
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                );
 
-                    const pattern = new RegExp(
-                        `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
-                    );
+                const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
-                    const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
+                await runProfile.runHandler(request, new CancellationTokenSource().token);
 
-                    await runProfile.runHandler(request, new CancellationTokenSource().token);
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
+                    'vendor/bin/pest',
+                    expect.stringMatching(pattern),
+                    normalPath(pestProject('tests/Unit/ExampleTest.php')),
+                    '--colors=never',
+                    '--teamcity',
+                ], expect.objectContaining({ cwd }));
 
-                    expect(spawn).toHaveBeenCalledWith('php', [
-                        'vendor/bin/pest',
-                        expect.stringMatching(pattern),
-                        normalPath(pestProject('tests/Unit/ExampleTest.php')),
-                        '--colors=never',
-                        '--teamcity',
-                    ], expect.objectContaining({ cwd }));
+                expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 0, failed: 1, end: 1 });
+            });
 
-                    expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 });
-                });
+            it('should run test case with dataset', async () => {
+                if (isPestV1) {
+                    return;
+                }
+
+                await activate(context);
+                const ctrl = getTestController();
+                const runProfile = getRunProfile(ctrl);
+
+                const method = 'it has emails';
+                const id = `tests/Unit/ExampleTest.php::it has emails`;
+
+                const pattern = new RegExp(
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                );
+
+                const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
+
+                await runProfile.runHandler(request, new CancellationTokenSource().token);
+
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
+                    'vendor/bin/pest',
+                    expect.stringMatching(pattern),
+                    normalPath(pestProject('tests/Unit/ExampleTest.php')),
+                    '--colors=never',
+                    '--teamcity',
+                ], expect.objectContaining({ cwd }));
+
+                expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 });
             });
         });
-    }
+    });
 });

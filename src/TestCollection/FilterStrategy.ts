@@ -29,12 +29,19 @@ class MethodFilterStrategy extends FilterStrategy {
     }
 
     private getDependsFilter() {
-        const deps = [
-            Transformer.generateSearchText(this.testDefinition.methodName!),
-            ...(this.testDefinition.annotations?.depends ?? []),
-        ].filter((value) => !!value).join('|');
+        if (this.hasChildren()) {
+            return '';
+        }
 
-        return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
+        const methodName = Transformer.generateSearchText(this.testDefinition.methodName!);
+        const deps = this.testDefinition.annotations?.depends ?? [];
+        const filter = [methodName, ...deps].filter((value) => !!value).join('|');
+
+        return `--filter '^.*::(${filter})( with data set .*)?$'`;
+    }
+
+    private hasChildren() {
+        return this.testDefinition.children && this.testDefinition.children.length > 0;
     }
 }
 

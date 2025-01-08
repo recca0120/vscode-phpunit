@@ -348,6 +348,24 @@ describe('Pest ProblemMatcher Text', () => {
         });
     });
 
+    it('name has */', () => {
+        resultShouldBe(`##teamcity[testStarted name='test /** with comment {@*} should do' locationHint='pest_qn://tests/Unit/ExampleTest.php::test /** with comment {@*} should do' flowId='28391']`, {
+            event: TeamcityEvent.testStarted,
+            id: 'tests/Unit/ExampleTest.php::test /** with comment */ should do',
+            name: 'test /** with comment {@*} should do',
+            flowId: 28391,
+        });
+
+        resultShouldBe(`##teamcity[testFailed name='test /** with comment {@*} should do' message='Failed asserting that true is identical to false.' details='at tests/Unit/ExampleTest.php:196' flowId='28391']`, undefined);
+
+        resultShouldBe(`##teamcity[testFinished name='test /** with comment {@*} should do' duration='0' flowId='28391']`, {
+            event: TeamcityEvent.testFailed,
+            id: 'tests/Unit/ExampleTest.php::test /** with comment */ should do',
+            name: 'test /** with comment {@*} should do',
+            flowId: 28391,
+        });
+    });
+
     it('with dataset', () => {
         resultShouldBe(`##teamcity[testSuiteStarted name='Addition provider' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider' flowId='53556']`, {
             event: TeamcityEvent.testSuiteStarted,
@@ -528,6 +546,98 @@ describe('Pest ProblemMatcher Text', () => {
                 name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,
+            });
+        });
+    });
+
+    describe('Pest v1', () => {
+        it('Pest v1 TestDuration', () => {
+            resultShouldBe('Time:  0.013558585s', {
+                event: TeamcityEvent.testDuration,
+                text: 'Time:  0.013558585s',
+                time: '0.013558585s',
+            });
+        });
+
+        it('testStarted without flowId', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Feature\\ExampleTest' locationHint='pest_qn://Tests\\Feature\\ExampleTest' flowId='58024']`, {
+                event: TeamcityEvent.testSuiteStarted,
+                id: 'Tests/Feature/ExampleTest',
+                name: 'Tests\\Feature\\ExampleTest',
+                flowId: 58024,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='test_example' locationHint='php_qn://${pestProject('tests/Feature/ExampleTest.php')}::\\Tests\\Feature\\ExampleTest::test_example']`, {
+                event: TeamcityEvent.testStarted,
+                id: 'Example (Tests\\Feature\\Example)::Example',
+                name: 'test_example',
+                flowId: 58024,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='test_example' duration='1' flowId='58024']`, {
+                event: TeamcityEvent.testFinished,
+                id: 'Example (Tests\\Feature\\Example)::Example',
+                name: 'test_example',
+                flowId: 58024,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Feature\\ExampleTest' locationHint='pest_qn://Tests\\Feature\\ExampleTest' flowId='58024']`, {
+                event: TeamcityEvent.testSuiteFinished,
+                id: 'Tests/Feature/ExampleTest',
+                name: 'Tests\\Feature\\ExampleTest',
+                flowId: 58024,
+            });
+        });
+
+        it('pest-v1 tests/Fixtures/CollisionTest.php', () => {
+            resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}' flowId='12667']`, {
+                event: TeamcityEvent.testSuiteStarted,
+                id: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                // file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='error' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}::error' flowId='12667']`, {
+                event: TeamcityEvent.testStarted,
+                id: 'tests/Fixtures/CollisionTest.php::error',
+                name: 'error',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testIgnored name='error' message='' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php:5|n ' duration='6']`, undefined);
+
+            resultShouldBe(`##teamcity[testFinished name='error' duration='6' flowId='12667']`, {
+                event: TeamcityEvent.testIgnored,
+                id: 'tests/Fixtures/CollisionTest.php::error',
+                name: 'error',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testStarted name='success' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}::success' flowId='12667']`, {
+                event: TeamcityEvent.testStarted,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='success' duration='0' flowId='12667']`, {
+                event: TeamcityEvent.testFinished,
+                id: 'tests/Fixtures/CollisionTest.php::success',
+                name: 'success',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}' flowId='12667']`, {
+                event: TeamcityEvent.testSuiteFinished,
+                id: 'tests/Fixtures/CollisionTest.php',
+                name: 'Tests\\Fixtures\\CollisionTest',
+                file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
             });
         });
     });

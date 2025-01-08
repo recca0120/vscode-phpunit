@@ -1,12 +1,12 @@
 import { basename, dirname, join, relative } from 'node:path';
 import { Block, Call, Closure, Declaration, ExpressionStatement, Node, Program, String } from 'php-parser';
-import { TransformerFactory } from '../Transformer';
+import { Transformer, TransformerFactory } from '../Transformer';
 import { TestDefinition, TestType } from '../types';
 import { capitalize } from '../utils';
 import { Parser } from './Parser';
 
 export class PestParser extends Parser {
-    private converter = TransformerFactory.factory('pest');
+    private transformer: Transformer = TransformerFactory.factory('pest');
 
     parse(declaration: Declaration | Node, file: string): TestDefinition[] | undefined {
         const clazz = this.parseClass(declaration, file);
@@ -37,8 +37,8 @@ export class PestParser extends Parser {
         const partsFQN = classFQN.split('\\');
         const className = partsFQN.pop()!;
         const namespace = partsFQN.join('\\');
-        const id = this.converter.uniqueId({ type, classFQN });
-        const label = this.converter.generateLabel({ type, classFQN, className });
+        const id = this.transformer.uniqueId({ type, classFQN });
+        const label = this.transformer.generateLabel({ type, classFQN, className });
 
         const { start, end } = this.parsePosition(declaration);
 
@@ -82,8 +82,8 @@ export class PestParser extends Parser {
         }
 
         const type = TestType.method;
-        const id = this.converter.uniqueId({ ...clazz, type, methodName });
-        const label = this.converter.generateLabel({ ...clazz, type, methodName });
+        const id = this.transformer.uniqueId({ ...clazz, type, methodName });
+        const label = this.transformer.generateLabel({ ...clazz, type, methodName });
         const { start, end } = this.parsePosition(call);
 
         return { ...clazz, type, id, label, methodName, start, end, depth: 3 };
