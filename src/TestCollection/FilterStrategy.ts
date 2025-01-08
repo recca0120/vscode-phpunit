@@ -10,7 +10,7 @@ abstract class FilterStrategy {
 
 class NamespaceFilterStrategy extends FilterStrategy {
     getFilter() {
-        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
+        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with (data set )?.*)?$'`;
     }
 }
 
@@ -37,7 +37,7 @@ class MethodFilterStrategy extends FilterStrategy {
         const deps = this.testDefinition.annotations?.depends ?? [];
         const filter = [methodName, ...deps].filter((value) => !!value).join('|');
 
-        return `--filter '^.*::(${filter})( with data set .*)?$'`;
+        return `--filter '^.*::(${filter})( with (data set )?.*)?$'`;
     }
 
     private hasChildren() {

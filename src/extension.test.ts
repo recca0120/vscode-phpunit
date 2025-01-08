@@ -117,13 +117,11 @@ const countItems = (testItemCollection: TestItemCollection) => {
 };
 
 describe('Extension Test', () => {
-
     const context: any = { subscriptions: { push: jest.fn() } };
     let cwd: string;
 
     describe('PHPUnit', () => {
         const phpBinary = 'php';
-        const PHP_VERSION: string = getPhpVersion(phpBinary);
         const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
         const root = phpUnitProject('');
@@ -201,12 +199,10 @@ describe('Extension Test', () => {
                     expect.objectContaining({ cwd }),
                 );
 
-                let expected;
-                if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                    expected = { enqueued: 28, started: 28, passed: 18, failed: 8, end: 1 };
-                } else {
-                    expected = { enqueued: 28, started: 26, passed: 14, failed: 10, end: 1 };
-                }
+                const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
+                    ? { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 }
+                    : { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
+
                 expectTestResultCalled(ctrl, expected);
             });
 
@@ -221,17 +217,14 @@ describe('Extension Test', () => {
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with data set .*)?$',
+                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with (data set )?.*)?$',
                     '--colors=never',
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                let expected;
-                if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                    expected = { enqueued: 27, started: 27, passed: 18, failed: 7, end: 1 };
-                } else {
-                    expected = { enqueued: 27, started: 25, passed: 14, failed: 9, end: 1 };
-                }
+                const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
+                    ? { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 }
+                    : { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -252,7 +245,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                expectTestResultCalled(ctrl, { enqueued: 9, started: 9, passed: 4, failed: 3, end: 1 });
+                expectTestResultCalled(ctrl, { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 });
             });
 
             it('should run test case', async () => {
@@ -264,7 +257,7 @@ describe('Extension Test', () => {
                 const id = `Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception`;
 
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
@@ -373,7 +366,7 @@ describe('Extension Test', () => {
 
                 const method = 'test_passed';
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
@@ -433,12 +426,9 @@ describe('Extension Test', () => {
                     expect.objectContaining({ cwd }),
                 );
 
-                let expected;
-                if (!isPestV1) {
-                    expected = { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
-                } else {
-                    expected = { enqueued: 59, started: 58, passed: 5, failed: 51, end: 1 };
-                }
+                const expected = !isPestV1
+                    ? { enqueued: 59, started: 61, passed: 8, failed: 51, end: 1 }
+                    : { enqueued: 59, started: 60, passed: 7, failed: 51, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -452,7 +442,7 @@ describe('Extension Test', () => {
                 const id = `tests/Unit/ExampleTest.php::test_description`;
 
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
@@ -471,10 +461,6 @@ describe('Extension Test', () => {
             });
 
             it('should run test case with dataset', async () => {
-                if (isPestV1) {
-                    return;
-                }
-
                 await activate(context);
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
@@ -483,7 +469,7 @@ describe('Extension Test', () => {
                 const id = `tests/Unit/ExampleTest.php::it has emails`;
 
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
@@ -498,7 +484,11 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 });
+                const expected = !isPestV1
+                    ? { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }
+                    : { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 };
+
+                expectTestResultCalled(ctrl, expected);
             });
         });
     });

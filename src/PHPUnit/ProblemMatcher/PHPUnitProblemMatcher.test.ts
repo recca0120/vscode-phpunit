@@ -124,7 +124,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
         it('testStarted addition_provider', () => {
             resultShouldBe(`##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`, {
                 event: TeamcityEvent.testStarted,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
                 locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                 flowId: 8024,
@@ -136,7 +137,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`, {
                 event: TeamcityEvent.testFailed,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
                 file: phpUnitProjectWin('tests/AssertionsTest.php'),
                 locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                 message: 'Failed asserting that 1 matches expected 2.',

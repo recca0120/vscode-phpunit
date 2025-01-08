@@ -15,7 +15,7 @@ export class Str {
 
 export class PestV1Fixer {
     static fixLocationHint(locationHint: string) {
-        return /^tests\//.test(locationHint) ? locationHint : locationHint.substring(locationHint.lastIndexOf('tests/'));
+        return this.fixDataSet(/^tests\//.test(locationHint) ? locationHint : locationHint.substring(locationHint.lastIndexOf('tests/')));
     }
 
     static fixFlowId(results = new Map<string, TestResult>(), testResult?: TestResult) {
@@ -45,6 +45,14 @@ export class PestV1Fixer {
         (testResult as any).flowId = (result as any)?.flowId;
 
         return;
+    }
+
+    private static fixDataSet(locationHint: string) {
+        const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
+
+        return matched && matched.groups?.description
+            ? `${matched.groups.description} with data set "(\'${matched.groups.data}\')"`
+            : locationHint;
     }
 }
 
@@ -105,7 +113,7 @@ export class PestTransformer extends PHPUnitTransformer {
         const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
             const location = PestV1Fixer.fixLocationHint(locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'));
-            const id = this.normalizeMethodName(PestV2Fixer.fixId(location, name));
+            const id = this.removeDataset(this.normalizeMethodName(PestV2Fixer.fixId(location, name)));
             const file = location.split('::')[0];
 
             return { id, file };
@@ -113,12 +121,12 @@ export class PestTransformer extends PHPUnitTransformer {
 
         const methodName = this.normalizeMethodName(matched.groups?.method ?? '');
         if (!methodName) {
-            return { id: name, file: '' };
+            return { id: this.removeDataset(name), file: '' };
         }
 
         const classFQN = matched.groups?.classFQN;
         const type = !methodName ? TestType.class : TestType.method;
-        const id = this.uniqueId({ type: type, classFQN, methodName });
+        const id = this.removeDataset(this.uniqueId({ type: type, classFQN, methodName }));
 
         return { id, file: '' };
     }

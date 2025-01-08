@@ -376,35 +376,40 @@ describe('Pest ProblemMatcher Text', () => {
 
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set ""foo-bar_%$"' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"' flowId='53556']`, {
             event: TeamcityEvent.testStarted,
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
+            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider with data set ""foo-bar_%$"',
             flowId: 53556,
         });
 
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set ""foo-bar_%$"' duration='0' flowId='53556']`, {
             event: TeamcityEvent.testFinished,
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
+            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider with data set ""foo-bar_%$"',
             flowId: 53556,
         });
 
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set #0' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0' flowId='53556']`, {
             event: TeamcityEvent.testStarted,
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
+            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider with data set #0',
             flowId: 53556,
         });
 
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set #0' duration='0' flowId='53556']`, {
             event: TeamcityEvent.testFinished,
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
+            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider with data set #0',
             flowId: 53556,
         });
 
         resultShouldBe(`##teamcity[testStarted name='Addition provider with data set #1' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1' flowId='53556']`, {
             event: TeamcityEvent.testStarted,
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
+            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider with data set #1',
             flowId: 53556,
         });
@@ -413,7 +418,8 @@ describe('Pest ProblemMatcher Text', () => {
 
         resultShouldBe(`##teamcity[testFinished name='Addition provider with data set #1' duration='0' flowId='53556']`, {
             event: TeamcityEvent.testFailed,
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
+            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider with data set #1',
             flowId: 53556,
         });
@@ -423,6 +429,54 @@ describe('Pest ProblemMatcher Text', () => {
             id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
             name: 'Addition provider',
             flowId: 53556,
+        });
+    });
+
+    it('describe with dataset', () => {
+        resultShouldBe(`##teamcity[testSuiteStarted name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it ha' locationHint='pest_qn://tests/Unit/ExampleTest.php::\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it ha' flowId='11847']`, {
+            event: TeamcityEvent.testSuiteStarted,
+            id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it ha',
+            name: '`abc` → `def` → `ijk` → `lmn` → it ha',
+            flowId: 11847,
+        });
+
+        resultShouldBe(`##teamcity[testStarted name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'enunomaduro@gmail.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'enunomaduro@gmail.com|')"' flowId='11847']`, {
+            event: TeamcityEvent.testStarted,
+            // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
+            id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+            name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
+            flowId: 11847,
+        });
+
+        resultShouldBe(`##teamcity[testFinished name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'enunomaduro@gmail.com|')"' duration='9' flowId='11847']`, {
+            event: TeamcityEvent.testFinished,
+            // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
+            id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+            name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
+            flowId: 11847,
+        });
+
+        resultShouldBe(`##teamcity[testStarted name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'other@example.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'other@example.com|')"' flowId='11847']`, {
+            event: TeamcityEvent.testStarted,
+            // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
+            id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+            name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
+            flowId: 11847,
+        });
+
+        resultShouldBe(`##teamcity[testFinished name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'other@example.com|')"' duration='0' flowId='11847']`, {
+            event: TeamcityEvent.testFinished,
+            // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
+            id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+            name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
+            flowId: 11847,
+        });
+
+        resultShouldBe(`##teamcity[testSuiteFinished name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it ha' flowId='11847']`, {
+            event: TeamcityEvent.testSuiteFinished,
+            id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it ha',
+            name: '`abc` → `def` → `ijk` → `lmn` → it ha',
+            flowId: 11847,
         });
     });
 
@@ -510,7 +564,8 @@ describe('Pest ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testStarted name='it has emails with data set "(|'enunomaduro@gmail.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'enunomaduro@gmail.com|')"' flowId='57317']`, {
                 event: TeamcityEvent.testStarted,
-                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                id: 'tests/Unit/ExampleTest.php::it has emails',
                 name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,
@@ -518,7 +573,8 @@ describe('Pest ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testFinished name='it has emails with data set "(|'enunomaduro@gmail.com|')"' duration='1' flowId='57317']`, {
                 event: TeamcityEvent.testFinished,
-                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                id: 'tests/Unit/ExampleTest.php::it has emails',
                 name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,
@@ -526,7 +582,8 @@ describe('Pest ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testStarted name='it has emails with data set "(|'other@example.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'other@example.com|')"' flowId='57317']`, {
                 event: TeamcityEvent.testStarted,
-                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                id: 'tests/Unit/ExampleTest.php::it has emails',
                 name: 'it has emails with data set "(\'other@example.com\')"',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,
@@ -534,7 +591,8 @@ describe('Pest ProblemMatcher Text', () => {
 
             resultShouldBe(`##teamcity[testFinished name='it has emails with data set "(|'other@example.com|')"' duration='0' flowId='57317']`, {
                 event: TeamcityEvent.testFinished,
-                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
+                id: 'tests/Unit/ExampleTest.php::it has emails',
                 name: 'it has emails with data set "(\'other@example.com\')"',
                 file: 'tests/Unit/ExampleTest.php',
                 flowId: 57317,
@@ -637,6 +695,26 @@ describe('Pest ProblemMatcher Text', () => {
                 id: 'tests/Fixtures/CollisionTest.php',
                 name: 'Tests\\Fixtures\\CollisionTest',
                 file: 'tests/Fixtures/CollisionTest.php',
+                flowId: 12667,
+            });
+        });
+
+        it('pest v1 data set', () => {
+            resultShouldBe(`##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']`, {
+                event: TeamcityEvent.testStarted,
+                // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                id: 'tests/Unit/ExampleTest.php::it has emails',
+                name: 'it has emails with (\'enunomaduro@gmail.com\')',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='it has emails with (|'enunomaduro@gmail.com|')' duration='1' flowId='12667']`, {
+                event: TeamcityEvent.testFinished,
+                // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                id: 'tests/Unit/ExampleTest.php::it has emails',
+                name: 'it has emails with (\'enunomaduro@gmail.com\')',
+                file: 'tests/Unit/ExampleTest.php',
                 flowId: 12667,
             });
         });
