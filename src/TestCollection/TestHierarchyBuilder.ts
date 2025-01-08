@@ -1,7 +1,7 @@
 import { Position, Range, TestController, TestItem, Uri } from 'vscode';
 import { TestDefinition, TestParser, TestType, TransformerFactory } from '../PHPUnit';
 import { CustomWeakMap } from '../PHPUnit/utils';
-import { TestCase } from './TestCollection';
+import { TestCase } from './TestCase';
 
 export class TestHierarchyBuilder {
     private icons = {

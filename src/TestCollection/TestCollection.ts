@@ -1,56 +1,10 @@
 import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    CommandBuilder, CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
-    Transformer,
+    CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
 } from '../PHPUnit';
+import { TestCase } from './TestCase';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
-
-const inRange = (test: TestItem, testCase: TestCase, position: Position) => {
-    return testCase.type !== TestType.method
-        ? false
-        : position.line >= test.range!.start.line && position.line <= test.range!.end.line;
-};
-
-export class TestCase {
-    constructor(private testDefinition: TestDefinition) {}
-
-    get type() {
-        return this.testDefinition.type;
-    }
-
-    update(command: CommandBuilder) {
-        return command.clone().setArguments(this.getArguments());
-    }
-
-    private getArguments(): string {
-        if (this.testDefinition.type === TestType.namespace) {
-            return this.parseNamespaceFilter();
-        }
-
-        if (this.testDefinition.type === TestType.class) {
-            return this.testDefinition.file!;
-        }
-
-        return [
-            this.parseDependsFilter(),
-            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ].filter((value) => !!value).join(' ');
-    }
-
-    private parseNamespaceFilter() {
-        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
-    }
-
-    private parseDependsFilter() {
-        const deps = [
-            Transformer.generateSearchText(this.testDefinition.methodName!),
-            ...(this.testDefinition.annotations?.depends ?? []),
-        ].filter((value) => !!value).join('|');
-
-        return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
-    }
-}
 
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
@@ -83,7 +37,7 @@ export class TestCollection extends BaseTestCollection {
 
     findTestByPosition(uri: URI, position: Position): TestItem | undefined {
         for (const [test, testCase] of this.getTestCases(uri)) {
-            if (inRange(test, testCase, position)) {
+            if (testCase.inRange(test, position)) {
                 return test;
             }
         }
