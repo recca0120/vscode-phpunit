@@ -1,35 +1,48 @@
+import { TestResult } from '../ProblemMatcher';
 import { TestDefinition, TestType } from '../types';
 import { capitalize, uncapitalize } from '../utils';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
 import { TransformerFactory } from './TransformerFactory';
 
-export class PestTransformer extends PHPUnitTransformer {
-    private static prefix = '__pest_evaluable_';
 
-    static hasPrefix(id?: string) {
-        return id && new RegExp(this.prefix).test(id);
-    }
+export class Str {
+    static prefix = '__pest_evaluable_';
 
     static evaluable(code: string) {
         return this.prefix + code.replace(/_/g, '__').replace(/\s/g, '_').replace(/[^a-zA-Z0-9_\u0080-\uFFFF]/g, '_');
     }
+}
 
-    static pestId(id: string) {
-        let [classFQN, method] = id.split('::');
+export class PestV2Fixer {
+    static isEqualsPestV2DataSetId(result: TestResult, testItemId: string) {
+        if (!('id' in result) || !this.hasPrefix(result.id)) {
+            return false;
+        }
 
-        method = method.replace(/\{@\*}/g, '*/');
-        const matched = method.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
+        let [classFQN, method] = testItemId.split('::');
+        classFQN = capitalize(classFQN.replace(/\//g, '\\').replace(/\.php$/, ''));
+
+        return [classFQN, this.methodName(method)].join('::') === result.id;
+    }
+
+    static hasPrefix(id?: string) {
+        return id && new RegExp(Str.prefix).test(id);
+    }
+
+    static methodName(methodName: string) {
+        methodName = methodName.replace(/\{@\*}/g, '*/');
+        const matched = methodName.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
         let dataset = '';
         if (matched) {
-            method = matched.groups!.method;
+            methodName = matched.groups!.method;
             dataset = matched.groups!.dataset.replace(/\|'/g, '\'');
         }
 
-        classFQN = capitalize(classFQN.replace(/\//g, '\\').replace(/\.php$/, ''));
-
-        return [classFQN, this.evaluable(method) + dataset].join('::');
+        return Str.evaluable(methodName) + dataset;
     }
+}
 
+export class PestTransformer extends PHPUnitTransformer {
     uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
         if (!TransformerFactory.isPest(testDefinition.classFQN!)) {
             return super.uniqueId(testDefinition);
@@ -50,12 +63,11 @@ export class PestTransformer extends PHPUnitTransformer {
     };
 
     fromLocationHit(locationHint: string, name: string) {
-        let file = '';
         const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
             let id = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
-            file = id.split('::')[0];
-            if (PestTransformer.hasPrefix(name)) {
+            let file = id.split('::')[0];
+            if (PestV2Fixer.hasPrefix(name)) {
                 id = name;
             }
 
@@ -64,14 +76,14 @@ export class PestTransformer extends PHPUnitTransformer {
 
         const methodName = matched.groups?.method;
         if (!methodName) {
-            return { id: name, file };
+            return { id: name, file: '' };
         }
 
         const classFQN = matched.groups?.['classFQN'];
         const type = !methodName ? TestType.class : TestType.method;
         const id = this.uniqueId({ type: type, classFQN, methodName });
 
-        return { id, file };
+        return { id, file: '' };
     }
 
     protected normalizeMethodName(methodName: string) {

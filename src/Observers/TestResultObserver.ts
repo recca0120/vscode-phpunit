@@ -1,8 +1,8 @@
 import { Location, Position, Range, TestItem, TestMessage, TestMessageStackFrame, TestRun } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    EOL, PestTransformer, TestFailed, TestFinished, TestIgnored, TestResult, TestRunnerObserver, TestStarted,
-    TestSuiteFinished, TestSuiteStarted,
+    EOL, PestV2Fixer, TestFailed, TestFinished, TestIgnored, TestResult, TestRunnerObserver, TestStarted, TestSuiteFinished,
+    TestSuiteStarted,
 } from '../PHPUnit';
 import { TestCase } from '../TestCollection';
 
@@ -82,16 +82,7 @@ export class TestResultObserver implements TestRunnerObserver {
     private find(result: TestResult) {
         if ('id' in result) {
             for (const [_, testItem] of this.queue) {
-                if (result.id === testItem.id) {
-                    return testItem;
-                }
-
-                if (!PestTransformer.hasPrefix(result.id)) {
-                    continue;
-                }
-
-                const pestId = PestTransformer.pestId(testItem.id);
-                if (pestId === result.id) {
+                if (result.id === testItem.id || PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)) {
                     return testItem;
                 }
             }
