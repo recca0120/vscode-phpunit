@@ -387,8 +387,8 @@ describe('Extension Test', () => {
     });
 
     describe('PEST', () => {
-        // const phpBinary = 'php';
-        const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
+        const phpBinary = 'php';
+        // const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
         const PHP_VERSION: string = getPhpVersion(phpBinary);
         const isPestV1 = semver.gte(PHP_VERSION, '8.0.0') && semver.lt(PHP_VERSION, '8.1.0');
         const isPestV2 = semver.gte(PHP_VERSION, '8.1.0') && semver.lt(PHP_VERSION, '8.2.0');
