@@ -82,16 +82,7 @@ export class TestResultObserver implements TestRunnerObserver {
     private find(result: TestResult) {
         if ('id' in result) {
             for (const [_, testItem] of this.queue) {
-                if (result.id === testItem.id) {
-                    return testItem;
-                }
-
-                if (!PestTransformer.hasPrefix(result.id)) {
-                    continue;
-                }
-
-                const pestId = PestTransformer.pestId(testItem.id);
-                if (pestId === result.id) {
+                if (result.id === testItem.id || PestTransformer.isEqualsPestV2DataSetId(result, testItem.id)) {
                     return testItem;
                 }
             }

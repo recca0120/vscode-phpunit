@@ -1,3 +1,4 @@
+import { TestResult } from '../ProblemMatcher';
 import { TestDefinition, TestType } from '../types';
 import { capitalize, uncapitalize } from '../utils';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
@@ -6,28 +7,37 @@ import { TransformerFactory } from './TransformerFactory';
 export class PestTransformer extends PHPUnitTransformer {
     private static prefix = '__pest_evaluable_';
 
+    static evaluable(code: string) {
+        code = code.replace(/\{@\*}/g, '*/');
+
+        return this.prefix + code.replace(/_/g, '__').replace(/\s/g, '_').replace(/[^a-zA-Z0-9_\u0080-\uFFFF]/g, '_');
+    }
+
+    static methodName(methodName: string) {
+        methodName = methodName.replace(/\{@\*}/g, '*/');
+        const matched = methodName.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
+        let dataset = '';
+        if (matched) {
+            methodName = matched.groups!.method;
+            dataset = matched.groups!.dataset.replace(/\|'/g, '\'');
+        }
+
+        return this.prefix + this.evaluable(methodName) + dataset;
+    }
+
     static hasPrefix(id?: string) {
         return id && new RegExp(this.prefix).test(id);
     }
 
-    static evaluable(code: string) {
-        return this.prefix + code.replace(/_/g, '__').replace(/\s/g, '_').replace(/[^a-zA-Z0-9_\u0080-\uFFFF]/g, '_');
-    }
-
-    static pestId(id: string) {
-        let [classFQN, method] = id.split('::');
-
-        method = method.replace(/\{@\*}/g, '*/');
-        const matched = method.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
-        let dataset = '';
-        if (matched) {
-            method = matched.groups!.method;
-            dataset = matched.groups!.dataset.replace(/\|'/g, '\'');
+    static isEqualsPestV2DataSetId(result: TestResult, testItemId: string) {
+        if (!('id' in result) || !this.hasPrefix(result.id)) {
+            return false;
         }
 
+        let [classFQN, method] = testItemId.split('::');
         classFQN = capitalize(classFQN.replace(/\//g, '\\').replace(/\.php$/, ''));
 
-        return [classFQN, this.evaluable(method) + dataset].join('::');
+        return [classFQN, this.methodName(method)].join('::') === result.id;
     }
 
     uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
