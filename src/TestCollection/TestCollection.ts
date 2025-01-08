@@ -1,80 +1,10 @@
 import { Position, TestController, TestItem } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    CommandBuilder, CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
-    Transformer,
+    CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
 } from '../PHPUnit';
+import { TestCase } from './TestCase';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
-
-const inRange = (test: TestItem, testCase: TestCase, position: Position) => {
-    return testCase.type !== TestType.method
-        ? false
-        : position.line >= test.range!.start.line && position.line <= test.range!.end.line;
-};
-
-abstract class FilterStrategy {
-    constructor(protected testDefinition: TestDefinition) {
-    }
-
-    abstract getFilter(): string
-
-}
-
-class NamespaceFilterStrategy extends FilterStrategy {
-    getFilter() {
-        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
-    }
-}
-
-class ClassFilterStrategy extends FilterStrategy {
-    getFilter() {
-        return this.testDefinition.file!;
-    }
-}
-
-class MethodFilterStrategy extends FilterStrategy {
-    getFilter() {
-        return [
-            this.getDependsFilter(),
-            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ].filter((value) => !!value).join(' ');
-    }
-
-    private getDependsFilter() {
-        const deps = [
-            Transformer.generateSearchText(this.testDefinition.methodName!),
-            ...(this.testDefinition.annotations?.depends ?? []),
-        ].filter((value) => !!value).join('|');
-
-        return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
-    }
-}
-
-class FilterStrategyFactory {
-    static getStrategy(testDefinition: TestDefinition) {
-        if (testDefinition.type === TestType.namespace) {
-            return new NamespaceFilterStrategy(testDefinition);
-        }
-
-        if (testDefinition.type === TestType.class) {
-            return new ClassFilterStrategy(testDefinition);
-        }
-
-        return new MethodFilterStrategy(testDefinition);
-    }
-}
-
-export class TestCase {
-    constructor(private testDefinition: TestDefinition) {}
-
-    get type() {
-        return this.testDefinition.type;
-    }
-
-    update(command: CommandBuilder) {
-        return command.clone().setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
-    }
-}
 
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
@@ -107,7 +37,7 @@ export class TestCollection extends BaseTestCollection {
 
     findTestByPosition(uri: URI, position: Position): TestItem | undefined {
         for (const [test, testCase] of this.getTestCases(uri)) {
-            if (inRange(test, testCase, position)) {
+            if (testCase.inRange(test, position)) {
                 return test;
             }
         }
