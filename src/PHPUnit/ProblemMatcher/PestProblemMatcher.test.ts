@@ -640,5 +640,25 @@ describe('Pest ProblemMatcher Text', () => {
                 flowId: 12667,
             });
         });
+
+        it('pest v1 data set', () => {
+            resultShouldBe(`##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']`, {
+                event: TeamcityEvent.testStarted,
+                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                // id: 'tests/Unit/ExampleTest.php::it has emails',
+                name: 'it has emails with (\'enunomaduro@gmail.com\')',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 12667,
+            });
+
+            resultShouldBe(`##teamcity[testFinished name='it has emails with (|'enunomaduro@gmail.com|')' duration='1' flowId='12667']`, {
+                event: TeamcityEvent.testFinished,
+                id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
+                // id: 'tests/Unit/ExampleTest.php::it has emails',
+                name: 'it has emails with (\'enunomaduro@gmail.com\')',
+                file: 'tests/Unit/ExampleTest.php',
+                flowId: 12667,
+            });
+        });
     });
 });

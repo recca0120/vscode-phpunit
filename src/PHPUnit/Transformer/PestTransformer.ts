@@ -15,7 +15,7 @@ export class Str {
 
 export class PestV1Fixer {
     static fixLocationHint(locationHint: string) {
-        return /^tests\//.test(locationHint) ? locationHint : locationHint.substring(locationHint.lastIndexOf('tests/'));
+        return this.fixDataSet(/^tests\//.test(locationHint) ? locationHint : locationHint.substring(locationHint.lastIndexOf('tests/')));
     }
 
     static fixFlowId(results = new Map<string, TestResult>(), testResult?: TestResult) {
@@ -45,6 +45,14 @@ export class PestV1Fixer {
         (testResult as any).flowId = (result as any)?.flowId;
 
         return;
+    }
+
+    private static fixDataSet(locationHint: string) {
+        const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
+
+        return matched && matched.groups?.description
+            ? `${matched.groups.description} with data set "(\'${matched.groups.data}\')"`
+            : locationHint;
     }
 }
 

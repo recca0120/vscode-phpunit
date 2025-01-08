@@ -117,7 +117,6 @@ const countItems = (testItemCollection: TestItemCollection) => {
 };
 
 describe('Extension Test', () => {
-
     const context: any = { subscriptions: { push: jest.fn() } };
     let cwd: string;
 
@@ -200,12 +199,10 @@ describe('Extension Test', () => {
                     expect.objectContaining({ cwd }),
                 );
 
-                let expected;
-                if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                    expected = { enqueued: 28, started: 28, passed: 18, failed: 8, end: 1 };
-                } else {
-                    expected = { enqueued: 28, started: 26, passed: 14, failed: 10, end: 1 };
-                }
+                const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
+                    ? { enqueued: 28, started: 28, passed: 18, failed: 8, end: 1 }
+                    : { enqueued: 28, started: 26, passed: 14, failed: 10, end: 1 };
+
                 expectTestResultCalled(ctrl, expected);
             });
 
@@ -225,12 +222,9 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                let expected;
-                if (semver.gte(PHPUNIT_VERSION, '10.0.0')) {
-                    expected = { enqueued: 27, started: 27, passed: 18, failed: 7, end: 1 };
-                } else {
-                    expected = { enqueued: 27, started: 25, passed: 14, failed: 9, end: 1 };
-                }
+                const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
+                    ? { enqueued: 27, started: 27, passed: 18, failed: 7, end: 1 }
+                    : { enqueued: 27, started: 25, passed: 14, failed: 9, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -432,12 +426,9 @@ describe('Extension Test', () => {
                     expect.objectContaining({ cwd }),
                 );
 
-                let expected;
-                if (!isPestV1) {
-                    expected = { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
-                } else {
-                    expected = { enqueued: 59, started: 58, passed: 5, failed: 51, end: 1 };
-                }
+                const expected = isPestV1
+                    ? { enqueued: 59, started: 60, passed: 7, failed: 51, end: 1 }
+                    : { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -470,10 +461,6 @@ describe('Extension Test', () => {
             });
 
             it('should run test case with dataset', async () => {
-                if (isPestV1) {
-                    return;
-                }
-
                 await activate(context);
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
@@ -497,7 +484,11 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 });
+                const expected = isPestV1
+                    ? { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 }
+                    : { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 };
+
+                expectTestResultCalled(ctrl, expected);
             });
         });
     });
