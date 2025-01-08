@@ -1,4 +1,4 @@
-import { TestResult } from '../ProblemMatcher';
+import { TeamcityEvent, TestResult } from '../ProblemMatcher';
 import { TestDefinition, TestType } from '../types';
 import { capitalize, uncapitalize } from '../utils';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
@@ -20,21 +20,17 @@ export class PestV1Fixer {
 
     static fixFlowId(results = new Map<string, TestResult>(), testResult?: TestResult) {
         if (!testResult) {
-            return;
-        }
-
-        const events = ['testStarted', 'testFailed', 'testIgnored'];
-        if ('event' in testResult && !events.includes(testResult.event)) {
             return testResult;
         }
 
-        if ((testResult as any).flowId) {
+        const events = [TeamcityEvent.testStarted, TeamcityEvent.testFailed, TeamcityEvent.testIgnored];
+        if ('event' in testResult && !events.includes(testResult.event) || (testResult as any).flowId) {
             return testResult;
         }
 
         const result = Array.from(results.values()).reverse().find((result: TestResult) => {
-            if (testResult.event !== 'testStarted') {
-                return result.event === 'testStarted' && (result as any).name === (testResult as any).name;
+            if (testResult.event !== TeamcityEvent.testStarted) {
+                return result.event === TeamcityEvent.testStarted && (result as any).name === (testResult as any).name;
             }
 
             const matched = (testResult as any).id?.match(/\((?<id>.+)\)/);
@@ -44,7 +40,7 @@ export class PestV1Fixer {
 
         (testResult as any).flowId = (result as any)?.flowId;
 
-        return;
+        return testResult;
     }
 
     private static fixDataSet(locationHint: string) {
