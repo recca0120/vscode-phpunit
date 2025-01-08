@@ -1,16 +1,16 @@
 import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
-import { TransformerFactory } from '../Transformer';
+import { Transformer, TransformerFactory } from '../Transformer';
 import { TestDefinition, TestType } from '../types';
 import { Parser } from './Parser';
 import { validator } from './Validator';
 
 export class PHPUnitParser extends Parser {
+    private transformer: Transformer = TransformerFactory.factory('phpunit');
+
     private parserLookup: { [p: string]: Function } = {
         namespace: this.parseNamespace,
         class: this.parseClass,
     };
-
-    private converter = TransformerFactory.factory('phpunit');
 
     parse(declaration: Declaration | Node, file: string, namespace?: TestDefinition): TestDefinition[] | undefined {
         const fn: Function = this.parserLookup[declaration.kind] ?? this.parseChildren;
@@ -32,8 +32,8 @@ export class PHPUnitParser extends Parser {
 
         const className = this.parseName(declaration)!;
         const classFQN = [namespace?.namespace, className].filter((name) => !!name).join('\\');
-        const id = this.converter.uniqueId({ type, classFQN, annotations });
-        const label = this.converter.generateLabel({ type, classFQN, className, annotations });
+        const id = this.transformer.uniqueId({ type, classFQN, annotations });
+        const label = this.transformer.generateLabel({ type, classFQN, className, annotations });
 
         const clazz = {
             type,
@@ -63,8 +63,8 @@ export class PHPUnitParser extends Parser {
         const annotations = this.parseAnnotations(declaration);
 
         const methodName = this.parseName(declaration);
-        const id = this.converter.uniqueId({ ...clazz, type, methodName, annotations });
-        const label = this.converter.generateLabel({ ...clazz, type, methodName, annotations });
+        const id = this.transformer.uniqueId({ ...clazz, type, methodName, annotations });
+        const label = this.transformer.generateLabel({ ...clazz, type, methodName, annotations });
 
         return {
             ...clazz,

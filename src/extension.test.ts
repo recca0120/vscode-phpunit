@@ -437,7 +437,7 @@ describe('Extension Test', () => {
                 if (!isPestV1) {
                     expected = { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
                 } else {
-                    expected = { enqueued: 59, started: 57, passed: 5, failed: 50, end: 1 };
+                    expected = { enqueued: 59, started: 58, passed: 5, failed: 51, end: 1 };
                 }
 
                 expectTestResultCalled(ctrl, expected);

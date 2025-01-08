@@ -11,7 +11,7 @@ describe('PestTransformer', () => {
             const methodName = 'test /** with comment */ should do';
             const classFQN = className;
 
-            const expected = 'tests/Unit/ExampleTest.php::test /** with comment {@*} should do';
+            const expected = 'tests/Unit/ExampleTest.php::test /** with comment */ should do';
             expect(transformer.uniqueId({ type, classFQN, methodName })).toEqual(expected);
         });
 

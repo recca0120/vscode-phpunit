@@ -105,18 +105,18 @@ export class PestTransformer extends PHPUnitTransformer {
         const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
             const location = PestV1Fixer.fixLocationHint(locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'));
-            const id = PestV2Fixer.fixId(location, name);
+            const id = this.normalizeMethodName(PestV2Fixer.fixId(location, name));
             const file = location.split('::')[0];
 
             return { id, file };
         }
 
-        const methodName = matched.groups?.method;
+        const methodName = this.normalizeMethodName(matched.groups?.method ?? '');
         if (!methodName) {
             return { id: name, file: '' };
         }
 
-        const classFQN = matched.groups?.['classFQN'];
+        const classFQN = matched.groups?.classFQN;
         const type = !methodName ? TestType.class : TestType.method;
         const id = this.uniqueId({ type: type, classFQN, methodName });
 
@@ -124,6 +124,6 @@ export class PestTransformer extends PHPUnitTransformer {
     }
 
     protected normalizeMethodName(methodName: string) {
-        return methodName.replace(/\*\//g, '{@*}');
+        return methodName.replace(/\{@\*}/g, '*/');
     }
 }

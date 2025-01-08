@@ -348,6 +348,24 @@ describe('Pest ProblemMatcher Text', () => {
         });
     });
 
+    it('name has */', () => {
+        resultShouldBe(`##teamcity[testStarted name='test /** with comment {@*} should do' locationHint='pest_qn://tests/Unit/ExampleTest.php::test /** with comment {@*} should do' flowId='28391']`, {
+            event: TeamcityEvent.testStarted,
+            id: 'tests/Unit/ExampleTest.php::test /** with comment */ should do',
+            name: 'test /** with comment {@*} should do',
+            flowId: 28391,
+        });
+
+        resultShouldBe(`##teamcity[testFailed name='test /** with comment {@*} should do' message='Failed asserting that true is identical to false.' details='at tests/Unit/ExampleTest.php:196' flowId='28391']`, undefined);
+
+        resultShouldBe(`##teamcity[testFinished name='test /** with comment {@*} should do' duration='0' flowId='28391']`, {
+            event: TeamcityEvent.testFailed,
+            id: 'tests/Unit/ExampleTest.php::test /** with comment */ should do',
+            name: 'test /** with comment {@*} should do',
+            flowId: 28391,
+        });
+    });
+
     it('with dataset', () => {
         resultShouldBe(`##teamcity[testSuiteStarted name='Addition provider' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider' flowId='53556']`, {
             event: TeamcityEvent.testSuiteStarted,
