@@ -13,7 +13,46 @@ export class Str {
     }
 }
 
+export class PestV1Fixer {
+    static fixLocationHint(locationHint: string) {
+        return /^tests\//.test(locationHint) ? locationHint : locationHint.substring(locationHint.lastIndexOf('tests/'));
+    }
+
+    static fixFlowId(results = new Map<string, TestResult>(), testResult?: TestResult) {
+        if (!testResult) {
+            return;
+        }
+
+        const events = ['testStarted', 'testFailed', 'testIgnored'];
+        if ('event' in testResult && !events.includes(testResult.event)) {
+            return testResult;
+        }
+
+        if ((testResult as any).flowId) {
+            return testResult;
+        }
+
+        const result = Array.from(results.values()).reverse().find((result: TestResult) => {
+            if (testResult.event !== 'testStarted') {
+                return result.event === 'testStarted' && (result as any).name === (testResult as any).name;
+            }
+
+            const matched = (testResult as any).id?.match(/\((?<id>.+)\)/);
+
+            return matched && (result as any).id === matched.groups?.id.replace(/\\/g, '/') + 'Test';
+        });
+
+        (testResult as any).flowId = (result as any)?.flowId;
+
+        return;
+    }
+}
+
 export class PestV2Fixer {
+    static fixId(location: string, name: string) {
+        return this.hasPrefix(name) ? name : location;
+    }
+
     static isEqualsPestV2DataSetId(result: TestResult, testItemId: string) {
         if (!('id' in result) || !this.hasPrefix(result.id)) {
             return false;
@@ -25,7 +64,7 @@ export class PestV2Fixer {
         return [classFQN, this.methodName(method)].join('::') === result.id;
     }
 
-    static hasPrefix(id?: string) {
+    private static hasPrefix(id?: string) {
         return id && new RegExp(Str.prefix).test(id);
     }
 
@@ -65,11 +104,9 @@ export class PestTransformer extends PHPUnitTransformer {
     fromLocationHit(locationHint: string, name: string) {
         const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
-            let id = locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/');
-            let file = id.split('::')[0];
-            if (PestV2Fixer.hasPrefix(name)) {
-                id = name;
-            }
+            const location = PestV1Fixer.fixLocationHint(locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'));
+            const id = PestV2Fixer.fixId(location, name);
+            const file = location.split('::')[0];
 
             return { id, file };
         }

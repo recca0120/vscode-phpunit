@@ -3,7 +3,7 @@ import { IParser } from './ValueParser';
 
 export class TestDurationParser implements IParser<TestDuration> {
     private readonly pattern = new RegExp(
-        '(Time|Duration):\\s(?<time>[\\d+:.]+(\\s?\\w+)?)(,\\sMemory:\\s(?<memory>[\\d.]+\\s\\w+))?',
+        '(Time|Duration):\\s+(?<time>[\\d+:.]+(\\s?\\w+)?)(,\\sMemory:\\s(?<memory>[\\d.]+\\s\\w+))?',
     );
 
     public is(text: string) {

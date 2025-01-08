@@ -13,8 +13,8 @@ export const getPhpUnitVersion = (): string => {
     return output.match(/PHPUnit\s([\d.]+)/)![1];
 };
 
-export const getPhpVersion = (): string => {
-    const output = execSync('php --version', { cwd: phpUnitProject('') }).toString();
+export const getPhpVersion = (phpBinary = 'php'): string => {
+    const output = execSync(`${phpBinary} --version`, { cwd: phpUnitProject('') }).toString();
 
     return output.match(/PHP\s([\d.]+)/)![1];
 };

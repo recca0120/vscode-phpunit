@@ -2,6 +2,7 @@ import {
     TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestResult, TestResultParser, TestStarted, TestSuiteFinished,
     TestSuiteStarted,
 } from '.';
+import { PestV1Fixer } from '../Transformer';
 
 export class ProblemMatcher {
     private results = new Map<string, TestResult>();
@@ -19,6 +20,7 @@ export class ProblemMatcher {
 
     parse(input: string | Buffer): TestResult | undefined {
         const result = this.testResultParser.parse(input.toString());
+        PestV1Fixer.fixFlowId(this.results, result);
 
         return this.isResult(result) ? this.lookup[result!.event]?.call(this, result) : result;
     }
