@@ -200,8 +200,8 @@ describe('Extension Test', () => {
                 );
 
                 const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
-                    ? { enqueued: 28, started: 28, passed: 18, failed: 8, end: 1 }
-                    : { enqueued: 28, started: 26, passed: 14, failed: 10, end: 1 };
+                    ? { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 }
+                    : { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -223,8 +223,8 @@ describe('Extension Test', () => {
                 ], expect.objectContaining({ cwd }));
 
                 const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
-                    ? { enqueued: 27, started: 27, passed: 18, failed: 7, end: 1 }
-                    : { enqueued: 27, started: 25, passed: 14, failed: 9, end: 1 };
+                    ? { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 }
+                    : { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -245,7 +245,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                expectTestResultCalled(ctrl, { enqueued: 9, started: 9, passed: 4, failed: 3, end: 1 });
+                expectTestResultCalled(ctrl, { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 });
             });
 
             it('should run test case', async () => {
@@ -426,9 +426,9 @@ describe('Extension Test', () => {
                     expect.objectContaining({ cwd }),
                 );
 
-                const expected = isPestV1
-                    ? { enqueued: 59, started: 60, passed: 7, failed: 51, end: 1 }
-                    : { enqueued: 59, started: 59, passed: 6, failed: 51, end: 1 };
+                const expected = !isPestV1
+                    ? { enqueued: 59, started: 61, passed: 8, failed: 51, end: 1 }
+                    : { enqueued: 59, started: 60, passed: 7, failed: 51, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
@@ -484,9 +484,9 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                const expected = isPestV1
-                    ? { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 }
-                    : { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 };
+                const expected = !isPestV1
+                    ? { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }
+                    : { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
