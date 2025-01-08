@@ -3,7 +3,7 @@ import { TestDefinition, TestType } from '../types';
 
 export abstract class Transformer {
     static generateSearchText(input: string) {
-        return input.replace(/([\[\]()*])/g, '\\$1');
+        return input.replace(/([\[\]()*+$!\\])/g, '\\$1').replace(/@/g, '[\\W]');
     }
 
     generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'>): string {
