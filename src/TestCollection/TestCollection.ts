@@ -12,6 +12,58 @@ const inRange = (test: TestItem, testCase: TestCase, position: Position) => {
         : position.line >= test.range!.start.line && position.line <= test.range!.end.line;
 };
 
+abstract class FilterStrategy {
+    constructor(protected testDefinition: TestDefinition) {
+    }
+
+    abstract getFilter(): string
+
+}
+
+class NamespaceFilterStrategy extends FilterStrategy {
+    getFilter() {
+        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
+    }
+}
+
+class ClassFilterStrategy extends FilterStrategy {
+    getFilter() {
+        return this.testDefinition.file!;
+    }
+}
+
+class MethodFilterStrategy extends FilterStrategy {
+    getFilter() {
+        return [
+            this.getDependsFilter(),
+            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
+        ].filter((value) => !!value).join(' ');
+    }
+
+    private getDependsFilter() {
+        const deps = [
+            Transformer.generateSearchText(this.testDefinition.methodName!),
+            ...(this.testDefinition.annotations?.depends ?? []),
+        ].filter((value) => !!value).join('|');
+
+        return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
+    }
+}
+
+class FilterStrategyFactory {
+    static getStrategy(testDefinition: TestDefinition) {
+        if (testDefinition.type === TestType.namespace) {
+            return new NamespaceFilterStrategy(testDefinition);
+        }
+
+        if (testDefinition.type === TestType.class) {
+            return new ClassFilterStrategy(testDefinition);
+        }
+
+        return new MethodFilterStrategy(testDefinition);
+    }
+}
+
 export class TestCase {
     constructor(private testDefinition: TestDefinition) {}
 
@@ -20,35 +72,7 @@ export class TestCase {
     }
 
     update(command: CommandBuilder) {
-        return command.clone().setArguments(this.getArguments());
-    }
-
-    private getArguments(): string {
-        if (this.testDefinition.type === TestType.namespace) {
-            return this.parseNamespaceFilter();
-        }
-
-        if (this.testDefinition.type === TestType.class) {
-            return this.testDefinition.file!;
-        }
-
-        return [
-            this.parseDependsFilter(),
-            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ].filter((value) => !!value).join(' ');
-    }
-
-    private parseNamespaceFilter() {
-        return `--filter '^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)( with data set .*)?$'`;
-    }
-
-    private parseDependsFilter() {
-        const deps = [
-            Transformer.generateSearchText(this.testDefinition.methodName!),
-            ...(this.testDefinition.annotations?.depends ?? []),
-        ].filter((value) => !!value).join('|');
-
-        return !!this.testDefinition.children && this.testDefinition.children.length > 0 ? '' : `--filter '^.*::(${deps})( with data set .*)?$'`;
+        return command.clone().setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
     }
 }
 
