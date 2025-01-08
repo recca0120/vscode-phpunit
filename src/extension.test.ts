@@ -123,7 +123,6 @@ describe('Extension Test', () => {
 
     describe('PHPUnit', () => {
         const phpBinary = 'php';
-        const PHP_VERSION: string = getPhpVersion(phpBinary);
         const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
         const root = phpUnitProject('');
@@ -221,7 +220,7 @@ describe('Extension Test', () => {
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with data set .*)?$',
+                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with (data set )?.*)?$',
                     '--colors=never',
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
@@ -264,7 +263,7 @@ describe('Extension Test', () => {
                 const id = `Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception`;
 
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
@@ -373,7 +372,7 @@ describe('Extension Test', () => {
 
                 const method = 'test_passed';
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
@@ -387,8 +386,8 @@ describe('Extension Test', () => {
     });
 
     describe('PEST', () => {
-        const phpBinary = 'php';
-        // const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
+        // const phpBinary = 'php';
+        const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
         const PHP_VERSION: string = getPhpVersion(phpBinary);
         const isPestV1 = semver.gte(PHP_VERSION, '8.0.0') && semver.lt(PHP_VERSION, '8.1.0');
         const isPestV2 = semver.gte(PHP_VERSION, '8.1.0') && semver.lt(PHP_VERSION, '8.2.0');
@@ -452,7 +451,7 @@ describe('Extension Test', () => {
                 const id = `tests/Unit/ExampleTest.php::test_description`;
 
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
@@ -483,7 +482,7 @@ describe('Extension Test', () => {
                 const id = `tests/Unit/ExampleTest.php::it has emails`;
 
                 const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\swith\\sdata\\sset\\s\\.\\*\\)\\?\\$["']?`,
+                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
                 );
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
