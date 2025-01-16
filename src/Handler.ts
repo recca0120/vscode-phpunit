@@ -28,7 +28,10 @@ export class Handler {
             command.setExtra(['-dxdebug.mode=debug', '-dxdebug.start_with_request=1']);
 
             const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
-            await debug.startDebugging(wsf, { type: 'php', request: 'launch', name: 'PHPUnit' });
+            const debuggerConfigName = this.configuration.get('debuggerConfig') as string | undefined;
+            const defaultDebuggerConfig = { type: 'php', request: 'launch', name: 'PHPUnit' };
+            const debuggerConfig = debuggerConfigName ?? defaultDebuggerConfig;
+            await debug.startDebugging(wsf, debuggerConfig);
             // TODO: perhaps wait for the debug session
         }
 

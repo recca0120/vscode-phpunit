@@ -136,6 +136,11 @@
           "default": "onFailure",
           "description": "Specify if the test report will automatically be shown after execution",
           "scope": "application"
+        },
+        "phpunit.debuggerConfig": {
+          "type": "string",
+          "default": null,
+          "description": "The name of a launch configuration to use for debugging PHPUnit tests"
         }
       }
     }
