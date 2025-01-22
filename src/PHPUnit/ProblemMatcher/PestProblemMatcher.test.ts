@@ -719,4 +719,18 @@ describe('Pest ProblemMatcher Text', () => {
             });
         });
     });
+
+    it('multi-word class names', () => {
+        resultShouldBe(`##teamcity[testStarted name='Login screen can be rendered' locationHint='pest_qn://Authentication Page (Tests\\Feature\\AuthenticationPage)::Login screen can be rendered' flowId='72545']`, {
+            event: TeamcityEvent.testStarted,
+            id: 'Authentication Page (Tests\\Feature\\AuthenticationPage)::Login screen can be rendered',
+            flowId: 72545,
+        });
+
+        resultShouldBe(`##teamcity[testFinished name='Login screen can be rendered' duration='1' flowId='72545']`, {
+            event: TeamcityEvent.testFinished,
+            id: 'Authentication Page (Tests\\Feature\\AuthenticationPage)::Login screen can be rendered',
+            flowId: 72545,
+        });
+    });
 });
