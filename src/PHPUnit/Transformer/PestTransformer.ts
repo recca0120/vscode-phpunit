@@ -106,7 +106,7 @@ export class PestTransformer extends PHPUnitTransformer {
     };
 
     fromLocationHit(locationHint: string, name: string) {
-        const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>\w+)\s+\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
+        const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
         if (!matched) {
             const location = PestV1Fixer.fixLocationHint(locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'));
             const id = this.removeDataset(this.normalizeMethodName(PestV2Fixer.fixId(location, name)));
