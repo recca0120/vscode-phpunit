@@ -33,7 +33,7 @@ This extension contributes the following settings:
 - `phpunit.clearOutputOnRun`: True will clear the output when we run a new test. False will leave the output after every
   test.
 - `phpunit.showAfterExecution` Specify if the test report will automatically be shown after execution
-
+- `phpunit.debuggerConfig` Specify the debugger launch configuration
 ## Commands
 
 The following commands are available in VS Code's command palette, use the ID to add them to your keyboard shortcuts:
