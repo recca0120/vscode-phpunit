@@ -14,6 +14,10 @@ export class TestCase {
     }
 
     inRange = (test: TestItem, position: Position) => {
+        if (![TestType.describe, TestType.method].includes(this.type)) {
+            return false;
+        }
+
         return position.line >= test.range!.start.line && position.line <= test.range!.end.line;
     };
 }

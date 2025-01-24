@@ -35,16 +35,10 @@ export class TestCollection extends BaseTestCollection {
         return tests;
     }
 
-    findTestByPosition(uri: URI, position: Position): TestItem | undefined {
-        for (const type of [TestType.method, TestType.describe]) {
-            for (const [test, testCase] of this.getTestCases(uri)) {
-                if (testCase.type === type && testCase.inRange(test, position)) {
-                    return test;
-                }
-            }
-        }
+    findTestsByPosition(uri: URI, position: Position): TestItem[] {
+        const items = this.inRangeTestItems(uri, position);
 
-        return;
+        return items.length > 0 ? [items[0]] : this.findTestsByFile(uri);
     }
 
     reset() {
@@ -94,5 +88,21 @@ export class TestCollection extends BaseTestCollection {
         }
 
         return this.testItems.get(workspace.fsPath)!;
+    }
+
+    private inRangeTestItems(uri: URI, position: Position) {
+        const items: TestItem[] = [];
+        for (const [test, testCase] of this.getTestCases(uri)) {
+            if (testCase.inRange(test, position)) {
+                items.push(test);
+            }
+        }
+        items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
+
+        return items;
+    }
+
+    private compareFn(testItem: TestItem, position: Position) {
+        return testItem.range!.start.line - position.line;
     }
 }

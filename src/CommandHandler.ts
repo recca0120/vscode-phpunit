@@ -38,9 +38,9 @@ export class CommandHandler {
                 return;
             }
 
-            const test = this.testCollection.findTestByPosition(uri, window.activeTextEditor!.selection.active!);
-            if (test) {
-                await this.run([test]);
+            let tests = this.testCollection.findTestsByPosition(uri, window.activeTextEditor!.selection.active!);
+            if (tests.length > 0) {
+                await this.run(tests);
             }
         });
     }
