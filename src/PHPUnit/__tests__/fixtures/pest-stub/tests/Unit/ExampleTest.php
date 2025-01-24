@@ -207,3 +207,26 @@ test('adds coverage if --min exist', function () {
 it('has emails', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with(['enunomaduro@gmail.com', 'other@example.com']);
+
+if (! function_exists('describe')) {
+    function describe() {
+    }
+}
+
+function sum($a, $b) {
+    return $a + $b;
+}
+
+describe('sum', function () {
+   it('may sum integers', function () {
+       $result = sum(1, 2);
+
+       expect($result)->toBe(3);
+    });
+
+    it('may sum floats', function () {
+       $result = sum(1.5, 2.5);
+
+       expect($result)->toBe(4.0);
+    });
+});

@@ -427,8 +427,8 @@ describe('Extension Test', () => {
                 );
 
                 const expected = !isPestV1
-                    ? { enqueued: 61, started: 63, passed: 10, failed: 51, end: 1 }
-                    : { enqueued: 61, started: 62, passed: 9, failed: 51, end: 1 };
+                    ? { enqueued: 63, started: 65, passed: 12, failed: 51, end: 1 }
+                    : { enqueued: 63, started: 62, passed: 9, failed: 51, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
             });
