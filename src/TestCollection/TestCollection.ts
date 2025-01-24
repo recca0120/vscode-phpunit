@@ -42,17 +42,16 @@ export class TestCollection extends BaseTestCollection {
     }
 
 
-    findTestsByRequest(request: TestRunRequest) {
-        const tests: TestItem[] = [];
-        const include = request.include;
-
-        if (!include) {
+    findTestsByRequest(request?: TestRunRequest) {
+        if (!request || !request.include) {
             return undefined;
         }
 
+        const include = request.include;
+        const tests: TestItem[] = [];
         for (const [, testData] of this.getTestData()) {
             testData.forEach((_, testItem: TestItem) => {
-                include?.forEach((test) => {
+                include.forEach((test) => {
                     if (test.id === testItem.id) {
                         tests.push(testItem);
                     }

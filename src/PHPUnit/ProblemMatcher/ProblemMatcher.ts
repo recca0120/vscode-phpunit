@@ -46,7 +46,7 @@ export class ProblemMatcher {
             return { ...testResult, id: [file, testResult.name].join('::'), file, duration: 0 };
         }
 
-        if (!prevData || prevData.event === TeamcityEvent.testStarted) {
+        if (prevData.event === TeamcityEvent.testStarted) {
             this.results.set(id, { ...(prevData ?? {}), ...testResult });
 
             return;

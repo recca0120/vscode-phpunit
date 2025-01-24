@@ -38,7 +38,7 @@ export class CommandHandler {
                 return;
             }
 
-            let tests = this.testCollection.findTestsByPosition(uri, window.activeTextEditor!.selection.active!);
+            const tests = this.testCollection.findTestsByPosition(uri, window.activeTextEditor!.selection.active!);
             if (tests.length > 0) {
                 await this.run(tests);
             }
@@ -47,13 +47,9 @@ export class CommandHandler {
 
     rerun(handler: Handler) {
         return commands.registerCommand('phpunit.rerun', () => {
-            const previousRequest = handler.getPreviousRequest();
-
-            if (!previousRequest) {
-                return this.run(undefined);
-            }
-
-            return this.run(this.testCollection.findTestsByRequest(previousRequest));
+            return this.run(
+                this.testCollection.findTestsByRequest(handler.getPreviousRequest()),
+            );
         });
     }
 
