@@ -208,18 +208,3 @@ it('has emails', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with(['enunomaduro@gmail.com', 'other@example.com']);
 
-describe('something', function () {
-    test('example', function () {
-        expect(true)->toBeTrue();
-    });
-
-    describe('something else', function () {
-        it('test example', function () {
-            expect(true)->toBeTrue();
-        });
-
-        it('test example2', function () {
-            expect(true)->toBeTrue();
-        });
-    });
-});

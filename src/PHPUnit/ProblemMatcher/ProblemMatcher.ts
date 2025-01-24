@@ -66,7 +66,7 @@ export class ProblemMatcher {
         const id = this.generateId(testResult);
 
         if (!this.results.has(id)) {
-            return testResult;
+            return;
         }
 
         const prevData = this.results.get(id)!;

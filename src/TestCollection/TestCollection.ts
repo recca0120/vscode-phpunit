@@ -1,4 +1,4 @@
-import { Position, TestController, TestItem } from 'vscode';
+import { Position, TestController, TestItem, TestRunRequest } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
     CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
@@ -13,9 +13,9 @@ export class TestCollection extends BaseTestCollection {
         super(phpUnitXML);
     }
 
-    getTestCase(test: TestItem): TestCase | undefined {
+    getTestCase(testItem: TestItem): TestCase | undefined {
         for (const [, testData] of this.getTestData()) {
-            const testCase = testData.get(test);
+            const testCase = testData.get(testItem);
             if (testCase) {
                 return testCase;
             }
@@ -41,6 +41,28 @@ export class TestCollection extends BaseTestCollection {
         return items.length > 0 ? [items[0]] : this.findTestsByFile(uri);
     }
 
+
+    findTestsByRequest(request: TestRunRequest) {
+        const tests: TestItem[] = [];
+        const include = request.include;
+
+        if (!include) {
+            return undefined;
+        }
+
+        for (const [, testData] of this.getTestData()) {
+            testData.forEach((_, testItem: TestItem) => {
+                include?.forEach((test) => {
+                    if (test.id === testItem.id) {
+                        tests.push(testItem);
+                    }
+                });
+            });
+        }
+
+        return tests.length > 0 ? tests : undefined;
+    }
+
     reset() {
         for (const [, testData] of this.getTestData()) {
             for (const [testItem] of testData) {
@@ -57,6 +79,7 @@ export class TestCollection extends BaseTestCollection {
         await testParser.parseFile(uri.fsPath);
 
         const testData = this.getTestCases(uri);
+        testData.clear();
         for (const [testItem, testCase] of testHierarchyBuilder.get()) {
             testData.set(testItem, testCase);
         }

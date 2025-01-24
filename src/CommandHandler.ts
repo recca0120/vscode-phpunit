@@ -47,9 +47,13 @@ export class CommandHandler {
 
     rerun(handler: Handler) {
         return commands.registerCommand('phpunit.rerun', () => {
-            const lastRequest = handler.getPreviousRequest();
+            const previousRequest = handler.getPreviousRequest();
 
-            return lastRequest ? this.run(lastRequest.include) : this.run(undefined);
+            if (!previousRequest) {
+                return this.run(undefined);
+            }
+
+            return this.run(this.testCollection.findTestsByRequest(previousRequest));
         });
     }
 

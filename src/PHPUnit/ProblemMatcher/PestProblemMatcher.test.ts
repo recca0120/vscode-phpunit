@@ -750,4 +750,8 @@ describe('Pest ProblemMatcher Text', () => {
             ],
         });
     });
+
+    it('testFinished without TestStarted', () => {
+        resultShouldBe('##teamcity[testFinished name=\'`before each` → example\' duration=\'12\' flowId=\'97972\']', undefined);
+    });
 });
