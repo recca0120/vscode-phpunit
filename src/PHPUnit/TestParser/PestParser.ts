@@ -60,32 +60,43 @@ export class PestParser extends Parser {
             .map((expressionStatement: any) => expressionStatement.expression)
             .filter((call: Call) => ['describe', 'test', 'it'].includes(this.parseName(call) ?? ''))
             .reduce((tests: TestDefinition[], call: Call) => {
-                return this.parseName(call) === 'describe'
-                    ? [...tests, ...this.parseDescribe(call, clazz, prefixes)]
-                    : [...tests, this.parseTestOrIt(call, clazz, prefixes)];
+                if (this.parseName(call) !== 'describe') {
+                    return [...tests, this.parseTestOrIt(call, clazz, prefixes)];
+                }
+
+                return [...tests, {
+                    ...this.parseTest(TestType.describe, call, clazz, prefixes),
+                    children: this.parseDescribe(call, clazz, prefixes),
+                }];
             }, []);
     }
 
     private parseTestOrIt(call: Call, clazz: TestDefinition, prefixes: string[] = []): TestDefinition {
+        return this.parseTest(TestType.method, call, clazz, prefixes);
+    }
+
+    private parseTest(type: TestType, call: Call, clazz: TestDefinition, prefixes: string[]) {
         if (call.what.kind === 'propertylookup') {
             return this.parseTestOrIt(((call.what as any).what) as Call, clazz, prefixes);
         }
 
         let methodName = (call.arguments[0] as String).value;
-
         if (this.parseName(call) === 'it') {
             methodName = 'it ' + methodName;
         }
+        const labelName = methodName;
 
+        if (type === TestType.describe) {
+            methodName = '`' + methodName + '`';
+        }
         if (prefixes.length > 0) {
             methodName = [...prefixes.map((value) => '`' + value + '`'), methodName].join(' → ');
         }
 
-        const type = TestType.method;
         const id = this.transformer.uniqueId({ ...clazz, type, methodName });
-        const label = this.transformer.generateLabel({ ...clazz, type, methodName });
+        const label = this.transformer.generateLabel({ ...clazz, type, methodName: labelName });
         const { start, end } = this.parsePosition(call);
 
-        return { ...clazz, type, id, label, methodName, start, end, depth: 3 };
+        return { ...clazz, type, id, label, methodName, start, end, depth: prefixes.length + 3 };
     }
 }

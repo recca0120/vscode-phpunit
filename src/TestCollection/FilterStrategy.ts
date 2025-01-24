@@ -33,7 +33,7 @@ class MethodFilterStrategy extends FilterStrategy {
             return '';
         }
 
-        const methodName = Transformer.generateSearchText(this.testDefinition.methodName!);
+        const methodName = this.getMethodMethodName();
         const deps = this.testDefinition.annotations?.depends ?? [];
         const filter = [methodName, ...deps].filter((value) => !!value).join('|');
 
@@ -42,6 +42,16 @@ class MethodFilterStrategy extends FilterStrategy {
 
     private hasChildren() {
         return this.testDefinition.children && this.testDefinition.children.length > 0;
+    }
+
+    protected getMethodMethodName() {
+        return Transformer.generateSearchText(this.testDefinition.methodName!);
+    }
+}
+
+class DescribeFilterStrategy extends MethodFilterStrategy {
+    protected getMethodMethodName() {
+        return Transformer.generateSearchText(this.testDefinition.methodName!) + '.*';
     }
 }
 
@@ -53,6 +63,10 @@ export class FilterStrategyFactory {
 
         if (testDefinition.type === TestType.class) {
             return new ClassFilterStrategy(testDefinition);
+        }
+
+        if (testDefinition.type === TestType.describe) {
+            return new DescribeFilterStrategy(testDefinition);
         }
 
         return new MethodFilterStrategy(testDefinition);

@@ -426,9 +426,14 @@ describe('Extension Test', () => {
                     expect.objectContaining({ cwd }),
                 );
 
-                const expected = !isPestV1
-                    ? { enqueued: 63, started: 65, passed: 12, failed: 51, end: 1 }
-                    : { enqueued: 63, started: 62, passed: 9, failed: 51, end: 1 };
+                let expected: any;
+                if (isPestV1) {
+                    expected = { enqueued: 63, started: 62, passed: 9, failed: 51, end: 1 };
+                } else if (isPestV2) {
+                    expected = { enqueued: 63, started: 64, passed: 11, failed: 51, end: 1 };
+                } else {
+                    expected = { enqueued: 63, started: 65, passed: 12, failed: 51, end: 1 };
+                }
 
                 expectTestResultCalled(ctrl, expected);
             });

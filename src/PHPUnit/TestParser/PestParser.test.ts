@@ -11,6 +11,7 @@ export const parse = (buffer: Buffer | string, file: string) => {
 
     testParser.on(TestType.namespace, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.class, (testDefinition: TestDefinition) => tests.push(testDefinition));
+    testParser.on(TestType.describe, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.parse(buffer, file);
 
@@ -21,6 +22,7 @@ describe('PestParser', () => {
     const findTest = (tests: TestDefinition[], id: string) => {
         const lookup = {
             [TestType.method]: (test: TestDefinition) => test.methodName === id,
+            [TestType.describe]: (test: TestDefinition) => test.methodName === id,
             [TestType.class]: (test: TestDefinition) => test.className === id && !test.methodName,
             [TestType.namespace]: (test: TestDefinition) => test.classFQN === id && !test.className && !test.methodName,
         } as { [key: string]: Function };
@@ -136,6 +138,21 @@ describe('something', function () {
     });
 });
         `;
+
+        expect(givenTest(file, content, '`something`')).toEqual(expect.objectContaining({
+            type: TestType.describe,
+            id: 'tests/Fixtures/ExampleTest.php::`something`',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: '`something`',
+            label: 'something',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
+        }));
+
         expect(givenTest(file, content, '`something` → example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → example',
@@ -143,18 +160,18 @@ describe('something', function () {
             namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: '`something` → example',
-            label: 'something → example',
+            label: 'example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 4,
         });
     });
 
     it('arrow function `something` → it example', async () => {
         const content = `<?php
         
-describe('something', fn () => it('example', expect(true)->toBeTrue()));
+describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
 
         `;
 
@@ -165,11 +182,11 @@ describe('something', fn () => it('example', expect(true)->toBeTrue()));
             namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: '`something` → it example',
-            label: 'something → it example',
+            label: 'it example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 4,
         });
     });
 
@@ -185,6 +202,20 @@ describe('something', function () {
 }); 
         `;
 
+        expect(givenTest(file, content, '`something` → `something else`')).toEqual(expect.objectContaining({
+            type: TestType.describe,
+            id: 'tests/Fixtures/ExampleTest.php::`something` → `something else`',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: '`something` → `something else`',
+            label: 'something else',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 4,
+        }));
+
         expect(givenTest(file, content, '`something` → `something else` → it test example')).toEqual({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → `something else` → it test example',
@@ -192,11 +223,11 @@ describe('something', function () {
             namespace: 'P\\Tests\\Fixtures',
             className: 'ExampleTest',
             methodName: '`something` → `something else` → it test example',
-            label: 'something → something else → it test example',
+            label: 'it test example',
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 5,
         });
     });
 
@@ -221,7 +252,7 @@ it('example 2')->assertTrue(true);
         });
     });
 
-    it('not test or test', async () => {
+    it('not it or test', async () => {
         const content = `<?php 
 
 function hello(string $description,  callable $closure) {}

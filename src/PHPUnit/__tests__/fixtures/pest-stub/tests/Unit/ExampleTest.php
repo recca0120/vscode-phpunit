@@ -208,25 +208,14 @@ it('has emails', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with(['enunomaduro@gmail.com', 'other@example.com']);
 
-if (! function_exists('describe')) {
-    function describe() {
-    }
-}
-
-function sum($a, $b) {
-    return $a + $b;
-}
-
-describe('sum', function () {
-   it('may sum integers', function () {
-       $result = sum(1, 2);
-
-       expect($result)->toBe(3);
+describe('something', function () {
+    test('example', function () {
+        expect(true)->toBeTrue();
     });
 
-    it('may sum floats', function () {
-       $result = sum(1.5, 2.5);
-
-       expect($result)->toBe(4.0);
+    describe('something else', function () {
+        it('test example', function () {
+            expect(true)->toBeTrue();
+        });
     });
 });

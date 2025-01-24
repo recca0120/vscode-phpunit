@@ -6,7 +6,8 @@ export type Position = {
 export enum TestType {
     namespace,
     class,
-    method
+    describe,
+    method,
 }
 
 export type Annotations = {

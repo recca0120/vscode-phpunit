@@ -1,6 +1,6 @@
 import { Position, Range, TestController, TestItem, Uri } from 'vscode';
 import { TestDefinition, TestParser, TestType, TransformerFactory } from '../PHPUnit';
-import { CustomWeakMap } from '../PHPUnit/utils';
+import { CustomWeakMap } from '../PHPUnit';
 import { TestCase } from './TestCase';
 
 export class TestHierarchyBuilder {
@@ -8,6 +8,7 @@ export class TestHierarchyBuilder {
         [TestType.namespace]: '$(symbol-namespace)',
         [TestType.class]: '$(symbol-class)',
         [TestType.method]: '$(symbol-method)',
+        [TestType.describe]: '$(symbol-class)',
     };
     private length = 1;
     private readonly ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [
@@ -21,6 +22,10 @@ export class TestHierarchyBuilder {
 
     onInit() {
         this.testParser.on(TestType.method, (testDefinition, index) => {
+            this.ascend(this.length + testDefinition.depth);
+            this.addTestItem(testDefinition, `${index}`);
+        });
+        this.testParser.on(TestType.describe, (testDefinition, index) => {
             this.ascend(this.length + testDefinition.depth);
             this.addTestItem(testDefinition, `${index}`);
         });

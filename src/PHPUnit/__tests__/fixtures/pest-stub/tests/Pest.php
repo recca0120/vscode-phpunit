@@ -43,3 +43,8 @@ function something()
 {
     // ..
 }
+
+
+if (! function_exists('describe')) {
+    function describe() {}
+}
