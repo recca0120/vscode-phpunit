@@ -38,18 +38,22 @@ export class CommandHandler {
                 return;
             }
 
-            const test = this.testCollection.findTestByPosition(uri, window.activeTextEditor!.selection.active!);
-            if (test) {
-                await this.run([test]);
+            let tests = this.testCollection.findTestsByPosition(uri, window.activeTextEditor!.selection.active!);
+            if (tests.length > 0) {
+                await this.run(tests);
             }
         });
     }
 
     rerun(handler: Handler) {
         return commands.registerCommand('phpunit.rerun', () => {
-            const lastRequest = handler.getPreviousRequest();
+            const previousRequest = handler.getPreviousRequest();
 
-            return lastRequest ? this.run(lastRequest.include) : this.run(undefined);
+            if (!previousRequest) {
+                return this.run(undefined);
+            }
+
+            return this.run(this.testCollection.findTestsByRequest(previousRequest));
         });
     }
 

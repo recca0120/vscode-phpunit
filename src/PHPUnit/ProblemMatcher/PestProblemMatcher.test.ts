@@ -733,4 +733,25 @@ describe('Pest ProblemMatcher Text', () => {
             flowId: 72545,
         });
     });
+
+    it('testFailed without TestStarted', () => {
+        resultShouldBe(`##teamcity[testFailed name='error' message='Exception: error' details='at tests/Fixtures/CollisionTest.php:4' flowId='68573']`, {
+            event: TeamcityEvent.testFailed,
+            id: 'tests/Fixtures/CollisionTest.php::error',
+            name: 'error',
+            message: 'Exception: error',
+            file: 'tests/Fixtures/CollisionTest.php',
+            flowId: 68573,
+            details: [
+                {
+                    file: 'tests/Fixtures/CollisionTest.php',
+                    line: 4,
+                },
+            ],
+        });
+    });
+
+    it('testFinished without TestStarted', () => {
+        resultShouldBe('##teamcity[testFinished name=\'`before each` → example\' duration=\'12\' flowId=\'97972\']', undefined);
+    });
 });

@@ -146,6 +146,7 @@ export class CustomWeakMap<K extends object, V> {
 
     delete(key: K) {
         this.keys.delete(key);
+
         return this.weakMap.delete(key);
     }
 
@@ -160,6 +161,7 @@ export class CustomWeakMap<K extends object, V> {
     set(key: K, value: V) {
         this.keys.add(key);
         this.weakMap.set(key, value);
+
         return this;
     }
 
