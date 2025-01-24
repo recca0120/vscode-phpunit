@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { CommandBuilder } from './CommandBuilder';
-import { ProblemMatcher, TestResult, TeamcityEvent } from './ProblemMatcher';
+import { ProblemMatcher, TeamcityEvent, TestResult } from './ProblemMatcher';
 import { EventResultMap, TestRunnerEvent, TestRunnerEventProxy, TestRunnerObserver } from './TestRunnerObserver';
 
 export class TestRunnerProcess {
@@ -127,15 +127,19 @@ export class TestRunner {
     }
 
     private processLine(line: string, command: CommandBuilder) {
-        let result = this.problemMatcher.parse(line);
-        if (result) {
-            result = command.replacePath(result);
-            if ('event' in result!) {
-                this.emit(result.event, result);
-            }
-
-            this.emit(TestRunnerEvent.result, result!);
-        }
+        this.emitResult(command, this.problemMatcher.parse(line));
         this.emit(TestRunnerEvent.line, line);
+    }
+
+    private emitResult(command: CommandBuilder, result: TestResult | undefined) {
+        if (!result) {
+            return;
+        }
+
+        result = command.replacePath(result);
+        if ('event' in result!) {
+            this.emit(result.event, result);
+        }
+        this.emit(TestRunnerEvent.result, result!);
     }
 }
