@@ -49,7 +49,22 @@ class MethodFilterStrategy extends FilterStrategy {
     }
 }
 
-class DescribeFilterStrategy extends MethodFilterStrategy {
+class DescribeFilterStrategy extends FilterStrategy {
+    getFilter() {
+        return [
+            this.getDependsFilter(),
+            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
+        ].filter((value) => !!value).join(' ');
+    }
+
+    private getDependsFilter() {
+        const methodName = this.getMethodMethodName();
+        const deps = this.testDefinition.annotations?.depends ?? [];
+        const filter = [methodName, ...deps].filter((value) => !!value).join('|');
+
+        return `--filter '^.*::(${filter})( with (data set )?.*)?$'`;
+    }
+
     protected getMethodMethodName() {
         return Transformer.generateSearchText(this.testDefinition.methodName!) + '.*';
     }

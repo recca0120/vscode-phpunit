@@ -10,6 +10,7 @@ export class TestDefinitionBuilder {
 
     onInit() {
         this.testParser.on(TestType.method, (testDefinition) => this.testDefinitions.push(testDefinition));
+        this.testParser.on(TestType.describe, (testDefinition) => this.testDefinitions.push(testDefinition));
         this.testParser.on(TestType.class, (testDefinition) => this.testDefinitions.push(testDefinition));
         this.testParser.on(TestType.namespace, (testDefinition) => this.testDefinitions.push(testDefinition));
     }

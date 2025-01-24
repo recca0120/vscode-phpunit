@@ -217,5 +217,9 @@ describe('something', function () {
         it('test example', function () {
             expect(true)->toBeTrue();
         });
+
+        it('test example2', function () {
+            expect(true)->toBeTrue();
+        });
     });
 });

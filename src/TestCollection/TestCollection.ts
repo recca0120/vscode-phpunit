@@ -36,9 +36,11 @@ export class TestCollection extends BaseTestCollection {
     }
 
     findTestByPosition(uri: URI, position: Position): TestItem | undefined {
-        for (const [test, testCase] of this.getTestCases(uri)) {
-            if (testCase.inRange(test, position)) {
-                return test;
+        for (const type of [TestType.method, TestType.describe]) {
+            for (const [test, testCase] of this.getTestCases(uri)) {
+                if (testCase.type === type && testCase.inRange(test, position)) {
+                    return test;
+                }
             }
         }
 
