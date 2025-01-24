@@ -16,7 +16,7 @@ export class ProblemMatcher {
         [TeamcityEvent.testSuiteFinished]: this.handleFinished,
     };
 
-    constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
+    constructor(private testResultParser: TestResultParser = new TestResultParser()) { }
 
     parse(input: string | Buffer): TestResult | undefined {
         const result = this.testResultParser.parse(input.toString());
@@ -31,17 +31,24 @@ export class ProblemMatcher {
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
         const id = this.generateId(testResult);
-        this.results.set(id, { ...testResult });
+        this.results.set(id, testResult);
 
         return this.results.get(id);
     }
 
-    private handleFault(testResult: TestFailed | TestIgnored): undefined {
+    private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
         const id = this.generateId(testResult);
-        const prevData = this.results.get(id) as (TestFailed | TestIgnored);
+        let prevData = this.results.get(id) as (TestFailed | TestIgnored);
+
+        if (!prevData) {
+            const file = testResult.details[0].file;
+
+            return { ...testResult, id: [file, testResult.name].join('::'), file, duration: 0 };
+        }
 
         if (!prevData || prevData.event === TeamcityEvent.testStarted) {
             this.results.set(id, { ...(prevData ?? {}), ...testResult });
+
             return;
         }
 
@@ -51,10 +58,16 @@ export class ProblemMatcher {
         prevData.details.push(...testResult.details);
 
         this.results.set(id, prevData);
+
+        return undefined;
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {
         const id = this.generateId(testResult);
+
+        if (!this.results.has(id)) {
+            return testResult;
+        }
 
         const prevData = this.results.get(id)!;
         const event = this.isFault(prevData) ? prevData.event : testResult.event;
