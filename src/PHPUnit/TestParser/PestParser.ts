@@ -15,6 +15,7 @@ export class PestParser extends Parser {
         if (!clazz.children || clazz.children.length <= 0) {
             return;
         }
+
         const namespace = this.generateNamespace(clazz.namespace);
 
         return namespace ? [{ ...namespace, children: [clazz] }] : [clazz];
@@ -47,12 +48,16 @@ export class PestParser extends Parser {
 
     private parseDescribe(declaration: Call | Block | Node, clazz: any, prefixes: string[] = []): TestDefinition[] {
         let children: any[];
-        if (declaration.kind === 'program') {
+        if (['program', 'namespace'].includes(declaration.kind)) {
             children = (declaration as Program).children;
         } else {
             const closure = (declaration as Call).arguments[1] as Closure;
             prefixes = [...prefixes, ((declaration as Call).arguments[0] as String).value];
             children = closure.kind === 'arrowfunc' ? [{ expression: closure.body! }] : closure.body!.children!;
+        }
+
+        if (children.length > 0 && children[0].kind === 'namespace') {
+            return this.parseDescribe(children[0], clazz);
         }
 
         return children

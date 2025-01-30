@@ -264,4 +264,29 @@ hello('hello', function () {
 
         expect(givenTest(file, content, 'hello')).toBeUndefined();
     });
+
+    it('test with namespace', async () => {
+        const content = `<?php 
+
+namespace Tests\\Fixtures\\Examples;
+
+it('asserts true is true', function () {
+    expect(true)->toBe(true);
+});
+        `;
+
+        expect(givenTest(file, content, 'it asserts true is true')).toEqual({
+            type: TestType.method,
+            id: 'tests/Fixtures/ExampleTest.php::it asserts true is true',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: 'it asserts true is true',
+            label: 'it asserts true is true',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 3,
+        });
+    });
 });
