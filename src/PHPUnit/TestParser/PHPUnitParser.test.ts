@@ -49,7 +49,7 @@ describe('PHPUnitParser Test', () => {
                 id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
                 classFQN: 'Recca0120\\VSCode\\Tests',
                 namespace: 'Recca0120\\VSCode\\Tests',
-                depth: 1,
+                depth: 0,
             }));
         });
 
@@ -63,7 +63,7 @@ describe('PHPUnitParser Test', () => {
                 className: 'AssertionsTest',
                 start: { line: 8, character: 0 },
                 end: { line: 83, character: 1 },
-                depth: 2,
+                depth: 1,
             }));
         });
 
@@ -78,7 +78,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_passed',
                 start: { line: 12, character: 4 },
                 end: { line: 15, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -94,7 +94,7 @@ describe('PHPUnitParser Test', () => {
                 annotations: { depends: ['test_passed'] },
                 start: { line: 20, character: 4 },
                 end: { line: 23, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -109,7 +109,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_is_not_same',
                 start: { line: 25, character: 4 },
                 end: { line: 28, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -124,7 +124,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_risky',
                 start: { line: 30, character: 4 },
                 end: { line: 33, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -139,7 +139,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'annotation_test',
                 start: { line: 38, character: 4 },
                 end: { line: 41, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -154,7 +154,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_skipped',
                 start: { line: 43, character: 4 },
                 end: { line: 46, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -169,7 +169,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_incomplete',
                 start: { line: 48, character: 4 },
                 end: { line: 51, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -185,7 +185,7 @@ describe('PHPUnitParser Test', () => {
                 annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
                 start: { line: 60, character: 4 },
                 end: { line: 63, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -201,7 +201,7 @@ describe('PHPUnitParser Test', () => {
                 annotations: { testdox: ['has an initial balance of zero'] },
                 start: { line: 79, character: 4 },
                 end: { line: 82, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -236,7 +236,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_static_public_fail',
                 start: { line: 9, character: 4 },
                 end: { line: 11, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -261,7 +261,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'property',
                 start: { line: 17, character: 4 },
                 end: { line: 20, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -282,7 +282,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'firstLeadingComments',
                 start: { line: 10, character: 4 },
                 end: { line: 13, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -303,7 +303,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'use_trait',
                 start: { line: 12, character: 4 },
                 end: { line: 15, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -324,7 +324,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'hi',
                 start: { line: 14, character: 4 },
                 end: { line: 17, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -340,7 +340,7 @@ describe('PHPUnitParser Test', () => {
                 annotations: { dataProvider: ['additionProvider'] },
                 start: { line: 20, character: 4 },
                 end: { line: 23, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -356,7 +356,7 @@ describe('PHPUnitParser Test', () => {
                 annotations: { depends: ['testEmpty'] },
                 start: { line: 44, character: 4 },
                 end: { line: 51, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
 
@@ -372,7 +372,7 @@ describe('PHPUnitParser Test', () => {
                 annotations: { testdox: ['has an initial balance of zero'] },
                 start: { line: 55, character: 4 },
                 end: { line: 58, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -393,7 +393,7 @@ describe('PHPUnitParser Test', () => {
                 methodName: 'test_no_namespace',
                 start: { line: 7, character: 4 },
                 end: { line: 10, character: 5 },
-                depth: 3,
+                depth: 2,
             }));
         });
     });
@@ -419,7 +419,7 @@ final class PDF_testerTest extends TestCase {
             methodName: 'test_hello',
             start: { line: 5, character: 4 },
             end: { line: 7, character: 5 },
-            depth: 3,
+            depth: 2,
         }));
     });
 });

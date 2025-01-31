@@ -107,6 +107,8 @@ export class PHPUnitXML {
     setRoot(root: string) {
         this.cached.clear();
         this._root = root;
+
+        return this;
     }
 
     file() {

@@ -45,7 +45,7 @@ export class PestParser extends Parser {
 
         const { start, end } = this.parsePosition(declaration);
 
-        return { type, id, label, classFQN, namespace, className, file, start, end, depth: 2 };
+        return { type, id, label, classFQN, namespace, className, file, start, end, depth: 1 };
     }
 
     private parseDescribe(declaration: Call | Block | Node, clazz: any, prefixes: string[] = []): TestDefinition[] {
@@ -104,6 +104,6 @@ export class PestParser extends Parser {
         const label = this.transformer.generateLabel({ ...clazz, type, methodName: labelName });
         const { start, end } = this.parsePosition(call);
 
-        return { ...clazz, type, id, label, methodName, start, end, depth: prefixes.length + 3 };
+        return { ...clazz, type, id, label, methodName, start, end, depth: prefixes.length + 2 };
     }
 }

@@ -58,7 +58,7 @@ test('example', function () {
             classFQN: 'P\\Tests\\Fixtures',
             namespace: 'P\\Tests\\Fixtures',
             label: 'Tests\\Fixtures',
-            depth: 1,
+            depth: 0,
         }));
     });
 
@@ -79,7 +79,7 @@ test('example', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 2,
+            depth: 1,
         }));
     });
 
@@ -102,7 +102,7 @@ test('example', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 2,
         });
     });
 
@@ -125,7 +125,7 @@ it('test example', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 2,
         });
     });
 
@@ -150,7 +150,7 @@ describe('something', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 2,
         }));
 
         expect(givenTest(file, content, '`something` → example')).toEqual({
@@ -164,7 +164,7 @@ describe('something', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 4,
+            depth: 3,
         });
     });
 
@@ -186,7 +186,7 @@ describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 4,
+            depth: 3,
         });
     });
 
@@ -213,7 +213,7 @@ describe('something', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 4,
+            depth: 3,
         }));
 
         expect(givenTest(file, content, '`something` → `something else` → it test example')).toEqual({
@@ -227,7 +227,7 @@ describe('something', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 5,
+            depth: 4,
         });
     });
 
@@ -248,7 +248,7 @@ it('example 2')->assertTrue(true);
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 2,
         });
     });
 
@@ -286,7 +286,7 @@ it('asserts true is true', function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 3,
+            depth: 2,
         });
     });
 
@@ -311,7 +311,7 @@ describe(description: 'something', test: function () {
             file,
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
-            depth: 4,
+            depth: 3,
         });
     });
 });

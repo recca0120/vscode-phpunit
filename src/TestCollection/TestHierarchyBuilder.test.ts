@@ -1,6 +1,7 @@
+import { expect } from '@jest/globals';
 import { TestController, tests } from 'vscode';
-import { TestParser } from '../PHPUnit';
-import { phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { PHPUnitXML, TestParser } from '../PHPUnit';
+import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 function givenPhp(namespace: string, className: string, methods: string[]) {
@@ -37,139 +38,230 @@ describe('TestHierarchyBuilder', () => {
 
     const givenCodes = (files: { file: string, code: string }[]) => {
         files.forEach(({ file, code }) => {
-            testParser.parse(code, phpUnitProject(file));
+            testParser.parse(code, file);
         });
 
         builder.get();
     };
 
-    beforeEach(() => {
-        ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
-        testParser = new TestParser();
-        builder = new TestHierarchyBuilder(testParser, ctrl);
+    describe('PHPUnit', () => {
+        beforeEach(() => {
+            ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
+            const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
+            testParser = new TestParser(phpUnitXML);
+            builder = new TestHierarchyBuilder(testParser, ctrl);
+        });
+
+        it('no namespace', () => {
+            givenCodes([{
+                file: phpUnitProject('tests/AssertionsTest.php'),
+                code: givenPhp(
+                    '',
+                    'AssertionsTest',
+                    ['test_passed', 'test_failed'],
+                ),
+            }]);
+
+            expect(toTree(ctrl.items)).toEqual([
+                {
+                    id: 'Assertions',
+                    label: '$(symbol-class) AssertionsTest',
+                    children: [
+                        {
+                            id: 'Assertions::Passed',
+                            label: '$(symbol-method) test_passed',
+                            children: [],
+                        },
+                        {
+                            id: 'Assertions::Failed',
+                            label: '$(symbol-method) test_failed',
+                            children: [],
+                        },
+                    ],
+                }
+                ,
+            ]);
+        });
+
+        it('nested namespace', () => {
+            givenCodes([{
+                file: phpUnitProject('tests/AssertionsTest.php'),
+                code: givenPhp(
+                    'namespace Recca0120\\VSCode\\Tests',
+                    'AssertionsTest',
+                    ['test_passed'],
+                ),
+            }]);
+
+            expect(toTree(ctrl.items)).toEqual([
+                {
+                    id: 'namespace:VSCode (Recca0120\\VSCode)',
+                    label: '$(symbol-namespace) Recca0120\\VSCode',
+                    children: [
+                        {
+                            id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
+                            label: '$(symbol-namespace) Tests',
+                            children: [
+                                {
+                                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                                    label: '$(symbol-class) AssertionsTest',
+                                    children: [
+                                        {
+                                            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                                            label: '$(symbol-method) test_passed',
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('sibling namespace', () => {
+            givenCodes([{
+                file: phpUnitProject('tests/AssertionsTest.php'),
+                code: givenPhp(
+                    'namespace Recca0120\\VSCode\\Tests',
+                    'AssertionsTest',
+                    ['test_passed'],
+                ),
+            }, {
+                file: phpUnitProject('tests/Assertions2Test.php'),
+                code: givenPhp(
+                    'namespace Recca0120\\VSCode\\Tests',
+                    'Assertions2Test',
+                    ['test_passed'],
+                ),
+            }]);
+
+            expect(toTree(ctrl.items)).toEqual([
+                {
+                    id: 'namespace:VSCode (Recca0120\\VSCode)',
+                    label: '$(symbol-namespace) Recca0120\\VSCode',
+                    children: [
+                        {
+                            id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
+                            label: '$(symbol-namespace) Tests',
+                            children: [
+                                {
+                                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                                    label: '$(symbol-class) AssertionsTest',
+                                    children: [
+                                        {
+                                            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                                            label: '$(symbol-method) test_passed',
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)',
+                                    label: `$(symbol-class) Assertions2Test`,
+                                    children: [
+                                        {
+                                            id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)::Passed',
+                                            label: '$(symbol-method) test_passed',
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
     });
 
-    it('no namespace', () => {
-        givenCodes([{
-            file: 'tests/AssertionsTest.php',
-            code: givenPhp(
-                '',
-                'AssertionsTest',
-                ['test_passed', 'test_failed'],
-            ),
-        }]);
+    describe('PEST', () => {
+        beforeEach(() => {
+            ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
+            const phpUnitXML = new PHPUnitXML().setRoot(pestProject(''));
+            testParser = new TestParser(phpUnitXML);
+            builder = new TestHierarchyBuilder(testParser, ctrl);
+        });
 
-        expect(toTree(ctrl.items)).toEqual([
-            {
-                id: 'Assertions',
-                label: '$(symbol-class) AssertionsTest',
-                children: [
-                    {
-                        id: 'Assertions::Passed',
-                        label: '$(symbol-method) test_passed',
-                        children: [],
-                    },
-                    {
-                        id: 'Assertions::Failed',
-                        label: '$(symbol-method) test_failed',
-                        children: [],
-                    },
-                ],
-            }
-            ,
-        ]);
+        it('nested describe', () => {
+            const code = `<?php
+describe('Given something ...', function () {
+    describe('When...', function () {
+        it('Then should...', function () {});
     });
+});
 
-    it('nested namespace', () => {
-        givenCodes([{
-            file: 'tests/AssertionsTest.php',
-            code: givenPhp(
-                'namespace Recca0120\\VSCode\\Tests',
-                'AssertionsTest',
-                ['test_passed'],
-            ),
-        }]);
+test('Test1', function () {
+    expect(true)->toBe(false);
+});
 
-        expect(toTree(ctrl.items)).toEqual([
-            {
-                id: 'namespace:VSCode (Recca0120\\VSCode)',
-                label: '$(symbol-namespace) Recca0120\\VSCode',
-                children: [
-                    {
-                        id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
-                        label: '$(symbol-namespace) Tests',
-                        children: [
-                            {
-                                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                                label: '$(symbol-class) AssertionsTest',
-                                children: [
-                                    {
-                                        id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                                        label: '$(symbol-method) test_passed',
-                                        children: [],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ])
-        ;
+describe('Given something else...', function () {
+    describe('When...', function () {
+        it('Then should...', function () {});
     });
+    
+    test('Test2', function () {
+        expect(true)->toBe(false);
+    });
+    
+    describe('When also...', function () {
+        it('Then should...', function () {});
+    });
+});
 
-    it('sibling namespace', () => {
-        givenCodes([{
-            file: 'tests/AssertionsTest.php',
-            code: givenPhp(
-                'namespace Recca0120\\VSCode\\Tests',
-                'AssertionsTest',
-                ['test_passed'],
-            ),
-        }, {
-            file: 'tests/Assertions2Test.php',
-            code: givenPhp(
-                'namespace Recca0120\\VSCode\\Tests',
-                'Assertions2Test',
-                ['test_passed'],
-            ),
-        }]);
+test('Test3', function () {
+    expect(true)->toBe(false);
+});
+`;
+            givenCodes([{
+                file: pestProject('tests/ExampleTest.php'),
+                code: code,
+            }]);
 
-        expect(toTree(ctrl.items)).toEqual([
-            {
-                id: 'namespace:VSCode (Recca0120\\VSCode)',
-                label: '$(symbol-namespace) Recca0120\\VSCode',
-                children: [
-                    {
-                        id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
-                        label: '$(symbol-namespace) Tests',
-                        children: [
-                            {
-                                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                                label: '$(symbol-class) AssertionsTest',
-                                children: [
-                                    {
-                                        id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                                        label: '$(symbol-method) test_passed',
-                                        children: [],
-                                    },
-                                ],
-                            },
-                            {
-                                id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)',
-                                label: `$(symbol-class) Assertions2Test`,
-                                children: [
-                                    {
-                                        id: 'Assertions2 (Recca0120\\VSCode\\Tests\\Assertions2)::Passed',
-                                        label: '$(symbol-method) test_passed',
-                                        children: [],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ]);
+            expect(toTree(ctrl.items)).toEqual([{
+                id: 'namespace:Tests',
+                label: '$(symbol-namespace) Tests',
+                children: [{
+                    id: 'Tests\\ExampleTest',
+                    label: '$(symbol-class) ExampleTest',
+                    children: [
+                        expect.objectContaining({
+                            id: 'tests/ExampleTest.php::`Given something ...`',
+                            label: '$(symbol-class) Given something ...',
+                        }),
+                        {
+                            id: 'tests/ExampleTest.php::Test1',
+                            label: '$(symbol-method) Test1',
+                            children: [],
+                        },
+                        {
+                            id: 'tests/ExampleTest.php::`Given something else...`',
+                            label: '$(symbol-class) Given something else...',
+                            children: [
+                                expect.objectContaining({
+                                    id: 'tests/ExampleTest.php::`Given something else...` → `When...`',
+                                    label: '$(symbol-class) When...',
+                                }),
+                                {
+                                    id: 'tests/ExampleTest.php::`Given something else...` → Test2',
+                                    label: '$(symbol-method) Test2',
+                                    children: [],
+                                },
+                                expect.objectContaining({
+                                    id: 'tests/ExampleTest.php::`Given something else...` → `When also...`',
+                                    label: '$(symbol-class) When also...',
+                                }),
+                            ],
+                        },
+                        {
+                            id: 'tests/ExampleTest.php::Test3',
+                            label: '$(symbol-method) Test3',
+                            children: [],
+                        },
+                    ],
+                }],
+            }]);
+        });
     });
 });
