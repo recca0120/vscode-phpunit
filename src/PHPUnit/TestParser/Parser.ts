@@ -1,4 +1,4 @@
-import { Call, Declaration, Identifier, Namespace, Node, Variable } from 'php-parser';
+import { Call, Closure, Declaration, Identifier, namedargument, Namespace, Node, String, Variable } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { TransformerFactory } from '../Transformer';
 import { TestDefinition, TestType } from '../types';
@@ -25,25 +25,39 @@ export abstract class Parser {
         return this.phpUnitXML?.root() ?? '';
     }
 
-    protected parseName(declaration?: Namespace | Declaration | Call | Identifier | Variable): string | undefined {
+    protected parseName(declaration?: Namespace | Declaration | Call | Identifier | namedargument | String | Variable): string | undefined {
         if (!declaration) {
-            return undefined;
+            return declaration;
         }
 
         if ('what' in declaration) {
             return this.parseName(declaration.what);
         }
 
-        if (typeof declaration.name === 'string') {
-            return declaration.name;
+        if (declaration.kind === 'namedargument') {
+            return this.parseName(((declaration as namedargument).value as String));
         }
 
-        if (declaration.name && 'name' in declaration.name) {
-            return declaration.name.name;
+        if ('name' in declaration) {
+            if (typeof declaration.name === 'string') {
+                return declaration.name;
+            }
+
+            if (declaration.name && 'name' in declaration.name) {
+                return declaration.name.name;
+            }
+        }
+
+        if (declaration.kind === 'string') {
+            return (declaration as String).value;
         }
 
         return undefined;
     };
+
+    protected parseClosure(argument: Closure | namedargument) {
+        return (argument.kind === 'namedargument' ? (argument as namedargument).value : argument) as Closure;
+    }
 
     protected parseAnnotations(declaration: Declaration) {
         return { ...annotationParser.parse(declaration), ...attributeParser.parse(declaration) };
