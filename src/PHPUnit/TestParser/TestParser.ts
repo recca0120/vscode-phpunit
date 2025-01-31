@@ -6,6 +6,7 @@ import { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
 import { Parser } from './Parser';
 import { PestParser } from './PestParser';
+import { PHPDefinition } from './PHPDefinition';
 import { PHPUnitParser } from './PHPUnitParser';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -14,8 +15,7 @@ export class TestParser {
     private parsers: Parser[] = [new PestParser(), new PHPUnitParser()];
     private eventEmitter = new EventEmitter;
 
-    constructor(private phpUnitXML?: PHPUnitXML) {
-        this.parsers.forEach(parser => parser.setPhpUnitXML(this.phpUnitXML));
+    constructor(private phpUnitXML: PHPUnitXML) {
     }
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
@@ -51,13 +51,17 @@ export class TestParser {
 
             return this.parseAst(ast, file);
         } catch (e) {
+            console.error(e);
+
             return undefined;
         }
     }
 
     private parseAst(declaration: Declaration | Node, file: string): TestDefinition[] | undefined {
+        const definition = new PHPDefinition(declaration, { phpUnitXML: this.phpUnitXML, file });
+
         for (const parser of this.parsers) {
-            const tests = parser.parse(declaration, file);
+            const tests = parser.parse(definition);
             if (tests) {
                 return this.emit(tests);
             }

@@ -1,96 +1,36 @@
-import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser';
-import { Transformer, TransformerFactory } from '../Transformer';
-import { TestDefinition, TestType } from '../types';
+import { TestDefinition } from '../types';
 import { Parser } from './Parser';
-import { validator } from './Validator';
+import { PHPDefinition } from './PHPDefinition';
 
-export class PHPUnitParser extends Parser {
-    private transformer: Transformer = TransformerFactory.factory('phpunit');
+export class PHPUnitParser implements Parser {
+    parse(definition: PHPDefinition): TestDefinition[] | undefined {
+        const testDefinitions: TestDefinition[] = [];
+        const getParent = (definition: PHPDefinition) => {
+            const testDefinition = definition.toTestDefinition();
+            if (!definition.parent) {
+                testDefinitions.push(testDefinition);
 
-    private parserLookup: { [p: string]: Function } = {
-        namespace: this.parseNamespace,
-        class: this.parseClass,
-    };
+                return testDefinition;
+            }
 
-    parse(declaration: Declaration | Node, file: string, namespace?: TestDefinition): TestDefinition[] | undefined {
-        const fn: Function = this.parserLookup[declaration.kind] ?? this.parseChildren;
+            let namespace = testDefinitions.find((item: TestDefinition) => item.namespace === definition.parent?.name);
+            if (!namespace) {
+                namespace = definition.parent.createNamespaceTestDefinition();
+                testDefinitions.push(namespace);
+            }
+            (namespace.children as TestDefinition[]).push(testDefinition);
 
-        return fn.apply(this, [declaration, file, namespace]);
-    }
-
-    private parseNamespace(declaration: Declaration & Namespace, file: string) {
-        return this.parseChildren(declaration, file, this.generateNamespace(this.parseName(declaration)));
-    }
-
-    private parseClass(declaration: Declaration & Class, file: string, namespace?: TestDefinition) {
-        if (!validator.isTest(declaration)) {
-            return undefined;
-        }
-
-        const type = TestType.class;
-        const annotations = this.parseAnnotations(declaration);
-
-        const className = this.parseName(declaration)!;
-        const classFQN = [namespace?.namespace, className].filter((name) => !!name).join('\\');
-        const id = this.transformer.uniqueId({ type, classFQN, annotations });
-        const label = this.transformer.generateLabel({ type, classFQN, className, annotations });
-
-        const clazz = {
-            type,
-            id,
-            label,
-            classFQN,
-            namespace: namespace?.namespace,
-            className,
-            annotations,
-            file, ...this.parsePosition(declaration),
-            depth: 1,
-        } as TestDefinition;
-
-        const methods = declaration.body
-            .filter((method) => validator.isTest(method as Method))
-            .map((method) => this.parseMethod(method, clazz));
-
-        if (methods.length <= 0) {
-            return undefined;
-        }
-
-        return [{ ...clazz, children: methods }];
-    }
-
-    private parseMethod(declaration: Declaration, clazz: TestDefinition): TestDefinition {
-        const type = TestType.method;
-        const annotations = this.parseAnnotations(declaration);
-
-        const methodName = this.parseName(declaration);
-        const id = this.transformer.uniqueId({ ...clazz, type, methodName, annotations });
-        const label = this.transformer.generateLabel({ ...clazz, type, methodName, annotations });
-
-        return {
-            ...clazz,
-            type,
-            id,
-            label,
-            methodName,
-            annotations,
-            ...this.parsePosition(declaration),
-            depth: 2,
+            return testDefinition;
         };
-    }
 
-    private parseChildren(declaration: Declaration | Program | Node, file: string, namespace?: TestDefinition) {
-        if (!('children' in declaration)) {
-            return undefined;
-        }
+        definition.getClasses()
+            .filter(definition => definition.isTest())
+            .forEach(definition => {
+                getParent(definition).children = (definition.children ?? [])
+                    .filter(definition => definition.isTest())
+                    .map(definition => definition.toTestDefinition());
+            });
 
-        const tests = declaration.children.reduce((testDefinitions, child: Node) => {
-            return testDefinitions.concat(this.parse(child, file, namespace) ?? []);
-        }, [] as TestDefinition[]);
-
-        if (!tests || tests.length === 0) {
-            return undefined;
-        }
-
-        return namespace ? [{ ...namespace, children: tests }] : tests;
+        return testDefinitions.length === 0 ? undefined : testDefinitions;
     }
 }

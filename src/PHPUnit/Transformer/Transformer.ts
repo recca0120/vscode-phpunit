@@ -6,11 +6,17 @@ export abstract class Transformer {
         return input.replace(/([\[\]()*+$!\\])/g, '\\$1').replace(/@/g, '[\\W]');
     }
 
-    generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'>): string {
-        const { type, classFQN, className, methodName, annotations } = testDefinition;
+    generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'> & {
+        label?: string
+    }): string {
+        const { type, classFQN, className, methodName, annotations, label } = testDefinition;
 
         if (annotations?.testdox && annotations.testdox.length > 0) {
             return annotations.testdox[annotations.testdox.length - 1];
+        }
+
+        if (label) {
+            return label;
         }
 
         if (type === TestType.namespace) {

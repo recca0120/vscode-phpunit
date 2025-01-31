@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { pestProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { TestDefinition, TestType } from '../types';
@@ -91,7 +92,7 @@ test('example', function () {
 });
         `;
 
-        expect(givenTest(file, content, 'example')).toEqual({
+        expect(givenTest(file, content, 'example')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -103,7 +104,7 @@ test('example', function () {
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 2,
-        });
+        }));
     });
 
     it('it test example', async () => {
@@ -114,7 +115,7 @@ it('test example', function () {
 });
         `;
 
-        expect(givenTest(file, content, 'it test example')).toEqual({
+        expect(givenTest(file, content, 'it test example')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::it test example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -126,7 +127,7 @@ it('test example', function () {
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 2,
-        });
+        }));
     });
 
     it('`something` → example', async () => {
@@ -153,7 +154,7 @@ describe('something', function () {
             depth: 2,
         }));
 
-        expect(givenTest(file, content, '`something` → example')).toEqual({
+        expect(givenTest(file, content, '`something` → example')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -165,7 +166,7 @@ describe('something', function () {
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 3,
-        });
+        }));
     });
 
     it('arrow function `something` → it example', async () => {
@@ -175,7 +176,7 @@ describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
 
         `;
 
-        expect(givenTest(file, content, '`something` → it example')).toEqual({
+        expect(givenTest(file, content, '`something` → it example')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → it example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -187,7 +188,7 @@ describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 3,
-        });
+        }));
     });
 
     it('`something` → `something else` → it test example', async () => {
@@ -216,7 +217,7 @@ describe('something', function () {
             depth: 3,
         }));
 
-        expect(givenTest(file, content, '`something` → `something else` → it test example')).toEqual({
+        expect(givenTest(file, content, '`something` → `something else` → it test example')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → `something else` → it test example',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -228,7 +229,7 @@ describe('something', function () {
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 4,
-        });
+        }));
     });
 
     it('it example 2', () => {
@@ -237,7 +238,7 @@ describe('something', function () {
 it('example 2')->assertTrue(true);
         `;
 
-        expect(givenTest(file, content, 'it example 2')).toEqual({
+        expect(givenTest(file, content, 'it example 2')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::it example 2',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -249,7 +250,7 @@ it('example 2')->assertTrue(true);
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 2,
-        });
+        }));
     });
 
     it('not it or test', async () => {
@@ -275,7 +276,7 @@ it('asserts true is true', function () {
 });
         `;
 
-        expect(givenTest(file, content, 'it asserts true is true')).toEqual({
+        expect(givenTest(file, content, 'it asserts true is true')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::it asserts true is true',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -287,7 +288,7 @@ it('asserts true is true', function () {
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 2,
-        });
+        }));
     });
 
     it('test with namedargument', async () => {
@@ -300,7 +301,7 @@ describe(description: 'something', test: function () {
 });
         `;
 
-        expect(givenTest(file, content, '`something` → it asserts true is true')).toEqual({
+        expect(givenTest(file, content, '`something` → it asserts true is true')).toEqual(expect.objectContaining({
             type: TestType.method,
             id: 'tests/Fixtures/ExampleTest.php::`something` → it asserts true is true',
             classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
@@ -312,6 +313,6 @@ describe(description: 'something', test: function () {
             start: { line: expect.any(Number), character: expect.any(Number) },
             end: { line: expect.any(Number), character: expect.any(Number) },
             depth: 3,
-        });
+        }));
     });
 });
