@@ -2,6 +2,7 @@ import { Class, Declaration, Method, Namespace, Node, Program } from 'php-parser
 import { Transformer, TransformerFactory } from '../Transformer';
 import { TestDefinition, TestType } from '../types';
 import { Parser } from './Parser';
+import { PHPDefinition } from './PHPDefinition';
 import { validator } from './Validator';
 
 export class PHPUnitParser extends Parser {
@@ -13,6 +14,20 @@ export class PHPUnitParser extends Parser {
     };
 
     parse(declaration: Declaration | Node, file: string, namespace?: TestDefinition): TestDefinition[] | undefined {
+        const definition = new PHPDefinition(declaration as Program, { file });
+        const methods = definition?.getMethods().filter((definition: PHPDefinition) => {
+            return definition.class?.isTest() || definition.isTest();
+        }) ?? [];
+        console.log(methods[0]?.class);
+        // definition?.getClasses()
+        //     .filter((definition: PHPDefinition) => definition.isTest())
+        //     .map((definition: PHPDefinition) => {
+        //         (definition.methods ?? [])
+        //             .filter(method => method.isTest())
+        //             .forEach((method: PHPDefinition) => {
+        //                 console.log(method.annotations);
+        //             });
+        //     });
         const fn: Function = this.parserLookup[declaration.kind] ?? this.parseChildren;
 
         return fn.apply(this, [declaration, file, namespace]);

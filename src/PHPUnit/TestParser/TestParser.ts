@@ -1,11 +1,12 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import { Declaration, Node } from 'php-parser';
+import { Declaration, Node, Program } from 'php-parser';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
 import { Parser } from './Parser';
 import { PestParser } from './PestParser';
+import { PHPDefinition } from './PHPDefinition';
 import { PHPUnitParser } from './PHPUnitParser';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -56,8 +57,10 @@ export class TestParser {
     }
 
     private parseAst(declaration: Declaration | Node, file: string): TestDefinition[] | undefined {
+        const definition = new PHPDefinition(declaration as Program, { file });
+
         for (const parser of this.parsers) {
-            const tests = parser.parse(declaration, file);
+            const tests = parser.parse(declaration, file, undefined);
             if (tests) {
                 return this.emit(tests);
             }

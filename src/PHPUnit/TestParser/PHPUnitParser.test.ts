@@ -42,7 +42,7 @@ describe('PHPUnitParser Test', () => {
         let content: string;
         beforeAll(async () => content = (await readFile(file)).toString());
 
-        it('parse namespace', () => {
+        fit('parse namespace', () => {
             expect(givenTest(file, content, 'Recca0120\\VSCode\\Tests')).toEqual(expect.objectContaining({
                 type: TestType.namespace,
                 // file,
