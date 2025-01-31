@@ -1,5 +1,7 @@
 import { basename, dirname, join, relative } from 'node:path';
-import { Block, Call, Closure, Declaration, ExpressionStatement, Node, Program, String } from 'php-parser';
+import {
+    Block, Call, Closure, Declaration, ExpressionStatement, namedargument, Node, Program, String,
+} from 'php-parser';
 import { Transformer, TransformerFactory } from '../Transformer';
 import { TestDefinition, TestType } from '../types';
 import { capitalize } from '../utils';
@@ -51,8 +53,8 @@ export class PestParser extends Parser {
         if (['program', 'namespace'].includes(declaration.kind)) {
             children = (declaration as Program).children;
         } else {
-            const closure = (declaration as Call).arguments[1] as Closure;
-            prefixes = [...prefixes, ((declaration as Call).arguments[0] as String).value];
+            const closure = this.parseClosure((declaration as Call).arguments[1] as Closure | namedargument);
+            prefixes = [...prefixes, this.parseName((declaration as Call).arguments[0] as namedargument | String)!];
             children = closure.kind === 'arrowfunc' ? [{ expression: closure.body! }] : closure.body!.children!;
         }
 
@@ -85,7 +87,7 @@ export class PestParser extends Parser {
             return this.parseTestOrIt(((call.what as any).what) as Call, clazz, prefixes);
         }
 
-        let methodName = (call.arguments[0] as String).value;
+        let methodName = this.parseName(call.arguments[0] as (String | namedargument));
         if (this.parseName(call) === 'it') {
             methodName = 'it ' + methodName;
         }
