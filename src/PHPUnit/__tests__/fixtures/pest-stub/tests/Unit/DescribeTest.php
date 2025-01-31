@@ -13,7 +13,7 @@ describe('something', function () {
 });
 
 describe('before each', function () {
-    test('example', function () {
+    beforeEach(function () {
         expect(true)->toBeTrue();
     });
 

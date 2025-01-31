@@ -44,7 +44,7 @@ export class PHPUnitParser extends Parser {
             className,
             annotations,
             file, ...this.parsePosition(declaration),
-            depth: 2,
+            depth: 1,
         } as TestDefinition;
 
         const methods = declaration.body
@@ -74,7 +74,7 @@ export class PHPUnitParser extends Parser {
             methodName,
             annotations,
             ...this.parsePosition(declaration),
-            depth: 3,
+            depth: 2,
         };
     }
 
