@@ -1,11 +1,14 @@
 import { readFile } from 'fs/promises';
 import { phpUnitProject } from '../__tests__/utils';
+import { PHPUnitXML } from '../PHPUnitXML';
 import { TestDefinition, TestType } from '../types';
 import { TestParser } from './TestParser';
 
 export const parse = (buffer: Buffer | string, file: string) => {
     const tests: TestDefinition[] = [];
-    const testParser = new TestParser();
+    const phpUnitXML = new PHPUnitXML();
+    phpUnitXML.setRoot(phpUnitProject(''));
+    const testParser = new TestParser(phpUnitXML);
     testParser.on(TestType.namespace, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.class, (testDefinition: TestDefinition) => tests.push(testDefinition));
     testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
@@ -388,9 +391,9 @@ describe('PHPUnitParser Test', () => {
                 file,
                 id: 'No Namespace::No namespace',
                 classFQN: 'NoNamespaceTest',
-                namespace: undefined,
                 className: 'NoNamespaceTest',
                 methodName: 'test_no_namespace',
+                label: 'test_no_namespace',
                 start: { line: 7, character: 4 },
                 end: { line: 10, character: 5 },
                 depth: 2,
@@ -414,7 +417,6 @@ final class PDF_testerTest extends TestCase {
             file,
             id: 'PDF Tester::Hello',
             classFQN: 'PDF_testerTest',
-            namespace: undefined,
             className: 'PDF_testerTest',
             methodName: 'test_hello',
             start: { line: 5, character: 4 },

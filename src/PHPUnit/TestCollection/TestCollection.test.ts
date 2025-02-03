@@ -15,10 +15,12 @@ describe('TestCollection', () => {
     };
 
     const shouldBe = async (collection: TestCollection, group: any) => {
+        const phpUnitXML = new PHPUnitXML();
+        phpUnitXML.setRoot(phpUnitProject(''));
         for (const [name, files] of Object.entries(group)) {
             const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
-                const testParser = new TestParser();
+                const testParser = new TestParser(phpUnitXML);
                 testParser.on(TestType.method, (testDefinition) => expected.push(testDefinition));
                 testParser.on(TestType.class, (testDefinition) => expected.push(testDefinition));
                 testParser.on(TestType.namespace, (testDefinition) => expected.push(testDefinition));

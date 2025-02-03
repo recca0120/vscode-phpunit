@@ -90,9 +90,4 @@ export class AnnotationParser {
     }
 }
 
-export const annotationParser = new AnnotationParser();
-export const attributeParser = new AttributeParser();
 
-export function isTest(method: Method) {
-    return annotationParser.isTest(method) || attributeParser.isTest(method);
-}
