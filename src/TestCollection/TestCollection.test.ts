@@ -31,7 +31,9 @@ describe('Extension TestCollection', () => {
     };
 
     const shouldBe = async (_collection: TestCollection, group: any) => {
-        const testParser = new TestParser();
+        const phpUnitXML = new PHPUnitXML();
+        phpUnitXML.setRoot(phpUnitProject(''));
+        const testParser = new TestParser(phpUnitXML);
         const expected = new Files<TestDefinition[]>;
         for (const [name, files] of Object.entries(group)) {
             const tests = new TestDefinitions<TestDefinition[]>();
