@@ -32,8 +32,8 @@ This extension contributes the following settings:
   or "XDEBUG_MODE=coverage"
 - `phpunit.clearOutputOnRun`: True will clear the output when we run a new test. False will leave the output after every
   test.
-- `phpunit.showAfterExecution` Specify if the test report will automatically be shown after execution
-- `phpunit.debuggerConfig` Specify the debugger launch configuration
+- `phpunit.showAfterExecution`: Specify if the test report will automatically be shown after execution
+- `phpunit.debuggerConfig`: Specify the debugger launch configuration
 ## Commands
 
 The following commands are available in VS Code's command palette, use the ID to add them to your keyboard shortcuts:
@@ -161,3 +161,38 @@ The following commands are available in VS Code's command palette, use the ID to
 ```
 
 ## Troubleshooting
+
+### Running test with XDEBUG_TRIGGER env
+
+When you have a PHP Xdebug launch configuration like this below:
+```jsonc
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {
+                "/var/www": "${workspaceRoot}"
+            },
+            "runtimeArgs": [
+                "-dxdebug.mode=debug,develop",
+            ]
+        }
+    ]
+}
+```
+and you are using docker compose, setup the extension with the configuration below to enable debug if your `xdebug.ini` configuration has `xdebug.start_with_request=trigger`:
+```jsonc
+ {
+    "phpunit.command": "docker compose -f docker-compose.yml -f docker-compose.test.yml -f docker-compose.test.override.yml exec -e 'XDEBUG_TRIGGER=VSCODE' app bash -c",// "app" is the container name in the docker-compose.yml
+    "phpunit.phpunit": "/var/www/artisan test --without-tty", //link to the Laravel artisan file in the container which is used to run the test
+    "phpunit.paths": {
+        "${workspaceFolder}": "/var/www"
+    },
+    "phpunit.debuggerConfig": "Listen for Xdebug",// This name of the launch configuration for PHP XDEBUG extension
+}
+```
+Then you can run the test with the "Debug Test" icon button. You can also run the test using the "Run Test" icon but you should have already started the Xdebug session from VSCode Debugger before running the test.
