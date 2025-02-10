@@ -204,9 +204,13 @@ export class PHPDefinition {
                     return definitions;
                 }
 
-                const ast = node.expression?.what?.kind === 'propertylookup'
-                    ? (node.expression?.what as PropertyLookup).what as AST
-                    : node.expression as AST;
+                let ast = node.expression as AST;
+                while (ast.what) {
+                    if (ast.what.kind === 'name') {
+                        break;
+                    }
+                    ast = ast.what as AST;
+                }
 
                 return definitions.concat(new PHPDefinition(ast, options));
             }, [] as PHPDefinition[]);
