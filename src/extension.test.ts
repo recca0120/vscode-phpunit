@@ -117,6 +117,10 @@ const countItems = (testItemCollection: TestItemCollection) => {
 };
 
 describe('Extension Test', () => {
+    const filterPattern = (method: string) => new RegExp(
+        `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\( with \\(data set \\)\\?\\.\\*\\)\\?\\)\\?\\$["']?`,
+    );
+
     const context: any = { subscriptions: { push: jest.fn() } };
     let cwd: string;
 
@@ -256,17 +260,13 @@ describe('Extension Test', () => {
                 const method = 'test_throw_exception';
                 const id = `Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception`;
 
-                const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
-                );
-
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    expect.stringMatching(pattern),
+                    expect.stringMatching(filterPattern(method)),
                     normalPath(phpUnitProject('tests/CalculatorTest.php')),
                     '--colors=never',
                     '--teamcity',
@@ -365,12 +365,10 @@ describe('Extension Test', () => {
                 await commands.executeCommand('phpunit.run-test-at-cursor');
 
                 const method = 'test_passed';
-                const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
-                );
+
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    expect.stringMatching(pattern),
+                    expect.stringMatching(filterPattern(method)),
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
                     '--colors=never',
                     '--teamcity',
@@ -428,11 +426,11 @@ describe('Extension Test', () => {
 
                 let expected: any;
                 if (isPestV1) {
-                    expected = { enqueued: 64, started: 62, passed: 9, failed: 51, end: 1 };
+                    expected = { enqueued: 68, started: 62, passed: 9, failed: 51, end: 1 };
                 } else if (isPestV2) {
-                    expected = { enqueued: 64, started: 64, passed: 11, failed: 51, end: 1 };
+                    expected = { enqueued: 68, started: 65, passed: 11, failed: 52, end: 1 };
                 } else {
-                    expected = { enqueued: 64, started: 66, passed: 13, failed: 51, end: 1 };
+                    expected = { enqueued: 68, started: 70, passed: 16, failed: 52, end: 1 };
                 }
 
                 expectTestResultCalled(ctrl, expected);
@@ -446,17 +444,13 @@ describe('Extension Test', () => {
                 const method = 'test_description';
                 const id = `tests/Unit/ExampleTest.php::test_description`;
 
-                const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
-                );
-
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/pest',
-                    expect.stringMatching(pattern),
+                    expect.stringMatching(filterPattern(method)),
                     normalPath(pestProject('tests/Unit/ExampleTest.php')),
                     '--colors=never',
                     '--teamcity',
@@ -473,17 +467,13 @@ describe('Extension Test', () => {
                 const method = 'it has emails';
                 const id = `tests/Unit/ExampleTest.php::it has emails`;
 
-                const pattern = new RegExp(
-                    `--filter=["']?\\^\\.\\*::\\(${method}\\)\\( with \\(data set \\)\\?\\.\\*\\)\\?\\$["']?`,
-                );
-
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/pest',
-                    expect.stringMatching(pattern),
+                    expect.stringMatching(filterPattern(method)),
                     normalPath(pestProject('tests/Unit/ExampleTest.php')),
                     '--colors=never',
                     '--teamcity',
