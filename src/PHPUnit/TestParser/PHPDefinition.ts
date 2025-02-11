@@ -293,7 +293,7 @@ export class PHPDefinition {
                 methodName = names
                     .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
                     .join('→');
-                label = [this.name, ...names].join(' → ');
+                label = names.join(' → ');
             } else {
                 methodName = this.arguments[0].name;
 

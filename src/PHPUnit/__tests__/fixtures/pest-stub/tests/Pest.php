@@ -48,3 +48,18 @@ function something()
 if (! function_exists('describe')) {
     function describe() {}
 }
+
+if (! function_exists('arch')) {
+    class FakeArch
+    {
+        public function __call($method, $args)
+        {
+            return $this;
+        }
+    }
+
+    function arch($name = '')
+    {
+        return new FakeArch();
+    }
+}
