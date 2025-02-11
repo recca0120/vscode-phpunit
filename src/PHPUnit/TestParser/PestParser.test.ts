@@ -315,4 +315,56 @@ describe(description: 'something', test: function () {
             depth: 3,
         }));
     });
+
+    it('parse arch', async () => {
+        const content = `<?php 
+
+arch()->preset()->php();
+arch()->preset()->strict();
+arch()->preset()->security();
+
+        `;
+
+        expect(givenTest(file, content, 'preset  → php ')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            id: 'tests/Fixtures/ExampleTest.php::preset  → php ',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: 'preset  → php ',
+            label: 'arch → preset → php',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 2,
+        }));
+
+        expect(givenTest(file, content, 'preset  → strict ')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            id: 'tests/Fixtures/ExampleTest.php::preset  → strict ',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: 'preset  → strict ',
+            label: 'arch → preset → strict',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 2,
+        }));
+
+        expect(givenTest(file, content, 'preset  → security ')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            id: 'tests/Fixtures/ExampleTest.php::preset  → security ',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: 'preset  → security ',
+            label: 'arch → preset → security',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 2,
+        }));
+    });
 });

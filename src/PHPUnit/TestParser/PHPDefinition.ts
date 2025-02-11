@@ -13,7 +13,7 @@ type AST = Node & {
     body?: Node[],
     children?: Node[],
     expression?: AST
-    what?: Name | PropertyLookup,
+    what?: (Name | PropertyLookup) & { offset?: Identifier },
     arguments?: AST[],
     value?: string;
 }
@@ -126,7 +126,12 @@ export class PHPDefinition {
             return this.ast.name?.name;
         }
 
+
         if (this.ast.what) {
+            if (this.ast.what.offset && this.ast.what.offset.kind === 'identifier') {
+                return this.ast.what.offset.name;
+            }
+
             return (this.ast.what as Name).name;
         }
 
@@ -184,9 +189,6 @@ export class PHPDefinition {
             return [new PHPDefinition(this.ast, this.options)];
         }
 
-        const parent = ['block'].includes(this.kind) ? this.parent : this;
-        const options = { ...this.options, parent };
-
         if (['closure', 'arrowfunc'].includes(this.kind) && this.ast.body) {
             return new PHPDefinition(this.ast.body as any, this.options).getFunctions();
         }
@@ -204,10 +206,16 @@ export class PHPDefinition {
                     return definitions;
                 }
 
+                const parent = ['block'].includes(this.kind) ? this.parent : this;
+                let options = { ...this.options, parent };
+
                 let ast = node.expression as AST;
                 while (ast.what) {
                     if (ast.what.kind === 'name') {
                         break;
+                    }
+                    if (ast.kind === 'call') {
+                        options.parent = new PHPDefinition(ast, { ...options });
                     }
                     ast = ast.what as AST;
                 }
@@ -232,7 +240,7 @@ export class PHPDefinition {
         }
 
         if (this.kind === 'call') {
-            return ['it', 'test', 'describe'].includes(this.name);
+            return ['it', 'test', 'describe', 'arch'].includes(this.name);
         }
 
         return false;
@@ -272,13 +280,29 @@ export class PHPDefinition {
 
         if (this.kind === 'call') {
             let depth = 2;
-            let methodName = this.arguments[0].name;
 
-            if (this.name === 'it') {
-                methodName = 'it ' + methodName;
+            let methodName = '';
+            let label = '';
+            if (this.name === 'arch') {
+                const names = [];
+                let parent = this.parent;
+                while (parent && parent.kind === 'call') {
+                    names.push(parent.name);
+                    parent = parent.parent;
+                }
+                methodName = names
+                    .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
+                    .join('→');
+                label = [this.name, ...names].join(' → ');
+            } else {
+                methodName = this.arguments[0].name;
+
+                if (this.name === 'it') {
+                    methodName = 'it ' + methodName;
+                }
+
+                label = methodName;
             }
-
-            const label = methodName;
 
             if (this.type === TestType.describe) {
                 methodName = '`' + methodName + '`';
@@ -295,7 +319,12 @@ export class PHPDefinition {
                 methodName = describeNames.reverse().concat(methodName).map(name => name).join(' → ');
             }
 
-            const { classFQN, namespace, className } = this.parent!.toTestDefinition();
+            let parent = this.parent;
+            while (parent && parent.kind === 'call') {
+                parent = parent.parent;
+            }
+
+            const { classFQN, namespace, className } = parent!.toTestDefinition();
             testDefinition.classFQN = classFQN;
             testDefinition.namespace = namespace;
             testDefinition.className = className;
