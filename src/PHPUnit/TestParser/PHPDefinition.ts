@@ -21,6 +21,154 @@ type AST = Node & {
 export const annotationParser = new AnnotationParser();
 export const attributeParser = new AttributeParser();
 
+abstract class TestDefinitionBuilder {
+    constructor(protected definition: PHPDefinition) {
+    }
+
+    abstract build(): TestDefinition;
+
+    protected generate(testDefinition: Partial<TestDefinition>) {
+        testDefinition = {
+            type: this.definition.type,
+            classFQN: this.definition.classFQN,
+            children: [],
+            annotations: this.definition.annotations,
+            file: this.definition.file,
+            ...this.definition.position,
+            ...testDefinition,
+        };
+        const transformer = this.getTransformer(testDefinition);
+        testDefinition.id = transformer.uniqueId(testDefinition as TestDefinition);
+        testDefinition.label = transformer.generateLabel(testDefinition as TestDefinition);
+
+        return testDefinition as TestDefinition;
+    }
+
+    private getTransformer(testDefinition: Pick<TestDefinition, 'classFQN'>): Transformer {
+        return TransformerFactory.factory(testDefinition.classFQN!);
+    }
+}
+
+class NamespaceDefinitionBuilder extends TestDefinitionBuilder {
+    build() {
+        const type = TestType.namespace;
+        const depth = 0;
+
+        const classFQN = this.definition.classFQN;
+        if (this.definition.kind === 'program') {
+            const partsFQN = classFQN!.split('\\');
+            const namespace = partsFQN.slice(0, -1).join('\\');
+
+            return this.generate({ type, depth, namespace, classFQN: namespace });
+        }
+
+        if (this.definition.kind === 'class') {
+            const partsFQN = classFQN!.split('\\');
+            const className = partsFQN.pop()!;
+            const namespace = partsFQN.join('\\');
+
+            return this.generate({ type, depth, namespace, classFQN: namespace, className });
+        }
+
+        return this.generate({ type, depth, namespace: classFQN, classFQN });
+    }
+}
+
+class TestSuiteDefinitionBuilder extends TestDefinitionBuilder {
+    build() {
+        return this.generate({
+            namespace: this.definition.parent?.name,
+            className: this.definition.name,
+            depth: 1,
+        });
+    }
+}
+
+class TestCaseDefinitionBuilder extends TestDefinitionBuilder {
+    build() {
+        return this.generate({
+            namespace: this.definition.parent!.parent?.name,
+            className: this.definition.parent!.name,
+            methodName: this.definition.name,
+            depth: 2,
+        });
+    }
+}
+
+class PestTestDefinitionBuilder extends TestDefinitionBuilder {
+    build() {
+        if (this.definition.kind === 'program') {
+            const classFQN = this.definition.classFQN!;
+            const partsFQN = classFQN.split('\\');
+            const className = partsFQN.pop()!;
+
+            return this.generate({ namespace: partsFQN.join('\\'), className, depth: 1 });
+        }
+
+        let depth = 2;
+
+        let { methodName, label } = this.parseMethodNameAndLabel();
+
+        if (this.definition.type === TestType.describe) {
+            methodName = '`' + methodName + '`';
+        }
+
+        let parent = this.definition.parent;
+        while (parent && parent.kind === 'call' && parent.type !== TestType.describe) {
+            parent = parent.parent;
+        }
+
+        if (parent?.type === TestType.describe) {
+            const describeNames: string[] = [];
+            while (parent && parent.type === TestType.describe) {
+                describeNames.push('`' + parent.arguments[0].name + '`');
+                parent = parent.parent;
+                depth++;
+            }
+            methodName = describeNames.reverse().concat(methodName).join(' → ');
+        }
+
+        const { classFQN, namespace, className } = parent!.toTestDefinition();
+
+        return this.generate({ classFQN, namespace, className, methodName, label, depth });
+    }
+
+    private parseMethodNameAndLabel() {
+        const args = this.definition.arguments;
+
+        if (this.definition.name !== 'arch') {
+            let methodName = args[0].name;
+
+            if (this.definition.name === 'it') {
+                methodName = 'it ' + methodName;
+            }
+
+            return { methodName, label: methodName };
+        }
+
+        if (args.length > 0) {
+            const methodName = args[0].name;
+
+            return { methodName, label: methodName };
+        }
+
+        const names = [] as string[];
+        let parent = this.definition.parent;
+        while (parent && parent.kind === 'call') {
+            names.push(parent.name);
+            parent = parent.parent;
+        }
+
+        const methodName = names
+            .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
+            .join('→');
+
+        const label = names.join(' → ');
+
+        return { methodName, label };
+    }
+}
+
 export class PHPDefinition {
     constructor(private readonly ast: AST, private options: {
         phpUnitXML: PHPUnitXML,
@@ -247,140 +395,19 @@ export class PHPDefinition {
     }
 
     toTestDefinition(): TestDefinition {
-        const testDefinition: Partial<TestDefinition> = {
-            type: this.type,
-            classFQN: this.classFQN,
-            children: [],
-            annotations: this.annotations,
-            file: this.file,
-            ...this.position,
-        };
-
         if (this.kind === 'class') {
-            testDefinition.namespace = this.parent?.name;
-            testDefinition.className = this.name;
-            testDefinition.depth = 1;
+            return new TestSuiteDefinitionBuilder(this).build();
         }
 
         if (this.kind === 'method') {
-            testDefinition.namespace = this.parent!.parent?.name;
-            testDefinition.className = this.parent!.name;
-            testDefinition.methodName = this.name;
-            testDefinition.depth = 2;
+            return new TestCaseDefinitionBuilder(this).build();
         }
 
-        if (this.kind === 'program') {
-            const classFQN = this.classFQN!;
-            const partsFQN = classFQN.split('\\');
-            const className = partsFQN.pop()!;
-            testDefinition.namespace = partsFQN.join('\\');
-            testDefinition.className = className;
-            testDefinition.depth = 1;
-        }
-
-        if (this.kind === 'call') {
-            let depth = 2;
-            const args = this.arguments;
-
-            let methodName = '';
-            let label = '';
-            if (this.name === 'arch') {
-                if (args.length > 0) {
-                    methodName = args[0].name;
-                    label = methodName;
-                } else {
-                    const names = [];
-                    let parent = this.parent;
-                    while (parent && parent.kind === 'call') {
-                        names.push(parent.name);
-                        parent = parent.parent;
-                    }
-                    methodName = names
-                        .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
-                        .join('→');
-                    label = names.join(' → ');
-                }
-            } else {
-                methodName = args[0].name;
-
-                if (this.name === 'it') {
-                    methodName = 'it ' + methodName;
-                }
-
-                label = methodName;
-            }
-
-            if (this.type === TestType.describe) {
-                methodName = '`' + methodName + '`';
-            }
-
-            if (this.parent?.type === TestType.describe) {
-                const describeNames: string[] = [];
-                let parent: PHPDefinition | undefined = this.parent;
-                while (parent && parent.type === TestType.describe) {
-                    describeNames.push('`' + parent.arguments[0].name + '`');
-                    parent = parent.parent;
-                    depth++;
-                }
-                methodName = describeNames.reverse().concat(methodName).map(name => name).join(' → ');
-            }
-
-            let parent = this.parent;
-            while (parent && parent.kind === 'call') {
-                parent = parent.parent;
-            }
-
-            const { classFQN, namespace, className } = parent!.toTestDefinition();
-            testDefinition.classFQN = classFQN;
-            testDefinition.namespace = namespace;
-            testDefinition.className = className;
-            testDefinition.methodName = methodName;
-            testDefinition.label = label;
-            testDefinition.depth = depth;
-        }
-
-        const transformer = this.getTransformer(testDefinition);
-        testDefinition.id = transformer.uniqueId(testDefinition as TestDefinition);
-        testDefinition.label = transformer.generateLabel(testDefinition as TestDefinition);
-
-        return testDefinition as TestDefinition;
+        return new PestTestDefinitionBuilder(this).build();
     }
 
     createNamespaceTestDefinition(): TestDefinition {
-        const testDefinition: Partial<TestDefinition> = {
-            type: TestType.namespace,
-            children: [],
-            file: this.file,
-            depth: 0,
-        };
-
-        const classFQN = this.classFQN;
-        if (this.kind === 'program') {
-            const partsFQN = classFQN!.split('\\');
-            const namespace = partsFQN.slice(0, -1).join('\\');
-            testDefinition.namespace = namespace;
-            testDefinition.classFQN = namespace;
-        } else if (this.kind === 'class') {
-            const partsFQN = classFQN!.split('\\');
-            const className = partsFQN.pop()!;
-            const namespace = partsFQN.join('\\');
-            testDefinition.namespace = namespace;
-            testDefinition.classFQN = namespace;
-            testDefinition.className = className;
-        } else {
-            testDefinition.namespace = classFQN;
-            testDefinition.classFQN = classFQN;
-        }
-
-        const transformer = this.getTransformer(testDefinition);
-        testDefinition.id = transformer.uniqueId(testDefinition as TestDefinition);
-        testDefinition.label = transformer.generateLabel(testDefinition as TestDefinition);
-
-        return testDefinition as TestDefinition;
-    }
-
-    private getTransformer(testDefinition: Pick<TestDefinition, 'classFQN'>): Transformer {
-        return TransformerFactory.factory(testDefinition.classFQN!);
+        return new NamespaceDefinitionBuilder(this).build();
     }
 
     private getMethods(): PHPDefinition[] {

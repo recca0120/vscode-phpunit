@@ -375,8 +375,44 @@ arch('Then should pass the PHP preset')->preset()->php();
 
         `;
 
-        givenTest(file, content, 'Then should pass the PHP preset');
-        // expect(givenTest(file, content, 'preset  → php ')).toEqual(expect.objectContaining({}));
+        expect(givenTest(file, content, 'Then should pass the PHP preset')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            id: 'tests/Fixtures/ExampleTest.php::Then should pass the PHP preset',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: 'Then should pass the PHP preset',
+            label: 'Then should pass the PHP preset',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 2,
+        }));
+    });
 
+    it('parse describe arch', () => {
+        const content = `<?php 
+
+describe('Given a project', function () {
+    describe('When the architecture is tested', function () {
+        arch('Then should pass the PHP preset')->preset()->php();
+    });
+});
+
+        `;
+
+        expect(givenTest(file, content, '`Given a project` → `When the architecture is tested` → Then should pass the PHP preset')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            id: 'tests/Fixtures/ExampleTest.php::`Given a project` → `When the architecture is tested` → Then should pass the PHP preset',
+            classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+            namespace: 'P\\Tests\\Fixtures',
+            className: 'ExampleTest',
+            methodName: '`Given a project` → `When the architecture is tested` → Then should pass the PHP preset',
+            label: 'Then should pass the PHP preset',
+            file,
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 4,
+        }));
     });
 });
