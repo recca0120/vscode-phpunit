@@ -280,22 +280,28 @@ export class PHPDefinition {
 
         if (this.kind === 'call') {
             let depth = 2;
+            const args = this.arguments;
 
             let methodName = '';
             let label = '';
             if (this.name === 'arch') {
-                const names = [];
-                let parent = this.parent;
-                while (parent && parent.kind === 'call') {
-                    names.push(parent.name);
-                    parent = parent.parent;
+                if (args.length > 0) {
+                    methodName = args[0].name;
+                    label = methodName;
+                } else {
+                    const names = [];
+                    let parent = this.parent;
+                    while (parent && parent.kind === 'call') {
+                        names.push(parent.name);
+                        parent = parent.parent;
+                    }
+                    methodName = names
+                        .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
+                        .join('→');
+                    label = names.join(' → ');
                 }
-                methodName = names
-                    .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
-                    .join('→');
-                label = names.join(' → ');
             } else {
-                methodName = this.arguments[0].name;
+                methodName = args[0].name;
 
                 if (this.name === 'it') {
                     methodName = 'it ' + methodName;

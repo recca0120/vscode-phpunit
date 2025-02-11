@@ -426,11 +426,11 @@ describe('Extension Test', () => {
 
                 let expected: any;
                 if (isPestV1) {
-                    expected = { enqueued: 67, started: 62, passed: 9, failed: 51, end: 1 };
+                    expected = { enqueued: 68, started: 62, passed: 9, failed: 51, end: 1 };
                 } else if (isPestV2) {
-                    expected = { enqueued: 67, started: 64, passed: 11, failed: 51, end: 1 };
+                    expected = { enqueued: 68, started: 65, passed: 11, failed: 52, end: 1 };
                 } else {
-                    expected = { enqueued: 67, started: 69, passed: 15, failed: 52, end: 1 };
+                    expected = { enqueued: 68, started: 70, passed: 16, failed: 52, end: 1 };
                 }
 
                 expectTestResultCalled(ctrl, expected);

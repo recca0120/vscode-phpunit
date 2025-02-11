@@ -367,4 +367,16 @@ arch()->preset()->security();
             depth: 2,
         }));
     });
+
+    it('parse arch with name', async () => {
+        const content = `<?php 
+
+arch('Then should pass the PHP preset')->preset()->php();
+
+        `;
+
+        givenTest(file, content, 'Then should pass the PHP preset');
+        // expect(givenTest(file, content, 'preset  → php ')).toEqual(expect.objectContaining({}));
+
+    });
 });
