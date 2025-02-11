@@ -282,8 +282,8 @@ export class PHPDefinition {
             let depth = 2;
             const args = this.arguments;
 
-            let methodName = '';
-            let label = '';
+            let methodName: string;
+            let label: string;
             if (this.name === 'arch') {
                 if (args.length > 0) {
                     methodName = args[0].name;
@@ -314,20 +314,19 @@ export class PHPDefinition {
                 methodName = '`' + methodName + '`';
             }
 
-            if (this.parent?.type === TestType.describe) {
+            let parent = this.parent;
+            while (parent && parent.kind === 'call' && parent.type !== TestType.describe) {
+                parent = parent.parent;
+            }
+
+            if (parent?.type === TestType.describe) {
                 const describeNames: string[] = [];
-                let parent: PHPDefinition | undefined = this.parent;
                 while (parent && parent.type === TestType.describe) {
                     describeNames.push('`' + parent.arguments[0].name + '`');
                     parent = parent.parent;
                     depth++;
                 }
                 methodName = describeNames.reverse().concat(methodName).map(name => name).join(' → ');
-            }
-
-            let parent = this.parent;
-            while (parent && parent.kind === 'call') {
-                parent = parent.parent;
             }
 
             const { classFQN, namespace, className } = parent!.toTestDefinition();
