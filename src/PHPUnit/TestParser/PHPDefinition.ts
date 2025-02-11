@@ -318,6 +318,7 @@ export class PHPDefinition {
         }
 
         return definitions.concat((this.ast.children ?? [])
+            .map((node: AST) => this.ifBlock(node))
             .map((node: Node) => new PHPDefinition(node, options))
             .filter((definition: PHPDefinition) => definition.kind === 'class'));
     }
@@ -349,7 +350,9 @@ export class PHPDefinition {
             .reduce((children: AST[], node) => {
                 return children.concat(node.kind === 'namespace' ? (node as Namespace).children : [node]);
             }, [])
+            .map((node: AST) => this.ifBlock(node))
             .reduce((definitions, node: AST) => {
+
                 if (!(node.kind === 'expressionstatement' && (node.expression as any).kind !== 'include')) {
                     return definitions;
                 }
@@ -439,5 +442,13 @@ export class PHPDefinition {
 
     private acceptModifier() {
         return ['', 'public'].includes(this.ast.visibility!);
+    }
+
+    private ifBlock(node: AST) {
+        if (node.kind === 'if' && (node as any).test.value === true) {
+            return (node.body as any).children[0];
+        }
+
+        return node;
     }
 }
