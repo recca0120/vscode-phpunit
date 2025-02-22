@@ -77,6 +77,7 @@ export class TestCollection extends BaseTestCollection {
         const testHierarchyBuilder = new TestHierarchyBuilder(testParser, this.ctrl);
         await testParser.parseFile(uri.fsPath);
 
+        this.removeTestItems(uri);
         const testData = this.getTestCases(uri);
         testData.clear();
         for (const [testItem, testCase] of testHierarchyBuilder.get()) {
@@ -87,9 +88,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     protected deleteFile(file: File<TestDefinition>) {
-        this.findTestsByFile(file.uri).forEach((testItem) => {
-            testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
-        });
+        this.removeTestItems(file.uri);
 
         return super.deleteFile(file);
     }
@@ -126,5 +125,11 @@ export class TestCollection extends BaseTestCollection {
 
     private compareFn(testItem: TestItem, position: Position) {
         return testItem.range!.start.line - position.line;
+    }
+
+    private removeTestItems(uri: URI) {
+        this.findTestsByFile(uri).forEach((testItem) => {
+            testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+        });
     }
 }
