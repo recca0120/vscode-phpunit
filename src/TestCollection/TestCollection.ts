@@ -137,14 +137,16 @@ export class TestCollection extends BaseTestCollection {
 
             let item = testItem;
             while (item.parent) {
-                let parent = item.parent;
-                let children = parent.children;
+                const parent = item.parent;
+                const children = parent.children;
                 children.delete(item.id);
-                if (children.size === 0) {
-                    item = parent;
-                    if (!item.parent) {
-                        this.ctrl.items.delete(item.id);
-                    }
+                if (children.size !== 0) {
+                    break;
+                }
+
+                item = parent;
+                if (!item.parent) {
+                    this.ctrl.items.delete(item.id);
                 }
             }
         });
