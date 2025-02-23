@@ -1,6 +1,6 @@
 <?php
 
-namespace Recca0120\VSCode;
+namespace App;
 
 use Exception;
 

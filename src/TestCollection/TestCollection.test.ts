@@ -88,22 +88,16 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             expect.objectContaining(
                 {
-                    id: 'namespace:VSCode (Recca0120\\VSCode)',
-                    label: '$(symbol-namespace) Recca0120\\VSCode',
+                    id: 'namespace:Tests',
+                    label: '$(symbol-namespace) Tests',
                     children: [
                         expect.objectContaining({
-                            id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
-                            label: '$(symbol-namespace) Tests',
-                            children: [
-                                expect.objectContaining({
-                                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                                    label: '$(symbol-class) AssertionsTest',
-                                }),
-                                expect.objectContaining({
-                                    id: 'Attribute (Recca0120\\VSCode\\Tests\\Attribute)',
-                                    label: '$(symbol-class) AttributeTest',
-                                }),
-                            ],
+                            id: 'Assertions (Tests\\Assertions)',
+                            label: '$(symbol-class) AssertionsTest',
+                        }),
+                        expect.objectContaining({
+                            id: 'Attribute (Tests\\Attribute)',
+                            label: '$(symbol-class) AttributeTest',
                         }),
                     ],
                 },
@@ -126,38 +120,28 @@ describe('Extension TestCollection', () => {
         await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
         await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
 
-        expect(toTree(ctrl.items)).toEqual([expect.objectContaining({
-            id: 'namespace:VSCode (Recca0120\\VSCode)',
-            label: '$(symbol-namespace) Recca0120\\VSCode',
-            children: [
-                expect.objectContaining({
-                    id: 'namespace:Tests (Recca0120\\VSCode\\Tests)',
-                    label: '$(symbol-namespace) Tests',
-                    children: [
-                        expect.objectContaining({
-                            id: 'namespace:Unit (Recca0120\\VSCode\\Tests\\Unit)',
-                            label: '$(symbol-namespace) Unit',
-                            children: [
-                                expect.objectContaining({
-                                    id: 'Example (Recca0120\\VSCode\\Tests\\Unit\\Example)',
-                                    label: '$(symbol-class) ExampleTest',
-                                }),
-                            ],
-                        }),
-                        expect.objectContaining({
-                            id: 'namespace:Feature (Recca0120\\VSCode\\Tests\\Feature)',
-                            label: '$(symbol-namespace) Feature',
-                            children: [
-                                expect.objectContaining({
-                                    id: 'Example (Recca0120\\VSCode\\Tests\\Feature\\Example)',
-                                    label: '$(symbol-class) ExampleTest',
-                                }),
-                            ],
-                        }),
-                    ],
-                }),
-            ],
-        })]);
+        expect(toTree(ctrl.items)).toEqual([
+            expect.objectContaining({
+                id: 'namespace:Unit (Tests\\Unit)',
+                label: '$(symbol-namespace) Tests\\Unit',
+                children: [
+                    expect.objectContaining({
+                        id: 'Example (Tests\\Unit\\Example)',
+                        label: '$(symbol-class) ExampleTest',
+                    }),
+                ],
+            }),
+            expect.objectContaining({
+                id: 'namespace:Feature (Tests\\Feature)',
+                label: '$(symbol-namespace) Tests\\Feature',
+                children: [
+                    expect.objectContaining({
+                        id: 'Example (Tests\\Feature\\Example)',
+                        label: '$(symbol-class) ExampleTest',
+                    }),
+                ],
+            }),
+        ]);
     });
 
     it('add test', async () => {
