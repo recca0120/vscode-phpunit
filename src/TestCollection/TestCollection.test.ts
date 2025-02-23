@@ -121,26 +121,32 @@ describe('Extension TestCollection', () => {
         await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([
-            expect.objectContaining({
-                id: 'namespace:Unit (Tests\\Unit)',
-                label: '$(symbol-namespace) Tests\\Unit',
+            {
+                id: 'namespace:Tests',
+                label: '$(symbol-namespace) Tests',
                 children: [
                     expect.objectContaining({
-                        id: 'Example (Tests\\Unit\\Example)',
-                        label: '$(symbol-class) ExampleTest',
+                        id: 'namespace:Unit (Tests\\Unit)',
+                        label: '$(symbol-namespace) Unit',
+                        children: [
+                            expect.objectContaining({
+                                id: 'Example (Tests\\Unit\\Example)',
+                                label: '$(symbol-class) ExampleTest',
+                            }),
+                        ],
                     }),
-                ],
-            }),
-            expect.objectContaining({
-                id: 'namespace:Feature (Tests\\Feature)',
-                label: '$(symbol-namespace) Tests\\Feature',
-                children: [
                     expect.objectContaining({
-                        id: 'Example (Tests\\Feature\\Example)',
-                        label: '$(symbol-class) ExampleTest',
+                        id: 'namespace:Feature (Tests\\Feature)',
+                        label: '$(symbol-namespace) Feature',
+                        children: [
+                            expect.objectContaining({
+                                id: 'Example (Tests\\Feature\\Example)',
+                                label: '$(symbol-class) ExampleTest',
+                            }),
+                        ],
                     }),
                 ],
-            }),
+            },
         ]);
     });
 

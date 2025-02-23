@@ -50,8 +50,7 @@ export class TestHierarchyBuilder {
         let parentTestCollection = this.ctrl.items;
         let testItem: TestItem | undefined;
         let namespaceParts = testDefinition.label?.split('\\') ?? [];
-        const vendorNamespace = namespaceParts.splice(0, 2).join('\\');
-        namespaceParts = [vendorNamespace, ...namespaceParts].filter(value => !!value);
+        namespaceParts = namespaceParts.filter(value => !!value);
         this.length = namespaceParts.length;
 
         namespaceParts.forEach((namespacePart, index, namespaceParts) => {
