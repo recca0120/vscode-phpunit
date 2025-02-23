@@ -129,7 +129,24 @@ export class TestCollection extends BaseTestCollection {
 
     private removeTestItems(uri: URI) {
         this.findTestsByFile(uri).forEach((testItem) => {
-            testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+            if (!testItem.parent) {
+                this.ctrl.items.delete(testItem.id);
+
+                return;
+            }
+
+            let item = testItem;
+            while (item.parent) {
+                let parent = item.parent;
+                let children = parent.children;
+                children.delete(item.id);
+                if (children.size === 0) {
+                    item = parent;
+                    if (!item.parent) {
+                        this.ctrl.items.delete(item.id);
+                    }
+                }
+            }
         });
     }
 }
