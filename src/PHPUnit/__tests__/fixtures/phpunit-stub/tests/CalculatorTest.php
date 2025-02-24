@@ -1,12 +1,12 @@
 <?php
 
-namespace Recca0120\VSCode\Tests;
+namespace Tests;
 
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use Recca0120\VSCode\Calculator;
-use Recca0120\VSCode\Item;
+use App\Calculator;
+use App\Item;
 
 class CalculatorTest extends TestCase
 {

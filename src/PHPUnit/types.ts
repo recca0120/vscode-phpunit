@@ -31,4 +31,5 @@ export type TestDefinition = {
     start?: Position;
     end?: Position;
     annotations?: Annotations;
+    testsuite?: string;
 };

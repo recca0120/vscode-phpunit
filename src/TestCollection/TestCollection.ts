@@ -72,10 +72,10 @@ export class TestCollection extends BaseTestCollection {
         return super.reset();
     }
 
-    protected async parseTests(uri: URI) {
+    protected async parseTests(uri: URI, testsuite: string) {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
-        const testHierarchyBuilder = new TestHierarchyBuilder(testParser, this.ctrl);
-        await testParser.parseFile(uri.fsPath);
+        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl, testParser);
+        await testParser.parseFile(uri.fsPath, testsuite);
 
         this.removeTestItems(uri);
         const testData = this.getTestCases(uri);

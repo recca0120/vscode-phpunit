@@ -195,12 +195,12 @@ const shouldRunAllTest = async (expected: string[], builder: CommandBuilder, pro
         event: TeamcityEvent.testStarted,
         name: 'test_passed',
         file: appPath('tests/AssertionsTest.php'),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        id: 'Tests\\AssertionsTest',
     }, {
         event: TeamcityEvent.testFinished,
         name: 'test_passed',
         flowId: expect.any(Number),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+        id: 'Tests\\AssertionsTest::test_passed',
         file: projectPath('tests/AssertionsTest.php'),
     });
 };
@@ -211,11 +211,11 @@ const shouldRunTestSuite = async (expected: string[], builder: CommandBuilder, p
     await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TeamcityEvent.testSuiteStarted,
         file: appPath('tests/AssertionsTest.php'),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        id: 'Tests\\AssertionsTest',
     }, {
         event: TeamcityEvent.testSuiteFinished,
         flowId: expect.any(Number),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        id: 'Tests\\AssertionsTest',
         file: projectPath('tests/AssertionsTest.php'),
     });
 };
@@ -228,11 +228,11 @@ const shouldRunTestPassed = async (expected: string[], command: CommandBuilder, 
         event: TeamcityEvent.testStarted,
         name: 'test_passed',
         file: appPath('tests/AssertionsTest.php'),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        id: 'Tests\\AssertionsTest',
     }, {
         event: TeamcityEvent.testFinished,
         flowId: expect.any(Number),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed',
+        id: 'Tests\\AssertionsTest::test_passed',
         file: projectPath('tests/AssertionsTest.php'),
     });
 };
@@ -245,12 +245,12 @@ const shouldRunTestFailed = async (expected: string[], command: CommandBuilder, 
         event: TeamcityEvent.testFailed,
         name: 'test_failed',
         file: appPath('tests/AssertionsTest.php'),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
+        id: 'Tests\\AssertionsTest',
         phpVfsComposer,
     }, {
         event: TeamcityEvent.testFailed,
         flowId: expect.any(Number),
-        id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
+        id: 'Tests\\AssertionsTest::test_failed',
         file: projectPath('tests/AssertionsTest.php'),
         message: 'Failed asserting that false is true.',
         details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],

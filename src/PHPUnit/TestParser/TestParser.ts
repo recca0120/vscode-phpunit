@@ -22,11 +22,11 @@ export class TestParser {
         this.eventEmitter.on(`${eventName}`, callback);
     }
 
-    async parseFile(file: string) {
-        return this.parse(textDecoder.decode(await readFile(file)), file);
+    async parseFile(file: string, testsuite?: string) {
+        return this.parse(textDecoder.decode(await readFile(file)), file, testsuite);
     }
 
-    parse(text: Buffer | string, file: string) {
+    parse(text: Buffer | string, file: string, testsuite?: string) {
         text = text.toString();
 
         // Todo https://github.com/glayzzle/php-parser/issues/170
@@ -49,7 +49,7 @@ export class TestParser {
                 }
             });
 
-            return this.parseAst(ast, file);
+            return this.parseAst(ast, file, testsuite);
         } catch (e) {
             console.error(e);
 
@@ -57,11 +57,12 @@ export class TestParser {
         }
     }
 
-    private parseAst(declaration: Declaration | Node, file: string): TestDefinition[] | undefined {
+    private parseAst(declaration: Declaration | Node, file: string, testsuite?: string): TestDefinition[] | undefined {
         const definition = new PHPDefinition(declaration, { phpUnitXML: this.phpUnitXML, file });
 
         for (const parser of this.parsers) {
             const tests = parser.parse(definition);
+            tests?.forEach((testDefinition) => testDefinition.testsuite = testsuite);
             if (tests) {
                 return this.emit(tests);
             }

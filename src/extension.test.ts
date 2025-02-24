@@ -152,7 +152,7 @@ describe('Extension Test', () => {
                 await activate(context);
                 const ctrl = getTestController();
                 const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
-                const itemId = `Assertions (Recca0120\\VSCode\\Tests\\Assertions)`;
+                const itemId = `Assertions (Tests\\Assertions)`;
 
                 const parent = findTest(ctrl.items, itemId)!;
                 const child = parent.children.get(`${itemId}::Passed`);
@@ -214,14 +214,14 @@ describe('Extension Test', () => {
                 await activate(context);
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
-                const id = `namespace:Tests (Recca0120\\VSCode\\Tests)`;
+                const id = `namespace:Tests`;
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)(( with (data set )?.*)?)?$',
+                    '--filter=^(Tests.*)(( with (data set )?.*)?)?$',
                     '--colors=never',
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
@@ -237,7 +237,7 @@ describe('Extension Test', () => {
                 await activate(context);
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
-                const id = `Assertions (Recca0120\\VSCode\\Tests\\Assertions)`;
+                const id = `Assertions (Tests\\Assertions)`;
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
                 await runProfile.runHandler(request, new CancellationTokenSource().token);
@@ -258,7 +258,7 @@ describe('Extension Test', () => {
                 const runProfile = getRunProfile(ctrl);
 
                 const method = 'test_throw_exception';
-                const id = `Calculator (Recca0120\\VSCode\\Tests\\Calculator)::Throw exception`;
+                const id = `Calculator (Tests\\Calculator)::Throw exception`;
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
@@ -300,7 +300,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(47);
+                expect(countItems(ctrl.items)).toEqual(46);
             });
 
             it('should resolve tests without phpunit.xml', async () => {
@@ -313,7 +313,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(47);
+                expect(countItems(ctrl.items)).toEqual(46);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {
@@ -327,7 +327,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(14);
+                expect(countItems(ctrl.items)).toEqual(13);
             });
 
             it('run phpunit.run-file', async () => {

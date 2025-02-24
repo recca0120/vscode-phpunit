@@ -14,10 +14,10 @@ describe('TestCollection', () => {
         return testCollection;
     };
 
-    const shouldBe = async (collection: TestCollection, group: any) => {
+    const shouldBe = async (collection: TestCollection, testsuites: any) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
-        for (const [name, files] of Object.entries(group)) {
+        for (const [testsuite, files] of Object.entries(testsuites)) {
             const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
                 const testParser = new TestParser(phpUnitXML);
@@ -25,10 +25,10 @@ describe('TestCollection', () => {
                 testParser.on(TestType.class, (testDefinition) => expected.push(testDefinition));
                 testParser.on(TestType.namespace, (testDefinition) => expected.push(testDefinition));
 
-                await testParser.parseFile(uri.fsPath);
+                await testParser.parseFile(uri.fsPath, testsuite);
             }
             const actual: TestDefinition[] = [];
-            collection.items().get(name)?.items().forEach((item) => actual.push(...item));
+            collection.items().get(testsuite)?.items().forEach((item) => actual.push(...item));
             expect(actual).toEqual(expected);
         }
     };

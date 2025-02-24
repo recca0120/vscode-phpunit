@@ -5,7 +5,7 @@ import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
 import { TestDefinitionBuilder } from './TestDefinitionBuilder';
 
 export interface File<T> {
-    group: string;
+    testsuite: string;
     uri: URI;
     tests: T[];
 }
@@ -99,17 +99,17 @@ export class TestCollection {
     }
 
     async change(uri: URI) {
-        const group = this.getGroup(uri);
-        if (!group) {
+        const testsuite = this.parseTestsuite(uri);
+        if (!testsuite) {
             return this;
         }
 
         const files = this.items();
-        const testDefinitions = await this.parseTests(uri);
+        const testDefinitions = await this.parseTests(uri, testsuite);
         if (testDefinitions.length === 0) {
             this.delete(uri);
         }
-        files.get(group)!.set(uri, testDefinitions);
+        files.get(testsuite)!.set(uri, testDefinitions);
 
         return this;
     }
@@ -147,9 +147,9 @@ export class TestCollection {
         return undefined;
     }
 
-    protected async parseTests(uri: URI) {
+    protected async parseTests(uri: URI, testsuite: string) {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
-        await testParser.parseFile(uri.fsPath);
+        await testParser.parseFile(uri.fsPath, testsuite);
 
         return testDefinitionBuilder.get();
     }
@@ -162,34 +162,36 @@ export class TestCollection {
     }
 
     protected deleteFile(file: File<TestDefinition>) {
-        return this.items().get(file.group)?.delete(file.uri);
+        return this.items().get(file.testsuite)?.delete(file.uri);
     }
 
     private* gatherFiles() {
-        for (const [group, files] of this.items()) {
+        for (const [testsuite, files] of this.items()) {
             for (const [uri, tests] of files) {
-                yield { group, uri, tests };
+                yield { testsuite, uri, tests };
             }
         }
     }
 
-    private getGroup(uri: URI) {
+    private parseTestsuite(uri: URI) {
         const testSuites = this.phpUnitXML.getTestSuites();
-        const group = testSuites.find(item => {
+        const testsuite = testSuites.find(item => {
             return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
         });
-        if (!group) {
+
+        if (!testsuite) {
             return;
         }
 
         const exclude = testSuites.find((item) => {
-            return item.name === group.name && item.tag === 'exclude' && this.match(item, uri);
+            return item.name === testsuite.name && item.tag === 'exclude' && this.match(item, uri);
         });
+
         if (exclude) {
             return;
         }
 
-        return group.name;
+        return testsuite.name;
     }
 
     private match(testSuite: TestSuite, uri: URI) {

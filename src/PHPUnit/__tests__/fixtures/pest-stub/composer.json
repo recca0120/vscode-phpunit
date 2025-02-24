@@ -8,12 +8,12 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Recca0120\\VSCode\\": "src/"
+      "App\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Recca0120\\VSCode\\Tests\\": "tests/"
+      "Tests\\": "tests/"
     }
   },
   "authors": [
