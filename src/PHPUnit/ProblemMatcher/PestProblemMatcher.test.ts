@@ -330,7 +330,7 @@ describe('Pest ProblemMatcher Text', () => {
         });
 
         it('TestSummary', () => {
-            resultShouldBe('Tests:    1 failed, 1 skipped, 5 passed (5 assertions)', {
+            resultShouldBe('  Tests:    1 failed, 1 skipped, 5 passed (5 assertions)', {
                 event: TeamcityEvent.testResultSummary,
                 passed: 5,
                 failed: 1,

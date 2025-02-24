@@ -19,7 +19,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
         return new RegExp(
             [
                 `^OK\\s+\\(\\d+\\stest(s)?`,
-                `^${tests}${assertions}((${items.join('|')}):${end})*`,
+                `\s*${tests}${assertions}((${items.join('|')}):${end})*`,
             ].join('|'),
             'ig',
         );
