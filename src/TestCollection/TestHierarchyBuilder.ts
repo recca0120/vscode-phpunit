@@ -51,31 +51,31 @@ export class TestHierarchyBuilder {
         let testItem: TestItem | undefined;
         let parts = testDefinition.label?.split('\\') ?? [];
         parts = parts.filter(value => !!value);
-        this.length = parts.length;
 
         parts.forEach((part, index, parts) => {
             const type = TestType.namespace;
 
             const classFQN = parts.slice(0, index + 1).join('\\');
             const id = transformer.uniqueId({ type, classFQN });
+            const label = transformer.generateLabel({ type, classFQN: part });
+            const testDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
 
-            testItem = children.get(id);
+            testItem = children.get(testDefinition.id);
             if (!testItem) {
-                const label = transformer.generateLabel({ type, classFQN: part });
-                const testDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
-                testItem = this.ctrl.createTestItem(id, this.parseLabelWithIcon(testDefinition));
+                testItem = this.ctrl.createTestItem(testDefinition.id, this.parseLabelWithIcon(testDefinition));
                 testItem.canResolveChildren = true;
-                testItem.sortText = id;
+                testItem.sortText = testDefinition.id;
                 children.add(testItem);
                 this.testData.set(testItem, new TestCase(testDefinition));
             }
 
             const parent = this.ancestors[this.ancestors.length - 1];
             parent.children.push(testItem);
-            this.ancestors.push({ item: testItem, type, children: [] });
+            this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
 
             children = testItem.children;
         });
+        this.length = this.ancestors.length - 1;
     }
 
     private addTestItem(testDefinition: TestDefinition, sortText: string) {
