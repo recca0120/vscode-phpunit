@@ -30,12 +30,12 @@ describe('Extension TestCollection', () => {
         return results;
     };
 
-    const shouldBe = async (_collection: TestCollection, group: any) => {
+    const shouldBe = async (_collection: TestCollection, testsuites: any) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
         const testParser = new TestParser(phpUnitXML);
         const expected = new Files<TestDefinition[]>;
-        for (const [name, files] of Object.entries(group)) {
+        for (const [name, files] of Object.entries(testsuites)) {
             const tests = new TestDefinitions<TestDefinition[]>();
             for (const uri of (files as URI[])) {
                 tests.set(uri, await testParser.parseFile(uri.fsPath) ?? []);
@@ -105,7 +105,7 @@ describe('Extension TestCollection', () => {
         ]);
     });
 
-    it('with groups', async () => {
+    it('with testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="Unit">

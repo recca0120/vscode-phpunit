@@ -12,12 +12,12 @@ export class TestVersionParser implements IParser<TestVersion> {
     }
 
     parse(text: string) {
-        const groups = text.match(this.pattern)!.groups!;
+        const matched = text.match(this.pattern)!.groups!;
 
         return {
             event: TeamcityEvent.testVersion,
-            phpunit: groups.phpunit,
-            paratest: groups.paratest,
+            phpunit: matched.phpunit,
+            paratest: matched.paratest,
             text,
         };
     }

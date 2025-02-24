@@ -15,7 +15,7 @@ export class TestHierarchyBuilder {
     ];
     private testData = new CustomWeakMap<TestItem, TestCase>();
 
-    constructor(private ctrl: TestController, private testParser: TestParser, private group: string = 'default') {
+    constructor(private ctrl: TestController, private testParser: TestParser, private testsuite: string = 'default') {
         this.onInit();
     }
 

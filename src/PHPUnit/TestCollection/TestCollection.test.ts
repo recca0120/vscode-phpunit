@@ -14,10 +14,10 @@ describe('TestCollection', () => {
         return testCollection;
     };
 
-    const shouldBe = async (collection: TestCollection, group: any) => {
+    const shouldBe = async (collection: TestCollection, testsuites: any) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
-        for (const [name, files] of Object.entries(group)) {
+        for (const [name, files] of Object.entries(testsuites)) {
             const expected: TestDefinition[] = [];
             for (const uri of (files as URI[])) {
                 const testParser = new TestParser(phpUnitXML);

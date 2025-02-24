@@ -38,10 +38,10 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
 
         return [...text.matchAll(pattern)].reduce(
             (result: any, match) => {
-                const groups = match.groups!;
-                const [name, count] = groups.name
-                    ? [groups.name, groups.count]
-                    : [groups.name2, groups.count2];
+                const matched = match.groups!;
+                const [name, count] = matched.name
+                    ? [matched.name, matched.count]
+                    : [matched.name2, matched.count2];
                 result[this.normalize(name)] = parseInt(count, 10);
 
                 return result;

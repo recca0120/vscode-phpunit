@@ -15,11 +15,11 @@ export abstract class ValueParser<T> implements IParser<T> {
     }
 
     parse(text: string) {
-        const groups = text.match(this.pattern)!.groups!;
+        const matched = text.match(this.pattern)!.groups!;
 
         return {
             event: this.event,
-            [this.name.toLowerCase()]: groups[this.name],
+            [this.name.toLowerCase()]: matched[this.name],
             text,
         } as T;
     }
