@@ -70,7 +70,7 @@ export async function activate(context: ExtensionContext) {
         for (const [item, thisProfile] of watchingTests) {
             const cast = item as TestItem;
             if (cast.uri?.toString() === uri.toString()) {
-                include.push(cast);
+                include.push(...testCollection.findTestsByFile(cast.uri!));
                 profile = thisProfile;
             }
         }
