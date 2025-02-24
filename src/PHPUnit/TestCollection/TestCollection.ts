@@ -147,9 +147,9 @@ export class TestCollection {
         return undefined;
     }
 
-    protected async parseTests(uri: URI, _testsuite: string) {
+    protected async parseTests(uri: URI, testsuite: string) {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
-        await testParser.parseFile(uri.fsPath);
+        await testParser.parseFile(uri.fsPath, testsuite);
 
         return testDefinitionBuilder.get();
     }

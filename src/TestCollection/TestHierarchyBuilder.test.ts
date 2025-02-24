@@ -68,12 +68,11 @@ describe('TestHierarchyBuilder', () => {
         ), configurationFile);
 
         const testParser = new TestParser(phpUnitXml);
+        const builder = new TestHierarchyBuilder(ctrl, testParser);
         codes.map(({ testsuite, file, code }) => {
-            const builder = new TestHierarchyBuilder(ctrl, testParser, testsuite.name);
-            testParser.parse(code, file);
-
-            return builder;
-        }).forEach(builder => builder.get());
+            testParser.parse(code, file, testsuite.name);
+        });
+        builder.get();
     };
 
     beforeEach(() => {
