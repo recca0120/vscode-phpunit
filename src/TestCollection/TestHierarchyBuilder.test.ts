@@ -49,7 +49,7 @@ describe('TestHierarchyBuilder', () => {
             ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
             const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
             testParser = new TestParser(phpUnitXML);
-            builder = new TestHierarchyBuilder(testParser, ctrl);
+            builder = new TestHierarchyBuilder(ctrl, testParser);
         });
 
         it('no namespace', () => {
@@ -169,7 +169,7 @@ describe('TestHierarchyBuilder', () => {
             ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
             const phpUnitXML = new PHPUnitXML().setRoot(pestProject(''));
             testParser = new TestParser(phpUnitXML);
-            builder = new TestHierarchyBuilder(testParser, ctrl);
+            builder = new TestHierarchyBuilder(ctrl, testParser);
         });
 
         it('nested describe', () => {

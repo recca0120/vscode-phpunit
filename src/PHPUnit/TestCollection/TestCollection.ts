@@ -99,13 +99,13 @@ export class TestCollection {
     }
 
     async change(uri: URI) {
-        const group = this.getGroup(uri);
+        const group = this.parseGroup(uri);
         if (!group) {
             return this;
         }
 
         const files = this.items();
-        const testDefinitions = await this.parseTests(uri);
+        const testDefinitions = await this.parseTests(uri, group);
         if (testDefinitions.length === 0) {
             this.delete(uri);
         }
@@ -147,7 +147,7 @@ export class TestCollection {
         return undefined;
     }
 
-    protected async parseTests(uri: URI) {
+    protected async parseTests(uri: URI, _group: string) {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
         await testParser.parseFile(uri.fsPath);
 
@@ -173,7 +173,7 @@ export class TestCollection {
         }
     }
 
-    private getGroup(uri: URI) {
+    private parseGroup(uri: URI) {
         const testSuites = this.phpUnitXML.getTestSuites();
         const group = testSuites.find(item => {
             return ['directory', 'file'].includes(item.tag) && this.match(item, uri);

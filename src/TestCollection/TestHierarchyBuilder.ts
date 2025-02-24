@@ -15,7 +15,7 @@ export class TestHierarchyBuilder {
     ];
     private testData = new CustomWeakMap<TestItem, TestCase>();
 
-    constructor(private testParser: TestParser, private ctrl: TestController) {
+    constructor(private ctrl: TestController, private testParser: TestParser, private group: string = 'default') {
         this.onInit();
     }
 
@@ -45,36 +45,36 @@ export class TestHierarchyBuilder {
     }
 
     private addNamespaceTestItems(testDefinition: TestDefinition) {
-        const converter = TransformerFactory.factory(testDefinition.classFQN!);
+        const transformer = TransformerFactory.factory(testDefinition.classFQN!);
 
-        let parentTestCollection = this.ctrl.items;
+        let children = this.ctrl.items;
         let testItem: TestItem | undefined;
-        let namespaceParts = testDefinition.label?.split('\\') ?? [];
-        namespaceParts = namespaceParts.filter(value => !!value);
-        this.length = namespaceParts.length;
+        let parts = testDefinition.label?.split('\\') ?? [];
+        parts = parts.filter(value => !!value);
+        this.length = parts.length;
 
-        namespaceParts.forEach((namespacePart, index, namespaceParts) => {
+        parts.forEach((part, index, parts) => {
             const type = TestType.namespace;
 
-            const classFQN = namespaceParts.slice(0, index + 1).join('\\');
-            const id = converter.uniqueId({ type, classFQN });
-            const label = converter.generateLabel({ type, classFQN: namespacePart });
-            const testDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
+            const classFQN = parts.slice(0, index + 1).join('\\');
+            const id = transformer.uniqueId({ type, classFQN });
 
-            testItem = parentTestCollection.get(testDefinition.id);
+            testItem = children.get(id);
             if (!testItem) {
-                testItem = this.ctrl.createTestItem(testDefinition.id, this.createLabel(testDefinition));
+                const label = transformer.generateLabel({ type, classFQN: part });
+                const testDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
+                testItem = this.ctrl.createTestItem(id, this.parseLabelWithIcon(testDefinition));
                 testItem.canResolveChildren = true;
-                testItem.sortText = testDefinition.id;
-                parentTestCollection.add(testItem);
+                testItem.sortText = id;
+                children.add(testItem);
                 this.testData.set(testItem, new TestCase(testDefinition));
             }
 
             const parent = this.ancestors[this.ancestors.length - 1];
             parent.children.push(testItem);
-            this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
+            this.ancestors.push({ item: testItem, type, children: [] });
 
-            parentTestCollection = testItem.children;
+            children = testItem.children;
         });
     }
 
@@ -91,7 +91,7 @@ export class TestHierarchyBuilder {
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
-        const testItem = this.ctrl.createTestItem(testDefinition.id, this.createLabel(testDefinition), Uri.file(testDefinition.file!));
+        const testItem = this.ctrl.createTestItem(testDefinition.id, this.parseLabelWithIcon(testDefinition), Uri.file(testDefinition.file!));
         testItem.canResolveChildren = testDefinition.type === TestType.class;
         testItem.sortText = sortText;
         testItem.range = this.createRange(testDefinition);
@@ -128,7 +128,7 @@ export class TestHierarchyBuilder {
         }) as TestItem;
     }
 
-    private createLabel(testDefinition: TestDefinition) {
+    private parseLabelWithIcon(testDefinition: TestDefinition) {
         const icon = this.icons[testDefinition.type];
 
         return icon ? `${icon} ${testDefinition.label}` : testDefinition.label;
