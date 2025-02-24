@@ -204,7 +204,6 @@ test('adds coverage if --min exist', function () {
     expect(true)->toBe(false);
 });
 
-it('has emails', function (string $email) {
+it('has user\'s email', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with(['enunomaduro@gmail.com', 'other@example.com']);
-

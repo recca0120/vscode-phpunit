@@ -221,7 +221,7 @@ describe('Extension Test', () => {
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)( with (data set )?.*)?$',
+                    '--filter=^(Recca0120\\\\VSCode\\\\Tests.*)(( with (data set )?.*)?)?$',
                     '--colors=never',
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
@@ -464,8 +464,8 @@ describe('Extension Test', () => {
                 const ctrl = getTestController();
                 const runProfile = getRunProfile(ctrl);
 
-                const method = 'it has emails';
-                const id = `tests/Unit/ExampleTest.php::it has emails`;
+                const method = `it has user's email`;
+                const id = `tests/Unit/ExampleTest.php::${method}`;
 
                 const request = { include: [findTest(ctrl.items, id)], exclude: [], profile: runProfile };
 
