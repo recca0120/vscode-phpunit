@@ -4,8 +4,24 @@ import { PHPUnitXML, TestParser } from '../PHPUnit';
 import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
-function givenPhp(namespace: string, className: string, methods: string[]) {
-    return `<?php
+type CODE = {
+    testsuite: { name: string, path: string },
+    file: string,
+    code: string
+}
+
+export const generateXML = (text: string) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    ${text.trim()}
+</phpunit>`;
+};
+
+const givenPhp = (namespace: string, className: string, methods: string[]) => `<?php
 ${namespace};
 
 class ${className} extends TestCase 
@@ -16,50 +32,62 @@ ${methods.map((name) => `
     }
 `).join('')}
 }`;
-}
 
 describe('TestHierarchyBuilder', () => {
     let ctrl: TestController;
-    let testParser: TestParser;
-    let builder: TestHierarchyBuilder;
+    let configurationFile: string;
 
     const toTree = (items: any) => {
         const results = [] as any[];
         items.forEach((item: any) => {
-            results.push({
-                id: item.id,
-                label: item.label,
-                children: toTree(item.children),
-            });
+            results.push({ id: item.id, label: item.label, children: toTree(item.children) });
         });
 
         return results;
     };
 
-    const givenCodes = (files: { file: string, code: string }[]) => {
-        files.forEach(({ file, code }) => {
-            testParser.parse(code, file);
-        });
+    const givenCodes = (codes: CODE[]) => {
+        const testsuites = Object.entries(codes
+            .map(({ testsuite }) => testsuite)
+            .reduce((items, item) => {
+                if (!(item.name in items)) {
+                    items[item.name] = [];
+                }
+                items[item.name].push(item.path);
 
-        builder.get();
+                return items;
+            }, {} as { [index: string]: string[] }))
+            .map(([name, paths]) => {
+                const directories = paths.map(path => `<directory>${path}</directory>`).join('');
+
+                return `<testsuite name="${name}">${directories}</testsuite>`;
+            });
+
+        const phpUnitXml = (new PHPUnitXML()).load(generateXML(
+            `<testsuites>${testsuites.join('')}</testsuites>`,
+        ), configurationFile);
+
+        const testParser = new TestParser(phpUnitXml);
+        codes.map(({ testsuite, file, code }) => {
+            const builder = new TestHierarchyBuilder(ctrl, testParser, testsuite.name);
+            testParser.parse(code, file);
+
+            return builder;
+        }).forEach(builder => builder.get());
     };
 
+    beforeEach(() => {
+        ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
+    });
+
     describe('PHPUnit', () => {
-        beforeEach(() => {
-            ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
-            const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
-            testParser = new TestParser(phpUnitXML);
-            builder = new TestHierarchyBuilder(ctrl, testParser);
-        });
+        beforeEach(() => configurationFile = phpUnitProject('phpunit.xml'));
 
         it('no namespace', () => {
             givenCodes([{
+                testsuite: { name: 'default', path: 'tests' },
                 file: phpUnitProject('tests/AssertionsTest.php'),
-                code: givenPhp(
-                    '',
-                    'AssertionsTest',
-                    ['test_passed', 'test_failed'],
-                ),
+                code: givenPhp('', 'AssertionsTest', ['test_passed', 'test_failed']),
             }]);
 
             expect(toTree(ctrl.items)).toEqual([
@@ -84,12 +112,9 @@ describe('TestHierarchyBuilder', () => {
 
         it('nested namespace', () => {
             givenCodes([{
+                testsuite: { name: 'default', path: 'tests' },
                 file: phpUnitProject('tests/AssertionsTest.php'),
-                code: givenPhp(
-                    'namespace Tests',
-                    'AssertionsTest',
-                    ['test_passed'],
-                ),
+                code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
             }]);
 
             expect(toTree(ctrl.items)).toEqual([
@@ -110,25 +135,18 @@ describe('TestHierarchyBuilder', () => {
                         },
                     ],
                 },
-
             ]);
         });
 
         it('sibling namespace', () => {
             givenCodes([{
+                testsuite: { name: 'default', path: 'tests' },
                 file: phpUnitProject('tests/AssertionsTest.php'),
-                code: givenPhp(
-                    'namespace Tests',
-                    'AssertionsTest',
-                    ['test_passed'],
-                ),
+                code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
             }, {
+                testsuite: { name: 'default', path: 'tests' },
                 file: phpUnitProject('tests/Assertions2Test.php'),
-                code: givenPhp(
-                    'namespace Tests',
-                    'Assertions2Test',
-                    ['test_passed'],
-                ),
+                code: givenPhp('namespace Tests', 'Assertions2Test', ['test_passed']),
             }]);
 
             expect(toTree(ctrl.items)).toEqual([
@@ -162,15 +180,24 @@ describe('TestHierarchyBuilder', () => {
                 },
             ]);
         });
+
+        xit('two testsuites', () => {
+            givenCodes([{
+                testsuite: { name: 'Unit', path: 'tests/Unit' },
+                file: phpUnitProject('tests/Feature/ExampleTest.php'),
+                code: givenPhp('namespace Tests\\Unit', 'ExampleTest', ['test_passed']),
+            }, {
+                testsuite: { name: 'Feature', path: 'tests/Feature' },
+                file: phpUnitProject('tests/Feature/ExampleTest.php'),
+                code: givenPhp('namespace Tests\\Feature', 'ExampleTest', ['test_passed']),
+            }]);
+
+            // console.log(toTree(ctrl.items));
+        });
     });
 
     describe('PEST', () => {
-        beforeEach(() => {
-            ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
-            const phpUnitXML = new PHPUnitXML().setRoot(pestProject(''));
-            testParser = new TestParser(phpUnitXML);
-            builder = new TestHierarchyBuilder(ctrl, testParser);
-        });
+        beforeEach(() => configurationFile = pestProject('phpunit.xml'));
 
         it('nested describe', () => {
             const code = `<?php
@@ -203,6 +230,7 @@ test('Test3', function () {
 });
 `;
             givenCodes([{
+                testsuite: { name: 'default', path: 'tests' },
                 file: pestProject('tests/ExampleTest.php'),
                 code: code,
             }]);

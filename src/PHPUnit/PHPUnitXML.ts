@@ -91,9 +91,9 @@ export class PHPUnitXML {
     private readonly cached: Map<string, any> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
+        this.element = new Element(parser.parse(text.toString()));
         this._file = file;
         this.setRoot(dirname(file));
-        this.element = new Element(parser.parse(text.toString()));
 
         return this;
     }
