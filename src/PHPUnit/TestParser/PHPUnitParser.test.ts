@@ -424,4 +424,36 @@ final class PDF_testerTest extends TestCase {
             depth: 2,
         }));
     });
+
+    it('fix const array problem', () => {
+        const file = phpUnitProject('tests/PDF_testerTest.php');
+        const content = `<?php declare(strict_types=1);
+        
+use PHPUnit\\Framework\\TestCase;
+
+final class ArrayConstTest extends TestCase {
+    public const bool IS_EMAIL = true;
+
+    public const array HTTP_EMAIL_TEMPLATE_RESPONSES = [
+        'a' => 'b',
+        'c' => 'd',
+    ];
+    
+    public function test_hello() {
+        self::assertTrue(true);
+    }
+}
+`;
+        expect(givenTest(file, content, 'test_hello')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            file,
+            id: 'Array Const::Hello',
+            classFQN: 'ArrayConstTest',
+            className: 'ArrayConstTest',
+            methodName: 'test_hello',
+            start: { line: expect.any(Number), character: 4 },
+            end: { line: expect.any(Number), character: 5 },
+            depth: 2,
+        }));
+    });
 });
