@@ -426,7 +426,7 @@ final class PDF_testerTest extends TestCase {
     });
 
     it('fix const array problem', () => {
-        const file = phpUnitProject('tests/PDF_testerTest.php');
+        const file = phpUnitProject('tests/ArrayConstTest.php');
         const content = `<?php declare(strict_types=1);
         
 use PHPUnit\\Framework\\TestCase;
