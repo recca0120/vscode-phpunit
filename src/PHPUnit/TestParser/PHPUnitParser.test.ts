@@ -456,4 +456,37 @@ final class ArrayConstTest extends TestCase {
             depth: 2,
         }));
     });
+
+    it('ignore annotation string case', () => {
+        const file = phpUnitProject('tests/TestDoxTest.php');
+        const content = `<?php declare(strict_types=1);
+        
+use PHPUnit\\Framework\\TestCase;
+
+final class TestDoxTest extends TestCase {
+    /**
+     * @testDox Do a test
+     * @testWIth [1,1]
+     *           [2,2]
+     *           [3,3]
+     */
+    public function testAtTestWith($a,$b){
+        $this->assertEquals($a,$b);
+    }
+}
+`;
+        expect(givenTest(file, content, 'testAtTestWith')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            file,
+            id: 'Test Dox::At test with',
+            classFQN: 'TestDoxTest',
+            className: 'TestDoxTest',
+            methodName: 'testAtTestWith',
+            label: 'Do a test',
+            annotations: { 'testdox': ['Do a test'] },
+            start: { line: expect.any(Number), character: expect.any(Number) },
+            end: { line: expect.any(Number), character: expect.any(Number) },
+            depth: 2,
+        }));
+    });
 });

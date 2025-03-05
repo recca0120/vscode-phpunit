@@ -5,11 +5,11 @@ const lookup = ['depends', 'dataProvider', 'testdox'];
 
 export class AttributeParser {
     public parse(declaration: Declaration) {
-        const parsed = this.parseAttributes(declaration);
+        const attributes = this.parseAttributes(declaration);
         const annotations = {} as Annotations;
 
         for (const property of lookup) {
-            const values = parsed
+            const values = attributes
                 .filter((attribute: any) => new RegExp(property, 'i').test(attribute.name))
                 .map((attribute: any) => attribute.args[0]);
 
@@ -64,7 +64,7 @@ export class AnnotationParser {
 
     private readonly pattern: RegExp = new RegExp(
         lookup.map((name) => this.template(name)).join('|'),
-        'g',
+        'ig',
     );
 
     private parseComments(declaration: Declaration) {
