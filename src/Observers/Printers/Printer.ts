@@ -124,8 +124,13 @@ export abstract class Printer {
 
         const name = 'name' in result ? result.name : '';
         const message = 'message' in result ? result.message : '';
-        const matched = message.match(/This\stest\sprinted\soutput:(.*)/);
-        const text = !matched ? this.outputBuffer.get(name) : matched[1].trim();
+
+        const pattern = [
+            'This test printed output',
+            'Test code or tested code printed unexpected output',
+        ].join('|');
+        const matched = message.match(new RegExp(`(${pattern}):(?<output>.*)`, 'i'));
+        const text = !matched ? this.outputBuffer.get(name) : matched?.groups!.output.trim();
 
         return text ? `${icon} ${text}` : undefined;
     }
