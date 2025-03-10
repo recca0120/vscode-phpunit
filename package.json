@@ -1,10 +1,10 @@
 {
   "name": "vscode-phpunit",
-  "description": "PHPUnit Test Explorer for VSCode",
+  "description": "The VS Code PHPUnit Test Explorer extension supports PHPUnit and Pest, enabling test execution in Docker and SSH environments. It integrates with vscode-xdebug for step-by-step debugging within VS Code.",
   "displayName": "PHPUnit Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
-  "version": "3.5.36",
+  "version": "3.5.37",
   "private": true,
   "license": "MIT",
   "repository": {
