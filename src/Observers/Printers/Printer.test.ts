@@ -1,4 +1,4 @@
-import { EOL, TeamcityEvent, TestFinished } from '../../PHPUnit';
+import { EOL, PHPUnitXML, TeamcityEvent, TestFinished } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { Printer } from './Printer';
 
@@ -9,7 +9,8 @@ class MyPrinter extends Printer {
 }
 
 describe('Printer', () => {
-    const printer = new MyPrinter;
+    const phpUnitXML = new PHPUnitXML();
+    const printer = new MyPrinter(phpUnitXML);
 
     beforeEach(() => printer.start());
     afterEach(() => printer.close());

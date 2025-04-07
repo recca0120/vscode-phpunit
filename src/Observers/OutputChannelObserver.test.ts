@@ -2,7 +2,7 @@ import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
-import { CommandBuilder, Configuration, EOL, TestRunner } from '../PHPUnit';
+import { CommandBuilder, Configuration, EOL, PHPUnitXML, TestRunner } from '../PHPUnit';
 import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { OutputChannelObserver, Printer } from './index';
 import { PrettyPrinter } from './Printers';
@@ -25,7 +25,7 @@ describe('OutputChannelObserver', () => {
         const observer = new OutputChannelObserver(
             outputChannel,
             configuration,
-            new PrettyPrinter(),
+            new PrettyPrinter(new PHPUnitXML()),
             { continuous: false } as TestRunRequest,
         );
         testRunner.observe(observer);
