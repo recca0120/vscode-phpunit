@@ -4,7 +4,7 @@ import {
     TestProcesses, TestResult, TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished,
     TestSuiteStarted, TestVersion,
 } from '../PHPUnit';
-import { PrettyPrinter, Printer } from './Printers';
+import { Printer } from './Printers';
 
 enum ShowOutputState {
     always = 'always',
@@ -15,12 +15,7 @@ enum ShowOutputState {
 export class OutputChannelObserver implements TestRunnerObserver {
     private lastCommand = '';
 
-    constructor(
-        private outputChannel: OutputChannel,
-        private configuration: IConfiguration,
-        private request: TestRunRequest,
-        private printer: Printer = new PrettyPrinter(),
-    ) {}
+    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration, private printer: Printer, private request: TestRunRequest) {}
 
     run(command: CommandBuilder): void {
         this.clearOutputOnRun();

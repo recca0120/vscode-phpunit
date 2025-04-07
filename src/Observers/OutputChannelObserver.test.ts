@@ -25,8 +25,8 @@ describe('OutputChannelObserver', () => {
         const observer = new OutputChannelObserver(
             outputChannel,
             configuration,
-            { continuous: false } as TestRunRequest,
             new PrettyPrinter(),
+            { continuous: false } as TestRunRequest,
         );
         testRunner.observe(observer);
     });

@@ -1,10 +1,11 @@
-import { EOL, TeamcityEvent } from '../../PHPUnit';
+import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { CollisionPrinter } from './CollisionPrinter';
 import { Printer } from './Printer';
 
 describe('CollisionPrinter', () => {
-    const printer = new CollisionPrinter();
+    const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
+    const printer = new CollisionPrinter(phpUnitXML);
 
     beforeEach(() => printer.start());
     afterEach(() => printer.close());

@@ -1,10 +1,14 @@
+import { isAbsolute, join } from 'node:path';
 import {
     CancellationToken, DocumentLink, DocumentLinkProvider, Position, ProviderResult, Range, TextDocument,
 } from 'vscode';
 import { URI } from 'vscode-uri';
+import { PHPUnitXML } from './PHPUnit';
 
 export class PHPUnitLinkProvider implements DocumentLinkProvider {
     private regex = /((?:[A-Z]:)?(?:\.{0,2}[\\/])?[^\s:]+\.php):(\d+)(?::(\d+))?/gi;
+
+    constructor(private phpUnitXML: PHPUnitXML) {}
 
     provideDocumentLinks(document: TextDocument, _token: CancellationToken): ProviderResult<DocumentLink[]> {
         const links: DocumentLink[] = [];
@@ -14,10 +18,10 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
             let match: RegExpExecArray | null;
 
             while ((match = this.regex.exec(line.text)) !== null) {
-                const [fullMatch, filePath, lineStr, colStr] = match;
+                const [fullMatch, filePath, lineStr] = match;
                 const lineNumber = parseInt(lineStr, 10);
 
-                const targetUri = URI.file(filePath).with({ fragment: `L${lineNumber}` });
+                const targetUri = URI.file(this.absolutePath(filePath)).with({ fragment: `L${lineNumber}` });
                 const start = new Position(lineIndex, match.index);
                 const end = new Position(lineIndex, match.index + fullMatch.length);
                 const range = new Range(start, end);
@@ -27,5 +31,11 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
         }
 
         return links;
+    }
+
+    private absolutePath(filePath: string): string {
+        const root = this.phpUnitXML.root();
+
+        return isAbsolute(filePath) && root ? filePath : join(root, filePath);
     }
 }
