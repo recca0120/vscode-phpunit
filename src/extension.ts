@@ -21,7 +21,7 @@ export async function activate(context: ExtensionContext) {
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
     context.subscriptions.push(outputChannel);
 
-    languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider());
+    context.subscriptions.push(languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider()));
 
     const configuration = new Configuration(workspace.getConfiguration('phpunit'));
     context.subscriptions.push(workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'))));
