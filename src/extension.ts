@@ -1,5 +1,5 @@
 import {
-    CancellationToken, EventEmitter, ExtensionContext, extensions, GlobPattern, RelativePattern, TestItem,
+    CancellationToken, EventEmitter, ExtensionContext, extensions, GlobPattern, languages, RelativePattern, TestItem,
     TestRunProfile, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder,
 } from 'vscode';
 import { PHPUnitFileCoverage } from './CloverParser';
@@ -7,6 +7,7 @@ import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
 import { Pattern, PHPUnitXML } from './PHPUnit';
+import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 
 const phpUnitXML = new PHPUnitXML();
@@ -19,6 +20,8 @@ export async function activate(context: ExtensionContext) {
 
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
     context.subscriptions.push(outputChannel);
+
+    languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider());
 
     const configuration = new Configuration(workspace.getConfiguration('phpunit'));
     context.subscriptions.push(workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'))));
