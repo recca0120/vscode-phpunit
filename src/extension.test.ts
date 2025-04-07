@@ -171,9 +171,8 @@ describe('Extension Test', () => {
                         uri: expect.objectContaining({ fsPath: uri.fsPath }),
                         label: '$(symbol-method) test_passed',
                         range: {
-                            start: { line: 11, character: 4 },
-                            end: { line: 14, character: 5 },
-                            // end: {line: 11, character: 29},
+                            start: expect.objectContaining({ line: 11, character: 4 }),
+                            end: expect.objectContaining({ line: 14, character: 5 }),
                         },
                     }),
                 );
@@ -279,8 +278,8 @@ describe('Extension Test', () => {
 
                 expect(message.location).toEqual(expect.objectContaining({
                     range: {
-                        start: { line: 53, character: 0 },
-                        end: { line: 53, character: 0 },
+                        start: expect.objectContaining({ line: 53, character: 0 }),
+                        end: expect.objectContaining({ line: 53, character: 0 }),
                     },
                 }));
             });

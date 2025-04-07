@@ -1,10 +1,10 @@
-import { DocumentLink, DocumentLinkProvider, ProviderResult, Range, TextDocument } from 'vscode';
+import { CancellationToken, DocumentLink, DocumentLinkProvider, ProviderResult, Range, TextDocument } from 'vscode';
 import { URI } from 'vscode-uri';
 
 export class PHPUnitLinkProvider implements DocumentLinkProvider {
     private regex = /(\/[^\s:]+\.php):(\d+)/g;
 
-    provideDocumentLinks(document: TextDocument): ProviderResult<DocumentLink[]> {
+    provideDocumentLinks(document: TextDocument, _token: CancellationToken): ProviderResult<DocumentLink[]> {
         const links: DocumentLink[] = [];
 
         for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {

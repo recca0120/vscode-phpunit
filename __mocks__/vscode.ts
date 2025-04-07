@@ -168,7 +168,17 @@ const Range = jest.fn().mockImplementation((start: any, end: any) => {
 });
 
 const Position = jest.fn().mockImplementation((line: number, character: number) => {
-    return { line, character };
+    return {
+        line,
+        character,
+        translate: (lineDelta?: number, characterDelta?: number) => {
+            return new Position(line + (lineDelta ?? 0), characterDelta ?? character);
+        },
+    };
+});
+
+const DocumentLink = jest.fn().mockImplementation((range: Range, target?: URI) => {
+    return { range, target };
 });
 
 const CancellationTokenSource = jest.fn().mockImplementation(() => {
@@ -350,4 +360,5 @@ export {
     FileCoverage,
     TestCoverageCount,
     StatementCoverage,
+    DocumentLink,
 };
