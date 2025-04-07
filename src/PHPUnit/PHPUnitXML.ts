@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
-import { dirname, join, normalize, relative } from 'node:path';
+import { dirname, isAbsolute, join, normalize, relative } from 'node:path';
 import { URI } from 'vscode-uri';
 
 type Source = { tag: string; value: string; prefix?: string; suffix?: string; };
@@ -117,6 +117,12 @@ export class PHPUnitXML {
 
     root() {
         return this._root;
+    }
+
+    path(file: string): string {
+        const root = this.root();
+
+        return isAbsolute(file) || !root ? file : join(root, file);
     }
 
     getTestSuites(): TestSuite[] {

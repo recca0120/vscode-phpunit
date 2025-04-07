@@ -83,7 +83,7 @@ export class CollisionPrinter extends Printer {
         }
 
         try {
-            const data = readFileSync(this.absolutePath(detail.file), 'utf8');
+            const data = readFileSync(this.phpUnitXML.path(detail.file), 'utf8');
             const position = Math.max(0, detail.line - 5);
             const lines = data.split(/\r\n|\n/).splice(position, 10).map((line, index) => {
                 const currentPosition = position + index + 1;

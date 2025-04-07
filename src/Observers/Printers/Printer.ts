@@ -1,4 +1,3 @@
-import { isAbsolute, join } from 'node:path';
 import {
     EOL, PHPUnitXML, TeamcityEvent, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses,
     TestResult, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
@@ -48,7 +47,7 @@ export abstract class Printer {
         [TeamcityEvent.testIgnored, ['➖', 'IGNORED']],
     ]);
 
-    constructor(private phpUnitXML: PHPUnitXML) {}
+    constructor(protected phpUnitXML: PHPUnitXML) {}
 
     static fileFormat(file: string, line: number) {
         return `${file}:${line}`;
@@ -140,12 +139,6 @@ export abstract class Printer {
 
     append(line: string) {
         this.outputBuffer.append(line);
-    }
-
-    protected absolutePath(filePath: string): string {
-        const root = this.phpUnitXML.root();
-
-        return isAbsolute(filePath) && root ? filePath : join(root, filePath);
     }
 
     private setCurrent(current?: string) {
