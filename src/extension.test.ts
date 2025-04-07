@@ -185,7 +185,7 @@ describe('Extension Test', () => {
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-file', expect.any(Function));
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-test-at-cursor', expect.any(Function));
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.rerun', expect.any(Function));
-                expect(context.subscriptions.push).toHaveBeenCalledTimes(9);
+                expect(context.subscriptions.push).toHaveBeenCalledTimes(10);
             });
 
             it('should run all tests', async () => {
