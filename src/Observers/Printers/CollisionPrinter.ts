@@ -5,6 +5,7 @@ import { Printer } from './Printer';
 export class CollisionPrinter extends Printer {
     private errors: TestFailed[] = [];
 
+
     start() {
         super.start();
         this.errors = [];
@@ -72,16 +73,17 @@ export class CollisionPrinter extends Printer {
     }
 
     private getFileContent(result: TestFailed) {
-        const detail = result.details.find(({ file }) => {
-            return file === result.file;
-        })!;
+        let detail = result.details.find(({ file }) => file === result.file)!;
+        if (result.details.length > 0) {
+            detail = result.details[0];
+        }
 
         if (!detail) {
             return undefined;
         }
 
         try {
-            const data = readFileSync(detail.file, 'utf8');
+            const data = readFileSync(this.absolutePath(detail.file), 'utf8');
             const position = detail.line - 5;
             const lines = data.split(/\r\n|\n/).splice(position, 10).map((line, index) => {
                 const currentPosition = position + index + 1;

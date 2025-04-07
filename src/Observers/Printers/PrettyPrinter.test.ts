@@ -1,10 +1,11 @@
-import { EOL, TeamcityEvent } from '../../PHPUnit';
+import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { PrettyPrinter } from './PrettyPrinter';
 import { Printer } from './Printer';
 
 describe('PrettyPrinter', () => {
-    const printer = new PrettyPrinter();
+    const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
+    const printer = new PrettyPrinter(phpUnitXML);
 
     beforeEach(() => printer.start());
     afterEach(() => printer.close());

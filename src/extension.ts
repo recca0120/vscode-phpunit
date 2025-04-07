@@ -6,11 +6,13 @@ import { PHPUnitFileCoverage } from './CloverParser';
 import { CommandHandler } from './CommandHandler';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
+import { CollisionPrinter } from './Observers';
 import { Pattern, PHPUnitXML } from './PHPUnit';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 
 const phpUnitXML = new PHPUnitXML();
+const printer = new CollisionPrinter(phpUnitXML);
 let testCollection: TestCollection;
 
 export async function activate(context: ExtensionContext) {
@@ -21,7 +23,7 @@ export async function activate(context: ExtensionContext) {
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
     context.subscriptions.push(outputChannel);
 
-    context.subscriptions.push(languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider()));
+    context.subscriptions.push(languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider(phpUnitXML)));
 
     const configuration = new Configuration(workspace.getConfiguration('phpunit'));
     context.subscriptions.push(workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'))));
@@ -57,7 +59,7 @@ export async function activate(context: ExtensionContext) {
         }
     };
 
-    const handler = new Handler(ctrl, configuration, testCollection, outputChannel);
+    const handler = new Handler(ctrl, configuration, testCollection, outputChannel, printer);
 
     const fileChangedEmitter = new EventEmitter<Uri>();
     const watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();

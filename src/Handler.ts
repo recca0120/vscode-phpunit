@@ -7,16 +7,20 @@ import {
 } from 'vscode';
 import { CloverParser } from './CloverParser';
 import { Configuration } from './Configuration';
-import { CollisionPrinter, OutputChannelObserver, TestResultObserver } from './Observers';
+import { OutputChannelObserver, Printer, TestResultObserver } from './Observers';
 import { MessageObserver } from './Observers/MessageObserver';
 import { CommandBuilder, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
     private previousRequest: TestRunRequest | undefined;
-    private printer = new CollisionPrinter();
 
-    constructor(private ctrl: TestController, private configuration: Configuration, private testCollection: TestCollection, private outputChannel: OutputChannel) { }
+    constructor(
+        private ctrl: TestController,
+        private configuration: Configuration,
+        private testCollection: TestCollection, private outputChannel: OutputChannel,
+        private printer: Printer,
+    ) { }
 
     getPreviousRequest() {
         return this.previousRequest;
@@ -55,7 +59,7 @@ export class Handler {
 
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queue, testRun));
-        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, request, this.printer));
+        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, this.printer, request));
         runner.observe(new MessageObserver(this.configuration));
 
         let tmpd: string | undefined;
