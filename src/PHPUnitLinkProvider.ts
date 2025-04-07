@@ -1,4 +1,3 @@
-import { isAbsolute, join } from 'node:path';
 import {
     CancellationToken, DocumentLink, DocumentLinkProvider, Position, ProviderResult, Range, TextDocument,
 } from 'vscode';
@@ -21,7 +20,7 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
                 const [fullMatch, filePath, lineStr] = match;
                 const lineNumber = parseInt(lineStr, 10);
 
-                const targetUri = URI.file(this.absolutePath(filePath)).with({ fragment: `L${lineNumber}` });
+                const targetUri = URI.file(this.phpUnitXML.path(filePath)).with({ fragment: `L${lineNumber}` });
                 const start = new Position(lineIndex, match.index);
                 const end = new Position(lineIndex, match.index + fullMatch.length);
                 const range = new Range(start, end);
@@ -31,11 +30,5 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
         }
 
         return links;
-    }
-
-    private absolutePath(filePath: string): string {
-        const root = this.phpUnitXML.root();
-
-        return isAbsolute(filePath) && root ? filePath : join(root, filePath);
     }
 }
