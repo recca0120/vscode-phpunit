@@ -2,8 +2,8 @@ import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { readFile } from 'node:fs/promises';
 import {
-    CancellationToken, DocumentFilter, MarkdownString, TestController, TestItem, TestItemCollection,
-    TestRunRequest as BaseTestRunRequest, TestTag, TextDocument, WorkspaceFolder, TestCoverageCount,
+    CancellationToken, DocumentFilter, MarkdownString, TestController, TestCoverageCount, TestItem, TestItemCollection,
+    TestRunRequest as BaseTestRunRequest, TestTag, TextDocument, WorkspaceFolder,
 } from 'vscode';
 import { URI } from 'vscode-uri';
 
@@ -168,7 +168,17 @@ const Range = jest.fn().mockImplementation((start: any, end: any) => {
 });
 
 const Position = jest.fn().mockImplementation((line: number, character: number) => {
-    return { line, character };
+    return {
+        line,
+        character,
+        translate: (lineDelta?: number, characterDelta?: number) => {
+            return new Position(line + (lineDelta ?? 0), characterDelta ?? character);
+        },
+    };
+});
+
+const DocumentLink = jest.fn().mockImplementation((range: Range, target?: URI) => {
+    return { range, target };
 });
 
 const CancellationTokenSource = jest.fn().mockImplementation(() => {
@@ -262,6 +272,7 @@ const languages = {
 
         return minimatch(document.uri.fsPath, pattern) ? 10 : 0;
     },
+    registerDocumentLinkProvider: jest.fn(),
 };
 
 const RelativePattern = jest
@@ -316,7 +327,7 @@ const extensions = {
 };
 
 class FileCoverage {
-    constructor(public uri:URI, public statementCoverage: TestCoverageCount) {}
+    constructor(public uri: URI, public statementCoverage: TestCoverageCount) {}
 }
 
 class TestCoverageCount {
@@ -349,4 +360,5 @@ export {
     FileCoverage,
     TestCoverageCount,
     StatementCoverage,
+    DocumentLink,
 };
