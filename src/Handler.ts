@@ -38,7 +38,7 @@ export class Handler {
             if (debuggerConfigName) {
                 await debug.startDebugging(wsf, debuggerConfigName);
             } else {
-                const freePort = this.configuration.get('xdebugPort', undefined) ?? await getFreePort();
+                const freePort = this.configuration.get('xdebugPort', 0) || await getFreePort();
                 extra.push(`-dxdebug.client_port=${freePort}`);
                 const debuggerConfig = { type: 'php', request: 'launch', name: 'PHPUnit', port: freePort };
                 await debug.startDebugging(wsf, debuggerConfig);
@@ -51,6 +51,8 @@ export class Handler {
 
         if (request.profile?.kind === TestRunProfileKind.Coverage) {
             command.setExtra(['-dxdebug.mode=coverage']);
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            command.setExtraEnvironment({ XDEBUG_MODE: 'coverage' });
         }
 
         const testRun = this.ctrl.createTestRun(request);

@@ -17,7 +17,7 @@ export class CommandBuilder {
     }
 
     clone(): CommandBuilder {
-        return new CommandBuilder(this.configuration, this.options).setArguments(this.arguments).setExtra(this.extra).setExtraArguments(this.extraArguments);
+        return new CommandBuilder(this.configuration, this.options).setArguments(this.arguments).setExtra(this.extra).setExtraArguments(this.extraArguments).setExtraEnvironment(this.extraEnvironment);
     }
 
     setArguments(args: string) {
