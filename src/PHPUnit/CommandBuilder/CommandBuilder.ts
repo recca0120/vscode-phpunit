@@ -10,6 +10,7 @@ export class CommandBuilder {
     private arguments = '';
     private extra: string[] = [];
     private extraArguments: string[] = [];
+    private extraEnvironment: {} = {};
 
     constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
@@ -37,12 +38,18 @@ export class CommandBuilder {
         return this;
     }
 
+    setExtraEnvironment(extraEnvironment: { [key: string]: string }) {
+        this.extraEnvironment = extraEnvironment;
+
+        return this;
+    }
+
     build() {
         const [command, ...args] = this.createCommand()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
-        const options = { ...this.options, env: { ...process.env, ...this.getEnvironment() } };
+        const options = { ...this.options, env: { ...process.env, ...this.extraEnvironment, ...this.getEnvironment() } };
 
         return { command, args, options };
     }

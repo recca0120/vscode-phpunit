@@ -141,6 +141,11 @@
           "type": "string",
           "default": null,
           "description": "The name of a launch configuration to use for debugging PHPUnit tests"
+        },
+        "phpunit.xdebugPort": {
+          "type": "integer",
+          "default": 0,
+          "description": "The port that is used to communicate between Xdebug in phpunit and the debug extension. 0 (default) will use a random port."
         }
       }
     }
@@ -161,7 +166,7 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src -c eslint.config.mjs --ignore-pattern '**/phpunit'",
-    "test": "node ./out/test/runTest.js ",
+    "test": "node ./out/test/runTest.js",
     "jest": "jest",
     "jest:watch": "jest --watch-all",
     "download-api": "npx vscode-dts main && npx vscode-dts dev",
