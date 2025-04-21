@@ -11,6 +11,7 @@ import { OutputChannelObserver, Printer, TestResultObserver } from './Observers'
 import { MessageObserver } from './Observers/MessageObserver';
 import { CommandBuilder, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
+import { getFreePort } from './utils';
 
 export class Handler {
     private previousRequest: TestRunRequest | undefined;
@@ -29,18 +30,29 @@ export class Handler {
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
         const command = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
         if (request.profile?.kind === TestRunProfileKind.Debug) {
-            command.setExtra(['-dxdebug.mode=debug', '-dxdebug.start_with_request=1']);
+            const extra = ['-dxdebug.mode=debug', '-dxdebug.start_with_request=1'];
 
             const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
             const debuggerConfigName = this.configuration.get('debuggerConfig') as string | undefined;
-            const defaultDebuggerConfig = { type: 'php', request: 'launch', name: 'PHPUnit' };
-            const debuggerConfig = debuggerConfigName ?? defaultDebuggerConfig;
-            await debug.startDebugging(wsf, debuggerConfig);
+
+            if (debuggerConfigName) {
+                await debug.startDebugging(wsf, debuggerConfigName);
+            } else {
+                const freePort = this.configuration.get('xdebugPort', 0) || await getFreePort();
+                extra.push(`-dxdebug.client_port=${freePort}`);
+                const debuggerConfig = { type: 'php', request: 'launch', name: 'PHPUnit', port: freePort };
+                await debug.startDebugging(wsf, debuggerConfig);
+            }
             // TODO: perhaps wait for the debug session
+            command.setExtra(extra);
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            command.setExtraEnvironment({ XDEBUG_MODE: 'debug' });
         }
 
         if (request.profile?.kind === TestRunProfileKind.Coverage) {
             command.setExtra(['-dxdebug.mode=coverage']);
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            command.setExtraEnvironment({ XDEBUG_MODE: 'coverage' });
         }
 
         const testRun = this.ctrl.createTestRun(request);
