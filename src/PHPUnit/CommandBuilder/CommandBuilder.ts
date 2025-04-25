@@ -128,7 +128,7 @@ export class CommandBuilder {
     }
 
     private setParaTestFunctional(args: string[]) {
-        return this.isParaTestFunctional(args) ? [...args, '-f'] : args;
+        return this.isParaTestFunctional(args) ? [...args, '--functional'] : args;
     }
 
     private isParaTestFunctional(args: string[]) {
