@@ -133,8 +133,9 @@ describe('Extension Test', () => {
         beforeEach(() => {
             setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
             setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
-            jest.clearAllMocks();
         });
+
+        afterEach(() => jest.clearAllMocks());
 
         describe('PHPUnit activate()', () => {
             beforeEach(async () => {
@@ -376,6 +377,53 @@ describe('Extension Test', () => {
         });
     });
 
+    describe('paratest', () => {
+        const phpBinary = 'php';
+        const root = phpUnitProject('');
+        let cwd: string;
+
+        beforeEach(async () => {
+            cwd = normalPath(root);
+            setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
+            setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
+            const configuration = workspace.getConfiguration('phpunit');
+            await configuration.update('php', phpBinary);
+            await configuration.update('phpunit', 'vendor/bin/paratest');
+            await configuration.update('args', []);
+            window.showErrorMessage = jest.fn();
+        });
+
+        afterEach(() => jest.clearAllMocks());
+
+        it('run phpunit.run-test-at-cursor', async () => {
+            await activate(context);
+
+            Object.defineProperty(window, 'activeTextEditor', {
+                value: {
+                    document: { uri: Uri.file(phpUnitProject('tests/AssertionsTest.php')) },
+                    selection: { active: { line: 13, character: 14 } },
+                },
+                enumerable: true,
+                configurable: true,
+            });
+
+            await commands.executeCommand('phpunit.run-test-at-cursor');
+
+            const method = 'test_passed';
+
+            expect(spawn).toHaveBeenCalledWith(phpBinary, [
+                'vendor/bin/paratest',
+                expect.stringMatching(filterPattern(method)),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+                '--functional',
+            ], expect.objectContaining({ cwd }));
+
+            expect(window.showErrorMessage).not.toHaveBeenCalled();
+        });
+    });
+
     describe('PEST', () => {
         const phpBinary = 'php';
         // const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
@@ -394,8 +442,9 @@ describe('Extension Test', () => {
         beforeEach(() => {
             setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
             setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
-            jest.clearAllMocks();
         });
+
+        afterEach(() => jest.clearAllMocks());
 
         describe('PEST activate()', () => {
             beforeEach(async () => {

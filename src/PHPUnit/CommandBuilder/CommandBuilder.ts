@@ -49,7 +49,10 @@ export class CommandBuilder {
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
-        const options = { ...this.options, env: { ...process.env, ...this.extraEnvironment, ...this.getEnvironment() } };
+        const options = {
+            ...this.options,
+            env: { ...process.env, ...this.extraEnvironment, ...this.getEnvironment() },
+        };
 
         return { command, args, options };
     }
