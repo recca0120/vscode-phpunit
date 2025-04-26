@@ -379,8 +379,14 @@ describe('Extension Test', () => {
 
     describe('paratest', () => {
         const phpBinary = 'php';
+        // const phpBinary = '/opt/homebrew/Cellar/php@8.0/8.0.30_5/bin/php';
+        const PHP_VERSION: string = getPhpVersion(phpBinary);
         const root = phpUnitProject('');
         let cwd: string;
+
+        if (semver.lt(PHP_VERSION, '7.3.0')) {
+            return;
+        }
 
         beforeEach(async () => {
             cwd = normalPath(root);
@@ -397,6 +403,7 @@ describe('Extension Test', () => {
 
         it('run phpunit.run-test-at-cursor', async () => {
             await activate(context);
+            const ctrl = getTestController();
 
             Object.defineProperty(window, 'activeTextEditor', {
                 value: {
@@ -421,6 +428,8 @@ describe('Extension Test', () => {
             ], expect.objectContaining({ cwd }));
 
             expect(window.showErrorMessage).not.toHaveBeenCalled();
+
+            expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 1, failed: 0, end: 1 });
         });
     });
 
