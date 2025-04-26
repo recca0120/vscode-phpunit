@@ -11,7 +11,7 @@ describe('CommandBuilder Test', () => {
             });
         };
 
-        it('should add -f when PHPUnit binary is paratest and has --filter', () => {
+        it('should add --functional when PHPUnit binary is paratest and has --filter', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
@@ -23,7 +23,7 @@ describe('CommandBuilder Test', () => {
                 '--filter=^.*::(test_passed)( with data set .*)?$',
                 '--colors=never',
                 '--teamcity',
-                '-f',
+                '--functional',
             ]);
         });
 
@@ -107,7 +107,7 @@ describe('CommandBuilder Test', () => {
             });
         };
 
-        it('should add -f when PHPUnit binary is paratest and has --filter', () => {
+        it('should add --functional when PHPUnit binary is paratest and has --filter', () => {
             const cwd = phpUnitProject('');
             const builder = givenCommandBuilder({
                 command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
@@ -130,7 +130,7 @@ describe('CommandBuilder Test', () => {
                 '--filter=^.*::(test_passed)( with data set .*)?$',
                 '--colors=never',
                 '--teamcity',
-                '-f',
+                '--functional',
             ]);
         });
 
@@ -154,7 +154,7 @@ describe('CommandBuilder Test', () => {
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     `'--colors=never'`,
                     `'--teamcity'`,
-                    `'-f'`,
+                    `'--functional'`,
                 ].join(' '),
             ]);
         });
