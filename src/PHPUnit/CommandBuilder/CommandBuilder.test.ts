@@ -98,6 +98,19 @@ describe('CommandBuilder Test', () => {
                 expect(spawnSync('php', ['-r', `echo getenv('${key}');`], options).stdout.toString()).toEqual(value);
             }
         });
+
+        it('allow artisan test', () => {
+            const builder = givenBuilder({ phpunit: 'artisan test' });
+
+            const { command, args } = builder.build();
+            expect(command).toEqual('php');
+            expect(args).toEqual([
+                'artisan',
+                'test',
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
     });
 
     describe('RemoteCommand', () => {
@@ -209,6 +222,31 @@ describe('CommandBuilder Test', () => {
                 '/var/www/tests/AssertionsTest.php',
                 '--colors=never',
                 '--teamcity',
+            ]);
+        });
+
+        it('docker with artisan test', () => {
+            const builder = givenCommandBuilder({
+                command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
+                phpunit: 'artisan test',
+            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+
+            const { command, args } = builder.build();
+            expect(command).toEqual('docker');
+            expect(args).toEqual([
+                'exec',
+                '--workdir=/var/www/',
+                'container_name',
+                '/bin/sh',
+                '-c',
+                [
+                    'php',
+                    'artisan',
+                    'test',
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `'--colors=never'`,
+                    `'--teamcity'`,
+                ].join(' '),
             ]);
         });
     });

@@ -101,9 +101,9 @@ export class CommandBuilder {
 
     private getExecutable() {
         return this.setParaTestFunctional([
-            this.getPhp(),
+            ...this.getPhp(),
             ...this.extra,
-            this.getPhpUnit(),
+            ...this.getPhpUnit(),
             ...this.getArguments(),
             ...this.extraArguments,
         ]);
@@ -118,11 +118,11 @@ export class CommandBuilder {
     }
 
     private getPhpUnit() {
-        return this.pathReplacer.toRemote(this.configuration.get('phpunit') as string ?? '');
+        return parseArgsStringToArgv(this.pathReplacer.toRemote(this.configuration.get('phpunit') as string ?? ''));
     }
 
     private getPhp() {
-        return this.pathReplacer.toRemote(this.configuration.get('php') as string ?? '');
+        return parseArgsStringToArgv(this.pathReplacer.toRemote(this.configuration.get('php') as string ?? ''));
     }
 
     private getArguments(): string[] {
@@ -137,7 +137,7 @@ export class CommandBuilder {
 
     private isParaTestFunctional(args: string[]) {
         return (
-            !!this.getPhpUnit().match(/paratest/) &&
+            !!this.getPhpUnit().join(' ').match(/paratest/) &&
             args.some((arg: string) => !!arg.match(/--filter/))
         );
     }
