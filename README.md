@@ -171,6 +171,31 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ## Troubleshooting
 
+### PHPUnit path mapping not working
+
+**Problem:**  
+Path mapping with `${workspaceFolder}` does not work as expected.  
+Example:
+
+```json
+{
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app"
+  }
+}
+```
+
+Solution:
+Replace ${workspaceFolder} with the actual project path.
+For example:
+```json
+{
+  "phpunit.paths": {
+    "/myproject": "/app"
+  }
+}
+```
+
 ### Running test with XDEBUG_TRIGGER env
 
 When you have a PHP Xdebug launch configuration like this below:
