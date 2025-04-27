@@ -1,5 +1,6 @@
 import { TransformerFactory } from '../Transformer';
-import { parseTeamcity, Teamcity } from '../utils';
+import { Teamcity } from '../types';
+import { parseTeamcity } from '../utils';
 import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestDurationParser } from './TestDurationParser';
 import { TestProcessesParser } from './TestProcessesParser';

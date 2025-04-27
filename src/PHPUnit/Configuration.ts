@@ -1,7 +1,9 @@
 import { join } from 'node:path';
-import * as yargsParser from 'yargs-parser';
-import { Arguments } from 'yargs-parser';
-import { checkFileExists, findAsyncSequential } from './utils';
+import { checkFileExists, findAsyncSequential, parseArguments } from './utils';
+
+interface ConfigurationItem {
+    [p: string]: unknown;
+}
 
 export interface IConfiguration {
     get(key: string, defaultValue?: unknown): unknown | undefined;
@@ -10,13 +12,9 @@ export interface IConfiguration {
 
     update(key: string, value: any): Promise<void>;
 
-    getArguments(input?: string): Arguments;
+    getArguments(input: string): string[];
 
     getConfigurationFile(): Promise<string | undefined>;
-}
-
-interface ConfigurationItem {
-    [p: string]: unknown;
 }
 
 export abstract class BaseConfiguration implements IConfiguration {
@@ -26,30 +24,19 @@ export abstract class BaseConfiguration implements IConfiguration {
 
     abstract update(key: string, value: any): Promise<void>;
 
-    getArguments(input: string = ''): Arguments {
-        const args = [input, ...(this.get('args', []) as string[])];
+    getArguments(input: string = ''): string[] {
+        const parameters = [input, ...(this.get('args', []) as string[])];
 
-        return yargsParser(args.join(' ').trim(), {
-            alias: { configuration: ['c'] },
-            configuration: {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'camel-case-expansion': false,
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'boolean-negation': false,
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'short-option-groups': true,
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'dot-notation': false,
-            },
-        });
+        return parseArguments(parameters, ['teamcity', 'colors', 'testdox', 'c']);
     }
 
     async getConfigurationFile(root: string = ''): Promise<string | undefined> {
         let files = ['phpunit.xml', 'phpunit.xml.dist', 'phpunit.dist.xml'].map((file) => join(root, file));
 
-        const { _, ...argv } = this.getArguments();
-        if (argv.hasOwnProperty('configuration')) {
-            files = [argv.configuration, join(root, argv.configuration), ...files];
+        const configuration = this.getArguments().find((parameter: string) => parameter.startsWith('--configuration'));
+        if (configuration) {
+            const configurationFile = configuration.replace('--configuration=', '');
+            files = [configurationFile, join(root, configurationFile), ...files];
         }
 
         return await findAsyncSequential<string>(files, async (file) => await checkFileExists(file));
