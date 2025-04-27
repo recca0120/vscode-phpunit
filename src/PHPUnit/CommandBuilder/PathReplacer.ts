@@ -34,7 +34,7 @@ export class PathReplacer {
     toLocal(path: string) {
         return this.removePhpVfsComposer(path).replace(/(php_qn:\/\/|)([^:]+)/, (_, prefix, path) => {
             path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
-                return currentPath.replace(new RegExp(remotePath === '.' ? '\.[\\\\/]/' : escapeRegExp(remotePath), 'g'), localPath);
+                return this.allowReplacement(localPath) ? currentPath.replace(new RegExp(remotePath === '.' ? '\.[\\\\/]/' : escapeRegExp(remotePath), 'g'), localPath) : currentPath;
             });
 
             path = this.replaceRelative(path);
@@ -50,7 +50,7 @@ export class PathReplacer {
         path = this.replaceRelative(path);
 
         path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
-            return currentPath.replace(new RegExp(escapeRegExp(localPath), 'g'), remotePath);
+            return this.allowReplacement(localPath) ? currentPath.replace(new RegExp(escapeRegExp(localPath), 'g'), remotePath) : currentPath;
         });
 
         path = this.posixPath(path);
@@ -86,5 +86,9 @@ export class PathReplacer {
     private normalizePath(path: string) {
         // fix windows path \Users\ -> c:\Users
         return /^\\/.test(path) ? `c:${path}` : path;
+    }
+
+    private allowReplacement(path: string) {
+        return !['/', '', ' '].includes(path);
     }
 }

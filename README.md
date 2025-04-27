@@ -47,11 +47,23 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ## Configuration
 
-### Laravel Artisan
+### [Laravel Artisan](https://laravel.com/docs/12.x/artisan)
 
 ```jsonc
 {
   "phpunit.phpunit": "artisan test"
+}
+```
+
+### [Laravel Sail](https://laravel.com/docs/12.x/sail)
+
+```jsonc
+{
+  "phpunit.command": "docker compose exec -u sail laravel.test",
+  "phpunit.phpunit": "artisan test",
+  "phpunit.paths": {
+    "${workspaceFolder}": "/var/www/html",
+  }
 }
 ```
 
@@ -170,6 +182,32 @@ The following commands are available in VS Code's command palette, use the ID to
 ```
 
 ## Troubleshooting
+
+### PHPUnit path mapping not working
+
+**Problem:**  
+Path mapping with `${workspaceFolder}` does not work as expected.  
+Example:
+
+```json
+{
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app"
+  }
+}
+```
+
+Solution:
+Replace ${workspaceFolder} with the actual project path.
+For example:
+
+```json
+{
+  "phpunit.paths": {
+    "/myproject": "/app"
+  }
+}
+```
 
 ### Running test with XDEBUG_TRIGGER env
 
