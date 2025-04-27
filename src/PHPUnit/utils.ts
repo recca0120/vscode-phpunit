@@ -1,5 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
+import * as yargsParser from 'yargs-parser';
+import { Teamcity } from './types';
 
 class EscapeValue {
     private values = {
@@ -102,6 +104,47 @@ export const groupBy = <T extends { [key: string]: any }>(items: T[], key: strin
 
         return acc;
     }, {} as { [key: string]: T[] });
+};
+
+export const parseTeamcity = (text: string): Teamcity => {
+    text = text.trim().replace(new RegExp('^.*#+teamcity'), '').replace(/^\[|]$/g, '');
+    text = escapeValue.escapeSingleQuote(text) as string;
+    text = escapeValue.unescape(text) as string;
+
+    const [eventName, ...args] = yargsParser(text)._;
+    const command = [
+        `--event='${eventName}'`,
+        ...args.map((parameter) => `--${parameter}`),
+    ];
+
+    const { _, $0, ...argv } = yargsParser(command.join(' '), {
+        string: ['actual', 'expected'],
+    });
+
+    return escapeValue.unescapeSingleQuote(argv);
+};
+
+export const parseArguments = (parameters: string[], excludes: string[]) => {
+    const { _, ...argv } = yargsParser(parameters.join(' ').trim(), {
+        alias: { configuration: ['c'] },
+        configuration: {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            'camel-case-expansion': false,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            'boolean-negation': false,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            'short-option-groups': true,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            'dot-notation': false,
+        },
+    });
+
+    return Object.entries(argv)
+        .filter(([key]) => !excludes.includes(key))
+        .reduce(
+            (parameters: any, [key, value]) => [...parseValue(key, value), ...parameters],
+            _.map((parameter) => (typeof parameter === 'number' ? parameter : decodeURIComponent(parameter))),
+        ) as string[];
 };
 
 export async function checkFileExists(filePath: string): Promise<boolean> {

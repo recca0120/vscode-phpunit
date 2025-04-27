@@ -2,7 +2,6 @@ import { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
 import { Configuration, IConfiguration } from '../Configuration';
 import { TestResult } from '../ProblemMatcher';
-import { parseValue } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
 
 export class CommandBuilder {
@@ -17,7 +16,11 @@ export class CommandBuilder {
     }
 
     clone(): CommandBuilder {
-        return new CommandBuilder(this.configuration, this.options).setArguments(this.arguments).setExtra(this.extra).setExtraArguments(this.extraArguments).setExtraEnvironment(this.extraEnvironment);
+        return new CommandBuilder(this.configuration, this.options)
+            .setArguments(this.arguments)
+            .setExtra(this.extra)
+            .setExtraArguments(this.extraArguments)
+            .setExtraEnvironment(this.extraEnvironment);
     }
 
     setArguments(args: string) {
@@ -84,13 +87,26 @@ export class CommandBuilder {
 
     private createCommand() {
         const command = this.getCommand();
-        const executable = this.setParaTestFunctional([this.getPhp(), ...this.getExtra(), this.getPhpUnit(), ...this.getArguments(), ...this.getExtraArguments()]);
+        const executable = this.getExecutable();
 
         if (!/^ssh/.test(command.join(' ')) && !/sh\s+-c/.test(command.slice(-2).join(' '))) {
             return [...command, ...executable];
         }
 
-        return [...command, executable.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' ')];
+        return [
+            ...command,
+            executable.map((input) => /^-/.test(input) ? `'${input}'` : input).join(' '),
+        ];
+    }
+
+    private getExecutable() {
+        return this.setParaTestFunctional([
+            this.getPhp(),
+            ...this.extra,
+            this.getPhpUnit(),
+            ...this.getArguments(),
+            ...this.extraArguments,
+        ]);
     }
 
     private getEnvironment() {
@@ -109,23 +125,8 @@ export class CommandBuilder {
         return this.pathReplacer.toRemote(this.configuration.get('php') as string ?? '');
     }
 
-    private getExtra() {
-        return this.extra;
-    }
-
-    private getExtraArguments() {
-        return this.extraArguments;
-    }
-
     private getArguments(): string[] {
-        const { _, ...argv } = this.configuration.getArguments(this.arguments);
-
-        return Object.entries(argv)
-            .filter(([key]) => !['teamcity', 'colors', 'testdox', 'c'].includes(key))
-            .reduce(
-                (args: any, [key, value]) => [...parseValue(key, value), ...args],
-                _.map((v) => (typeof v === 'number' ? v : decodeURIComponent(v))),
-            )
+        return this.configuration.getArguments(this.arguments)
             .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
             .concat('--colors=never', '--teamcity');
     }
