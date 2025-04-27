@@ -1,5 +1,6 @@
 import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
+import * as yargsParser from 'yargs-parser';
 
 class EscapeValue {
     private values = {
@@ -102,6 +103,33 @@ export const groupBy = <T extends { [key: string]: any }>(items: T[], key: strin
 
         return acc;
     }, {} as { [key: string]: T[] });
+};
+
+export interface Teamcity {
+    [key: string]: string | number;
+
+    name: string;
+    locationHint: string;
+    message: string;
+    details: string;
+}
+
+export const parseTeamcity = (text: string): Teamcity => {
+    text = text.trim().replace(new RegExp('^.*#+teamcity'), '').replace(/^\[|]$/g, '');
+    text = escapeValue.escapeSingleQuote(text) as string;
+    text = escapeValue.unescape(text) as string;
+
+    const [eventName, ...args] = yargsParser(text)._;
+    const command = [
+        `--event='${eventName}'`,
+        ...args.map((parameter) => `--${parameter}`),
+    ];
+
+    const { _, $0, ...argv } = yargsParser(command.join(' '), {
+        string: ['actual', 'expected'],
+    });
+
+    return escapeValue.unescapeSingleQuote(argv);
 };
 
 export async function checkFileExists(filePath: string): Promise<boolean> {

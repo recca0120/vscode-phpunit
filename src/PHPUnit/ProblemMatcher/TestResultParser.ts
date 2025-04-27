@@ -1,7 +1,5 @@
-import * as yargsParser from 'yargs-parser';
-import { Arguments } from 'yargs-parser';
 import { TransformerFactory } from '../Transformer';
-import { escapeValue } from '../utils';
+import { parseTeamcity, Teamcity } from '../utils';
 import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestDurationParser } from './TestDurationParser';
 import { TestProcessesParser } from './TestProcessesParser';
@@ -32,30 +30,29 @@ export class TestResultParser implements IParser<TestResult | undefined> {
     }
 
     private doParse(text: string) {
-        text = text.trim().replace(this.pattern, '').replace(/^\[|]$/g, '');
-        const argv = this.toTeamcityArgv(text);
+        const teamcity = parseTeamcity(text);
 
         return {
-            ...argv,
-            ...this.parseLocationHint(argv),
-            ...this.parseDetails(argv),
+            ...teamcity,
+            ...this.parseLocationHint(teamcity),
+            ...this.parseDetails(teamcity),
         } as TestResult;
     }
 
-    private parseDetails(argv: Pick<Arguments, string | number>) {
-        if (!('details' in argv)) {
+    private parseDetails(teamcity: Teamcity): Partial<TestResult> {
+        if (!('details' in teamcity)) {
             return {};
         }
 
-        let message = argv.message;
-        const details = this.parseFileAndLine(argv.message);
+        let message = teamcity.message;
+        const details = this.parseFileAndLine(teamcity.message);
         details.forEach(({ file, line }) => {
             message = message.replace(`${file}:${line}`, '');
         });
 
         return {
             message: message.trim(),
-            details: [...details, ...this.parseFileAndLine(argv.details)],
+            details: [...details, ...this.parseFileAndLine(teamcity.details)],
         };
     }
 
@@ -74,28 +71,11 @@ export class TestResultParser implements IParser<TestResult | undefined> {
             });
     }
 
-    private parseLocationHint(argv: Pick<Arguments, string | number>): Partial<TestResult> {
+    private parseLocationHint(argv: Teamcity): Partial<TestResult> {
         if (!argv.locationHint) {
             return {};
         }
 
         return TransformerFactory.factory(argv.locationHint).fromLocationHit(argv.locationHint, argv.name);
-    }
-
-    private toTeamcityArgv(text: string): Pick<Arguments, string | number> {
-        text = escapeValue.escapeSingleQuote(text) as string;
-        text = escapeValue.unescape(text) as string;
-
-        const [eventName, ...args] = yargsParser(text)._;
-        const command = [
-            `--event='${eventName}'`,
-            ...args.map((parameter) => `--${parameter}`),
-        ].join(' ');
-
-        const { _, $0, ...argv } = yargsParser(command, {
-            string: ['actual', 'expected'],
-        });
-
-        return escapeValue.unescapeSingleQuote(argv);
     }
 }
