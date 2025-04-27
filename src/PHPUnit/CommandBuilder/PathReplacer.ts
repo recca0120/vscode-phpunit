@@ -34,7 +34,9 @@ export class PathReplacer {
     toLocal(path: string) {
         return this.removePhpVfsComposer(path).replace(/(php_qn:\/\/|)([^:]+)/, (_, prefix, path) => {
             path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
-                return currentPath.replace(new RegExp(remotePath === '.' ? '\.[\\\\/]/' : escapeRegExp(remotePath), 'g'), localPath);
+                return localPath !== '/'
+                    ? currentPath.replace(new RegExp(remotePath === '.' ? '\.[\\\\/]/' : escapeRegExp(remotePath), 'g'), localPath)
+                    : currentPath;
             });
 
             path = this.replaceRelative(path);
@@ -50,7 +52,9 @@ export class PathReplacer {
         path = this.replaceRelative(path);
 
         path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
-            return currentPath.replace(new RegExp(escapeRegExp(localPath), 'g'), remotePath);
+            return localPath !== '/'
+                ? currentPath.replace(new RegExp(escapeRegExp(localPath), 'g'), remotePath)
+                : currentPath;
         });
 
         path = this.posixPath(path);

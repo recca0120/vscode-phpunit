@@ -183,4 +183,17 @@ describe('PathReplacer', () => {
 
         expect(pathReplacer.toLocal(path)).toEqual('C:\\vscode\\tests\\AssertionsTest.php');
     });
+
+    it('can\'t replace path when ${workspaceFolder} is /', () => {
+        const pathReplacer = givenPathReplacer({
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            '${workspaceFolder}': '/app',
+        }, '/');
+
+        const localPath = phpUnitProject('tests/AssertionsTest.php');
+        expect(pathReplacer.toRemote(localPath)).toEqual(localPath);
+
+        const remotePath = '/app/tests/AssertionsTest.php';
+        expect(pathReplacer.toLocal(remotePath)).toEqual(remotePath);
+    });
 });
