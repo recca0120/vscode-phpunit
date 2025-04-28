@@ -59,7 +59,7 @@ export async function activate(context: ExtensionContext) {
         }
     };
 
-    const handler = new Handler(ctrl, configuration, testCollection, outputChannel, printer);
+    const handler = new Handler(ctrl, phpUnitXML, configuration, testCollection, outputChannel, printer);
 
     const fileChangedEmitter = new EventEmitter<Uri>();
     const watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
