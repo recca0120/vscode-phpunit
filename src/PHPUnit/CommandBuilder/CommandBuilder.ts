@@ -1,6 +1,6 @@
 import { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
-import { Configuration, IConfiguration } from '../Configuration';
+import { IConfiguration } from '../Configuration';
 import { TestResult } from '../ProblemMatcher';
 import { Path, PathReplacer } from './PathReplacer';
 
@@ -11,7 +11,7 @@ export class CommandBuilder {
     private extraArguments: string[] = [];
     private extraEnvironment: {} = {};
 
-    constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
+    constructor(private configuration: IConfiguration, private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
