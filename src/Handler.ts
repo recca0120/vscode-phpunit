@@ -9,7 +9,7 @@ import { CloverParser } from './CloverParser';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, Printer, TestResultObserver } from './Observers';
 import { MessageObserver } from './Observers/MessageObserver';
-import { CommandBuilder, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
+import { CommandBuilder, PHPUnitXML, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 import { getFreePort } from './utils';
 
@@ -18,8 +18,10 @@ export class Handler {
 
     constructor(
         private ctrl: TestController,
+        private phpUnitXML: PHPUnitXML,
         private configuration: Configuration,
-        private testCollection: TestCollection, private outputChannel: OutputChannel,
+        private testCollection: TestCollection,
+        private outputChannel: OutputChannel,
         private printer: Printer,
     ) { }
 
@@ -28,7 +30,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const command = new CommandBuilder(this.configuration, { cwd: this.testCollection.getWorkspace().fsPath });
+        const command = new CommandBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
         if (request.profile?.kind === TestRunProfileKind.Debug) {
             const extra = ['-dxdebug.mode=debug', '-dxdebug.start_with_request=1'];
 
