@@ -104,9 +104,13 @@
           "default": "vendor/bin/phpunit"
         },
         "phpunit.command": {
+          "markdownDescription": "Custom command to for running and debugging tests. Use variables `${phpunit}`, `${phpunitxml}`, `${phpunitargs}`, `${php}`, `${phpargs}`, `${cwd}`.\n\nExample:\n\n`ddev exec phpunit -c ${phpunitxml} ${phpunitargs}`",
           "type": "string",
-          "description": "Custom command to run. Ex: `docker exec -t container_name`.",
-          "default": null
+          "default": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
+          "examples": [
+            "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
+            "Custom command to run. Ex: `docker exec -t [container_id] /bin/sh -c \"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
+          ]
         },
         "phpunit.args": {
           "type": "array",

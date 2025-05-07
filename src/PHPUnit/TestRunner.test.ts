@@ -392,8 +392,8 @@ describe('TestRunner Test', () => {
                     'php',
                     'vendor/bin/phpunit',
                     `'--configuration=${appPath('phpunit.xml')}'`,
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -417,8 +417,8 @@ describe('TestRunner Test', () => {
                     'vendor/bin/phpunit',
                     `'--configuration=${appPath('phpunit.xml')}'`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -443,8 +443,8 @@ describe('TestRunner Test', () => {
                     `'--configuration=${appPath('phpunit.xml')}'`,
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -469,8 +469,8 @@ describe('TestRunner Test', () => {
                     `'--configuration=${appPath('phpunit.xml')}'`,
                     `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -495,8 +495,8 @@ describe('TestRunner Test', () => {
                     `'--configuration=${appPath('phpunit.xml')}'`,
                     `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
