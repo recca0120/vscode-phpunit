@@ -59,7 +59,7 @@ export class CommandBuilder {
     }
 
     build() {
-        const [command, ...args] = this.createCommand()
+        const [command, ...args] = this.create()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
@@ -93,39 +93,39 @@ export class CommandBuilder {
         return `${command} ${args.join(' ')}`;
     }
 
-    private createCommand() {
-        const commands = this.getCommands();
+    private create() {
+        const commands = this.getCommand();
         const args = this.getArguments();
 
-        if (this.isCommandHasVariable(commands, args)) {
-            return this.setParaTestFunctional(commands.reduce((commands: string[], command: string) => {
+        if (this.hasVariable(args, commands)) {
+            return this.setParaTestFunctional(commands.reduce((command: string[], arg: string) => {
                 for (const name in args) {
                     // command = command.replace(name, variables[name].join(' '));
-                    if (name === command) {
-                        return commands.concat(...args[name]);
+                    if (name === arg) {
+                        return command.concat(...args[name]);
                     }
                 }
 
-                return commands.concat(command);
+                return command.concat(arg);
             }, []));
         }
 
-        const executable = this.setParaTestFunctional(flatten(Object.values(args)));
+        const options = this.setParaTestFunctional(flatten(Object.values(args)));
         if (isSSH(commands) || isShellCommand(commands)) {
-            return [...commands, this.quoteArgs(executable).join(' ')];
+            return [...commands, this.quoteArgv(options).join(' ')];
         }
 
-        return [...commands, ...executable];
+        return [...commands, ...options];
     }
 
     private getArguments(): { [pIndex: string]: string[] } {
         return {
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            '${php}': this.getPhp(),
+            '${php}': parseArgsStringToArgv(this.getPhp()),
             // eslint-disable-next-line @typescript-eslint/naming-convention
             '${phpargs}': this.getPhpArgs(),
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            '${phpunit}': this.getPhpUnit(),
+            '${phpunit}': parseArgsStringToArgv(this.getPhpUnit()),
             // eslint-disable-next-line @typescript-eslint/naming-convention
             '${phpunitargs}': this.getPhpUnitArgs(),
         };
@@ -139,20 +139,20 @@ export class CommandBuilder {
         };
     }
 
-    private getCommands() {
+    private getCommand() {
         return parseArgsStringToArgv((this.configuration.get('command') as string) ?? '');
     }
 
-    private getPhpUnit() {
-        return parseArgsStringToArgv(this.pathReplacer.toRemote(this.configuration.get('phpunit') as string ?? ''));
-    }
-
     private getPhp() {
-        return parseArgsStringToArgv(this.pathReplacer.toRemote(this.configuration.get('php') as string ?? ''));
+        return this.pathReplacer.toRemote(this.configuration.get('php') as string ?? '');
     }
 
     private getPhpArgs() {
         return this.extra;
+    }
+
+    private getPhpUnit() {
+        return this.pathReplacer.toRemote(this.configuration.get('phpunit') as string ?? '');
     }
 
     private getPhpUnitArgs(): string[] {
@@ -167,21 +167,20 @@ export class CommandBuilder {
     }
 
     private isParaTestFunctional(args: string[]) {
-        return (
-            !!this.getPhpUnit().join(' ').match(/paratest/) &&
-            args.some((arg: string) => !!arg.match(/--filter/))
-        );
+        const command = args.join(' ');
+
+        return /paratest/.test(command) && /--filter/.test(command);
     }
 
     private resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
-    private quoteArgs(executable: string[]) {
-        return executable.map((input) => new RegExp(`^(${this.quotedArgs.join('|')})`).test(input) ? `'${input}'` : input);
+    private quoteArgv(args: string[]) {
+        return args.map((input) => new RegExp(`^(${this.quotedArgs.join('|')})`).test(input) ? `'${input}'` : input);
     }
 
-    private isCommandHasVariable(commands: string[], variables: { [p: string]: string[] }) {
+    private hasVariable(variables: { [p: string]: string[] }, commands: string[]) {
         return new RegExp(this.hasVariablePattern(variables)).test(commands.join(' '));
     }
 

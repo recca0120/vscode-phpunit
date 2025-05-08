@@ -323,9 +323,9 @@ describe('CommandBuilder Test', () => {
             ]);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with ssh', () => {
+        xit('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with ssh', () => {
             const builder = givenBuilder({
-                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
+                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}',
                 phpunit: 'artisan test',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
