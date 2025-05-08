@@ -1,12 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
-import { CommandBuilder } from './CommandBuilder';
+import { Builder } from './Builder';
 
-describe('CommandBuilder Test', () => {
+describe('Builder Test', () => {
     describe('LocalCommand', () => {
         const givenBuilder = (configuration: any, cwd?: string) => {
-            return new CommandBuilder(new Configuration({ php: 'php', ...configuration }), {
+            return new Builder(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
         };
@@ -16,8 +16,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
                 '--filter=^.*::(test_passed)( with data set .*)?$',
@@ -34,8 +34,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: phpUnitProjectWin('vendor/bin/phpunit'),
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 phpUnitProjectWin('vendor/bin/phpunit'),
                 '--filter=^.*::(test_passed)( with data set .*)?$',
@@ -51,8 +51,8 @@ describe('CommandBuilder Test', () => {
                 args: ['--repeat=2', '--order-by=random'],
             });
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 '--order-by=random',
@@ -68,8 +68,8 @@ describe('CommandBuilder Test', () => {
                 args: ['--no-coverage', '--no-logging'],
             });
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 '--no-logging',
@@ -89,8 +89,8 @@ describe('CommandBuilder Test', () => {
 
             const builder = givenBuilder({ environment, phpunit: 'vendor/bin/phpunit' });
 
-            const { command, args, options } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args, options } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
             expect(options.cwd).toEqual(phpUnitProject(''));
 
@@ -102,8 +102,8 @@ describe('CommandBuilder Test', () => {
         it('artisan test', () => {
             const builder = givenBuilder({ phpunit: 'artisan test' });
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'artisan',
                 'test',
@@ -115,7 +115,7 @@ describe('CommandBuilder Test', () => {
 
     describe('RemoteCommand', () => {
         const givenBuilder = (configuration: any, cwd?: string) => {
-            return new CommandBuilder(new Configuration({ php: 'php', ...configuration }), {
+            return new Builder(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
         };
@@ -127,8 +127,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('docker');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'run',
                 '-i',
@@ -153,8 +153,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('docker');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
                 '--workdir=/var/www/',
@@ -183,8 +183,8 @@ describe('CommandBuilder Test', () => {
                 },
             }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('docker');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
                 '--workdir=/var/www/',
@@ -210,8 +210,8 @@ describe('CommandBuilder Test', () => {
                 },
             }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('docker');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
                 '--workdir=/var/www/',
@@ -231,8 +231,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'artisan test',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('docker');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
                 '--workdir=/var/www/',
@@ -253,7 +253,7 @@ describe('CommandBuilder Test', () => {
 
     describe('phpunit.command has variable', () => {
         const givenBuilder = (configuration: any, cwd?: string) => {
-            return new CommandBuilder(new Configuration({
+            return new Builder(new Configuration({
                 command: '${php} ${phpargs} ${phpunit} ${phpunitargs}',
                 php: 'php',
                 ...configuration,
@@ -265,8 +265,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'vendor/bin/phpunit',
             });
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 '--colors=never',
@@ -279,8 +279,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
                 '--filter=^.*::(test_passed)( with data set .*)?$',
@@ -296,8 +296,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'artisan test',
             });
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('php');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'artisan',
                 'test',
@@ -312,8 +312,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'vendor/bin/phpunit',
             });
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('XDEBUG_MODE=coverage');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('XDEBUG_MODE=coverage');
             expect(args).toEqual([
                 'MEMORY_LIMIT=-1',
                 'php',
@@ -329,8 +329,8 @@ describe('CommandBuilder Test', () => {
                 phpunit: 'artisan test',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
-            const { command, args } = builder.build();
-            expect(command).toEqual('ssh');
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('ssh');
             expect(args).toEqual([
                 '-i',
                 'dockerfiles/pest/id_rsa',

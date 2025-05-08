@@ -1,7 +1,7 @@
-import { CommandBuilder } from './CommandBuilder';
+import { Builder } from './CommandBuilder';
 import {
-    TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses, TestResult,
-    TeamcityEvent, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
+    TeamcityEvent, TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
+    TestResult, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from './ProblemMatcher';
 
 export enum TestRunnerEvent {
@@ -18,7 +18,7 @@ export enum TestRunnerEvent {
 
 export type EventResultMap = {
     [TestRunnerEvent.start]: undefined;
-    [TestRunnerEvent.run]: CommandBuilder;
+    [TestRunnerEvent.run]: Builder;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;
@@ -52,8 +52,8 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
         this.emit(TestRunnerEvent.start, undefined);
     }
 
-    run(command: CommandBuilder): void {
-        this.emit(TestRunnerEvent.run, command);
+    run(builder: Builder): void {
+        this.emit(TestRunnerEvent.run, builder);
     }
 
     line(line: string): void {

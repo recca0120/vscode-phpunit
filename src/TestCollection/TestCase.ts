@@ -1,5 +1,5 @@
 import { Position, TestItem } from 'vscode';
-import { CommandBuilder, TestDefinition, TestType } from '../PHPUnit';
+import { Builder, TestDefinition, TestType } from '../PHPUnit';
 import { FilterStrategyFactory } from './FilterStrategy';
 
 export class TestCase {
@@ -9,8 +9,8 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    update(command: CommandBuilder) {
-        return command.clone().setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
+    update(builder: Builder) {
+        return builder.clone().setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
     }
 
     inRange = (test: TestItem, position: Position) => {

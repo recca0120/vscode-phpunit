@@ -1,1 +1,1 @@
-export * from './CommandBuilder';
+export * from './Builder';

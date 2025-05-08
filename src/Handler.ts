@@ -9,7 +9,7 @@ import { CloverParser } from './CloverParser';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, Printer, TestResultObserver } from './Observers';
 import { MessageObserver } from './Observers/MessageObserver';
-import { CommandBuilder, PHPUnitXML, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
+import { Builder, PHPUnitXML, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 import { getFreePort } from './utils';
 
@@ -30,7 +30,7 @@ export class Handler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const command = new CommandBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
+        const command = new Builder(this.configuration, { cwd: this.phpUnitXML.root() });
         if (request.profile?.kind === TestRunProfileKind.Debug) {
             const extra = ['-dxdebug.mode=debug', '-dxdebug.start_with_request=1'];
 
@@ -67,7 +67,7 @@ export class Handler {
         this.previousRequest = request;
     }
 
-    private async runTestQueue(command: CommandBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
+    private async runTestQueue(builder: Builder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
         const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request);
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
@@ -79,16 +79,16 @@ export class Handler {
         let tmpd: string | undefined;
         if (request.profile?.kind === TestRunProfileKind.Coverage) {
             tmpd = await fs.mkdtemp(path.join(os.tmpdir(), 'phpunit'));
-            command.setExtraArguments(['--coverage-clover', path.join(tmpd, 'phpunit-0.xml')]);
+            builder.setExtraArguments(['--coverage-clover', path.join(tmpd, 'phpunit-0.xml')]);
         }
 
         runner.emit(TestRunnerEvent.start, undefined);
 
         const processes = !request.include
-            ? [runner.run(command)]
+            ? [runner.run(builder)]
             : request.include
                 .map((testItem) => this.testCollection.getTestCase(testItem)!)
-                .map((testCase, k) => testCase.update(tmpd ? command.setExtraArguments(['--coverage-clover', path.join(tmpd, `phpunit-${k}.xml`)]) : command))
+                .map((testCase, k) => testCase.update(tmpd ? builder.setExtraArguments(['--coverage-clover', path.join(tmpd, `phpunit-${k}.xml`)]) : builder))
                 .map((testCase) => runner.run(testCase));
 
         cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));

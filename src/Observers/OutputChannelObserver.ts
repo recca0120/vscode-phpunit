@@ -1,6 +1,6 @@
 import { OutputChannel, TestRunRequest } from 'vscode';
 import {
-    CommandBuilder, IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored,
+    Builder, IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored,
     TestProcesses, TestResult, TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished,
     TestSuiteStarted, TestVersion,
 } from '../PHPUnit';
@@ -17,12 +17,12 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     constructor(private outputChannel: OutputChannel, private configuration: IConfiguration, private printer: Printer, private request: TestRunRequest) {}
 
-    run(command: CommandBuilder): void {
+    run(builder: Builder): void {
         this.clearOutputOnRun();
         this.showOutputChannel(ShowOutputState.always);
 
         this.printer.start();
-        this.appendLine(this.lastCommand = command.toString());
+        this.appendLine(this.lastCommand = builder.toString());
     }
 
     error(error: string): void {

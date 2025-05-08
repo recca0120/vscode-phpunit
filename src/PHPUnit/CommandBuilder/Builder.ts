@@ -8,13 +8,11 @@ import { Path, PathReplacer } from './PathReplacer';
 const isSSH = (commands: string[]) => /^ssh/.test(commands.join(' '));
 const isShellCommand = (commands: string[]) => /sh\s+-c/.test(commands.slice(-2).join(' '));
 
-function flatten<T>(arr: (T | T[])[]): T[] {
-    return arr.reduce<T[]>((acc, val) =>
-            Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val),
-        []);
-}
+const flatten = <T>(arr: (T | T[])[]): T[] => arr.reduce<T[]>((acc, val) => {
+    return Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val);
+}, []);
 
-export class CommandBuilder {
+export class Builder {
     private readonly pathReplacer: PathReplacer;
     private quotedArgs = ['--filter', '--configuration'];
     private arguments = '';
@@ -26,8 +24,8 @@ export class CommandBuilder {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
-    clone(): CommandBuilder {
-        return new CommandBuilder(this.configuration, this.options)
+    clone(): Builder {
+        return new Builder(this.configuration, this.options)
             .setArguments(this.arguments)
             .setExtra(this.extra)
             .setExtraArguments(this.extraArguments)
@@ -59,13 +57,13 @@ export class CommandBuilder {
     }
 
     build() {
-        const [command, ...args] = this.create()
+        const [runtime, ...args] = this.create()
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
         const options = { ...this.options, env: this.getEnvironment() };
 
-        return { command, args, options };
+        return { runtime, args, options };
     }
 
     replacePath(result: TestResult) {
@@ -88,9 +86,9 @@ export class CommandBuilder {
     }
 
     toString() {
-        const { command, args } = this.build();
+        const { runtime, args } = this.build();
 
-        return `${command} ${args.join(' ')}`;
+        return `${runtime} ${args.join(' ')}`;
     }
 
     private create() {
