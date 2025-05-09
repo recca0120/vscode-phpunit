@@ -7,9 +7,7 @@ abstract class FilterStrategy {
     abstract getFilter(): string
 
     protected parseFilter(filter: string) {
-        const quote = filter.includes('"') ? '\'' : '"';
-
-        return `--filter ${quote}${filter}(( with (data set )?.*)?)?$${quote}`;
+        return `--filter="${filter}(( with (data set )?.*)?)?$"`;
     }
 }
 

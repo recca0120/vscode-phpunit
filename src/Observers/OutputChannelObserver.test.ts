@@ -44,7 +44,7 @@ describe('OutputChannelObserver', () => {
 
     async function run(file?: string, filter?: string) {
         if (filter) {
-            filter = `--filter="^.*::(${filter})( with data set .*)?$"`;
+            filter = `--filter='^.*::(${filter})( with data set .*)?$'`;
         }
 
         const cwd = phpUnitProject('');

@@ -20,7 +20,7 @@ describe('Builder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter='^.*::(test_passed)( with data set .*)?$'`,
                 '--colors=never',
                 '--teamcity',
                 '--functional',
@@ -38,7 +38,7 @@ describe('Builder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 phpUnitProjectWin('vendor/bin/phpunit'),
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter='^.*::(test_passed)( with data set .*)?$'`,
                 phpUnitProjectWin('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -111,6 +111,26 @@ describe('Builder Test', () => {
                 '--teamcity',
             ]);
         });
+
+        it('has single quote', () => {
+            const filter = '^.*::(it has user\'s email)(( with (data set )?.*)?)?$';
+
+            const cwd = phpUnitProject('');
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            const builder = givenBuilder({
+                phpunit: 'vendor/bin/pest',
+            }, cwd).setArguments(`${testFile} --filter="${filter}"`);
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
+            expect(args).toEqual([
+                'vendor/bin/pest',
+                `--filter="^.*::(it has user's email)(( with (data set )?.*)?)?$"`,
+                phpUnitProject('tests/AssertionsTest.php'),
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
     });
 
     describe('RemoteCommand', () => {
@@ -120,7 +140,7 @@ describe('Builder Test', () => {
             });
         };
 
-        it('run paratest with --functional and --filter', () => {
+        it('run paratest with --functional', () => {
             const cwd = phpUnitProject('');
             const builder = givenBuilder({
                 command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
@@ -140,7 +160,7 @@ describe('Builder Test', () => {
                 'phpunit-stub',
                 'php',
                 'vendor/bin/paratest',
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter='^.*::(test_passed)( with data set .*)?$'`,
                 '--colors=never',
                 '--teamcity',
                 '--functional',
@@ -164,7 +184,7 @@ describe('Builder Test', () => {
                 [
                     'php',
                     'vendor/bin/paratest',
-                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
                     `--colors=never`,
                     `--teamcity`,
                     `--functional`,
@@ -191,7 +211,7 @@ describe('Builder Test', () => {
                 'container_name',
                 'php',
                 'vendor/bin/phpunit',
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter='^.*::(test_passed)( with data set .*)?$'`,
                 '/var/www/tests/AssertionsTest.php',
                 '--colors=never',
                 '--teamcity',
@@ -218,7 +238,7 @@ describe('Builder Test', () => {
                 'container_name',
                 'php',
                 'vendor/bin/phpunit',
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter='^.*::(test_passed)( with data set .*)?$'`,
                 '/var/www/tests/AssertionsTest.php',
                 '--colors=never',
                 '--teamcity',
@@ -243,9 +263,38 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
                     `--colors=never`,
                     `--teamcity`,
+                ].join(' '),
+            ]);
+        });
+
+        it('ssh', () => {
+            const builder = givenBuilder({
+                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
+                phpunit: 'artisan test',
+            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('ssh');
+            expect(args).toEqual([
+                '-i',
+                'dockerfiles/pest/id_rsa',
+                '-p',
+                '2222',
+                'root@localhost',
+                '-o',
+                'StrictHostKeyChecking=no',
+                'cd',
+                '/app;',
+                [
+                    'php',
+                    'artisan',
+                    'test',
+                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    '--colors=never',
+                    '--teamcity',
                 ].join(' '),
             ]);
         });
@@ -274,7 +323,7 @@ describe('Builder Test', () => {
             ]);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} --filter --functional', () => {
+        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} --functional', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/paratest',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
@@ -283,7 +332,7 @@ describe('Builder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter='^.*::(test_passed)( with data set .*)?$'`,
                 '--colors=never',
                 '--teamcity',
                 '--functional',
@@ -323,9 +372,9 @@ describe('Builder Test', () => {
             ]);
         });
 
-        xit('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with ssh', () => {
+        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with ssh', () => {
             const builder = givenBuilder({
-                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}',
+                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}"',
                 phpunit: 'artisan test',
             }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
 
@@ -339,15 +388,39 @@ describe('Builder Test', () => {
                 'root@localhost',
                 '-o',
                 'StrictHostKeyChecking=no',
-                'cd',
-                '/app;',
                 [
+                    'cd',
+                    '/app;',
                     'php',
                     'artisan',
                     'test',
-                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
                     `--colors=never`,
                     `--teamcity`,
+                ].join(' '),
+            ]);
+        });
+
+        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with docker', () => {
+            const builder = givenBuilder({
+                command: 'docker exec -t container_name /bin/sh -c \'${php} ${phpargs} ${phpunit} ${phpunitargs}\'',
+                phpunit: 'vendor/bin/phpunit',
+            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
+            expect(args).toEqual([
+                'exec',
+                '-t',
+                'container_name',
+                '/bin/sh',
+                '-c',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    '--colors=never',
+                    '--teamcity',
                 ].join(' '),
             ]);
         });
