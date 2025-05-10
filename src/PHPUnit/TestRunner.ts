@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { CommandBuilder } from './CommandBuilder';
+import { Builder } from './CommandBuilder';
 import { ProblemMatcher, TeamcityEvent, TestResult } from './ProblemMatcher';
 import { EventResultMap, TestRunnerEvent, TestRunnerEventProxy, TestRunnerObserver } from './TestRunnerObserver';
 
@@ -12,7 +12,7 @@ export class TestRunnerProcess {
     private temp = '';
     private abortController: AbortController;
 
-    constructor(private builder: CommandBuilder) {
+    constructor(private builder: Builder) {
         this.abortController = new AbortController();
     }
 
@@ -50,8 +50,8 @@ export class TestRunnerProcess {
         this.temp = '';
 
         this.emitter.emit('start', this.builder);
-        const { command, args, options } = this.builder.build();
-        this.child = spawn(command, args, { ...options, signal: this.abortController.signal });
+        const { runtime, args, options } = this.builder.build();
+        this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
         this.child.stdout!.on('data', (data) => this.appendOutput(data));
         this.child.stderr!.on('data', (data) => this.appendOutput(data));
         this.child.stdout!.on('end', () => this.emitLines(this.temp));
@@ -98,10 +98,10 @@ export class TestRunner {
         return this;
     }
 
-    run(command: CommandBuilder) {
-        const process = new TestRunnerProcess(command);
-        process.on('start', (command: CommandBuilder) => this.emit(TestRunnerEvent.run, command));
-        process.on('line', (line: string) => this.processLine(line, command));
+    run(builder: Builder) {
+        const process = new TestRunnerProcess(builder);
+        process.on('start', (builder: Builder) => this.emit(TestRunnerEvent.run, builder));
+        process.on('line', (line: string) => this.processLine(line, builder));
         process.on('error', (err: Error) => {
             const error = err.stack ?? err.message;
             this.emit(TestRunnerEvent.error, error);
@@ -126,17 +126,17 @@ export class TestRunner {
         return this.teamcityPattern.test(output);
     }
 
-    private processLine(line: string, command: CommandBuilder) {
-        this.emitResult(command, this.problemMatcher.parse(line));
+    private processLine(line: string, builder: Builder) {
+        this.emitResult(builder, this.problemMatcher.parse(line));
         this.emit(TestRunnerEvent.line, line);
     }
 
-    private emitResult(command: CommandBuilder, result: TestResult | undefined) {
+    private emitResult(builder: Builder, result: TestResult | undefined) {
         if (!result) {
             return;
         }
 
-        result = command.replacePath(result);
+        result = builder.replacePath(result);
         if ('event' in result!) {
             this.emit(result.event, result);
         }

@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
-import { CommandBuilder } from './CommandBuilder';
+import { Builder } from './CommandBuilder';
 import { Configuration } from './Configuration';
 import { TeamcityEvent } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';
@@ -165,7 +165,7 @@ const generateTestResult = (
     }
 };
 
-const expectedCommand = async (builder: CommandBuilder, expected: string[]) => {
+const expectedCommand = async (builder: Builder, expected: string[]) => {
     const testRunner = new TestRunner();
     onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
@@ -177,7 +177,7 @@ const expectedCommand = async (builder: CommandBuilder, expected: string[]) => {
 
 const shouldRunTest = async (
     expected: string[],
-    builder: CommandBuilder,
+    builder: Builder,
     projectPath: (path: string) => string,
     appPath: (path: string) => string,
     start: { event: TeamcityEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
@@ -190,7 +190,7 @@ const shouldRunTest = async (
     expectedTestResult(finished, projectPath);
 };
 
-const shouldRunAllTest = async (expected: string[], builder: CommandBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+const shouldRunAllTest = async (expected: string[], builder: Builder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
     await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TeamcityEvent.testStarted,
         name: 'test_passed',
@@ -205,7 +205,7 @@ const shouldRunAllTest = async (expected: string[], builder: CommandBuilder, pro
     });
 };
 
-const shouldRunTestSuite = async (expected: string[], builder: CommandBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestSuite = async (expected: string[], builder: Builder, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
     builder.setArguments(projectPath('tests/AssertionsTest.php'));
 
     await shouldRunTest(expected, builder, projectPath, appPath, {
@@ -220,11 +220,11 @@ const shouldRunTestSuite = async (expected: string[], builder: CommandBuilder, p
     });
 };
 
-const shouldRunTestPassed = async (expected: string[], command: CommandBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestPassed = async (expected: string[], builder: Builder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
     const filter = `^.*::(test_passed)( with data set .*)?$`;
-    command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
+    builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
-    await shouldRunTest(expected, command, projectPath, appPath, {
+    await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TeamcityEvent.testStarted,
         name: 'test_passed',
         file: appPath('tests/AssertionsTest.php'),
@@ -237,11 +237,11 @@ const shouldRunTestPassed = async (expected: string[], command: CommandBuilder, 
     });
 };
 
-const shouldRunTestFailed = async (expected: string[], command: CommandBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
+const shouldRunTestFailed = async (expected: string[], builder: Builder, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
     const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
-    command.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
+    builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
-    await shouldRunTest(expected, command, projectPath, appPath, {
+    await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TeamcityEvent.testFailed,
         name: 'test_failed',
         file: appPath('tests/AssertionsTest.php'),
@@ -269,7 +269,7 @@ describe('TestRunner Test', () => {
             args: ['-c', '${PWD}/phpunit.xml'],
         });
 
-        const builder = new CommandBuilder(configuration, { cwd });
+        const builder = new Builder(configuration, { cwd });
         const expected = [
             'foo',
             'vendor/bin/phpunit',
@@ -292,7 +292,7 @@ describe('TestRunner Test', () => {
             phpunit: '${workspaceFolder}/vendor/bin/phpunit',
             args: ['-c', '${workspaceFolder}/phpunit.xml'],
         });
-        const builder = new CommandBuilder(configuration, { cwd });
+        const builder = new Builder(configuration, { cwd });
 
         it('should run all tests', async () => {
             const expected = [
@@ -324,7 +324,7 @@ describe('TestRunner Test', () => {
                 'php',
                 appPath('vendor/bin/phpunit'),
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -338,7 +338,7 @@ describe('TestRunner Test', () => {
                 'php',
                 appPath('vendor/bin/phpunit'),
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -352,7 +352,7 @@ describe('TestRunner Test', () => {
                 'php',
                 appPath('vendor/bin/phpunit'),
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -374,7 +374,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const builder = new CommandBuilder(configuration, { cwd });
+        const builder = new Builder(configuration, { cwd });
 
         it('should run all tests for SSH', async () => {
             const expected = [
@@ -391,9 +391,9 @@ describe('TestRunner Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `'--configuration=${appPath('phpunit.xml')}'`,
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--configuration=${appPath('phpunit.xml')}`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -415,10 +415,10 @@ describe('TestRunner Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `'--configuration=${appPath('phpunit.xml')}'`,
+                    `--configuration=${appPath('phpunit.xml')}`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -440,11 +440,11 @@ describe('TestRunner Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `'--configuration=${appPath('phpunit.xml')}'`,
-                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `--configuration=${appPath('phpunit.xml')}`,
+                    `--filter=^.*::(test_passed)( with data set .*)?$`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -466,11 +466,11 @@ describe('TestRunner Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `'--configuration=${appPath('phpunit.xml')}'`,
-                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
+                    `--configuration=${appPath('phpunit.xml')}`,
+                    `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -492,11 +492,11 @@ describe('TestRunner Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `'--configuration=${appPath('phpunit.xml')}'`,
-                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
+                    `--configuration=${appPath('phpunit.xml')}`,
+                    `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                     appPath('tests/AssertionsTest.php'),
-                    `'--colors=never'`,
-                    `'--teamcity'`,
+                    `--colors=never`,
+                    `--teamcity`,
                 ].join(' '),
             ];
 
@@ -517,7 +517,7 @@ describe('TestRunner Test', () => {
             paths: { '${PWD}': appPath('') },
         });
 
-        const builder = new CommandBuilder(configuration, { cwd });
+        const builder = new Builder(configuration, { cwd });
 
         it('should run all tests for Docker', async () => {
             const expected = [
@@ -576,7 +576,7 @@ describe('TestRunner Test', () => {
                 'php',
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -598,7 +598,7 @@ describe('TestRunner Test', () => {
                 'phpunit-stub',
                 'php', 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -621,7 +621,7 @@ describe('TestRunner Test', () => {
                 'php',
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -643,7 +643,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const builder = new CommandBuilder(configuration, { cwd });
+        const builder = new Builder(configuration, { cwd });
 
         it('should run all tests for Windows Docker', async () => {
             const expected = [
@@ -702,7 +702,7 @@ describe('TestRunner Test', () => {
                 'php',
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed)( with data set .*)?$',
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -725,7 +725,7 @@ describe('TestRunner Test', () => {
                 'php',
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -748,7 +748,7 @@ describe('TestRunner Test', () => {
                 'php',
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
-                '--filter=^.*::(test_passed|test_failed)( with data set .*)?$',
+                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
