@@ -114,14 +114,14 @@ export class Builder {
             return command.replace(keyVariable(key), value.trim());
         }, command.trim());
 
-        return this.decodeFilter(parseArgsStringToArgv(this.pathReplacer.replacePathVariables(command)));
+        return this.decodeFilter(parseArgsStringToArgv(command));
     }
 
     private getArguments(): { [pIndex: string]: string } {
         return {
-            'php': this.getPhp(),
+            'php': this.pathReplacer.toRemote(this.getPhp()),
             'phpargs': this.getPhpArgs(),
-            'phpunit': this.getPhpUnit(),
+            'phpunit': this.pathReplacer.toRemote(this.getPhpUnit()),
             'phpunitargs': this.getPhpUnitArgs(),
         };
     }
@@ -192,7 +192,7 @@ export class Builder {
 
             return input.replace(pattern, (_m, ...matched) => {
                 const value = atob(matched[1]);
-                const quote = value.includes('\'') ? '"' : '\'';
+                const quote = value.includes('\'') ? '"' : '';
 
                 return `${matched[0]}=${quote}${value}${quote}`;
             });

@@ -14,13 +14,13 @@ describe('Builder Test', () => {
         it('run paratest with --functional and --filter', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
-                `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '--colors=never',
                 '--teamcity',
                 '--functional',
@@ -38,7 +38,7 @@ describe('Builder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 phpUnitProjectWin('vendor/bin/phpunit'),
-                `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 phpUnitProjectWin('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -145,7 +145,7 @@ describe('Builder Test', () => {
             const builder = givenBuilder({
                 command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('docker');
@@ -160,7 +160,7 @@ describe('Builder Test', () => {
                 'phpunit-stub',
                 'php',
                 'vendor/bin/paratest',
-                `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '--colors=never',
                 '--teamcity',
                 '--functional',
@@ -171,7 +171,7 @@ describe('Builder Test', () => {
             const builder = givenBuilder({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('docker');
@@ -184,7 +184,7 @@ describe('Builder Test', () => {
                 [
                     'php',
                     'vendor/bin/paratest',
-                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter=^.*::(test_passed)( with data set .*)?$`,
                     `--colors=never`,
                     `--teamcity`,
                     `--functional`,
@@ -211,7 +211,7 @@ describe('Builder Test', () => {
                 'container_name',
                 'php',
                 'vendor/bin/phpunit',
-                `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '/var/www/tests/AssertionsTest.php',
                 '--colors=never',
                 '--teamcity',
@@ -238,7 +238,7 @@ describe('Builder Test', () => {
                 'container_name',
                 'php',
                 'vendor/bin/phpunit',
-                `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '/var/www/tests/AssertionsTest.php',
                 '--colors=never',
                 '--teamcity',
@@ -249,7 +249,7 @@ describe('Builder Test', () => {
             const builder = givenBuilder({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'artisan test',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('docker');
@@ -263,7 +263,7 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter=^.*::(test_passed)( with data set .*)?$`,
                     `--colors=never`,
                     `--teamcity`,
                 ].join(' '),
@@ -274,7 +274,7 @@ describe('Builder Test', () => {
             const builder = givenBuilder({
                 command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
                 phpunit: 'artisan test',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('ssh');
@@ -292,7 +292,7 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter=^.*::(test_passed)( with data set .*)?$`,
                     '--colors=never',
                     '--teamcity',
                 ].join(' '),
@@ -326,13 +326,13 @@ describe('Builder Test', () => {
         it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} --functional', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
-                `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '--colors=never',
                 '--teamcity',
                 '--functional',
@@ -376,7 +376,7 @@ describe('Builder Test', () => {
             const builder = givenBuilder({
                 command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}"',
                 phpunit: 'artisan test',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('ssh');
@@ -394,7 +394,7 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter=^.*::(test_passed)( with data set .*)?$`,
                     `--colors=never`,
                     `--teamcity`,
                 ].join(' '),
@@ -405,7 +405,7 @@ describe('Builder Test', () => {
             const builder = givenBuilder({
                 command: 'docker exec -t container_name /bin/sh -c \'${php} ${phpargs} ${phpunit} ${phpunitargs}\'',
                 phpunit: 'vendor/bin/phpunit',
-            }).setArguments('--filter=\'^.*::(test_passed)( with data set .*)?$\'');
+            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('docker');
@@ -418,7 +418,7 @@ describe('Builder Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `--filter='^.*::(test_passed)( with data set .*)?$'`,
+                    `--filter=^.*::(test_passed)( with data set .*)?$`,
                     '--colors=never',
                     '--teamcity',
                 ].join(' '),

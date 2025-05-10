@@ -221,7 +221,7 @@ describe('Extension Test', () => {
 
                 expect(spawn).toHaveBeenCalledWith(phpBinary, [
                     'vendor/bin/phpunit',
-                    `--filter='^(Tests.*)(( with (data set )?.*)?)?$'`,
+                    `--filter=^(Tests.*)(( with (data set )?.*)?)?$`,
                     '--colors=never',
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));

@@ -59,7 +59,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker compose exec -u sail laravel.test",
+  "phpunit.command": "docker compose exec -u sail laravel.test ${php} ${phpargs} ${phpunit} ${phpunitargs}",
   "phpunit.phpunit": "artisan test",
   "phpunit.paths": {
     "${workspaceFolder}": "/var/www/html",
@@ -87,7 +87,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
+  "phpunit.command": "docker exec -t [container_id] /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit", 
   "phpunit.args": [
@@ -102,7 +102,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest",
+  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest ${php} ${phpargs} ${phpunit} ${phpunitargs}",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -119,7 +119,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker exec -t [container_id] /bin/sh -c",
+  "phpunit.command": "docker exec -t [container_id] /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/pest", 
   "phpunit.args": [
@@ -134,7 +134,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest",
+  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest ${php} ${phpargs} ${phpunit} ${phpunitargs}",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/pest",
   "phpunit.args": [
@@ -151,7 +151,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;",
+  "phpunit.command": "ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no \"cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/phpunit",
   "phpunit.args": [
@@ -168,7 +168,7 @@ The following commands are available in VS Code's command palette, use the ID to
 
 ```jsonc
 {
-  "phpunit.command": "ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;",
+  "phpunit.command": "ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no \"cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
   "phpunit.php": "php",
   "phpunit.phpunit": "vendor/bin/pest",
   "phpunit.args": [
