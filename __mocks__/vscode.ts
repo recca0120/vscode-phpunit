@@ -338,6 +338,12 @@ class StatementCoverage {
     constructor(public executed: number | boolean, public location: any) {}
 }
 
+const debug = {
+    activeDebugSession: { type: 'php' },
+    startDebugging: jest.fn(),
+    stopDebugging: jest.fn(),
+};
+
 export {
     languages,
     workspace,
@@ -361,4 +367,5 @@ export {
     TestCoverageCount,
     StatementCoverage,
     DocumentLink,
+    debug,
 };
