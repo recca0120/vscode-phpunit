@@ -1,4 +1,5 @@
-import { TestDefinition, TestType, Transformer } from '../PHPUnit';
+import { Transformer } from '../Transformer';
+import { TestDefinition, TestType } from '../types';
 
 abstract class FilterStrategy {
     constructor(protected testDefinition: TestDefinition) {

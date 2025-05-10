@@ -1,6 +1,6 @@
 import { Position, TestItem } from 'vscode';
 import { Builder, TestDefinition, TestType } from '../PHPUnit';
-import { FilterStrategyFactory } from './FilterStrategy';
+import { FilterStrategyFactory } from '../PHPUnit/CommandBuilder/FilterStrategy';
 
 export class TestCase {
     constructor(private testDefinition: TestDefinition) { }
