@@ -26,17 +26,16 @@ export class TestRunnerProcess {
         this.emitter.emit(eventName, ...args);
     }
 
-    run() {
-        return new Promise((resolve) => {
-            this.execute();
-            this.child?.on('error', () => resolve(true));
-            this.child?.on('close', () => resolve(true));
+    run(): Promise<number | null> { // Return the exit code
+        return new Promise((resolve, reject) => {
+            this.execute(resolve, reject); // Pass resolve/reject to execute
         });
     }
 
-    abort() {
+    abort(): boolean | undefined { // Return boolean or undefined
         this.abortController.abort();
 
+        // Check if child process exists and was killed
         const killed = this.child?.killed;
         if (killed) {
             this.emitter.emit('abort');
@@ -45,36 +44,58 @@ export class TestRunnerProcess {
         return killed;
     }
 
-    private execute() {
+    private execute(resolve: (code: number | null) => void, reject: (err: Error) => void) {
         this.output = '';
         this.temp = '';
 
         this.emitter.emit('start', this.builder);
         const { runtime, args, options } = this.builder.build();
-        this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
-        this.child.stdout!.on('data', (data) => this.appendOutput(data));
-        this.child.stderr!.on('data', (data) => this.appendOutput(data));
-        this.child.stdout!.on('end', () => this.emitLines(this.temp));
-        this.child.on('error', (err: Error) => this.emitter.emit('error', err));
-        this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
+        try {
+            this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
+
+            this.child.stdout?.on('data', (data) => this.appendOutput(data));
+            this.child.stderr?.on('data', (data) => this.appendOutput(data));
+
+            // Removed the call to emitLines on 'end' as appendOutput handles remaining data
+
+            this.child.on('error', (err: Error) => {
+                this.emitter.emit('error', err);
+                reject(err); // Reject the promise on spawn error
+            });
+
+            this.child.on('close', (code) => {
+                this.emitter.emit('close', code, this.output);
+                resolve(code); // Resolve the promise on close
+            });
+
+        } catch (err: any) {
+            // Handle errors during spawn itself
+            this.emitter.emit('error', err);
+            reject(err);
+        }
     }
 
-    private appendOutput(data: string) {
+    private appendOutput(data: Buffer | string) {
         const out = data.toString();
         this.output += out;
         this.temp += out;
-        const lines = this.emitLines(this.temp, 1);
-        this.temp = lines.shift()!;
+        // Process lines as they arrive, keeping the last partial line in temp
+        const lines = this.temp.split(/\r\n|\n/);
+        this.temp = lines.pop() || ''; // Keep the last element (partial line)
+        for (const line of lines) {
+            this.emitter.emit('line', line);
+        }
     };
 
-    private emitLines(temp: string, limit = 0) {
-        const lines = temp.split(/\r\n|\n/);
-        while (lines.length > limit) {
-            this.emitter.emit('line', lines.shift()!);
-        }
+    // Removed emitLines as its logic is now integrated into appendOutput
+    // private emitLines(temp: string, limit = 0) {
+    //     const lines = temp.split(/\r\n|\n/);
+    //     while (lines.length > limit) {
+    //         this.emitter.emit('line', lines.shift()!);
+    //     }
 
-        return lines;
-    }
+    //     return lines;
+    // }
 }
 
 export class TestRunner {

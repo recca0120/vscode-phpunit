@@ -1,5 +1,5 @@
 import { TransformerFactory } from '../Transformer';
-import { Teamcity } from '../types';
+// Removed import of Teamcity from '../types';
 import { parseTeamcity } from '../utils';
 import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestDurationParser } from './TestDurationParser';
@@ -40,7 +40,7 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         } as TestResult;
     }
 
-    private parseDetails(teamcity: Teamcity): Partial<TestResult> {
+    private parseDetails(teamcity: any): Partial<TestResult> { // Changed type to any
         if (!('details' in teamcity)) {
             return {};
         }
@@ -48,7 +48,8 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         let message = teamcity.message;
         const details = this.parseFileAndLine(teamcity.message);
         details.forEach(({ file, line }) => {
-            message = message.replace(`${file}:${line}`, '');
+            // Use a more robust replace to avoid issues with multiple occurrences or partial matches
+            message = message.split(`${file}:${line}`).join('').trim();
         });
 
         return {
@@ -57,22 +58,28 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         };
     }
 
-    private parseFileAndLine(text: string) {
-        return text
-            .trim()
-            .split(/\r\n|\n/g)
-            .filter((input: string) => input.match(this.filePattern))
-            .map((input: string) => {
-                const { file, line } = input.match(this.filePattern)!.groups!;
+    private parseFileAndLine(text: string): { file: string; line: number }[] {
+        if (!text) {
+            return [];
+        }
+        const details: { file: string; line: number }[] = [];
+        const lines = text.trim().split(/\r\n|\n/g);
 
-                return {
+        for (const line of lines) {
+            const match = line.match(this.filePattern);
+            if (match && match.groups) {
+                const { file, line: lineStr } = match.groups;
+                details.push({
                     file: file.replace(/^(-)+|^at\s+/, '').trim(),
-                    line: parseInt(line, 10),
-                };
-            });
+                    line: parseInt(lineStr, 10),
+                });
+            }
+        }
+
+        return details;
     }
 
-    private parseLocationHint(argv: Teamcity): Partial<TestResult> {
+    private parseLocationHint(argv: any): Partial<TestResult> { // Changed type to any as Teamcity is removed
         if (!argv.locationHint) {
             return {};
         }

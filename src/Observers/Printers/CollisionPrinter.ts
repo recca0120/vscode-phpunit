@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs'; // Keep for now, will remove after async conversion
+import { readFile } from 'node:fs/promises'; // Import async readFile
 import { EOL, TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestSuiteFinished } from '../../PHPUnit';
 import { Printer } from './Printer';
 
@@ -30,17 +31,19 @@ export class CollisionPrinter extends Printer {
         return '';
     }
 
-    end() {
-        return this.errors.map((result) => this.formatError(result)).join(EOL);
+    async end(): Promise<string> { // Make end() async
+        const formattedErrors = await Promise.all(this.errors.map((result) => this.formatError(result)));
+        return formattedErrors.join(EOL);
     }
 
-    private formatError(result: TestFailed) {
+    private async formatError(result: TestFailed): Promise<string> { // Make formatError() async
+        const fileContent = await this.getFileContent(result); // Await async getFileContent
         return [
             '',
             this.formatErrorTitle(result),
             this.formatMessage(result),
             this.formatDiff(result),
-            this.getFileContent(result),
+            fileContent, // Use awaited content
             this.formatDetails(result),
             '',
         ].filter((content) => content !== undefined).join(EOL);
@@ -72,21 +75,23 @@ export class CollisionPrinter extends Printer {
         ].join(EOL);
     }
 
-    private getFileContent(result: TestFailed) {
-        let detail = result.details.find(({ file }) => file === result.file)!;
-        if (result.details.length > 0) {
-            detail = result.details[0];
-        }
+    private async getFileContent(result: TestFailed): Promise<string | undefined> { // Make getFileContent() async
+        // Prioritize the first detail entry if available, otherwise use the file from the result
+        const detail = result.details.length > 0 ? result.details[0] : (result.file ? { file: result.file, line: 0 } : undefined);
 
-        if (!detail) {
+        if (!detail || !detail.file) {
             return undefined;
         }
 
         try {
-            const data = readFileSync(this.phpUnitXML.path(detail.file), 'utf8');
-            const position = Math.max(0, detail.line - 5);
-            const lines = data.split(/\r\n|\n/).splice(position, 10).map((line, index) => {
-                const currentPosition = position + index + 1;
+            const filePath = this.phpUnitXML.path(detail.file);
+            const data = await readFile(filePath, 'utf8'); // Use async readFile
+            const lines = data.split(/\r\n|\n/);
+            const startLine = Math.max(0, detail.line - 1 - 4); // 5 lines before
+            const endLine = Math.min(lines.length, detail.line - 1 + 5); // 5 lines after
+
+            const formattedLines = lines.slice(startLine, endLine).map((line, index) => {
+                const currentPosition = startLine + index + 1;
                 const prefix = detail.line === currentPosition ? '➜ ' : '  ';
 
                 return `${prefix}${String(currentPosition).padStart(2, ' ')} ▕ ${line}`;
@@ -95,9 +100,10 @@ export class CollisionPrinter extends Printer {
             return [
                 '',
                 `at ${Printer.fileFormat(detail.file, detail.line)}`,
-                ...lines,
+                ...formattedLines,
             ].join(EOL);
         } catch (e) {
+            console.error(`Error reading file ${detail.file}:`, e); // Log error
             return undefined;
         }
     }

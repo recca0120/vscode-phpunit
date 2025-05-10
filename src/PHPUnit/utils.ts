@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
 import * as yargsParser from 'yargs-parser';
-import { Teamcity } from './types';
+// Removed import of Teamcity from './types'
 
 class EscapeValue {
     private values = {
@@ -35,11 +35,13 @@ class EscapeValue {
     }
 
     private change(value: string | number | any, from: RegExp[], to: string[]) {
-        if (typeof value === 'object') {
-            for (const x in value) {
-                value[x] = this.change(value[x], from, to);
+        if (typeof value === 'object' && value !== null) {
+            // Recursively process object properties
+            for (const key in value) {
+                if (Object.prototype.hasOwnProperty.call(value, key)) {
+                    value[key] = this.change(value[key], from, to);
+                }
             }
-
             return value;
         }
 
@@ -47,8 +49,9 @@ class EscapeValue {
             return value;
         }
 
-        for (const x in from) {
-            value = value.replace(from[x], to[x]);
+        // Use standard for loop for array iteration
+        for (let i = 0; i < from.length; i++) {
+            value = value.replace(from[i], to[i]);
         }
 
         return value;
@@ -106,7 +109,7 @@ export const groupBy = <T extends { [key: string]: any }>(items: T[], key: strin
     }, {} as { [key: string]: T[] });
 };
 
-export const parseTeamcity = (text: string): Teamcity => {
+export const parseTeamcity = (text: string) => { // Removed return type annotation
     text = text.trim().replace(new RegExp('^.*#+teamcity'), '').replace(/^\[|]$/g, '');
     text = escapeValue.escapeSingleQuote(text) as string;
     text = escapeValue.unescape(text) as string;
@@ -173,53 +176,8 @@ export async function findAsyncSequential<T>(
     return undefined;
 }
 
-export class CustomWeakMap<K extends object, V> {
-    private weakMap: WeakMap<K, V>;
-    private keys: Set<K>;
-
-    constructor() {
-        this.weakMap = new WeakMap<K, V>();
-        this.keys = new Set<K>();
-    }
-
-    clear() {
-        this.weakMap = new WeakMap();
-        this.keys = new Set();
-    }
-
-    delete(key: K) {
-        this.keys.delete(key);
-
-        return this.weakMap.delete(key);
-    }
-
-    get(key: K) {
-        return this.weakMap.get(key);
-    }
-
-    has(key: K) {
-        return this.keys.has(key);
-    }
-
-    set(key: K, value: V) {
-        this.keys.add(key);
-        this.weakMap.set(key, value);
-
-        return this;
-    }
-
-    forEach(callback: (value: V, key: K) => void) {
-        this.keys.forEach((key) => {
-            callback(this.weakMap.get(key)!, key);
-        });
-    }
-
-    * [Symbol.iterator](): Generator<[K, V]> {
-        for (const key of this.keys) {
-            yield [key, this.weakMap.get(key)!];
-        }
-    }
-}
+// Removed CustomWeakMap class as it defeats the purpose of WeakMap by holding strong references to keys.
+// If weak references are needed, use the built-in WeakMap directly.
 
 export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export const uncapitalize = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);

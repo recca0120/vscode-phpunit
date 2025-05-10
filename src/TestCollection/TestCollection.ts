@@ -1,154 +1,310 @@
 import { Position, TestController, TestItem, TestRunRequest } from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
-} from '../PHPUnit';
+    PHPUnitXML, TestDefinition, TestType,
+} from '../PHPUnit'; // Removed CustomWeakMap and BaseTestCollection import
 import { TestCase } from './TestCase';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
+import { Minimatch } from 'minimatch'; // Import Minimatch
+import { extname, join, normalize } from 'node:path'; // Import path functions
+import { TestParser } from '../PHPUnit/TestParser/TestParser'; // Import TestParser
+import { TestDefinitionBuilder } from '../PHPUnit/TestCollection/TestDefinitionBuilder'; // Import TestDefinitionBuilder
 
-export class TestCollection extends BaseTestCollection {
-    private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
 
-    constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML) {
-        super(phpUnitXML);
+// Removed File interface as it's no longer strictly necessary with direct Map usage,
+// but keeping it for clarity if needed elsewhere.
+export interface File<T> {
+    testsuite: string;
+    uri: URI;
+    tests: T[];
+}
+
+
+export class TestCollection {
+    // Use nested standard Maps for storing test items and test cases
+    // Map<workspacePath, Map<testsuiteName, Map<testItemId, TestItem>>>
+    private readonly testItems: Map<string, Map<string, Map<string, TestItem>>>;
+    // Map<testItemId, TestCase> - Using a single map for TestCase instances keyed by TestItem id
+    private readonly testCases: Map<string, TestCase>;
+
+
+    constructor(private ctrl: TestController, private phpUnitXML: PHPUnitXML) { // Removed inheritance
+        this.testItems = new Map();
+        this.testCases = new Map();
+    }
+
+    // Get the Map of testsuites for the current workspace
+    private getTestsuitesForWorkspace(): Map<string, Map<string, TestItem>> {
+        const workspacePath = this.getWorkspace().fsPath;
+        if (!this.testItems.has(workspacePath)) {
+            const testsuitesMap = new Map<string, Map<string, TestItem>>();
+            // Initialize with testsuites from phpunit.xml
+            this.phpUnitXML.getTestSuites().forEach((suite) => testsuitesMap.set(suite.name, new Map()));
+            this.testItems.set(workspacePath, testsuitesMap);
+        }
+        return this.testItems.get(workspacePath)!;
     }
 
     getTestCase(testItem: TestItem): TestCase | undefined {
-        for (const [, testData] of this.getTestData()) {
-            const testCase = testData.get(testItem);
-            if (testCase) {
-                return testCase;
-            }
-        }
-
-        return;
+        return this.testCases.get(testItem.id);
     }
 
-    findTestsByFile(uri: URI): TestItem[] {
-        const tests = [] as TestItem[];
-        for (const [test, testCase] of this.getTestCases(uri)) {
-            if (testCase.type === TestType.class) {
-                tests.push(test);
-            }
+    // Public method to add a file to the collection
+    async add(uri: URI): Promise<this> {
+        // The change method handles parsing and adding/updating if the file is relevant
+        return this.change(uri);
+    }
+
+    // Public method to handle file changes (add or update)
+    async change(uri: URI): Promise<this> {
+        const testsuiteName = this.parseTestsuite(uri);
+        if (!testsuiteName) {
+            // If the file doesn't belong to any testsuite or is excluded, delete it if it exists
+            this.delete(uri);
+            return this;
         }
 
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+        const filesMap = testsuitesMap.get(testsuiteName);
+
+        if (!filesMap) {
+             // This should not happen if getTestsuitesForWorkspace initializes correctly,
+             // but as a safeguard, log a warning and skip.
+             console.warn(`Testsuite "${testsuiteName}" not found for workspace.`);
+             return this;
+        }
+
+        // Parse tests and update internal maps and TestController
+        await this.parseTests(uri, testsuiteName);
+
+        return this;
+    }
+
+    // Public method to delete a file from the collection
+    delete(uri: URI): boolean {
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+        let deleted = false;
+        testsuitesMap.forEach(filesMap => {
+            const itemsToRemove: string[] = [];
+            filesMap.forEach(testItem => {
+                if (testItem.uri?.toString() === uri.toString()) {
+                    // Mark for removal from internal maps
+                    itemsToRemove.push(testItem.id);
+                    deleted = true; // Mark as deleted if at least one item is found
+                }
+            });
+            // Remove from internal maps and TestController
+            itemsToRemove.forEach(itemId => {
+                const testItem = filesMap.get(itemId);
+                if (testItem) {
+                    testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+                    this.testCases.delete(testItem.id);
+                    filesMap.delete(itemId);
+                }
+            });
+        });
+        return deleted;
+    }
+
+
+    findTestsByFile(uri: URI): TestItem[] {
+        const tests: TestItem[] = [];
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+        for (const [, filesMap] of testsuitesMap) {
+            for (const [, testItem] of filesMap) {
+                // Check if the test item's URI matches the file URI and it's a class type (test suite)
+                const testCase = this.testCases.get(testItem.id);
+                if (testItem.uri?.toString() === uri.toString() && testCase?.type === TestType.class) {
+                    tests.push(testItem);
+                }
+            }
+        }
         return tests;
     }
 
     findTestsByPosition(uri: URI, position: Position): TestItem[] {
-        const items = this.inRangeTestItems(uri, position);
+        const items: TestItem[] = [];
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+         for (const [, filesMap] of testsuitesMap) {
+            for (const [, testItem] of filesMap) {
+                const testCase = this.testCases.get(testItem.id);
+                 // Check if the test item is in the given file and position range, and is a method or describe type
+                if (testItem.uri?.toString() === uri.toString() && testItem.range && testCase && [TestType.describe, TestType.method].includes(testCase.type)) {
+                    if (position.line >= testItem.range.start.line && position.line <= testItem.range.end.line) {
+                         items.push(testItem);
+                    }
+                }
+            }
+        }
 
+        // Sort by proximity to the position (closer lines first)
+        items.sort((a, b) => {
+            const posA = a.range!.start.line;
+            const posB = b.range!.start.line;
+            const diffA = Math.abs(posA - position.line);
+            const diffB = Math.abs(posB - position.line);
+            return diffA - diffB; // Sort ascending by difference
+        });
+
+
+        // If items found at position, return the closest one, otherwise return tests by file
         return items.length > 0 ? [items[0]] : this.findTestsByFile(uri);
     }
 
 
-    findTestsByRequest(request?: TestRunRequest) {
+    findTestsByRequest(request?: TestRunRequest): TestItem[] | undefined {
         if (!request || !request.include) {
             return undefined;
         }
 
         const include = request.include;
         const tests: TestItem[] = [];
-        for (const [, testData] of this.getTestData()) {
-            testData.forEach((_, testItem: TestItem) => {
-                include.forEach((test) => {
-                    if (test.id === testItem.id) {
-                        tests.push(testItem);
-                    }
-                });
-            });
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+        for (const [, filesMap] of testsuitesMap) {
+            for (const [, testItem] of filesMap) {
+                // Check if the test item is included in the request
+                if (include.some(item => item.id === testItem.id)) {
+                    tests.push(testItem);
+                }
+            }
         }
 
         return tests.length > 0 ? tests : undefined;
     }
 
-    reset() {
-        for (const [, testData] of this.getTestData()) {
-            for (const [testItem] of testData) {
-                testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
-            }
+    reset(): this {
+        // Clear all test items and test cases for the current workspace
+        const workspacePath = this.getWorkspace().fsPath;
+        if (this.testItems.has(workspacePath)) {
+            const testsuitesMap = this.testItems.get(workspacePath)!;
+            testsuitesMap.forEach(filesMap => {
+                filesMap.forEach(testItem => {
+                    // Remove test item from VS Code Test Explorer
+                    testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+                    // Remove test case
+                    this.testCases.delete(testItem.id);
+                });
+                filesMap.clear();
+            });
+            testsuitesMap.clear();
+            this.testItems.delete(workspacePath);
         }
+        // Re-initialize the testsuites structure for the current workspace
+        this.getTestsuitesForWorkspace();
 
-        return super.reset();
+        return this;
     }
 
-    protected async parseTests(uri: URI, testsuite: string) {
+    // Modified parseTests to populate testItems and testCases maps
+    async parseTests(uri: URI, testsuiteName: string): Promise<TestDefinition[]> {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
-        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl, testParser);
-        await testParser.parseFile(uri.fsPath, testsuite);
+        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl, testParser); // TestHierarchyBuilder populates TestController
 
-        this.removeTestItems(uri);
-        const testData = this.getTestCases(uri);
-        testData.clear();
-        for (const [testItem, testCase] of testHierarchyBuilder.get()) {
-            testData.set(testItem, testCase);
+        // Parse the file and get raw test definitions
+        const testDefinitions = await testParser.parseFile(uri.fsPath, testsuiteName) ?? [];
+
+        // Build the test hierarchy in the TestController and get the mapping of TestItem to TestCase
+        // TestHierarchyBuilder.get() returns Map<TestItem, TestCase>
+        const testItemToTestCaseMap: Map<TestItem, TestCase> = testHierarchyBuilder.get();
+
+        // Update the internal maps
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+        const filesMap = testsuitesMap.get(testsuiteName);
+
+        if (filesMap) {
+             // Clear existing test items for this file before adding new ones
+             this.removeTestItems(uri);
+
+             // Add new test items and test cases
+             testItemToTestCaseMap.forEach((testCase: TestCase, testItem: TestItem) => { // Added explicit types
+                 filesMap.set(testItem.id, testItem); // Store TestItem by id
+                 this.testCases.set(testItem.id, testCase); // Store TestCase by TestItem id
+             });
+        } else {
+             console.warn(`Testsuite "${testsuiteName}" not found when parsing file ${uri.fsPath}.`);
         }
 
-        return testDefinitionBuilder.get();
+
+        return testDefinitions; // Return the raw test definitions
     }
 
-    protected deleteFile(file: File<TestDefinition>) {
-        this.removeTestItems(file.uri);
+    protected createTestParser(): { testParser: TestParser; testDefinitionBuilder: TestDefinitionBuilder } { // Corrected return types
+        // This method remains the same, creating parser and builder instances
+        const testParser = new TestParser(this.phpUnitXML);
+        const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
 
-        return super.deleteFile(file);
+        return { testParser, testDefinitionBuilder };
     }
 
-    private getTestCases(uri: URI) {
-        const testData = this.getTestData();
-        if (!testData.has(uri.toString())) {
-            testData.set(uri.toString(), new CustomWeakMap<TestItem, TestCase>());
-        }
+    // Removed deleteFile as its logic is integrated into the delete method
 
-        return testData.get(uri.toString())!;
-    }
-
-    private getTestData() {
-        const workspace = this.getWorkspace();
-        if (!this.testItems.has(workspace.fsPath)) {
-            this.testItems.set(workspace.fsPath, new Map<string, CustomWeakMap<TestItem, TestCase>>());
-        }
-
-        return this.testItems.get(workspace.fsPath)!;
-    }
-
-    private inRangeTestItems(uri: URI, position: Position) {
-        const items: TestItem[] = [];
-        for (const [test, testCase] of this.getTestCases(uri)) {
-            if (testCase.inRange(test, position)) {
-                items.push(test);
-            }
-        }
-        items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
-
-        return items;
-    }
-
-    private compareFn(testItem: TestItem, position: Position) {
-        return testItem.range!.start.line - position.line;
-    }
-
-    private removeTestItems(uri: URI) {
-        this.findTestsByFile(uri).forEach((testItem) => {
-            if (!testItem.parent) {
-                this.ctrl.items.delete(testItem.id);
-
-                return;
-            }
-
-            let item = testItem;
-            while (item.parent) {
-                const parent = item.parent;
-                const children = parent.children;
-                children.delete(item.id);
-                if (children.size !== 0) {
-                    break;
+    // Helper to remove test items associated with a file URI from TestController and internal maps
+    private removeTestItems(uri: URI): void {
+        const testsuitesMap = this.getTestsuitesForWorkspace();
+        testsuitesMap.forEach(filesMap => {
+            const itemsToRemove: string[] = [];
+            filesMap.forEach(testItem => {
+                if (testItem.uri?.toString() === uri.toString()) {
+                    // Remove from VS Code Test Explorer
+                    testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+                    // Remove test case
+                    this.testCases.delete(testItem.id);
                 }
-
-                item = parent;
-                if (!item.parent) {
-                    this.ctrl.items.delete(item.id);
-                }
-            }
+            });
+            // Remove from internal maps
+            itemsToRemove.forEach(itemId => {
+                filesMap.delete(itemId);
+                this.testCases.delete(itemId);
+            });
         });
+    }
+
+
+    private getWorkspace(): URI {
+        return URI.file(this.phpUnitXML.root());
+    }
+
+    private parseTestsuite(uri: URI): string | undefined {
+        const testSuites = this.phpUnitXML.getTestSuites();
+        const matchingSuite = testSuites.find(item => {
+            return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
+        });
+
+        if (!matchingSuite) {
+            return undefined;
+        }
+
+        // Check for exclusion within the same testsuite name
+        const isExcluded = testSuites.some((item) => {
+            return item.name === matchingSuite.name && item.tag === 'exclude' && this.match(item, uri);
+        });
+
+        if (isExcluded) {
+            return undefined;
+        }
+
+        return matchingSuite.name;
+    }
+
+    private match(testSuite: any, uri: URI): boolean { // Use any for testSuite type due to import issues
+        const workspace = this.getWorkspace();
+        // Corrected typo and parenthesis placement
+        const isFileMatch = testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
+
+        if (isFileMatch) {
+            // Normalize paths for comparison
+            return normalize(join(workspace.fsPath, testSuite.value)) === normalize(uri.fsPath);
+        }
+
+        // Directory match using Minimatch
+        const suffix = testSuite.suffix ?? '.php';
+        const globPattern = URI.file(join(workspace.fsPath, testSuite.value, `/**/*${suffix}`)).toString(true);
+
+        const minimatch = new Minimatch(
+            globPattern,
+            { matchBase: true, nocase: true },
+        );
+
+        return minimatch.match(uri.toString(true));
     }
 }

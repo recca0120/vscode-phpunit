@@ -1,6 +1,6 @@
 import { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
-import { Configuration, IConfiguration } from '../Configuration';
+import { InMemoryConfiguration, IConfiguration } from '../Configuration';
 import { TestResult } from '../ProblemMatcher';
 import { Path, PathReplacer } from './PathReplacer';
 
@@ -10,10 +10,6 @@ const isShellCommand = (command: string) => /sh\s+-c/.test(command);
 
 const keyVariable = (key: string) => '${' + key + '}';
 
-const flatten = <T>(arr: (T | T[])[]): T[] => arr.reduce<T[]>((acc, val) => {
-    return Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val);
-}, []);
-
 export class Builder {
     private readonly pathReplacer: PathReplacer;
     private arguments = '';
@@ -21,7 +17,7 @@ export class Builder {
     private extraArguments: string[] = [];
     private extraEnvironment: {} = {};
 
-    constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
+    constructor(private configuration: IConfiguration = new InMemoryConfiguration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
@@ -57,17 +53,15 @@ export class Builder {
         return this;
     }
 
-    build() {
-        const [runtime, ...args] = this.create()
-            .filter((input: string) => !!input)
-            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
+    build(): { runtime: string; args: string[]; options: SpawnOptions } {
+        const { runtime, args } = this.create();
 
         const options = { ...this.options, env: this.getEnvironment() };
 
         return { runtime, args, options };
     }
 
-    replacePath(result: TestResult) {
+    replacePath(result: TestResult): TestResult {
         if ('locationHint' in result) {
             result.locationHint = this.pathReplacer.toLocal(result.locationHint!);
         }
@@ -92,38 +86,48 @@ export class Builder {
         return `${runtime} ${args.join(' ')}`;
     }
 
-    private create() {
-        let command = this.getCommand();
-        const args = this.getArguments();
+    private create(): { runtime: string; args: string[] } {
+        const command = this.getCommand();
+        const php = this.pathReplacer.toRemote(this.getPhp());
+        const phpArgs = this.getPhpArgs();
+        const phpunit = this.pathReplacer.toRemote(this.getPhpUnit());
+        const phpunitArgs = this.getPhpUnitArgs();
 
-        if (!this.hasVariable(args, command)) {
-            command += isSSH(command) || isShellCommand(command)
-                ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
-                : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}';
+        let runtime: string;
+        let args: string[];
+
+        if (this.hasVariable({ php, phpArgs, phpunit, phpunitArgs }, command)) {
+            // If variables are present, replace them and parse
+            let processedCommand = command.replace(keyVariable('php'), php);
+            processedCommand = processedCommand.replace(keyVariable('phpunit'), phpunit);
+
+            const commandParts = parseArgsStringToArgv(processedCommand);
+            runtime = commandParts[0];
+            args = commandParts.slice(1);
+
+            // Replace phpargs and phpunitargs variables with actual arrays
+            const finalArgs: string[] = [];
+            for (const arg of args) {
+                if (arg === keyVariable('phpargs')) {
+                    finalArgs.push(...phpArgs);
+                } else if (arg === keyVariable('phpunitargs')) {
+                    finalArgs.push(...phpunitArgs);
+                } else {
+                    finalArgs.push(arg);
+                }
+            }
+            args = finalArgs;
+
+        } else {
+            // If no variables, construct the command and args directly
+            runtime = command;
+            args = [php, ...phpArgs, phpunit, ...phpunitArgs];
         }
 
-        command = command.replace(new RegExp('(\'\\$\{(php|phpargs|phpunit|phpunitargs)\}.*?\')', 'g'), (_m, ...matched) => {
-            return matched[0].replace(/^['"]|['"]$/g, '"');
-        });
+        // Filter out any empty strings and decode filter
+        args = args.filter(arg => arg !== '');
 
-        if (!args.phpargs) {
-            command = command.replace(/\s+\$\{phpargs\}/, '');
-        }
-
-        command = Object.entries(args).reduce((command, [key, value]) => {
-            return command.replace(keyVariable(key), value.trim());
-        }, command.trim());
-
-        return this.decodeFilter(parseArgsStringToArgv(command));
-    }
-
-    private getArguments(): { [pIndex: string]: string } {
-        return {
-            'php': this.pathReplacer.toRemote(this.getPhp()),
-            'phpargs': this.getPhpArgs(),
-            'phpunit': this.pathReplacer.toRemote(this.getPhpUnit()),
-            'phpunitargs': this.getPhpUnitArgs(),
-        };
+        return { runtime, args: this.decodeFilter(args) };
     }
 
     private getEnvironment() {
@@ -142,31 +146,30 @@ export class Builder {
         return this.configuration.get('php') as string ?? '';
     }
 
-    private getPhpArgs() {
-        return this.extra.join(' ');
+    private getPhpArgs(): string[] { // Modified to return string[]
+        return this.extra;
     }
 
     private getPhpUnit() {
         return this.configuration.get('phpunit') as string ?? '';
     }
 
-    private getPhpUnitArgs(): string {
-        return this.encodeFilter(
-            this.addParaTestFunctional(this.configuration.getArguments(this.arguments)
-                .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
-                .concat('--colors=never', '--teamcity'),
-            ).concat(...this.extraArguments),
-        ).join(' ');
+    private getPhpUnitArgs(): string[] { // Modified to return string[]
+        const args = this.configuration.getArguments(this.arguments)
+            .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
+            .concat('--colors=never', '--teamcity');
+
+        return this.addParaTestFunctional(args).concat(...this.extraArguments);
     }
 
-    private addParaTestFunctional(args: string[]) {
-        if (this.isParaTest() && /--filter/.test(args.join(' '))) {
+    private addParaTestFunctional(args: string[]): string[] {
+        if (this.isParaTest() && args.some(arg => /^--filter/.test(arg))) {
             return args.concat('--functional');
         }
         return args;
     }
 
-    private isParaTest() {
+    private isParaTest(): boolean {
         return (/paratest/.test(this.getCommand()) || /paratest/.test(this.getPhpUnit()));
     }
 
@@ -174,7 +177,7 @@ export class Builder {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
-    private encodeFilter(args: string[]) {
+    private encodeFilter(args: string[]): string[] {
         return args.map((input) => {
             const pattern = new RegExp('^(--filter)=(.*)');
 
@@ -186,7 +189,7 @@ export class Builder {
         });
     }
 
-    private decodeFilter(args: string[]) {
+    private decodeFilter(args: string[]): string[] {
         return args.map((input) => {
             const pattern = new RegExp('(--filter)=["\'](.+)?["\']');
 
@@ -199,11 +202,11 @@ export class Builder {
         });
     }
 
-    private hasVariable(variables: { [p: string]: string }, command: string) {
+    private hasVariable(variables: { [p: string]: string | string[] }, command: string): boolean { // Modified type to include string[]
         return new RegExp(this.hasVariablePattern(variables)).test(command);
     }
 
-    private hasVariablePattern(variables: { [p: string]: string }) {
+    private hasVariablePattern(variables: { [p: string]: string | string[] }): string { // Modified type to include string[]
         return Object.keys(variables)
             .map((key) => keyVariable(key))
             .join('|')

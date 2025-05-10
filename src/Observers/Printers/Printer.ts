@@ -109,7 +109,7 @@ export abstract class Printer {
         return result.text;
     }
 
-    end(): string | undefined {
+    async end(): Promise<string | undefined> {
         return undefined;
     }
 

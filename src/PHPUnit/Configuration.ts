@@ -43,7 +43,7 @@ export abstract class BaseConfiguration implements IConfiguration {
     }
 }
 
-export class Configuration extends BaseConfiguration {
+export class InMemoryConfiguration extends BaseConfiguration {
     private items = new Map<string, unknown>();
 
     constructor(items: Map<string, unknown> | ConfigurationItem | undefined = undefined) {

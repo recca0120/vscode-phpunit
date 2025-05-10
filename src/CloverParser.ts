@@ -26,34 +26,55 @@ export class CloverParser
 
             if (clover.coverage?.project?.file) {
                 for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.file)) {
-                    ret.push(new PHPUnitFileCoverage(cloverFile));
+                    const uri = vscode.Uri.file(cloverFile['@_name']);
+                    const coveredStatements = parseInt(cloverFile.metrics['@_coveredstatements'], 10);
+                    const totalStatements = parseInt(cloverFile.metrics['@_statements'], 10);
+                    const lineCoverageData = CloverParser.ensureArray(cloverFile.line);
+                    ret.push(new PHPUnitFileCoverage(uri, coveredStatements, totalStatements, lineCoverageData));
                 }
             }
             if (clover.coverage?.project?.package?.file) {
                 for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.package.file)) {
-                    ret.push(new PHPUnitFileCoverage(cloverFile));
+                     const uri = vscode.Uri.file(cloverFile['@_name']);
+                    const coveredStatements = parseInt(cloverFile.metrics['@_coveredstatements'], 10);
+                    const totalStatements = parseInt(cloverFile.metrics['@_statements'], 10);
+                    const lineCoverageData = CloverParser.ensureArray(cloverFile.line);
+                    ret.push(new PHPUnitFileCoverage(uri, coveredStatements, totalStatements, lineCoverageData));
                 }
             }
 
             return ret;
-        } catch (ex) {
+        } catch (ex: any) {
+            console.error('Error parsing Clover file:', ex.message);
+            // Depending on desired behavior, could re-throw or return empty
             return [];
         }
     }
 
 }
 
+interface CloverLineCoverage {
+    '@_num': string;
+    '@_count': string;
+}
+
 export class PHPUnitFileCoverage extends vscode.FileCoverage {
-    constructor(public readonly cloverFile: any) {
-        super(vscode.Uri.file(cloverFile['@_name']), new vscode.TestCoverageCount(0, 0));
-        this.statementCoverage.covered = parseInt(cloverFile.metrics['@_coveredstatements'], 10);
-        this.statementCoverage.total = parseInt(cloverFile.metrics['@_statements'], 10);
+    public readonly detailedCoverage: vscode.FileCoverageDetail[];
+
+    constructor(
+        uri: vscode.Uri,
+        coveredStatements: number,
+        totalStatements: number,
+        lineCoverageData: CloverLineCoverage[]
+    ) {
+        super(uri, new vscode.TestCoverageCount(coveredStatements, totalStatements));
+        this.detailedCoverage = this.generateDetailedCoverage(lineCoverageData);
     }
 
-    public generateDetailedCoverage(): vscode.FileCoverageDetail[] {
-        const ret = [];
-        for (const l of CloverParser.ensureArray(this.cloverFile.line)) {
-            ret.push(new vscode.StatementCoverage(parseInt(l['@_count'], 10), new vscode.Position(parseInt(l['@_num'], 10)-1, 0)));
+    private generateDetailedCoverage(lineCoverageData: CloverLineCoverage[]): vscode.FileCoverageDetail[] {
+        const ret: vscode.FileCoverageDetail[] = [];
+        for (const l of lineCoverageData) {
+            ret.push(new vscode.StatementCoverage(parseInt(l['@_count'], 10), new vscode.Position(parseInt(l['@_num'], 10) - 1, 0)));
         }
         return ret;
     }

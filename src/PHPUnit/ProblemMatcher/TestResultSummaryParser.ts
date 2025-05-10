@@ -29,32 +29,43 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
         return !!text.match(this.pattern);
     }
 
-    public parse(text: string) {
+    public parse(text: string): TestResultSummary {
         const pattern = new RegExp(
             `((?<name>[\\w\\s]+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
             'ig',
         );
         const event = TeamcityEvent.testResultSummary;
+        const result: TestResultSummary = { event, text }; // Initialize result object
 
-        return [...text.matchAll(pattern)].reduce(
-            (result: any, match) => {
-                const matched = match.groups!;
-                const [name, count] = matched.name
-                    ? [matched.name, matched.count]
-                    : [matched.name2, matched.count2];
-                result[this.normalize(name)] = parseInt(count, 10);
+        for (const match of text.matchAll(pattern)) {
+            const matched = match.groups!;
+            let name: string;
+            let count: number;
 
-                return result;
-            },
-            { event, text } as TestResultSummary,
-        );
+            if (matched.name) { // Matched "Name: Count"
+                name = matched.name;
+                count = parseInt(matched.count, 10);
+            } else { // Matched "Count Name"
+                name = matched.name2;
+                count = parseInt(matched.count2, 10);
+            }
+
+            // Assign to result using the normalized name
+            (result as any)[this.normalize(name)] = count;
+        }
+
+        return result;
     }
 
-    private normalize(name: string) {
+    private normalize(name: string): string {
         name = camelCase(name.trim());
 
-        return name.endsWith('ed') || ['incomplete', 'risky'].includes(name)
-            ? name
-            : `${name}${name.match(/s$/) ? '' : 's'}`;
+        // Handle pluralization and specific names
+        if (name.endsWith('ed') || ['incomplete', 'risky'].includes(name)) {
+            return name;
+        }
+
+        // Add 's' if it's not already plural
+        return name.endsWith('s') ? name : `${name}s`;
     }
 }

@@ -38,28 +38,36 @@ export class ProblemMatcher {
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
         const id = this.generateId(testResult);
-        let prevData = this.results.get(id) as (TestFailed | TestIgnored);
+        const existingResult = this.results.get(id) as TestFailed | TestIgnored | undefined;
 
-        if (!prevData) {
-            const file = testResult.details[0].file;
-
-            return { ...testResult, id: [file, testResult.name].join('::'), file, duration: 0 };
+        if (!existingResult) {
+            // If no existing result, this is the first time we see this failed/ignored test
+            // Create a new result object with a more specific ID if file is available
+            const file = testResult.details?.[0]?.file;
+            const newId = file ? [file, testResult.name].join('::') : id;
+            const result = { ...testResult, id: newId, file, duration: testResult.duration ?? 0 };
+            this.results.set(id, result); // Store the new result
+            return result; // Return the new result
         }
 
-        if (prevData.event === TeamcityEvent.testStarted) {
-            this.results.set(id, { ...(prevData ?? {}), ...testResult });
-
-            return;
+        if (existingResult.event === TeamcityEvent.testStarted) {
+            // If the existing result was just 'testStarted', update it with the fault details
+            const updatedResult = { ...existingResult, ...testResult };
+            this.results.set(id, updatedResult);
+            return undefined; // Don't return a result yet, wait for testFinished
         }
 
+        // If the existing result is already a fault, append message and details
         if (testResult.message) {
-            prevData.message += '\n\n' + testResult.message;
+            existingResult.message = (existingResult.message ? existingResult.message + '\n\n' : '') + testResult.message;
         }
-        prevData.details.push(...testResult.details);
+        if (testResult.details) {
+            existingResult.details = [...(existingResult.details ?? []), ...testResult.details];
+        }
+        // Update the map with the modified existing result (though it's already modified by reference)
+        this.results.set(id, existingResult);
 
-        this.results.set(id, prevData);
-
-        return undefined;
+        return undefined; // Don't return a result yet, wait for testFinished
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {

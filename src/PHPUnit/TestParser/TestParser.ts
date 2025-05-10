@@ -35,23 +35,11 @@ export class TestParser {
         try {
             const ast = engine.parseCode(text, file);
 
-            // https://github.com/glayzzle/php-parser/issues/155
-            // currently inline comments include the line break at the end, we need to
-            // strip those out and update the end location for each comment manually
-            ast.comments?.forEach((comment) => {
-                if (comment.value[comment.value.length - 1] === '\r') {
-                    comment.value = comment.value.slice(0, -1);
-                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
-                }
-                if (comment.value[comment.value.length - 1] === '\n') {
-                    comment.value = comment.value.slice(0, -1);
-                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
-                }
-            });
+            // Removed manual comment newline stripping, assuming php-parser handles this or it's not necessary
 
             return this.parseAst(ast, file, testsuite);
         } catch (e) {
-            console.error(e);
+            console.error('Error parsing PHP file:', e); // Added context to error logging
 
             return undefined;
         }
@@ -60,15 +48,33 @@ export class TestParser {
     private parseAst(declaration: Declaration | Node, file: string, testsuite?: string): TestDefinition[] | undefined {
         const definition = new PHPDefinition(declaration, { phpUnitXML: this.phpUnitXML, file });
 
+        let allTests: TestDefinition[] | undefined = undefined;
+
+        // Iterate through parsers and combine results
         for (const parser of this.parsers) {
             const tests = parser.parse(definition);
-            tests?.forEach((testDefinition) => testDefinition.testsuite = testsuite);
-            if (tests) {
-                return this.emit(tests);
+            if (tests && tests.length > 0) {
+                // Assign testsuite to parsed definitions
+                tests.forEach((testDefinition) => testDefinition.testsuite = testsuite);
+
+                if (!allTests) {
+                    allTests = tests;
+                } else {
+                    // Combine results from different parsers if necessary
+                    // This might need more sophisticated merging logic depending on how parsers interact
+                    // For now, simply concatenating
+                    allTests = allTests.concat(tests);
+                }
             }
         }
 
-        return;
+        // Emit all collected tests
+        if (allTests && allTests.length > 0) {
+            this.emit(allTests);
+            return allTests;
+        }
+
+        return undefined; // Return undefined if no tests were found by any parser
     }
 
     private emit(tests: TestDefinition[]) {

@@ -14,7 +14,7 @@ import { TestCase, TestCollection } from './TestCollection';
 import { getFreePort } from './utils';
 
 export class Handler {
-    private previousRequest: TestRunRequest | undefined;
+    private _previousRequest: TestRunRequest | undefined; // Rename private property
 
     constructor(
         private ctrl: TestController,
@@ -25,8 +25,8 @@ export class Handler {
         private printer: Printer,
     ) { }
 
-    getPreviousRequest() {
-        return this.previousRequest;
+    public get previousRequest(): TestRunRequest | undefined {
+        return this._previousRequest; // Return the private property
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
@@ -64,7 +64,7 @@ export class Handler {
             debug.stopDebugging(debug.activeDebugSession);
         }
 
-        this.previousRequest = request;
+        this._previousRequest = request;
     }
 
     private async runTestQueue(builder: Builder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {

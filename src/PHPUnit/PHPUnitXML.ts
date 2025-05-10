@@ -64,23 +64,37 @@ export class Pattern {
         this.items.push(Pattern.normalizePath(...args));
     }
 
-    toGlobPattern() {
-        const arrayUnique = (items: (string | undefined)[]) => Array.from(new Set(items));
-        const dirs = arrayUnique(this.items.map((item) => {
-            return /^\*/.test(item) ? undefined : item.substring(0, item.indexOf('/'));
-        }));
+    toGlobPattern(): { uri: URI; pattern: string } {
+        // Extract base directories from items that don't start with '*'
+        const baseDirs = Array.from(new Set(this.items
+            .filter(item => !item.startsWith('*'))
+            .map(item => {
+                const firstSlash = item.indexOf('/');
+                return firstSlash === -1 ? '' : item.substring(0, firstSlash);
+            })
+        ));
 
-        const legalDirs = dirs.filter(value => !!value);
-        const isSingle = dirs.length === 1 && legalDirs.length === 1;
-        if (!isSingle) {
-            return { uri: URI.file(this.root), pattern: `{${this.items}}` };
+        // If there's a single, non-empty base directory, use it as the base for RelativePattern
+        if (baseDirs.length === 1 && baseDirs[0] !== '') {
+            const baseDir = baseDirs[0];
+            const itemsRelativeToBase = this.items.map(item => {
+                // Remove the base directory prefix if it exists
+                if (item.startsWith(baseDir + '/')) {
+                    return item.substring(baseDir.length + 1);
+                }
+                // If item doesn't have the base prefix but is not a glob, it's likely an issue,
+                // but for now, keep it as is or handle as appropriate for the expected input.
+                // Assuming items either start with baseDir/ or are globs like **/*.php
+                return item;
+            });
+             // Filter out empty strings that might result from items exactly matching the baseDir
+            const pattern = `{${itemsRelativeToBase.filter(item => item !== '').join(',')}}`;
+            return { uri: URI.file(join(this.root, baseDir)), pattern };
+        } else {
+            // Otherwise, use the root as the base and the full items as the pattern
+            const pattern = `{${this.items.join(',')}}`;
+            return { uri: URI.file(this.root), pattern };
         }
-
-        const dir = legalDirs[0];
-        const items = this.items.map((item) => item.replace(new RegExp('^' + dir + '[\\/]?'), ''));
-        const pattern = `{${items}}`;
-
-        return { uri: URI.file(join(this.root, dir!)), pattern };
     }
 }
 

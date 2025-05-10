@@ -38,28 +38,39 @@ export class PrettyPrinter extends Printer {
         ].join('');
     }
 
-    private formatDetails(result: TestFailed) {
-        return result.details
-            .map(({ file, line }) => Printer.fileFormat(file, line))
-            .reduce((msg, file) => (msg + this.formatMessage(this.decorated.default, file)), '');
+    private formatDetails(result: TestFailed): string {
+        const formattedDetails = result.details
+            .map(({ file, line }) => Printer.fileFormat(file, line));
+
+        let message = '';
+        for (const detail of formattedDetails) {
+            message += this.formatMessage(this.decorated.default, detail);
+        }
+        return message;
     }
 
-    private formatDiff(result: TestFailed) {
+    private formatDiff(result: TestFailed): string | undefined {
         if (!(result.expected && result.actual)) {
-            return;
+            return undefined;
         }
 
-        return [
-            this.formatMessage(this.decorated.diff, `${result.expected}`, '---·Expected '),
-            this.formatMessage(this.decorated.diff, `${result.actual}`, '+++·Actual '),
-        ].join('');
+        const expected = this.formatMessage(this.decorated.diff, `${result.expected}`, '---·Expected ');
+        const actual = this.formatMessage(this.decorated.diff, `${result.actual}`, '+++·Actual ');
+
+        return expected + actual;
     }
 
-    private formatMessage(decorated: string, message: string = '', prefix = '') {
+    private formatMessage(decorated: string, message: string = '', prefix = ''): string {
         const indent = '     ';
+        const lines = message.split(/\r\n|\n/g);
+        let formattedMessage = '';
 
-        return message.split(/\r\n|\n/g).reduce((msg, line, index) => {
-            return (msg + `${indent}${decorated} ${index === 0 ? prefix : ''}${line}${EOL}`);
-        }, '');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const currentPrefix = i === 0 ? prefix : '';
+            formattedMessage += `${indent}${decorated} ${currentPrefix}${line}${EOL}`;
+        }
+
+        return formattedMessage;
     }
 }

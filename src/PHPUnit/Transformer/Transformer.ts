@@ -6,28 +6,36 @@ export abstract class Transformer {
         return input.replace(/([\[\]()*+$!\\])/g, '\\$1').replace(/@/g, '[\\W]');
     }
 
-    generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'> & {
+    generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations' | 'id'> & {
         label?: string
     }): string {
-        const { type, classFQN, className, methodName, annotations, label } = testDefinition;
+        const { type, classFQN, className, methodName, annotations, label, id } = testDefinition;
 
-        if (annotations?.testdox && annotations.testdox.length > 0) {
-            return annotations.testdox[annotations.testdox.length - 1];
-        }
-
+        // Prioritize explicit label if provided
         if (label) {
             return label;
         }
 
-        if (type === TestType.namespace) {
-            return classFQN!.replace(/^P\\/g, '');
+        // Prioritize testdox annotation if available
+        if (annotations?.testdox && annotations.testdox.length > 0) {
+            return annotations.testdox[annotations.testdox.length - 1];
         }
 
-        if (type === TestType.class) {
-            return className ?? classFQN!.replace(/^P\\/g, '');
+        // Generate label based on test type
+        switch (type) {
+            case TestType.namespace:
+                // Remove Pest namespace prefix if present
+                return classFQN?.replace(/^P\\/g, '') ?? '';
+            case TestType.class:
+                // Use className if available, otherwise generate from classFQN
+                return className ?? classFQN?.replace(/^P\\/g, '') ?? '';
+            case TestType.method:
+                // Remove backticks from method name (Pest style)
+                return methodName?.replace(/`/g, '') ?? '';
+            default:
+                // Fallback for other types or unexpected cases
+                return testDefinition.id ?? 'Unknown Test'; // Use id as a fallback
         }
-
-        return methodName!.replace(/`/g, '');
     }
 
     abstract uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string ;
@@ -36,25 +44,25 @@ export abstract class Transformer {
 
     protected abstract normalizeMethodName(methodName: string): string
 
-    protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>) {
-        let { methodName, annotations } = testDefinition;
-        let dataset = '';
-        const matched = methodName!.match(/(?<methodName>.*)(?<dataset>\swith\sdata\sset\s[#"].+$)/);
-        if (matched && matched.groups) {
-            methodName = matched.groups['methodName'];
-            dataset = matched.groups['dataset'];
-        }
+    protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>): string {
+        const { methodName, annotations } = testDefinition;
 
+        // Prioritize testdox annotation for method name
         if (annotations?.testdox && annotations.testdox.length > 0) {
-            methodName = annotations.testdox[annotations.testdox.length - 1];
-        } else {
-            methodName = this.normalizeMethodName(methodName!);
+            return annotations.testdox[annotations.testdox.length - 1];
         }
 
-        return methodName + dataset;
+        // If no testdox, use the normalized method name
+        const baseMethodName = this.normalizeMethodName(methodName ?? ''); // Use empty string if methodName is undefined
+
+        // Extract dataset part if present
+        const datasetMatch = methodName?.match(/(?<dataset>\swith\sdata\sset\s[#"].+$)/);
+        const dataset = datasetMatch?.groups?.['dataset'] ?? '';
+
+        return baseMethodName + dataset;
     }
 
-    protected removeDataset(id: string) {
+    protected removeDataset(id: string): string {
         return id.replace(/\swith\sdata\sset\s[#"].+$/, '');
     }
 }

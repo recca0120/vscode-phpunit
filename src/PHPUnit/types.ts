@@ -33,12 +33,3 @@ export type TestDefinition = {
     annotations?: Annotations;
     testsuite?: string;
 };
-
-export interface Teamcity {
-    [key: string]: string | number;
-
-    name: string;
-    locationHint: string;
-    message: string;
-    details: string;
-}

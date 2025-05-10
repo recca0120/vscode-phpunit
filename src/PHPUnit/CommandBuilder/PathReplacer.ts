@@ -77,9 +77,10 @@ export class PathReplacer {
         return path.replace(/phpvfscomposer:\/\//ig, '');
     }
 
-    private replacePaths(path: string, fn: (currentPath: string, remotePath: string, localPath: string) => string) {
-        return Array.from(this.pathLookup.entries()).reduce((path, [remotePath, localPath]) => {
-            return fn(path, remotePath, localPath);
+    // Renamed callback parameters to be clearer (key from map, value from map)
+    private replacePaths(path: string, fn: (currentPath: string, key: string, value: string) => string) {
+        return Array.from(this.pathLookup.entries()).reduce((currentPath, [key, value]) => {
+            return fn(currentPath, key, value);
         }, path);
     }
 
