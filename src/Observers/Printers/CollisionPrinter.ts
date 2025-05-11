@@ -5,7 +5,6 @@ import { Printer } from './Printer';
 export class CollisionPrinter extends Printer {
     private errors: TestFailed[] = [];
 
-
     start() {
         super.start();
         this.errors = [];
@@ -31,7 +30,10 @@ export class CollisionPrinter extends Printer {
     }
 
     end() {
-        return this.errors.map((result) => this.formatError(result)).join(EOL);
+        const error = this.errors.map((result) => this.formatError(result)).join(EOL);
+        this.errors = [];
+
+        return error;
     }
 
     private formatError(result: TestFailed) {
