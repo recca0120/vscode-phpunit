@@ -381,8 +381,9 @@ describe('Extension Test', () => {
         });
     });
 
-    describe('XDebug', () => {
+    describe('Xdebug', () => {
         const phpBinary = 'php';
+        // const phpBinary = '/opt/homebrew/Cellar/php@8.1/8.1.32_1/bin/php';
         const root = phpUnitProject('');
 
         beforeEach(() => {

@@ -1,27 +1,22 @@
-import * as vscode from 'vscode';
-import * as fs from 'node:fs/promises';
 import { XMLParser } from 'fast-xml-parser';
+import { readFile } from 'node:fs/promises';
+import * as vscode from 'vscode';
 
 
-export class CloverParser
-{
+export class CloverParser {
     public static ensureArray(obj: any) {
         return Array.isArray(obj) ? obj : [obj];
     }
 
-    static async parseClover(file:string): Promise<PHPUnitFileCoverage[]> {
-
+    static async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {
         try {
-            const xml = await fs.readFile(file);
-
             const parser = new XMLParser({
                 ignoreAttributes: false, // Don't ignore attributes
                 attributeNamePrefix: '@_', // Prefix for attributes
                 trimValues: true,
             });
 
-            const clover = parser.parse(xml);
-
+            const clover = parser.parse(await readFile(file));
             const ret = [];
 
             if (clover.coverage?.project?.file) {
@@ -40,7 +35,6 @@ export class CloverParser
             return [];
         }
     }
-
 }
 
 export class PHPUnitFileCoverage extends vscode.FileCoverage {
@@ -53,8 +47,14 @@ export class PHPUnitFileCoverage extends vscode.FileCoverage {
     public generateDetailedCoverage(): vscode.FileCoverageDetail[] {
         const ret = [];
         for (const l of CloverParser.ensureArray(this.cloverFile.line)) {
-            ret.push(new vscode.StatementCoverage(parseInt(l['@_count'], 10), new vscode.Position(parseInt(l['@_num'], 10)-1, 0)));
+            ret.push(
+                new vscode.StatementCoverage(
+                    parseInt(l['@_count'], 10),
+                    new vscode.Position(parseInt(l['@_num'], 10) - 1, 0),
+                ),
+            );
         }
+
         return ret;
     }
 }

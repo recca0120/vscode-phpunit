@@ -34,6 +34,10 @@ export class TestRunnerProcess {
         });
     }
 
+    getCloverFile() {
+        return this.builder.getXdebug()?.getCloverFile();
+    }
+
     abort() {
         this.abortController.abort();
 

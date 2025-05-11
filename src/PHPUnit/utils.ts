@@ -228,3 +228,9 @@ export const camelCase = (str: string) => str.toLowerCase().replace(/([-_ \s]+[a
 export const titleCase = (str: string) => capitalize(str.replace(/([A-Z]+|[_\-\s]+([A-Z]+|[a-z]))/g, (_: string, matched: string) => {
     return ' ' + matched.trim().replace(/[_\-]/, '').toUpperCase();
 }).trim());
+
+export const cloneInstance = <T extends object>(obj: T): T => {
+    const clone = Object.create(Object.getPrototypeOf(obj));
+
+    return Object.assign(clone, obj);
+};

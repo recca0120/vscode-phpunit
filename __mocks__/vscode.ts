@@ -125,6 +125,7 @@ const createTestRun = jest
             passed: jest.fn(),
             appendOutput: jest.fn(),
             end: jest.fn(),
+            addCoverage: jest.fn(),
         };
     });
 
