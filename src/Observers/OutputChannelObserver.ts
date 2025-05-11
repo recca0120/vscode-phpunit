@@ -1,8 +1,8 @@
 import { OutputChannel, TestRunRequest } from 'vscode';
 import {
-    Builder, IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored,
-    TestProcesses, TestResult, TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished,
-    TestSuiteStarted, TestVersion,
+    Builder, IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
+    TestResult, TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted,
+    TestVersion,
 } from '../PHPUnit';
 import { Printer } from './Printers';
 
@@ -91,16 +91,18 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.appendLine(this.printer.testSuiteFinished(result));
     }
 
-    testDuration(result: TestDuration) {
+    testResultSummary(result: TestResultSummary) {
         this.appendLine(this.printer.end());
-        this.appendLine(this.printer.timeAndMemory(result));
+        this.append(this.printer.testResultSummary(result));
     }
 
-    testResultSummary(result: TestResultSummary) {
-        this.appendLine(this.printer.testResultSummary(result));
+    testDuration(result: TestDuration) {
+        this.appendLine(this.printer.end());
+        this.append(this.printer.timeAndMemory(result));
     }
 
     close() {
+        this.appendLine(this.printer.end());
         this.printedOutput();
         this.printer.close();
     }
@@ -110,6 +112,12 @@ export class OutputChannelObserver implements TestRunnerObserver {
         if (output) {
             this.appendLine(output);
             this.outputChannel.show(false);
+        }
+    }
+
+    private append(text: string | undefined) {
+        if (text !== undefined) {
+            this.outputChannel.append(text);
         }
     }
 

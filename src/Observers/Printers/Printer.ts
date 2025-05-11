@@ -100,13 +100,13 @@ export abstract class Printer {
     timeAndMemory(result: TestDuration) {
         this.setCurrent(undefined);
 
-        return result.text;
+        return result.text.trim();
     }
 
     testResultSummary(result: TestResultSummary) {
         this.setCurrent(undefined);
 
-        return result.text;
+        return result.text.trim();
     }
 
     end(): string | undefined {

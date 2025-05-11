@@ -211,7 +211,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+        expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(/Tests: \d+, Assertions: \d+/),
         );
     });
@@ -225,7 +225,7 @@ describe('OutputChannelObserver', () => {
         await run(testFile);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+        expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/),
         );
     });
