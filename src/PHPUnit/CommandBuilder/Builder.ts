@@ -2,35 +2,26 @@ import { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
 import { Configuration, IConfiguration } from '../Configuration';
 import { TestResult } from '../ProblemMatcher';
+import { cloneInstance } from '../utils';
 import { Path, PathReplacer } from './PathReplacer';
+import { Xdebug } from './Xdebug';
 
 
 const isSSH = (command: string) => /^ssh/.test(command);
 const isShellCommand = (command: string) => /sh\s+-c/.test(command);
-
 const keyVariable = (key: string) => '${' + key + '}';
-
-const flatten = <T>(arr: (T | T[])[]): T[] => arr.reduce<T[]>((acc, val) => {
-    return Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val);
-}, []);
 
 export class Builder {
     private readonly pathReplacer: PathReplacer;
     private arguments = '';
-    private extra: string[] = [];
-    private extraArguments: string[] = [];
-    private extraEnvironment: {} = {};
+    private xdebug: Xdebug | undefined;
 
     constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
     clone(): Builder {
-        return new Builder(this.configuration, this.options)
-            .setArguments(this.arguments)
-            .setExtra(this.extra)
-            .setExtraArguments(this.extraArguments)
-            .setExtraEnvironment(this.extraEnvironment);
+        return cloneInstance(this);
     }
 
     setArguments(args: string) {
@@ -39,22 +30,14 @@ export class Builder {
         return this;
     }
 
-    setExtra(extra: string[]) {
-        this.extra = extra;
+    setXdebug(xdebug?: Xdebug) {
+        this.xdebug = xdebug;
 
         return this;
     }
 
-    setExtraArguments(extraArguments: string[]) {
-        this.extraArguments = extraArguments;
-
-        return this;
-    }
-
-    setExtraEnvironment(extraEnvironment: { [key: string]: string }) {
-        this.extraEnvironment = extraEnvironment;
-
-        return this;
+    getXdebug() {
+        return this.xdebug;
     }
 
     build() {
@@ -62,9 +45,7 @@ export class Builder {
             .filter((input: string) => !!input)
             .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
 
-        const options = { ...this.options, env: this.getEnvironment() };
-
-        return { runtime, args, options };
+        return { runtime, args, options: { ...this.options, env: this.getEnvironment() } };
     }
 
     replacePath(result: TestResult) {
@@ -117,7 +98,7 @@ export class Builder {
         return this.decodeFilter(parseArgsStringToArgv(command));
     }
 
-    private getArguments(): { [pIndex: string]: string } {
+    private getArguments() {
         return {
             'php': this.pathReplacer.toRemote(this.getPhp()),
             'phpargs': this.getPhpArgs(),
@@ -129,7 +110,7 @@ export class Builder {
     private getEnvironment() {
         return {
             ...process.env,
-            ...this.extraEnvironment,
+            ...this.xdebug?.getEnvironment(),
             ...(this.configuration.get('environment') ?? {}),
         };
     }
@@ -143,20 +124,22 @@ export class Builder {
     }
 
     private getPhpArgs() {
-        return this.extra.join(' ');
+        return this.xdebug?.getPhpArgs().join(' ') ?? '';
     }
 
     private getPhpUnit() {
         return this.configuration.get('phpunit') as string ?? '';
     }
 
-    private getPhpUnitArgs(): string {
-        return this.encodeFilter(
-            this.addParaTestFunctional(this.configuration.getArguments(this.arguments)
-                .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
-                .concat('--colors=never', '--teamcity'),
-            ).concat(...this.extraArguments),
-        ).join(' ');
+    private getPhpUnitArgs() {
+        const args = this.configuration.getArguments(this.arguments)
+            .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
+            .concat('--colors=never', '--teamcity');
+
+        return this
+            .encodeFilter(this.addParaTestFunctional(args))
+            .concat(...(this.xdebug?.getPhpUnitArgs() ?? []))
+            .join(' ');
     }
 
     private addParaTestFunctional(args: string[]) {

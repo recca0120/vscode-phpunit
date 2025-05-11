@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as semver from 'semver';
 import {
-    CancellationTokenSource, commands, TestController, TestItem, TestItemCollection, tests, TextDocument, Uri, window,
-    workspace, WorkspaceFolder,
+    CancellationTokenSource, commands, debug, TestController, TestItem, TestItemCollection, TestRunProfileKind, tests,
+    TextDocument, Uri, window, workspace, WorkspaceFolder,
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { activate } from './extension';
@@ -61,8 +61,11 @@ const getTestController = () => {
     return (tests.createTestController as jest.Mock).mock.results[0].value;
 };
 
-const getRunProfile = (ctrl: TestController) => {
-    return (ctrl.createRunProfile as jest.Mock).mock.results[0].value;
+const getRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) => {
+    const profile = (ctrl.createRunProfile as jest.Mock).mock.results[0].value;
+    profile.kind = kind;
+
+    return profile;
 };
 
 const findTest = (items: TestItemCollection, id: string): TestItem | undefined => {
@@ -373,6 +376,87 @@ describe('Extension Test', () => {
                     '--colors=never',
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
+            });
+
+        });
+    });
+
+    describe('Xdebug', () => {
+        const phpBinary = 'php';
+        // const phpBinary = '/opt/homebrew/Cellar/php@8.1/8.1.32_1/bin/php';
+        const root = phpUnitProject('');
+
+        beforeEach(() => {
+            setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
+            setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
+        });
+
+        beforeEach(async () => {
+            context.subscriptions.push.mockReset();
+            cwd = normalPath(root);
+            const configuration = workspace.getConfiguration('phpunit');
+            await configuration.update('php', phpBinary);
+            await configuration.update('phpunit', 'vendor/bin/phpunit');
+            await configuration.update('args', []);
+        });
+
+        afterEach(() => jest.clearAllMocks());
+
+        it('Debug', async () => {
+            await activate(context);
+            const ctrl = getTestController();
+            const runProfile = getRunProfile(ctrl, TestRunProfileKind.Debug);
+            const request = { include: undefined, exclude: [], profile: runProfile };
+
+            await runProfile.runHandler(request, new CancellationTokenSource().token);
+            expect(spawn).toHaveBeenCalledWith(phpBinary, expect.arrayContaining([
+                '-dxdebug.mode=debug',
+                '-dxdebug.start_with_request=1',
+                expect.stringMatching(/-dxdebug\.client_port=\d+/),
+                'vendor/bin/phpunit',
+                '--colors=never',
+                '--teamcity',
+            ]), expect.objectContaining({
+                env: expect.objectContaining({
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    'XDEBUG_MODE': 'debug',
+                }),
+            }));
+
+            expect(debug.startDebugging).toHaveBeenCalledWith(expect.anything(), {
+                type: 'php', request: 'launch', name: 'PHPUnit', port: expect.any(Number),
+            });
+            expect(debug.stopDebugging).toHaveBeenCalledWith({ type: 'php' });
+        });
+
+        it('Coverage', async () => {
+            await activate(context);
+            const ctrl = getTestController();
+            const runProfile = getRunProfile(ctrl, TestRunProfileKind.Coverage);
+
+            const request = {
+                include: [
+                    findTest(ctrl.items, 'Assertions (Tests\\Assertions)'),
+                    findTest(ctrl.items, 'Calculator (Tests\\Calculator)'),
+                ], exclude: [], profile: runProfile,
+            };
+
+            await runProfile.runHandler(request, new CancellationTokenSource().token);
+            ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
+                expect(spawn).toHaveBeenCalledWith(phpBinary, [
+                    '-dxdebug.mode=coverage',
+                    'vendor/bin/phpunit',
+                    expect.stringMatching(file),
+                    '--colors=never',
+                    '--teamcity',
+                    '--coverage-clover',
+                    expect.stringMatching(`phpunit-${i}.xml`),
+                ], expect.objectContaining({
+                    env: expect.objectContaining({
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        'XDEBUG_MODE': 'coverage',
+                    }),
+                }));
             });
         });
     });

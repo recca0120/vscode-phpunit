@@ -9,8 +9,10 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    update(builder: Builder) {
-        return builder.clone().setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
+    update(builder: Builder, index: number) {
+        return builder.clone()
+            .setXdebug(builder.getXdebug()?.clone().setIndex(index))
+            .setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
     }
 
     inRange = (test: TestItem, position: Position) => {
