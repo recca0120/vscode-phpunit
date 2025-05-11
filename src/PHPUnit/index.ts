@@ -1,5 +1,6 @@
 export * from './Configuration';
 export * from './CommandBuilder';
+export * from './Element';
 export * from './TestRunnerObserver';
 export * from './TestRunner';
 export * from './TestParser';

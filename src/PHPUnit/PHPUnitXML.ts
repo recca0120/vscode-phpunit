@@ -1,48 +1,11 @@
-import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, relative } from 'node:path';
 import { URI } from 'vscode-uri';
+import { Element } from './Element';
 
 type Source = { tag: string; value: string; prefix?: string; suffix?: string; };
 
 export type TestSuite = Source & { name: string };
-
-const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
-
-class Element {
-    constructor(private readonly node: any) {}
-
-    getAttribute(key: string) {
-        return this.node[`@_${key}`] ?? undefined;
-    }
-
-    getText() {
-        if (typeof this.node === 'string') {
-            return this.node;
-        }
-
-        return this.node['#text'];
-    }
-
-    querySelectorAll(selector: string) {
-        const segments = selector.split(' ');
-        let current = this.node;
-        while (segments.length > 0) {
-            const segment = segments.shift()!;
-            current = current[segment] ?? undefined;
-
-            if (current === undefined) {
-                return [];
-            }
-        }
-
-        return this.ensureArray(current).map((node) => new Element(node));
-    }
-
-    private ensureArray(obj: any) {
-        return Array.isArray(obj) ? obj : [obj];
-    }
-}
 
 export class Pattern {
     private readonly relativePath: string;
@@ -91,7 +54,7 @@ export class PHPUnitXML {
     private readonly cached: Map<string, any> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
-        this.element = new Element(parser.parse(text.toString()));
+        this.element = Element.load(text.toString());
         this._file = file;
         this.setRoot(dirname(file));
 

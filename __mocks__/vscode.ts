@@ -168,15 +168,13 @@ const Range = jest.fn().mockImplementation((start: any, end: any) => {
     return { start, end };
 });
 
-const Position = jest.fn().mockImplementation((line: number, character: number) => {
-    return {
-        line,
-        character,
-        translate: (lineDelta?: number, characterDelta?: number) => {
-            return new Position(line + (lineDelta ?? 0), characterDelta ?? character);
-        },
-    };
-});
+class Position {
+    constructor(public line: number, public character: number) {}
+
+    translate(lineDelta?: number, characterDelta?: number) {
+        return new Position(this.line + (lineDelta ?? 0), characterDelta ?? this.character);
+    }
+}
 
 const DocumentLink = jest.fn().mockImplementation((range: Range, target?: URI) => {
     return { range, target };
