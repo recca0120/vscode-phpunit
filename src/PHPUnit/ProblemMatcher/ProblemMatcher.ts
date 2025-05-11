@@ -2,7 +2,7 @@ import {
     TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestResult, TestResultParser, TestStarted, TestSuiteFinished,
     TestSuiteStarted,
 } from '.';
-import { PestV1Fixer } from '../Transformer';
+import { PestV1Fixer, PHPUnitFixer } from '../Transformer';
 
 export class ProblemMatcher {
     private results = new Map<string, TestResult>();
@@ -41,6 +41,7 @@ export class ProblemMatcher {
         let prevData = this.results.get(id) as (TestFailed | TestIgnored);
 
         if (!prevData) {
+            PHPUnitFixer.fixDetails(this.results, testResult);
             const file = testResult.details[0].file;
 
             return { ...testResult, id: [file, testResult.name].join('::'), file, duration: 0 };

@@ -235,4 +235,50 @@ describe('PHPUnit ProblemMatcher Text', () => {
             }),
         );
     });
+
+    fit('fix PHPUnit 10 without details', () => {
+        const contents = [
+            `##teamcity[testSuiteStarted name='Tests\\Feature\\ChatControllerTest' locationHint='php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest' flowId='22946']`,
+            `##teamcity[testIgnored name='test_permission' message='ChatControllerTest uses PlayerService' duration='0' flowId='22946']`,
+            `##teamcity[testIgnored name='test_grant_chat_token' message='ChatControllerTest uses PlayerService' duration='57' flowId='22946']`,
+            `##teamcity[testIgnored name='test_grant_chat_token_with_channels' message='ChatControllerTest uses PlayerService' duration='116' flowId='22946']`,
+            `##teamcity[testIgnored name='test_grant_chat_token_missing_token_without_ttl' message='ChatControllerTest uses PlayerService' duration='171' flowId='22946']`,
+            `##teamcity[testSuiteFinished name='Tests\\Feature\\ChatControllerTest' flowId='22946']`,
+        ];
+
+        problemMatcher.parse(contents[0]);
+        expect(problemMatcher.parse(contents[1])).toEqual(
+            expect.objectContaining({
+                event: TeamcityEvent.testIgnored,
+                name: 'test_permission',
+                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::test_permission',
+                flowId: 22946,
+                id: '/var/www/html/tests/Feature/ChatControllerTest.php::test_permission',
+                file: '/var/www/html/tests/Feature/ChatControllerTest.php',
+                message: 'ChatControllerTest uses PlayerService',
+                details: [{
+                    file: '/var/www/html/tests/Feature/ChatControllerTest.php',
+                    line: 1,
+                }],
+                duration: 0,
+            }),
+        );
+
+        expect(problemMatcher.parse(contents[2])).toEqual(
+            expect.objectContaining({
+                event: TeamcityEvent.testIgnored,
+                name: 'test_grant_chat_token',
+                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::test_grant_chat_token',
+                flowId: 22946,
+                id: '/var/www/html/tests/Feature/ChatControllerTest.php::test_grant_chat_token',
+                file: '/var/www/html/tests/Feature/ChatControllerTest.php',
+                message: 'ChatControllerTest uses PlayerService',
+                details: [{
+                    file: '/var/www/html/tests/Feature/ChatControllerTest.php',
+                    line: 1,
+                }],
+                duration: 0,
+            }),
+        );
+    });
 });
