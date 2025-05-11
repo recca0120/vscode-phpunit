@@ -1,6 +1,46 @@
+import { TeamcityEvent, TestResult, TestStarted, TestSuiteStarted } from '../ProblemMatcher';
 import { TestDefinition, TestType } from '../types';
 import { capitalize, snakeCase, titleCase } from '../utils';
 import { Transformer } from './Transformer';
+
+export class PHPUnitFixer {
+    static fixDetails(results = new Map<string, TestResult>(), testResult: TestResult & {
+        name: string,
+        locationHint?: string,
+        file?: string,
+        details?: Array<{ file: string, line: number }>,
+    }) {
+        if (testResult.details && testResult.file) {
+            return testResult;
+        }
+
+        const result = Array.from(results.values()).reverse().find((result) => {
+            return [TeamcityEvent.testSuiteStarted, TeamcityEvent.testStarted].includes(result.event);
+        }) as (TestSuiteStarted | TestStarted | undefined);
+
+        if (!result) {
+            return testResult;
+        }
+
+        const file = result.file!;
+        if (!testResult.file) {
+            testResult.file = file;
+        }
+
+        if (!testResult.details) {
+            testResult.details = [{ file: file, line: 1 }];
+        }
+
+        if (!testResult.locationHint) {
+            const locationHint = result.locationHint?.split('::').slice(0, 1).join('::');
+            testResult.locationHint = [locationHint, testResult.name]
+                .filter(value => !!value)
+                .join('::');
+        }
+
+        return testResult;
+    }
+}
 
 export class PHPUnitTransformer extends Transformer {
     uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
