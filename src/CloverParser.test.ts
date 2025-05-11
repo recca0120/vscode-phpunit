@@ -3,7 +3,6 @@ import { Position } from 'vscode';
 import { CloverParser } from './CloverParser';
 
 describe('CloverParser test', () => {
-
     it('parseClover', async () => {
         const cf = await CloverParser.parseClover('src/PHPUnit/__tests__/fixtures/test1.clover.xml');
         expect(cf.length).toEqual(2);
@@ -14,5 +13,4 @@ describe('CloverParser test', () => {
             expect(dc[0].location.line).toEqual(8);
         }
     });
-
 });

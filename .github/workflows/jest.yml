@@ -19,7 +19,7 @@ jobs:
 
     name: ${{ matrix.os }} node-${{ matrix.node }} php-${{ matrix.php }}
     env:
-      extensions: curl
+      extensions: curl, dom, libxml, mbstring, pcntl, pdo, pdo_sqlite, sqlite, xdebug, zip
       key: cache-v1 # can be any string, change to clear the extension cache.
       GITHUB_ACTIONS: true
       PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
@@ -50,7 +50,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.extensions }}
           tools: composer:v2
-          coverage: none
+          coverage: xdebug
 
       - name: Install Composer dependencies (PHPUnit)
         run: cd ${{ env.PHPUNIT_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress

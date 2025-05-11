@@ -1,60 +1,39 @@
-import { XMLParser } from 'fast-xml-parser';
-import { readFile } from 'node:fs/promises';
-import * as vscode from 'vscode';
+import { FileCoverage, FileCoverageDetail, Position, StatementCoverage, TestCoverageCount, Uri } from 'vscode';
+import { Element } from './PHPUnit';
 
 
 export class CloverParser {
-    public static ensureArray(obj: any) {
-        return Array.isArray(obj) ? obj : [obj];
-    }
-
     static async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {
         try {
-            const parser = new XMLParser({
-                ignoreAttributes: false, // Don't ignore attributes
-                attributeNamePrefix: '@_', // Prefix for attributes
-                trimValues: true,
-            });
+            const element = await Element.loadFile(file);
 
-            const clover = parser.parse(await readFile(file));
-            const ret = [];
-
-            if (clover.coverage?.project?.file) {
-                for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.file)) {
-                    ret.push(new PHPUnitFileCoverage(cloverFile));
-                }
-            }
-            if (clover.coverage?.project?.package?.file) {
-                for (const cloverFile of CloverParser.ensureArray(clover.coverage.project.package.file)) {
-                    ret.push(new PHPUnitFileCoverage(cloverFile));
-                }
-            }
-
-            return ret;
+            return [
+                ...element.querySelectorAll('coverage project file'),
+                ...element.querySelectorAll('coverage project package file'),
+            ].map((node: Element) => new PHPUnitFileCoverage(node));
         } catch (ex) {
             return [];
         }
     }
 }
 
-export class PHPUnitFileCoverage extends vscode.FileCoverage {
-    constructor(public readonly cloverFile: any) {
-        super(vscode.Uri.file(cloverFile['@_name']), new vscode.TestCoverageCount(0, 0));
-        this.statementCoverage.covered = parseInt(cloverFile.metrics['@_coveredstatements'], 10);
-        this.statementCoverage.total = parseInt(cloverFile.metrics['@_statements'], 10);
+export class PHPUnitFileCoverage extends FileCoverage {
+    constructor(private element: Element) {
+        super(
+            Uri.file(element.getAttribute('name')),
+            new TestCoverageCount(0, 0),
+        );
+        const metrics = this.element.querySelector('metrics');
+        this.statementCoverage.covered = parseInt(metrics?.getAttribute('coveredstatements'), 10);
+        this.statementCoverage.total = parseInt(metrics?.getAttribute('statements'), 10);
     }
 
-    public generateDetailedCoverage(): vscode.FileCoverageDetail[] {
-        const ret = [];
-        for (const l of CloverParser.ensureArray(this.cloverFile.line)) {
-            ret.push(
-                new vscode.StatementCoverage(
-                    parseInt(l['@_count'], 10),
-                    new vscode.Position(parseInt(l['@_num'], 10) - 1, 0),
-                ),
+    public generateDetailedCoverage(): FileCoverageDetail[] {
+        return this.element.querySelectorAll('line').map((line: Element) => {
+            return new StatementCoverage(
+                parseInt(line.getAttribute('count'), 10),
+                new Position(parseInt(line.getAttribute('num'), 10) - 1, 0),
             );
-        }
-
-        return ret;
+        });
     }
 }
