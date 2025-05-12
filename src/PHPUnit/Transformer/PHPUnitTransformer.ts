@@ -32,7 +32,7 @@ export class PHPUnitFixer {
         }
 
         if (!testResult.locationHint) {
-            const locationHint = result.locationHint?.split('::').slice(0, 1).join('::');
+            const locationHint = result.locationHint?.split('::').slice(0, 2).join('::');
             testResult.locationHint = [locationHint, testResult.name]
                 .filter(value => !!value)
                 .join('::');
