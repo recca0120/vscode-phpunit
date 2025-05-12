@@ -1,5 +1,6 @@
 import { TestType } from '../types';
-import { PestTransformer, PestV2Fixer } from './PestTransformer';
+import { PestV2Fixer } from './Fixer';
+import { PestTransformer } from './PestTransformer';
 
 describe('PestTransformer', () => {
     const transformer = new PestTransformer();

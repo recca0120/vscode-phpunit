@@ -236,7 +236,33 @@ describe('PHPUnit ProblemMatcher Text', () => {
         );
     });
 
-    fit('fix PHPUnit 10 without details', () => {
+    it('fix PHPUnit10 testFailed', () => {
+        const contents = [
+            `##teamcity[testSuiteStarted name='App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest' locationHint='php_qn:///srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::\\App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest' flowId='5161']`,
+            `##teamcity[testFailed name='testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled' message='Error: Class "App\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer" not found' details='/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php:28|n' duration='0' flowId='5161']`,
+            `##teamcity[testSuiteFinished name='App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest' flowId='5161']`,
+        ];
+
+        problemMatcher.parse(contents[0]);
+        expect(problemMatcher.parse(contents[1])).toEqual(
+            expect.objectContaining({
+                event: TeamcityEvent.testFailed,
+                name: 'testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
+                // locationHint: 'php_qn:///srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::\\App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
+                flowId: 5161,
+                id: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
+                file: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php',
+                message: 'Error: Class "App\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer" not found',
+                details: [{
+                    file: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php',
+                    line: 28,
+                }],
+                duration: 0,
+            }),
+        );
+    });
+
+    it('fix PHPUnit10 testIgnored', () => {
         const contents = [
             `##teamcity[testSuiteStarted name='Tests\\Feature\\ChatControllerTest' locationHint='php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest' flowId='22946']`,
             `##teamcity[testIgnored name='test_permission' message='ChatControllerTest uses PlayerService' duration='0' flowId='22946']`,
@@ -251,7 +277,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             expect.objectContaining({
                 event: TeamcityEvent.testIgnored,
                 name: 'test_permission',
-                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::test_permission',
+                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_permission',
                 flowId: 22946,
                 id: '/var/www/html/tests/Feature/ChatControllerTest.php::test_permission',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',
@@ -268,7 +294,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             expect.objectContaining({
                 event: TeamcityEvent.testIgnored,
                 name: 'test_grant_chat_token',
-                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::test_grant_chat_token',
+                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_grant_chat_token',
                 flowId: 22946,
                 id: '/var/www/html/tests/Feature/ChatControllerTest.php::test_grant_chat_token',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',

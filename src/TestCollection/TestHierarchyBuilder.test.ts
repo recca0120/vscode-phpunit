@@ -180,7 +180,7 @@ describe('TestHierarchyBuilder', () => {
             ]);
         });
 
-        xit('two testsuites', () => {
+        it('two testsuites', () => {
             givenCodes([{
                 testsuite: { name: 'Unit', path: 'tests/Unit' },
                 file: phpUnitProject('tests/Feature/ExampleTest.php'),
