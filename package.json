@@ -4,7 +4,7 @@
   "displayName": "PHPUnit Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
-  "version": "3.7.4",
+  "version": "3.7.5",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -192,7 +192,7 @@
     "@vscode/vsce": "^3.3.2",
     "chai": "^5.2.0",
     "eslint": "^9.26.0",
-    "fast-xml-parser": "^5.2.2",
+    "fast-xml-parser": "^5.2.3",
     "glob": "^11.0.2",
     "minimatch": "^10.0.1",
     "mocha": "^11.2.2",
