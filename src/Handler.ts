@@ -35,8 +35,7 @@ export class Handler {
         const xdebug = new Xdebug(this.configuration);
         builder.setXdebug(xdebug);
 
-        xdebug.setMode(request.profile?.kind);
-
+        await xdebug.setMode(request.profile?.kind);
         if (xdebug.mode === Mode.debug) {
             // TODO: perhaps wait for the debug session
             await debug.startDebugging(wsf, xdebug.name ?? await xdebug.getDebugConfiguration());

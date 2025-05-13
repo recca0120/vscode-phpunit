@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { mkdtempSync } from 'node:fs';
+import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { IConfiguration } from '../Configuration';
@@ -54,7 +54,7 @@ export class Xdebug {
         return this;
     }
 
-    setMode(mode?: Mode | number) {
+    async setMode(mode?: Mode | number) {
         if (typeof mode !== 'number') {
             this.mode = mode;
 
@@ -64,21 +64,18 @@ export class Xdebug {
         // export enum TestRunProfileKind { Run = 1, Debug = 2, Coverage = 3 }
         if (mode === 2) {
             this.mode = Mode.debug;
+            this.port = this.configuration.get('xdebugPort', 0) as number || await getFreePort();
         }
 
         if (mode === 3) {
             this.mode = Mode.coverage;
-            this.setTemporaryDirectory(mkdtempSync(join(tmpdir(), 'phpunit-')));
+            this.setTemporaryDirectory(await mkdtemp(join(tmpdir(), 'phpunit')));
         }
 
         return this;
     }
 
     private async getPort() {
-        if (!this.port) {
-            this.port = this.configuration.get('xdebugPort', await getFreePort()) as number;
-        }
-
         return this.port;
     }
 
