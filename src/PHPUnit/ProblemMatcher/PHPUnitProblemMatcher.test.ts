@@ -295,7 +295,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
                 id: 'Chat Controller (Tests\\Feature\\ChatController)::Grant chat token',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',
                 message: 'ChatControllerTest uses PlayerService',
-                duration: 0,
+                duration: 57,
             }),
         );
     });
