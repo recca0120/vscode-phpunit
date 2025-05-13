@@ -1,5 +1,5 @@
 import { TestType } from '../types';
-import { PestV2Fixer } from './Fixer';
+import { PestV2Fixer } from './PestFixer';
 import { PestTransformer } from './PestTransformer';
 
 describe('PestTransformer', () => {

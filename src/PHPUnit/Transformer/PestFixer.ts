@@ -1,44 +1,6 @@
-import { TeamcityEvent, TestResult, TestStarted, TestSuiteStarted } from '../ProblemMatcher';
+import { TeamcityEvent, TestFailed, TestIgnored, TestResult } from '../ProblemMatcher';
 import { capitalize } from '../utils';
-
-export class PHPUnitFixer {
-    static fixDetails(results = new Map<string, TestResult>(), testResult: TestResult & {
-        name: string,
-        locationHint?: string,
-        file?: string,
-        details?: Array<{ file: string, line: number }>,
-    }) {
-        if (testResult.details && testResult.file) {
-            return testResult;
-        }
-
-        const result = Array.from(results.values()).reverse().find((result) => {
-            return [TeamcityEvent.testSuiteStarted, TeamcityEvent.testStarted].includes(result.event);
-        }) as (TestSuiteStarted | TestStarted | undefined);
-
-        if (!result) {
-            return testResult;
-        }
-
-        const file = result.file!;
-        if (!testResult.file) {
-            testResult.file = file;
-        }
-
-        if (!testResult.details) {
-            testResult.details = [{ file: file, line: 1 }];
-        }
-
-        if (!testResult.locationHint) {
-            const locationHint = result.locationHint?.split('::').slice(0, 2).join('::');
-            testResult.locationHint = [locationHint, testResult.name]
-                .filter(value => !!value)
-                .join('::');
-        }
-
-        return testResult;
-    }
-}
+import { getPrevTestResult } from './utils';
 
 class Str {
     static prefix = '__pest_evaluable_';
@@ -48,12 +10,45 @@ class Str {
     }
 }
 
+export class PestFixer {
+    static fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
+        if (testResult.id) {
+            return testResult;
+        }
+
+        if (!testResult.duration) {
+            testResult.duration = 0;
+        }
+
+        if ('details' in testResult && testResult.details.length > 0) {
+            const file = testResult.details[0].file;
+            testResult.id = [file, testResult.name].join('::');
+            testResult.file = file;
+
+            return testResult;
+        }
+
+        const pattern = new RegExp('^(pest_qn|file):\/\/');
+        const prevTestResult = getPrevTestResult(pattern, cache, testResult);
+        if (prevTestResult) {
+            testResult.id = [
+                prevTestResult.locationHint?.replace(pattern, ''),
+                testResult.name,
+            ].filter(v => !!v).join('::');
+
+            return testResult;
+        }
+
+        return testResult;
+    }
+}
+
 export class PestV1Fixer {
     static fixLocationHint(locationHint: string) {
         return this.fixDataSet(/^tests\//.test(locationHint) ? locationHint : locationHint.substring(locationHint.lastIndexOf('tests/')));
     }
 
-    static fixFlowId(results = new Map<string, TestResult>(), testResult?: TestResult) {
+    static fixFlowId(cache: Map<string, TestResult>, testResult?: TestResult) {
         if (!testResult) {
             return testResult;
         }
@@ -63,7 +58,7 @@ export class PestV1Fixer {
             return testResult;
         }
 
-        const result = Array.from(results.values()).reverse().find((result: TestResult) => {
+        const result = Array.from(cache.values()).reverse().find((result: TestResult) => {
             if (testResult.event !== TeamcityEvent.testStarted) {
                 return result.event === TeamcityEvent.testStarted && (result as any).name === (testResult as any).name;
             }

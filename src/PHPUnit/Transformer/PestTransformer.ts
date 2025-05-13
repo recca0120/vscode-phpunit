@@ -1,6 +1,6 @@
 import { TestDefinition, TestType } from '../types';
 import { uncapitalize } from '../utils';
-import { PestV1Fixer, PestV2Fixer } from './Fixer';
+import { PestV1Fixer, PestV2Fixer } from './PestFixer';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
 import { TransformerFactory } from './TransformerFactory';
 

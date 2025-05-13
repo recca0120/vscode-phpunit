@@ -248,9 +248,9 @@ describe('PHPUnit ProblemMatcher Text', () => {
             expect.objectContaining({
                 event: TeamcityEvent.testFailed,
                 name: 'testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
-                // locationHint: 'php_qn:///srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::\\App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
+                locationHint: 'php_qn:///srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::\\App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
                 flowId: 5161,
-                id: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
+                id: 'Price Synchronizer (App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer)::Product need update returns false when price sync not enabled',
                 file: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php',
                 message: 'Error: Class "App\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer" not found',
                 details: [{
@@ -279,13 +279,9 @@ describe('PHPUnit ProblemMatcher Text', () => {
                 name: 'test_permission',
                 locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_permission',
                 flowId: 22946,
-                id: '/var/www/html/tests/Feature/ChatControllerTest.php::test_permission',
+                id: 'Chat Controller (Tests\\Feature\\ChatController)::Permission',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',
                 message: 'ChatControllerTest uses PlayerService',
-                details: [{
-                    file: '/var/www/html/tests/Feature/ChatControllerTest.php',
-                    line: 1,
-                }],
                 duration: 0,
             }),
         );
@@ -296,13 +292,9 @@ describe('PHPUnit ProblemMatcher Text', () => {
                 name: 'test_grant_chat_token',
                 locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_grant_chat_token',
                 flowId: 22946,
-                id: '/var/www/html/tests/Feature/ChatControllerTest.php::test_grant_chat_token',
+                id: 'Chat Controller (Tests\\Feature\\ChatController)::Grant chat token',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',
                 message: 'ChatControllerTest uses PlayerService',
-                details: [{
-                    file: '/var/www/html/tests/Feature/ChatControllerTest.php',
-                    line: 1,
-                }],
                 duration: 0,
             }),
         );

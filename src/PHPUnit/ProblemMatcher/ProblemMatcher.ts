@@ -2,10 +2,10 @@ import {
     TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestResult, TestResultParser, TestStarted, TestSuiteFinished,
     TestSuiteStarted,
 } from '.';
-import { PestV1Fixer, PHPUnitFixer } from '../Transformer';
+import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../Transformer';
 
 export class ProblemMatcher {
-    private results = new Map<string, TestResult>();
+    private cache = new Map<string, TestResult>();
 
     private lookup: { [p: string]: (result: any) => TestResult | undefined } = {
         [TeamcityEvent.testSuiteStarted]: this.handleStarted,
@@ -19,8 +19,8 @@ export class ProblemMatcher {
     constructor(private testResultParser: TestResultParser = new TestResultParser()) { }
 
     parse(input: string | Buffer): TestResult | undefined {
-        const result = this.testResultParser.parse(input.toString());
-        PestV1Fixer.fixFlowId(this.results, result);
+        let result = this.testResultParser.parse(input.toString());
+        result = PestV1Fixer.fixFlowId(this.cache, result);
 
         return this.isResult(result) ? this.lookup[result!.event]?.call(this, result) : result;
     }
@@ -30,50 +30,50 @@ export class ProblemMatcher {
     }
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
-        const id = this.generateId(testResult);
-        this.results.set(id, testResult);
+        const cacheId = this.cacheId(testResult);
+        this.cache.set(cacheId, testResult);
 
-        return this.results.get(id);
+        return this.cache.get(cacheId);
     }
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
-        const id = this.generateId(testResult);
-        let prevData = this.results.get(id) as (TestFailed | TestIgnored);
+        const cacheId = this.cacheId(testResult);
+        let prevTestResult = this.cache.get(cacheId) as (TestFailed | TestIgnored);
 
-        if (!prevData) {
-            PHPUnitFixer.fixDetails(this.results, testResult);
-            const file = testResult.details[0].file;
-
-            return { ...testResult, id: [file, testResult.name].join('::'), file, duration: 0 };
+        if (!prevTestResult) {
+            return PestFixer.fixNoTestStarted(
+                this.cache,
+                PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
+            );
         }
 
-        if (prevData.event === TeamcityEvent.testStarted) {
-            this.results.set(id, { ...(prevData ?? {}), ...testResult });
+        if (prevTestResult.event === TeamcityEvent.testStarted) {
+            this.cache.set(cacheId, { ...(prevTestResult ?? {}), ...testResult });
 
             return;
         }
 
         if (testResult.message) {
-            prevData.message += '\n\n' + testResult.message;
+            prevTestResult.message += '\n\n' + testResult.message;
         }
-        prevData.details.push(...testResult.details);
+        prevTestResult.details.push(...testResult.details);
 
-        this.results.set(id, prevData);
+        this.cache.set(cacheId, prevTestResult);
 
         return undefined;
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {
-        const id = this.generateId(testResult);
+        const cacheId = this.cacheId(testResult);
 
-        if (!this.results.has(id)) {
+        if (!this.cache.has(cacheId)) {
             return;
         }
 
-        const prevData = this.results.get(id)!;
-        const event = this.isFault(prevData) ? prevData.event : testResult.event;
-        const result = { ...prevData, ...testResult, event };
-        this.results.delete(id);
+        const prevTestResult = this.cache.get(cacheId)!;
+        const event = this.isFault(prevTestResult) ? prevTestResult.event : testResult.event;
+        const result = { ...prevTestResult, ...testResult, event };
+        this.cache.delete(cacheId);
 
         return result;
     }
@@ -82,7 +82,7 @@ export class ProblemMatcher {
         return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
     }
 
-    private generateId(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
+    private cacheId(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
         return `${testResult.name}-${testResult.flowId}`;
     }
 }

@@ -754,4 +754,18 @@ describe('Pest ProblemMatcher Text', () => {
     it('testFinished without TestStarted', () => {
         resultShouldBe('##teamcity[testFinished name=\'`before each` → example\' duration=\'12\' flowId=\'97972\']', undefined);
     });
+
+    it('PHPUnit without TestStarted', () => {
+        resultShouldBe(`##teamcity[testSuiteStarted name='Tests\\Feature\\AuthenticationTest' locationHint='pest_qn://Authentication (Tests\\Feature\\Authentication)' flowId='6611']`, {});
+        resultShouldBe(`##teamcity[testCount count='1' flowId='6611']`, {});
+        resultShouldBe(`##teamcity[testIgnored name='Login screen can be rendered' message='This test was ignored.' details='' flowId='6611']`, {
+            event: TeamcityEvent.testIgnored,
+            flowId: 6611,
+            id: 'Authentication (Tests\\Feature\\Authentication)::Login screen can be rendered',
+            name: 'Login screen can be rendered',
+            message: 'This test was ignored.',
+            duration: 0,
+        });
+        resultShouldBe(`##teamcity[testSuiteFinished name='Tests\\Feature\\AuthenticationTest' flowId='6611']`, {});
+    });
 });
