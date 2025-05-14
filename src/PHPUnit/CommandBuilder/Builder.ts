@@ -162,7 +162,7 @@ export class Builder {
             const pattern = new RegExp('^(--filter)=(.*)');
 
             return input.replace(pattern, (_m, ...matched) => {
-                const value = btoa(matched[1]);
+                const value = Buffer.from(matched[1], 'utf-8').toString('base64');
 
                 return `${matched[0]}='${value}'`;
             });
@@ -170,14 +170,18 @@ export class Builder {
     }
 
     private decodeFilter(args: string[]) {
+        const command = args.join(' ');
+        const needsQuote = isSSH(command) || isShellCommand(command);
+
         return args.map((input) => {
             const pattern = new RegExp('(--filter)=["\'](.+)?["\']');
 
             return input.replace(pattern, (_m, ...matched) => {
-                const value = atob(matched[1]);
-                const quote = value.includes('\'') ? '"' : '';
+                const value = Buffer.from(matched[1], 'base64').toString('utf-8');
+                const quote = value.includes('\'') ? '"' : '\'';
+                const filter = `${matched[0]}=${value}`;
 
-                return `${matched[0]}=${quote}${value}${quote}`;
+                return needsQuote ? `${quote}${filter}${quote}` : filter;
             });
         });
     }

@@ -125,7 +125,7 @@ describe('Builder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/pest',
-                `--filter="^.*::(it has user's email)(( with (data set )?.*)?)?$"`,
+                `--filter=^.*::(it has user's email)(( with (data set )?.*)?)?$`,
                 phpUnitProject('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
@@ -184,7 +184,7 @@ describe('Builder Test', () => {
                 [
                     'php',
                     'vendor/bin/paratest',
-                    `--filter=^.*::(test_passed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     `--colors=never`,
                     `--teamcity`,
                     `--functional`,
@@ -263,7 +263,7 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `--filter=^.*::(test_passed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     `--colors=never`,
                     `--teamcity`,
                 ].join(' '),
@@ -292,7 +292,7 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `--filter=^.*::(test_passed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     '--colors=never',
                     '--teamcity',
                 ].join(' '),
@@ -394,7 +394,7 @@ describe('Builder Test', () => {
                     'php',
                     'artisan',
                     'test',
-                    `--filter=^.*::(test_passed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     `--colors=never`,
                     `--teamcity`,
                 ].join(' '),
@@ -418,7 +418,7 @@ describe('Builder Test', () => {
                 [
                     'php',
                     'vendor/bin/phpunit',
-                    `--filter=^.*::(test_passed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     '--colors=never',
                     '--teamcity',
                 ].join(' '),

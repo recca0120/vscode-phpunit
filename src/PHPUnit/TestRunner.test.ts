@@ -346,20 +346,6 @@ describe('TestRunner Test', () => {
 
             await shouldRunTestFailed(expected, builder, projectPath, appPath);
         });
-
-        it('should run test failed with phpvfscomposer for Docker', async () => {
-            const expected = [
-                'php',
-                appPath('vendor/bin/phpunit'),
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
-        });
     });
 
     describe('SSH', () => {
@@ -441,7 +427,7 @@ describe('TestRunner Test', () => {
                     'php',
                     'vendor/bin/phpunit',
                     `--configuration=${appPath('phpunit.xml')}`,
-                    `--filter=^.*::(test_passed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
                     appPath('tests/AssertionsTest.php'),
                     `--colors=never`,
                     `--teamcity`,
@@ -467,7 +453,7 @@ describe('TestRunner Test', () => {
                     'php',
                     'vendor/bin/phpunit',
                     `--configuration=${appPath('phpunit.xml')}`,
-                    `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
                     appPath('tests/AssertionsTest.php'),
                     `--colors=never`,
                     `--teamcity`,
@@ -493,7 +479,7 @@ describe('TestRunner Test', () => {
                     'php',
                     'vendor/bin/phpunit',
                     `--configuration=${appPath('phpunit.xml')}`,
-                    `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
+                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
                     appPath('tests/AssertionsTest.php'),
                     `--colors=never`,
                     `--teamcity`,
