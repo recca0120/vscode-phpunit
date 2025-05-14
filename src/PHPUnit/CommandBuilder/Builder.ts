@@ -75,10 +75,11 @@ export class Builder {
 
     private create() {
         let command = this.getCommand();
+        const isSshOrShellCommand = isSSH(command) || isShellCommand(command);
         const args = this.getArguments();
 
         if (!this.hasVariable(args, command)) {
-            command += isSSH(command) || isShellCommand(command)
+            command += isSshOrShellCommand
                 ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
                 : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}';
         }
@@ -95,7 +96,7 @@ export class Builder {
             return command.replace(keyVariable(key), value.trim());
         }, command.trim());
 
-        return this.decodeFilter(parseArgsStringToArgv(command));
+        return this.decodeFilter(parseArgsStringToArgv(command), isSshOrShellCommand);
     }
 
     private getArguments() {
@@ -169,10 +170,7 @@ export class Builder {
         });
     }
 
-    private decodeFilter(args: string[]) {
-        const command = args.join(' ');
-        const needsQuote = isSSH(command) || isShellCommand(command);
-
+    private decodeFilter(args: string[], needsQuote: boolean) {
         return args.map((input) => {
             const pattern = new RegExp('(--filter)=["\'](.+)?["\']');
 
