@@ -71,7 +71,7 @@ export class Xdebug {
 
         if (mode === 3) {
             this.mode = Mode.coverage;
-            const directory = this.configuration.get<string>('coverageFile') || await mkdtemp(join(tmpdir(), 'phpunit'));
+            const directory = this.configuration.get<string>('coveragePath') || await mkdtemp(join(tmpdir(), 'phpunit'));
 
             this.setDirectory(directory);
         }
