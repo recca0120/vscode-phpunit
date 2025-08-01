@@ -24,7 +24,7 @@ export enum Mode {
 export class Xdebug {
     mode?: Mode;
     private port?: number;
-    private temporaryDirectory?: string;
+    private directory?: string;
     private index: number = 0;
 
     constructor(private configuration: IConfiguration) {
@@ -39,7 +39,9 @@ export class Xdebug {
             return undefined;
         }
 
-        return join(this.temporaryDirectory!, `phpunit-${this.index}.xml`);
+        const fileName = this.configuration.get('coverageFile', `phpunit-${this.index}.xml`);
+
+        return join(this.directory!, fileName);
     }
 
     setIndex(index: number) {
@@ -48,8 +50,8 @@ export class Xdebug {
         return this;
     }
 
-    setTemporaryDirectory(temporaryDirectory: string) {
-        this.temporaryDirectory = temporaryDirectory;
+    setDirectory(temporaryDirectory: string) {
+        this.directory = temporaryDirectory;
 
         return this;
     }
@@ -64,12 +66,14 @@ export class Xdebug {
         // export enum TestRunProfileKind { Run = 1, Debug = 2, Coverage = 3 }
         if (mode === 2) {
             this.mode = Mode.debug;
-            this.port = this.configuration.get('xdebugPort', 0) as number || await getFreePort();
+            this.port = this.configuration.get('xdebugPort', 0) || await getFreePort();
         }
 
         if (mode === 3) {
             this.mode = Mode.coverage;
-            this.setTemporaryDirectory(await mkdtemp(join(tmpdir(), 'phpunit')));
+            const directory = this.configuration.get<string>('coverageFile') || await mkdtemp(join(tmpdir(), 'phpunit'));
+
+            this.setDirectory(directory);
         }
 
         return this;

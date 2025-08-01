@@ -150,6 +150,16 @@
           "type": "integer",
           "default": 0,
           "description": "The port that is used to communicate between Xdebug in phpunit and the debug extension. 0 (default) will use a random port."
+        },
+        "phpunit.coveragePath": {
+          "type": "string",
+          "default": null,
+          "description": "Path for code coverage results"
+        },
+        "phpunit.coverageFile": {
+          "type": "string",
+          "default": null,
+          "description": "File name for code coverage results"
         }
       }
     }
