@@ -1,6 +1,6 @@
 import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
 import { Handler } from './Handler';
-import { TestCollection } from './TestCollection';
+import { GroupRegistry, TestCollection } from './TestCollection';
 
 export class CommandHandler {
     constructor(private testCollection: TestCollection, private testRunProfile: TestRunProfile) {}
@@ -50,6 +50,28 @@ export class CommandHandler {
             return this.run(
                 this.testCollection.findTestsByRequest(handler.getPreviousRequest()),
             );
+        });
+    }
+
+    runByGroup(handler: Handler) {
+        return commands.registerCommand('phpunit.run-by-group', async () => {
+            const groups = GroupRegistry.getInstance().getAll();
+            if (groups.length === 0) {
+                window.showInformationMessage('No PHPUnit groups found. Add @group annotations or #[Group] attributes to your tests.');
+                return;
+            }
+
+            const selectedGroup = await window.showQuickPick(groups, {
+                placeHolder: 'Select a PHPUnit group to run',
+                title: 'Run Tests by Group',
+            });
+
+            if (!selectedGroup || !handler) {
+                return;
+            }
+
+            const cancellation = new CancellationTokenSource().token;
+            await handler.startGroupTestRun(selectedGroup, cancellation);
         });
     }
 

@@ -15,6 +15,7 @@ export type Annotations = {
     depends?: string[];
     dataProvider?: string[];
     testdox?: string[];
+    group?: string[];
 };
 export type TestDefinition = {
     type: TestType;
