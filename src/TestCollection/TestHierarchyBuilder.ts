@@ -113,10 +113,13 @@ export class TestHierarchyBuilder {
 
         // Inherit group tags from parent class to methods for proper filter inheritance
         if (testDefinition.type === TestType.method && parent.type === TestType.class) {
-            const parentTags = parent.item.tags.filter(t => t.id.startsWith('group:'));
+            const parentTags = (parent.item.tags ?? []).filter(t => t.id.startsWith('group:'));
             if (parentTags.length > 0) {
-                const ownTags = testItem.tags;
-                testItem.tags = [...ownTags, ...parentTags.filter(pt => !ownTags.some(ot => ot.id === pt.id))];
+                const ownTags = testItem.tags ?? [];
+                testItem.tags = [
+                    ...ownTags,
+                    ...parentTags.filter(pt => !ownTags.some(ot => ot.id === pt.id)),
+                ];
             }
         }
 
