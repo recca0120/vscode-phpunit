@@ -489,4 +489,82 @@ final class TestDoxTest extends TestCase {
             depth: 2,
         }));
     });
+
+    it('parse @group annotation', () => {
+        const file = phpUnitProject('tests/GroupTest.php');
+        const content = `<?php declare(strict_types=1);
+
+use PHPUnit\\Framework\\TestCase;
+
+final class GroupTest extends TestCase {
+    /**
+     * @group integration
+     * @group slow
+     */
+    public function test_with_groups() {
+        $this->assertTrue(true);
+    }
+}
+`;
+        expect(givenTest(file, content, 'test_with_groups')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            file,
+            id: 'Group::With groups',
+            classFQN: 'GroupTest',
+            className: 'GroupTest',
+            methodName: 'test_with_groups',
+            annotations: { group: ['integration', 'slow'] },
+            depth: 2,
+        }));
+    });
+
+    it('parse #[Group] attribute', () => {
+        const file = phpUnitProject('tests/GroupAttributeTest.php');
+        const content = `<?php declare(strict_types=1);
+
+use PHPUnit\\Framework\\TestCase;
+use PHPUnit\\Framework\\Attributes\\Group;
+
+final class GroupAttributeTest extends TestCase {
+    #[Group('plaid')]
+    #[Group('api')]
+    public function test_with_group_attributes() {
+        $this->assertTrue(true);
+    }
+}
+`;
+        expect(givenTest(file, content, 'test_with_group_attributes')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            file,
+            id: 'Group Attribute::With group attributes',
+            classFQN: 'GroupAttributeTest',
+            className: 'GroupAttributeTest',
+            methodName: 'test_with_group_attributes',
+            annotations: { group: ['plaid', 'api'] },
+            depth: 2,
+        }));
+    });
+
+    it('parse single @group annotation', () => {
+        const file = phpUnitProject('tests/SingleGroupTest.php');
+        const content = `<?php declare(strict_types=1);
+
+use PHPUnit\\Framework\\TestCase;
+
+final class SingleGroupTest extends TestCase {
+    /**
+     * @group unit
+     */
+    public function test_unit() {
+        $this->assertTrue(true);
+    }
+}
+`;
+        expect(givenTest(file, content, 'test_unit')).toEqual(expect.objectContaining({
+            type: TestType.method,
+            file,
+            methodName: 'test_unit',
+            annotations: { group: ['unit'] },
+        }));
+    });
 });

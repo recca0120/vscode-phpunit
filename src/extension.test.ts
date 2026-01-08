@@ -11,7 +11,8 @@ import { Configuration } from './Configuration';
 import { activate } from './extension';
 import { getPhpUnitVersion, getPhpVersion, normalPath, pestProject, phpUnitProject } from './PHPUnit/__tests__/utils';
 
-jest.mock('child_process');
+//updated to match spawn for tests
+jest.mock('node:child_process');
 
 const setTextDocuments = (textDocuments: TextDocument[]) => {
     Object.defineProperty(workspace, 'textDocuments', {

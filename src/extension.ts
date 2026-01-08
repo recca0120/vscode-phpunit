@@ -113,6 +113,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());
     context.subscriptions.push(commandHandler.rerun(handler));
+    context.subscriptions.push(commandHandler.runByGroup(handler));
 }
 
 async function getWorkspaceTestPatterns() {

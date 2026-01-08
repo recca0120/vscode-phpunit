@@ -1,7 +1,7 @@
 import { Declaration, Method } from 'php-parser';
 import { Annotations } from '../types';
 
-const lookup = ['depends', 'dataProvider', 'testdox'];
+const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
 
 export class AttributeParser {
     public parse(declaration: Declaration) {
