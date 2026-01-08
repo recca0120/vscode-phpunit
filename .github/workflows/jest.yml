@@ -56,6 +56,10 @@ jobs:
       - name: Install Composer dependencies (PHPUnit)
         run: cd ${{ env.PHPUNIT_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress
 
+      - name: Install PHPUnit 10.5.30 for PHP 8.1
+        if: matrix.php == '8.1'
+        run: cd ${{ env.PHPUNIT_PROJECT }} && composer require phpunit/phpunit:10.5.30 --prefer-dist --no-interaction --no-progress
+
       - name: Install Composer dependencies (PEST)
         if: matrix.php >= '8.0'
         run: cd ${{ env.PEST_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress
