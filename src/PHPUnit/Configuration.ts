@@ -6,7 +6,8 @@ interface ConfigurationItem {
 }
 
 export interface IConfiguration {
-    get(key: string, defaultValue?: unknown): unknown | undefined;
+    get<T = unknown>(key: string): T | undefined;
+    get<T = unknown>(key: string, defaultValue: T): T;
 
     has(key: string): any;
 
@@ -18,7 +19,8 @@ export interface IConfiguration {
 }
 
 export abstract class BaseConfiguration implements IConfiguration {
-    abstract get(key: string, defaultValue?: unknown): unknown | undefined;
+    abstract get<T = unknown>(key: string): T | undefined;
+    abstract get<T = unknown>(key: string, defaultValue: T): T;
 
     abstract has(key: string): any;
 
@@ -57,8 +59,8 @@ export class Configuration extends BaseConfiguration {
         }
     }
 
-    get(key: string, defaultValue?: unknown): unknown | undefined {
-        return this.has(key) ? this.items.get(key) : defaultValue;
+    get<T = unknown>(key: string, defaultValue?: T): T | undefined {
+        return this.has(key) ? this.items.get(key) as T : defaultValue;
     }
 
     has(key: string) {

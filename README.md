@@ -181,6 +181,15 @@ The following commands are available in VS Code's command palette, use the ID to
 }
 ```
 
+### Coverage
+
+```jsonc
+{
+  "phpunit.coveragePath": "${workspaceFolder}/coverage",
+  "phpunit.coverageFile": "phpunit.xml"
+}
+```
+
 ## Troubleshooting
 
 ### PHPUnit path mapping not working
