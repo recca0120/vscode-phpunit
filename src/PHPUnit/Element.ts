@@ -35,7 +35,11 @@ export class Element {
         let current = this.node;
         while (segments.length > 0) {
             const segment = segments.shift()!;
-            current = current[segment] ?? undefined;
+            if (Array.isArray(current)) {
+                current = current.flatMap((node) => node[segment] ?? undefined).filter((node) => node !== undefined);
+            } else {
+                current = current[segment] ?? undefined;
+            }
 
             if (current === undefined) {
                 return [];
