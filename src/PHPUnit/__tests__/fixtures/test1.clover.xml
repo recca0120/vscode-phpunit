@@ -25,6 +25,9 @@
         <metrics loc="19" ncloc="19" classes="1" methods="2" coveredmethods="2" conditionals="0" coveredconditionals="0" statements="2" coveredstatements="2" elements="4" coveredelements="4"/>
       </file>
     </package>
+    <file name="C:\local_disk\zobo\Projects\vscode-php-debug\vscode-phpunit\src\PHPUnit\__tests__\fixtures\phpunit-stub\src\Common.php">
+      <metrics loc="16" ncloc="3" classes="0" methods="0" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="0" coveredstatements="0" elements="0" coveredelements="0"/>
+    </file>
     <metrics files="2" loc="43" ncloc="43" classes="2" methods="5" coveredmethods="4" conditionals="0" coveredconditionals="0" statements="5" coveredstatements="4" elements="10" coveredelements="8"/>
   </project>
 </coverage>

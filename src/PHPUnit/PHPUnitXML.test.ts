@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
-import { Element } from './Element';
 import { PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {
@@ -326,36 +325,6 @@ describe('PHPUnit XML Test', () => {
             { type: 'exclude', tag: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
             { type: 'exclude', tag: 'file', value: 'src/autoload.php' },
         ]);
-    });
-
-    it('coverage with multiple namespaces (intermediate array)', () => {
-        // XML where 'package' repeats, creating an array structure in the parser
-        const xml = generateXML(`
-            <coverage>
-                <project>
-                    <package name="NamespaceA">
-                        <file name="A.php"/>
-                    </package>
-                    <package name="NamespaceB">
-                        <file name="B.php"/>
-                    </package>
-                </project>
-            </coverage>
-        `);
-
-        // We need to access private method or verify via side effect if getCoverage isn't public.
-        // Assuming we can test Element traversal via the loaded instance:
-        const phpUnitXml = new PHPUnitXML();
-        phpUnitXml.load(xml, 'phpunit.xml');
-
-        // Access the underlying element to verify traversal logic in this context
-        // Note: strict property access might require casting or internal testing
-        const element = (phpUnitXml as any).element as Element; // Accessing private element for verification
-
-        const files = element.querySelectorAll('phpunit coverage project package file');
-        expect(files.length).toEqual(2);
-        expect(files[0].getAttribute('name')).toEqual('A.php');
-        expect(files[1].getAttribute('name')).toEqual('B.php');
     });
 
     it('load file', async () => {
