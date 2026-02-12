@@ -104,30 +104,32 @@ export class TestRunner {
 
     run(builder: Builder) {
         const process = new TestRunnerProcess(builder);
+
         process.on('start', (builder: Builder) => this.emit(TestRunnerEvent.run, builder));
         process.on('line', (line: string) => this.processLine(line, builder));
-        process.on('error', (err: Error) => {
-            const error = err.stack ?? err.message;
-            this.emit(TestRunnerEvent.error, error);
-            this.emit(TestRunnerEvent.close, 2);
-        });
-        process.on('close', (code: number | null, output: string) => {
-            const eventName = this.isTestRunning(output) ? TestRunnerEvent.output : TestRunnerEvent.error;
-            this.emit(eventName, output);
-            this.emit(TestRunnerEvent.close, code);
-        });
+        process.on('error', (err: Error) => this.handleProcessError(err));
+        process.on('close', (code: number | null, output: string) => this.handleProcessClose(code, output));
 
         return process;
     }
 
-    emit(eventName: TestRunnerEvent | TeamcityEvent, result: TestResult | any) {
-        this.observers
-            .filter((observer) => observer[eventName])
-            .forEach((observer) => (observer[eventName] as Function)(result));
+    emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]) {
+        for (const observer of this.observers) {
+            const handler = observer[eventName] as ((result: EventResultMap[K]) => void) | undefined;
+            handler?.call(observer, result);
+        }
     }
 
-    private isTestRunning(output: string) {
-        return this.teamcityPattern.test(output);
+    private handleProcessError(err: Error) {
+        const error = err.stack ?? err.message;
+        this.emit(TestRunnerEvent.error, error);
+        this.emit(TestRunnerEvent.close, 2);
+    }
+
+    private handleProcessClose(code: number | null, output: string) {
+        const eventName = this.teamcityPattern.test(output) ? TestRunnerEvent.output : TestRunnerEvent.error;
+        this.emit(eventName, output);
+        this.emit(TestRunnerEvent.close, code);
     }
 
     private processLine(line: string, builder: Builder) {

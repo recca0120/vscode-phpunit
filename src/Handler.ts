@@ -80,42 +80,55 @@ export class Handler {
         const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request);
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
+        const runner = this.createTestRunner(queue, testRun, request);
+        runner.emit(TestRunnerEvent.start, undefined);
+
+        const processes = this.createProcesses(runner, builder, request);
+        cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
+
+        await Promise.all(processes.map((process) => process.run()));
+        await this.collectCoverage(processes, testRun);
+
+        runner.emit(TestRunnerEvent.done, undefined);
+    };
+
+    private createTestRunner(queue: Map<TestCase, TestItem>, testRun: TestRun, request: TestRunRequest) {
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queue, testRun));
         runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, this.printer, request));
         runner.observe(new MessageObserver(this.configuration));
 
-        runner.emit(TestRunnerEvent.start, undefined);
+        return runner;
+    }
 
-        const processes = !request.include
-            ? [runner.run(builder)]
-            : request.include
-                .map((testItem) => this.testCollection.getTestCase(testItem)!)
-                .map((testCase, index) => testCase.update(builder, index))
-                .map((builder) => runner.run(builder));
-
-        cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
-
-        await Promise.all(processes.map((process) => process.run()));
-
-        await Promise.all(
-            processes
-                .map((process) => process.getCloverFile())
-                .filter((file) => !!file)
-                .map(async (file) => {
-                    return (await CloverParser.parseClover(file!)).map(coverage => {
-                        testRun.addCoverage(coverage);
-                    });
-                }),
-        );
-
-        const cloverFile = processes[0].getCloverFile();
-        if (cloverFile) {
-            await rm(dirname(cloverFile), { recursive: true, force: true });
+    private createProcesses(runner: TestRunner, builder: Builder, request: TestRunRequest) {
+        if (!request.include) {
+            return [runner.run(builder)];
         }
 
-        runner.emit(TestRunnerEvent.done, undefined);
-    };
+        return request.include
+            .map((testItem) => this.testCollection.getTestCase(testItem)!)
+            .map((testCase, index) => testCase.update(builder, index))
+            .map((builder) => runner.run(builder));
+    }
+
+    private async collectCoverage(processes: ReturnType<TestRunner['run']>[], testRun: TestRun) {
+        const cloverFiles = processes
+            .map((process) => process.getCloverFile())
+            .filter((file): file is string => !!file);
+
+        await Promise.all(
+            cloverFiles.map(async (file) => {
+                (await CloverParser.parseClover(file)).forEach(coverage => {
+                    testRun.addCoverage(coverage);
+                });
+            }),
+        );
+
+        if (cloverFiles.length > 0) {
+            await rm(dirname(cloverFiles[0]), { recursive: true, force: true });
+        }
+    }
 
     private async discoverTests(tests: Iterable<TestItem>, request: TestRunRequest, queue = new Map<TestCase, TestItem>()) {
         for (const testItem of tests) {

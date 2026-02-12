@@ -22,10 +22,14 @@ export class ProblemMatcher {
         let result = this.testResultParser.parse(input.toString());
         result = PestV1Fixer.fixFlowId(this.cache, result);
 
-        return this.isResult(result) ? this.lookup[result!.event]?.call(this, result) : result;
+        if (!this.isDispatchable(result)) {
+            return result;
+        }
+
+        return this.lookup[result!.event]?.call(this, result);
     }
 
-    private isResult(result?: TestResult): boolean {
+    private isDispatchable(result?: TestResult): boolean {
         return !!result && 'event' in result && 'name' in result && 'flowId' in result;
     }
 
@@ -38,7 +42,7 @@ export class ProblemMatcher {
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
         const cacheId = this.cacheId(testResult);
-        let prevTestResult = this.cache.get(cacheId) as (TestFailed | TestIgnored);
+        const prevTestResult = this.cache.get(cacheId) as (TestFailed | TestIgnored);
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
@@ -48,19 +52,21 @@ export class ProblemMatcher {
         }
 
         if (prevTestResult.event === TeamcityEvent.testStarted) {
-            this.cache.set(cacheId, { ...(prevTestResult ?? {}), ...testResult });
-
-            return;
+            this.cache.set(cacheId, { ...prevTestResult, ...testResult });
+            return undefined;
         }
 
-        if (testResult.message) {
-            prevTestResult.message += '\n\n' + testResult.message;
-        }
-        prevTestResult.details.push(...testResult.details);
-
+        this.appendFaultDetails(prevTestResult, testResult);
         this.cache.set(cacheId, prevTestResult);
 
         return undefined;
+    }
+
+    private appendFaultDetails(target: TestFailed | TestIgnored, source: TestFailed | TestIgnored) {
+        if (source.message) {
+            target.message += '\n\n' + source.message;
+        }
+        target.details.push(...source.details);
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {

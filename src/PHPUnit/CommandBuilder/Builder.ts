@@ -75,28 +75,43 @@ export class Builder {
 
     private create() {
         let command = this.getCommand();
-        const isSshOrShellCommand = isSSH(command) || isShellCommand(command);
+        const isRemoteCommand = isSSH(command) || isShellCommand(command);
         const args = this.getArguments();
 
-        if (!this.hasVariable(args, command)) {
-            command += isSshOrShellCommand
-                ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
-                : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}';
+        command = this.ensureVariablePlaceholders(command, args, isRemoteCommand);
+        command = this.normalizeQuotedVariables(command);
+        command = this.removeEmptyPhpArgs(command, args);
+        command = this.substituteVariables(command, args);
+
+        return this.decodeFilter(parseArgsStringToArgv(command), isRemoteCommand);
+    }
+
+    private ensureVariablePlaceholders(command: string, args: { [p: string]: string }, isRemoteCommand: boolean) {
+        if (this.hasVariable(args, command)) {
+            return command;
         }
 
-        command = command.replace(new RegExp('(\'\\$\{(php|phpargs|phpunit|phpunitargs)\}.*?\')', 'g'), (_m, ...matched) => {
-            return matched[0].replace(/^['"]|['"]$/g, '"');
-        });
+        return command + (isRemoteCommand
+            ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
+            : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}');
+    }
 
-        if (!args.phpargs) {
-            command = command.replace(/\s+\$\{phpargs\}/, '');
-        }
+    private normalizeQuotedVariables(command: string) {
+        return command.replace(
+            new RegExp('(\'\\$\{(php|phpargs|phpunit|phpunitargs)\}.*?\')', 'g'),
+            (_m, ...matched) => matched[0].replace(/^['"]|['"]$/g, '"'),
+        );
+    }
 
-        command = Object.entries(args).reduce((command, [key, value]) => {
-            return command.replace(keyVariable(key), value.trim());
-        }, command.trim());
+    private removeEmptyPhpArgs(command: string, args: { [p: string]: string }) {
+        return args.phpargs ? command : command.replace(/\s+\$\{phpargs\}/, '');
+    }
 
-        return this.decodeFilter(parseArgsStringToArgv(command), isSshOrShellCommand);
+    private substituteVariables(command: string, args: { [p: string]: string }) {
+        return Object.entries(args).reduce(
+            (cmd, [key, value]) => cmd.replace(keyVariable(key), value.trim()),
+            command.trim(),
+        );
     }
 
     private getArguments() {

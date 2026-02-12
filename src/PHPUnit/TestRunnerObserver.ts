@@ -1,7 +1,8 @@
 import { Builder } from './CommandBuilder';
-import {
-    TeamcityEvent, TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
-    TestResult, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
+import { TeamcityEvent, TestResult } from './ProblemMatcher';
+import type {
+    TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
+    TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
 } from './ProblemMatcher';
 
 export enum TestRunnerEvent {
@@ -48,92 +49,16 @@ export type TestRunnerObserver = Partial<{
 export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
 
-    start(): void {
-        this.emit(TestRunnerEvent.start, undefined);
-    }
+    [key: string]: any;
 
-    run(builder: Builder): void {
-        this.emit(TestRunnerEvent.run, builder);
-    }
-
-    line(line: string): void {
-        this.emit(TestRunnerEvent.line, line);
-    }
-
-    output(output: string): void {
-        this.emit(TestRunnerEvent.output, output);
-    }
-
-    error(error: string): void {
-        this.emit(TestRunnerEvent.error, error);
-    }
-
-    close(code: number | null): void {
-        this.emit(TestRunnerEvent.close, code);
-    }
-
-    abort(): void {
-        this.emit(TestRunnerEvent.abort, undefined);
-    }
-
-    done(): void {
-        this.emit(TestRunnerEvent.done, undefined);
-    }
-
-    result(result: TestResult): void {
-        this.emit(TestRunnerEvent.result, result);
-    }
-
-    testVersion(result: TestVersion): void {
-        this.emit(TeamcityEvent.testVersion, result);
-    }
-
-    testProcesses(result: TestProcesses): void {
-        this.emit(TeamcityEvent.testProcesses, result);
-    }
-
-    testRuntime(result: TestRuntime): void {
-        this.emit(TeamcityEvent.testRuntime, result);
-    }
-
-    testConfiguration(result: TestConfiguration): void {
-        this.emit(TeamcityEvent.testConfiguration, result);
-    }
-
-    testSuiteStarted(result: TestSuiteStarted): void {
-        this.emit(TeamcityEvent.testSuiteStarted, result);
-    }
-
-    testCount(result: TestCount): void {
-        this.emit(TeamcityEvent.testCount, result);
-    }
-
-    testStarted(result: TestStarted): void {
-        this.emit(TeamcityEvent.testStarted, result);
-    }
-
-    testFinished(result: TestFinished): void {
-        this.emit(TeamcityEvent.testFinished, result);
-    }
-
-    testFailed(result: TestFailed): void {
-        this.emit(TeamcityEvent.testFailed, result);
-    }
-
-    testIgnored(result: TestIgnored): void {
-        this.emit(TeamcityEvent.testIgnored, result);
-    }
-
-    testSuiteFinished(result: TestSuiteFinished): void {
-        this.emit(TeamcityEvent.testSuiteFinished, result);
-    }
-
-    testDuration(result: TestDuration): void {
-        this.emit(TeamcityEvent.testDuration, result);
-    }
-
-    testResultSummary(result: TestResultSummary): void {
-        this.emit(TeamcityEvent.testResultSummary, result);
+    constructor() {
+        const allEvents = [
+            ...Object.values(TestRunnerEvent),
+            ...Object.values(TeamcityEvent),
+        ];
+        for (const eventName of allEvents) {
+            this[eventName] = (result: any) => this.notify(eventName as any, result);
+        }
     }
 
     on<K extends keyof EventResultMap>(eventName: K, fn: (result: EventResultMap[K]) => void): this {
@@ -145,7 +70,7 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
         return this;
     }
 
-    private emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void {
+    private notify<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void {
         this.listeners[eventName]?.forEach(callback => callback(result));
     }
 }
