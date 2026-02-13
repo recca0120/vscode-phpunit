@@ -3,7 +3,13 @@ import { Handler } from './Handler';
 import { GroupRegistry, TestCollection } from './TestCollection';
 
 export class TestCommandRegistry {
-    constructor(private testCollection: TestCollection, private testRunProfile: TestRunProfile) {}
+    private testRunProfile!: TestRunProfile;
+
+    constructor(private testCollection: TestCollection) {}
+
+    setTestRunProfile(profile: TestRunProfile) {
+        this.testRunProfile = profile;
+    }
 
     reload(callback: () => void) {
         return commands.registerCommand('phpunit.reload', async () => {

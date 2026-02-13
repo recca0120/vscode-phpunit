@@ -17,12 +17,7 @@ import { TYPES } from './types';
 class PHPUnitExtension {
     private container!: Container;
     private ctrl!: ReturnType<typeof tests.createTestController>;
-    private testCollection!: TestCollection;
-    private configuration!: Configuration;
-    private handler!: Handler;
-    private fileChangedEmitter = new EventEmitter<Uri>();
     private watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
-    private phpUnitXML = new PHPUnitXML();
 
     async activate(context: ExtensionContext) {
         this.ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
@@ -31,20 +26,22 @@ class PHPUnitExtension {
         const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
         context.subscriptions.push(outputChannel);
 
-        this.configuration = this.createConfiguration(context);
-        context.subscriptions.push(this.fileChangedEmitter);
+        this.container = createContainer(this.ctrl, outputChannel);
 
-        this.container = createContainer(this.phpUnitXML, this.ctrl, outputChannel, this.configuration);
-        this.testCollection = this.container.get<TestCollection>(TYPES.testCollection);
-        this.handler = this.container.get<Handler>(TYPES.handler);
+        const fileChangedEmitter = this.container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
+        context.subscriptions.push(fileChangedEmitter);
+
+        this.setupConfigurationListener(context);
 
         context.subscriptions.push(languages.registerDocumentLinkProvider(
             { language: 'phpunit' },
             this.container.get<PHPUnitLinkProvider>(TYPES.phpUnitLinkProvider),
         ));
 
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+
         await this.loadInitialConfiguration();
-        await Promise.all(workspace.textDocuments.map((document) => this.testCollection.add(document.uri)));
+        await Promise.all(workspace.textDocuments.map((document) => testCollection.add(document.uri)));
 
         this.registerDocumentListeners(context);
         this.setupTestController(context);
@@ -55,8 +52,8 @@ class PHPUnitExtension {
         this.registerCommands(context, testRunProfile);
     }
 
-    private createConfiguration(context: ExtensionContext) {
-        const configuration = new Configuration(workspace.getConfiguration('phpunit'));
+    private setupConfigurationListener(context: ExtensionContext) {
+        const configuration = this.container.get<Configuration>(TYPES.configuration);
         context.subscriptions.push(
             workspace.onDidChangeConfiguration((event) => {
                 if (event.affectsConfiguration('phpunit')) {
@@ -66,26 +63,31 @@ class PHPUnitExtension {
                 }
             }),
         );
-
-        return configuration;
     }
 
     private async loadInitialConfiguration() {
-        const configurationFile = await this.configuration.getConfigurationFile(workspace.workspaceFolders![0].uri.fsPath);
+        const configuration = this.container.get<Configuration>(TYPES.configuration);
+        const phpUnitXML = this.container.get<PHPUnitXML>(TYPES.phpUnitXML);
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+
+        const configurationFile = await configuration.getConfigurationFile(workspace.workspaceFolders![0].uri.fsPath);
         if (configurationFile) {
-            this.testCollection.reset();
-            await this.phpUnitXML.loadFile(configurationFile);
+            testCollection.reset();
+            await phpUnitXML.loadFile(configurationFile);
         }
     }
 
     private registerDocumentListeners(context: ExtensionContext) {
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
         context.subscriptions.push(
-            workspace.onDidOpenTextDocument((document) => this.testCollection.add(document.uri)),
-            workspace.onDidChangeTextDocument((e) => this.testCollection.change(e.document.uri)),
+            workspace.onDidOpenTextDocument((document) => testCollection.add(document.uri)),
+            workspace.onDidChangeTextDocument((e) => testCollection.change(e.document.uri)),
         );
     }
 
     private setupTestController(context: ExtensionContext) {
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+
         const reload = async () => {
             await Promise.all(
                 (await this.getWorkspaceTestPatterns()).map(({ pattern, exclude }) => this.findInitialFiles(pattern, exclude)),
@@ -100,15 +102,19 @@ class PHPUnitExtension {
             }
 
             if (item.uri) {
-                await this.testCollection.add(item.uri);
+                await testCollection.add(item.uri);
             }
         };
     }
 
     private setupFileChangeHandler() {
-        this.fileChangedEmitter.event(uri => {
+        const fileChangedEmitter = this.container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
+        const handler = this.container.get<Handler>(TYPES.handler);
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+
+        fileChangedEmitter.event(uri => {
             if (this.watchingTests.has('ALL')) {
-                this.handler.startTestRun(new TestRunRequest(undefined, undefined, this.watchingTests.get('ALL'), true));
+                handler.startTestRun(new TestRunRequest(undefined, undefined, this.watchingTests.get('ALL'), true));
                 return;
             }
 
@@ -117,21 +123,23 @@ class PHPUnitExtension {
             for (const [testItem, thisProfile] of this.watchingTests) {
                 const cast = testItem as TestItem;
                 if (cast.uri?.toString() === uri.toString()) {
-                    include.push(...this.testCollection.findTestsByFile(cast.uri!));
+                    include.push(...testCollection.findTestsByFile(cast.uri!));
                     profile = thisProfile;
                 }
             }
 
             if (include.length) {
-                this.handler.startTestRun(new TestRunRequest(include, undefined, profile, true));
+                handler.startTestRun(new TestRunRequest(include, undefined, profile, true));
             }
         });
     }
 
     private createRunHandler() {
+        const handler = this.container.get<Handler>(TYPES.handler);
+
         return async (request: TestRunRequest, cancellation: CancellationToken) => {
             if (!request.continuous) {
-                return this.handler.startTestRun(request, cancellation);
+                return handler.startTestRun(request, cancellation);
             }
 
             if (request.include === undefined) {
@@ -160,7 +168,10 @@ class PHPUnitExtension {
     }
 
     private registerCommands(context: ExtensionContext, testRunProfile: TestRunProfile) {
-        const commandHandler = new TestCommandRegistry(this.testCollection, testRunProfile);
+        const commandHandler = this.container.get<TestCommandRegistry>(TYPES.testCommandRegistry);
+        commandHandler.setTestRunProfile(testRunProfile);
+
+        const handler = this.container.get<Handler>(TYPES.handler);
 
         context.subscriptions.push(commandHandler.reload(async () => {
             await Promise.all(
@@ -170,8 +181,8 @@ class PHPUnitExtension {
         context.subscriptions.push(commandHandler.runAll());
         context.subscriptions.push(commandHandler.runFile());
         context.subscriptions.push(commandHandler.runTestAtCursor());
-        context.subscriptions.push(commandHandler.rerun(this.handler));
-        context.subscriptions.push(commandHandler.runByGroup(this.handler));
+        context.subscriptions.push(commandHandler.rerun(handler));
+        context.subscriptions.push(commandHandler.runByGroup(handler));
     }
 
     private async getWorkspaceTestPatterns() {
@@ -180,13 +191,14 @@ class PHPUnitExtension {
         }
 
         const configuration = new Configuration(workspace.getConfiguration('phpunit'));
+        const phpUnitXML = this.container.get<PHPUnitXML>(TYPES.phpUnitXML);
 
         return Promise.all(workspace.workspaceFolders.map(async (workspaceFolder: WorkspaceFolder) => {
             const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
             configurationFile
-                ? await this.phpUnitXML.loadFile(Uri.file(configurationFile).fsPath)
-                : this.phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
-            const { includes, excludes } = this.phpUnitXML.getPatterns(workspaceFolder.uri.fsPath);
+                ? await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath)
+                : phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
+            const { includes, excludes } = phpUnitXML.getPatterns(workspaceFolder.uri.fsPath);
 
             const toRelativePattern = (pattern: Pattern) => {
                 const { uri, pattern: glob } = pattern.toGlobPattern();
@@ -202,27 +214,31 @@ class PHPUnitExtension {
     }
 
     private async findInitialFiles(pattern: GlobPattern, exclude: GlobPattern) {
-        this.testCollection.reset();
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+        testCollection.reset();
         const files = await workspace.findFiles(pattern, exclude);
-        await Promise.all(files.map((file) => this.testCollection.add(file)));
+        await Promise.all(files.map((file) => testCollection.add(file)));
     }
 
     private async startWatchingWorkspace() {
+        const testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+        const fileChangedEmitter = this.container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
+
         return Promise.all((await this.getWorkspaceTestPatterns()).map(async ({ pattern, exclude }) => {
             const watcher = workspace.createFileSystemWatcher(pattern);
 
             watcher.onDidCreate((uri) => {
-                this.testCollection.add(uri);
-                this.fileChangedEmitter.fire(uri);
+                testCollection.add(uri);
+                fileChangedEmitter.fire(uri);
             });
 
             watcher.onDidChange((uri) => {
-                this.testCollection.change(uri);
-                this.fileChangedEmitter.fire(uri);
+                testCollection.change(uri);
+                fileChangedEmitter.fire(uri);
             });
 
             watcher.onDidDelete((uri) => {
-                this.testCollection.delete(uri);
+                testCollection.delete(uri);
             });
 
             await this.findInitialFiles(pattern, exclude);

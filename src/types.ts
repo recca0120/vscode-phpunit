@@ -8,4 +8,6 @@ export const TYPES = {
     testRunnerFactory: Symbol.for('TestRunnerFactory'),
     handler: Symbol.for('Handler'),
     phpUnitLinkProvider: Symbol.for('PHPUnitLinkProvider'),
+    testCommandRegistry: Symbol.for('TestCommandRegistry'),
+    fileChangedEmitter: Symbol.for('FileChangedEmitter'),
 };
