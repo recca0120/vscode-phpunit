@@ -1,22 +1,21 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import { Declaration, Node } from 'php-parser';
-import { PHPUnitXML } from '../PHPUnitXML';
-import { TestDefinition, TestType } from '../types';
+import type { Declaration, Node } from 'php-parser';
+import type { PHPUnitXML } from '../PHPUnitXML';
+import type { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
-import { Parser } from './Parser';
+import type { Parser } from './Parser';
 import { PestParser } from './PestParser';
-import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 import { PHPUnitParser } from './PHPUnitParser';
+import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestParser {
     private parsers: Parser[] = [new PestParser(), new PHPUnitParser()];
-    private eventEmitter = new EventEmitter;
+    private eventEmitter = new EventEmitter();
 
-    constructor(private phpUnitXML: PHPUnitXML) {
-    }
+    constructor(private phpUnitXML: PHPUnitXML) {}
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
         this.eventEmitter.on(`${eventName}`, callback);
@@ -41,10 +40,12 @@ export class TestParser {
             ast.comments?.forEach((comment) => {
                 if (comment.value[comment.value.length - 1] === '\r') {
                     comment.value = comment.value.slice(0, -1);
+                    // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
                     comment.loc!.end.offset = comment.loc!.end.offset - 1;
                 }
                 if (comment.value[comment.value.length - 1] === '\n') {
                     comment.value = comment.value.slice(0, -1);
+                    // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
                     comment.loc!.end.offset = comment.loc!.end.offset - 1;
                 }
             });
@@ -57,12 +58,19 @@ export class TestParser {
         }
     }
 
-    private parseAst(declaration: Declaration | Node, file: string, testsuite?: string): TestDefinition[] | undefined {
-        const definition = new PhpAstNodeWrapper(declaration, { phpUnitXML: this.phpUnitXML, file });
+    private parseAst(
+        declaration: Declaration | Node,
+        file: string,
+        testsuite?: string,
+    ): TestDefinition[] | undefined {
+        const definition = new PhpAstNodeWrapper(declaration, {
+            phpUnitXML: this.phpUnitXML,
+            file,
+        });
 
         for (const parser of this.parsers) {
             const tests = parser.parse(definition);
-            tests?.forEach((testDefinition) => testDefinition.testsuite = testsuite);
+            tests?.forEach((testDefinition) => (testDefinition.testsuite = testsuite));
             if (tests) {
                 return this.emit(tests);
             }
@@ -72,7 +80,7 @@ export class TestParser {
     }
 
     private emit(tests: TestDefinition[]) {
-        tests.forEach(test => {
+        tests.forEach((test) => {
             this.eventEmitter.emit(`${test.type}`, test);
             if (test.children && test.children.length > 0) {
                 this.emit(test.children);

@@ -1,6 +1,6 @@
-import { TestDefinition } from '../types';
-import { Parser } from './Parser';
-import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
+import type { TestDefinition } from '../types';
+import type { Parser } from './Parser';
+import type { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 export class PHPUnitParser implements Parser {
     parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined {
@@ -13,7 +13,9 @@ export class PHPUnitParser implements Parser {
                 return testDefinition;
             }
 
-            let namespace = testDefinitions.find((item: TestDefinition) => item.namespace === definition.parent?.name);
+            let namespace = testDefinitions.find(
+                (item: TestDefinition) => item.namespace === definition.parent?.name,
+            );
             if (!namespace) {
                 namespace = definition.parent.createNamespaceTestDefinition();
                 testDefinitions.push(namespace);
@@ -23,12 +25,13 @@ export class PHPUnitParser implements Parser {
             return testDefinition;
         };
 
-        definition.getClasses()
-            .filter(definition => definition.isTest())
-            .forEach(definition => {
+        definition
+            .getClasses()
+            .filter((definition) => definition.isTest())
+            .forEach((definition) => {
                 getParent(definition).children = (definition.children ?? [])
-                    .filter(definition => definition.isTest())
-                    .map(definition => definition.toTestDefinition());
+                    .filter((definition) => definition.isTest())
+                    .map((definition) => definition.toTestDefinition());
             });
 
         return testDefinitions.length === 0 ? undefined : testDefinitions;

@@ -1,15 +1,23 @@
-import { Position, TestController, TestItem, TestRunRequest } from 'vscode';
-import { URI } from 'vscode-uri';
+import type { Position, TestController, TestItem, TestRunRequest } from 'vscode';
+import type { URI } from 'vscode-uri';
 import {
-    CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
+    TestCollection as BaseTestCollection,
+    CustomWeakMap,
+    type File,
+    type PHPUnitXML,
+    type TestDefinition,
+    TestType,
 } from '../PHPUnit';
-import { TestCase } from './TestCase';
+import type { TestCase } from './TestCase';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
 
-    constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML) {
+    constructor(
+        private ctrl: TestController,
+        phpUnitXML: PHPUnitXML,
+    ) {
         super(phpUnitXML);
     }
 
@@ -41,7 +49,6 @@ export class TestCollection extends BaseTestCollection {
         return items.length > 0 ? [items[0]] : this.findTestsByFile(uri);
     }
 
-
     findTestsByRequest(request?: TestRunRequest) {
         if (!request || !request.include) {
             return undefined;
@@ -65,7 +72,9 @@ export class TestCollection extends BaseTestCollection {
     reset() {
         for (const [, testData] of this.getTestData()) {
             for (const [testItem] of testData) {
-                testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+                testItem.parent
+                    ? testItem.parent.children.delete(testItem.id)
+                    : this.ctrl.items.delete(testItem.id);
             }
         }
 
@@ -105,7 +114,10 @@ export class TestCollection extends BaseTestCollection {
     private getTestData() {
         const workspace = this.getWorkspace();
         if (!this.testItems.has(workspace.fsPath)) {
-            this.testItems.set(workspace.fsPath, new Map<string, CustomWeakMap<TestItem, TestCase>>());
+            this.testItems.set(
+                workspace.fsPath,
+                new Map<string, CustomWeakMap<TestItem, TestCase>>(),
+            );
         }
 
         return this.testItems.get(workspace.fsPath)!;

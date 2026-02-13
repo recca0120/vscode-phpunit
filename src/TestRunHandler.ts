@@ -1,14 +1,18 @@
 import {
-    CancellationToken, debug, TestController, TestItem, TestRun, TestRunRequest,
+    type CancellationToken,
+    debug,
+    type TestController,
+    type TestRun,
+    type TestRunRequest,
     workspace,
 } from 'vscode';
-import { CoverageCollector } from './CoverageCollector';
-import { Configuration } from './Configuration';
-import { ProcessBuilder, PHPUnitXML, TestRunner, TestRunnerEvent } from './PHPUnit';
+import type { Configuration } from './Configuration';
+import type { CoverageCollector } from './CoverageCollector';
+import { type PHPUnitXML, ProcessBuilder, type TestRunner, TestRunnerEvent } from './PHPUnit';
 import { Mode, Xdebug } from './PHPUnit/ProcessBuilder/Xdebug';
-import { TestCollection } from './TestCollection';
-import { TestQueueBuilder } from './TestQueueBuilder';
-import { TestRunnerBuilder } from './TestRunnerBuilder';
+import type { TestCollection } from './TestCollection';
+import type { TestQueueBuilder } from './TestQueueBuilder';
+import type { TestRunnerBuilder } from './TestRunnerBuilder';
 
 export class TestRunHandler {
     private previousRequest: TestRunRequest | undefined;
@@ -37,7 +41,7 @@ export class TestRunHandler {
         await xdebug.setMode(request.profile?.kind);
         if (xdebug.mode === Mode.debug) {
             // TODO: perhaps wait for the debug session
-            await debug.startDebugging(wsf, xdebug.name ?? await xdebug.getDebugConfiguration());
+            await debug.startDebugging(wsf, xdebug.name ?? (await xdebug.getDebugConfiguration()));
         }
 
         const testRun = this.ctrl.createTestRun(request);
@@ -57,13 +61,13 @@ export class TestRunHandler {
         const request = new TestRunRequest();
         const testRun = this.ctrl.createTestRun(request);
 
-        const queue = await this.testDiscovery.discover(
-            this.testDiscovery.gatherTestItems(this.ctrl.items),
+        const queue = await this.testQueueBuilder.build(
+            this.testQueueBuilder.collectItems(this.ctrl.items),
             request,
         );
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
-        const runner = this.testRunnerFactory.create(queue, testRun, request);
+        const runner = this.testRunnerBuilder.build(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
         const process = runner.run(builder);
@@ -74,7 +78,12 @@ export class TestRunHandler {
         testRun.end();
     }
 
-    private async runTestQueue(builder: ProcessBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
+    private async runTestQueue(
+        builder: ProcessBuilder,
+        testRun: TestRun,
+        request: TestRunRequest,
+        cancellation?: CancellationToken,
+    ) {
         const queue = await this.testQueueBuilder.build(
             request.include ?? this.testQueueBuilder.collectItems(this.ctrl.items),
             request,
@@ -85,13 +94,15 @@ export class TestRunHandler {
         runner.emit(TestRunnerEvent.start, undefined);
 
         const processes = this.createProcesses(runner, builder, request);
-        cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
+        cancellation?.onCancellationRequested(() =>
+            processes.forEach((process) => process.abort()),
+        );
 
         await Promise.all(processes.map((process) => process.run()));
         await this.coverageCollector.collect(processes, testRun);
 
         runner.emit(TestRunnerEvent.done, undefined);
-    };
+    }
 
     private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
         if (!request.include) {

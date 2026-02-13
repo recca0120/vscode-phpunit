@@ -1,12 +1,12 @@
 import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
 import yargsParser from 'yargs-parser';
-import { Teamcity } from './types';
+import type { Teamcity } from './types';
 
 class EscapeValue {
     private readonly mappings: ReadonlyArray<readonly [string, string]> = [
         ['||', '|'],
-        ['|\'', '\''],
+        ["|'", "'"],
         ['|n', '\n'],
         ['|r', '\r'],
         ['|]', ']'],
@@ -34,20 +34,24 @@ class EscapeValue {
     }
 
     public escapeSingleQuote(value: string | number | object) {
-        return this.change(value, [[new RegExp('\\|\'', 'g'), '%%%SINGLE_QUOTE%%%']]);
+        return this.change(value, [[/\|'/g, '%%%SINGLE_QUOTE%%%']]);
     }
 
     public unescapeSingleQuote(value: string | number | object) {
-        return this.change(value, [[new RegExp('%%%SINGLE_QUOTE%%%', 'g'), '\'']]);
+        return this.change(value, [[/%%%SINGLE_QUOTE%%%/g, "'"]]);
     }
 
-    private change(value: string | number | any, replacements: ReadonlyArray<readonly [RegExp, string]>) {
+    private change(
+        value: string | number | object,
+        replacements: ReadonlyArray<readonly [RegExp, string]>,
+    ) {
         if (typeof value === 'object') {
-            for (const x in value) {
-                value[x] = this.change(value[x], replacements);
+            const obj = value as Record<string, unknown>;
+            for (const x in obj) {
+                obj[x] = this.change(obj[x] as string | number | object, replacements);
             }
 
-            return value;
+            return obj;
         }
 
         if (typeof value !== 'string') {
@@ -62,7 +66,10 @@ class EscapeValue {
     }
 
     private toRegExp(str: string) {
-        return new RegExp(str.replace(/([|\]\[])/g, (m) => `\\${m}`), 'g');
+        return new RegExp(
+            str.replace(/([|\][])/g, (m) => `\\${m}`),
+            'g',
+        );
     }
 }
 
@@ -72,18 +79,19 @@ export const engine = new Engine({
     ast: { withPositions: true, withSource: true },
     parser: { extractDoc: true, suppressErrors: false },
     lexer: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         all_tokens: true,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         short_tags: true,
     },
 });
 
 export const escapeValue = new EscapeValue();
 
-export const parseValue = (key: any, value: any): string[] => {
+export const parseValue = (key: string, value: string | boolean | string[]): string[] => {
     if (Array.isArray(value)) {
-        return value.reduce((acc: string[], item: any) => acc.concat(parseValue(key, item)), []);
+        return value.reduce(
+            (acc: string[], item: string | boolean | string[]) => acc.concat(parseValue(key, item)),
+            [],
+        );
     }
     const dash = key.length === 1 ? '-' : '--';
     const operator = key.length === 1 ? ' ' : '=';
@@ -91,53 +99,55 @@ export const parseValue = (key: any, value: any): string[] => {
     return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
 };
 
-export const groupBy = <T extends { [key: string]: any }>(items: T[], key: string): { [key: string]: T[]; } => {
+export const groupBy = <T extends Record<string, unknown>>(
+    items: T[],
+    key: string,
+): { [key: string]: T[] } => {
     if (!items) {
         return {};
     }
 
-    return items.reduce((acc, item: T) => {
-        const itemKey = item[key] as string;
+    return items.reduce(
+        (acc, item: T) => {
+            const itemKey = item[key] as string;
 
-        if (!acc[itemKey]) {
-            acc[itemKey] = [];
-        }
+            if (!acc[itemKey]) {
+                acc[itemKey] = [];
+            }
 
-        acc[itemKey].push(item);
+            acc[itemKey].push(item);
 
-        return acc;
-    }, {} as { [key: string]: T[] });
+            return acc;
+        },
+        {} as { [key: string]: T[] },
+    );
 };
 
 export const parseTeamcity = (text: string): Teamcity => {
-    text = text.trim().replace(new RegExp('^.*#+teamcity'), '').replace(/^\[|]$/g, '');
+    text = text
+        .trim()
+        .replace(/^.*#+teamcity/, '')
+        .replace(/^\[|]$/g, '');
     text = escapeValue.escapeSingleQuote(text) as string;
     text = escapeValue.unescape(text) as string;
 
     const [eventName, ...args] = yargsParser(text)._;
-    const command = [
-        `--event='${eventName}'`,
-        ...args.map((parameter) => `--${parameter}`),
-    ];
+    const command = [`--event='${eventName}'`, ...args.map((parameter) => `--${parameter}`)];
 
     const { _, $0, ...argv } = yargsParser(command.join(' '), {
         string: ['actual', 'expected'],
     });
 
-    return escapeValue.unescapeSingleQuote(argv);
+    return escapeValue.unescapeSingleQuote(argv) as Teamcity;
 };
 
 export const parseArguments = (parameters: string[], excludes: string[]) => {
     const { _, ...argv } = yargsParser(parameters.join(' ').trim(), {
         alias: { configuration: ['c'] },
         configuration: {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             'camel-case-expansion': false,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             'boolean-negation': false,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             'short-option-groups': true,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             'dot-notation': false,
         },
     });
@@ -145,9 +155,14 @@ export const parseArguments = (parameters: string[], excludes: string[]) => {
     return Object.entries(argv)
         .filter(([key]) => !excludes.includes(key))
         .reduce(
-            (parameters: any, [key, value]) => [...parseValue(key, value), ...parameters],
-            _.map((parameter) => (typeof parameter === 'number' ? parameter : decodeURIComponent(parameter))),
-        ) as string[];
+            (parameters: string[], [key, value]) => [
+                ...parseValue(key, value as string | boolean | string[]),
+                ...parameters,
+            ],
+            _.map((parameter) =>
+                typeof parameter === 'number' ? String(parameter) : decodeURIComponent(parameter),
+            ),
+        );
 };
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
@@ -155,8 +170,12 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
         await stat(filePath);
 
         return true;
-    } catch (error: any) {
-        if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+        if (
+            error instanceof Error &&
+            'code' in error &&
+            (error as NodeJS.ErrnoException).code === 'ENOENT'
+        ) {
             return false;
         } else {
             throw error;
@@ -217,7 +236,7 @@ export class CustomWeakMap<K extends object, V> {
         });
     }
 
-    * [Symbol.iterator](): Generator<[K, V]> {
+    *[Symbol.iterator](): Generator<[K, V]> {
         for (const key of this.keys) {
             yield [key, this.weakMap.get(key)!];
         }
@@ -226,15 +245,26 @@ export class CustomWeakMap<K extends object, V> {
 
 export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 export const uncapitalize = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
-export const snakeCase = (str: string) => str.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s\-]+/g, '_').toLowerCase();
-export const camelCase = (str: string) => str.toLowerCase().replace(/([-_ \s]+[a-z])/g, (group) => group.toUpperCase().replace(/[-_ \s]/g, ''));
-export const titleCase = (str: string) => capitalize(str.replace(/([A-Z]+|[_\-\s]+([A-Z]+|[a-z]))/g, (_: string, matched: string) => {
-    return ' ' + matched.trim().replace(/[_\-]/, '').toUpperCase();
-}).trim());
+export const snakeCase = (str: string) =>
+    str
+        .replace(/([a-z])([A-Z])/g, '$1_$2')
+        .replace(/[\s-]+/g, '_')
+        .toLowerCase();
+export const camelCase = (str: string) =>
+    str
+        .toLowerCase()
+        .replace(/([-_ \s]+[a-z])/g, (group) => group.toUpperCase().replace(/[-_ \s]/g, ''));
+export const titleCase = (str: string) =>
+    capitalize(
+        str
+            .replace(/([A-Z]+|[_\-\s]+([A-Z]+|[a-z]))/g, (_: string, matched: string) => {
+                return ` ${matched.trim().replace(/[_-]/, '').toUpperCase()}`;
+            })
+            .trim(),
+    );
 
 export const cloneInstance = <T extends object>(obj: T): T => {
     const clone = Object.create(Object.getPrototypeOf(obj));
 
     return Object.assign(clone, obj);
 };
-

@@ -1,4 +1,4 @@
-import { describe, expect, it, test } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { TestType } from '../types';
 import { PestV2Fixer } from './PestFixer';
 import { PestTransformer } from './PestTransformer';
@@ -20,10 +20,12 @@ describe('PestTransformer', () => {
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
             const type = TestType.method;
             const className = 'P\\Tests\\Unit\\ExampleTest';
-            const methodName = 'ensures the given closures reports the correct class name and suggests the [pest()] function';
+            const methodName =
+                'ensures the given closures reports the correct class name and suggests the [pest()] function';
             const classFQN = className;
 
-            const expected = 'tests/Unit/ExampleTest.php::ensures the given closures reports the correct class name and suggests the [pest()] function';
+            const expected =
+                'tests/Unit/ExampleTest.php::ensures the given closures reports the correct class name and suggests the [pest()] function';
             expect(transformer.uniqueId({ type, classFQN, methodName })).toEqual(expected);
         });
     });
@@ -32,13 +34,15 @@ describe('PestTransformer', () => {
         it('test /** with comment */ should do', () => {
             const input = 'test /** with comment */ should do';
             const expected = 'test /\\*\\* with comment \\*/ should do';
-            expect(input.replace(/([\[\]()*])/g, '\\$1')).toEqual(expected);
+            expect(input.replace(/([[\]()*])/g, '\\$1')).toEqual(expected);
         });
 
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
-            const input = 'ensures the given closures reports the correct class name and suggests the [pest()] function';
-            const expected = 'ensures the given closures reports the correct class name and suggests the \\[pest\\(\\)\\] function';
-            expect(input.replace(/([\[\]()*])/g, '\\$1')).toEqual(expected);
+            const input =
+                'ensures the given closures reports the correct class name and suggests the [pest()] function';
+            const expected =
+                'ensures the given closures reports the correct class name and suggests the \\[pest\\(\\)\\] function';
+            expect(input.replace(/([[\]()*])/g, '\\$1')).toEqual(expected);
         });
     });
 
@@ -344,9 +348,13 @@ describe('PestTransformer', () => {
         });
 
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
-            const actual = PestV2Fixer.methodName('ensures the given closures reports the correct class name and suggests the [pest()] function');
+            const actual = PestV2Fixer.methodName(
+                'ensures the given closures reports the correct class name and suggests the [pest()] function',
+            );
 
-            expect(actual).toEqual('__pest_evaluable_ensures_the_given_closures_reports_the_correct_class_name_and_suggests_the__pest____function');
+            expect(actual).toEqual(
+                '__pest_evaluable_ensures_the_given_closures_reports_the_correct_class_name_and_suggests_the__pest____function',
+            );
         });
 
         it('adds coverage if --min exist', () => {
@@ -356,7 +364,9 @@ describe('PestTransformer', () => {
         });
 
         it('has_emails with dataset', () => {
-            const actual = PestV2Fixer.methodName(`it has emails with data set "(|'enunomaduro@gmail.com|')"`);
+            const actual = PestV2Fixer.methodName(
+                `it has emails with data set "(|'enunomaduro@gmail.com|')"`,
+            );
 
             expect(actual).toEqual('__pest_evaluable_it_has_emails"(\'enunomaduro@gmail.com\')"');
         });

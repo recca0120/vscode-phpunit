@@ -1,12 +1,15 @@
-import { beforeEach, describe, expect, it, test } from 'vitest';
 import { relative } from 'node:path';
-import { DocumentLink, Position, Range } from 'vscode';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { type DocumentLink, Position, Range } from 'vscode';
 import { PHPUnitXML } from './PHPUnit';
 import { phpUnitProject } from './PHPUnit/__tests__/utils';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 
 class TextLine {
-    constructor(public text: string, public range: Range) {}
+    constructor(
+        public text: string,
+        public range: Range,
+    ) {}
 }
 
 class TextDocument {
@@ -15,9 +18,12 @@ class TextDocument {
     constructor(text: string) {
         this.lines = text
             .split('\n')
-            .map((line, index) => new TextLine(
-                line,
-                new Range(new Position(index, 0), new Position(index, text.length))),
+            .map(
+                (line, index) =>
+                    new TextLine(
+                        line,
+                        new Range(new Position(index, 0), new Position(index, text.length)),
+                    ),
             );
     }
 
@@ -38,11 +44,12 @@ describe('PHPUnitLinkProvider', () => {
     };
 
     let provider: PHPUnitLinkProvider;
-    beforeEach(() => provider = new PHPUnitLinkProvider(phpUnitXML));
+    beforeEach(() => (provider = new PHPUnitLinkProvider(phpUnitXML)));
 
     it('get PHPUnit links', () => {
-        const document = new TextDocument(`❌ FAILED  Calculator (Tests\Calculator) > Sum item method not call
-Mockery\Exception\InvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called
+        const document =
+            new TextDocument(`❌ FAILED  Calculator (TestsCalculator) > Sum item method not call
+MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called
  exactly 1 times but called 0 times.
 
 1. ${phpUnitProject('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php')}:32
@@ -55,8 +62,12 @@ Mockery\Exception\InvalidCountException: Method test(<Any Arguments>) from Mocke
 8. ${phpUnitProject('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php')}:61
 9. ${phpUnitProject('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php')}:19`);
 
-        const links = (provider.provideDocumentLinks(document as any, {} as any) as DocumentLink[])
-            .map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
+        const links = (
+            provider.provideDocumentLinks(
+                document as unknown as import('vscode').TextDocument,
+                {} as unknown as import('vscode').CancellationToken,
+            ) as DocumentLink[]
+        ).map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
 
         expect(links).toEqual([
             ['vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php', 'L32'],
@@ -65,9 +76,18 @@ Mockery\Exception\InvalidCountException: Method test(<Any Arguments>) from Mocke
             ['vendor/mockery/mockery/library/Mockery/Container.php', 'L583'],
             ['vendor/mockery/mockery/library/Mockery/Container.php', 'L519'],
             ['vendor/mockery/mockery/library/Mockery.php', 'L176'],
-            ['vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php', 'L49'],
-            ['vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php', 'L61'],
-            ['vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php', 'L19'],
+            [
+                'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php',
+                'L49',
+            ],
+            [
+                'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php',
+                'L61',
+            ],
+            [
+                'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php',
+                'L19',
+            ],
         ]);
     });
 
@@ -100,8 +120,12 @@ at src/Calculator.php:7
 11. vendor/pestphp/pest-plugin-arch/src/SingleArchExpectation.php:156
 12. vendor/pestphp/pest-plugin-arch/src/SingleArchExpectation.php:140`);
 
-        const links = (provider.provideDocumentLinks(document as any, {} as any) as DocumentLink[])
-            .map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
+        const links = (
+            provider.provideDocumentLinks(
+                document as unknown as import('vscode').TextDocument,
+                {} as unknown as import('vscode').CancellationToken,
+            ) as DocumentLink[]
+        ).map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
 
         expect(links).toEqual([
             ['src/Calculator.php', 'L7'],

@@ -1,12 +1,12 @@
-import { describe, expect, it, test } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
 import { ProcessBuilder } from './ProcessBuilder';
 
 describe('ProcessBuilder Test', () => {
     describe('LocalCommand', () => {
-        const givenBuilder = (configuration: any, cwd?: string) => {
+        const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
             return new ProcessBuilder(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
@@ -31,9 +31,12 @@ describe('ProcessBuilder Test', () => {
         it('should run Windows Path', () => {
             const cwd = phpUnitProjectWin('');
             const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
-            const builder = givenBuilder({
-                phpunit: phpUnitProjectWin('vendor/bin/phpunit'),
-            }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            const builder = givenBuilder(
+                {
+                    phpunit: phpUnitProjectWin('vendor/bin/phpunit'),
+                },
+                cwd,
+            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
@@ -82,10 +85,8 @@ describe('ProcessBuilder Test', () => {
 
         it('set environment object', () => {
             const environment = {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'XDEBUG_MODE': 'coverage',
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                'MEMORY_LIMIT': '-1',
+                XDEBUG_MODE: 'coverage',
+                MEMORY_LIMIT: '-1',
             };
 
             const builder = givenBuilder({ environment, phpunit: 'vendor/bin/phpunit' });
@@ -96,7 +97,9 @@ describe('ProcessBuilder Test', () => {
             expect(options.cwd).toEqual(phpUnitProject(''));
 
             for (const [key, value] of Object.entries(environment)) {
-                expect(spawnSync('php', ['-r', `echo getenv('${key}');`], options).stdout.toString()).toEqual(value);
+                expect(
+                    spawnSync('php', ['-r', `echo getenv('${key}');`], options).stdout.toString(),
+                ).toEqual(value);
             }
         });
 
@@ -105,22 +108,20 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual([
-                'artisan',
-                'test',
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expect(args).toEqual(['artisan', 'test', '--colors=never', '--teamcity']);
         });
 
         it('has single quote', () => {
-            const filter = '^.*::(it has user\'s email)(( with (data set )?.*)?)?$';
+            const filter = "^.*::(it has user's email)(( with (data set )?.*)?)?$";
 
             const cwd = phpUnitProject('');
             const testFile = phpUnitProject('tests/AssertionsTest.php');
-            const builder = givenBuilder({
-                phpunit: 'vendor/bin/pest',
-            }, cwd).setArguments(`${testFile} --filter="${filter}"`);
+            const builder = givenBuilder(
+                {
+                    phpunit: 'vendor/bin/pest',
+                },
+                cwd,
+            ).setArguments(`${testFile} --filter="${filter}"`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
@@ -135,7 +136,7 @@ describe('ProcessBuilder Test', () => {
     });
 
     describe('RemoteCommand', () => {
-        const givenBuilder = (configuration: any, cwd?: string) => {
+        const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
             return new ProcessBuilder(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
@@ -199,7 +200,6 @@ describe('ProcessBuilder Test', () => {
                 command: 'docker exec --workdir=/var/www/ container_name',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
                     '${workspaceFolder}': '/var/www',
                 },
             }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
@@ -222,14 +222,16 @@ describe('ProcessBuilder Test', () => {
         it('should replace workspaceFolder for Windows Path', () => {
             const cwd = phpUnitProjectWin('');
             const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
-            const builder = givenBuilder({
-                command: 'docker exec --workdir=/var/www/ container_name',
-                phpunit: 'vendor/bin/phpunit',
-                paths: {
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
-                    '${workspaceFolder}': '/var/www',
+            const builder = givenBuilder(
+                {
+                    command: 'docker exec --workdir=/var/www/ container_name',
+                    phpunit: 'vendor/bin/phpunit',
+                    paths: {
+                        '${workspaceFolder}': '/var/www',
+                    },
                 },
-            }, cwd).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+                cwd,
+            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('docker');
@@ -273,7 +275,8 @@ describe('ProcessBuilder Test', () => {
 
         it('ssh', () => {
             const builder = givenBuilder({
-                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
+                command:
+                    'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -302,12 +305,15 @@ describe('ProcessBuilder Test', () => {
     });
 
     describe('phpunit.command has variable', () => {
-        const givenBuilder = (configuration: any, cwd?: string) => {
-            return new ProcessBuilder(new Configuration({
-                command: '${php} ${phpargs} ${phpunit} ${phpunitargs}',
-                php: 'php',
-                ...configuration,
-            }), { cwd: cwd ?? phpUnitProject('') });
+        const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
+            return new ProcessBuilder(
+                new Configuration({
+                    command: '${php} ${phpargs} ${phpunit} ${phpunitargs}',
+                    php: 'php',
+                    ...configuration,
+                }),
+                { cwd: cwd ?? phpUnitProject('') },
+            );
         };
 
         it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs}', () => {
@@ -317,11 +323,7 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual([
-                'vendor/bin/phpunit',
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
         });
 
         it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} --functional', () => {
@@ -348,17 +350,13 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual([
-                'artisan',
-                'test',
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expect(args).toEqual(['artisan', 'test', '--colors=never', '--teamcity']);
         });
 
         it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} and environment', () => {
             const builder = givenBuilder({
-                command: 'XDEBUG_MODE=coverage MEMORY_LIMIT=-1 ${php} ${phpargs} ${phpunit} ${phpunitargs}',
+                command:
+                    'XDEBUG_MODE=coverage MEMORY_LIMIT=-1 ${php} ${phpargs} ${phpunit} ${phpunitargs}',
                 phpunit: 'vendor/bin/phpunit',
             });
 
@@ -375,7 +373,8 @@ describe('ProcessBuilder Test', () => {
 
         it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with ssh', () => {
             const builder = givenBuilder({
-                command: 'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}"',
+                command:
+                    'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}"',
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -404,7 +403,8 @@ describe('ProcessBuilder Test', () => {
 
         it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with docker', () => {
             const builder = givenBuilder({
-                command: 'docker exec -t container_name /bin/sh -c \'${php} ${phpargs} ${phpunit} ${phpunitargs}\'',
+                command:
+                    "docker exec -t container_name /bin/sh -c '${php} ${phpargs} ${phpunit} ${phpunitargs}'",
                 phpunit: 'vendor/bin/phpunit',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 

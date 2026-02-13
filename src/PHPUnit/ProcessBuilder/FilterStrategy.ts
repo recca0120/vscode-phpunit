@@ -1,11 +1,10 @@
 import { Transformer } from '../Transformer';
-import { TestDefinition, TestType } from '../types';
+import { type TestDefinition, TestType } from '../types';
 
 abstract class FilterStrategy {
-    constructor(protected testDefinition: TestDefinition) {
-    }
+    constructor(protected testDefinition: TestDefinition) {}
 
-    abstract getFilter(): string
+    abstract getFilter(): string;
 
     protected parseFilter(filter: string) {
         return `--filter="${filter}(( with (data set )?.*)?)?$"`;
@@ -14,7 +13,7 @@ abstract class FilterStrategy {
 
 class NamespaceFilterStrategy extends FilterStrategy {
     getFilter() {
-        return this.parseFilter(`^(${this.testDefinition.namespace!.replace(/\\/g, '\\\\')}.*)`);
+        return this.parseFilter(`^(${this.testDefinition.namespace?.replace(/\\/g, '\\\\')}.*)`);
     }
 }
 
@@ -29,7 +28,9 @@ class DescribeFilterStrategy extends FilterStrategy {
         return [
             this.getDependsFilter(),
             this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ].filter((value) => !!value).join(' ');
+        ]
+            .filter((value) => !!value)
+            .join(' ');
     }
 
     protected getDependsFilter() {
@@ -41,7 +42,7 @@ class DescribeFilterStrategy extends FilterStrategy {
     }
 
     protected getMethodNamePattern() {
-        return Transformer.generateSearchText(this.testDefinition.methodName!) + '.*';
+        return `${Transformer.generateSearchText(this.testDefinition.methodName!)}.*`;
     }
 }
 
@@ -50,7 +51,9 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
         return [
             this.getDependsFilter(),
             this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ].filter((value) => !!value).join(' ');
+        ]
+            .filter((value) => !!value)
+            .join(' ');
     }
 
     protected getDependsFilter() {

@@ -1,7 +1,12 @@
-import { Declaration, Method } from 'php-parser';
-import { Annotations } from '../types';
+import type { AttrGroup, Attribute, Declaration, Method } from 'php-parser';
+import type { Annotations } from '../types';
 
 const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
+
+interface ParsedAttribute {
+    name: string;
+    args: unknown[];
+}
 
 export class AttributeParser {
     public parse(declaration: Declaration) {
@@ -10,8 +15,10 @@ export class AttributeParser {
 
         for (const property of lookup) {
             const values = attributes
-                .filter((attribute: any) => new RegExp(property, 'i').test(attribute.name))
-                .map((attribute: any) => attribute.args[0]);
+                .filter((attribute: ParsedAttribute) =>
+                    new RegExp(property, 'i').test(attribute.name),
+                )
+                .map((attribute: ParsedAttribute) => attribute.args[0]);
 
             if (values.length > 0) {
                 annotations[property] = values;
@@ -24,25 +31,30 @@ export class AttributeParser {
     public isTest(method: Method) {
         return !method.attrGroups
             ? false
-            : this.parseAttributes(method).some((attribute: any) => attribute.name === 'Test');
+            : this.parseAttributes(method).some(
+                  (attribute: ParsedAttribute) => attribute.name === 'Test',
+              );
     }
 
-    private parseAttributes(declaration: any): any[] {
-        if (!declaration.hasOwnProperty('attrGroups')) {
+    private parseAttributes(declaration: Declaration): ParsedAttribute[] {
+        if (!('attrGroups' in declaration)) {
             return [];
         }
 
-        return declaration.attrGroups.reduce((attributes: any[], group: any) => {
-            return [
-                ...attributes,
-                ...group.attrs.map((attr: any) => {
-                    return {
-                        name: attr.name,
-                        args: attr.args.map((arg: any) => arg.value),
-                    };
-                }),
-            ];
-        }, []);
+        return (declaration.attrGroups as AttrGroup[]).reduce(
+            (attributes: ParsedAttribute[], group: AttrGroup) => {
+                return [
+                    ...attributes,
+                    ...group.attrs.map((attr: Attribute) => {
+                        return {
+                            name: attr.name,
+                            args: attr.args.map((arg: { value?: unknown }) => arg.value),
+                        };
+                    }),
+                ];
+            },
+            [],
+        );
     }
 }
 
@@ -54,9 +66,7 @@ export class AnnotationParser {
     public isTest(method: Method) {
         return !method.leadingComments
             ? false
-            : new RegExp('@test').test(
-                method.leadingComments.map((comment) => comment.value).join('\n'),
-            );
+            : /@test/.test(method.leadingComments.map((comment) => comment.value).join('\n'));
     }
 
     private readonly template = (annotation: string) =>
@@ -75,13 +85,16 @@ export class AnnotationParser {
             .reduce((result, matches) => this.append(result, matches), {} as Annotations);
     }
 
-    private append(annotations: Annotations | any, matches: IterableIterator<RegExpMatchArray>) {
-        for (let match of matches) {
-            const groups = match!.groups;
+    private append(annotations: Annotations, matches: IterableIterator<RegExpMatchArray>) {
+        for (const match of matches) {
+            const groups = match?.groups;
             for (const property in groups) {
                 const value = groups[property];
                 if (value) {
-                    annotations[property] = [...(annotations[property] ?? []), value.trim()];
+                    annotations[property] = [
+                        ...((annotations[property] as unknown[] | undefined) ?? []),
+                        value.trim(),
+                    ];
                 }
             }
         }
@@ -89,5 +102,3 @@ export class AnnotationParser {
         return annotations;
     }
 }
-
-

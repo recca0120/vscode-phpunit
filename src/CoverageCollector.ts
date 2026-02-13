@@ -1,8 +1,8 @@
 import { rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { TestRun } from 'vscode';
+import type { TestRun } from 'vscode';
 import { CloverParser } from './CloverParser';
-import { TestRunnerProcess } from './PHPUnit';
+import type { TestRunnerProcess } from './PHPUnit';
 
 export class CoverageCollector {
     async collect(processes: TestRunnerProcess[], testRun: TestRun): Promise<void> {
@@ -12,7 +12,7 @@ export class CoverageCollector {
 
         await Promise.all(
             cloverFiles.map(async (file) => {
-                (await CloverParser.parseClover(file)).forEach(coverage => {
+                (await CloverParser.parseClover(file)).forEach((coverage) => {
                     testRun.addCoverage(coverage);
                 });
             }),

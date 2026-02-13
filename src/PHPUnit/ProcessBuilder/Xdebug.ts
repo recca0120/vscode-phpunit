@@ -1,12 +1,12 @@
-import * as net from 'net';
 import { mkdtemp } from 'node:fs/promises';
+import * as net from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { IConfiguration } from '../Configuration';
+import type { IConfiguration } from '../Configuration';
 import { cloneInstance } from '../utils';
 
 async function getFreePort(): Promise<number> {
-    return new Promise<number>(resolve => {
+    return new Promise<number>((resolve) => {
         const server = net.createServer();
         server.listen(0, '127.0.0.1', () => {
             const freePort = (server.address()! as net.AddressInfo).port;
@@ -17,8 +17,8 @@ async function getFreePort(): Promise<number> {
 }
 
 export enum Mode {
-    'debug' = 'debug',
-    'coverage' = 'coverage',
+    debug = 'debug',
+    coverage = 'coverage',
 }
 
 export class Xdebug {
@@ -27,8 +27,7 @@ export class Xdebug {
     private temporaryDirectory?: string;
     private index: number = 0;
 
-    constructor(private configuration: IConfiguration) {
-    }
+    constructor(private configuration: IConfiguration) {}
 
     get name() {
         return this.configuration.get('debuggerConfig') as string | undefined;
@@ -64,7 +63,8 @@ export class Xdebug {
         // export enum TestRunProfileKind { Run = 1, Debug = 2, Coverage = 3 }
         if (mode === 2) {
             this.mode = Mode.debug;
-            this.port = this.configuration.get('xdebugPort', 0) as number || await getFreePort();
+            this.port =
+                (this.configuration.get('xdebugPort', 0) as number) || (await getFreePort());
         }
 
         if (mode === 3) {

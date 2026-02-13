@@ -1,6 +1,12 @@
-import { Disposable, EventEmitter, ExtensionContext, Uri, workspace } from 'vscode';
-import { TestFileDiscovery } from './TestFileDiscovery';
-import { TestCollection } from './TestCollection';
+import {
+    type Disposable,
+    type EventEmitter,
+    type ExtensionContext,
+    type Uri,
+    workspace,
+} from 'vscode';
+import type { TestCollection } from './TestCollection';
+import type { TestFileDiscovery } from './TestFileDiscovery';
 
 export class TestFileWatcher {
     constructor(
@@ -11,12 +17,8 @@ export class TestFileWatcher {
 
     registerDocumentListeners(context: ExtensionContext): void {
         context.subscriptions.push(
-            workspace.onDidOpenTextDocument((document) =>
-                this.testCollection.add(document.uri),
-            ),
-            workspace.onDidChangeTextDocument((e) =>
-                this.testCollection.change(e.document.uri),
-            ),
+            workspace.onDidOpenTextDocument((document) => this.testCollection.add(document.uri)),
+            workspace.onDidChangeTextDocument((e) => this.testCollection.change(e.document.uri)),
         );
     }
 

@@ -1,9 +1,14 @@
-import { spawn } from 'child_process';
-import { ChildProcess } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { ProcessBuilder } from './ProcessBuilder';
-import { ProblemMatcher, TeamcityEvent, TestResult } from './ProblemMatcher';
-import { EventResultMap, TestRunnerEvent, TestRunnerEventProxy, TestRunnerObserver } from './TestRunnerObserver';
+import { ProblemMatcher, type TestResult } from './ProblemMatcher';
+import type { ProcessBuilder } from './ProcessBuilder';
+import {
+    type EventResultMap,
+    TestRunnerEvent,
+    TestRunnerEventProxy,
+    type TestRunnerObserver,
+} from './TestRunnerObserver';
 
 export class TestRunnerProcess {
     private child?: ChildProcess;
@@ -16,12 +21,14 @@ export class TestRunnerProcess {
         this.abortController = new AbortController();
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: EventEmitter callback signature requires any[]
     on(eventName: string, callback: (...args: any[]) => void) {
         this.emitter.on(eventName, callback);
 
         return this;
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: EventEmitter emit signature requires any[]
     emit(eventName: string, ...args: any[]) {
         this.emitter.emit(eventName, ...args);
     }
@@ -56,9 +63,9 @@ export class TestRunnerProcess {
         this.emitter.emit('start', this.builder);
         const { runtime, args, options } = this.builder.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
-        this.child.stdout!.on('data', (data) => this.processOutput(data));
-        this.child.stderr!.on('data', (data) => this.processOutput(data));
-        this.child.stdout!.on('end', () => this.flushCompleteLines(this.incompleteLineBuffer));
+        this.child.stdout?.on('data', (data) => this.processOutput(data));
+        this.child.stderr?.on('data', (data) => this.processOutput(data));
+        this.child.stdout?.on('end', () => this.flushCompleteLines(this.incompleteLineBuffer));
         this.child.on('error', (err: Error) => this.emitter.emit('error', err));
         this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
     }
@@ -69,7 +76,7 @@ export class TestRunnerProcess {
         this.incompleteLineBuffer += out;
         const lines = this.flushCompleteLines(this.incompleteLineBuffer, 1);
         this.incompleteLineBuffer = lines.shift()!;
-    };
+    }
 
     private flushCompleteLines(buffer: string, limit = 0) {
         const lines = buffer.split(/\r\n|\n/);
@@ -84,7 +91,7 @@ export class TestRunnerProcess {
 export class TestRunner {
     private readonly defaultObserver: TestRunnerEventProxy;
     private readonly problemMatcher = new ProblemMatcher();
-    private readonly teamcityPattern = new RegExp('##teamcity\\[', 'i');
+    private readonly teamcityPattern = /##teamcity\[/i;
     private observers: TestRunnerObserver[] = [];
 
     constructor() {
@@ -96,7 +103,10 @@ export class TestRunner {
         this.observers.push(observer);
     }
 
-    on<K extends keyof EventResultMap>(eventName: K, callback: (result: EventResultMap[K]) => void): this {
+    on<K extends keyof EventResultMap>(
+        eventName: K,
+        callback: (result: EventResultMap[K]) => void,
+    ): this {
         this.defaultObserver.on(eventName, callback);
 
         return this;
@@ -108,14 +118,18 @@ export class TestRunner {
         process.on('start', (builder: ProcessBuilder) => this.emit(TestRunnerEvent.run, builder));
         process.on('line', (line: string) => this.processLine(line, builder));
         process.on('error', (err: Error) => this.handleProcessError(err));
-        process.on('close', (code: number | null, output: string) => this.handleProcessClose(code, output));
+        process.on('close', (code: number | null, output: string) =>
+            this.handleProcessClose(code, output),
+        );
 
         return process;
     }
 
     emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]) {
         for (const observer of this.observers) {
-            const handler = observer[eventName] as ((result: EventResultMap[K]) => void) | undefined;
+            const handler = observer[eventName] as
+                | ((result: EventResultMap[K]) => void)
+                | undefined;
             handler?.call(observer, result);
         }
     }
@@ -127,7 +141,9 @@ export class TestRunner {
     }
 
     private handleProcessClose(code: number | null, output: string) {
-        const eventName = this.teamcityPattern.test(output) ? TestRunnerEvent.output : TestRunnerEvent.error;
+        const eventName = this.teamcityPattern.test(output)
+            ? TestRunnerEvent.output
+            : TestRunnerEvent.error;
         this.emit(eventName, output);
         this.emit(TestRunnerEvent.close, code);
     }

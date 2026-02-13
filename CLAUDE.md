@@ -12,14 +12,16 @@ VS Code extension for PHPUnit/Pest test integration. TypeScript project with two
 npm run jest                                          # Run all unit tests
 npm run jest -- --testPathPattern='<pattern>' --no-coverage  # Run specific test
 npm run jest:watch                                    # Watch mode
-npm run lint                                          # ESLint check
+npm run lint                                          # Biome lint check
+npm run lint:fix                                      # Biome lint + auto-fix
+npm run format                                        # Biome format
 npm run typecheck                                     # Type check (tsc --noEmit)
 npm run compile                                       # Type check + esbuild
 ```
 
 ## Code Style
 
-- **Prettier**: printWidth 100, singleQuote true, tabWidth 4, useTabs false
+- **Biome**: printWidth 100, singleQuote true, indentWidth 4, indentStyle space
 - **Naming**: camelCase for variables/functions, PascalCase for classes/types
 - **Imports**: Use named exports/imports. Barrel files (`index.ts`) for each module.
 - **Tests**: Co-located with source as `<name>.test.ts`

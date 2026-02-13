@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';
 import { PHPUnitXML } from './PHPUnitXML';
@@ -157,7 +157,8 @@ describe('PHPUnit XML Test', () => {
         const { includes, excludes } = parsed.getPatterns(root);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
-            pattern: '{tests/Unit/**/*.php,tests/Unit2/**/*.php,vendor/someone/tests/MyClassTest.php,vendor/someone/tests/MyClassTest2.php}',
+            pattern:
+                '{tests/Unit/**/*.php,tests/Unit2/**/*.php,vendor/someone/tests/MyClassTest.php,vendor/someone/tests/MyClassTest2.php}',
         });
         expect(excludes.toGlobPattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
@@ -205,7 +206,13 @@ describe('PHPUnit XML Test', () => {
         const parsed = parse(xml);
 
         expect(parsed.getTestSuites()).toEqual([
-            { tag: 'directory', name: 'Unit', prefix: undefined, suffix: '.phpt', value: 'tests/Unit' },
+            {
+                tag: 'directory',
+                name: 'Unit',
+                prefix: undefined,
+                suffix: '.phpt',
+                value: 'tests/Unit',
+            },
         ]);
 
         const { includes, excludes } = parsed.getPatterns(root);
@@ -320,10 +327,22 @@ describe('PHPUnit XML Test', () => {
 
         expect(parse(xml).getSources()).toEqual([
             { type: 'include', tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
-            { type: 'include', tag: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
+            {
+                type: 'include',
+                tag: 'directory',
+                prefix: 'hello',
+                suffix: undefined,
+                value: 'app2',
+            },
             { type: 'include', tag: 'file', value: 'src/autoload.php' },
             { type: 'include', tag: 'file', value: 'src/autoload2.php' },
-            { type: 'exclude', tag: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
+            {
+                type: 'exclude',
+                tag: 'directory',
+                prefix: undefined,
+                suffix: '.php',
+                value: 'src/generated',
+            },
             { type: 'exclude', tag: 'file', value: 'src/autoload.php' },
         ]);
     });

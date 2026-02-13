@@ -1,6 +1,19 @@
 import {
-    EOL, PHPUnitXML, TeamcityEvent, TestConfiguration, TestDuration, TestFailed, TestFinished, TestProcesses,
-    TestResult, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
+    EOL,
+    type PHPUnitXML,
+    TeamcityEvent,
+    type TestConfiguration,
+    type TestDuration,
+    type TestFailed,
+    type TestFinished,
+    type TestProcesses,
+    type TestResult,
+    type TestResultSummary,
+    type TestRuntime,
+    type TestStarted,
+    type TestSuiteFinished,
+    type TestSuiteStarted,
+    type TestVersion,
 } from '../../PHPUnit';
 
 class OutputBuffer {
@@ -39,7 +52,7 @@ class OutputBuffer {
 }
 
 export abstract class OutputFormatter {
-    protected outputBuffer = new OutputBuffer;
+    protected outputBuffer = new OutputBuffer();
     protected messages = new Map<TeamcityEvent, string[]>([
         [TeamcityEvent.testVersion, ['🚀', 'STARTED']],
         [TeamcityEvent.testFinished, ['✅', 'PASSED']],
@@ -55,7 +68,7 @@ export abstract class OutputFormatter {
 
     start() {
         this.outputBuffer.clear();
-    };
+    }
 
     error(text: string) {
         const [icon] = this.messages.get(TeamcityEvent.testFailed)!;
@@ -113,8 +126,7 @@ export abstract class OutputFormatter {
         return undefined;
     }
 
-    close() {
-    }
+    close() {}
 
     printedOutput(result: TestResult | undefined = undefined) {
         const icon = '🟨';
@@ -132,7 +144,7 @@ export abstract class OutputFormatter {
             'Test code or tested code printed unexpected output',
         ].join('|');
         const matched = message.match(new RegExp(`(${pattern}):(?<output>.*)`, 'i'));
-        const text = !matched ? this.outputBuffer.get(name) : matched?.groups!.output.trim();
+        const text = !matched ? this.outputBuffer.get(name) : matched?.groups?.output.trim();
 
         return text ? `${icon} ${text}` : undefined;
     }

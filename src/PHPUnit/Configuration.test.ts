@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 import { phpUnitProject } from './__tests__/utils';
 import { Configuration } from './Configuration';
 

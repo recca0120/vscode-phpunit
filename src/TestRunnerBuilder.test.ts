@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TestItem, TestRun, TestRunRequest } from 'vscode';
-import { ErrorDialogObserver, OutputChannelObserver } from './Observers';
+import type { TestItem, TestRun, TestRunRequest } from 'vscode';
+import type { ErrorDialogObserver, OutputChannelObserver } from './Observers';
 import { TestRunner } from './PHPUnit';
-import { TestCase } from './TestCollection';
+import type { TestCase } from './TestCollection';
 import { TestRunnerBuilder } from './TestRunnerBuilder';
 
 describe('TestRunnerBuilder', () => {

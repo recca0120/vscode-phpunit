@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { rm } from 'node:fs/promises';
-import { TestRun } from 'vscode';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TestRun } from 'vscode';
 import { CloverParser } from './CloverParser';
 import { CoverageCollector } from './CoverageCollector';
 
@@ -21,12 +21,14 @@ describe('CoverageCollector', () => {
 
     it('should parse clover files and add coverage to test run', async () => {
         const fakeCoverage = [{ file: 'a.php' }, { file: 'b.php' }];
-        vi.spyOn(CloverParser, 'parseClover').mockResolvedValue(fakeCoverage as any);
+        vi.spyOn(CloverParser, 'parseClover').mockResolvedValue(
+            fakeCoverage as unknown as import('./CloverParser').PHPUnitFileCoverage[],
+        );
 
         const processes = [
             { getCloverFile: () => '/tmp/coverage/phpunit-0.xml' },
             { getCloverFile: () => '/tmp/coverage/phpunit-1.xml' },
-        ] as any;
+        ] as unknown as import('./PHPUnit').TestRunnerProcess[];
 
         await collector.collect(processes, testRun);
 
@@ -39,7 +41,7 @@ describe('CoverageCollector', () => {
     it('should skip when no clover files', async () => {
         const processes = [
             { getCloverFile: () => undefined },
-        ] as any;
+        ] as unknown as import('./PHPUnit').TestRunnerProcess[];
 
         await collector.collect(processes, testRun);
 

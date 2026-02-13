@@ -1,13 +1,20 @@
-import {
-    TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestResult, TestResultParser, TestStarted, TestSuiteFinished,
-    TestSuiteStarted,
-} from '.';
 import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../Transformer';
+import {
+    TeamcityEvent,
+    type TestFailed,
+    type TestFinished,
+    type TestIgnored,
+    type TestResult,
+    TestResultParser,
+    type TestStarted,
+    type TestSuiteFinished,
+    type TestSuiteStarted,
+} from '.';
 
 export class ProblemMatcher {
     private cache = new Map<string, TestResult>();
 
-    constructor(private testResultParser: TestResultParser = new TestResultParser()) { }
+    constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
 
     parse(input: string | Buffer): TestResult | undefined {
         let result = this.testResultParser.parse(input.toString());
@@ -49,7 +56,7 @@ export class ProblemMatcher {
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
         const buildCacheKey = this.buildCacheKey(testResult);
-        const prevTestResult = this.cache.get(buildCacheKey) as (TestFailed | TestIgnored);
+        const prevTestResult = this.cache.get(buildCacheKey) as TestFailed | TestIgnored;
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
@@ -71,7 +78,7 @@ export class ProblemMatcher {
 
     private mergeFaultDetails(target: TestFailed | TestIgnored, source: TestFailed | TestIgnored) {
         if (source.message) {
-            target.message += '\n\n' + source.message;
+            target.message += `\n\n${source.message}`;
         }
         target.details.push(...source.details);
     }
@@ -95,7 +102,15 @@ export class ProblemMatcher {
         return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
     }
 
-    private buildCacheKey(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
+    private buildCacheKey(
+        testResult:
+            | TestSuiteStarted
+            | TestStarted
+            | TestFailed
+            | TestIgnored
+            | TestSuiteFinished
+            | TestFinished,
+    ) {
         return `${testResult.name}-${testResult.flowId}`;
     }
 }

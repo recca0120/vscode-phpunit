@@ -1,5 +1,5 @@
-import { TestParser } from '../TestParser';
-import { TestDefinition, TestType } from '../types';
+import type { TestParser } from '../TestParser';
+import { type TestDefinition, TestType } from '../types';
 
 export class TestDefinitionBuilder {
     private readonly testDefinitions: TestDefinition[] = [];
@@ -9,10 +9,18 @@ export class TestDefinitionBuilder {
     }
 
     onInit() {
-        this.testParser.on(TestType.method, (testDefinition) => this.testDefinitions.push(testDefinition));
-        this.testParser.on(TestType.describe, (testDefinition) => this.testDefinitions.push(testDefinition));
-        this.testParser.on(TestType.class, (testDefinition) => this.testDefinitions.push(testDefinition));
-        this.testParser.on(TestType.namespace, (testDefinition) => this.testDefinitions.push(testDefinition));
+        this.testParser.on(TestType.method, (testDefinition) =>
+            this.testDefinitions.push(testDefinition),
+        );
+        this.testParser.on(TestType.describe, (testDefinition) =>
+            this.testDefinitions.push(testDefinition),
+        );
+        this.testParser.on(TestType.class, (testDefinition) =>
+            this.testDefinitions.push(testDefinition),
+        );
+        this.testParser.on(TestType.namespace, (testDefinition) =>
+            this.testDefinitions.push(testDefinition),
+        );
     }
 
     get() {

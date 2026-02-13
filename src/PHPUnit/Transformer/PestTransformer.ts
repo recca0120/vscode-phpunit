@@ -1,11 +1,13 @@
-import { TestDefinition, TestType } from '../types';
+import { type TestDefinition, TestType } from '../types';
 import { uncapitalize } from '../utils';
 import { PestV1Fixer, PestV2Fixer } from './PestFixer';
 import { PHPUnitTransformer } from './PHPUnitTransformer';
 import { TransformerFactory } from './TransformerFactory';
 
 export class PestTransformer extends PHPUnitTransformer {
-    uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
+    uniqueId(
+        testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
+    ): string {
         if (!TransformerFactory.isPest(testDefinition.classFQN!)) {
             return super.uniqueId(testDefinition);
         }
@@ -21,14 +23,23 @@ export class PestTransformer extends PHPUnitTransformer {
             return classFQN;
         }
 
-        return [uncapitalize(classFQN).replace(/\\/g, '/') + '.php', this.getMethodName(testDefinition)].join('::');
-    };
+        return [
+            `${uncapitalize(classFQN).replace(/\\/g, '/')}.php`,
+            this.getMethodName(testDefinition),
+        ].join('::');
+    }
 
     fromLocationHit(locationHint: string, name: string) {
-        const matched = locationHint.match(/(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/);
+        const matched = locationHint.match(
+            /(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/,
+        );
         if (!matched) {
-            const location = PestV1Fixer.fixLocationHint(locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'));
-            const id = this.removeDataset(this.normalizeMethodName(PestV2Fixer.fixId(location, name)));
+            const location = PestV1Fixer.fixLocationHint(
+                locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'),
+            );
+            const id = this.removeDataset(
+                this.normalizeMethodName(PestV2Fixer.fixId(location, name)),
+            );
             const file = location.split('::')[0];
 
             return { id, file };

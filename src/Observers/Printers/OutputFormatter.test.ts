@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EOL, PHPUnitXML, TeamcityEvent, TestFinished } from '../../PHPUnit';
+import { EOL, PHPUnitXML, TeamcityEvent, type TestFinished } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { OutputFormatter } from './OutputFormatter';
 
@@ -24,7 +24,9 @@ describe('OutputFormatter', () => {
             text: 'PHPUnit 11.5.0 by Sebastian Bergmann and contributors.',
         });
 
-        expect(output).toEqual(`${EOL}🚀 PHPUnit 11.5.0 by Sebastian Bergmann and contributors.${EOL}`);
+        expect(output).toEqual(
+            `${EOL}🚀 PHPUnit 11.5.0 by Sebastian Bergmann and contributors.${EOL}`,
+        );
     });
 
     it('testRuntime', () => {
@@ -62,7 +64,9 @@ describe('OutputFormatter', () => {
             risky: 2,
         });
 
-        expect(output).toEqual('Tests: 33, Assertions: 30, Errors: 2, Failures: 6, Warnings: 1, PHPUnit Deprecations: 8, Skipped: 1, Incomplete: 1, Risky: 2.');
+        expect(output).toEqual(
+            'Tests: 33, Assertions: 30, Errors: 2, Failures: 6, Warnings: 1, PHPUnit Deprecations: 8, Skipped: 1, Incomplete: 1, Risky: 2.',
+        );
     });
 
     it('timeAndMemory', () => {
@@ -113,7 +117,7 @@ describe('OutputFormatter', () => {
             event: TeamcityEvent.testSuiteFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,
-        } as any);
+        } as unknown as import('../../PHPUnit').TestSuiteFinished);
 
         expect(output).toBeUndefined();
     });

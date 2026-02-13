@@ -1,17 +1,24 @@
 import 'reflect-metadata';
 import {
-    EventEmitter, ExtensionContext, extensions, languages,
-    TestRunProfileKind, tests, Uri, window, workspace,
+    type EventEmitter,
+    type ExtensionContext,
+    extensions,
+    languages,
+    TestRunProfileKind,
+    tests,
+    type Uri,
+    window,
+    workspace,
 } from 'vscode';
-import { PHPUnitFileCoverage } from './CloverParser';
-import { Configuration } from './Configuration';
-import { TestWatchManager } from './TestWatchManager';
+import type { PHPUnitFileCoverage } from './CloverParser';
+import type { Configuration } from './Configuration';
 import { createContainer } from './container';
-import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
-import { TestCollection } from './TestCollection';
-import { TestCommandRegistry } from './TestCommandRegistry';
-import { TestFileDiscovery } from './TestFileDiscovery';
-import { TestFileWatcher } from './TestFileWatcher';
+import type { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
+import type { TestCollection } from './TestCollection';
+import type { TestCommandRegistry } from './TestCommandRegistry';
+import type { TestFileDiscovery } from './TestFileDiscovery';
+import type { TestFileWatcher } from './TestFileWatcher';
+import type { TestWatchManager } from './TestWatchManager';
 import { TYPES } from './types';
 
 export async function activate(context: ExtensionContext) {
@@ -50,13 +57,34 @@ export async function activate(context: ExtensionContext) {
 
     // Run profiles
     const runHandler = testWatchManager.createRunHandler();
-    const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
+    const testRunProfile = ctrl.createRunProfile(
+        'Run Tests',
+        TestRunProfileKind.Run,
+        runHandler,
+        true,
+        undefined,
+        true,
+    );
 
     if (extensions.getExtension('xdebug.php-debug') !== undefined) {
-        ctrl.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, undefined, false);
+        ctrl.createRunProfile(
+            'Debug Tests',
+            TestRunProfileKind.Debug,
+            runHandler,
+            true,
+            undefined,
+            false,
+        );
     }
 
-    const coverageProfile = ctrl.createRunProfile('Run with Coverage', TestRunProfileKind.Coverage, runHandler, true, undefined, false);
+    const coverageProfile = ctrl.createRunProfile(
+        'Run with Coverage',
+        TestRunProfileKind.Coverage,
+        runHandler,
+        true,
+        undefined,
+        false,
+    );
     coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
         return (<PHPUnitFileCoverage>coverage).generateDetailedCoverage();
     };
@@ -78,9 +106,7 @@ export async function activate(context: ExtensionContext) {
         fileChangedEmitter,
         workspace.onDidChangeConfiguration((event) => {
             if (event.affectsConfiguration('phpunit')) {
-                configuration.updateWorkspaceConfiguration(
-                    workspace.getConfiguration('phpunit'),
-                );
+                configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'));
             }
         }),
         languages.registerDocumentLinkProvider(

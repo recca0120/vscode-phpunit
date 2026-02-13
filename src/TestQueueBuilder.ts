@@ -1,6 +1,6 @@
-import { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
+import type { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
 import { TestType } from './PHPUnit';
-import { TestCase, TestCollection } from './TestCollection';
+import type { TestCase, TestCollection } from './TestCollection';
 
 export class TestQueueBuilder {
     constructor(private testCollection: TestCollection) {}

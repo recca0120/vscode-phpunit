@@ -1,6 +1,17 @@
-import { TeamcityEvent, TestFailed, TestIgnored, TestResult, TestStarted, TestSuiteStarted } from '../ProblemMatcher';
+import {
+    TeamcityEvent,
+    type TestFailed,
+    type TestIgnored,
+    type TestResult,
+    type TestStarted,
+    type TestSuiteStarted,
+} from '../ProblemMatcher';
 
-export const getPrevTestResult = (pattern: RegExp, cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) => {
+export const getPrevTestResult = (
+    pattern: RegExp,
+    cache: Map<string, TestResult>,
+    testResult: TestFailed | TestIgnored,
+) => {
     for (const prevTestResult of Array.from(cache.values()).reverse()) {
         if (isTestStarted(pattern, prevTestResult)) {
             return prevTestResult as TestStarted | TestSuiteStarted;
@@ -19,6 +30,8 @@ export const getPrevTestResult = (pattern: RegExp, cache: Map<string, TestResult
 };
 
 const isTestStarted = (pattern: RegExp, testResult: TestResult & { locationHint?: string }) => {
-    return [TeamcityEvent.testStarted, TeamcityEvent.testSuiteStarted].includes(testResult.event)
-        && pattern.test(testResult.locationHint ?? '');
+    return (
+        [TeamcityEvent.testStarted, TeamcityEvent.testSuiteStarted].includes(testResult.event) &&
+        pattern.test(testResult.locationHint ?? '')
+    );
 };

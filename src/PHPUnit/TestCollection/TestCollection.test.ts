@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from '../__tests__/utils';
-import { PHPUnitXML, TestDefinition, TestParser, TestType } from '../index';
+import { PHPUnitXML, type TestDefinition, TestParser, TestType } from '../index';
 import { TestCollection } from './TestCollection';
 
 describe('TestCollection', () => {
@@ -15,21 +15,30 @@ describe('TestCollection', () => {
         return testCollection;
     };
 
-    const shouldBe = async (collection: TestCollection, testsuites: any) => {
+    const shouldBe = async (
+        collection: TestCollection,
+        testsuites: Record<string, import('vscode-uri').URI[]>,
+    ) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
         for (const [testsuite, files] of Object.entries(testsuites)) {
             const expected: TestDefinition[] = [];
-            for (const uri of (files as URI[])) {
+            for (const uri of files as URI[]) {
                 const testParser = new TestParser(phpUnitXML);
                 testParser.on(TestType.method, (testDefinition) => expected.push(testDefinition));
                 testParser.on(TestType.class, (testDefinition) => expected.push(testDefinition));
-                testParser.on(TestType.namespace, (testDefinition) => expected.push(testDefinition));
+                testParser.on(TestType.namespace, (testDefinition) =>
+                    expected.push(testDefinition),
+                );
 
                 await testParser.parseFile(uri.fsPath, testsuite);
             }
             const actual: TestDefinition[] = [];
-            collection.items().get(testsuite)?.items().forEach((item) => actual.push(...item));
+            collection
+                .items()
+                .get(testsuite)
+                ?.items()
+                .forEach((item) => actual.push(...item));
             expect(actual).toEqual(expected);
         }
     };
@@ -40,8 +49,7 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
@@ -60,8 +68,7 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <file>tests/AssertionsTest.php</file>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
         for (const file of files) {
@@ -78,8 +85,7 @@ describe('TestCollection', () => {
                     <directory>tests</directory>
                     <exclude>tests/Unit</exclude>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
@@ -99,8 +105,7 @@ describe('TestCollection', () => {
                     <directory>tests</directory>
                     <exclude>tests/Unit/ExampleTest.php</exclude>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
@@ -127,8 +132,7 @@ describe('TestCollection', () => {
                     <exclude>tests/Unit/ExampleTest.php</exclude>
                     <exclude>tests/Feature/ExampleTest.php</exclude>
                 </testsuite> 
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/AssertionsTest.php')),
@@ -141,9 +145,7 @@ describe('TestCollection', () => {
 
         await shouldBe(collection, {
             default: [files[0]],
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             Unit: [files[1]],
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             Feature: [files[2]],
         });
     });
@@ -154,8 +156,7 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests/*/SubFolder</directory>
                 </testsuite> 
-            </testsuites>`,
-        );
+            </testsuites>`);
         const files = [
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')),
@@ -174,12 +175,9 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests/unit</directory>
                 </testsuite> 
-            </testsuites>`,
-        );
+            </testsuites>`);
 
-        const files = [
-            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-        ];
+        const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
         for (const file of files) {
             await collection.add(file);
         }
@@ -195,8 +193,7 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite> 
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/AbstractTest.php')),
@@ -216,8 +213,7 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite> 
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
@@ -236,9 +232,7 @@ describe('TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite> 
-            </testsuites>`,
-        );
-
+            </testsuites>`);
 
         const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
         for (const file of files) {
@@ -260,8 +254,7 @@ describe('TestCollection', () => {
                 <testsuite name="Feature">
                     <directory>tests/Feature</directory>
                 </testsuite> 
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         const files = [
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),

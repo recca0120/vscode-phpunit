@@ -1,10 +1,23 @@
-import { OutputChannel, TestRunRequest } from 'vscode';
-import {
-    ProcessBuilder, IConfiguration, TestConfiguration, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
-    TestResult, TestResultSummary, TestRunnerObserver, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted,
+import type { OutputChannel, TestRunRequest } from 'vscode';
+import type {
+    IConfiguration,
+    ProcessBuilder,
+    TestConfiguration,
+    TestDuration,
+    TestFailed,
+    TestFinished,
+    TestIgnored,
+    TestProcesses,
+    TestResult,
+    TestResultSummary,
+    TestRunnerObserver,
+    TestRuntime,
+    TestStarted,
+    TestSuiteFinished,
+    TestSuiteStarted,
     TestVersion,
 } from '../PHPUnit';
-import { OutputFormatter } from './Printers';
+import type { OutputFormatter } from './Printers';
 
 enum ShowOutputState {
     always = 'always',
@@ -16,7 +29,11 @@ export class OutputChannelObserver implements TestRunnerObserver {
     private lastCommand = '';
     private request!: TestRunRequest;
 
-    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration, private outputFormatter: OutputFormatter) {}
+    constructor(
+        private outputChannel: OutputChannel,
+        private configuration: IConfiguration,
+        private outputFormatter: OutputFormatter,
+    ) {}
 
     setRequest(request: TestRunRequest) {
         this.request = request;
@@ -27,7 +44,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.showOutputChannel(ShowOutputState.always);
 
         this.outputFormatter.start();
-        this.appendLine(this.lastCommand = builder.toString());
+        this.appendLine((this.lastCommand = builder.toString()));
     }
 
     error(error: string): void {

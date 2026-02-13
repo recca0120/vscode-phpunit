@@ -1,4 +1,10 @@
-import { EOL, TeamcityEvent, TestFailed, TestFinished, TestSuiteFinished } from '../../PHPUnit';
+import {
+    EOL,
+    TeamcityEvent,
+    type TestFailed,
+    type TestFinished,
+    type TestSuiteFinished,
+} from '../../PHPUnit';
 import { OutputFormatter } from './OutputFormatter';
 
 export class PrettyPrinter extends OutputFormatter {
@@ -41,7 +47,7 @@ export class PrettyPrinter extends OutputFormatter {
     private formatDetails(result: TestFailed) {
         return result.details
             .map(({ file, line }) => OutputFormatter.fileFormat(file, line))
-            .reduce((msg, file) => (msg + this.formatMessage(this.decorated.default, file)), '');
+            .reduce((msg, file) => msg + this.formatMessage(this.decorated.default, file), '');
     }
 
     private formatDiff(result: TestFailed) {
@@ -59,7 +65,7 @@ export class PrettyPrinter extends OutputFormatter {
         const indent = '     ';
 
         return message.split(/\r\n|\n/g).reduce((msg, line, index) => {
-            return (msg + `${indent}${decorated} ${index === 0 ? prefix : ''}${line}${EOL}`);
+            return `${msg}${indent}${decorated} ${index === 0 ? prefix : ''}${line}${EOL}`;
         }, '');
     }
 }

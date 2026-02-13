@@ -1,5 +1,5 @@
+import { resolve } from 'node:path';
 import { runTests } from '@vscode/test-electron';
-import { resolve } from 'path';
 
 async function main() {
     try {
@@ -13,7 +13,7 @@ async function main() {
 
         // Download VS Code, unzip it and run the integration test
         await runTests({ extensionDevelopmentPath, extensionTestsPath });
-    } catch (err) {
+    } catch (_err) {
         console.error('Failed to run tests');
         process.exit(1);
     }

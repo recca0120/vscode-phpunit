@@ -1,8 +1,13 @@
 import {
-    CancellationToken, EventEmitter, TestItem, TestRunProfile, TestRunRequest, Uri,
+    type CancellationToken,
+    type EventEmitter,
+    type TestItem,
+    type TestRunProfile,
+    TestRunRequest,
+    type Uri,
 } from 'vscode';
-import { TestRunHandler } from './TestRunHandler';
-import { TestCollection } from './TestCollection';
+import type { TestCollection } from './TestCollection';
+import type { TestRunHandler } from './TestRunHandler';
 
 export class TestWatchManager {
     private watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
@@ -13,7 +18,10 @@ export class TestWatchManager {
         private fileChangedEmitter: EventEmitter<Uri>,
     ) {}
 
-    createRunHandler(): (request: TestRunRequest, cancellation: CancellationToken) => Promise<void> {
+    createRunHandler(): (
+        request: TestRunRequest,
+        cancellation: CancellationToken,
+    ) => Promise<void> {
         return async (request: TestRunRequest, cancellation: CancellationToken) => {
             if (!request.continuous) {
                 return this.handler.startTestRun(request, cancellation);
@@ -27,7 +35,7 @@ export class TestWatchManager {
                     this.watchingTests.set(testItem, request.profile),
                 );
                 cancellation.onCancellationRequested(() =>
-                    request.include!.forEach((testItem) => this.watchingTests.delete(testItem)),
+                    request.include?.forEach((testItem) => this.watchingTests.delete(testItem)),
                 );
             }
         };
@@ -37,12 +45,7 @@ export class TestWatchManager {
         this.fileChangedEmitter.event((uri) => {
             if (this.watchingTests.has('ALL')) {
                 this.handler.startTestRun(
-                    new TestRunRequest(
-                        undefined,
-                        undefined,
-                        this.watchingTests.get('ALL'),
-                        true,
-                    ),
+                    new TestRunRequest(undefined, undefined, this.watchingTests.get('ALL'), true),
                 );
                 return;
             }

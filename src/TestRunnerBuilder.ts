@@ -1,7 +1,11 @@
-import { TestItem, TestRun, TestRunRequest } from 'vscode';
-import { ErrorDialogObserver, OutputChannelObserver, TestResultObserver } from './Observers';
+import type { TestItem, TestRun, TestRunRequest } from 'vscode';
+import {
+    type ErrorDialogObserver,
+    type OutputChannelObserver,
+    TestResultObserver,
+} from './Observers';
 import { TestRunner } from './PHPUnit';
-import { TestCase } from './TestCollection';
+import type { TestCase } from './TestCollection';
 
 export class TestRunnerBuilder {
     constructor(

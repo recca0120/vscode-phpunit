@@ -1,0 +1,52 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "includes": ["**", "!**/out", "!**/dist", "!**/coverage", "!**/.vscode-test", "!**/*.d.ts"]
+    },
+    "formatter": {
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "trailingCommas": "all"
+        }
+    },
+    "linter": {
+        "rules": {
+            "style": {
+                "noNonNullAssertion": "warn"
+            },
+            "complexity": {
+                "noStaticOnlyClass": "warn",
+                "noBannedTypes": "warn"
+            },
+            "performance": {
+                "noAccumulatingSpread": "warn"
+            },
+            "suspicious": {
+                "noDoubleEquals": "warn",
+                "noExplicitAny": "error",
+                "noNonNullAssertedOptionalChain": "warn",
+                "useIterableCallbackReturn": "warn",
+                "noDuplicateTestHooks": "warn",
+                "noAssignInExpressions": "warn",
+                "noImplicitAnyLet": "warn",
+                "noExportsInTest": "warn",
+                "noTemplateCurlyInString": "warn"
+            },
+            "correctness": {
+                "noUnusedVariables": "warn",
+                "noUnusedImports": "warn",
+                "noUnsafeOptionalChaining": "warn"
+            }
+        }
+    }
+}

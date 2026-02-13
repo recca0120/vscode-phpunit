@@ -1,4 +1,4 @@
-import { TeamcityEvent, TestRuntime } from './types';
+import { TeamcityEvent, type TestRuntime } from './types';
 import { ValueParser } from './ValueParser';
 
 export class TestRuntimeParser extends ValueParser<TestRuntime> {

@@ -1,22 +1,24 @@
-import { SpawnOptions } from 'node:child_process';
+import type { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
-import { Configuration, IConfiguration } from '../Configuration';
-import { TestResult } from '../ProblemMatcher';
+import { Configuration, type IConfiguration } from '../Configuration';
+import type { TestResult } from '../ProblemMatcher';
 import { cloneInstance } from '../utils';
-import { Path, PathReplacer } from './PathReplacer';
-import { Xdebug } from './Xdebug';
-
+import { type Path, PathReplacer } from './PathReplacer';
+import type { Xdebug } from './Xdebug';
 
 const isSSH = (command: string) => /^ssh/.test(command);
 const isShellCommand = (command: string) => /sh\s+-c/.test(command);
-const keyVariable = (key: string) => '${' + key + '}';
+const keyVariable = (key: string) => `\${${key}}`;
 
 export class ProcessBuilder {
     private readonly pathReplacer: PathReplacer;
     private arguments = '';
     private xdebug: Xdebug | undefined;
 
-    constructor(private configuration: IConfiguration = new Configuration(), private options: SpawnOptions = {}) {
+    constructor(
+        private configuration: IConfiguration = new Configuration(),
+        private options: SpawnOptions = {},
+    ) {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
@@ -86,20 +88,26 @@ export class ProcessBuilder {
         return this.base64DecodeFilter(parseArgsStringToArgv(command), isRemoteCommand);
     }
 
-    private ensureVariablePlaceholders(command: string, args: { [p: string]: string }, isRemoteCommand: boolean) {
+    private ensureVariablePlaceholders(
+        command: string,
+        args: { [p: string]: string },
+        isRemoteCommand: boolean,
+    ) {
         if (this.hasVariable(args, command)) {
             return command;
         }
 
-        return command + (isRemoteCommand
-            ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
-            : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}');
+        return (
+            command +
+            (isRemoteCommand
+                ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
+                : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}')
+        );
     }
 
     private convertSingleToDoubleQuotes(command: string) {
-        return command.replace(
-            new RegExp('(\'\\$\{(php|phpargs|phpunit|phpunitargs)\}.*?\')', 'g'),
-            (_m, ...matched) => matched[0].replace(/^['"]|['"]$/g, '"'),
+        return command.replace(/('\${(php|phpargs|phpunit|phpunitargs)}.*?')/g, (_m, ...matched) =>
+            matched[0].replace(/^['"]|['"]$/g, '"'),
         );
     }
 
@@ -116,10 +124,10 @@ export class ProcessBuilder {
 
     private getArguments() {
         return {
-            'php': this.pathReplacer.toRemote(this.getPhp()),
-            'phpargs': this.getPhpArgs(),
-            'phpunit': this.pathReplacer.toRemote(this.getPhpUnit()),
-            'phpunitargs': this.getPhpUnitArgs(),
+            php: this.pathReplacer.toRemote(this.getPhp()),
+            phpargs: this.getPhpArgs(),
+            phpunit: this.pathReplacer.toRemote(this.getPhpUnit()),
+            phpunitargs: this.getPhpUnitArgs(),
         };
     }
 
@@ -136,7 +144,7 @@ export class ProcessBuilder {
     }
 
     private getPhp() {
-        return this.configuration.get('php') as string ?? '';
+        return (this.configuration.get('php') as string) ?? '';
     }
 
     private getPhpArgs() {
@@ -144,16 +152,16 @@ export class ProcessBuilder {
     }
 
     private getPhpUnit() {
-        return this.configuration.get('phpunit') as string ?? '';
+        return (this.configuration.get('phpunit') as string) ?? '';
     }
 
     private getPhpUnitArgs() {
-        const args = this.configuration.getArguments(this.arguments)
-            .map((arg: string) => /^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg))
+        const args = this.configuration
+            .getArguments(this.arguments)
+            .map((arg: string) => (/^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg)))
             .concat('--colors=never', '--teamcity');
 
-        return this
-            .base64EncodeFilter(this.addParaTestFunctional(args))
+        return this.base64EncodeFilter(this.addParaTestFunctional(args))
             .concat(...(this.xdebug?.getPhpUnitArgs() ?? []))
             .join(' ');
     }
@@ -166,16 +174,19 @@ export class ProcessBuilder {
     }
 
     private isParaTest() {
-        return (/paratest/.test(this.getCommand()) || /paratest/.test(this.getPhpUnit()));
+        return /paratest/.test(this.getCommand()) || /paratest/.test(this.getPhpUnit());
     }
 
-    private resolvePathReplacer(options: SpawnOptions, configuration: IConfiguration): PathReplacer {
+    private resolvePathReplacer(
+        options: SpawnOptions,
+        configuration: IConfiguration,
+    ): PathReplacer {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
     private base64EncodeFilter(args: string[]) {
         return args.map((input) => {
-            const pattern = new RegExp('^(--filter)=(.*)');
+            const pattern = /^(--filter)=(.*)/;
 
             return input.replace(pattern, (_m, ...matched) => {
                 const value = Buffer.from(matched[1], 'utf-8').toString('base64');
@@ -187,11 +198,11 @@ export class ProcessBuilder {
 
     private base64DecodeFilter(args: string[], needsQuote: boolean) {
         return args.map((input) => {
-            const pattern = new RegExp('(--filter)=["\'](.+)?["\']');
+            const pattern = /(--filter)=["'](.+)?["']/;
 
             return input.replace(pattern, (_m, ...matched) => {
                 const value = Buffer.from(matched[1], 'base64').toString('utf-8');
-                const quote = value.includes('\'') ? '"' : '\'';
+                const quote = value.includes("'") ? '"' : "'";
                 const filter = `${matched[0]}=${value}`;
 
                 return needsQuote ? `${quote}${filter}${quote}` : filter;

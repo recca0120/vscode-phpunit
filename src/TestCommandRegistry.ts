@@ -1,7 +1,14 @@
-import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
-import { TestRunHandler } from './TestRunHandler';
-import { GroupRegistry, TestCollection } from './TestCollection';
-import { TestFileDiscovery } from './TestFileDiscovery';
+import {
+    CancellationTokenSource,
+    commands,
+    type TestItem,
+    type TestRunProfile,
+    TestRunRequest,
+    window,
+} from 'vscode';
+import { GroupRegistry, type TestCollection } from './TestCollection';
+import type { TestFileDiscovery } from './TestFileDiscovery';
+import type { TestRunHandler } from './TestRunHandler';
 
 export class TestCommandRegistry {
     private testRunProfile!: TestRunProfile;
@@ -49,7 +56,10 @@ export class TestCommandRegistry {
                 return;
             }
 
-            const tests = this.testCollection.findTestsByPosition(uri, window.activeTextEditor!.selection.active!);
+            const tests = this.testCollection.findTestsByPosition(
+                uri,
+                window.activeTextEditor?.selection.active!,
+            );
             if (tests.length > 0) {
                 await this.run(tests);
             }
@@ -89,6 +99,9 @@ export class TestCommandRegistry {
     private async run(include: readonly TestItem[] | undefined) {
         const cancellation = new CancellationTokenSource().token;
 
-        await this.testRunProfile.runHandler(new TestRunRequest(include, undefined, this.testRunProfile), cancellation);
+        await this.testRunProfile.runHandler(
+            new TestRunRequest(include, undefined, this.testRunProfile),
+            cancellation,
+        );
     }
 }

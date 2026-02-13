@@ -1,9 +1,9 @@
-import { Position, TestItem } from 'vscode';
-import { ProcessBuilder, TestDefinition, TestType } from '../PHPUnit';
+import type { Position, TestItem } from 'vscode';
+import { type ProcessBuilder, type TestDefinition, TestType } from '../PHPUnit';
 import { FilterStrategyFactory } from '../PHPUnit/ProcessBuilder/FilterStrategy';
 
 export class TestCase {
-    constructor(private testDefinition: TestDefinition) { }
+    constructor(private testDefinition: TestDefinition) {}
 
     get type() {
         return this.testDefinition.type;
@@ -14,7 +14,8 @@ export class TestCase {
     }
 
     configureProcessBuilder(builder: ProcessBuilder, index: number) {
-        return builder.clone()
+        return builder
+            .clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))
             .setArguments(FilterStrategyFactory.create(this.testDefinition).getFilter());
     }

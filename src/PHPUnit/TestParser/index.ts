@@ -1,4 +1,4 @@
-export * from './TestParser';
-export * from './PHPUnitParser';
 export * from './PestParser';
+export * from './PHPUnitParser';
 export * from './PhpAstNodeWrapper';
+export * from './TestParser';

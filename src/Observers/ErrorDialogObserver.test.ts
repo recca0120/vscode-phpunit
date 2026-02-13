@@ -1,7 +1,7 @@
+import { afterAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { window } from 'vscode';
-import { Configuration, IConfiguration } from '../PHPUnit';
+import { Configuration, type IConfiguration } from '../PHPUnit';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
-import { type Mock, afterAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 describe('ErrorDialogObserver', () => {
     let errorDialogObserver: ErrorDialogObserver;
@@ -31,7 +31,8 @@ describe('ErrorDialogObserver', () => {
     });
 
     it('click Yes and set phpunit to vendor/bin/pest', async () => {
-        const message = '"\n   Pest\\Exceptions\\InvalidPestCommand \n\n  Please run [./vendor/bin/pest] instead.\n\n"';
+        const message =
+            '"\n   Pest\\Exceptions\\InvalidPestCommand \n\n  Please run [./vendor/bin/pest] instead.\n\n"';
 
         (window.showWarningMessage as Mock).mockReturnValue('Yes');
 
@@ -43,7 +44,8 @@ describe('ErrorDialogObserver', () => {
     });
 
     it('click Cancel and do not set phpunit to vendor/bin/pest', async () => {
-        const message = '"\n   Pest\\Exceptions\\InvalidPestCommand \n\n  Please run [./vendor/bin/pest] instead.\n\n"';
+        const message =
+            '"\n   Pest\\Exceptions\\InvalidPestCommand \n\n  Please run [./vendor/bin/pest] instead.\n\n"';
 
         (window.showWarningMessage as Mock).mockReturnValue('Cancel');
 
@@ -55,7 +57,8 @@ describe('ErrorDialogObserver', () => {
     });
 
     it('other pest exception', async () => {
-        const message = '"\\n   TypeError \\n\\n  it(): Argument #2 ($closure) must be of type ?Closure, Pest\\\\Expectation given, called in /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php on line 2\\n\\n  at vendor/pestphp/pest/src/Functions.php:159\\n    155▕      * @param-closure-this TestCase  $closure\\n    156▕      *\\n    157▕      * @return Expectable|TestCall|TestCase|mixed\\n    158▕      */\\n  ➜ 159▕     function it(string $description, ?Closure $closure = null): TestCall\\n    160▕     {\\n    161▕         $description = sprintf(\'it %s\', $description);\\n    162▕ \\n    163▕         /** @var TestCall $test */\\n\\n  1   tests/Unit/ExampleTest.php:2\\n      \u001b[2m+2 vendor frames \u001b[22m\\n  4   tests/Unit/ExampleTest.php:2\\n\\n\\n"';
+        const message =
+            '"\\n   TypeError \\n\\n  it(): Argument #2 ($closure) must be of type ?Closure, Pest\\\\Expectation given, called in /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php on line 2\\n\\n  at vendor/pestphp/pest/src/Functions.php:159\\n    155▕      * @param-closure-this TestCase  $closure\\n    156▕      *\\n    157▕      * @return Expectable|TestCall|TestCase|mixed\\n    158▕      */\\n  ➜ 159▕     function it(string $description, ?Closure $closure = null): TestCall\\n    160▕     {\\n    161▕         $description = sprintf(\'it %s\', $description);\\n    162▕ \\n    163▕         /** @var TestCall $test */\\n\\n  1   tests/Unit/ExampleTest.php:2\\n      \u001b[2m+2 vendor frames \u001b[22m\\n  4   tests/Unit/ExampleTest.php:2\\n\\n\\n"';
 
         await errorDialogObserver.error(message);
     });

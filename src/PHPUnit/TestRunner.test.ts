@@ -1,10 +1,10 @@
-import { Mock, beforeEach, describe, expect, it, test, vi } from 'vitest';
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 import * as semver from 'semver';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
-import { ProcessBuilder } from './ProcessBuilder';
 import { Configuration } from './Configuration';
 import { TeamcityEvent } from './ProblemMatcher';
+import { ProcessBuilder } from './ProcessBuilder';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import { TransformerFactory } from './Transformer';
@@ -42,7 +42,7 @@ const onTestResultEvents = new Map<TeamcityEvent, Mock>([
 
 const fakeSpawn = (contents: string[]) => {
     const stdout = vi.fn().mockImplementation((_event, fn: (data: string) => void) => {
-        contents.forEach((line) => fn(line + '\n'));
+        contents.forEach((line) => fn(`${line}\n`));
     });
 
     (spawn as Mock).mockReturnValue({
@@ -60,10 +60,12 @@ const hasFile = (
     testResult: { details: { file: string; line: number }[] }[],
     pattern: string,
     l: number,
-) => (testResult[0].details).some(({ file, line }) => {
-    return !!file.match(new RegExp(pattern)) && line === l;
-});
+) =>
+    testResult[0].details.some(({ file, line }) => {
+        return !!file.match(new RegExp(pattern)) && line === l;
+    });
 
+// biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
 function expectedTestResult(expected: any, projectPath: (path: string) => string): void {
     const [classFQN, methodName] = expected.id.split('::');
     const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
@@ -71,33 +73,39 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     const converter = TransformerFactory.create(classFQN);
     expected.id = converter.uniqueId({ type, classFQN, methodName });
 
-    const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find((call: any) => {
-        return call[0].id === expected.id && call[0].event === expected.event;
-    });
+    const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
+        // biome-ignore lint/suspicious/noExplicitAny: test mock calls have dynamic shape
+        (call: any) => {
+            return call[0].id === expected.id && call[0].event === expected.event;
+        },
+    );
 
     expect(actual).not.toBeUndefined();
 
     if (expected.event === TeamcityEvent.testFailed) {
         if (hasFile(actual!, 'AssertionsTest', 5)) {
-            expected.details = [{
-                file: projectPath('tests/AssertionsTest.php'),
-                line: 5,
-            }, ...expected.details];
+            expected.details = [
+                {
+                    file: projectPath('tests/AssertionsTest.php'),
+                    line: 5,
+                },
+                ...expected.details,
+            ];
         }
 
         if (hasFile(actual!, 'phpunit', 60)) {
-            expected.details = [...expected.details, {
-                file: projectPath('vendor/phpunit/phpunit/phpunit'),
-                line: 60,
-            }];
+            expected.details = [
+                ...expected.details,
+                {
+                    file: projectPath('vendor/phpunit/phpunit/phpunit'),
+                    line: 60,
+                },
+            ];
         }
         expect(actual![0].details).toEqual(expected.details);
     }
 
-
-    expect(actual![0]).toEqual(
-        expect.objectContaining({ ...expected, locationHint }),
-    );
+    expect(actual![0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
     expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
         expect.objectContaining({ ...expected, locationHint }),
     );
@@ -116,11 +124,17 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
 }
 
 const generateTestResult = (
-    testResult: { event: TeamcityEvent; name?: string; file: string; id: string; phpVfsComposer?: boolean },
+    testResult: {
+        event: TeamcityEvent;
+        name?: string;
+        file: string;
+        id: string;
+        phpVfsComposer?: boolean;
+    },
     appPath: (path: string) => string,
     phpVfsComposer: boolean = false,
 ) => {
-    let { event, name, file, id } = testResult;
+    const { event, name, file, id } = testResult;
     const locationHint = `php_qn://${file}::\\${id}`;
     const phpUnitXml = appPath('phpunit.xml');
 
@@ -129,7 +143,7 @@ const generateTestResult = (
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: '${phpUnitXml}`,
-            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
             `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
@@ -142,7 +156,7 @@ const generateTestResult = (
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: '${phpUnitXml}`,
-            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='${name}' locationHint='${locationHint}::${name}' flowId='8024']`,
             `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
             'Time: 00:00.049, Memory: 6.00 MB',
@@ -159,7 +173,7 @@ const generateTestResult = (
             'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
             'Runtime:       PHP 8.1.12',
             `Configuration: '${phpUnitXml}`,
-            '##teamcity[testCount count=\'1\' flowId=\'8024\']',
+            "##teamcity[testCount count='1' flowId='8024']",
             `##teamcity[testStarted name='${name}' locationHint='${locationHint}::test_failed' flowId='8024']`,
             `##teamcity[testFailed name='${name}' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${details} ' duration='0' flowId='8024']`,
             `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
@@ -171,8 +185,12 @@ const generateTestResult = (
 
 const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
     const testRunner = new TestRunner();
-    onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
-    onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
+    onTestResultEvents.forEach((fn, eventName) =>
+        testRunner.on(eventName, (test: unknown) => fn(test)),
+    );
+    onTestRunnerEvents.forEach((fn, eventName) =>
+        testRunner.on(eventName, (test: unknown) => fn(test)),
+    );
     await testRunner.run(builder).run();
 
     const call = (spawn as Mock).mock.calls[0];
@@ -184,7 +202,14 @@ const shouldRunTest = async (
     builder: ProcessBuilder,
     projectPath: (path: string) => string,
     appPath: (path: string) => string,
-    start: { event: TeamcityEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
+    start: {
+        event: TeamcityEvent;
+        name?: string;
+        file: string;
+        id: string;
+        phpVfsComposer?: boolean;
+    },
+    // biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
     finished: any,
 ) => {
     generateTestResult(start, appPath, start.phpVfsComposer);
@@ -194,71 +219,120 @@ const shouldRunTest = async (
     expectedTestResult(finished, projectPath);
 };
 
-const shouldRunAllTest = async (expected: string[], builder: ProcessBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
-    await shouldRunTest(expected, builder, projectPath, appPath, {
-        event: TeamcityEvent.testStarted,
-        name: 'test_passed',
-        file: appPath('tests/AssertionsTest.php'),
-        id: 'Tests\\AssertionsTest',
-    }, {
-        event: TeamcityEvent.testFinished,
-        name: 'test_passed',
-        flowId: expect.any(Number),
-        id: 'Tests\\AssertionsTest::test_passed',
-        file: projectPath('tests/AssertionsTest.php'),
-    });
+const shouldRunAllTest = async (
+    expected: string[],
+    builder: ProcessBuilder,
+    projectPath: (path: string) => string,
+    appPath: (path: string) => string,
+) => {
+    await shouldRunTest(
+        expected,
+        builder,
+        projectPath,
+        appPath,
+        {
+            event: TeamcityEvent.testStarted,
+            name: 'test_passed',
+            file: appPath('tests/AssertionsTest.php'),
+            id: 'Tests\\AssertionsTest',
+        },
+        {
+            event: TeamcityEvent.testFinished,
+            name: 'test_passed',
+            flowId: expect.any(Number),
+            id: 'Tests\\AssertionsTest::test_passed',
+            file: projectPath('tests/AssertionsTest.php'),
+        },
+    );
 };
 
-const shouldRunTestSuite = async (expected: string[], builder: ProcessBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestSuite = async (
+    expected: string[],
+    builder: ProcessBuilder,
+    projectPath: (uri: string) => string,
+    appPath: (path: string) => string,
+) => {
     builder.setArguments(projectPath('tests/AssertionsTest.php'));
 
-    await shouldRunTest(expected, builder, projectPath, appPath, {
-        event: TeamcityEvent.testSuiteStarted,
-        file: appPath('tests/AssertionsTest.php'),
-        id: 'Tests\\AssertionsTest',
-    }, {
-        event: TeamcityEvent.testSuiteFinished,
-        flowId: expect.any(Number),
-        id: 'Tests\\AssertionsTest',
-        file: projectPath('tests/AssertionsTest.php'),
-    });
+    await shouldRunTest(
+        expected,
+        builder,
+        projectPath,
+        appPath,
+        {
+            event: TeamcityEvent.testSuiteStarted,
+            file: appPath('tests/AssertionsTest.php'),
+            id: 'Tests\\AssertionsTest',
+        },
+        {
+            event: TeamcityEvent.testSuiteFinished,
+            flowId: expect.any(Number),
+            id: 'Tests\\AssertionsTest',
+            file: projectPath('tests/AssertionsTest.php'),
+        },
+    );
 };
 
-const shouldRunTestPassed = async (expected: string[], builder: ProcessBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestPassed = async (
+    expected: string[],
+    builder: ProcessBuilder,
+    projectPath: (path: string) => string,
+    appPath: (path: string) => string,
+) => {
     const filter = `^.*::(test_passed)( with data set .*)?$`;
     builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
-    await shouldRunTest(expected, builder, projectPath, appPath, {
-        event: TeamcityEvent.testStarted,
-        name: 'test_passed',
-        file: appPath('tests/AssertionsTest.php'),
-        id: 'Tests\\AssertionsTest',
-    }, {
-        event: TeamcityEvent.testFinished,
-        flowId: expect.any(Number),
-        id: 'Tests\\AssertionsTest::test_passed',
-        file: projectPath('tests/AssertionsTest.php'),
-    });
+    await shouldRunTest(
+        expected,
+        builder,
+        projectPath,
+        appPath,
+        {
+            event: TeamcityEvent.testStarted,
+            name: 'test_passed',
+            file: appPath('tests/AssertionsTest.php'),
+            id: 'Tests\\AssertionsTest',
+        },
+        {
+            event: TeamcityEvent.testFinished,
+            flowId: expect.any(Number),
+            id: 'Tests\\AssertionsTest::test_passed',
+            file: projectPath('tests/AssertionsTest.php'),
+        },
+    );
 };
 
-const shouldRunTestFailed = async (expected: string[], builder: ProcessBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
+const shouldRunTestFailed = async (
+    expected: string[],
+    builder: ProcessBuilder,
+    projectPath: (uri: string) => string,
+    appPath: (path: string) => string,
+    phpVfsComposer: boolean = false,
+) => {
     const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
     builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
-    await shouldRunTest(expected, builder, projectPath, appPath, {
-        event: TeamcityEvent.testFailed,
-        name: 'test_failed',
-        file: appPath('tests/AssertionsTest.php'),
-        id: 'Tests\\AssertionsTest',
-        phpVfsComposer,
-    }, {
-        event: TeamcityEvent.testFailed,
-        flowId: expect.any(Number),
-        id: 'Tests\\AssertionsTest::test_failed',
-        file: projectPath('tests/AssertionsTest.php'),
-        message: 'Failed asserting that false is true.',
-        details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
-    });
+    await shouldRunTest(
+        expected,
+        builder,
+        projectPath,
+        appPath,
+        {
+            event: TeamcityEvent.testFailed,
+            name: 'test_failed',
+            file: appPath('tests/AssertionsTest.php'),
+            id: 'Tests\\AssertionsTest',
+            phpVfsComposer,
+        },
+        {
+            event: TeamcityEvent.testFailed,
+            flowId: expect.any(Number),
+            id: 'Tests\\AssertionsTest::test_failed',
+            file: projectPath('tests/AssertionsTest.php'),
+            message: 'Failed asserting that false is true.',
+            details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
+        },
+    );
 };
 
 describe('TestRunner Test', () => {
@@ -354,14 +428,14 @@ describe('TestRunner Test', () => {
 
     describe('SSH', () => {
         const projectPath = phpUnitProject;
-        const appPath = (path?: string) => path ? `/app/${path}` : '/app';
+        const appPath = (path?: string) => (path ? `/app/${path}` : '/app');
         const cwd = projectPath('');
         const configuration = new Configuration({
-            command: 'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
+            command:
+                'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '/app/phpunit.xml'],
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
         const builder = new ProcessBuilder(configuration, { cwd });
@@ -496,14 +570,13 @@ describe('TestRunner Test', () => {
 
     describe('Docker', () => {
         const projectPath = phpUnitProject;
-        const appPath = (path?: string) => path ? `/app/${path}` : '/app';
+        const appPath = (path?: string) => (path ? `/app/${path}` : '/app');
         const cwd = projectPath('');
         const configuration = new Configuration({
             command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '${PWD}/phpunit.xml'],
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
 
@@ -586,7 +659,8 @@ describe('TestRunner Test', () => {
                 '-w',
                 '/app',
                 'phpunit-stub',
-                'php', 'vendor/bin/phpunit',
+                'php',
+                'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
                 `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
                 appPath('tests/AssertionsTest.php'),
@@ -630,7 +704,6 @@ describe('TestRunner Test', () => {
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '${PWD}/phpunit.xml'],
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
         const builder = new ProcessBuilder(configuration, { cwd });

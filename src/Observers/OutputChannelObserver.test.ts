@@ -1,8 +1,8 @@
-import { Mock, beforeEach, describe, expect, it } from 'vitest';
 import * as semver from 'semver';
+import { beforeEach, describe, expect, it, type Mock } from 'vitest';
+import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
-import { OutputChannel, TestRunRequest } from 'vscode';
-import { ProcessBuilder, Configuration, EOL, PHPUnitXML, TestRunner } from '../PHPUnit';
+import { Configuration, EOL, PHPUnitXML, ProcessBuilder, TestRunner } from '../PHPUnit';
 import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
@@ -37,7 +37,7 @@ describe('OutputChannelObserver', () => {
         return (vscode.window.createOutputChannel as Mock).mock.results[0].value;
     }
 
-    function debug(outputChannel: OutputChannel) {
+    function _debug(outputChannel: OutputChannel) {
         console.log((outputChannel.appendLine as Mock).mock.calls);
         console.log((outputChannel.append as Mock).mock.calls);
     }
@@ -145,12 +145,14 @@ describe('OutputChannelObserver', () => {
             expect.stringMatching(/\s+❌\sfailed\s\d+\sms/),
         );
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringContaining([
-                `     ┐ `,
-                `     ├ Failed asserting that false is true.`,
-                `     │ `,
-                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
-            ].join(EOL)),
+            expect.stringContaining(
+                [
+                    `     ┐ `,
+                    `     ├ Failed asserting that false is true.`,
+                    `     │ `,
+                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+                ].join(EOL),
+            ),
         );
     });
 
@@ -173,21 +175,23 @@ describe('OutputChannelObserver', () => {
             expect.stringMatching(/\s+❌\sis_not_same\s\d+\sms/),
         );
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringContaining([
-                `     ┐ `,
-                `     ├ Failed asserting that two arrays are identical.`,
-                `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}`,
-                `     ┊     'a' => 'b'${DOT}`,
-                `     ┊     'c' => 'd'${DOT}`,
-                `     ┊ ${ARRAY_CLOSE}`,
-                `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}`,
-                `     ┊     'e' => 'f'${DOT}`,
-                `     ┊     0 => 'g'${DOT}`,
-                `     ┊     1 => 'h'${DOT}`,
-                `     ┊ ${ARRAY_CLOSE}`,
-                `     │ `,
-                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
-            ].join(EOL)),
+            expect.stringContaining(
+                [
+                    `     ┐ `,
+                    `     ├ Failed asserting that two arrays are identical.`,
+                    `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}`,
+                    `     ┊     'a' => 'b'${DOT}`,
+                    `     ┊     'c' => 'd'${DOT}`,
+                    `     ┊ ${ARRAY_CLOSE}`,
+                    `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}`,
+                    `     ┊     'e' => 'f'${DOT}`,
+                    `     ┊     0 => 'g'${DOT}`,
+                    `     ┊     1 => 'h'${DOT}`,
+                    `     ┊ ${ARRAY_CLOSE}`,
+                    `     │ `,
+                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+                ].join(EOL),
+            ),
         );
     });
 
@@ -237,7 +241,9 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringMatching('❌'));
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
+        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+            expect.stringMatching(/NotFound\.php/),
+        );
     });
 
     it('always show output channel', async () => {

@@ -1,11 +1,12 @@
-import { TestDefinition, TestType } from '../types';
-import { Parser } from './Parser';
-import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
+import { type TestDefinition, TestType } from '../types';
+import type { Parser } from './Parser';
+import type { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 export class PestParser implements Parser {
     parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined {
         const getFunctions = (definition: PhpAstNodeWrapper) => {
-            return definition.getFunctions()
+            return definition
+                .getFunctions()
                 .filter((definition: PhpAstNodeWrapper) => definition.isTest())
                 .map((definition: PhpAstNodeWrapper) => {
                     const testDefinition = definition.toTestDefinition();

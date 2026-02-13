@@ -1,6 +1,6 @@
 import { window } from 'vscode';
 
-import { IConfiguration, TestRunnerObserver } from '../PHPUnit';
+import type { IConfiguration, TestRunnerObserver } from '../PHPUnit';
 
 export class ErrorDialogObserver implements TestRunnerObserver {
     constructor(private configuration: IConfiguration) {}

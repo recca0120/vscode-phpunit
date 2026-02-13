@@ -1,10 +1,10 @@
-import { XMLParser } from 'fast-xml-parser';
 import { readFile } from 'node:fs/promises';
+import { XMLParser } from 'fast-xml-parser';
 
 const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
 export class XmlElement {
-    constructor(private readonly node: any) {}
+    constructor(private readonly node: Record<string, unknown>) {}
 
     static async loadFile(file: string) {
         return XmlElement.load(await readFile(file));
@@ -14,16 +14,16 @@ export class XmlElement {
         return new XmlElement(parser.parse(buffer.toString()));
     }
 
-    getAttribute(key: string) {
-        return this.node[`@_${key}`] ?? undefined;
+    getAttribute(key: string): string | undefined {
+        return (this.node[`@_${key}`] as string) ?? undefined;
     }
 
-    getText() {
+    getText(): string {
         if (typeof this.node === 'string') {
             return this.node;
         }
 
-        return this.node['#text'];
+        return this.node['#text'] as string;
     }
 
     querySelector(selector: string) {
@@ -32,13 +32,15 @@ export class XmlElement {
 
     querySelectorAll(selector: string) {
         const segments = selector.split(' ');
-        let current = this.node;
+        let current: unknown = this.node;
         while (segments.length > 0) {
             const segment = segments.shift()!;
             if (Array.isArray(current)) {
-                current = current.flatMap((node) => node[segment] ?? undefined).filter((node) => node !== undefined);
+                current = current
+                    .flatMap((node: Record<string, unknown>) => node[segment] ?? undefined)
+                    .filter((node: unknown) => node !== undefined);
             } else {
-                current = current[segment] ?? undefined;
+                current = (current as Record<string, unknown>)[segment] ?? undefined;
             }
 
             if (current === undefined) {
@@ -46,10 +48,12 @@ export class XmlElement {
             }
         }
 
-        return this.ensureArray(current).map((node) => new XmlElement(node));
+        return this.ensureArray(current).map(
+            (node: Record<string, unknown>) => new XmlElement(node),
+        );
     }
 
-    private ensureArray(obj: any) {
+    private ensureArray(obj: unknown) {
         return Array.isArray(obj) ? obj : [obj];
     }
 }

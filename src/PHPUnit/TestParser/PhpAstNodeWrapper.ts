@@ -1,29 +1,36 @@
 import { basename, dirname, join, relative } from 'node:path';
-import { Declaration, Identifier, Name, Namespace, Node, PropertyLookup } from 'php-parser';
-import { PHPUnitXML } from '../PHPUnitXML';
-import { Transformer, TransformerFactory } from '../Transformer';
-import { TestDefinition, TestType } from '../types';
+import type {
+    Declaration,
+    Identifier,
+    Method,
+    Name,
+    Namespace,
+    Node,
+    PropertyLookup,
+} from 'php-parser';
+import type { PHPUnitXML } from '../PHPUnitXML';
+import { type Transformer, TransformerFactory } from '../Transformer';
+import { type TestDefinition, TestType } from '../types';
 import { capitalize } from '../utils';
 import { AnnotationParser, AttributeParser } from './AnnotationParser';
 
 type AST = Node & {
-    name?: Identifier | string,
-    visibility?: string,
-    isAbstract?: boolean,
-    body?: Node[],
-    children?: Node[],
-    expression?: AST
-    what?: (Name | PropertyLookup) & { offset?: Identifier },
-    arguments?: AST[],
+    name?: Identifier | string;
+    visibility?: string;
+    isAbstract?: boolean;
+    body?: Node[];
+    children?: Node[];
+    expression?: AST;
+    what?: (Name | PropertyLookup) & { offset?: Identifier };
+    arguments?: AST[];
     value?: string;
-}
+};
 
 export const annotationParser = new AnnotationParser();
 export const attributeParser = new AttributeParser();
 
 abstract class TestDefinitionBuilder {
-    constructor(protected definition: PhpAstNodeWrapper) {
-    }
+    constructor(protected definition: PhpAstNodeWrapper) {}
 
     abstract build(): TestDefinition;
 
@@ -87,8 +94,8 @@ class TestSuiteDefinitionBuilder extends TestDefinitionBuilder {
 class TestCaseDefinitionBuilder extends TestDefinitionBuilder {
     build() {
         return this.generate({
-            namespace: this.definition.parent!.parent?.name,
-            className: this.definition.parent!.name,
+            namespace: this.definition.parent?.parent?.name,
+            className: this.definition.parent?.name,
             methodName: this.definition.name,
             depth: 2,
         });
@@ -110,7 +117,7 @@ class PestTestDefinitionBuilder extends TestDefinitionBuilder {
         let { methodName, label } = this.parseMethodNameAndLabel();
 
         if (this.definition.type === TestType.describe) {
-            methodName = '`' + methodName + '`';
+            methodName = `\`${methodName}\``;
         }
 
         let parent = this.definition.parent;
@@ -121,14 +128,14 @@ class PestTestDefinitionBuilder extends TestDefinitionBuilder {
         if (parent?.type === TestType.describe) {
             const describeNames: string[] = [];
             while (parent && parent.type === TestType.describe) {
-                describeNames.push('`' + parent.arguments[0].name + '`');
+                describeNames.push(`\`${parent.arguments[0].name}\``);
                 parent = parent.parent;
                 depth++;
             }
             methodName = describeNames.reverse().concat(methodName).join(' → ');
         }
 
-        const { classFQN, namespace, className } = parent!.toTestDefinition();
+        const { classFQN, namespace, className } = parent?.toTestDefinition();
 
         return this.generate({ classFQN, namespace, className, methodName, label, depth });
     }
@@ -140,7 +147,7 @@ class PestTestDefinitionBuilder extends TestDefinitionBuilder {
             let methodName = args[0].name;
 
             if (this.definition.name === 'it') {
-                methodName = 'it ' + methodName;
+                methodName = `it ${methodName}`;
             }
 
             return { methodName, label: methodName };
@@ -160,7 +167,7 @@ class PestTestDefinitionBuilder extends TestDefinitionBuilder {
         }
 
         const methodName = names
-            .map((name: string) => name === 'preset' ? `${name}  ` : ` ${name} `)
+            .map((name: string) => (name === 'preset' ? `${name}  ` : ` ${name} `))
             .join('→');
 
         const label = names.join(' → ');
@@ -170,13 +177,15 @@ class PestTestDefinitionBuilder extends TestDefinitionBuilder {
 }
 
 export class PhpAstNodeWrapper {
-    constructor(private readonly ast: AST, private options: {
-        phpUnitXML: PHPUnitXML,
-        file: string,
-        namespace?: PhpAstNodeWrapper,
-        parent?: PhpAstNodeWrapper,
-    }) {
-    }
+    constructor(
+        private readonly ast: AST,
+        private options: {
+            phpUnitXML: PHPUnitXML;
+            file: string;
+            namespace?: PhpAstNodeWrapper;
+            parent?: PhpAstNodeWrapper;
+        },
+    ) {}
 
     get kind() {
         return this.ast.kind;
@@ -223,7 +232,7 @@ export class PhpAstNodeWrapper {
             relativePath = relativePath.replace(/\\'|\\"/g, '');
             relativePath = relativePath.replace(/[^A-Za-z0-9\\]/, '');
 
-            return 'P\\' + relativePath;
+            return `P\\${relativePath}`;
         }
 
         if (this.kind === 'namespace') {
@@ -254,15 +263,17 @@ export class PhpAstNodeWrapper {
     }
 
     get arguments() {
-        return this.ast.arguments?.map((ast: AST) => {
-            return new PhpAstNodeWrapper(ast, { ...this.options, parent: this });
-        }) ?? [];
+        return (
+            this.ast.arguments?.map((ast: AST) => {
+                return new PhpAstNodeWrapper(ast, { ...this.options, parent: this });
+            }) ?? []
+        );
     }
 
     get name(): string {
         if (this.ast.kind === 'namedargument') {
-            if ((this.ast.value as any).kind === 'string') {
-                return (this.ast.value as any).value;
+            if ((this.ast.value as unknown as AST).kind === 'string') {
+                return (this.ast.value as unknown as AST).value!;
             }
         }
 
@@ -273,7 +284,6 @@ export class PhpAstNodeWrapper {
         if (this.ast.name?.name) {
             return this.ast.name?.name;
         }
-
 
         if (this.ast.what) {
             if (this.ast.what.offset && this.ast.what.offset.kind === 'identifier') {
@@ -306,20 +316,23 @@ export class PhpAstNodeWrapper {
     }
 
     getClasses() {
-        const definitions: PhpAstNodeWrapper[] = this.kind !== 'program'
-            ? []
-            : this.getNamespaces().reduce((definitions, definition: PhpAstNodeWrapper) => {
-                return definitions.concat(definition.getClasses());
-            }, [] as PhpAstNodeWrapper[]);
+        const definitions: PhpAstNodeWrapper[] =
+            this.kind !== 'program'
+                ? []
+                : this.getNamespaces().reduce((definitions, definition: PhpAstNodeWrapper) => {
+                      return definitions.concat(definition.getClasses());
+                  }, [] as PhpAstNodeWrapper[]);
 
         const options = { ...this.options };
         if (this.kind === 'namespace') {
             options.parent = this;
         }
 
-        return definitions.concat((this.ast.children ?? [])
-            .map((node: Node) => new PhpAstNodeWrapper(node, options))
-            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'class'));
+        return definitions.concat(
+            (this.ast.children ?? [])
+                .map((node: Node) => new PhpAstNodeWrapper(node, options))
+                .filter((definition: PhpAstNodeWrapper) => definition.kind === 'class'),
+        );
     }
 
     getFunctions(): PhpAstNodeWrapper[] {
@@ -338,24 +351,37 @@ export class PhpAstNodeWrapper {
         }
 
         if (['closure', 'arrowfunc'].includes(this.kind) && this.ast.body) {
-            return new PhpAstNodeWrapper(this.ast.body as any, this.options).getFunctions();
+            return new PhpAstNodeWrapper(
+                this.ast.body as unknown as AST,
+                this.options,
+            ).getFunctions();
         }
 
         if (this.kind === 'namedargument') {
-            return new PhpAstNodeWrapper((this.ast.value as any).body, this.options).getFunctions();
+            return new PhpAstNodeWrapper(
+                (this.ast.value as unknown as AST).body as unknown as AST,
+                this.options,
+            ).getFunctions();
         }
 
         return (this.ast.children ?? [])
             .reduce((children: AST[], node) => {
-                return children.concat(node.kind === 'namespace' ? (node as Namespace).children : [node]);
+                return children.concat(
+                    node.kind === 'namespace' ? (node as Namespace).children : [node],
+                );
             }, [])
             .reduce((definitions, node: AST) => {
-                if (!(node.kind === 'expressionstatement' && (node.expression as any).kind !== 'include')) {
+                if (
+                    !(
+                        node.kind === 'expressionstatement' &&
+                        (node.expression as AST).kind !== 'include'
+                    )
+                ) {
                     return definitions;
                 }
 
                 const parent = ['block'].includes(this.kind) ? this.parent : this;
-                let options = { ...this.options, parent };
+                const options = { ...this.options, parent };
 
                 let ast = node.expression as AST;
                 while (ast.what) {
@@ -378,13 +404,18 @@ export class PhpAstNodeWrapper {
         }
 
         if (this.kind === 'class') {
-            return this.name.endsWith('Test') && this.children!.some((definition): boolean => definition.isTest());
+            return (
+                this.name.endsWith('Test') &&
+                this.children!.some((definition): boolean => definition.isTest())
+            );
         }
 
         if (this.kind === 'method' && this.acceptModifier()) {
-            return this.name.startsWith('test') ||
-                annotationParser.isTest(this.ast as any) ||
-                attributeParser.isTest(this.ast as any);
+            return (
+                this.name.startsWith('test') ||
+                annotationParser.isTest(this.ast as unknown as Method) ||
+                attributeParser.isTest(this.ast as unknown as Method)
+            );
         }
 
         if (this.kind === 'call') {
@@ -412,9 +443,12 @@ export class PhpAstNodeWrapper {
 
     private getMethods(): PhpAstNodeWrapper[] {
         if (['program', 'namespace'].includes(this.ast.kind)) {
-            return this.getClasses().reduce((definitions: PhpAstNodeWrapper[], definition: PhpAstNodeWrapper) => {
-                return definitions.concat(definition.getMethods());
-            }, []);
+            return this.getClasses().reduce(
+                (definitions: PhpAstNodeWrapper[], definition: PhpAstNodeWrapper) => {
+                    return definitions.concat(definition.getMethods());
+                },
+                [],
+            );
         }
 
         const options = { ...this.options };

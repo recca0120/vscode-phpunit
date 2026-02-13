@@ -1,6 +1,6 @@
-import { describe, expect, it, test } from 'vitest';
-import { TestResultParser } from '.';
+import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
+import { TestResultParser } from '.';
 import { TeamcityEvent } from './types';
 
 describe('TestResultParser', () => {
@@ -172,18 +172,25 @@ describe('TestResultParser', () => {
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testFailed,
             name: 'test_sum_item_method_not_call',
-            message: 'Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called\r\n exactly 1 times but called 0 times.',
+            message:
+                'Mockery\\Exception\\InvalidCountException : Method test(<Any Arguments>) from Mockery_0_Recca0120_VSCode_Item_Recca0120_VSCode_Item should be called\r\n exactly 1 times but called 0 times.',
             details: [
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php',
+                    ),
                     line: 38,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Expectation.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Expectation.php',
+                    ),
                     line: 308,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/ExpectationDirector.php',
+                    ),
                     line: 119,
                 },
                 {
@@ -199,15 +206,21 @@ describe('TestResultParser', () => {
                     line: 204,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php',
+                    ),
                     line: 68,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php',
+                    ),
                     line: 43,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php',
+                    ),
                     line: 29,
                 },
             ],
@@ -276,18 +289,25 @@ describe('TestResultParser', () => {
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testFailed,
             name: 'testExample',
-            message: 'Illuminate\\Database\\QueryException : SQLSTATE[HY000]: General error: 1 no such table: roles (SQL: select * from "roles" where "roles"."id" = 1 and "roles"."deleted_at" is null limit 1)',
+            message:
+                'Illuminate\\Database\\QueryException : SQLSTATE[HY000]: General error: 1 no such table: roles (SQL: select * from "roles" where "roles"."id" = 1 and "roles"."deleted_at" is null limit 1)',
             details: [
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php',
+                    ),
                     line: 38,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Expectation.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Expectation.php',
+                    ),
                     line: 308,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/ExpectationDirector.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/ExpectationDirector.php',
+                    ),
                     line: 119,
                 },
                 {
@@ -303,15 +323,21 @@ describe('TestResultParser', () => {
                     line: 204,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php',
+                    ),
                     line: 68,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegration.php',
+                    ),
                     line: 43,
                 },
                 {
-                    file: phpUnitProjectWin('vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php'),
+                    file: phpUnitProjectWin(
+                        'vendor/mockery/mockery/library/Mockery/Adapter/Phpunit/MockeryPHPUnitIntegrationAssertPostConditions.php',
+                    ),
                     line: 29,
                 },
             ],
@@ -372,7 +398,8 @@ describe('TestResultParser', () => {
     });
 
     it('parse test result', () => {
-        const text = 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.';
+        const text =
+            'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.';
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testResultSummary,
@@ -465,9 +492,9 @@ describe('TestResultParser', () => {
         });
 
         it('case 2', () => {
-            const text = `##teamcity[testFailed name='testCreateEntityWithExceptPathEmptyString' message='ROOT/tests/TestCase/Model/Table/Validation/CmsPagesTableValidationTest.php (line 264)|n########## DEBUG ##########|nobject(App\Model\Entity\CmsPage) id:0 {|n  |'page_name|' => |'cms_page_639ca3c184af3|'|n  |'valid_for_pages|' => (int) 1|n  |'except_path|' => null|n  |'regex_path|' => null|n  |'page_settings_hash|' => |'44a9453b57d228884223347359a4b1cc|'|n  |'|[new|]|' => true|n  |'|[accessible|]|' => |[|n    |'page_name|' => true,|n    |'valid_for_pages|' => true|n  |]|n  |'|[dirty|]|' => |[|n    |'page_name|' => true,|n    |'valid_for_pages|' => true,|n    |'except_path|' => true,|n    |'regex_path|' => true,|n    |'page_settings_hash|' => true|n  |]|n  |'|[original|]|' => |[|]|n  |'|[virtual|]|' => |[|]|n  |'|[hasErrors|] |' => true|n  |'|[errors|]|' => |[|n    |'page_settings_hash|' => |[|n      |'_isUnique|' => |'This value is already in use|'|n    |]|n  |]|n  |'|[invalid|]|' => |[|n    |'page_settings_hash|' => |'44a9453b57d228884223347359a4b1cc|'|n  |]|n  |'|[repository|]|' => |'CmsPa ges|'|n}|n###########################' details=' |n Caused by|n ErrorException: unserialize(): Error at offset 0 of 919 bytes|n |n ' duration='0' flowId='3580']`;
+            const text = `##teamcity[testFailed name='testCreateEntityWithExceptPathEmptyString' message='ROOT/tests/TestCase/Model/Table/Validation/CmsPagesTableValidationTest.php (line 264)|n########## DEBUG ##########|nobject(AppModelEntityCmsPage) id:0 {|n  |'page_name|' => |'cms_page_639ca3c184af3|'|n  |'valid_for_pages|' => (int) 1|n  |'except_path|' => null|n  |'regex_path|' => null|n  |'page_settings_hash|' => |'44a9453b57d228884223347359a4b1cc|'|n  |'|[new|]|' => true|n  |'|[accessible|]|' => |[|n    |'page_name|' => true,|n    |'valid_for_pages|' => true|n  |]|n  |'|[dirty|]|' => |[|n    |'page_name|' => true,|n    |'valid_for_pages|' => true,|n    |'except_path|' => true,|n    |'regex_path|' => true,|n    |'page_settings_hash|' => true|n  |]|n  |'|[original|]|' => |[|]|n  |'|[virtual|]|' => |[|]|n  |'|[hasErrors|] |' => true|n  |'|[errors|]|' => |[|n    |'page_settings_hash|' => |[|n      |'_isUnique|' => |'This value is already in use|'|n    |]|n  |]|n  |'|[invalid|]|' => |[|n    |'page_settings_hash|' => |'44a9453b57d228884223347359a4b1cc|'|n  |]|n  |'|[repository|]|' => |'CmsPa ges|'|n}|n###########################' details=' |n Caused by|n ErrorException: unserialize(): Error at offset 0 of 919 bytes|n |n ' duration='0' flowId='3580']`;
 
-            expect(parse(text) as any).toEqual({
+            expect(parse(text) as Record<string, unknown>).toEqual({
                 event: TeamcityEvent.testFailed,
                 name: 'testCreateEntityWithExceptPathEmptyString',
                 details: [],

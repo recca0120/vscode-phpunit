@@ -1,15 +1,24 @@
 import {
-    CancellationToken, DocumentLink, DocumentLinkProvider, Position, ProviderResult, Range, TextDocument,
+    type CancellationToken,
+    DocumentLink,
+    type DocumentLinkProvider,
+    Position,
+    type ProviderResult,
+    Range,
+    type TextDocument,
 } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML } from './PHPUnit';
+import type { PHPUnitXML } from './PHPUnit';
 
 export class PHPUnitLinkProvider implements DocumentLinkProvider {
     private regex = /((?:[A-Z]:)?(?:\.{0,2}[\\/])?[^\s:]+\.php):(\d+)(?::(\d+))?/gi;
 
     constructor(private phpUnitXML: PHPUnitXML) {}
 
-    provideDocumentLinks(document: TextDocument, _token: CancellationToken): ProviderResult<DocumentLink[]> {
+    provideDocumentLinks(
+        document: TextDocument,
+        _token: CancellationToken,
+    ): ProviderResult<DocumentLink[]> {
         const links: DocumentLink[] = [];
 
         for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
@@ -20,7 +29,9 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
                 const [fullMatch, filePath, lineStr] = match;
                 const lineNumber = parseInt(lineStr, 10);
 
-                const targetUri = URI.file(this.phpUnitXML.path(filePath)).with({ fragment: `L${lineNumber}` });
+                const targetUri = URI.file(this.phpUnitXML.path(filePath)).with({
+                    fragment: `L${lineNumber}`,
+                });
                 const start = new Position(lineIndex, match.index);
                 const end = new Position(lineIndex, match.index + fullMatch.length);
                 const range = new Range(start, end);

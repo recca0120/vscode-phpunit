@@ -1,7 +1,7 @@
-import { Minimatch } from 'minimatch';
 import { extname, join } from 'node:path';
+import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import { type PHPUnitXML, type TestDefinition, TestParser, type TestSuite } from '../index';
 import { TestDefinitionBuilder } from './TestDefinitionBuilder';
 
 export interface File<T> {
@@ -41,7 +41,7 @@ abstract class Base<K, V> implements Iterable<[K, V]> {
         return Array.from(this._items.entries()).map(([key]) => key);
     }
 
-    forEach(callback: (tests: V, key: K, map: Map<K, V>) => void, thisArg?: any) {
+    forEach(callback: (tests: V, key: K, map: Map<K, V>) => void, thisArg?: unknown) {
         this._items.forEach(callback, thisArg);
     }
 
@@ -49,7 +49,7 @@ abstract class Base<K, V> implements Iterable<[K, V]> {
         return this._items;
     }
 
-    * [Symbol.iterator](): Generator<[K, V], void, unknown> {
+    *[Symbol.iterator](): Generator<[K, V], void, unknown> {
         for (const item of this._items.entries()) {
             yield item;
         }
@@ -72,7 +72,7 @@ export class TestCollection {
     private readonly _workspaces: Workspace<TestDefinition[]>;
 
     constructor(private phpUnitXML: PHPUnitXML) {
-        this._workspaces = new Workspace<TestDefinition[]>;
+        this._workspaces = new Workspace<TestDefinition[]>();
     }
 
     get size() {
@@ -86,8 +86,10 @@ export class TestCollection {
     items() {
         const workspace = this.getWorkspace();
         if (!this._workspaces.has(workspace.fsPath)) {
-            const files = new Files<TestDefinition[]>;
-            this.phpUnitXML.getTestSuites().forEach((suite) => files.set(suite.name, new TestDefinitions<TestDefinition[]>()));
+            const files = new Files<TestDefinition[]>();
+            this.phpUnitXML
+                .getTestSuites()
+                .forEach((suite) => files.set(suite.name, new TestDefinitions<TestDefinition[]>()));
             this._workspaces.set(workspace.fsPath, files);
         }
 
@@ -109,7 +111,7 @@ export class TestCollection {
         if (testDefinitions.length === 0) {
             this.delete(uri);
         }
-        files.get(testsuite)!.set(uri, testDefinitions);
+        files.get(testsuite)?.set(uri, testDefinitions);
 
         return this;
     }
@@ -165,7 +167,7 @@ export class TestCollection {
         return this.items().get(file.testsuite)?.delete(file.uri);
     }
 
-    private* gatherFiles() {
+    private *gatherFiles() {
         for (const [testsuite, files] of this.items()) {
             for (const [uri, tests] of files) {
                 yield { testsuite, uri, tests };
@@ -175,7 +177,7 @@ export class TestCollection {
 
     private parseTestsuite(uri: URI) {
         const testSuites = this.phpUnitXML.getTestSuites();
-        const testsuite = testSuites.find(item => {
+        const testsuite = testSuites.find((item) => {
             return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
         });
 
@@ -196,7 +198,8 @@ export class TestCollection {
 
     private match(testSuite: TestSuite, uri: URI) {
         const workspace = this.getWorkspace();
-        const isFile = testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
+        const isFile =
+            testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
 
         if (isFile) {
             return join(workspace.fsPath, testSuite.value) === uri.fsPath;
@@ -212,4 +215,3 @@ export class TestCollection {
         return minimatch.match(uri.toString(true));
     }
 }
-

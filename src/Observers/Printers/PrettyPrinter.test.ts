@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
-import { PrettyPrinter } from './PrettyPrinter';
 import { OutputFormatter } from './OutputFormatter';
+import { PrettyPrinter } from './PrettyPrinter';
 
 describe('PrettyPrinter', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
@@ -69,15 +69,17 @@ describe('PrettyPrinter', () => {
             duration: 0,
         });
 
-        expect(output).toEqual([
-            `  ❌ failed 0 ms`,
-            `     ┐ `,
-            `     ├ Failed asserting that false is true.`,
-            `     │ `,
-            `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
-            `     ┴ `,
-            ``,
-        ].join(EOL));
+        expect(output).toEqual(
+            [
+                `  ❌ failed 0 ms`,
+                `     ┐ `,
+                `     ├ Failed asserting that false is true.`,
+                `     │ `,
+                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+                `     ┴ `,
+                ``,
+            ].join(EOL),
+        );
     });
 
     it('testFailed with actual and expect', () => {
@@ -97,28 +99,30 @@ describe('PrettyPrinter', () => {
             ],
             duration: 29,
             type: 'comparisonFailure',
-            actual: 'Array &0 [\n    \'e\' => \'f\',\n    0 => \'g\',\n    1 => \'h\',\n]',
-            expected: 'Array &0 [\n    \'a\' => \'b\',\n    \'c\' => \'d\',\n]',
+            actual: "Array &0 [\n    'e' => 'f',\n    0 => 'g',\n    1 => 'h',\n]",
+            expected: "Array &0 [\n    'a' => 'b',\n    'c' => 'd',\n]",
         });
 
-        expect(output).toEqual([
-            `  ❌ is_not_same 29 ms`,
-            `     ┐ `,
-            `     ├ Failed asserting that two arrays are identical.`,
-            `     ┊ ---·Expected Array &0 [`,
-            `     ┊     'a' => 'b',`,
-            `     ┊     'c' => 'd',`,
-            `     ┊ ]`,
-            `     ┊ +++·Actual Array &0 [`,
-            `     ┊     'e' => 'f',`,
-            `     ┊     0 => 'g',`,
-            `     ┊     1 => 'h',`,
-            `     ┊ ]`,
-            `     │ `,
-            `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
-            `     ┴ `,
-            ``,
-        ].join(EOL));
+        expect(output).toEqual(
+            [
+                `  ❌ is_not_same 29 ms`,
+                `     ┐ `,
+                `     ├ Failed asserting that two arrays are identical.`,
+                `     ┊ ---·Expected Array &0 [`,
+                `     ┊     'a' => 'b',`,
+                `     ┊     'c' => 'd',`,
+                `     ┊ ]`,
+                `     ┊ +++·Actual Array &0 [`,
+                `     ┊     'e' => 'f',`,
+                `     ┊     0 => 'g',`,
+                `     ┊     1 => 'h',`,
+                `     ┊ ]`,
+                `     │ `,
+                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+                `     ┴ `,
+                ``,
+            ].join(EOL),
+        );
     });
 
     it('testIgnored', () => {
