@@ -5,7 +5,7 @@ import {
 } from 'vscode';
 import { PHPUnitFileCoverage } from './CloverParser';
 import { Configuration } from './Configuration';
-import { ContinuousTestRunner } from './ContinuousTestRunner';
+import { TestWatchManager } from './TestWatchManager';
 import { createContainer } from './container';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
@@ -23,9 +23,9 @@ export async function activate(context: ExtensionContext) {
     const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
     const testFileDiscovery = container.get<TestFileDiscovery>(TYPES.testFileDiscovery);
     const testFileWatcher = container.get<TestFileWatcher>(TYPES.testFileWatcher);
-    const continuousTestRunner = container.get<ContinuousTestRunner>(TYPES.continuousTestRunner);
+    const testWatchManager = container.get<TestWatchManager>(TYPES.testWatchManager);
     const testCollection = container.get<TestCollection>(TYPES.testCollection);
-    const commandHandler = container.get<TestCommandRegistry>(TYPES.testCommandRegistry);
+    const testCommandRegistry = container.get<TestCommandRegistry>(TYPES.testCommandRegistry);
 
     // Initial load
     await testFileDiscovery.loadInitialConfiguration();
@@ -33,7 +33,7 @@ export async function activate(context: ExtensionContext) {
 
     // Listeners
     testFileWatcher.registerDocumentListeners(context);
-    continuousTestRunner.setupFileChangeListener();
+    testWatchManager.setupFileChangeListener();
 
     // Test controller
     ctrl.refreshHandler = () => testFileDiscovery.reloadAll();
@@ -49,7 +49,7 @@ export async function activate(context: ExtensionContext) {
     };
 
     // Run profiles
-    const runHandler = continuousTestRunner.createRunHandler();
+    const runHandler = testWatchManager.createRunHandler();
     const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
 
     if (extensions.getExtension('xdebug.php-debug') !== undefined) {
@@ -62,12 +62,12 @@ export async function activate(context: ExtensionContext) {
     };
 
     // Commands
-    commandHandler.setTestRunProfile(testRunProfile);
-    context.subscriptions.push(commandHandler.reload());
-    context.subscriptions.push(commandHandler.runAll());
-    context.subscriptions.push(commandHandler.runFile());
-    context.subscriptions.push(commandHandler.runTestAtCursor());
-    context.subscriptions.push(commandHandler.rerun());
+    testCommandRegistry.setTestRunProfile(testRunProfile);
+    context.subscriptions.push(testCommandRegistry.reload());
+    context.subscriptions.push(testCommandRegistry.runAll());
+    context.subscriptions.push(testCommandRegistry.runFile());
+    context.subscriptions.push(testCommandRegistry.runTestAtCursor());
+    context.subscriptions.push(testCommandRegistry.rerun());
 
     context.subscriptions.push(commandHandler.runByGroup(handler));
 

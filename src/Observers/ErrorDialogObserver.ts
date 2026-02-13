@@ -2,7 +2,7 @@ import { window } from 'vscode';
 
 import { IConfiguration, TestRunnerObserver } from '../PHPUnit';
 
-export class MessageObserver implements TestRunnerObserver {
+export class ErrorDialogObserver implements TestRunnerObserver {
     constructor(private configuration: IConfiguration) {}
 
     async error(error: string) {

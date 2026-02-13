@@ -1,21 +1,21 @@
 import { TestItem, TestRun, TestRunRequest } from 'vscode';
-import { MessageObserver, OutputChannelObserver, TestResultObserver } from './Observers';
+import { ErrorDialogObserver, OutputChannelObserver, TestResultObserver } from './Observers';
 import { TestRunner } from './PHPUnit';
 import { TestCase } from './TestCollection';
 
-export class TestRunnerFactory {
+export class TestRunnerBuilder {
     constructor(
         private outputChannelObserver: OutputChannelObserver,
-        private messageObserver: MessageObserver,
+        private errorDialogObserver: ErrorDialogObserver,
     ) {}
 
-    create(queue: Map<TestCase, TestItem>, testRun: TestRun, request: TestRunRequest): TestRunner {
+    build(queue: Map<TestCase, TestItem>, testRun: TestRun, request: TestRunRequest): TestRunner {
         this.outputChannelObserver.setRequest(request);
 
         const runner = new TestRunner();
         runner.observe(new TestResultObserver(queue, testRun));
         runner.observe(this.outputChannelObserver);
-        runner.observe(this.messageObserver);
+        runner.observe(this.errorDialogObserver);
 
         return runner;
     }

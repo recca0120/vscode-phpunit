@@ -1,7 +1,7 @@
 import { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
 import { TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
-import { TestDiscovery } from './TestDiscovery';
+import { TestQueueBuilder } from './TestQueueBuilder';
 
 const createTestItem = (id: string, children: TestItem[] = []): TestItem => {
     const childCollection = {
@@ -11,13 +11,13 @@ const createTestItem = (id: string, children: TestItem[] = []): TestItem => {
     return { id, children: childCollection } as TestItem;
 };
 
-describe('TestDiscovery', () => {
+describe('TestQueueBuilder', () => {
     let testCollection: TestCollection;
-    let discovery: TestDiscovery;
+    let queueBuilder: TestQueueBuilder;
 
     beforeEach(() => {
         testCollection = { getTestCase: jest.fn() } as unknown as TestCollection;
-        discovery = new TestDiscovery(testCollection);
+        queueBuilder = new TestQueueBuilder(testCollection);
     });
 
     it('should discover method test items', async () => {
@@ -26,7 +26,7 @@ describe('TestDiscovery', () => {
         (testCollection.getTestCase as jest.Mock).mockReturnValue(testCase);
 
         const request = {} as TestRunRequest;
-        const queue = await discovery.discover([testItem], request);
+        const queue = await queueBuilder.build([testItem], request);
 
         expect(queue.size).toBe(1);
         expect(queue.get(testCase)).toBe(testItem);
@@ -42,7 +42,7 @@ describe('TestDiscovery', () => {
             .mockReturnValueOnce(childCase);
 
         const request = {} as TestRunRequest;
-        const queue = await discovery.discover([parentItem], request);
+        const queue = await queueBuilder.build([parentItem], request);
 
         expect(queue.size).toBe(1);
         expect(queue.get(childCase)).toBe(childItem);
@@ -52,7 +52,7 @@ describe('TestDiscovery', () => {
         const testItem = createTestItem('excluded');
         const request = { exclude: [testItem] } as unknown as TestRunRequest;
 
-        const queue = await discovery.discover([testItem], request);
+        const queue = await queueBuilder.build([testItem], request);
 
         expect(queue.size).toBe(0);
     });
@@ -63,6 +63,6 @@ describe('TestDiscovery', () => {
             forEach: (cb: (item: TestItem) => void) => items.forEach(cb),
         } as TestItemCollection;
 
-        expect(discovery.gatherTestItems(collection)).toEqual(items);
+        expect(queueBuilder.gatherTestItems(collection)).toEqual(items);
     });
 });

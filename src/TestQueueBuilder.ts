@@ -2,10 +2,10 @@ import { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
 import { TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
 
-export class TestDiscovery {
+export class TestQueueBuilder {
     constructor(private testCollection: TestCollection) {}
 
-    async discover(
+    async build(
         tests: Iterable<TestItem>,
         request: TestRunRequest,
         queue = new Map<TestCase, TestItem>(),
@@ -19,7 +19,7 @@ export class TestDiscovery {
             if (testCase?.type === TestType.method) {
                 queue.set(testCase, testItem);
             } else {
-                await this.discover(this.gatherTestItems(testItem.children), request, queue);
+                await this.build(this.gatherTestItems(testItem.children), request, queue);
             }
         }
 

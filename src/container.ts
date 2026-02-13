@@ -1,18 +1,18 @@
 import { Container } from 'inversify';
 import { EventEmitter, OutputChannel, TestController, Uri, workspace } from 'vscode';
 import { Configuration } from './Configuration';
-import { ContinuousTestRunner } from './ContinuousTestRunner';
+import { TestWatchManager } from './TestWatchManager';
 import { CoverageCollector } from './CoverageCollector';
-import { Handler } from './Handler';
-import { CollisionPrinter, MessageObserver, OutputChannelObserver } from './Observers';
+import { TestRunHandler } from './TestRunHandler';
+import { CollisionPrinter, ErrorDialogObserver, OutputChannelObserver } from './Observers';
 import { PHPUnitXML } from './PHPUnit';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 import { TestCommandRegistry } from './TestCommandRegistry';
-import { TestDiscovery } from './TestDiscovery';
+import { TestQueueBuilder } from './TestQueueBuilder';
 import { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
-import { TestRunnerFactory } from './TestRunnerFactory';
+import { TestRunnerBuilder } from './TestRunnerBuilder';
 import { TYPES } from './types';
 
 export function createContainer(
@@ -48,8 +48,8 @@ export function createContainer(
         new PHPUnitLinkProvider(ctx.get(TYPES.phpUnitXML)),
     ).inSingletonScope();
 
-    container.bind(TYPES.messageObserver).toDynamicValue((ctx) =>
-        new MessageObserver(ctx.get(TYPES.configuration)),
+    container.bind(TYPES.errorDialogObserver).toDynamicValue((ctx) =>
+        new ErrorDialogObserver(ctx.get(TYPES.configuration)),
     ).inSingletonScope();
 
     container.bind(TYPES.outputChannelObserver).toDynamicValue((ctx) =>
@@ -60,10 +60,10 @@ export function createContainer(
         ),
     ).inSingletonScope();
 
-    container.bind(TYPES.testRunnerFactory).toDynamicValue((ctx) =>
-        new TestRunnerFactory(
+    container.bind(TYPES.testRunnerBuilder).toDynamicValue((ctx) =>
+        new TestRunnerBuilder(
             ctx.get(TYPES.outputChannelObserver),
-            ctx.get(TYPES.messageObserver),
+            ctx.get(TYPES.errorDialogObserver),
         ),
     ).inSingletonScope();
 
@@ -71,26 +71,26 @@ export function createContainer(
         new CoverageCollector(),
     ).inSingletonScope();
 
-    container.bind(TYPES.testDiscovery).toDynamicValue((ctx) =>
-        new TestDiscovery(ctx.get(TYPES.testCollection)),
+    container.bind(TYPES.testQueueBuilder).toDynamicValue((ctx) =>
+        new TestQueueBuilder(ctx.get(TYPES.testCollection)),
     ).inSingletonScope();
 
-    container.bind(TYPES.handler).toDynamicValue((ctx) =>
-        new Handler(
+    container.bind(TYPES.testRunHandler).toDynamicValue((ctx) =>
+        new TestRunHandler(
             ctx.get(TYPES.testController),
             ctx.get(TYPES.phpUnitXML),
             ctx.get(TYPES.configuration),
             ctx.get(TYPES.testCollection),
-            ctx.get(TYPES.testRunnerFactory),
+            ctx.get(TYPES.testRunnerBuilder),
             ctx.get(TYPES.coverageCollector),
-            ctx.get(TYPES.testDiscovery),
+            ctx.get(TYPES.testQueueBuilder),
         ),
     ).inSingletonScope();
 
     container.bind(TYPES.testCommandRegistry).toDynamicValue((ctx) =>
         new TestCommandRegistry(
             ctx.get(TYPES.testCollection),
-            ctx.get(TYPES.handler),
+            ctx.get(TYPES.testRunHandler),
             ctx.get(TYPES.testFileDiscovery),
         ),
     ).inSingletonScope();
@@ -111,9 +111,9 @@ export function createContainer(
         ),
     ).inSingletonScope();
 
-    container.bind(TYPES.continuousTestRunner).toDynamicValue((ctx) =>
-        new ContinuousTestRunner(
-            ctx.get(TYPES.handler),
+    container.bind(TYPES.testWatchManager).toDynamicValue((ctx) =>
+        new TestWatchManager(
+            ctx.get(TYPES.testRunHandler),
             ctx.get(TYPES.testCollection),
             ctx.get(TYPES.fileChangedEmitter),
         ),

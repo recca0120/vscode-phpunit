@@ -1,20 +1,20 @@
 import { TestItem, TestRun, TestRunRequest } from 'vscode';
-import { MessageObserver, OutputChannelObserver } from './Observers';
+import { ErrorDialogObserver, OutputChannelObserver } from './Observers';
 import { TestRunner } from './PHPUnit';
 import { TestCase } from './TestCollection';
-import { TestRunnerFactory } from './TestRunnerFactory';
+import { TestRunnerBuilder } from './TestRunnerBuilder';
 
-describe('TestRunnerFactory', () => {
-    it('should create a TestRunner with observers', () => {
+describe('TestRunnerBuilder', () => {
+    it('should build a TestRunner with observers', () => {
         const outputChannelObserver = { setRequest: jest.fn() } as unknown as OutputChannelObserver;
-        const messageObserver = {} as MessageObserver;
-        const factory = new TestRunnerFactory(outputChannelObserver, messageObserver);
+        const errorDialogObserver = {} as ErrorDialogObserver;
+        const builder = new TestRunnerBuilder(outputChannelObserver, errorDialogObserver);
 
         const queue = new Map<TestCase, TestItem>();
         const testRun = { enqueued: jest.fn() } as unknown as TestRun;
         const request = {} as TestRunRequest;
 
-        const runner = factory.create(queue, testRun, request);
+        const runner = builder.build(queue, testRun, request);
 
         expect(runner).toBeInstanceOf(TestRunner);
         expect(outputChannelObserver.setRequest).toHaveBeenCalledWith(request);

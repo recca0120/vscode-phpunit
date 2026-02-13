@@ -7,10 +7,10 @@ import { Configuration } from './Configuration';
 import { ProcessBuilder, PHPUnitXML, TestRunner, TestRunnerEvent } from './PHPUnit';
 import { Mode, Xdebug } from './PHPUnit/ProcessBuilder/Xdebug';
 import { TestCollection } from './TestCollection';
-import { TestDiscovery } from './TestDiscovery';
-import { TestRunnerFactory } from './TestRunnerFactory';
+import { TestQueueBuilder } from './TestQueueBuilder';
+import { TestRunnerBuilder } from './TestRunnerBuilder';
 
-export class Handler {
+export class TestRunHandler {
     private previousRequest: TestRunRequest | undefined;
 
     constructor(
@@ -18,9 +18,9 @@ export class Handler {
         private phpUnitXML: PHPUnitXML,
         private configuration: Configuration,
         private testCollection: TestCollection,
-        private testRunnerFactory: TestRunnerFactory,
+        private testRunnerBuilder: TestRunnerBuilder,
         private coverageCollector: CoverageCollector,
-        private testDiscovery: TestDiscovery,
+        private testQueueBuilder: TestQueueBuilder,
     ) {}
 
     getPreviousRequest() {
@@ -75,13 +75,13 @@ export class Handler {
     }
 
     private async runTestQueue(builder: ProcessBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
-        const queue = await this.testDiscovery.discover(
-            request.include ?? this.testDiscovery.gatherTestItems(this.ctrl.items),
+        const queue = await this.testQueueBuilder.build(
+            request.include ?? this.testQueueBuilder.gatherTestItems(this.ctrl.items),
             request,
         );
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
-        const runner = this.testRunnerFactory.create(queue, testRun, request);
+        const runner = this.testRunnerBuilder.build(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
         const processes = this.createProcesses(runner, builder, request);

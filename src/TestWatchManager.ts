@@ -1,14 +1,14 @@
 import {
     CancellationToken, EventEmitter, TestItem, TestRunProfile, TestRunRequest, Uri,
 } from 'vscode';
-import { Handler } from './Handler';
+import { TestRunHandler } from './TestRunHandler';
 import { TestCollection } from './TestCollection';
 
-export class ContinuousTestRunner {
+export class TestWatchManager {
     private watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
 
     constructor(
-        private handler: Handler,
+        private handler: TestRunHandler,
         private testCollection: TestCollection,
         private fileChangedEmitter: EventEmitter<Uri>,
     ) {}

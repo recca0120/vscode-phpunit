@@ -1,5 +1,5 @@
 import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
-import { Handler } from './Handler';
+import { TestRunHandler } from './TestRunHandler';
 import { GroupRegistry, TestCollection } from './TestCollection';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
@@ -8,7 +8,7 @@ export class TestCommandRegistry {
 
     constructor(
         private testCollection: TestCollection,
-        private handler: Handler,
+        private handler: TestRunHandler,
         private testFileDiscovery: TestFileDiscovery,
     ) {}
 
@@ -64,7 +64,7 @@ export class TestCommandRegistry {
         });
     }
 
-    runByGroup(handler: Handler) {
+    runByGroup(handler: TestRunHandler) {
         return commands.registerCommand('phpunit.run-by-group', async () => {
             const groups = GroupRegistry.getInstance().getAll();
             if (groups.length === 0) {
