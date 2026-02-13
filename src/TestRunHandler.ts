@@ -32,26 +32,38 @@ export class TestRunHandler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
-        const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
+        const builder = await this.createProcessBuilder(request);
+        const xdebug = builder.getXdebug()!;
 
+        await this.manageDebugSession(xdebug, async () => {
+            const testRun = this.ctrl.createTestRun(request);
+            await this.runTestQueue(builder, testRun, request, cancellation);
+        });
+
+        this.previousRequest = request;
+    }
+
+    private async createProcessBuilder(request: TestRunRequest): Promise<ProcessBuilder> {
+        const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
         const xdebug = new Xdebug(this.configuration);
         builder.setXdebug(xdebug);
-
         await xdebug.setMode(request.profile?.kind);
+
+        return builder;
+    }
+
+    private async manageDebugSession(xdebug: Xdebug, fn: () => Promise<void>): Promise<void> {
         if (xdebug.mode === Mode.debug) {
+            const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
             // TODO: perhaps wait for the debug session
             await debug.startDebugging(wsf, xdebug.name ?? (await xdebug.getDebugConfiguration()));
         }
 
-        const testRun = this.ctrl.createTestRun(request);
-        await this.runTestQueue(builder, testRun, request, cancellation);
+        await fn();
 
         if (xdebug.mode === Mode.debug && debug.activeDebugSession?.type === 'php') {
             debug.stopDebugging(debug.activeDebugSession);
         }
-
-        this.previousRequest = request;
     }
 
     async startGroupTestRun(group: string, cancellation?: CancellationToken) {

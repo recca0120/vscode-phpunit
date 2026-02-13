@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import type { Declaration, Node } from 'php-parser';
+import type { Comment, Declaration, Node } from 'php-parser';
 import type { PHPUnitXML } from '../PHPUnitXML';
 import type { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
@@ -26,29 +26,12 @@ export class TestParser {
     }
 
     parse(text: Buffer | string, file: string, testsuite?: string) {
-        text = text.toString();
-
-        // Todo https://github.com/glayzzle/php-parser/issues/170
-        text = text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
-
         try {
-            const ast = engine.parseCode(text, file);
-
-            // https://github.com/glayzzle/php-parser/issues/155
-            // currently inline comments include the line break at the end, we need to
-            // strip those out and update the end location for each comment manually
-            ast.comments?.forEach((comment) => {
-                if (comment.value[comment.value.length - 1] === '\r') {
-                    comment.value = comment.value.slice(0, -1);
-                    // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
-                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
-                }
-                if (comment.value[comment.value.length - 1] === '\n') {
-                    comment.value = comment.value.slice(0, -1);
-                    // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
-                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
-                }
-            });
+            const preprocessed = applyInlinePlaceholderWorkaround(text.toString());
+            const ast = engine.parseCode(preprocessed, file);
+            if (ast.comments) {
+                normalizeCommentLineBreaks(ast.comments);
+            }
 
             return this.parseAst(ast, file, testsuite);
         } catch (e) {
@@ -89,4 +72,25 @@ export class TestParser {
 
         return tests;
     }
+}
+
+/** Workaround for https://github.com/glayzzle/php-parser/issues/170 */
+function applyInlinePlaceholderWorkaround(text: string): string {
+    return text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
+}
+
+/** Workaround for https://github.com/glayzzle/php-parser/issues/155 */
+function normalizeCommentLineBreaks(comments: Comment[]): void {
+    comments.forEach((comment) => {
+        if (comment.value[comment.value.length - 1] === '\r') {
+            comment.value = comment.value.slice(0, -1);
+            // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
+            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+        }
+        if (comment.value[comment.value.length - 1] === '\n') {
+            comment.value = comment.value.slice(0, -1);
+            // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
+            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+        }
+    });
 }

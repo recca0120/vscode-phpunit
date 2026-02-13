@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import {
     EOL,
     TeamcityEvent,
@@ -8,6 +7,7 @@ import {
     type TestSuiteFinished,
 } from '../../PHPUnit';
 import { OutputFormatter } from './OutputFormatter';
+import { readSourceSnippet } from './SourceFileReader';
 
 export class CollisionPrinter extends OutputFormatter {
     private errors: TestFailed[] = [];
@@ -93,27 +93,7 @@ export class CollisionPrinter extends OutputFormatter {
             return undefined;
         }
 
-        try {
-            const data = readFileSync(this.phpUnitXML.path(detail.file), 'utf8');
-            const position = Math.max(0, detail.line - 5);
-            const lines = data
-                .split(/\r\n|\n/)
-                .splice(position, 10)
-                .map((line, index) => {
-                    const currentPosition = position + index + 1;
-                    const prefix = detail.line === currentPosition ? '➜ ' : '  ';
-
-                    return `${prefix}${String(currentPosition).padStart(2, ' ')} ▕ ${line}`;
-                });
-
-            return [
-                '',
-                `at ${OutputFormatter.fileFormat(detail.file, detail.line)}`,
-                ...lines,
-            ].join(EOL);
-        } catch (_e) {
-            return undefined;
-        }
+        return readSourceSnippet(this.phpUnitXML.path(detail.file), detail.line)?.join(EOL);
     }
 
     private formatDetails(result: TestFailed) {
