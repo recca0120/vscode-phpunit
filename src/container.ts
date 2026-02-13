@@ -2,12 +2,14 @@ import { Container } from 'inversify';
 import { EventEmitter, OutputChannel, TestController, Uri, workspace } from 'vscode';
 import { Configuration } from './Configuration';
 import { ContinuousTestRunner } from './ContinuousTestRunner';
+import { CoverageCollector } from './CoverageCollector';
 import { Handler } from './Handler';
-import { CollisionPrinter } from './Observers';
+import { CollisionPrinter, MessageObserver } from './Observers';
 import { PHPUnitXML } from './PHPUnit';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 import { TestCommandRegistry } from './TestCommandRegistry';
+import { TestDiscovery } from './TestDiscovery';
 import { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
 import { TestRunnerFactory } from './TestRunnerFactory';
@@ -46,12 +48,25 @@ export function createContainer(
         new PHPUnitLinkProvider(ctx.get(TYPES.phpUnitXML)),
     ).inSingletonScope();
 
+    container.bind(TYPES.messageObserver).toDynamicValue((ctx) =>
+        new MessageObserver(ctx.get(TYPES.configuration)),
+    ).inSingletonScope();
+
     container.bind(TYPES.testRunnerFactory).toDynamicValue((ctx) =>
         new TestRunnerFactory(
             ctx.get(TYPES.outputChannel),
             ctx.get(TYPES.configuration),
             ctx.get(TYPES.printer),
+            ctx.get(TYPES.messageObserver),
         ),
+    ).inSingletonScope();
+
+    container.bind(TYPES.coverageCollector).toDynamicValue(() =>
+        new CoverageCollector(),
+    ).inSingletonScope();
+
+    container.bind(TYPES.testDiscovery).toDynamicValue((ctx) =>
+        new TestDiscovery(ctx.get(TYPES.testCollection)),
     ).inSingletonScope();
 
     container.bind(TYPES.handler).toDynamicValue((ctx) =>
@@ -61,11 +76,17 @@ export function createContainer(
             ctx.get(TYPES.configuration),
             ctx.get(TYPES.testCollection),
             ctx.get(TYPES.testRunnerFactory),
+            ctx.get(TYPES.coverageCollector),
+            ctx.get(TYPES.testDiscovery),
         ),
     ).inSingletonScope();
 
     container.bind(TYPES.testCommandRegistry).toDynamicValue((ctx) =>
-        new TestCommandRegistry(ctx.get(TYPES.testCollection)),
+        new TestCommandRegistry(
+            ctx.get(TYPES.testCollection),
+            ctx.get(TYPES.handler),
+            ctx.get(TYPES.testFileDiscovery),
+        ),
     ).inSingletonScope();
 
     container.bind(TYPES.testFileDiscovery).toDynamicValue((ctx) =>

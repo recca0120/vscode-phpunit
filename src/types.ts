@@ -13,4 +13,7 @@ export const TYPES = {
     testFileDiscovery: Symbol.for('TestFileDiscovery'),
     testFileWatcher: Symbol.for('TestFileWatcher'),
     continuousTestRunner: Symbol.for('ContinuousTestRunner'),
+    coverageCollector: Symbol.for('CoverageCollector'),
+    testDiscovery: Symbol.for('TestDiscovery'),
+    messageObserver: Symbol.for('MessageObserver'),
 };

@@ -12,8 +12,6 @@ import { TestRunnerFactory } from './TestRunnerFactory';
 
 export class Handler {
     private previousRequest: TestRunRequest | undefined;
-    private testDiscovery: TestDiscovery;
-    private coverageCollector = new CoverageCollector();
 
     constructor(
         private ctrl: TestController,
@@ -21,9 +19,9 @@ export class Handler {
         private configuration: Configuration,
         private testCollection: TestCollection,
         private testRunnerFactory: TestRunnerFactory,
-    ) {
-        this.testDiscovery = new TestDiscovery(testCollection);
-    }
+        private coverageCollector: CoverageCollector,
+        private testDiscovery: TestDiscovery,
+    ) {}
 
     getPreviousRequest() {
         return this.previousRequest;

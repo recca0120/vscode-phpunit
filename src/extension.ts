@@ -7,7 +7,6 @@ import { PHPUnitFileCoverage } from './CloverParser';
 import { Configuration } from './Configuration';
 import { ContinuousTestRunner } from './ContinuousTestRunner';
 import { createContainer } from './container';
-import { Handler } from './Handler';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 import { TestCommandRegistry } from './TestCommandRegistry';
@@ -26,27 +25,18 @@ export async function activate(context: ExtensionContext) {
     const testFileWatcher = container.get<TestFileWatcher>(TYPES.testFileWatcher);
     const continuousTestRunner = container.get<ContinuousTestRunner>(TYPES.continuousTestRunner);
     const testCollection = container.get<TestCollection>(TYPES.testCollection);
-    const handler = container.get<Handler>(TYPES.handler);
     const commandHandler = container.get<TestCommandRegistry>(TYPES.testCommandRegistry);
 
     // Initial load
     await testFileDiscovery.loadInitialConfiguration();
     await Promise.all(workspace.textDocuments.map((document) => testCollection.add(document.uri)));
 
-    const reload = async () => {
-        await Promise.all(
-            (await testFileDiscovery.getWorkspaceTestPatterns()).map(
-                ({ pattern, exclude }) => testFileDiscovery.findInitialFiles(pattern, exclude),
-            ),
-        );
-    };
-
     // Listeners
     testFileWatcher.registerDocumentListeners(context);
     continuousTestRunner.setupFileChangeListener();
 
     // Test controller
-    ctrl.refreshHandler = reload;
+    ctrl.refreshHandler = () => testFileDiscovery.reloadAll();
     ctrl.resolveHandler = async (item) => {
         if (!item) {
             context.subscriptions.push(...(await testFileWatcher.startWatching()));
@@ -73,11 +63,11 @@ export async function activate(context: ExtensionContext) {
 
     // Commands
     commandHandler.setTestRunProfile(testRunProfile);
-    context.subscriptions.push(commandHandler.reload(reload));
+    context.subscriptions.push(commandHandler.reload());
     context.subscriptions.push(commandHandler.runAll());
     context.subscriptions.push(commandHandler.runFile());
     context.subscriptions.push(commandHandler.runTestAtCursor());
-    context.subscriptions.push(commandHandler.rerun(handler));
+    context.subscriptions.push(commandHandler.rerun());
 
     context.subscriptions.push(commandHandler.runByGroup(handler));
 

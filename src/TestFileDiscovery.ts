@@ -31,11 +31,9 @@ export class TestFileDiscovery {
             return [];
         }
 
-        const configuration = new Configuration(workspace.getConfiguration('phpunit'));
-
         return Promise.all(
             workspace.workspaceFolders.map(async (workspaceFolder: WorkspaceFolder) => {
-                const configurationFile = await configuration.getConfigurationFile(
+                const configurationFile = await this.configuration.getConfigurationFile(
                     workspaceFolder.uri.fsPath,
                 );
                 configurationFile
@@ -56,6 +54,14 @@ export class TestFileDiscovery {
                     exclude: toRelativePattern(excludes),
                 };
             }),
+        );
+    }
+
+    async reloadAll(): Promise<void> {
+        await Promise.all(
+            (await this.getWorkspaceTestPatterns()).map(
+                ({ pattern, exclude }) => this.findInitialFiles(pattern, exclude),
+            ),
         );
     }
 

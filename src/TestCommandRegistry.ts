@@ -1,19 +1,24 @@
 import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunRequest, window } from 'vscode';
 import { Handler } from './Handler';
 import { GroupRegistry, TestCollection } from './TestCollection';
+import { TestFileDiscovery } from './TestFileDiscovery';
 
 export class TestCommandRegistry {
     private testRunProfile!: TestRunProfile;
 
-    constructor(private testCollection: TestCollection) {}
+    constructor(
+        private testCollection: TestCollection,
+        private handler: Handler,
+        private testFileDiscovery: TestFileDiscovery,
+    ) {}
 
     setTestRunProfile(profile: TestRunProfile) {
         this.testRunProfile = profile;
     }
 
-    reload(callback: () => void) {
+    reload() {
         return commands.registerCommand('phpunit.reload', async () => {
-            callback();
+            await this.testFileDiscovery.reloadAll();
         });
     }
 
@@ -51,10 +56,10 @@ export class TestCommandRegistry {
         });
     }
 
-    rerun(handler: Handler) {
+    rerun() {
         return commands.registerCommand('phpunit.rerun', () => {
             return this.run(
-                this.testCollection.findTestsByRequest(handler.getPreviousRequest()),
+                this.testCollection.findTestsByRequest(this.handler.getPreviousRequest()),
             );
         });
     }
