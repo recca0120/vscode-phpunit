@@ -26,9 +26,9 @@ export class TestCollection extends BaseTestCollection {
 
     findTestsByFile(uri: URI): TestItem[] {
         const tests = [] as TestItem[];
-        for (const [test, testCase] of this.getTestCases(uri)) {
+        for (const [testItem, testCase] of this.getTestCases(uri)) {
             if (testCase.type === TestType.class) {
-                tests.push(test);
+                tests.push(testItem);
             }
         }
 
@@ -51,8 +51,8 @@ export class TestCollection extends BaseTestCollection {
         const tests: TestItem[] = [];
         for (const [, testData] of this.getTestData()) {
             testData.forEach((_, testItem: TestItem) => {
-                include.forEach((test) => {
-                    if (test.id === testItem.id) {
+                include.forEach((requestedItem) => {
+                    if (requestedItem.id === testItem.id) {
                         tests.push(testItem);
                     }
                 });
@@ -113,9 +113,9 @@ export class TestCollection extends BaseTestCollection {
 
     private inRangeTestItems(uri: URI, position: Position) {
         const items: TestItem[] = [];
-        for (const [test, testCase] of this.getTestCases(uri)) {
-            if (testCase.inRange(test, position)) {
-                items.push(test);
+        for (const [testItem, testCase] of this.getTestCases(uri)) {
+            if (testCase.inRange(testItem, position)) {
+                items.push(testItem);
             }
         }
         items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
@@ -135,18 +135,18 @@ export class TestCollection extends BaseTestCollection {
                 return;
             }
 
-            let item = testItem;
-            while (item.parent) {
-                const parent = item.parent;
+            let current = testItem;
+            while (current.parent) {
+                const parent = current.parent;
                 const children = parent.children;
-                children.delete(item.id);
+                children.delete(current.id);
                 if (children.size !== 0) {
                     break;
                 }
 
-                item = parent;
-                if (!item.parent) {
-                    this.ctrl.items.delete(item.id);
+                current = parent;
+                if (!current.parent) {
+                    this.ctrl.items.delete(current.id);
                 }
             }
         });
