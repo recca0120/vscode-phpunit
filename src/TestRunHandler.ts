@@ -8,8 +8,14 @@ import {
 } from 'vscode';
 import type { Configuration } from './Configuration';
 import type { CoverageCollector } from './CoverageCollector';
-import { type PHPUnitXML, ProcessBuilder, type TestRunner, TestRunnerEvent } from './PHPUnit';
-import { Mode, Xdebug } from './PHPUnit/ProcessBuilder/Xdebug';
+import {
+    Mode,
+    type PHPUnitXML,
+    ProcessBuilder,
+    type TestRunner,
+    TestRunnerEvent,
+    Xdebug,
+} from './PHPUnit';
 import type { TestCollection } from './TestCollection';
 import type { TestQueueBuilder } from './TestQueueBuilder';
 import type { TestRunnerBuilder } from './TestRunnerBuilder';

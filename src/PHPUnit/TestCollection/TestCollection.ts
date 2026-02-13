@@ -2,7 +2,7 @@ import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import { type PHPUnitXML, type TestDefinition, TestParser, type TestSuite } from '../index';
-import { TestDefinitionBuilder } from './TestDefinitionBuilder';
+import { TestDefinitionCollector } from './TestDefinitionCollector';
 
 export interface File<T> {
     testsuite: string;
@@ -100,7 +100,7 @@ export class TestCollection {
 
     protected createTestParser() {
         const testParser = new TestParser(this.phpUnitXML);
-        const testDefinitionBuilder = new TestDefinitionBuilder(testParser);
+        const testDefinitionBuilder = new TestDefinitionCollector(testParser);
 
         return { testParser, testDefinitionBuilder };
     }

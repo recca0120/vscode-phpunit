@@ -1,2 +1,2 @@
 export * from './TestCollection';
-export * from './TestDefinitionBuilder';
+export * from './TestDefinitionCollector';

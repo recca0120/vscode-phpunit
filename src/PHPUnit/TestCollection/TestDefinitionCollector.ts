@@ -1,7 +1,7 @@
 import type { TestParser } from '../TestParser';
 import { type TestDefinition, TestType } from '../types';
 
-export class TestDefinitionBuilder {
+export class TestDefinitionCollector {
     private readonly testDefinitions: TestDefinition[] = [];
 
     constructor(private testParser: TestParser) {

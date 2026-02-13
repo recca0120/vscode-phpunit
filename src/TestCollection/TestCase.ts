@@ -1,6 +1,10 @@
 import type { Position, TestItem } from 'vscode';
-import { type ProcessBuilder, type TestDefinition, TestType } from '../PHPUnit';
-import { FilterStrategyFactory } from '../PHPUnit/ProcessBuilder/FilterStrategy';
+import {
+    FilterStrategyFactory,
+    type ProcessBuilder,
+    type TestDefinition,
+    TestType,
+} from '../PHPUnit';
 
 export class TestCase {
     constructor(private testDefinition: TestDefinition) {}

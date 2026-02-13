@@ -48,5 +48,17 @@
                 "noUnsafeOptionalChaining": "warn"
             }
         }
-    }
+    },
+    "overrides": [
+        {
+            "includes": ["**/*.test.ts"],
+            "linter": {
+                "rules": {
+                    "suspicious": { "noConsole": "off", "noExportsInTest": "off" },
+                    "correctness": { "noUnusedFunctionParameters": "off" },
+                    "style": { "noNonNullAssertion": "off" }
+                }
+            }
+        }
+    ]
 }
