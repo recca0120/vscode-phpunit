@@ -1,7 +1,7 @@
-FROM php:8.3-cli-alpine
+ARG PHP_VERSION=8.3
+FROM php:${PHP_VERSION}-cli-alpine
 
 WORKDIR /app
-
 ENV TZ=UTC
 
 RUN apk update && apk add --no-cache tzdata git openssh && \

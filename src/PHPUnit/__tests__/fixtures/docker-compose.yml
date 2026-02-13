@@ -1,0 +1,167 @@
+x-base: &base
+  build:
+    context: ./dockerfiles
+    dockerfile: Dockerfile
+  tty: true
+  networks:
+    - vscode-phpunit-network
+
+services:
+  php71:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "7.1"
+    container_name: php71
+    ports:
+      - "2271:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - phpunit-vendor-php71:/app/phpunit-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php72:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "7.2"
+    container_name: php72
+    ports:
+      - "2272:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - phpunit-vendor-php72:/app/phpunit-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php73:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "7.3"
+    container_name: php73
+    ports:
+      - "2273:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - phpunit-vendor-php73:/app/phpunit-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php80:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "8.0"
+    container_name: php80
+    ports:
+      - "2280:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - ./pest-stub:/app/pest-stub
+      - phpunit-vendor-php80:/app/phpunit-stub/vendor
+      - pest-vendor-php80:/app/pest-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php81:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "8.1"
+    container_name: php81
+    ports:
+      - "2281:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - ./pest-stub:/app/pest-stub
+      - phpunit-vendor-php81:/app/phpunit-stub/vendor
+      - pest-vendor-php81:/app/pest-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php82:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "8.2"
+    container_name: php82
+    ports:
+      - "2282:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - ./pest-stub:/app/pest-stub
+      - phpunit-vendor-php82:/app/phpunit-stub/vendor
+      - pest-vendor-php82:/app/pest-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php83:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "8.3"
+    container_name: php83
+    ports:
+      - "2283:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - ./pest-stub:/app/pest-stub
+      - phpunit-vendor-php83:/app/phpunit-stub/vendor
+      - pest-vendor-php83:/app/pest-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php84:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "8.4"
+    container_name: php84
+    ports:
+      - "2284:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - ./pest-stub:/app/pest-stub
+      - phpunit-vendor-php84:/app/phpunit-stub/vendor
+      - pest-vendor-php84:/app/pest-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+  php85:
+    <<: *base
+    build:
+      context: ./dockerfiles
+      args:
+        PHP_VERSION: "8.5"
+    container_name: php85
+    ports:
+      - "2285:22"
+    volumes:
+      - ./phpunit-stub:/app/phpunit-stub
+      - ./pest-stub:/app/pest-stub
+      - phpunit-vendor-php85:/app/phpunit-stub/vendor
+      - pest-vendor-php85:/app/pest-stub/vendor
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
+
+volumes:
+  phpunit-vendor-php71:
+  phpunit-vendor-php72:
+  phpunit-vendor-php73:
+  phpunit-vendor-php80:
+  phpunit-vendor-php81:
+  phpunit-vendor-php82:
+  phpunit-vendor-php83:
+  phpunit-vendor-php84:
+  phpunit-vendor-php85:
+  pest-vendor-php80:
+  pest-vendor-php81:
+  pest-vendor-php82:
+  pest-vendor-php83:
+  pest-vendor-php84:
+  pest-vendor-php85:
+
+networks:
+  vscode-phpunit-network:
+    driver: "bridge"
