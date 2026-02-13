@@ -16,4 +16,5 @@ export const TYPES = {
     coverageCollector: Symbol.for('CoverageCollector'),
     testDiscovery: Symbol.for('TestDiscovery'),
     messageObserver: Symbol.for('MessageObserver'),
+    outputChannelObserver: Symbol.for('OutputChannelObserver'),
 };

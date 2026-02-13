@@ -26,8 +26,8 @@ describe('OutputChannelObserver', () => {
             outputChannel,
             configuration,
             new PrettyPrinter(new PHPUnitXML()),
-            { continuous: false } as TestRunRequest,
         );
+        observer.setRequest({ continuous: false } as TestRunRequest);
         testRunner.observe(observer);
     });
 

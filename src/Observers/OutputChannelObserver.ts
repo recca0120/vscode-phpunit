@@ -14,8 +14,13 @@ enum ShowOutputState {
 
 export class OutputChannelObserver implements TestRunnerObserver {
     private lastCommand = '';
+    private request!: TestRunRequest;
 
-    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration, private printer: Printer, private request: TestRunRequest) {}
+    constructor(private outputChannel: OutputChannel, private configuration: IConfiguration, private printer: Printer) {}
+
+    setRequest(request: TestRunRequest) {
+        this.request = request;
+    }
 
     run(builder: ProcessBuilder): void {
         this.clearOutputOnRun();

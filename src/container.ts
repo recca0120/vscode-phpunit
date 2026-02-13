@@ -4,7 +4,7 @@ import { Configuration } from './Configuration';
 import { ContinuousTestRunner } from './ContinuousTestRunner';
 import { CoverageCollector } from './CoverageCollector';
 import { Handler } from './Handler';
-import { CollisionPrinter, MessageObserver } from './Observers';
+import { CollisionPrinter, MessageObserver, OutputChannelObserver } from './Observers';
 import { PHPUnitXML } from './PHPUnit';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
@@ -52,11 +52,17 @@ export function createContainer(
         new MessageObserver(ctx.get(TYPES.configuration)),
     ).inSingletonScope();
 
-    container.bind(TYPES.testRunnerFactory).toDynamicValue((ctx) =>
-        new TestRunnerFactory(
+    container.bind(TYPES.outputChannelObserver).toDynamicValue((ctx) =>
+        new OutputChannelObserver(
             ctx.get(TYPES.outputChannel),
             ctx.get(TYPES.configuration),
             ctx.get(TYPES.printer),
+        ),
+    ).inSingletonScope();
+
+    container.bind(TYPES.testRunnerFactory).toDynamicValue((ctx) =>
+        new TestRunnerFactory(
+            ctx.get(TYPES.outputChannelObserver),
             ctx.get(TYPES.messageObserver),
         ),
     ).inSingletonScope();
