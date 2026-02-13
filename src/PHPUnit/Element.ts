@@ -3,15 +3,15 @@ import { readFile } from 'node:fs/promises';
 
 const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
-export class XmlElement {
+export class Element {
     constructor(private readonly node: any) {}
 
     static async loadFile(file: string) {
-        return XmlElement.load(await readFile(file));
+        return Element.load(await readFile(file));
     }
 
     static load(buffer: string | Buffer | Uint8Array) {
-        return new XmlElement(parser.parse(buffer.toString()));
+        return new Element(parser.parse(buffer.toString()));
     }
 
     getAttribute(key: string) {
@@ -46,7 +46,7 @@ export class XmlElement {
             }
         }
 
-        return this.ensureArray(current).map((node) => new XmlElement(node));
+        return this.ensureArray(current).map((node) => new Element(node));
     }
 
     private ensureArray(obj: any) {

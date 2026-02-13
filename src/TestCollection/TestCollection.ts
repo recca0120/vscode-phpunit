@@ -25,20 +25,20 @@ export class TestCollection extends BaseTestCollection {
     }
 
     findTestsByFile(uri: URI): TestItem[] {
-        const testItems: TestItem[] = [];
-        for (const [testItem, testCase] of this.getTestCases(uri)) {
+        const tests = [] as TestItem[];
+        for (const [test, testCase] of this.getTestCases(uri)) {
             if (testCase.type === TestType.class) {
-                testItems.push(testItem);
+                tests.push(test);
             }
         }
 
-        return testItems;
+        return tests;
     }
 
     findTestsByPosition(uri: URI, position: Position): TestItem[] {
-        const testItems = this.inRangeTestItems(uri, position);
+        const items = this.inRangeTestItems(uri, position);
 
-        return testItems.length > 0 ? [testItems[0]] : this.findTestsByFile(uri);
+        return items.length > 0 ? [items[0]] : this.findTestsByFile(uri);
     }
 
 
@@ -48,18 +48,18 @@ export class TestCollection extends BaseTestCollection {
         }
 
         const include = request.include;
-        const matched: TestItem[] = [];
+        const tests: TestItem[] = [];
         for (const [, testData] of this.getTestData()) {
             testData.forEach((_, testItem: TestItem) => {
-                include.forEach((requested) => {
-                    if (requested.id === testItem.id) {
-                        matched.push(testItem);
+                include.forEach((test) => {
+                    if (test.id === testItem.id) {
+                        tests.push(testItem);
                     }
                 });
             });
         }
 
-        return matched.length > 0 ? matched : undefined;
+        return tests.length > 0 ? tests : undefined;
     }
 
     reset() {
@@ -112,15 +112,15 @@ export class TestCollection extends BaseTestCollection {
     }
 
     private inRangeTestItems(uri: URI, position: Position) {
-        const testItems: TestItem[] = [];
-        for (const [testItem, testCase] of this.getTestCases(uri)) {
-            if (testCase.inRange(testItem, position)) {
-                testItems.push(testItem);
+        const items: TestItem[] = [];
+        for (const [test, testCase] of this.getTestCases(uri)) {
+            if (testCase.inRange(test, position)) {
+                items.push(test);
             }
         }
-        testItems.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
+        items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
 
-        return testItems;
+        return items;
     }
 
     private compareFn(testItem: TestItem, position: Position) {
@@ -135,18 +135,18 @@ export class TestCollection extends BaseTestCollection {
                 return;
             }
 
-            let current = testItem as TestItem;
-            while (current.parent) {
-                const parent = current.parent;
+            let item = testItem;
+            while (item.parent) {
+                const parent = item.parent;
                 const children = parent.children;
-                children.delete(current.id);
+                children.delete(item.id);
                 if (children.size !== 0) {
                     break;
                 }
 
-                current = parent;
-                if (!current.parent) {
-                    this.ctrl.items.delete(current.id);
+                item = parent;
+                if (!item.parent) {
+                    this.ctrl.items.delete(item.id);
                 }
             }
         });

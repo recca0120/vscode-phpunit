@@ -99,8 +99,8 @@ function setupFileChangeHandler(fileChangedEmitter: EventEmitter<Uri>, watchingT
 
         const include: TestItem[] = [];
         let profile: TestRunProfile | undefined;
-        for (const [watchedItem, thisProfile] of watchingTests) {
-            const cast = watchedItem as TestItem;
+        for (const [item, thisProfile] of watchingTests) {
+            const cast = item as TestItem;
             if (cast.uri?.toString() === uri.toString()) {
                 include.push(...testCollection.findTestsByFile(cast.uri!));
                 profile = thisProfile;
@@ -123,8 +123,8 @@ function createRunHandler(handler: Handler, watchingTests: Map<TestItem | 'ALL',
             watchingTests.set('ALL', request.profile);
             cancellation.onCancellationRequested(() => watchingTests.delete('ALL'));
         } else {
-            request.include.forEach(testItem => watchingTests.set(testItem, request.profile));
-            cancellation.onCancellationRequested(() => request.include!.forEach(testItem => watchingTests.delete(testItem)));
+            request.include.forEach(item => watchingTests.set(item, request.profile));
+            cancellation.onCancellationRequested(() => request.include!.forEach(item => watchingTests.delete(item)));
         }
     };
 }

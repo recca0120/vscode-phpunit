@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, relative } from 'node:path';
 import { URI } from 'vscode-uri';
-import { XmlElement } from './Element';
+import { Element } from './Element';
 
 type Source = { tag: string; value: string; prefix?: string; suffix?: string; };
 
@@ -48,13 +48,13 @@ export class Pattern {
 }
 
 export class PHPUnitXML {
-    private element?: XmlElement;
+    private element?: Element;
     private _file: string = '';
     private _root: string = '';
     private readonly cached: Map<string, any> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
-        this.element = XmlElement.load(text.toString());
+        this.element = Element.load(text.toString());
         this._file = file;
         this.setRoot(dirname(file));
 
@@ -89,7 +89,7 @@ export class PHPUnitXML {
     }
 
     getTestSuites(): TestSuite[] {
-        const callback = (tag: string, node: XmlElement, parent: XmlElement) => {
+        const callback = (tag: string, node: Element, parent: Element) => {
             const name = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
@@ -146,26 +146,26 @@ export class PHPUnitXML {
 
     private getIncludesOrExcludes(key: string): Source[] {
         return this.getDirectoriesAndFiles<Source>(key, {
-            directory: (tag: string, node: XmlElement) => {
+            directory: (tag: string, node: Element) => {
                 const prefix = node.getAttribute('prefix');
                 const suffix = node.getAttribute('suffix');
 
                 return { tag, value: node.getText(), prefix, suffix };
             },
-            file: (tag: string, node: XmlElement) => ({ tag, value: node.getText() }),
+            file: (tag: string, node: Element) => ({ tag, value: node.getText() }),
         });
     }
 
     private getDirectoriesAndFiles<T>(
         selector: string,
-        callbacks: { [key: string]: (tag: string, node: XmlElement, parent: XmlElement) => T; },
+        callbacks: { [key: string]: (tag: string, node: Element, parent: Element) => T; },
     ) {
         if (!this.element) {
             return [];
         }
 
         return this.fromCache<T>(selector, () => {
-            return this.element!.querySelectorAll(selector).reduce((results: T[], parent: XmlElement) => {
+            return this.element!.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
                 for (const [type, callback] of Object.entries(callbacks)) {
                     const temp = parent
                         .querySelectorAll(type)

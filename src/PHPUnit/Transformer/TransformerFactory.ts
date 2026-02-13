@@ -11,7 +11,7 @@ export abstract class TransformerFactory {
         ].join('|'), 'i').test(text);
     }
 
-    static create(text: string) {
+    static factory(text: string) {
         return this.isPest(text) ? new PestTransformer() : new PHPUnitTransformer();
     }
 }

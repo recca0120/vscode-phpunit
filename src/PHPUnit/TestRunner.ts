@@ -9,7 +9,7 @@ export class TestRunnerProcess {
     private child?: ChildProcess;
     private emitter = new EventEmitter();
     private output = '';
-    private incompleteLineBuffer = '';
+    private temp = '';
     private abortController: AbortController;
 
     constructor(private builder: ProcessBuilder) {
@@ -51,14 +51,14 @@ export class TestRunnerProcess {
 
     private execute() {
         this.output = '';
-        this.incompleteLineBuffer = '';
+        this.temp = '';
 
         this.emitter.emit('start', this.builder);
         const { runtime, args, options } = this.builder.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
         this.child.stdout!.on('data', (data) => this.appendOutput(data));
         this.child.stderr!.on('data', (data) => this.appendOutput(data));
-        this.child.stdout!.on('end', () => this.emitLines(this.incompleteLineBuffer));
+        this.child.stdout!.on('end', () => this.emitLines(this.temp));
         this.child.on('error', (err: Error) => this.emitter.emit('error', err));
         this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
     }
@@ -66,9 +66,9 @@ export class TestRunnerProcess {
     private appendOutput(data: string) {
         const out = data.toString();
         this.output += out;
-        this.incompleteLineBuffer += out;
-        const lines = this.emitLines(this.incompleteLineBuffer, 1);
-        this.incompleteLineBuffer = lines.shift()!;
+        this.temp += out;
+        const lines = this.emitLines(this.temp, 1);
+        this.temp = lines.shift()!;
     };
 
     private emitLines(temp: string, limit = 0) {
@@ -133,19 +133,19 @@ export class TestRunner {
     }
 
     private processLine(line: string, builder: ProcessBuilder) {
-        this.emitTestResult(builder, this.problemMatcher.parse(line));
+        this.emitResult(builder, this.problemMatcher.parse(line));
         this.emit(TestRunnerEvent.line, line);
     }
 
-    private emitTestResult(builder: ProcessBuilder, testResult: TestResult | undefined) {
-        if (!testResult) {
+    private emitResult(builder: ProcessBuilder, result: TestResult | undefined) {
+        if (!result) {
             return;
         }
 
-        testResult = builder.replacePath(testResult);
-        if ('event' in testResult!) {
-            this.emit(testResult.event, testResult);
+        result = builder.replacePath(result);
+        if ('event' in result!) {
+            this.emit(result.event, result);
         }
-        this.emit(TestRunnerEvent.result, testResult!);
+        this.emit(TestRunnerEvent.result, result!);
     }
 }

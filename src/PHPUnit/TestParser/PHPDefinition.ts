@@ -45,7 +45,7 @@ abstract class TestDefinitionBuilder {
     }
 
     private getTransformer(testDefinition: Pick<TestDefinition, 'classFQN'>): Transformer {
-        return TransformerFactory.create(testDefinition.classFQN!);
+        return TransformerFactory.factory(testDefinition.classFQN!);
     }
 }
 

@@ -21,7 +21,7 @@ export class PHPUnitFixer {
                 .join('::');
         }
 
-        const transformer = TransformerFactory.create(testResult.locationHint);
+        const transformer = TransformerFactory.factory(testResult.locationHint);
         const { id, file } = transformer.fromLocationHit(testResult.locationHint, testResult.name);
         testResult.id = id;
         testResult.file = file;

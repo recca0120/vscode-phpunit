@@ -1,16 +1,16 @@
 import { FileCoverage, FileCoverageDetail, Position, StatementCoverage, TestCoverageCount, Uri } from 'vscode';
-import { XmlElement } from './PHPUnit';
+import { Element } from './PHPUnit';
 
 
 export class CloverParser {
     static async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {
         try {
-            const element = await XmlElement.loadFile(file);
+            const element = await Element.loadFile(file);
 
             return [
                 ...element.querySelectorAll('coverage project file'),
                 ...element.querySelectorAll('coverage project package file'),
-            ].map((node: XmlElement) => new PHPUnitFileCoverage(node));
+            ].map((node: Element) => new PHPUnitFileCoverage(node));
         } catch (ex) {
             return [];
         }
@@ -18,7 +18,7 @@ export class CloverParser {
 }
 
 export class PHPUnitFileCoverage extends FileCoverage {
-    constructor(private element: XmlElement) {
+    constructor(private element: Element) {
         super(
             Uri.file(element.getAttribute('name')),
             new TestCoverageCount(0, 0),
@@ -29,7 +29,7 @@ export class PHPUnitFileCoverage extends FileCoverage {
     }
 
     public generateDetailedCoverage(): FileCoverageDetail[] {
-        return this.element.querySelectorAll('line').map((line: XmlElement) => {
+        return this.element.querySelectorAll('line').map((line: Element) => {
             return new StatementCoverage(
                 parseInt(line.getAttribute('count'), 10),
                 new Position(parseInt(line.getAttribute('num'), 10) - 1, 0),
