@@ -9,7 +9,7 @@ export class TestRunnerProcess {
     private child?: ChildProcess;
     private emitter = new EventEmitter();
     private output = '';
-    private temp = '';
+    private incompleteLineBuffer = '';
     private abortController: AbortController;
 
     constructor(private builder: ProcessBuilder) {
@@ -51,14 +51,14 @@ export class TestRunnerProcess {
 
     private execute() {
         this.output = '';
-        this.temp = '';
+        this.incompleteLineBuffer = '';
 
         this.emitter.emit('start', this.builder);
         const { runtime, args, options } = this.builder.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
         this.child.stdout!.on('data', (data) => this.appendOutput(data));
         this.child.stderr!.on('data', (data) => this.appendOutput(data));
-        this.child.stdout!.on('end', () => this.emitLines(this.temp));
+        this.child.stdout!.on('end', () => this.emitLines(this.incompleteLineBuffer));
         this.child.on('error', (err: Error) => this.emitter.emit('error', err));
         this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
     }
@@ -66,13 +66,13 @@ export class TestRunnerProcess {
     private appendOutput(data: string) {
         const out = data.toString();
         this.output += out;
-        this.temp += out;
-        const lines = this.emitLines(this.temp, 1);
-        this.temp = lines.shift()!;
+        this.incompleteLineBuffer += out;
+        const lines = this.emitLines(this.incompleteLineBuffer, 1);
+        this.incompleteLineBuffer = lines.shift()!;
     };
 
-    private emitLines(temp: string, limit = 0) {
-        const lines = temp.split(/\r\n|\n/);
+    private emitLines(buffer: string, limit = 0) {
+        const lines = buffer.split(/\r\n|\n/);
         while (lines.length > limit) {
             this.emitter.emit('line', lines.shift()!);
         }
@@ -133,11 +133,11 @@ export class TestRunner {
     }
 
     private processLine(line: string, builder: ProcessBuilder) {
-        this.emitResult(builder, this.problemMatcher.parse(line));
+        this.emitTestResult(builder, this.problemMatcher.parse(line));
         this.emit(TestRunnerEvent.line, line);
     }
 
-    private emitResult(builder: ProcessBuilder, result: TestResult | undefined) {
+    private emitTestResult(builder: ProcessBuilder, result: TestResult | undefined) {
         if (!result) {
             return;
         }
