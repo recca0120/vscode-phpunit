@@ -148,9 +148,9 @@ export class Handler {
     };
 
     private gatherTestItems(collection: TestItemCollection) {
-        const items: TestItem[] = [];
-        collection.forEach((item) => items.push(item));
+        const testItems: TestItem[] = [];
+        collection.forEach((testItem) => testItems.push(testItem));
 
-        return items;
+        return testItems;
     }
 }
