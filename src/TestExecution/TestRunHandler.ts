@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import {
     type CancellationToken,
     debug,
@@ -6,31 +7,33 @@ import {
     type TestRunRequest,
     workspace,
 } from 'vscode';
-import type { Configuration } from './Configuration';
-import type { CoverageCollector } from './CoverageCollector';
+import { Configuration } from '../Configuration';
+import { CoverageCollector } from '../Coverage';
 import {
     Mode,
-    type PHPUnitXML,
+    PHPUnitXML,
     ProcessBuilder,
     type TestRunner,
     TestRunnerEvent,
     Xdebug,
-} from './PHPUnit';
-import type { TestCollection } from './TestCollection';
-import type { TestQueueBuilder } from './TestQueueBuilder';
-import type { TestRunnerBuilder } from './TestRunnerBuilder';
+} from '../PHPUnit';
+import { TestCollection } from '../TestCollection';
+import { TYPES } from '../types';
+import { TestQueueBuilder } from './TestQueueBuilder';
+import { TestRunnerBuilder } from './TestRunnerBuilder';
 
+@injectable()
 export class TestRunHandler {
     private previousRequest: TestRunRequest | undefined;
 
     constructor(
-        private ctrl: TestController,
-        private phpUnitXML: PHPUnitXML,
-        private configuration: Configuration,
-        private testCollection: TestCollection,
-        private testRunnerBuilder: TestRunnerBuilder,
-        private coverageCollector: CoverageCollector,
-        private testQueueBuilder: TestQueueBuilder,
+        @inject(TYPES.TestController) private ctrl: TestController,
+        @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
+        @inject(Configuration) private configuration: Configuration,
+        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
+        @inject(CoverageCollector) private coverageCollector: CoverageCollector,
+        @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
     ) {}
 
     getPreviousRequest() {

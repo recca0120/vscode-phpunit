@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import {
     CancellationTokenSource,
     commands,
@@ -6,17 +7,18 @@ import {
     TestRunRequest,
     window,
 } from 'vscode';
-import { GroupRegistry, type TestCollection } from './TestCollection';
-import type { TestFileDiscovery } from './TestFileDiscovery';
-import type { TestRunHandler } from './TestRunHandler';
+import { GroupRegistry, TestCollection } from '../TestCollection';
+import { TestFileDiscovery } from '../TestDiscovery';
+import { TestRunHandler } from '../TestExecution';
 
+@injectable()
 export class TestCommandRegistry {
     private testRunProfile!: TestRunProfile;
 
     constructor(
-        private testCollection: TestCollection,
-        private handler: TestRunHandler,
-        private testFileDiscovery: TestFileDiscovery,
+        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestRunHandler) private handler: TestRunHandler,
+        @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
     ) {}
 
     setTestRunProfile(profile: TestRunProfile) {
@@ -74,7 +76,7 @@ export class TestCommandRegistry {
         });
     }
 
-    runByGroup(handler: TestRunHandler) {
+    runByGroup() {
         return commands.registerCommand('phpunit.run-by-group', async () => {
             const groups = GroupRegistry.getInstance().getAll();
             if (groups.length === 0) {
@@ -87,12 +89,12 @@ export class TestCommandRegistry {
                 title: 'Run Tests by Group',
             });
 
-            if (!selectedGroup || !handler) {
+            if (!selectedGroup) {
                 return;
             }
 
             const cancellation = new CancellationTokenSource().token;
-            await handler.startGroupTestRun(selectedGroup, cancellation);
+            await this.handler.startGroupTestRun(selectedGroup, cancellation);
         });
     }
 

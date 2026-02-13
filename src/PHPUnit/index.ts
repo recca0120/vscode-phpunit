@@ -1,6 +1,5 @@
 export * from './Configuration';
 export * from './CustomWeakMap';
-export * from './XmlElement';
 export * from './PHPUnitXML';
 export * from './ProblemMatcher';
 export * from './ProcessBuilder';
@@ -12,3 +11,4 @@ export * from './TestRunnerProcess';
 export * from './Transformer';
 export * from './types';
 export * from './utils';
+export * from './XmlElement';

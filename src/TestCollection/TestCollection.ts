@@ -1,23 +1,26 @@
+import { inject, injectable } from 'inversify';
 import type { Position, TestController, TestItem, TestRunRequest } from 'vscode';
 import type { URI } from 'vscode-uri';
 import {
     TestCollection as BaseTestCollection,
     CustomWeakMap,
     type File,
-    type PHPUnitXML,
+    PHPUnitXML,
     type TestDefinition,
     TestType,
 } from '../PHPUnit';
+import { TYPES } from '../types';
 import type { TestCase } from './TestCase';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
+@injectable()
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
     private testCaseIndex = new Map<string, TestCase>();
 
     constructor(
-        private ctrl: TestController,
-        phpUnitXML: PHPUnitXML,
+        @inject(TYPES.TestController) private ctrl: TestController,
+        @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
     ) {
         super(phpUnitXML);
     }

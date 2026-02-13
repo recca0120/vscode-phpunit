@@ -14,15 +14,12 @@ import {
     window,
     workspace,
 } from 'vscode';
-import type { PHPUnitFileCoverage } from './CloverParser';
-import type { Configuration } from './Configuration';
+import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
+import { Configuration } from './Configuration';
+import type { PHPUnitFileCoverage } from './Coverage';
 import { createContainer } from './container';
-import type { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
-import type { TestCollection } from './TestCollection';
-import type { TestCommandRegistry } from './TestCommandRegistry';
-import type { TestFileDiscovery } from './TestFileDiscovery';
-import type { TestFileWatcher } from './TestFileWatcher';
-import type { TestWatchManager } from './TestWatchManager';
+import { TestCollection } from './TestCollection';
+import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import { TYPES } from './types';
 
 export async function activate(context: ExtensionContext) {
@@ -30,11 +27,11 @@ export async function activate(context: ExtensionContext) {
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
     const container = createContainer(ctrl, outputChannel);
 
-    const testFileDiscovery = container.get<TestFileDiscovery>(TYPES.testFileDiscovery);
-    const testFileWatcher = container.get<TestFileWatcher>(TYPES.testFileWatcher);
-    const testWatchManager = container.get<TestWatchManager>(TYPES.testWatchManager);
-    const testCollection = container.get<TestCollection>(TYPES.testCollection);
-    const testCommandRegistry = container.get<TestCommandRegistry>(TYPES.testCommandRegistry);
+    const testFileDiscovery = container.get(TestFileDiscovery);
+    const testFileWatcher = container.get(TestFileWatcher);
+    const testWatchManager = container.get(TestWatchManager);
+    const testCollection = container.get(TestCollection);
+    const testCommandRegistry = container.get(TestCommandRegistry);
 
     // Initial load
     await testFileDiscovery.loadWorkspaceConfiguration();
@@ -112,6 +109,7 @@ function registerCommands(
     context.subscriptions.push(testCommandRegistry.runFile());
     context.subscriptions.push(testCommandRegistry.runTestAtCursor());
     context.subscriptions.push(testCommandRegistry.rerun());
+    context.subscriptions.push(testCommandRegistry.runByGroup());
 }
 
 function registerDisposables(
@@ -120,10 +118,8 @@ function registerDisposables(
     outputChannel: OutputChannel,
     container: Container,
 ) {
-    const configuration = container.get<Configuration>(TYPES.configuration);
-    const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
-
-    context.subscriptions.push(commandHandler.runByGroup(handler));
+    const configuration = container.get(Configuration);
+    const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.FileChangedEmitter);
 
     context.subscriptions.push(
         ctrl,
@@ -136,7 +132,7 @@ function registerDisposables(
         }),
         languages.registerDocumentLinkProvider(
             { language: 'phpunit' },
-            container.get<PHPUnitLinkProvider>(TYPES.phpUnitLinkProvider),
+            container.get(PHPUnitLinkProvider),
         ),
     );
 }

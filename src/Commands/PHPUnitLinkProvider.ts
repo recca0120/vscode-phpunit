@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import {
     type CancellationToken,
     DocumentLink,
@@ -8,12 +9,13 @@ import {
     type TextDocument,
 } from 'vscode';
 import { URI } from 'vscode-uri';
-import type { PHPUnitXML } from './PHPUnit';
+import { PHPUnitXML } from '../PHPUnit';
 
+@injectable()
 export class PHPUnitLinkProvider implements DocumentLinkProvider {
     private regex = /((?:[A-Z]:)?(?:\.{0,2}[\\/])?[^\s:]+\.php):(\d+)(?::(\d+))?/gi;
 
-    constructor(private phpUnitXML: PHPUnitXML) {}
+    constructor(@inject(PHPUnitXML) private phpUnitXML: PHPUnitXML) {}
 
     provideDocumentLinks(
         document: TextDocument,

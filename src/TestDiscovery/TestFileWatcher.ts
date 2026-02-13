@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import {
     type Disposable,
     type EventEmitter,
@@ -5,14 +6,16 @@ import {
     type Uri,
     workspace,
 } from 'vscode';
-import type { TestCollection } from './TestCollection';
-import type { TestFileDiscovery } from './TestFileDiscovery';
+import { TestCollection } from '../TestCollection';
+import { TYPES } from '../types';
+import { TestFileDiscovery } from './TestFileDiscovery';
 
+@injectable()
 export class TestFileWatcher {
     constructor(
-        private testFileDiscovery: TestFileDiscovery,
-        private testCollection: TestCollection,
-        private fileChangedEmitter: EventEmitter<Uri>,
+        @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
+        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TYPES.FileChangedEmitter) private fileChangedEmitter: EventEmitter<Uri>,
     ) {}
 
     registerDocumentListeners(context: ExtensionContext): void {

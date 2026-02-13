@@ -6,7 +6,7 @@ import {
     TestCoverageCount,
     Uri,
 } from 'vscode';
-import { XmlElement } from './PHPUnit';
+import { XmlElement } from '../PHPUnit';
 
 export class CloverParser {
     static async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {

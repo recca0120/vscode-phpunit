@@ -1,7 +1,8 @@
+import { inject, injectable } from 'inversify';
 import { type GlobPattern, RelativePattern, Uri, type WorkspaceFolder, workspace } from 'vscode';
-import type { Configuration } from './Configuration';
-import type { PHPUnitXML, TestGlobPattern } from './PHPUnit';
-import type { TestCollection } from './TestCollection';
+import { Configuration } from '../Configuration';
+import { PHPUnitXML, type TestGlobPattern } from '../PHPUnit';
+import { TestCollection } from '../TestCollection';
 
 export type WorkspaceTestPattern = {
     workspaceFolder: WorkspaceFolder;
@@ -9,11 +10,12 @@ export type WorkspaceTestPattern = {
     exclude: RelativePattern;
 };
 
+@injectable()
 export class TestFileDiscovery {
     constructor(
-        private configuration: Configuration,
-        private phpUnitXML: PHPUnitXML,
-        private testCollection: TestCollection,
+        @inject(Configuration) private configuration: Configuration,
+        @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
+        @inject(TestCollection) private testCollection: TestCollection,
     ) {}
 
     async loadWorkspaceConfiguration(): Promise<void> {

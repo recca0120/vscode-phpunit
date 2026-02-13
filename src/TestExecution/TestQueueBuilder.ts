@@ -1,9 +1,11 @@
+import { inject, injectable } from 'inversify';
 import type { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
-import { TestType } from './PHPUnit';
-import type { TestCase, TestCollection } from './TestCollection';
+import { TestType } from '../PHPUnit';
+import { type TestCase, TestCollection } from '../TestCollection';
 
+@injectable()
 export class TestQueueBuilder {
-    constructor(private testCollection: TestCollection) {}
+    constructor(@inject(TestCollection) private testCollection: TestCollection) {}
 
     async build(
         tests: Iterable<TestItem>,

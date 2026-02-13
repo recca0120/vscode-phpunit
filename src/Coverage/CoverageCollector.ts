@@ -1,9 +1,11 @@
 import { rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { injectable } from 'inversify';
 import type { TestRun } from 'vscode';
+import type { TestRunnerProcess } from '../PHPUnit';
 import { CloverParser } from './CloverParser';
-import type { TestRunnerProcess } from './PHPUnit';
 
+@injectable()
 export class CoverageCollector {
     async collect(processes: TestRunnerProcess[], testRun: TestRun): Promise<void> {
         const cloverFiles = processes

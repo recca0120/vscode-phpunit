@@ -1,8 +1,8 @@
 import { relative } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type DocumentLink, Position, Range } from 'vscode';
-import { PHPUnitXML } from './PHPUnit';
-import { phpUnitProject } from './PHPUnit/__tests__/utils';
+import { PHPUnitXML } from '../PHPUnit';
+import { phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 
 class TextLine {

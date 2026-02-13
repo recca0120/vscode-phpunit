@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import {
     type CancellationToken,
     type EventEmitter,
@@ -6,16 +7,18 @@ import {
     TestRunRequest,
     type Uri,
 } from 'vscode';
-import type { TestCollection } from './TestCollection';
-import type { TestRunHandler } from './TestRunHandler';
+import { TestCollection } from '../TestCollection';
+import { TestRunHandler } from '../TestExecution';
+import { TYPES } from '../types';
 
+@injectable()
 export class TestWatchManager {
     private watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
 
     constructor(
-        private handler: TestRunHandler,
-        private testCollection: TestCollection,
-        private fileChangedEmitter: EventEmitter<Uri>,
+        @inject(TestRunHandler) private handler: TestRunHandler,
+        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TYPES.FileChangedEmitter) private fileChangedEmitter: EventEmitter<Uri>,
     ) {}
 
     createRunHandler(): (

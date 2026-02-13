@@ -1,3 +1,4 @@
+import { injectable, injectFromBase } from 'inversify';
 import {
     EOL,
     TeamcityEvent,
@@ -9,6 +10,8 @@ import {
 import { OutputFormatter } from './OutputFormatter';
 import { readSourceSnippet } from './SourceFileReader';
 
+@injectable()
+@injectFromBase()
 export class CollisionPrinter extends OutputFormatter {
     private errors: TestFailed[] = [];
 

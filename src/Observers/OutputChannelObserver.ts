@@ -1,4 +1,6 @@
+import { inject, injectable } from 'inversify';
 import type { OutputChannel, TestRunRequest } from 'vscode';
+import { Configuration } from '../Configuration';
 import type {
     IConfiguration,
     ProcessBuilder,
@@ -17,7 +19,8 @@ import type {
     TestSuiteStarted,
     TestVersion,
 } from '../PHPUnit';
-import type { OutputFormatter } from './Printers';
+import { TYPES } from '../types';
+import { OutputFormatter } from './Printers';
 
 enum ShowOutputState {
     always = 'always',
@@ -25,14 +28,15 @@ enum ShowOutputState {
     never = 'never',
 }
 
+@injectable()
 export class OutputChannelObserver implements TestRunnerObserver {
     private lastCommand = '';
     private request!: TestRunRequest;
 
     constructor(
-        private outputChannel: OutputChannel,
-        private configuration: IConfiguration,
-        private outputFormatter: OutputFormatter,
+        @inject(TYPES.OutputChannel) private outputChannel: OutputChannel,
+        @inject(Configuration) private configuration: IConfiguration,
+        @inject(OutputFormatter) private outputFormatter: OutputFormatter,
     ) {}
 
     setRequest(request: TestRunRequest) {

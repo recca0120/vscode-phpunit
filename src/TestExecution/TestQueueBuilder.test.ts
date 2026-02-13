@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
-import { TestType } from './PHPUnit';
-import type { TestCase, TestCollection } from './TestCollection';
+import { TestType } from '../PHPUnit';
+import type { TestCase, TestCollection } from '../TestCollection';
 import { TestQueueBuilder } from './TestQueueBuilder';
 
 const createTestItem = (id: string, children: TestItem[] = []): TestItem => {
