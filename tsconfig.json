@@ -18,7 +18,9 @@
     "noUnusedParameters": true,
     /* Report errors on unused parameters. */
     "skipLibCheck": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     ".vscode-test",

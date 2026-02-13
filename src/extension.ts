@@ -1,21 +1,23 @@
+import 'reflect-metadata';
 import {
     CancellationToken, EventEmitter, ExtensionContext, extensions, GlobPattern, languages, RelativePattern, TestItem,
     TestRunProfile, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder,
 } from 'vscode';
+import { Container } from 'inversify';
 import { PHPUnitFileCoverage } from './CloverParser';
 import { TestCommandRegistry } from './TestCommandRegistry';
 import { Configuration } from './Configuration';
+import { createContainer } from './container';
 import { Handler } from './Handler';
-import { CollisionPrinter } from './Observers';
 import { Pattern, PHPUnitXML } from './PHPUnit';
-import { TestRunnerFactory } from './TestRunnerFactory';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
+import { TYPES } from './types';
 
 const phpUnitXML = new PHPUnitXML();
-const printer = new CollisionPrinter(phpUnitXML);
 
 class PHPUnitExtension {
+    private container!: Container;
     private ctrl!: ReturnType<typeof tests.createTestController>;
     private testCollection!: TestCollection;
     private configuration!: Configuration;
@@ -26,28 +28,30 @@ class PHPUnitExtension {
     async activate(context: ExtensionContext) {
         this.ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
         context.subscriptions.push(this.ctrl);
-        this.testCollection = new TestCollection(this.ctrl, phpUnitXML);
 
         const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
         context.subscriptions.push(outputChannel);
 
-        context.subscriptions.push(languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider(phpUnitXML)));
-
         this.configuration = this.createConfiguration(context);
+
+        this.container = createContainer(phpUnitXML, this.ctrl, outputChannel, this.configuration);
+        this.testCollection = this.container.get<TestCollection>(TYPES.testCollection);
+        this.handler = this.container.get<Handler>(TYPES.handler);
+
+        context.subscriptions.push(languages.registerDocumentLinkProvider(
+            { language: 'phpunit' },
+            this.container.get<PHPUnitLinkProvider>(TYPES.phpUnitLinkProvider),
+        ));
+
         await this.loadInitialConfiguration();
         await Promise.all(workspace.textDocuments.map((document) => this.testCollection.add(document.uri)));
 
         this.registerDocumentListeners(context);
-
-        const testRunnerFactory = new TestRunnerFactory(outputChannel, this.configuration, printer);
-        this.handler = new Handler(this.ctrl, phpUnitXML, this.configuration, this.testCollection, testRunnerFactory);
-
         this.setupTestController(context);
         this.setupFileChangeHandler();
 
         const runHandler = this.createRunHandler();
         const testRunProfile = this.registerRunProfiles(runHandler);
-
         this.registerCommands(context, testRunProfile);
     }
 
