@@ -37,7 +37,7 @@ export class TestHierarchyBuilder {
         [TestType.method]: '$(symbol-method)',
         [TestType.describe]: '$(symbol-class)',
     };
-    private length = 1;
+    private ancestorDepth = 1;
     private readonly ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [
         { item: this.createProxyTestController(), type: TestType.namespace, children: [] },
     ];
@@ -49,15 +49,15 @@ export class TestHierarchyBuilder {
 
     onInit() {
         this.testParser.on(TestType.method, (testDefinition, index) => {
-            this.ascend(this.length + testDefinition.depth);
+            this.ascend(this.ancestorDepth + testDefinition.depth);
             this.addTestItem(testDefinition, `${index}`);
         });
         this.testParser.on(TestType.describe, (testDefinition) => {
-            this.ascend(this.length + testDefinition.depth);
+            this.ascend(this.ancestorDepth + testDefinition.depth);
             this.addTestItem(testDefinition, testDefinition.id);
         });
         this.testParser.on(TestType.class, (testDefinition) => {
-            this.ascend(this.length + testDefinition.depth);
+            this.ascend(this.ancestorDepth + testDefinition.depth);
             this.addTestItem(testDefinition, testDefinition.id);
         });
         this.testParser.on(TestType.namespace, (testDefinition) => {
@@ -86,15 +86,15 @@ export class TestHierarchyBuilder {
             const classFQN = parts.slice(0, index + 1).join('\\');
             const id = transformer.uniqueId({ type, classFQN });
             const label = transformer.generateLabel({ type, classFQN: part });
-            const testDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
+            const namespaceDefinition = { type, id, namespace: classFQN, label, depth: index + 1 } as TestDefinition;
 
-            testItem = children.get(testDefinition.id);
+            testItem = children.get(namespaceDefinition.id);
             if (!testItem) {
-                testItem = this.ctrl.createTestItem(testDefinition.id, this.parseLabelWithIcon(testDefinition));
+                testItem = this.ctrl.createTestItem(namespaceDefinition.id, this.parseLabelWithIcon(namespaceDefinition));
                 testItem.canResolveChildren = true;
-                testItem.sortText = testDefinition.id;
+                testItem.sortText = namespaceDefinition.id;
                 children.add(testItem);
-                this.testData.set(testItem, new TestCase(testDefinition));
+                this.testData.set(testItem, new TestCase(namespaceDefinition));
             }
 
             const parent = this.ancestors[this.ancestors.length - 1];
@@ -103,7 +103,7 @@ export class TestHierarchyBuilder {
 
             children = testItem.children;
         });
-        this.length = this.ancestors.length - 1;
+        this.ancestorDepth = this.ancestors.length - 1;
     }
 
     private addTestItem(testDefinition: TestDefinition, sortText: string) {
@@ -147,14 +147,14 @@ export class TestHierarchyBuilder {
 
     private ascend(depth: number) {
         while (this.ancestors.length > depth) {
-            const finished = this.ancestors.pop()!;
-            if (finished.type === TestType.method) {
-                finished.item.children.replace(finished.children);
+            const completedAncestor = this.ancestors.pop()!;
+            if (completedAncestor.type === TestType.method) {
+                completedAncestor.item.children.replace(completedAncestor.children);
                 continue;
             }
 
-            for (const child of finished.children) {
-                finished.item.children.add(child);
+            for (const child of completedAncestor.children) {
+                completedAncestor.item.children.add(child);
             }
         }
     };
