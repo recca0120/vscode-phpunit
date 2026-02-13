@@ -44,7 +44,7 @@ export type EventResultMap = {
 
 export type TestRunnerObserver = Partial<{
     [K in keyof EventResultMap]: (result: EventResultMap[K]) => void;
-} & { [p in TeamcityEvent]: (result: EventResultMap[p]) => void }>
+}>
 
 export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
