@@ -14,8 +14,6 @@ import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 import { TYPES } from './types';
 
-const phpUnitXML = new PHPUnitXML();
-
 class PHPUnitExtension {
     private container!: Container;
     private ctrl!: ReturnType<typeof tests.createTestController>;
@@ -24,6 +22,7 @@ class PHPUnitExtension {
     private handler!: Handler;
     private fileChangedEmitter = new EventEmitter<Uri>();
     private watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
+    private phpUnitXML = new PHPUnitXML();
 
     async activate(context: ExtensionContext) {
         this.ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
@@ -33,8 +32,9 @@ class PHPUnitExtension {
         context.subscriptions.push(outputChannel);
 
         this.configuration = this.createConfiguration(context);
+        context.subscriptions.push(this.fileChangedEmitter);
 
-        this.container = createContainer(phpUnitXML, this.ctrl, outputChannel, this.configuration);
+        this.container = createContainer(this.phpUnitXML, this.ctrl, outputChannel, this.configuration);
         this.testCollection = this.container.get<TestCollection>(TYPES.testCollection);
         this.handler = this.container.get<Handler>(TYPES.handler);
 
@@ -58,9 +58,13 @@ class PHPUnitExtension {
     private createConfiguration(context: ExtensionContext) {
         const configuration = new Configuration(workspace.getConfiguration('phpunit'));
         context.subscriptions.push(
-            workspace.onDidChangeConfiguration(() =>
-                configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit')),
-            ),
+            workspace.onDidChangeConfiguration((event) => {
+                if (event.affectsConfiguration('phpunit')) {
+                    configuration.updateWorkspaceConfiguration(
+                        workspace.getConfiguration('phpunit'),
+                    );
+                }
+            }),
         );
 
         return configuration;
@@ -70,7 +74,7 @@ class PHPUnitExtension {
         const configurationFile = await this.configuration.getConfigurationFile(workspace.workspaceFolders![0].uri.fsPath);
         if (configurationFile) {
             this.testCollection.reset();
-            await phpUnitXML.loadFile(configurationFile);
+            await this.phpUnitXML.loadFile(configurationFile);
         }
     }
 
@@ -180,9 +184,9 @@ class PHPUnitExtension {
         return Promise.all(workspace.workspaceFolders.map(async (workspaceFolder: WorkspaceFolder) => {
             const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
             configurationFile
-                ? await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath)
-                : phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
-            const { includes, excludes } = phpUnitXML.getPatterns(workspaceFolder.uri.fsPath);
+                ? await this.phpUnitXML.loadFile(Uri.file(configurationFile).fsPath)
+                : this.phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
+            const { includes, excludes } = this.phpUnitXML.getPatterns(workspaceFolder.uri.fsPath);
 
             const toRelativePattern = (pattern: Pattern) => {
                 const { uri, pattern: glob } = pattern.toGlobPattern();

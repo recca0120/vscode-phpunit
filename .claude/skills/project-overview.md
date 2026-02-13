@@ -122,6 +122,25 @@ The extension reads `phpunit.*` settings from VS Code workspace configuration:
 - `phpunit.showAfterExecution` - When to show test report
 - `phpunit.debuggerConfig` - Xdebug launch configuration name
 
+## Known Failing Tests (Pre-existing)
+
+These tests are known to fail on the `refactor/improve-readability` branch baseline (2 failed / 401 passed):
+
+1. **`Extension Test › Xdebug › Coverage`** (`src/extension.test.ts`)
+   - `TypeError: vscode_1.window.showErrorMessage is not a function`
+   - The `window.showErrorMessage` mock is not set up for this test path.
+
+2. **`OutputChannelObserver › should print printed output when die`** (`src/Observers/OutputChannelObserver.test.ts`)
+   - Assertion mismatch on `appendLine` call with emoji/encoded output string.
+
+On `main` branch there are additional failures (5 failed / 383 passed) due to test expectation values not yet updated for the refactored code.
+
+## Testing Principles
+
+- **Test double preference**: Real > Fake > Stub > Spy > Mock
+- If the original test uses real objects, do not replace them with fakes.
+- Never modify `expect` assertions — fix production code, not tests.
+
 ## Build & Development
 
 - **Language**: TypeScript

@@ -190,7 +190,32 @@ describe('Extension Test', () => {
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-file', expect.any(Function));
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-test-at-cursor', expect.any(Function));
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.rerun', expect.any(Function));
-                expect(context.subscriptions.push).toHaveBeenCalledTimes(10);
+                expect(context.subscriptions.push).toHaveBeenCalledTimes(11);
+            });
+
+            it('should only update configuration when phpunit settings change', async () => {
+                await activate(context);
+
+                const onDidChangeConfig = workspace.onDidChangeConfiguration as jest.Mock;
+                const listenerCall = onDidChangeConfig.mock.calls.find(
+                    (call: any[]) => typeof call[0] === 'function',
+                );
+                expect(listenerCall).toBeDefined();
+                const listener = listenerCall![0];
+
+                const spy = jest.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
+
+                // phpunit config change → should update
+                listener({ affectsConfiguration: (section: string) => section === 'phpunit' });
+                expect(spy).toHaveBeenCalledTimes(1);
+
+                spy.mockClear();
+
+                // non-phpunit config change → should NOT update
+                listener({ affectsConfiguration: (section: string) => section === 'editor' });
+                expect(spy).not.toHaveBeenCalled();
+
+                spy.mockRestore();
             });
 
             it('should run all tests', async () => {
@@ -308,8 +333,9 @@ describe('Extension Test', () => {
             });
 
             it('should resolve tests without phpunit.xml', async () => {
-                jest.spyOn(Configuration.prototype, 'getConfigurationFile')
-                    .mockReturnValueOnce(undefined as any);
+                const testsRoot = phpUnitProject('tests');
+                setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(testsRoot) }]);
+                setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: testsRoot })));
 
                 await activate(context);
 
@@ -317,7 +343,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(46);
+                expect(countItems(ctrl.items)).toEqual(144);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {
