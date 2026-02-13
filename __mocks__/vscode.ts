@@ -13,7 +13,7 @@ enum TestRunProfileKind {
     Coverage = 3,
 }
 
-const TestRunRequest = jest.fn().mockImplementation((include: any) => {
+const TestRunRequest = vi.fn().mockImplementation((include: any) => {
     return {
         include,
     };
@@ -88,7 +88,7 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
     }
 }
 
-const createTestItem = jest
+const createTestItem = vi
     .fn()
     .mockImplementation((id: string, label: string, uri?: URI): TestItem => {
         const testItem = { id, label, uri } as any;
@@ -97,7 +97,7 @@ const createTestItem = jest
         return testItem;
     });
 
-const createRunProfile = jest
+const createRunProfile = vi
     .fn()
     .mockImplementation((
         label: string,
@@ -110,26 +110,26 @@ const createRunProfile = jest
         tag?: TestTag,
     ) => ({ label, kind, isDefault, tag, runHandler }));
 
-const createTestRun = jest
+const createTestRun = vi
     .fn()
     .mockImplementation((_request: BaseTestRunRequest, name?: string, persist?: boolean) => {
         return {
             name: name,
             // token: CancellationToken;
             isPersisted: !!persist,
-            enqueued: jest.fn(),
-            started: jest.fn(),
-            skipped: jest.fn(),
-            failed: jest.fn(),
-            errored: jest.fn(),
-            passed: jest.fn(),
-            appendOutput: jest.fn(),
-            end: jest.fn(),
-            addCoverage: jest.fn(),
+            enqueued: vi.fn(),
+            started: vi.fn(),
+            skipped: vi.fn(),
+            failed: vi.fn(),
+            errored: vi.fn(),
+            passed: vi.fn(),
+            appendOutput: vi.fn(),
+            end: vi.fn(),
+            addCoverage: vi.fn(),
         };
     });
 
-const createTestController = jest
+const createTestController = vi
     .fn()
     .mockImplementation((id: string, label: string): TestController => {
         const testController = {
@@ -147,7 +147,7 @@ const createTestController = jest
 const tests = { createTestController };
 
 const TestMessage = {
-    diff: jest
+    diff: vi
         .fn()
         .mockImplementation(
             (message: string | MarkdownString, expected: string, actual: string) => {
@@ -157,14 +157,14 @@ const TestMessage = {
 };
 
 class Disposable {
-    dispose = (): any => jest.fn();
+    dispose = (): any => vi.fn();
 }
 
-const Location = jest.fn().mockImplementation((uri: URI, rangeOrPosition: any) => {
+const Location = vi.fn().mockImplementation((uri: URI, rangeOrPosition: any) => {
     return { uri, range: rangeOrPosition };
 });
 
-const Range = jest.fn().mockImplementation((start: any, end: any) => {
+const Range = vi.fn().mockImplementation((start: any, end: any) => {
     return { start, end };
 });
 
@@ -176,14 +176,14 @@ class Position {
     }
 }
 
-const DocumentLink = jest.fn().mockImplementation((range: Range, target?: URI) => {
+const DocumentLink = vi.fn().mockImplementation((range: Range, target?: URI) => {
     return { range, target };
 });
 
-const CancellationTokenSource = jest.fn().mockImplementation(() => {
+const CancellationTokenSource = vi.fn().mockImplementation(() => {
     return {
-        token: { isCancellationRequested: false, onCancellationRequested: jest.fn() },
-        cancel: jest.fn(),
+        token: { isCancellationRequested: false, onCancellationRequested: vi.fn() },
+        cancel: vi.fn(),
         dispose: new Disposable(),
     };
 });
@@ -220,7 +220,7 @@ const configurations = new Map<string, Configuration>();
 const workspace = {
     workspaceFolders: [],
     textDocuments: [],
-    getConfiguration: jest.fn().mockImplementation((section: string) => {
+    getConfiguration: vi.fn().mockImplementation((section: string) => {
         if (configurations.has(section)) {
             return configurations.get(section);
         }
@@ -234,7 +234,7 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: jest.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
+    findFiles: vi.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
         const splitPattern = (pattern: string) => {
             return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
         };
@@ -244,21 +244,21 @@ const workspace = {
             cwd: pattern.uri.fsPath,
         })).map((file) => URI.file(file.replace(/^\w:/, (matched) => matched.toLowerCase())));
     }),
-    createFileSystemWatcher: jest.fn().mockImplementation(() => {
+    createFileSystemWatcher: vi.fn().mockImplementation(() => {
         return {
-            onDidCreate: jest.fn(),
-            onDidChange: jest.fn(),
-            onDidDelete: jest.fn(),
+            onDidCreate: vi.fn(),
+            onDidChange: vi.fn(),
+            onDidDelete: vi.fn(),
             disposable: new Disposable(),
         };
     }),
-    onDidChangeConfiguration: jest.fn().mockImplementation(() => {
+    onDidChangeConfiguration: vi.fn().mockImplementation(() => {
         return new Disposable();
     }),
-    onDidOpenTextDocument: jest.fn().mockReturnValue(new Disposable()),
-    onDidChangeTextDocument: jest.fn().mockReturnValue(new Disposable()),
+    onDidOpenTextDocument: vi.fn().mockReturnValue(new Disposable()),
+    onDidChangeTextDocument: vi.fn().mockReturnValue(new Disposable()),
     fs: {
-        readFile: jest.fn().mockImplementation((uri: URI) => readFile(uri.fsPath)),
+        readFile: vi.fn().mockImplementation((uri: URI) => readFile(uri.fsPath)),
     },
 };
 
@@ -271,10 +271,10 @@ const languages = {
 
         return minimatch(document.uri.fsPath, pattern) ? 10 : 0;
     },
-    registerDocumentLinkProvider: jest.fn(),
+    registerDocumentLinkProvider: vi.fn(),
 };
 
-const RelativePattern = jest
+const RelativePattern = vi
     .fn()
     .mockImplementation((workspaceFolder: WorkspaceFolder | URI | string, pattern: string) => {
         if (typeof workspaceFolder === 'string') {
@@ -287,12 +287,12 @@ const RelativePattern = jest
     });
 
 const window = {
-    createOutputChannel: jest.fn().mockImplementation(() => {
+    createOutputChannel: vi.fn().mockImplementation(() => {
         return {
-            append: jest.fn(),
-            appendLine: jest.fn(),
-            clear: jest.fn(),
-            show: jest.fn(),
+            append: vi.fn(),
+            appendLine: vi.fn(),
+            clear: vi.fn(),
+            show: vi.fn(),
         };
     }),
 };
@@ -300,7 +300,7 @@ const window = {
 const commands = (function () {
     const commands = new Map<string, (...rest: any[]) => void>();
     return {
-        registerCommand: jest.fn().mockImplementation((command: string, callback: (...rest: any[]) => void) => {
+        registerCommand: vi.fn().mockImplementation((command: string, callback: (...rest: any[]) => void) => {
             commands.set(command, callback);
             return new Disposable();
         }),
@@ -310,17 +310,17 @@ const commands = (function () {
     };
 })();
 
-const EventEmitter = jest.fn().mockImplementation(() => {
+const EventEmitter = vi.fn().mockImplementation(() => {
     return {
-        fire: jest.fn(),
-        event: jest.fn(),
+        fire: vi.fn(),
+        event: vi.fn(),
     };
 });
 
-const TestMessageStackFrame = jest.fn();
+const TestMessageStackFrame = vi.fn();
 
 const extensions = {
-    getExtension: jest.fn().mockImplementation(() => {
+    getExtension: vi.fn().mockImplementation(() => {
         return true;
     }),
 };
@@ -339,8 +339,8 @@ class StatementCoverage {
 
 const debug = {
     activeDebugSession: { type: 'php' },
-    startDebugging: jest.fn(),
-    stopDebugging: jest.fn(),
+    startDebugging: vi.fn(),
+    stopDebugging: vi.fn(),
 };
 
 export {

@@ -11,40 +11,43 @@ import { TestType } from './types';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
-jest.mock('child_process');
+vi.mock('child_process', async () => {
+    const actual = await vi.importActual<typeof import('child_process')>('child_process');
+    return { ...actual, spawn: vi.fn(actual.spawn) };
+});
 
-const onTestRunnerEvents = new Map<TestRunnerEvent, jest.Mock>([
-    [TestRunnerEvent.run, jest.fn()],
-    [TestRunnerEvent.line, jest.fn()],
-    [TestRunnerEvent.result, jest.fn()],
-    [TestRunnerEvent.close, jest.fn()],
-    [TestRunnerEvent.error, jest.fn()],
+const onTestRunnerEvents = new Map<TestRunnerEvent, import('vitest').Mock>([
+    [TestRunnerEvent.run, vi.fn()],
+    [TestRunnerEvent.line, vi.fn()],
+    [TestRunnerEvent.result, vi.fn()],
+    [TestRunnerEvent.close, vi.fn()],
+    [TestRunnerEvent.error, vi.fn()],
 ]);
 
-const onTestResultEvents = new Map<TeamcityEvent, jest.Mock>([
-    [TeamcityEvent.testVersion, jest.fn()],
-    [TeamcityEvent.testRuntime, jest.fn()],
-    [TeamcityEvent.testConfiguration, jest.fn()],
-    [TeamcityEvent.testCount, jest.fn()],
-    [TeamcityEvent.testDuration, jest.fn()],
-    [TeamcityEvent.testResultSummary, jest.fn()],
-    [TeamcityEvent.testSuiteStarted, jest.fn()],
-    [TeamcityEvent.testSuiteFinished, jest.fn()],
-    [TeamcityEvent.testStarted, jest.fn()],
-    [TeamcityEvent.testFailed, jest.fn()],
-    [TeamcityEvent.testIgnored, jest.fn()],
-    [TeamcityEvent.testFinished, jest.fn()],
+const onTestResultEvents = new Map<TeamcityEvent, import('vitest').Mock>([
+    [TeamcityEvent.testVersion, vi.fn()],
+    [TeamcityEvent.testRuntime, vi.fn()],
+    [TeamcityEvent.testConfiguration, vi.fn()],
+    [TeamcityEvent.testCount, vi.fn()],
+    [TeamcityEvent.testDuration, vi.fn()],
+    [TeamcityEvent.testResultSummary, vi.fn()],
+    [TeamcityEvent.testSuiteStarted, vi.fn()],
+    [TeamcityEvent.testSuiteFinished, vi.fn()],
+    [TeamcityEvent.testStarted, vi.fn()],
+    [TeamcityEvent.testFailed, vi.fn()],
+    [TeamcityEvent.testIgnored, vi.fn()],
+    [TeamcityEvent.testFinished, vi.fn()],
 ]);
 
 const fakeSpawn = (contents: string[]) => {
-    const stdout = jest.fn().mockImplementation((_event, fn: (data: string) => void) => {
+    const stdout = vi.fn().mockImplementation((_event, fn: (data: string) => void) => {
         contents.forEach((line) => fn(line + '\n'));
     });
 
-    (spawn as jest.Mock).mockReturnValue({
+    (spawn as import('vitest').Mock).mockReturnValue({
         stdout: { on: stdout },
-        stderr: { on: jest.fn() },
-        on: jest.fn().mockImplementation((_event, callback: (data: number) => void) => {
+        stderr: { on: vi.fn() },
+        on: vi.fn().mockImplementation((_event, callback: (data: number) => void) => {
             if (_event === 'close') {
                 callback(2);
             }
@@ -171,7 +174,7 @@ const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     await testRunner.run(builder).run();
 
-    const call = (spawn as jest.Mock).mock.calls[0];
+    const call = (spawn as import('vitest').Mock).mock.calls[0];
     expect([call[0], ...call[1]]).toEqual(expected);
 };
 
@@ -258,7 +261,7 @@ const shouldRunTestFailed = async (expected: string[], builder: ProcessBuilder, 
 };
 
 describe('TestRunner Test', () => {
-    beforeEach(() => jest.restoreAllMocks());
+    beforeEach(() => vi.restoreAllMocks());
 
     it('run error command', async () => {
         const cwd = phpUnitProject('');

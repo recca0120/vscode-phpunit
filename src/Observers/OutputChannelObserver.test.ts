@@ -1,4 +1,3 @@
-import 'jest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
@@ -34,12 +33,12 @@ describe('OutputChannelObserver', () => {
     const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
     function getOutputChannel(): OutputChannel {
-        return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
+        return (vscode.window.createOutputChannel as import('vitest').Mock).mock.results[0].value;
     }
 
     function debug(outputChannel: OutputChannel) {
-        console.log((outputChannel.appendLine as jest.Mock).mock.calls);
-        console.log((outputChannel.append as jest.Mock).mock.calls);
+        console.log((outputChannel.appendLine as import('vitest').Mock).mock.calls);
+        console.log((outputChannel.append as import('vitest').Mock).mock.calls);
     }
 
     async function run(file?: string, filter?: string) {

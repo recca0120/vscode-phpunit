@@ -16,14 +16,14 @@ describe('TestQueueBuilder', () => {
     let queueBuilder: TestQueueBuilder;
 
     beforeEach(() => {
-        testCollection = { getTestCase: jest.fn() } as unknown as TestCollection;
+        testCollection = { getTestCase: vi.fn() } as unknown as TestCollection;
         queueBuilder = new TestQueueBuilder(testCollection);
     });
 
     it('should discover method test items', async () => {
         const testItem = createTestItem('test1');
         const testCase = { type: TestType.method } as TestCase;
-        (testCollection.getTestCase as jest.Mock).mockReturnValue(testCase);
+        (testCollection.getTestCase as import('vitest').Mock).mockReturnValue(testCase);
 
         const request = {} as TestRunRequest;
         const queue = await queueBuilder.build([testItem], request);
@@ -37,7 +37,7 @@ describe('TestQueueBuilder', () => {
         const parentItem = createTestItem('parent', [childItem]);
 
         const childCase = { type: TestType.method } as TestCase;
-        (testCollection.getTestCase as jest.Mock)
+        (testCollection.getTestCase as import('vitest').Mock)
             .mockReturnValueOnce({ type: TestType.class })
             .mockReturnValueOnce(childCase);
 

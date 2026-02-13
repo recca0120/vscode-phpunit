@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { Files, PHPUnitXML, TestDefinition, TestDefinitions, TestParser } from '../PHPUnit';
@@ -48,7 +47,7 @@ describe('Extension TestCollection', () => {
 
     beforeEach(() => {
         ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('without namespace', async () => {

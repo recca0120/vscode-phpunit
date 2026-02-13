@@ -3,8 +3,8 @@ import { TestRun } from 'vscode';
 import { CloverParser } from './CloverParser';
 import { CoverageCollector } from './CoverageCollector';
 
-jest.mock('node:fs/promises', () => ({
-    rm: jest.fn().mockResolvedValue(undefined),
+vi.mock('node:fs/promises', () => ({
+    rm: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe('CoverageCollector', () => {
@@ -13,14 +13,14 @@ describe('CoverageCollector', () => {
 
     beforeEach(() => {
         collector = new CoverageCollector();
-        testRun = { addCoverage: jest.fn() } as unknown as TestRun;
+        testRun = { addCoverage: vi.fn() } as unknown as TestRun;
     });
 
-    afterEach(() => jest.restoreAllMocks());
+    afterEach(() => vi.restoreAllMocks());
 
     it('should parse clover files and add coverage to test run', async () => {
         const fakeCoverage = [{ file: 'a.php' }, { file: 'b.php' }];
-        jest.spyOn(CloverParser, 'parseClover').mockResolvedValue(fakeCoverage as any);
+        vi.spyOn(CloverParser, 'parseClover').mockResolvedValue(fakeCoverage as any);
 
         const processes = [
             { getCloverFile: () => '/tmp/coverage/phpunit-0.xml' },

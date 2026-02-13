@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const child_process = jest.requireActual('child_process');
-const spawn = jest.spyOn(child_process, 'spawn');
+const child_process = await vi.importActual<typeof import('child_process')>('child_process');
+const spawn = vi.spyOn(child_process, 'spawn');
 
-module.exports = { ...child_process, spawn };
+export { spawn };
+export const { exec, execSync, execFile, execFileSync, fork, spawnSync } = child_process;

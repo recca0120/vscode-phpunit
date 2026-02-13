@@ -1,15 +1,15 @@
 import { window } from 'vscode';
 import { Configuration, IConfiguration } from '../PHPUnit';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
-import Mock = jest.Mock;
+import { type Mock } from 'vitest';
 
 describe('ErrorDialogObserver', () => {
     let errorDialogObserver: ErrorDialogObserver;
     let configuration: IConfiguration;
     beforeEach(() => {
-        window.showErrorMessage = jest.fn();
-        window.showWarningMessage = jest.fn();
-        window.showInformationMessage = jest.fn();
+        window.showErrorMessage = vi.fn();
+        window.showWarningMessage = vi.fn();
+        window.showInformationMessage = vi.fn();
         configuration = new Configuration();
         errorDialogObserver = new ErrorDialogObserver(configuration);
     });
@@ -20,7 +20,7 @@ describe('ErrorDialogObserver', () => {
         (window.showInformationMessage as Mock).mockReset();
     });
 
-    afterAll(() => jest.restoreAllMocks());
+    afterAll(() => vi.restoreAllMocks());
 
     it('show error message', async () => {
         const message = 'something went wrong';

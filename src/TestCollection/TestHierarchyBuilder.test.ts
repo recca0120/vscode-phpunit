@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { TestController, tests } from 'vscode';
 import { PHPUnitXML, TestParser } from '../PHPUnit';
 import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';

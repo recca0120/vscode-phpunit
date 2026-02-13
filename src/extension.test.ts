@@ -11,8 +11,10 @@ import { Configuration } from './Configuration';
 import { activate } from './extension';
 import { getPhpUnitVersion, getPhpVersion, normalPath, pestProject, phpUnitProject } from './PHPUnit/__tests__/utils';
 
-//updated to match spawn for tests
-jest.mock('node:child_process');
+vi.mock('child_process', async () => {
+    const actual = await vi.importActual<typeof import('child_process')>('child_process');
+    return { ...actual, spawn: vi.fn(actual.spawn) };
+});
 
 const setTextDocuments = (textDocuments: TextDocument[]) => {
     Object.defineProperty(workspace, 'textDocuments', {
@@ -55,15 +57,15 @@ const globTextDocuments = (pattern: string, options?: GlobOptions) => {
 // };
 
 const getOutputChannel = () => {
-    return (window.createOutputChannel as jest.Mock).mock.results[0].value;
+    return (window.createOutputChannel as import('vitest').Mock).mock.results[0].value;
 };
 
 const getTestController = () => {
-    return (tests.createTestController as jest.Mock).mock.results[0].value;
+    return (tests.createTestController as import('vitest').Mock).mock.results[0].value;
 };
 
 const getRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) => {
-    const profile = (ctrl.createRunProfile as jest.Mock).mock.results[0].value;
+    const profile = (ctrl.createRunProfile as import('vitest').Mock).mock.results[0].value;
     profile.kind = kind;
 
     return profile;
@@ -90,7 +92,7 @@ const findTest = (items: TestItemCollection, id: string): TestItem | undefined =
 // };
 
 const getTestRun = (ctrl: TestController) => {
-    return (ctrl.createTestRun as jest.Mock).mock.results[0].value;
+    return (ctrl.createTestRun as import('vitest').Mock).mock.results[0].value;
 };
 
 const expectTestResultCalled = (ctrl: TestController, expected: any) => {
@@ -125,7 +127,7 @@ describe('Extension Test', () => {
         `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\( with \\(data set \\)\\?\\.\\*\\)\\?\\)\\?\\$["']?`,
     );
 
-    const context: any = { subscriptions: { push: jest.fn() } };
+    const context: any = { subscriptions: { push: vi.fn() } };
     let cwd: string;
 
     describe('PHPUnit', () => {
@@ -139,7 +141,7 @@ describe('Extension Test', () => {
             setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
         });
 
-        afterEach(() => jest.clearAllMocks());
+        afterEach(() => vi.clearAllMocks());
 
         describe('PHPUnit activate()', () => {
             beforeEach(async () => {
@@ -151,7 +153,7 @@ describe('Extension Test', () => {
                 await configuration.update('args', []);
             });
 
-            afterEach(() => jest.clearAllMocks());
+            afterEach(() => vi.clearAllMocks());
 
             it('should load tests', async () => {
                 await activate(context);
@@ -196,14 +198,14 @@ describe('Extension Test', () => {
             it('should only update configuration when phpunit settings change', async () => {
                 await activate(context);
 
-                const onDidChangeConfig = workspace.onDidChangeConfiguration as jest.Mock;
+                const onDidChangeConfig = workspace.onDidChangeConfiguration as import('vitest').Mock;
                 const listenerCall = onDidChangeConfig.mock.calls.find(
                     (call: any[]) => typeof call[0] === 'function',
                 );
                 expect(listenerCall).toBeDefined();
                 const listener = listenerCall![0];
 
-                const spy = jest.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
+                const spy = vi.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
 
                 // phpunit config change → should update
                 listener({ affectsConfiguration: (section: string) => section === 'phpunit' });
@@ -304,7 +306,7 @@ describe('Extension Test', () => {
                 expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 0, failed: 1, end: 1 });
 
                 const { failed } = getTestRun(ctrl);
-                const [, message] = (failed as jest.Mock).mock.calls.find(([test]) => test.id === id);
+                const [, message] = (failed as import('vitest').Mock).mock.calls.find(([test]) => test.id === id);
 
                 expect(message.location).toEqual(expect.objectContaining({
                     range: {
@@ -427,7 +429,7 @@ describe('Extension Test', () => {
             await configuration.update('args', []);
         });
 
-        afterEach(() => jest.clearAllMocks());
+        afterEach(() => vi.clearAllMocks());
 
         it('Debug', async () => {
             await activate(context);
@@ -507,10 +509,10 @@ describe('Extension Test', () => {
             await configuration.update('php', phpBinary);
             await configuration.update('phpunit', 'vendor/bin/paratest');
             await configuration.update('args', []);
-            window.showErrorMessage = jest.fn();
+            window.showErrorMessage = vi.fn();
         });
 
-        afterEach(() => jest.clearAllMocks());
+        afterEach(() => vi.clearAllMocks());
 
         it('run phpunit.run-test-at-cursor', async () => {
             await activate(context);
@@ -564,7 +566,7 @@ describe('Extension Test', () => {
             setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
         });
 
-        afterEach(() => jest.clearAllMocks());
+        afterEach(() => vi.clearAllMocks());
 
         describe('PEST activate()', () => {
             beforeEach(async () => {
@@ -576,7 +578,7 @@ describe('Extension Test', () => {
                 await configuration.update('args', []);
             });
 
-            afterEach(() => jest.clearAllMocks());
+            afterEach(() => vi.clearAllMocks());
 
             it('should run all tests', async () => {
                 await activate(context);

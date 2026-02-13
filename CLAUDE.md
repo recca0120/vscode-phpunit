@@ -3,7 +3,7 @@
 ## Project Summary
 
 VS Code extension for PHPUnit/Pest test integration. TypeScript project with two layers:
-- `src/PHPUnit/` - Pure logic (no VS Code dependency), testable with Jest
+- `src/PHPUnit/` - Pure logic (no VS Code dependency), testable with Vitest
 - `src/` (top-level) - VS Code integration layer
 
 ## Quick Commands

@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { pestProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { TestDefinition, TestType } from '../types';

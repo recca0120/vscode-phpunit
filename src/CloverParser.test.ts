@@ -1,4 +1,3 @@
-import { describe, expect, it } from '@jest/globals';
 import { Position } from 'vscode';
 import { CloverParser } from './CloverParser';
 

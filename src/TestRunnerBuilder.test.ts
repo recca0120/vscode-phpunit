@@ -6,12 +6,12 @@ import { TestRunnerBuilder } from './TestRunnerBuilder';
 
 describe('TestRunnerBuilder', () => {
     it('should build a TestRunner with observers', () => {
-        const outputChannelObserver = { setRequest: jest.fn() } as unknown as OutputChannelObserver;
+        const outputChannelObserver = { setRequest: vi.fn() } as unknown as OutputChannelObserver;
         const errorDialogObserver = {} as ErrorDialogObserver;
         const builder = new TestRunnerBuilder(outputChannelObserver, errorDialogObserver);
 
         const queue = new Map<TestCase, TestItem>();
-        const testRun = { enqueued: jest.fn() } as unknown as TestRun;
+        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const request = {} as TestRunRequest;
 
         const runner = builder.build(queue, testRun, request);

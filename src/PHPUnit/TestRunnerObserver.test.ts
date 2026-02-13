@@ -100,7 +100,7 @@ describe('TestRunnerObserver', () => {
     describe('TestRunnerEventProxy', () => {
         it('should notify listeners when event is emitted', () => {
             const proxy = new TestRunnerEventProxy();
-            const callback = jest.fn();
+            const callback = vi.fn();
 
             proxy.on(TestRunnerEvent.line, callback);
             proxy[TestRunnerEvent.line]('test line');
@@ -110,7 +110,7 @@ describe('TestRunnerObserver', () => {
 
         it('should notify listeners for teamcity events', () => {
             const proxy = new TestRunnerEventProxy();
-            const callback = jest.fn();
+            const callback = vi.fn();
 
             proxy.on(TeamcityEvent.testFailed, callback);
             const fakeResult = { event: TeamcityEvent.testFailed, name: 'test', flowId: 1 };
@@ -121,8 +121,8 @@ describe('TestRunnerObserver', () => {
 
         it('should support multiple listeners for the same event', () => {
             const proxy = new TestRunnerEventProxy();
-            const callback1 = jest.fn();
-            const callback2 = jest.fn();
+            const callback1 = vi.fn();
+            const callback2 = vi.fn();
 
             proxy.on(TestRunnerEvent.error, callback1);
             proxy.on(TestRunnerEvent.error, callback2);

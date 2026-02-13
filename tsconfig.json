@@ -17,6 +17,7 @@
     /* Report errors for fallthrough cases in switch statement. */
     "noUnusedParameters": true,
     /* Report errors on unused parameters. */
+    "esModuleInterop": true,
     "skipLibCheck": true,
     "isolatedModules": true,
     "experimentalDecorators": true,
@@ -27,6 +28,7 @@
     "node_modules",
     "**/__mocks__/*",
     "**/__tests__/fixtures/**/*",
-    "**/*.test.[tj]s?(x)"
+    "**/*.test.[tj]s?(x)",
+    "vitest.config.ts"
   ]
 }

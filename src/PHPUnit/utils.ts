@@ -1,6 +1,6 @@
 import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import { Teamcity } from './types';
 
 class EscapeValue {
