@@ -296,6 +296,7 @@ const window = {
             show: vi.fn(),
         };
     }),
+    showErrorMessage: vi.fn(),
 };
 
 const commands = (function () {
