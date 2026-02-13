@@ -73,7 +73,7 @@ export class TestHierarchyBuilder {
     }
 
     private addNamespaceTestItems(testDefinition: TestDefinition) {
-        const transformer = TransformerFactory.factory(testDefinition.classFQN!);
+        const transformer = TransformerFactory.create(testDefinition.classFQN!);
 
         let children = this.ctrl.items;
         let testItem: TestItem | undefined;
