@@ -11,7 +11,7 @@ const isSSH = (command: string) => /^ssh/.test(command);
 const isShellCommand = (command: string) => /sh\s+-c/.test(command);
 const keyVariable = (key: string) => '${' + key + '}';
 
-export class Builder {
+export class ProcessBuilder {
     private readonly pathReplacer: PathReplacer;
     private arguments = '';
     private xdebug: Xdebug | undefined;
@@ -20,7 +20,7 @@ export class Builder {
         this.pathReplacer = this.resolvePathReplacer(options, configuration);
     }
 
-    clone(): Builder {
+    clone(): ProcessBuilder {
         return cloneInstance(this);
     }
 

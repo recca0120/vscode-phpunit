@@ -1,6 +1,6 @@
 import { Position, TestItem } from 'vscode';
-import { Builder, TestDefinition, TestType } from '../PHPUnit';
-import { FilterStrategyFactory } from '../PHPUnit/CommandBuilder/FilterStrategy';
+import { ProcessBuilder, TestDefinition, TestType } from '../PHPUnit';
+import { FilterStrategyFactory } from '../PHPUnit/ProcessBuilder/FilterStrategy';
 
 export class TestCase {
     constructor(private testDefinition: TestDefinition) { }
@@ -13,7 +13,7 @@ export class TestCase {
         return (this.testDefinition.annotations?.group as string[]) ?? [];
     }
 
-    update(builder: Builder, index: number) {
+    update(builder: ProcessBuilder, index: number) {
         return builder.clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))
             .setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());

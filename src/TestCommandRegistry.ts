@@ -2,7 +2,7 @@ import { CancellationTokenSource, commands, TestItem, TestRunProfile, TestRunReq
 import { Handler } from './Handler';
 import { GroupRegistry, TestCollection } from './TestCollection';
 
-export class CommandHandler {
+export class TestCommandRegistry {
     constructor(private testCollection: TestCollection, private testRunProfile: TestRunProfile) {}
 
     reload(callback: () => void) {

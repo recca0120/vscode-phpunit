@@ -8,8 +8,8 @@ import { CloverParser } from './CloverParser';
 import { Configuration } from './Configuration';
 import { OutputChannelObserver, Printer, TestResultObserver } from './Observers';
 import { MessageObserver } from './Observers/MessageObserver';
-import { Builder, PHPUnitXML, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
-import { Mode, Xdebug } from './PHPUnit/CommandBuilder/Xdebug';
+import { ProcessBuilder, PHPUnitXML, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
+import { Mode, Xdebug } from './PHPUnit/ProcessBuilder/Xdebug';
 import { TestCase, TestCollection } from './TestCollection';
 
 export class Handler {
@@ -30,7 +30,7 @@ export class Handler {
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
         const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
-        const builder = new Builder(this.configuration, { cwd: this.phpUnitXML.root() });
+        const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
 
         const xdebug = new Xdebug(this.configuration);
         builder.setXdebug(xdebug);
@@ -52,7 +52,7 @@ export class Handler {
     }
 
     async startGroupTestRun(group: string, cancellation?: CancellationToken) {
-        const builder = new Builder(this.configuration, { cwd: this.phpUnitXML.root() });
+        const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
         builder.setArguments(`--group ${group}`);
 
         const request = new TestRunRequest();
@@ -76,7 +76,7 @@ export class Handler {
         testRun.end();
     }
 
-    private async runTestQueue(builder: Builder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
+    private async runTestQueue(builder: ProcessBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
         const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request);
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
@@ -101,7 +101,7 @@ export class Handler {
         return runner;
     }
 
-    private createProcesses(runner: TestRunner, builder: Builder, request: TestRunRequest) {
+    private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
         if (!request.include) {
             return [runner.run(builder)];
         }

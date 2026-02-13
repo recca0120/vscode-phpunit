@@ -9,8 +9,8 @@
 ```
 src/
 ├── extension.ts              # VS Code extension entry point (activate function)
-├── Handler.ts                # Orchestrates test runs (creates Builder, TestRunner, Observers)
-├── CommandHandler.ts         # Registers VS Code commands (run-all, run-file, run-test-at-cursor, rerun)
+├── Handler.ts                # Orchestrates test runs (creates ProcessBuilder, TestRunner, Observers)
+├── TestCommandRegistry.ts    # Registers VS Code commands (run-all, run-file, run-test-at-cursor, rerun)
 ├── Configuration.ts          # VS Code workspace configuration wrapper (extends BaseConfiguration)
 ├── CloverParser.ts           # Parses Clover XML coverage reports
 ├── PHPUnitLinkProvider.ts    # Document link provider for PHPUnit output
@@ -39,8 +39,8 @@ src/
 │   ├── types.ts              # Core types: TestType, TestDefinition, Position, Annotations
 │   ├── utils.ts              # Utility functions (cloneInstance, CustomWeakMap, EOL, etc.)
 │   │
-│   ├── CommandBuilder/       # Builds the shell command to run PHPUnit
-│   │   ├── Builder.ts        # Main builder: composes php + phpunit + args + path replacement
+│   ├── ProcessBuilder/       # Builds the child process command to run PHPUnit
+│   │   ├── ProcessBuilder.ts # Main builder: composes php + phpunit + args + path replacement
 │   │   ├── PathReplacer.ts   # Translates local <-> remote paths (Docker/SSH support)
 │   │   ├── FilterStrategy.ts # Generates --filter regex for specific test methods
 │   │   └── Xdebug.ts         # Xdebug/coverage configuration (mode, environment, clover file)
@@ -86,7 +86,7 @@ src/
 - `MessageObserver` - shows VS Code messages
 
 ### Builder Pattern
-`Builder` constructs the PHPUnit command with fluent API: configuration -> path replacement -> xdebug -> filter arguments.
+`ProcessBuilder` constructs the PHPUnit command with fluent API: configuration -> path replacement -> xdebug -> filter arguments.
 
 ### Strategy Pattern
 `FilterStrategy` / `FilterStrategyFactory` generates different `--filter` regex patterns based on test type (PHPUnit class, method, Pest test/describe).

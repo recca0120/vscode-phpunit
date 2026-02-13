@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { Builder } from './CommandBuilder';
+import { ProcessBuilder } from './ProcessBuilder';
 import { ProblemMatcher, TeamcityEvent, TestResult } from './ProblemMatcher';
 import { EventResultMap, TestRunnerEvent, TestRunnerEventProxy, TestRunnerObserver } from './TestRunnerObserver';
 
@@ -12,7 +12,7 @@ export class TestRunnerProcess {
     private temp = '';
     private abortController: AbortController;
 
-    constructor(private builder: Builder) {
+    constructor(private builder: ProcessBuilder) {
         this.abortController = new AbortController();
     }
 
@@ -102,10 +102,10 @@ export class TestRunner {
         return this;
     }
 
-    run(builder: Builder) {
+    run(builder: ProcessBuilder) {
         const process = new TestRunnerProcess(builder);
 
-        process.on('start', (builder: Builder) => this.emit(TestRunnerEvent.run, builder));
+        process.on('start', (builder: ProcessBuilder) => this.emit(TestRunnerEvent.run, builder));
         process.on('line', (line: string) => this.processLine(line, builder));
         process.on('error', (err: Error) => this.handleProcessError(err));
         process.on('close', (code: number | null, output: string) => this.handleProcessClose(code, output));
@@ -132,12 +132,12 @@ export class TestRunner {
         this.emit(TestRunnerEvent.close, code);
     }
 
-    private processLine(line: string, builder: Builder) {
+    private processLine(line: string, builder: ProcessBuilder) {
         this.emitResult(builder, this.problemMatcher.parse(line));
         this.emit(TestRunnerEvent.line, line);
     }
 
-    private emitResult(builder: Builder, result: TestResult | undefined) {
+    private emitResult(builder: ProcessBuilder, result: TestResult | undefined) {
         if (!result) {
             return;
         }

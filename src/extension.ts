@@ -3,7 +3,7 @@ import {
     TestRunProfile, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder,
 } from 'vscode';
 import { PHPUnitFileCoverage } from './CloverParser';
-import { CommandHandler } from './CommandHandler';
+import { TestCommandRegistry } from './TestCommandRegistry';
 import { Configuration } from './Configuration';
 import { Handler } from './Handler';
 import { CollisionPrinter } from './Observers';
@@ -145,7 +145,7 @@ function registerRunProfiles(ctrl: ReturnType<typeof tests.createTestController>
 }
 
 function registerCommands(context: ExtensionContext, testCollection: TestCollection, testRunProfile: TestRunProfile, handler: Handler) {
-    const commandHandler = new CommandHandler(testCollection, testRunProfile);
+    const commandHandler = new TestCommandRegistry(testCollection, testRunProfile);
 
     context.subscriptions.push(commandHandler.reload(async () => {
         await Promise.all(

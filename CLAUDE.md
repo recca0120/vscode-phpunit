@@ -27,7 +27,7 @@ npm run compile                                       # Webpack build
 
 - `src/PHPUnit/` must NOT import from `vscode`. Keep it framework-agnostic.
 - `src/TestCollection/`, `src/Observers/`, `src/Handler.ts` can import from both `vscode` and `src/PHPUnit/`.
-- Observer pattern for test run events. Builder pattern for command construction.
+- Observer pattern for test run events. ProcessBuilder pattern for process construction.
 
 ## TDD Workflow
 
@@ -45,10 +45,10 @@ npm run compile                                       # Webpack build
 
 | Task | Files |
 |------|-------|
-| Add PHPUnit command option | `src/PHPUnit/CommandBuilder/Builder.ts` |
+| Add PHPUnit command option | `src/PHPUnit/ProcessBuilder/ProcessBuilder.ts` |
 | Parse new teamcity event | `src/PHPUnit/ProblemMatcher/` |
 | New test parser feature | `src/PHPUnit/TestParser/` |
 | Test Explorer UI changes | `src/TestCollection/TestHierarchyBuilder.ts` |
 | Output formatting | `src/Observers/Printers/` |
-| Path mapping (Docker/SSH) | `src/PHPUnit/CommandBuilder/PathReplacer.ts` |
-| Coverage support | `src/CloverParser.ts`, `src/PHPUnit/CommandBuilder/Xdebug.ts` |
+| Path mapping (Docker/SSH) | `src/PHPUnit/ProcessBuilder/PathReplacer.ts` |
+| Coverage support | `src/CloverParser.ts`, `src/PHPUnit/ProcessBuilder/Xdebug.ts` |

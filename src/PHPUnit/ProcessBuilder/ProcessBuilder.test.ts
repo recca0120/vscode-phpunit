@@ -1,12 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
-import { Builder } from './Builder';
+import { ProcessBuilder } from './ProcessBuilder';
 
-describe('Builder Test', () => {
+describe('ProcessBuilder Test', () => {
     describe('LocalCommand', () => {
         const givenBuilder = (configuration: any, cwd?: string) => {
-            return new Builder(new Configuration({ php: 'php', ...configuration }), {
+            return new ProcessBuilder(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
         };
@@ -135,7 +135,7 @@ describe('Builder Test', () => {
 
     describe('RemoteCommand', () => {
         const givenBuilder = (configuration: any, cwd?: string) => {
-            return new Builder(new Configuration({ php: 'php', ...configuration }), {
+            return new ProcessBuilder(new Configuration({ php: 'php', ...configuration }), {
                 cwd: cwd ?? phpUnitProject(''),
             });
         };
@@ -302,7 +302,7 @@ describe('Builder Test', () => {
 
     describe('phpunit.command has variable', () => {
         const givenBuilder = (configuration: any, cwd?: string) => {
-            return new Builder(new Configuration({
+            return new ProcessBuilder(new Configuration({
                 command: '${php} ${phpargs} ${phpunit} ${phpunitargs}',
                 php: 'php',
                 ...configuration,

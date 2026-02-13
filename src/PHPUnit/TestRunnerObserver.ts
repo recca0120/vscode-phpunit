@@ -1,4 +1,4 @@
-import { Builder } from './CommandBuilder';
+import { ProcessBuilder } from './ProcessBuilder';
 import { TeamcityEvent, TestResult } from './ProblemMatcher';
 import type {
     TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
@@ -19,7 +19,7 @@ export enum TestRunnerEvent {
 
 export type EventResultMap = {
     [TestRunnerEvent.start]: undefined;
-    [TestRunnerEvent.run]: Builder;
+    [TestRunnerEvent.run]: ProcessBuilder;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;

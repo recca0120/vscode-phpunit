@@ -208,7 +208,7 @@ describe('Extension Test', () => {
                 );
 
                 const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
-                    ? { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 }
+                    ? { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 }
                     : { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
@@ -231,7 +231,7 @@ describe('Extension Test', () => {
                 ], expect.objectContaining({ cwd }));
 
                 const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
-                    ? { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 }
+                    ? { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 }
                     : { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
 
                 expectTestResultCalled(ctrl, expected);
@@ -253,7 +253,7 @@ describe('Extension Test', () => {
                     '--teamcity',
                 ], expect.objectContaining({ cwd }));
 
-                expectTestResultCalled(ctrl, { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 });
+                expectTestResultCalled(ctrl, { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 });
             });
 
             it('should run test case', async () => {

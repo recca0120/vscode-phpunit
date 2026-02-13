@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
-import { Builder } from './CommandBuilder';
+import { ProcessBuilder } from './ProcessBuilder';
 import { Configuration } from './Configuration';
 import { TeamcityEvent } from './ProblemMatcher';
 import { TestRunner } from './TestRunner';
@@ -165,7 +165,7 @@ const generateTestResult = (
     }
 };
 
-const expectedCommand = async (builder: Builder, expected: string[]) => {
+const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
     const testRunner = new TestRunner();
     onTestResultEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
@@ -177,7 +177,7 @@ const expectedCommand = async (builder: Builder, expected: string[]) => {
 
 const shouldRunTest = async (
     expected: string[],
-    builder: Builder,
+    builder: ProcessBuilder,
     projectPath: (path: string) => string,
     appPath: (path: string) => string,
     start: { event: TeamcityEvent, name?: string, file: string, id: string, phpVfsComposer?: boolean, },
@@ -190,7 +190,7 @@ const shouldRunTest = async (
     expectedTestResult(finished, projectPath);
 };
 
-const shouldRunAllTest = async (expected: string[], builder: Builder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+const shouldRunAllTest = async (expected: string[], builder: ProcessBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
     await shouldRunTest(expected, builder, projectPath, appPath, {
         event: TeamcityEvent.testStarted,
         name: 'test_passed',
@@ -205,7 +205,7 @@ const shouldRunAllTest = async (expected: string[], builder: Builder, projectPat
     });
 };
 
-const shouldRunTestSuite = async (expected: string[], builder: Builder, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestSuite = async (expected: string[], builder: ProcessBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string) => {
     builder.setArguments(projectPath('tests/AssertionsTest.php'));
 
     await shouldRunTest(expected, builder, projectPath, appPath, {
@@ -220,7 +220,7 @@ const shouldRunTestSuite = async (expected: string[], builder: Builder, projectP
     });
 };
 
-const shouldRunTestPassed = async (expected: string[], builder: Builder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
+const shouldRunTestPassed = async (expected: string[], builder: ProcessBuilder, projectPath: (path: string) => string, appPath: (path: string) => string) => {
     const filter = `^.*::(test_passed)( with data set .*)?$`;
     builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
@@ -237,7 +237,7 @@ const shouldRunTestPassed = async (expected: string[], builder: Builder, project
     });
 };
 
-const shouldRunTestFailed = async (expected: string[], builder: Builder, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
+const shouldRunTestFailed = async (expected: string[], builder: ProcessBuilder, projectPath: (uri: string) => string, appPath: (path: string) => string, phpVfsComposer: boolean = false) => {
     const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
     builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
 
@@ -269,7 +269,7 @@ describe('TestRunner Test', () => {
             args: ['-c', '${PWD}/phpunit.xml'],
         });
 
-        const builder = new Builder(configuration, { cwd });
+        const builder = new ProcessBuilder(configuration, { cwd });
         const expected = [
             'foo',
             'vendor/bin/phpunit',
@@ -292,7 +292,7 @@ describe('TestRunner Test', () => {
             phpunit: '${workspaceFolder}/vendor/bin/phpunit',
             args: ['-c', '${workspaceFolder}/phpunit.xml'],
         });
-        const builder = new Builder(configuration, { cwd });
+        const builder = new ProcessBuilder(configuration, { cwd });
 
         it('should run all tests', async () => {
             const expected = [
@@ -360,7 +360,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const builder = new Builder(configuration, { cwd });
+        const builder = new ProcessBuilder(configuration, { cwd });
 
         it('should run all tests for SSH', async () => {
             const expected = [
@@ -503,7 +503,7 @@ describe('TestRunner Test', () => {
             paths: { '${PWD}': appPath('') },
         });
 
-        const builder = new Builder(configuration, { cwd });
+        const builder = new ProcessBuilder(configuration, { cwd });
 
         it('should run all tests for Docker', async () => {
             const expected = [
@@ -629,7 +629,7 @@ describe('TestRunner Test', () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             paths: { '${PWD}': appPath('') },
         });
-        const builder = new Builder(configuration, { cwd });
+        const builder = new ProcessBuilder(configuration, { cwd });
 
         it('should run all tests for Windows Docker', async () => {
             const expected = [
