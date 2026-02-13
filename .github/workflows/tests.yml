@@ -1,4 +1,4 @@
-name: Jest
+name: Vitest
 on:
   workflow_dispatch:
   push:
@@ -70,7 +70,7 @@ jobs:
 
       # Finally, run our tests
       - name: Run the tests
-        run: npm run jest
+        run: npm run vitest
 
       - name: Send to codecov
         uses: codecov/codecov-action@v3
