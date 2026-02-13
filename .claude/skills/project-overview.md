@@ -133,7 +133,15 @@ These tests are known to fail on the `refactor/improve-readability` branch basel
 2. **`OutputChannelObserver › should print printed output when die`** (`src/Observers/OutputChannelObserver.test.ts`)
    - Assertion mismatch on `appendLine` call with emoji/encoded output string.
 
-On `main` branch there are additional failures (5 failed / 383 passed) due to test expectation values not yet updated for the refactored code.
+On `main` branch there are additional failures (5 failed / 383 passed). Three of these are **incorrect expected values** that were already wrong on main — the production code on main itself produces different numbers:
+
+| Test | main expected | main actual |
+|------|--------------|-------------|
+| `should run all tests` | started: 35, passed: 23, failed: 10 | started: 26, passed: 15, failed: 9 |
+| `should run test by namespace` | started: 34, passed: 23, failed: 9 | started: 25, passed: 15, failed: 8 |
+| `should run test suite` | started: 12, passed: 6, failed: 4 | started: 6, passed: 1, failed: 3 |
+
+These were corrected in commit `4f698cf` on the refactor branch. The `TestRunnerEventProxy` dynamic registration (constructor-based own properties) is behaviorally equivalent to the original 17 explicit prototype methods — the number differences are not caused by the refactor.
 
 ## Testing Principles
 

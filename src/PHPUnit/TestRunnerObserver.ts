@@ -49,17 +49,29 @@ export type TestRunnerObserver = Partial<{
 export class TestRunnerEventProxy implements TestRunnerObserver {
     private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
 
-    [key: string]: any;
+    start(): void { this.notify(TestRunnerEvent.start, undefined); }
+    run(builder: ProcessBuilder): void { this.notify(TestRunnerEvent.run, builder); }
+    line(line: string): void { this.notify(TestRunnerEvent.line, line); }
+    result(result: TestResult): void { this.notify(TestRunnerEvent.result, result); }
+    output(output: string): void { this.notify(TestRunnerEvent.output, output); }
+    error(error: string): void { this.notify(TestRunnerEvent.error, error); }
+    close(code: number | null): void { this.notify(TestRunnerEvent.close, code); }
+    abort(): void { this.notify(TestRunnerEvent.abort, undefined); }
+    done(): void { this.notify(TestRunnerEvent.done, undefined); }
 
-    constructor() {
-        const allEvents = [
-            ...Object.values(TestRunnerEvent),
-            ...Object.values(TeamcityEvent),
-        ];
-        for (const eventName of allEvents) {
-            this[eventName] = (result: any) => this.notify(eventName as any, result);
-        }
-    }
+    testVersion(result: TestVersion): void { this.notify(TeamcityEvent.testVersion, result); }
+    testProcesses(result: TestProcesses): void { this.notify(TeamcityEvent.testProcesses, result); }
+    testRuntime(result: TestRuntime): void { this.notify(TeamcityEvent.testRuntime, result); }
+    testConfiguration(result: TestConfiguration): void { this.notify(TeamcityEvent.testConfiguration, result); }
+    testSuiteStarted(result: TestSuiteStarted): void { this.notify(TeamcityEvent.testSuiteStarted, result); }
+    testCount(result: TestCount): void { this.notify(TeamcityEvent.testCount, result); }
+    testStarted(result: TestStarted): void { this.notify(TeamcityEvent.testStarted, result); }
+    testFinished(result: TestFinished): void { this.notify(TeamcityEvent.testFinished, result); }
+    testFailed(result: TestFailed): void { this.notify(TeamcityEvent.testFailed, result); }
+    testIgnored(result: TestIgnored): void { this.notify(TeamcityEvent.testIgnored, result); }
+    testSuiteFinished(result: TestSuiteFinished): void { this.notify(TeamcityEvent.testSuiteFinished, result); }
+    testDuration(result: TestDuration): void { this.notify(TeamcityEvent.testDuration, result); }
+    testResultSummary(result: TestResultSummary): void { this.notify(TeamcityEvent.testResultSummary, result); }
 
     on<K extends keyof EventResultMap>(eventName: K, fn: (result: EventResultMap[K]) => void): this {
         if (!this.listeners[eventName]) {
