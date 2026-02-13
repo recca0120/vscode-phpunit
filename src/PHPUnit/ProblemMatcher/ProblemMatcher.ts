@@ -7,15 +7,6 @@ import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../Transformer';
 export class ProblemMatcher {
     private cache = new Map<string, TestResult>();
 
-    private lookup: { [p: string]: (result: any) => TestResult | undefined } = {
-        [TeamcityEvent.testSuiteStarted]: this.handleStarted,
-        [TeamcityEvent.testStarted]: this.handleStarted,
-        [TeamcityEvent.testFinished]: this.handleFinished,
-        [TeamcityEvent.testFailed]: this.handleFault,
-        [TeamcityEvent.testIgnored]: this.handleFault,
-        [TeamcityEvent.testSuiteFinished]: this.handleFinished,
-    };
-
     constructor(private testResultParser: TestResultParser = new TestResultParser()) { }
 
     parse(input: string | Buffer): TestResult | undefined {
@@ -26,11 +17,25 @@ export class ProblemMatcher {
             return result;
         }
 
-        return this.lookup[result!.event]?.call(this, result);
+        return this.dispatch(result!);
     }
 
     private isDispatchable(result?: TestResult): boolean {
         return !!result && 'event' in result && 'name' in result && 'flowId' in result;
+    }
+
+    private dispatch(result: TestResult): TestResult | undefined {
+        switch (result.event) {
+            case TeamcityEvent.testSuiteStarted:
+            case TeamcityEvent.testStarted:
+                return this.handleStarted(result as TestSuiteStarted | TestStarted);
+            case TeamcityEvent.testFailed:
+            case TeamcityEvent.testIgnored:
+                return this.handleFault(result as TestFailed | TestIgnored);
+            case TeamcityEvent.testSuiteFinished:
+            case TeamcityEvent.testFinished:
+                return this.handleFinished(result as TestSuiteFinished | TestFinished);
+        }
     }
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
