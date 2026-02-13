@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { EOL, TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestSuiteFinished } from '../../PHPUnit';
-import { Printer } from './Printer';
+import { OutputFormatter } from './OutputFormatter';
 
-export class CollisionPrinter extends Printer {
+export class CollisionPrinter extends OutputFormatter {
     private errors: TestFailed[] = [];
 
     start() {
@@ -96,7 +96,7 @@ export class CollisionPrinter extends Printer {
 
             return [
                 '',
-                `at ${Printer.fileFormat(detail.file, detail.line)}`,
+                `at ${OutputFormatter.fileFormat(detail.file, detail.line)}`,
                 ...lines,
             ].join(EOL);
         } catch (e) {
@@ -106,7 +106,7 @@ export class CollisionPrinter extends Printer {
 
     private formatDetails(result: TestFailed) {
         return EOL + result.details
-            .map(({ file, line }) => Printer.fileFormat(file, line))
+            .map(({ file, line }) => OutputFormatter.fileFormat(file, line))
             .map((file, index) => `${index + 1}. ${file}`).join(EOL);
     }
 

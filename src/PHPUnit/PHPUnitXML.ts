@@ -7,11 +7,11 @@ type Source = { tag: string; value: string; prefix?: string; suffix?: string; };
 
 export type TestSuite = Source & { name: string };
 
-export class Pattern {
+export class TestGlobPattern {
     private readonly relativePath: string;
 
     constructor(private root: string, private testPath: string, private items: string[] = []) {
-        this.relativePath = Pattern.normalizePath(relative(this.root, this.testPath));
+        this.relativePath = TestGlobPattern.normalizePath(relative(this.root, this.testPath));
     }
 
     private static normalizePath(...paths: string[]) {
@@ -24,7 +24,7 @@ export class Pattern {
             args.push('**/*' + (item.suffix ?? extension));
         }
 
-        this.items.push(Pattern.normalizePath(...args));
+        this.items.push(TestGlobPattern.normalizePath(...args));
     }
 
     toGlobPattern() {
@@ -108,8 +108,8 @@ export class PHPUnitXML {
     }
 
     getPatterns(root: string) {
-        const includes = new Pattern(root, this.root());
-        const excludes = new Pattern(root, this.root(), ['**/.git/**', '**/node_modules/**']);
+        const includes = new TestGlobPattern(root, this.root());
+        const excludes = new TestGlobPattern(root, this.root(), ['**/.git/**', '**/node_modules/**']);
 
         this.getTestSuites().forEach((item) => {
             (item.tag !== 'exclude') ? includes.push(item, '.php') : excludes.push(item);

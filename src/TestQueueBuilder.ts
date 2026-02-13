@@ -19,14 +19,14 @@ export class TestQueueBuilder {
             if (testCase?.type === TestType.method) {
                 queue.set(testCase, testItem);
             } else {
-                await this.build(this.gatherTestItems(testItem.children), request, queue);
+                await this.build(this.collectItems(testItem.children), request, queue);
             }
         }
 
         return queue;
     }
 
-    gatherTestItems(collection: TestItemCollection): TestItem[] {
+    collectItems(collection: TestItemCollection): TestItem[] {
         const testItems: TestItem[] = [];
         collection.forEach((testItem) => testItems.push(testItem));
 

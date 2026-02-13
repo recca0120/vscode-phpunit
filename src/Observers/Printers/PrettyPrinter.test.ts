@@ -1,7 +1,7 @@
 import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { PrettyPrinter } from './PrettyPrinter';
-import { Printer } from './Printer';
+import { OutputFormatter } from './OutputFormatter';
 
 describe('PrettyPrinter', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
@@ -73,7 +73,7 @@ describe('PrettyPrinter', () => {
             `     ┐ `,
             `     ├ Failed asserting that false is true.`,
             `     │ `,
-            `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+            `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
             `     ┴ `,
             ``,
         ].join(EOL));
@@ -114,7 +114,7 @@ describe('PrettyPrinter', () => {
             `     ┊     1 => 'h',`,
             `     ┊ ]`,
             `     │ `,
-            `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+            `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
             `     ┴ `,
             ``,
         ].join(EOL));

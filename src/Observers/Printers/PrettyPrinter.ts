@@ -1,7 +1,7 @@
 import { EOL, TeamcityEvent, TestFailed, TestFinished, TestSuiteFinished } from '../../PHPUnit';
-import { Printer } from './Printer';
+import { OutputFormatter } from './OutputFormatter';
 
-export class PrettyPrinter extends Printer {
+export class PrettyPrinter extends OutputFormatter {
     private decorated = {
         default: '│',
         start: '┐',
@@ -40,7 +40,7 @@ export class PrettyPrinter extends Printer {
 
     private formatDetails(result: TestFailed) {
         return result.details
-            .map(({ file, line }) => Printer.fileFormat(file, line))
+            .map(({ file, line }) => OutputFormatter.fileFormat(file, line))
             .reduce((msg, file) => (msg + this.formatMessage(this.decorated.default, file)), '');
     }
 

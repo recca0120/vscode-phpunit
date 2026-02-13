@@ -1,16 +1,16 @@
 import { EOL, PHPUnitXML, TeamcityEvent, TestFinished } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
-import { Printer } from './Printer';
+import { OutputFormatter } from './OutputFormatter';
 
-class MyPrinter extends Printer {
+class MyOutputFormatter extends OutputFormatter {
     testFinished(_result: TestFinished): string | undefined {
         return undefined;
     }
 }
 
-describe('Printer', () => {
+describe('OutputFormatter', () => {
     const phpUnitXML = new PHPUnitXML();
-    const printer = new MyPrinter(phpUnitXML);
+    const printer = new MyOutputFormatter(phpUnitXML);
 
     beforeEach(() => printer.start());
     afterEach(() => printer.close());

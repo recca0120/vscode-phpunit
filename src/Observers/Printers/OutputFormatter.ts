@@ -38,7 +38,7 @@ class OutputBuffer {
     }
 }
 
-export abstract class Printer {
+export abstract class OutputFormatter {
     protected outputBuffer = new OutputBuffer;
     protected messages = new Map<TeamcityEvent, string[]>([
         [TeamcityEvent.testVersion, ['🚀', 'STARTED']],

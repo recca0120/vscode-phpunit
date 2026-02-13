@@ -28,7 +28,7 @@ export async function activate(context: ExtensionContext) {
     const testCommandRegistry = container.get<TestCommandRegistry>(TYPES.testCommandRegistry);
 
     // Initial load
-    await testFileDiscovery.loadInitialConfiguration();
+    await testFileDiscovery.loadWorkspaceConfiguration();
     await Promise.all(workspace.textDocuments.map((document) => testCollection.add(document.uri)));
 
     // Listeners

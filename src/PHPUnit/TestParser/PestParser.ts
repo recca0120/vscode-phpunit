@@ -1,13 +1,13 @@
 import { TestDefinition, TestType } from '../types';
 import { Parser } from './Parser';
-import { PHPDefinition } from './PHPDefinition';
+import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 export class PestParser implements Parser {
-    parse(definition: PHPDefinition): TestDefinition[] | undefined {
-        const getFunctions = (definition: PHPDefinition) => {
+    parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined {
+        const getFunctions = (definition: PhpAstNodeWrapper) => {
             return definition.getFunctions()
-                .filter((definition: PHPDefinition) => definition.isTest())
-                .map((definition: PHPDefinition) => {
+                .filter((definition: PhpAstNodeWrapper) => definition.isTest())
+                .map((definition: PhpAstNodeWrapper) => {
                     const testDefinition = definition.toTestDefinition();
 
                     if (definition.type === TestType.describe) {

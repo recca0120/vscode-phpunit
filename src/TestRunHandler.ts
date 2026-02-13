@@ -76,7 +76,7 @@ export class TestRunHandler {
 
     private async runTestQueue(builder: ProcessBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
         const queue = await this.testQueueBuilder.build(
-            request.include ?? this.testQueueBuilder.gatherTestItems(this.ctrl.items),
+            request.include ?? this.testQueueBuilder.collectItems(this.ctrl.items),
             request,
         );
         queue.forEach((testItem) => testRun.enqueued(testItem));
@@ -100,7 +100,7 @@ export class TestRunHandler {
 
         return request.include
             .map((testItem) => this.testCollection.getTestCase(testItem)!)
-            .map((testCase, index) => testCase.update(builder, index))
+            .map((testCase, index) => testCase.configureProcessBuilder(builder, index))
             .map((builder) => runner.run(builder));
     }
 }

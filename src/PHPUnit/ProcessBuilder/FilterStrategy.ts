@@ -33,14 +33,14 @@ class DescribeFilterStrategy extends FilterStrategy {
     }
 
     protected getDependsFilter() {
-        const methodName = this.getMethodMethodName();
+        const methodName = this.getMethodNamePattern();
         const deps = this.testDefinition.annotations?.depends ?? [];
         const filter = [methodName, ...deps].filter((value) => !!value).join('|');
 
         return this.parseFilter(`^.*::(${filter})`);
     }
 
-    protected getMethodMethodName() {
+    protected getMethodNamePattern() {
         return Transformer.generateSearchText(this.testDefinition.methodName!) + '.*';
     }
 }
@@ -61,7 +61,7 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
         return this.testDefinition.children && this.testDefinition.children.length > 0;
     }
 
-    protected getMethodMethodName() {
+    protected getMethodNamePattern() {
         return Transformer.generateSearchText(this.testDefinition.methodName!);
     }
 }

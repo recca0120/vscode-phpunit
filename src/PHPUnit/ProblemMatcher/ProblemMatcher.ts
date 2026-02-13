@@ -34,15 +34,15 @@ export class ProblemMatcher {
     }
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
-        const cacheId = this.cacheId(testResult);
-        this.cache.set(cacheId, testResult);
+        const buildCacheKey = this.buildCacheKey(testResult);
+        this.cache.set(buildCacheKey, testResult);
 
-        return this.cache.get(cacheId);
+        return this.cache.get(buildCacheKey);
     }
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
-        const cacheId = this.cacheId(testResult);
-        const prevTestResult = this.cache.get(cacheId) as (TestFailed | TestIgnored);
+        const buildCacheKey = this.buildCacheKey(testResult);
+        const prevTestResult = this.cache.get(buildCacheKey) as (TestFailed | TestIgnored);
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
@@ -52,17 +52,17 @@ export class ProblemMatcher {
         }
 
         if (prevTestResult.event === TeamcityEvent.testStarted) {
-            this.cache.set(cacheId, { ...prevTestResult, ...testResult });
+            this.cache.set(buildCacheKey, { ...prevTestResult, ...testResult });
             return undefined;
         }
 
-        this.appendFaultDetails(prevTestResult, testResult);
-        this.cache.set(cacheId, prevTestResult);
+        this.mergeFaultDetails(prevTestResult, testResult);
+        this.cache.set(buildCacheKey, prevTestResult);
 
         return undefined;
     }
 
-    private appendFaultDetails(target: TestFailed | TestIgnored, source: TestFailed | TestIgnored) {
+    private mergeFaultDetails(target: TestFailed | TestIgnored, source: TestFailed | TestIgnored) {
         if (source.message) {
             target.message += '\n\n' + source.message;
         }
@@ -70,16 +70,16 @@ export class ProblemMatcher {
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {
-        const cacheId = this.cacheId(testResult);
+        const buildCacheKey = this.buildCacheKey(testResult);
 
-        if (!this.cache.has(cacheId)) {
+        if (!this.cache.has(buildCacheKey)) {
             return;
         }
 
-        const prevTestResult = this.cache.get(cacheId)!;
+        const prevTestResult = this.cache.get(buildCacheKey)!;
         const event = this.isFault(prevTestResult) ? prevTestResult.event : testResult.event;
         const result = { ...prevTestResult, ...testResult, event };
-        this.cache.delete(cacheId);
+        this.cache.delete(buildCacheKey);
 
         return result;
     }
@@ -88,7 +88,7 @@ export class ProblemMatcher {
         return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
     }
 
-    private cacheId(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
+    private buildCacheKey(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
         return `${testResult.name}-${testResult.flowId}`;
     }
 }

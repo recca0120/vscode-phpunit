@@ -1,11 +1,11 @@
 import { TestDefinition } from '../types';
 import { Parser } from './Parser';
-import { PHPDefinition } from './PHPDefinition';
+import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 export class PHPUnitParser implements Parser {
-    parse(definition: PHPDefinition): TestDefinition[] | undefined {
+    parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined {
         const testDefinitions: TestDefinition[] = [];
-        const getParent = (definition: PHPDefinition) => {
+        const getParent = (definition: PhpAstNodeWrapper) => {
             const testDefinition = definition.toTestDefinition();
             if (!definition.parent) {
                 testDefinitions.push(testDefinition);

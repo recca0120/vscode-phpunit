@@ -13,7 +13,7 @@ export class TestCase {
         return (this.testDefinition.annotations?.group as string[]) ?? [];
     }
 
-    update(builder: ProcessBuilder, index: number) {
+    configureProcessBuilder(builder: ProcessBuilder, index: number) {
         return builder.clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))
             .setArguments(FilterStrategyFactory.create(this.testDefinition).getFilter());

@@ -1,6 +1,6 @@
 import { GlobPattern, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { Configuration } from './Configuration';
-import { Pattern, PHPUnitXML } from './PHPUnit';
+import { TestGlobPattern, PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 
 export type WorkspaceTestPattern = {
@@ -16,7 +16,7 @@ export class TestFileDiscovery {
         private testCollection: TestCollection,
     ) {}
 
-    async loadInitialConfiguration(): Promise<void> {
+    async loadWorkspaceConfiguration(): Promise<void> {
         const configurationFile = await this.configuration.getConfigurationFile(
             workspace.workspaceFolders![0].uri.fsPath,
         );
@@ -43,7 +43,7 @@ export class TestFileDiscovery {
                     workspaceFolder.uri.fsPath,
                 );
 
-                const toRelativePattern = (pattern: Pattern) => {
+                const toRelativePattern = (pattern: TestGlobPattern) => {
                     const { uri, pattern: glob } = pattern.toGlobPattern();
                     return new RelativePattern(uri, glob);
                 };
@@ -60,12 +60,12 @@ export class TestFileDiscovery {
     async reloadAll(): Promise<void> {
         await Promise.all(
             (await this.getWorkspaceTestPatterns()).map(
-                ({ pattern, exclude }) => this.findInitialFiles(pattern, exclude),
+                ({ pattern, exclude }) => this.discoverTestFiles(pattern, exclude),
             ),
         );
     }
 
-    async findInitialFiles(pattern: GlobPattern, exclude: GlobPattern): Promise<void> {
+    async discoverTestFiles(pattern: GlobPattern, exclude: GlobPattern): Promise<void> {
         this.testCollection.reset();
         const files = await workspace.findFiles(pattern, exclude);
         await Promise.all(files.map((file) => this.testCollection.add(file)));

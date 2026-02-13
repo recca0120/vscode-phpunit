@@ -79,11 +79,11 @@ export class ProcessBuilder {
         const args = this.getArguments();
 
         command = this.ensureVariablePlaceholders(command, args, isRemoteCommand);
-        command = this.normalizeQuotedVariables(command);
+        command = this.convertSingleToDoubleQuotes(command);
         command = this.removeEmptyPhpArgs(command, args);
         command = this.substituteVariables(command, args);
 
-        return this.decodeFilter(parseArgsStringToArgv(command), isRemoteCommand);
+        return this.base64DecodeFilter(parseArgsStringToArgv(command), isRemoteCommand);
     }
 
     private ensureVariablePlaceholders(command: string, args: { [p: string]: string }, isRemoteCommand: boolean) {
@@ -96,7 +96,7 @@ export class ProcessBuilder {
             : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}');
     }
 
-    private normalizeQuotedVariables(command: string) {
+    private convertSingleToDoubleQuotes(command: string) {
         return command.replace(
             new RegExp('(\'\\$\{(php|phpargs|phpunit|phpunitargs)\}.*?\')', 'g'),
             (_m, ...matched) => matched[0].replace(/^['"]|['"]$/g, '"'),
@@ -107,8 +107,8 @@ export class ProcessBuilder {
         return args.phpargs ? command : command.replace(/\s+\$\{phpargs\}/, '');
     }
 
-    private substituteVariables(command: string, args: { [p: string]: string }) {
-        return Object.entries(args).reduce(
+    private substituteVariables(command: string, variableMap: { [p: string]: string }) {
+        return Object.entries(variableMap).reduce(
             (cmd, [key, value]) => cmd.replace(keyVariable(key), value.trim()),
             command.trim(),
         );
@@ -153,7 +153,7 @@ export class ProcessBuilder {
             .concat('--colors=never', '--teamcity');
 
         return this
-            .encodeFilter(this.addParaTestFunctional(args))
+            .base64EncodeFilter(this.addParaTestFunctional(args))
             .concat(...(this.xdebug?.getPhpUnitArgs() ?? []))
             .join(' ');
     }
@@ -173,7 +173,7 @@ export class ProcessBuilder {
         return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
-    private encodeFilter(args: string[]) {
+    private base64EncodeFilter(args: string[]) {
         return args.map((input) => {
             const pattern = new RegExp('^(--filter)=(.*)');
 
@@ -185,7 +185,7 @@ export class ProcessBuilder {
         });
     }
 
-    private decodeFilter(args: string[], needsQuote: boolean) {
+    private base64DecodeFilter(args: string[], needsQuote: boolean) {
         return args.map((input) => {
             const pattern = new RegExp('(--filter)=["\'](.+)?["\']');
 

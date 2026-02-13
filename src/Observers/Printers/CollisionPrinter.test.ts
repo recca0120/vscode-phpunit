@@ -1,7 +1,7 @@
 import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { CollisionPrinter } from './CollisionPrinter';
-import { Printer } from './Printer';
+import { OutputFormatter } from './OutputFormatter';
 
 describe('CollisionPrinter', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
@@ -85,7 +85,7 @@ describe('CollisionPrinter', () => {
             `❌ FAILED  Recca0120\\VSCode\\Tests\\AssertionsTest > failed`,
             `Failed asserting that false is true.`,
             ``,
-            `at ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+            `at ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
             `  18 ▕      * @depends test_passed`,
             `  19 ▕      */`,
             `  20 ▕     public function test_failed()`,
@@ -97,7 +97,7 @@ describe('CollisionPrinter', () => {
             `  26 ▕     {`,
             `  27 ▕         $this->assertSame(['a' => 'b', 'c' => 'd'], ['e' => 'f', 'g', 'h']);`,
             ``,
-            `1. ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+            `1. ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
             ``,
         ].join(EOL));
     });
@@ -138,7 +138,7 @@ describe('CollisionPrinter', () => {
             ` ]`,
             ``,
             ``,
-            `at ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+            `at ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
             `  23 ▕     }`,
             `  24 ▕ `,
             `  25 ▕     public function test_is_not_same()`,
@@ -150,7 +150,7 @@ describe('CollisionPrinter', () => {
             `  31 ▕     {`,
             `  32 ▕         $a = 1;`,
             ``,
-            `1. ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+            `1. ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
             ``,
         ].join(EOL));
     });
@@ -180,7 +180,7 @@ describe('CollisionPrinter', () => {
             `❌ FAILED  Recca0120\\VSCode\\Tests\\NotFoundTest > failed`,
             `Failed asserting that false is true.`,
             ``,
-            `1. ${Printer.fileFormat(phpUnitProject('tests/NotFoundTest.php'), 22)}`,
+            `1. ${OutputFormatter.fileFormat(phpUnitProject('tests/NotFoundTest.php'), 22)}`,
             ``,
         ].join(EOL));
     });

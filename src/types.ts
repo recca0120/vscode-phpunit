@@ -1,6 +1,6 @@
 export const TYPES = {
     phpUnitXML: Symbol.for('PHPUnitXML'),
-    printer: Symbol.for('Printer'),
+    outputFormatter: Symbol.for('OutputFormatter'),
     configuration: Symbol.for('Configuration'),
     testController: Symbol.for('TestController'),
     outputChannel: Symbol.for('OutputChannel'),

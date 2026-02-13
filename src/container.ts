@@ -36,7 +36,7 @@ export function createContainer(
         new EventEmitter<Uri>(),
     ).inSingletonScope();
 
-    container.bind(TYPES.printer).toDynamicValue((ctx) =>
+    container.bind(TYPES.outputFormatter).toDynamicValue((ctx) =>
         new CollisionPrinter(ctx.get(TYPES.phpUnitXML)),
     ).inSingletonScope();
 
@@ -56,7 +56,7 @@ export function createContainer(
         new OutputChannelObserver(
             ctx.get(TYPES.outputChannel),
             ctx.get(TYPES.configuration),
-            ctx.get(TYPES.printer),
+            ctx.get(TYPES.outputFormatter),
         ),
     ).inSingletonScope();
 

@@ -40,7 +40,7 @@ export class TestFileWatcher {
                         this.testCollection.delete(uri);
                     });
 
-                    await this.testFileDiscovery.findInitialFiles(pattern, exclude);
+                    await this.testFileDiscovery.discoverTestFiles(pattern, exclude);
 
                     return watcher;
                 },

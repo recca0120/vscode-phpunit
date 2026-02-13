@@ -22,7 +22,7 @@ export const annotationParser = new AnnotationParser();
 export const attributeParser = new AttributeParser();
 
 abstract class TestDefinitionBuilder {
-    constructor(protected definition: PHPDefinition) {
+    constructor(protected definition: PhpAstNodeWrapper) {
     }
 
     abstract build(): TestDefinition;
@@ -169,12 +169,12 @@ class PestTestDefinitionBuilder extends TestDefinitionBuilder {
     }
 }
 
-export class PHPDefinition {
+export class PhpAstNodeWrapper {
     constructor(private readonly ast: AST, private options: {
         phpUnitXML: PHPUnitXML,
         file: string,
-        namespace?: PHPDefinition,
-        parent?: PHPDefinition,
+        namespace?: PhpAstNodeWrapper,
+        parent?: PhpAstNodeWrapper,
     }) {
     }
 
@@ -255,7 +255,7 @@ export class PHPDefinition {
 
     get arguments() {
         return this.ast.arguments?.map((ast: AST) => {
-            return new PHPDefinition(ast, { ...this.options, parent: this });
+            return new PhpAstNodeWrapper(ast, { ...this.options, parent: this });
         }) ?? [];
     }
 
@@ -306,11 +306,11 @@ export class PHPDefinition {
     }
 
     getClasses() {
-        const definitions: PHPDefinition[] = this.kind !== 'program'
+        const definitions: PhpAstNodeWrapper[] = this.kind !== 'program'
             ? []
-            : this.getNamespaces().reduce((definitions, definition: PHPDefinition) => {
+            : this.getNamespaces().reduce((definitions, definition: PhpAstNodeWrapper) => {
                 return definitions.concat(definition.getClasses());
-            }, [] as PHPDefinition[]);
+            }, [] as PhpAstNodeWrapper[]);
 
         const options = { ...this.options };
         if (this.kind === 'namespace') {
@@ -318,11 +318,11 @@ export class PHPDefinition {
         }
 
         return definitions.concat((this.ast.children ?? [])
-            .map((node: Node) => new PHPDefinition(node, options))
-            .filter((definition: PHPDefinition) => definition.kind === 'class'));
+            .map((node: Node) => new PhpAstNodeWrapper(node, options))
+            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'class'));
     }
 
-    getFunctions(): PHPDefinition[] {
+    getFunctions(): PhpAstNodeWrapper[] {
         const args = this.arguments;
 
         if (this.type === TestType.describe) {
@@ -334,15 +334,15 @@ export class PHPDefinition {
         }
 
         if (args.length > 1 && args[1].kind === 'arrowfunc') {
-            return [new PHPDefinition(this.ast, this.options)];
+            return [new PhpAstNodeWrapper(this.ast, this.options)];
         }
 
         if (['closure', 'arrowfunc'].includes(this.kind) && this.ast.body) {
-            return new PHPDefinition(this.ast.body as any, this.options).getFunctions();
+            return new PhpAstNodeWrapper(this.ast.body as any, this.options).getFunctions();
         }
 
         if (this.kind === 'namedargument') {
-            return new PHPDefinition((this.ast.value as any).body, this.options).getFunctions();
+            return new PhpAstNodeWrapper((this.ast.value as any).body, this.options).getFunctions();
         }
 
         return (this.ast.children ?? [])
@@ -363,13 +363,13 @@ export class PHPDefinition {
                         break;
                     }
                     if (ast.kind === 'call') {
-                        options.parent = new PHPDefinition(ast, { ...options });
+                        options.parent = new PhpAstNodeWrapper(ast, { ...options });
                     }
                     ast = ast.what as AST;
                 }
 
-                return definitions.concat(new PHPDefinition(ast, options));
-            }, [] as PHPDefinition[]);
+                return definitions.concat(new PhpAstNodeWrapper(ast, options));
+            }, [] as PhpAstNodeWrapper[]);
     }
 
     isTest() {
@@ -410,9 +410,9 @@ export class PHPDefinition {
         return new NamespaceDefinitionBuilder(this).build();
     }
 
-    private getMethods(): PHPDefinition[] {
+    private getMethods(): PhpAstNodeWrapper[] {
         if (['program', 'namespace'].includes(this.ast.kind)) {
-            return this.getClasses().reduce((definitions: PHPDefinition[], definition: PHPDefinition) => {
+            return this.getClasses().reduce((definitions: PhpAstNodeWrapper[], definition: PhpAstNodeWrapper) => {
                 return definitions.concat(definition.getMethods());
             }, []);
         }
@@ -423,8 +423,8 @@ export class PHPDefinition {
         }
 
         return (this.ast.body ?? [])
-            .map((node: Node) => new PHPDefinition(node, options))
-            .filter((definition: PHPDefinition) => definition.kind === 'method');
+            .map((node: Node) => new PhpAstNodeWrapper(node, options))
+            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'method');
     }
 
     private getNamespaces() {
@@ -433,8 +433,8 @@ export class PHPDefinition {
         }
 
         return (this.ast.children ?? [])
-            .map((node: Node) => new PHPDefinition(node, this.options))
-            .filter((definition: PHPDefinition) => definition.kind === 'namespace');
+            .map((node: Node) => new PhpAstNodeWrapper(node, this.options))
+            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'namespace');
     }
 
     private acceptModifier() {

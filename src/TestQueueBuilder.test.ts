@@ -63,6 +63,6 @@ describe('TestQueueBuilder', () => {
             forEach: (cb: (item: TestItem) => void) => items.forEach(cb),
         } as TestItemCollection;
 
-        expect(queueBuilder.gatherTestItems(collection)).toEqual(items);
+        expect(queueBuilder.collectItems(collection)).toEqual(items);
     });
 });

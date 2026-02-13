@@ -56,22 +56,22 @@ export class TestRunnerProcess {
         this.emitter.emit('start', this.builder);
         const { runtime, args, options } = this.builder.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
-        this.child.stdout!.on('data', (data) => this.appendOutput(data));
-        this.child.stderr!.on('data', (data) => this.appendOutput(data));
-        this.child.stdout!.on('end', () => this.emitLines(this.incompleteLineBuffer));
+        this.child.stdout!.on('data', (data) => this.processOutput(data));
+        this.child.stderr!.on('data', (data) => this.processOutput(data));
+        this.child.stdout!.on('end', () => this.flushCompleteLines(this.incompleteLineBuffer));
         this.child.on('error', (err: Error) => this.emitter.emit('error', err));
         this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
     }
 
-    private appendOutput(data: string) {
+    private processOutput(data: string) {
         const out = data.toString();
         this.output += out;
         this.incompleteLineBuffer += out;
-        const lines = this.emitLines(this.incompleteLineBuffer, 1);
+        const lines = this.flushCompleteLines(this.incompleteLineBuffer, 1);
         this.incompleteLineBuffer = lines.shift()!;
     };
 
-    private emitLines(buffer: string, limit = 0) {
+    private flushCompleteLines(buffer: string, limit = 0) {
         const lines = buffer.split(/\r\n|\n/);
         while (lines.length > limit) {
             this.emitter.emit('line', lines.shift()!);

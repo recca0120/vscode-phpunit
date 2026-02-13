@@ -6,7 +6,7 @@ import { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
 import { Parser } from './Parser';
 import { PestParser } from './PestParser';
-import { PHPDefinition } from './PHPDefinition';
+import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 import { PHPUnitParser } from './PHPUnitParser';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -58,7 +58,7 @@ export class TestParser {
     }
 
     private parseAst(declaration: Declaration | Node, file: string, testsuite?: string): TestDefinition[] | undefined {
-        const definition = new PHPDefinition(declaration, { phpUnitXML: this.phpUnitXML, file });
+        const definition = new PhpAstNodeWrapper(declaration, { phpUnitXML: this.phpUnitXML, file });
 
         for (const parser of this.parsers) {
             const tests = parser.parse(definition);
