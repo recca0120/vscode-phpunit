@@ -190,7 +190,7 @@ describe('Extension Test', () => {
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-file', expect.any(Function));
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.run-test-at-cursor', expect.any(Function));
                 expect(commands.registerCommand).toHaveBeenCalledWith('phpunit.rerun', expect.any(Function));
-                expect(context.subscriptions.push).toHaveBeenCalledTimes(11);
+                expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
             });
 
             it('should only update configuration when phpunit settings change', async () => {
