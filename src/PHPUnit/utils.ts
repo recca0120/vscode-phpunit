@@ -4,40 +4,47 @@ import * as yargsParser from 'yargs-parser';
 import { Teamcity } from './types';
 
 class EscapeValue {
-    private values = {
-        escape: ['||', '|\'', '|n', '|r', '|]', '|['],
-        unescape: ['|', '\'', '\n', '\r', ']', '['],
-    };
+    private readonly mappings: ReadonlyArray<readonly [string, string]> = [
+        ['||', '|'],
+        ['|\'', '\''],
+        ['|n', '\n'],
+        ['|r', '\r'],
+        ['|]', ']'],
+        ['|[', '['],
+    ];
 
-    private patterns: { unescape: RegExp[]; escape: RegExp[] };
+    private readonly escapePatterns: ReadonlyArray<readonly [RegExp, string]>;
+    private readonly unescapePatterns: ReadonlyArray<readonly [RegExp, string]>;
 
     constructor() {
-        this.patterns = {
-            escape: this.toRegExp(this.values.escape),
-            unescape: this.toRegExp(this.values.unescape),
-        };
+        this.escapePatterns = this.mappings.map(
+            ([escaped, unescaped]) => [this.toRegExp(unescaped), escaped] as const,
+        );
+        this.unescapePatterns = this.mappings.map(
+            ([escaped, unescaped]) => [this.toRegExp(escaped), unescaped] as const,
+        );
     }
 
     public escape(value: string | number | object) {
-        return this.change(value, this.patterns.unescape, this.values.escape);
+        return this.change(value, this.escapePatterns);
     }
 
     public unescape(value: string | number | object) {
-        return this.change(value, this.patterns.escape, this.values.unescape);
+        return this.change(value, this.unescapePatterns);
     }
 
     public escapeSingleQuote(value: string | number | object) {
-        return this.change(value, [new RegExp('\\|\'', 'g')], ['%%%SINGLE_QUOTE%%%']);
+        return this.change(value, [[new RegExp('\\|\'', 'g'), '%%%SINGLE_QUOTE%%%']]);
     }
 
     public unescapeSingleQuote(value: string | number | object) {
-        return this.change(value, [new RegExp('%%%SINGLE_QUOTE%%%', 'g')], ['\'']);
+        return this.change(value, [[new RegExp('%%%SINGLE_QUOTE%%%', 'g'), '\'']]);
     }
 
-    private change(value: string | number | any, from: RegExp[], to: string[]) {
+    private change(value: string | number | any, replacements: ReadonlyArray<readonly [RegExp, string]>) {
         if (typeof value === 'object') {
             for (const x in value) {
-                value[x] = this.change(value[x], from, to);
+                value[x] = this.change(value[x], replacements);
             }
 
             return value;
@@ -47,19 +54,15 @@ class EscapeValue {
             return value;
         }
 
-        for (const x in from) {
-            value = value.replace(from[x], to[x]);
+        for (const [pattern, replacement] of replacements) {
+            value = value.replace(pattern, replacement);
         }
 
         return value;
     }
 
-    private toRegExp(values: string[]) {
-        return values.map((str) => {
-            str = str.replace(/([|\]\[])/g, (m) => `\\${m}`);
-
-            return new RegExp(str, 'g');
-        });
+    private toRegExp(str: string) {
+        return new RegExp(str.replace(/([|\]\[])/g, (m) => `\\${m}`), 'g');
     }
 }
 

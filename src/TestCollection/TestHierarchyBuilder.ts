@@ -39,7 +39,7 @@ export class TestHierarchyBuilder {
     };
     private ancestorDepth = 1;
     private readonly ancestors: [{ item: TestItem, type: TestType, children: TestItem[] }] = [
-        { item: this.createProxyTestController(), type: TestType.namespace, children: [] },
+        { item: this.createRootItem(), type: TestType.namespace, children: [] },
     ];
     private testData = new CustomWeakMap<TestItem, TestCase>();
 
@@ -166,12 +166,8 @@ export class TestHierarchyBuilder {
         );
     }
 
-    private createProxyTestController() {
-        return new Proxy(this.ctrl, {
-            get(target: any, prop) {
-                return prop === 'children' ? target.items : target[prop];
-            },
-        }) as TestItem;
+    private createRootItem(): TestItem {
+        return { children: this.ctrl.items } as TestItem;
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {

@@ -1,28 +1,29 @@
-import { rm } from 'node:fs/promises';
-import { dirname } from 'node:path';
 import {
-    CancellationToken, debug, OutputChannel, TestController, TestItem, TestItemCollection, TestRun, TestRunRequest,
+    CancellationToken, debug, TestController, TestItem, TestRun, TestRunRequest,
     workspace,
 } from 'vscode';
-import { CloverParser } from './CloverParser';
+import { CoverageCollector } from './CoverageCollector';
 import { Configuration } from './Configuration';
-import { OutputChannelObserver, Printer, TestResultObserver } from './Observers';
-import { MessageObserver } from './Observers/MessageObserver';
-import { ProcessBuilder, PHPUnitXML, TestRunner, TestRunnerEvent, TestType } from './PHPUnit';
+import { ProcessBuilder, PHPUnitXML, TestRunner, TestRunnerEvent } from './PHPUnit';
 import { Mode, Xdebug } from './PHPUnit/ProcessBuilder/Xdebug';
-import { TestCase, TestCollection } from './TestCollection';
+import { TestCollection } from './TestCollection';
+import { TestDiscovery } from './TestDiscovery';
+import { TestRunnerFactory } from './TestRunnerFactory';
 
 export class Handler {
     private previousRequest: TestRunRequest | undefined;
+    private testDiscovery: TestDiscovery;
+    private coverageCollector = new CoverageCollector();
 
     constructor(
         private ctrl: TestController,
         private phpUnitXML: PHPUnitXML,
         private configuration: Configuration,
         private testCollection: TestCollection,
-        private outputChannel: OutputChannel,
-        private printer: Printer,
-    ) { }
+        private testRunnerFactory: TestRunnerFactory,
+    ) {
+        this.testDiscovery = new TestDiscovery(testCollection);
+    }
 
     getPreviousRequest() {
         return this.previousRequest;
@@ -58,14 +59,13 @@ export class Handler {
         const request = new TestRunRequest();
         const testRun = this.ctrl.createTestRun(request);
 
-        const runner = new TestRunner();
-        const queue = await this.discoverTests(this.gatherTestItems(this.ctrl.items), request);
+        const queue = await this.testDiscovery.discover(
+            this.testDiscovery.gatherTestItems(this.ctrl.items),
+            request,
+        );
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
-        runner.observe(new TestResultObserver(queue, testRun));
-        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, this.printer, request));
-        runner.observe(new MessageObserver(this.configuration));
-
+        const runner = this.testRunnerFactory.create(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
         const process = runner.run(builder);
@@ -77,29 +77,23 @@ export class Handler {
     }
 
     private async runTestQueue(builder: ProcessBuilder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
-        const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request);
+        const queue = await this.testDiscovery.discover(
+            request.include ?? this.testDiscovery.gatherTestItems(this.ctrl.items),
+            request,
+        );
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
-        const runner = this.createTestRunner(queue, testRun, request);
+        const runner = this.testRunnerFactory.create(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
         const processes = this.createProcesses(runner, builder, request);
         cancellation?.onCancellationRequested(() => processes.forEach((process) => process.abort()));
 
         await Promise.all(processes.map((process) => process.run()));
-        await this.collectCoverage(processes, testRun);
+        await this.coverageCollector.collect(processes, testRun);
 
         runner.emit(TestRunnerEvent.done, undefined);
     };
-
-    private createTestRunner(queue: Map<TestCase, TestItem>, testRun: TestRun, request: TestRunRequest) {
-        const runner = new TestRunner();
-        runner.observe(new TestResultObserver(queue, testRun));
-        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, this.printer, request));
-        runner.observe(new MessageObserver(this.configuration));
-
-        return runner;
-    }
 
     private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
         if (!request.include) {
@@ -110,47 +104,5 @@ export class Handler {
             .map((testItem) => this.testCollection.getTestCase(testItem)!)
             .map((testCase, index) => testCase.update(builder, index))
             .map((builder) => runner.run(builder));
-    }
-
-    private async collectCoverage(processes: ReturnType<TestRunner['run']>[], testRun: TestRun) {
-        const cloverFiles = processes
-            .map((process) => process.getCloverFile())
-            .filter((file): file is string => !!file);
-
-        await Promise.all(
-            cloverFiles.map(async (file) => {
-                (await CloverParser.parseClover(file)).forEach(coverage => {
-                    testRun.addCoverage(coverage);
-                });
-            }),
-        );
-
-        if (cloverFiles.length > 0) {
-            await rm(dirname(cloverFiles[0]), { recursive: true, force: true });
-        }
-    }
-
-    private async discoverTests(tests: Iterable<TestItem>, request: TestRunRequest, queue = new Map<TestCase, TestItem>()) {
-        for (const testItem of tests) {
-            if (request.exclude?.includes(testItem)) {
-                continue;
-            }
-
-            const testCase = this.testCollection.getTestCase(testItem);
-            if (testCase?.type === TestType.method) {
-                queue.set(testCase, testItem);
-            } else {
-                await this.discoverTests(this.gatherTestItems(testItem.children), request, queue);
-            }
-        }
-
-        return queue;
-    };
-
-    private gatherTestItems(collection: TestItemCollection) {
-        const testItems: TestItem[] = [];
-        collection.forEach((testItem) => testItems.push(testItem));
-
-        return testItems;
     }
 }
