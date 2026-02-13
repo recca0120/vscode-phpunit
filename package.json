@@ -172,8 +172,8 @@
     "lint:fix": "biome check --write src",
     "format": "biome format --write src",
     "test": "node ./out/test/runTest.js",
-    "jest": "vitest run",
-    "jest:watch": "vitest",
+    "vitest": "vitest run",
+    "vitest:watch": "vitest",
     "download-api": "npx vscode-dts main && npx vscode-dts dev",
     "postinstall": "npm run download-api"
   },

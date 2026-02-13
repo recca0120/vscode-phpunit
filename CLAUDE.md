@@ -9,9 +9,9 @@ VS Code extension for PHPUnit/Pest test integration. TypeScript project with two
 ## Quick Commands
 
 ```bash
-npm run jest                                          # Run all unit tests
-npm run jest -- --testPathPattern='<pattern>' --no-coverage  # Run specific test
-npm run jest:watch                                    # Watch mode
+npm run vitest                                        # Run all unit tests
+npm run vitest -- --testPathPattern='<pattern>' --no-coverage  # Run specific test
+npm run vitest:watch                                  # Watch mode
 npm run lint                                          # Biome lint check
 npm run lint:fix                                      # Biome lint + auto-fix
 npm run format                                        # Biome format
@@ -29,7 +29,7 @@ npm run compile                                       # Type check + esbuild
 ## Architecture Rules
 
 - `src/PHPUnit/` must NOT import from `vscode`. Keep it framework-agnostic.
-- `src/TestCollection/`, `src/Observers/`, `src/Handler.ts` can import from both `vscode` and `src/PHPUnit/`.
+- `src/TestCollection/`, `src/Observers/`, `src/TestExecution/`, `src/TestDiscovery/`, `src/Commands/`, `src/Coverage/` can import from both `vscode` and `src/PHPUnit/`.
 - Observer pattern for test run events. ProcessBuilder pattern for process construction.
 
 ## TDD Workflow
@@ -54,4 +54,4 @@ npm run compile                                       # Type check + esbuild
 | Test Explorer UI changes | `src/TestCollection/TestHierarchyBuilder.ts` |
 | Output formatting | `src/Observers/Printers/` |
 | Path mapping (Docker/SSH) | `src/PHPUnit/ProcessBuilder/PathReplacer.ts` |
-| Coverage support | `src/CloverParser.ts`, `src/PHPUnit/ProcessBuilder/Xdebug.ts` |
+| Coverage support | `src/Coverage/CloverParser.ts`, `src/PHPUnit/ProcessBuilder/Xdebug.ts` |
