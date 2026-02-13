@@ -10,15 +10,16 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '.';
+import { TestResultCache } from './TestResultCache';
 
 export class ProblemMatcher {
-    private cache = new Map<string, TestResult>();
+    private cache = new TestResultCache();
 
     constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
 
     parse(input: string | Buffer): TestResult | undefined {
         let result = this.testResultParser.parse(input.toString());
-        result = PestV1Fixer.fixFlowId(this.cache, result);
+        result = PestV1Fixer.fixFlowId(this.cache.asMap(), result);
 
         if (!this.isDispatchable(result)) {
             return result;
@@ -48,30 +49,28 @@ export class ProblemMatcher {
     }
 
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
-        const buildCacheKey = this.buildCacheKey(testResult);
-        this.cache.set(buildCacheKey, testResult);
+        this.cache.set(testResult, testResult);
 
-        return this.cache.get(buildCacheKey);
+        return this.cache.get(testResult);
     }
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
-        const buildCacheKey = this.buildCacheKey(testResult);
-        const prevTestResult = this.cache.get(buildCacheKey) as TestFailed | TestIgnored;
+        const prevTestResult = this.cache.get(testResult) as TestFailed | TestIgnored;
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
-                this.cache,
-                PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
+                this.cache.asMap(),
+                PHPUnitFixer.fixNoTestStarted(this.cache.asMap(), testResult),
             );
         }
 
         if (prevTestResult.event === TeamcityEvent.testStarted) {
-            this.cache.set(buildCacheKey, { ...prevTestResult, ...testResult });
+            this.cache.set(testResult, { ...prevTestResult, ...testResult });
             return undefined;
         }
 
         this.mergeFaultDetails(prevTestResult, testResult);
-        this.cache.set(buildCacheKey, prevTestResult);
+        this.cache.set(testResult, prevTestResult);
 
         return undefined;
     }
@@ -84,33 +83,19 @@ export class ProblemMatcher {
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {
-        const buildCacheKey = this.buildCacheKey(testResult);
-
-        if (!this.cache.has(buildCacheKey)) {
+        if (!this.cache.has(testResult)) {
             return;
         }
 
-        const prevTestResult = this.cache.get(buildCacheKey)!;
+        const prevTestResult = this.cache.get(testResult)!;
         const event = this.isFault(prevTestResult) ? prevTestResult.event : testResult.event;
         const result = { ...prevTestResult, ...testResult, event };
-        this.cache.delete(buildCacheKey);
+        this.cache.delete(testResult);
 
         return result;
     }
 
     private isFault(testResult: TestResult) {
         return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
-    }
-
-    private buildCacheKey(
-        testResult:
-            | TestSuiteStarted
-            | TestStarted
-            | TestFailed
-            | TestIgnored
-            | TestSuiteFinished
-            | TestFinished,
-    ) {
-        return `${testResult.name}-${testResult.flowId}`;
     }
 }

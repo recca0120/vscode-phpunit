@@ -37,8 +37,7 @@ describe('TestCollection', () => {
             collection
                 .items()
                 .get(testsuite)
-                ?.items()
-                .forEach((item) => actual.push(...item));
+                ?.forEach((tests) => actual.push(...tests));
             expect(actual).toEqual(expected);
         }
     };

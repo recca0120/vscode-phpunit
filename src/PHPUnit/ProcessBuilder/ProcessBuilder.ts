@@ -3,6 +3,7 @@ import parseArgsStringToArgv from 'string-argv';
 import { Configuration, type IConfiguration } from '../Configuration';
 import type { TestResult } from '../ProblemMatcher';
 import { cloneInstance } from '../utils';
+import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
 import { type Path, PathReplacer } from './PathReplacer';
 import type { Xdebug } from './Xdebug';
 
@@ -85,7 +86,7 @@ export class ProcessBuilder {
         command = this.removeEmptyPhpArgs(command, args);
         command = this.substituteVariables(command, args);
 
-        return this.base64DecodeFilter(parseArgsStringToArgv(command), isRemoteCommand);
+        return base64DecodeFilter(parseArgsStringToArgv(command), isRemoteCommand);
     }
 
     private ensureVariablePlaceholders(
@@ -161,7 +162,7 @@ export class ProcessBuilder {
             .map((arg: string) => (/^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg)))
             .concat('--colors=never', '--teamcity');
 
-        return this.base64EncodeFilter(this.addParaTestFunctional(args))
+        return base64EncodeFilter(this.addParaTestFunctional(args))
             .concat(...(this.xdebug?.getPhpUnitArgs() ?? []))
             .join(' ');
     }
@@ -182,32 +183,6 @@ export class ProcessBuilder {
         configuration: IConfiguration,
     ): PathReplacer {
         return new PathReplacer(options, configuration.get('paths') as Path);
-    }
-
-    private base64EncodeFilter(args: string[]) {
-        return args.map((input) => {
-            const pattern = /^(--filter)=(.*)/;
-
-            return input.replace(pattern, (_m, ...matched) => {
-                const value = Buffer.from(matched[1], 'utf-8').toString('base64');
-
-                return `${matched[0]}='${value}'`;
-            });
-        });
-    }
-
-    private base64DecodeFilter(args: string[], needsQuote: boolean) {
-        return args.map((input) => {
-            const pattern = /(--filter)=["'](.+)?["']/;
-
-            return input.replace(pattern, (_m, ...matched) => {
-                const value = Buffer.from(matched[1], 'base64').toString('utf-8');
-                const quote = value.includes("'") ? '"' : "'";
-                const filter = `${matched[0]}=${value}`;
-
-                return needsQuote ? `${quote}${filter}${quote}` : filter;
-            });
-        });
     }
 
     private hasVariable(variables: { [p: string]: string }, command: string) {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { Files, PHPUnitXML, type TestDefinition, TestDefinitions, TestParser } from '../PHPUnit';
+import { PHPUnitXML, type TestDefinition, TestParser } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestCollection } from './TestCollection';
 
@@ -32,21 +32,9 @@ describe('Extension TestCollection', () => {
 
     const shouldBe = async (
         _collection: TestCollection,
-        testsuites: Record<string, import('vscode-uri').URI[]>,
+        _testsuites: Record<string, import('vscode-uri').URI[]>,
     ) => {
-        const phpUnitXML = new PHPUnitXML();
-        phpUnitXML.setRoot(phpUnitProject(''));
-        const testParser = new TestParser(phpUnitXML);
-        const expected = new Files<TestDefinition[]>();
-        for (const [name, files] of Object.entries(testsuites)) {
-            const tests = new TestDefinitions<TestDefinition[]>();
-            for (const uri of files as URI[]) {
-                tests.set(uri, (await testParser.parseFile(uri.fsPath)) ?? []);
-            }
-            expected.set(name, tests);
-        }
-
-        // expect(_collection.items()).toEqual(expected);
+        // Assertion was previously commented out; kept as placeholder
     };
 
     beforeEach(() => {

@@ -13,6 +13,7 @@ import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
+    private testCaseIndex = new Map<string, TestCase>();
 
     constructor(
         private ctrl: TestController,
@@ -22,18 +23,11 @@ export class TestCollection extends BaseTestCollection {
     }
 
     getTestCase(testItem: TestItem): TestCase | undefined {
-        for (const [, testData] of this.getTestData()) {
-            const testCase = testData.get(testItem);
-            if (testCase) {
-                return testCase;
-            }
-        }
-
-        return;
+        return this.testCaseIndex.get(testItem.id);
     }
 
     findTestsByFile(uri: URI): TestItem[] {
-        const tests = [] as TestItem[];
+        const tests: TestItem[] = [];
         for (const [testItem, testCase] of this.getTestCases(uri)) {
             if (testCase.type === TestType.class) {
                 tests.push(testItem);
@@ -54,15 +48,13 @@ export class TestCollection extends BaseTestCollection {
             return undefined;
         }
 
-        const include = request.include;
+        const includeIds = new Set(request.include.map((item) => item.id));
         const tests: TestItem[] = [];
         for (const [, testData] of this.getTestData()) {
             testData.forEach((_, testItem: TestItem) => {
-                include.forEach((requestedItem) => {
-                    if (requestedItem.id === testItem.id) {
-                        tests.push(testItem);
-                    }
-                });
+                if (includeIds.has(testItem.id)) {
+                    tests.push(testItem);
+                }
             });
         }
 
@@ -77,6 +69,7 @@ export class TestCollection extends BaseTestCollection {
                     : this.ctrl.items.delete(testItem.id);
             }
         }
+        this.testCaseIndex.clear();
 
         return super.reset();
     }
@@ -91,6 +84,7 @@ export class TestCollection extends BaseTestCollection {
         testData.clear();
         for (const [testItem, testCase] of testHierarchyBuilder.get()) {
             testData.set(testItem, testCase);
+            this.testCaseIndex.set(testItem.id, testCase);
         }
 
         return testDefinitionBuilder.get();

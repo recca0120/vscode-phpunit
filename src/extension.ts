@@ -1,9 +1,13 @@
 import 'reflect-metadata';
+import type { Container } from 'inversify';
 import {
     type EventEmitter,
     type ExtensionContext,
     extensions,
     languages,
+    type OutputChannel,
+    type TestController,
+    type TestRunProfile,
     TestRunProfileKind,
     tests,
     type Uri,
@@ -26,8 +30,6 @@ export async function activate(context: ExtensionContext) {
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
     const container = createContainer(ctrl, outputChannel);
 
-    const configuration = container.get<Configuration>(TYPES.configuration);
-    const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
     const testFileDiscovery = container.get<TestFileDiscovery>(TYPES.testFileDiscovery);
     const testFileWatcher = container.get<TestFileWatcher>(TYPES.testFileWatcher);
     const testWatchManager = container.get<TestWatchManager>(TYPES.testWatchManager);
@@ -55,8 +57,15 @@ export async function activate(context: ExtensionContext) {
         }
     };
 
-    // Run profiles
+    // Run profiles, commands, and disposables
+    const testRunProfile = createRunProfiles(ctrl, testWatchManager);
+    registerCommands(context, testCommandRegistry, testRunProfile);
+    registerDisposables(context, ctrl, outputChannel, container);
+}
+
+function createRunProfiles(ctrl: TestController, testWatchManager: TestWatchManager) {
     const runHandler = testWatchManager.createRunHandler();
+
     const testRunProfile = ctrl.createRunProfile(
         'Run Tests',
         TestRunProfileKind.Run,
@@ -89,17 +98,33 @@ export async function activate(context: ExtensionContext) {
         return (<PHPUnitFileCoverage>coverage).generateDetailedCoverage();
     };
 
-    // Commands
+    return testRunProfile;
+}
+
+function registerCommands(
+    context: ExtensionContext,
+    testCommandRegistry: TestCommandRegistry,
+    testRunProfile: TestRunProfile,
+) {
     testCommandRegistry.setTestRunProfile(testRunProfile);
     context.subscriptions.push(testCommandRegistry.reload());
     context.subscriptions.push(testCommandRegistry.runAll());
     context.subscriptions.push(testCommandRegistry.runFile());
     context.subscriptions.push(testCommandRegistry.runTestAtCursor());
     context.subscriptions.push(testCommandRegistry.rerun());
+}
+
+function registerDisposables(
+    context: ExtensionContext,
+    ctrl: TestController,
+    outputChannel: OutputChannel,
+    container: Container,
+) {
+    const configuration = container.get<Configuration>(TYPES.configuration);
+    const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.fileChangedEmitter);
 
     context.subscriptions.push(commandHandler.runByGroup(handler));
 
-    // Disposables
     context.subscriptions.push(
         ctrl,
         outputChannel,

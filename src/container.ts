@@ -21,6 +21,14 @@ export function createContainer(ctrl: TestController, outputChannel: OutputChann
     container.bind(TYPES.testController).toConstantValue(ctrl);
     container.bind(TYPES.outputChannel).toConstantValue(outputChannel);
 
+    bindCoreServices(container);
+    bindObservers(container);
+    bindTestServices(container);
+
+    return container;
+}
+
+function bindCoreServices(container: Container) {
     container
         .bind(TYPES.phpUnitXML)
         .toDynamicValue(() => new PHPUnitXML())
@@ -37,20 +45,15 @@ export function createContainer(ctrl: TestController, outputChannel: OutputChann
         .inSingletonScope();
 
     container
-        .bind(TYPES.outputFormatter)
-        .toDynamicValue((ctx) => new CollisionPrinter(ctx.get(TYPES.phpUnitXML)))
-        .inSingletonScope();
-
-    container
-        .bind(TYPES.testCollection)
-        .toDynamicValue(
-            (ctx) => new TestCollection(ctx.get(TYPES.testController), ctx.get(TYPES.phpUnitXML)),
-        )
-        .inSingletonScope();
-
-    container
         .bind(TYPES.phpUnitLinkProvider)
         .toDynamicValue((ctx) => new PHPUnitLinkProvider(ctx.get(TYPES.phpUnitXML)))
+        .inSingletonScope();
+}
+
+function bindObservers(container: Container) {
+    container
+        .bind(TYPES.outputFormatter)
+        .toDynamicValue((ctx) => new CollisionPrinter(ctx.get(TYPES.phpUnitXML)))
         .inSingletonScope();
 
     container
@@ -67,6 +70,15 @@ export function createContainer(ctrl: TestController, outputChannel: OutputChann
                     ctx.get(TYPES.configuration),
                     ctx.get(TYPES.outputFormatter),
                 ),
+        )
+        .inSingletonScope();
+}
+
+function bindTestServices(container: Container) {
+    container
+        .bind(TYPES.testCollection)
+        .toDynamicValue(
+            (ctx) => new TestCollection(ctx.get(TYPES.testController), ctx.get(TYPES.phpUnitXML)),
         )
         .inSingletonScope();
 
@@ -154,6 +166,4 @@ export function createContainer(ctrl: TestController, outputChannel: OutputChann
                 ),
         )
         .inSingletonScope();
-
-    return container;
 }
