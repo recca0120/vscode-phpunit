@@ -55,13 +55,13 @@ export class TestResultObserver implements TestRunnerObserver {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
-            const current = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
-            const line = current ? current.line - 1 : test.range!.start.line;
+            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
+            const line = matchingDetail ? matchingDetail.line - 1 : test.range!.start.line;
 
             message.location = new Location(test.uri!, new Range(new Position(line, 0), new Position(line, 0)));
 
             message.stackTrace = details
-                .filter(({ file, line }) => file.endsWith(result.file ?? '') && line !== current.line)
+                .filter(({ file, line }) => file.endsWith(result.file ?? '') && line !== matchingDetail.line)
                 .map(({ file, line }) => new TestMessageStackFrame(
                     `${file}:${line}`, URI.file(file), new Position(line, 0),
                 ));
@@ -70,13 +70,13 @@ export class TestResultObserver implements TestRunnerObserver {
         return message;
     }
 
-    private doRun(result: TestResult, callback: (test: TestItem) => void) {
-        const test = this.find(result);
-        if (!test) {
+    private doRun(result: TestResult, updateTestRun: (testItem: TestItem) => void) {
+        const testItem = this.find(result);
+        if (!testItem) {
             return;
         }
 
-        callback(test);
+        updateTestRun(testItem);
     }
 
     private find(result: TestResult) {
