@@ -33,7 +33,7 @@ src/
 ├── PHPUnit/                  # Core logic (framework-agnostic, no VS Code dependency)
 │   ├── Configuration.ts      # Base configuration interface (IConfiguration) and default implementation
 │   ├── PHPUnitXML.ts         # Parses phpunit.xml to determine test directories and patterns
-│   ├── Element.ts            # XML element wrapper using fast-xml-parser
+│   ├── Element.ts            # XmlElement wrapper using fast-xml-parser
 │   ├── TestRunner.ts         # Spawns PHPUnit process, emits events (TestRunner + TestRunnerProcess)
 │   ├── TestRunnerObserver.ts # Event types, observer interface, and TestRunnerEventProxy
 │   ├── types.ts              # Core types: TestType, TestDefinition, Position, Annotations
@@ -89,13 +89,13 @@ src/
 `ProcessBuilder` constructs the PHPUnit command with fluent API: configuration -> path replacement -> xdebug -> filter arguments.
 
 ### Strategy Pattern
-`FilterStrategy` / `FilterStrategyFactory` generates different `--filter` regex patterns based on test type (PHPUnit class, method, Pest test/describe).
+`FilterStrategy` / `FilterStrategyFactory.create()` generates different `--filter` regex patterns based on test type (PHPUnit class, method, Pest test/describe).
 
 ### Event Emitter Pattern
 `TestParser` emits events per test type (namespace, class, describe, method) during parsing. `TestHierarchyBuilder` subscribes to build the VS Code test tree.
 
 ### Transformer Pattern
-`TransformerFactory` creates the appropriate transformer (PHPUnit vs Pest) for generating unique test IDs and labels. Fixers handle edge cases in teamcity output.
+`TransformerFactory.create()` creates the appropriate transformer (PHPUnit vs Pest) for generating unique test IDs and labels. Fixers handle edge cases in teamcity output.
 
 ## Two-Layer Architecture
 
