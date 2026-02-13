@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { rm } from 'node:fs/promises';
 import { TestRun } from 'vscode';
 import { CloverParser } from './CloverParser';

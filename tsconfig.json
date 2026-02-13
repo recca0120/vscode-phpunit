@@ -29,6 +29,7 @@
     "**/__mocks__/*",
     "**/__tests__/fixtures/**/*",
     "**/*.test.[tj]s?(x)",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "esbuild.mjs"
   ]
 }

@@ -1,3 +1,4 @@
+import { describe, expect, it, test, vi } from 'vitest';
 import { TestRunnerEvent, TestRunnerObserver, TestRunnerEventProxy, EventResultMap } from './TestRunnerObserver';
 import { TeamcityEvent } from './ProblemMatcher';
 
@@ -113,7 +114,7 @@ describe('TestRunnerObserver', () => {
             const callback = vi.fn();
 
             proxy.on(TeamcityEvent.testFailed, callback);
-            const fakeResult = { event: TeamcityEvent.testFailed, name: 'test', flowId: 1 };
+            const fakeResult = { event: TeamcityEvent.testFailed, name: 'test', flowId: 1 } as any;
             proxy[TeamcityEvent.testFailed](fakeResult);
 
             expect(callback).toHaveBeenCalledWith(fakeResult);

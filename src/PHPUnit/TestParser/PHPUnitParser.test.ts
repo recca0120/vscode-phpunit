@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it, test } from 'vitest';
 import { readFile } from 'fs/promises';
 import { phpUnitProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';

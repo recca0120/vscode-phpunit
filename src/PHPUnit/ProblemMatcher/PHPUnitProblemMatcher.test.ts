@@ -1,3 +1,4 @@
+import { describe, expect, it, test } from 'vitest';
 import { TeamcityEvent } from '.';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { ProblemMatcher } from './ProblemMatcher';

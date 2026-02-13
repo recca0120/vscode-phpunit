@@ -1,3 +1,4 @@
+import { Mock, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
 import { TestType } from './PHPUnit';
 import { TestCase, TestCollection } from './TestCollection';
@@ -23,7 +24,7 @@ describe('TestQueueBuilder', () => {
     it('should discover method test items', async () => {
         const testItem = createTestItem('test1');
         const testCase = { type: TestType.method } as TestCase;
-        (testCollection.getTestCase as import('vitest').Mock).mockReturnValue(testCase);
+        (testCollection.getTestCase as Mock).mockReturnValue(testCase);
 
         const request = {} as TestRunRequest;
         const queue = await queueBuilder.build([testItem], request);
@@ -37,7 +38,7 @@ describe('TestQueueBuilder', () => {
         const parentItem = createTestItem('parent', [childItem]);
 
         const childCase = { type: TestType.method } as TestCase;
-        (testCollection.getTestCase as import('vitest').Mock)
+        (testCollection.getTestCase as Mock)
             .mockReturnValueOnce({ type: TestType.class })
             .mockReturnValueOnce(childCase);
 

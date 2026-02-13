@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, test } from 'vitest';
 import { TestController, tests } from 'vscode';
 import { PHPUnitXML, TestParser } from '../PHPUnit';
 import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';

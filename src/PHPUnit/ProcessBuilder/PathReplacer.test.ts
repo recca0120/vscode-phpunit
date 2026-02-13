@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { PathReplacer } from './PathReplacer';
 

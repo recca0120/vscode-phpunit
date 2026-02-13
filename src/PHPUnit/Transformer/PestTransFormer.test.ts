@@ -1,3 +1,4 @@
+import { describe, expect, it, test } from 'vitest';
 import { TestType } from '../types';
 import { PestV2Fixer } from './PestFixer';
 import { PestTransformer } from './PestTransformer';

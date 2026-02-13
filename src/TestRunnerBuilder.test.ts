@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from 'vitest';
 import { TestItem, TestRun, TestRunRequest } from 'vscode';
 import { ErrorDialogObserver, OutputChannelObserver } from './Observers';
 import { TestRunner } from './PHPUnit';

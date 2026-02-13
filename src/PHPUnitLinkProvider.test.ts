@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, test } from 'vitest';
 import { relative } from 'node:path';
 import { DocumentLink, Position, Range } from 'vscode';
 import { PHPUnitXML } from './PHPUnit';

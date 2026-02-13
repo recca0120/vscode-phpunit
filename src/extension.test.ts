@@ -1,3 +1,4 @@
+import { Mock, afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { glob, GlobOptions } from 'glob';
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -57,15 +58,15 @@ const globTextDocuments = (pattern: string, options?: GlobOptions) => {
 // };
 
 const getOutputChannel = () => {
-    return (window.createOutputChannel as import('vitest').Mock).mock.results[0].value;
+    return (window.createOutputChannel as Mock).mock.results[0].value;
 };
 
 const getTestController = () => {
-    return (tests.createTestController as import('vitest').Mock).mock.results[0].value;
+    return (tests.createTestController as Mock).mock.results[0].value;
 };
 
 const getRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) => {
-    const profile = (ctrl.createRunProfile as import('vitest').Mock).mock.results[0].value;
+    const profile = (ctrl.createRunProfile as Mock).mock.results[0].value;
     profile.kind = kind;
 
     return profile;
@@ -92,7 +93,7 @@ const findTest = (items: TestItemCollection, id: string): TestItem | undefined =
 // };
 
 const getTestRun = (ctrl: TestController) => {
-    return (ctrl.createTestRun as import('vitest').Mock).mock.results[0].value;
+    return (ctrl.createTestRun as Mock).mock.results[0].value;
 };
 
 const expectTestResultCalled = (ctrl: TestController, expected: any) => {
@@ -198,7 +199,7 @@ describe('Extension Test', () => {
             it('should only update configuration when phpunit settings change', async () => {
                 await activate(context);
 
-                const onDidChangeConfig = workspace.onDidChangeConfiguration as import('vitest').Mock;
+                const onDidChangeConfig = workspace.onDidChangeConfiguration as Mock;
                 const listenerCall = onDidChangeConfig.mock.calls.find(
                     (call: any[]) => typeof call[0] === 'function',
                 );
@@ -306,7 +307,7 @@ describe('Extension Test', () => {
                 expectTestResultCalled(ctrl, { enqueued: 1, started: 1, passed: 0, failed: 1, end: 1 });
 
                 const { failed } = getTestRun(ctrl);
-                const [, message] = (failed as import('vitest').Mock).mock.calls.find(([test]) => test.id === id);
+                const [, message] = (failed as Mock).mock.calls.find(([test]: any[]) => test.id === id)!;
 
                 expect(message.location).toEqual(expect.objectContaining({
                     range: {

@@ -1,7 +1,7 @@
 import { window } from 'vscode';
 import { Configuration, IConfiguration } from '../PHPUnit';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
-import { type Mock } from 'vitest';
+import { type Mock, afterAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 describe('ErrorDialogObserver', () => {
     let errorDialogObserver: ErrorDialogObserver;

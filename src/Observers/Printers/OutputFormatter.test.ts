@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { EOL, PHPUnitXML, TeamcityEvent, TestFinished } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { OutputFormatter } from './OutputFormatter';

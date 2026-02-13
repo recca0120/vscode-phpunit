@@ -1,3 +1,4 @@
+import { describe, expect, it, test } from 'vitest';
 import { pestProject } from '../__tests__/utils';
 import { ProblemMatcher } from './ProblemMatcher';
 import { TeamcityEvent } from './types';

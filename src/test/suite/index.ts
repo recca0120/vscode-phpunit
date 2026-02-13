@@ -1,5 +1,5 @@
 import * as glob from 'glob';
-import * as Mocha from 'mocha';
+import Mocha from 'mocha';
 import * as path from 'path';
 
 export function run(): Promise<void> {
@@ -19,7 +19,7 @@ export function run(): Promise<void> {
 
         try {
             // Run the mocha test
-            mocha.run((failures) => {
+            mocha.run((failures: number) => {
                 if (failures > 0) {
                     e(new Error(`${failures} tests failed.`));
                 } else {

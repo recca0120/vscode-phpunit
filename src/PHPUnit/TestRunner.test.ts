@@ -1,3 +1,4 @@
+import { Mock, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { spawn } from 'child_process';
 import * as semver from 'semver';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
@@ -16,7 +17,7 @@ vi.mock('child_process', async () => {
     return { ...actual, spawn: vi.fn(actual.spawn) };
 });
 
-const onTestRunnerEvents = new Map<TestRunnerEvent, import('vitest').Mock>([
+const onTestRunnerEvents = new Map<TestRunnerEvent, Mock>([
     [TestRunnerEvent.run, vi.fn()],
     [TestRunnerEvent.line, vi.fn()],
     [TestRunnerEvent.result, vi.fn()],
@@ -24,7 +25,7 @@ const onTestRunnerEvents = new Map<TestRunnerEvent, import('vitest').Mock>([
     [TestRunnerEvent.error, vi.fn()],
 ]);
 
-const onTestResultEvents = new Map<TeamcityEvent, import('vitest').Mock>([
+const onTestResultEvents = new Map<TeamcityEvent, Mock>([
     [TeamcityEvent.testVersion, vi.fn()],
     [TeamcityEvent.testRuntime, vi.fn()],
     [TeamcityEvent.testConfiguration, vi.fn()],
@@ -44,7 +45,7 @@ const fakeSpawn = (contents: string[]) => {
         contents.forEach((line) => fn(line + '\n'));
     });
 
-    (spawn as import('vitest').Mock).mockReturnValue({
+    (spawn as Mock).mockReturnValue({
         stdout: { on: stdout },
         stderr: { on: vi.fn() },
         on: vi.fn().mockImplementation((_event, callback: (data: number) => void) => {
@@ -77,24 +78,24 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     expect(actual).not.toBeUndefined();
 
     if (expected.event === TeamcityEvent.testFailed) {
-        if (hasFile(actual, 'AssertionsTest', 5)) {
+        if (hasFile(actual!, 'AssertionsTest', 5)) {
             expected.details = [{
                 file: projectPath('tests/AssertionsTest.php'),
                 line: 5,
             }, ...expected.details];
         }
 
-        if (hasFile(actual, 'phpunit', 60)) {
+        if (hasFile(actual!, 'phpunit', 60)) {
             expected.details = [...expected.details, {
                 file: projectPath('vendor/phpunit/phpunit/phpunit'),
                 line: 60,
             }];
         }
-        expect(actual[0].details).toEqual(expected.details);
+        expect(actual![0].details).toEqual(expected.details);
     }
 
 
-    expect(actual[0]).toEqual(
+    expect(actual![0]).toEqual(
         expect.objectContaining({ ...expected, locationHint }),
     );
     expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
@@ -174,7 +175,7 @@ const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
     onTestRunnerEvents.forEach((fn, eventName) => testRunner.on(eventName, (test: any) => fn(test)));
     await testRunner.run(builder).run();
 
-    const call = (spawn as import('vitest').Mock).mock.calls[0];
+    const call = (spawn as Mock).mock.calls[0];
     expect([call[0], ...call[1]]).toEqual(expected);
 };
 

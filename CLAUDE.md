@@ -13,7 +13,8 @@ npm run jest                                          # Run all unit tests
 npm run jest -- --testPathPattern='<pattern>' --no-coverage  # Run specific test
 npm run jest:watch                                    # Watch mode
 npm run lint                                          # ESLint check
-npm run compile                                       # Webpack build
+npm run typecheck                                     # Type check (tsc --noEmit)
+npm run compile                                       # Type check + esbuild
 ```
 
 ## Code Style

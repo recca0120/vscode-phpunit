@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from './__tests__/utils';

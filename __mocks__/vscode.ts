@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { readFile } from 'node:fs/promises';

@@ -1,3 +1,4 @@
+import { Mock, beforeEach, describe, expect, it } from 'vitest';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { OutputChannel, TestRunRequest } from 'vscode';
@@ -33,12 +34,12 @@ describe('OutputChannelObserver', () => {
     const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
     function getOutputChannel(): OutputChannel {
-        return (vscode.window.createOutputChannel as import('vitest').Mock).mock.results[0].value;
+        return (vscode.window.createOutputChannel as Mock).mock.results[0].value;
     }
 
     function debug(outputChannel: OutputChannel) {
-        console.log((outputChannel.appendLine as import('vitest').Mock).mock.calls);
-        console.log((outputChannel.append as import('vitest').Mock).mock.calls);
+        console.log((outputChannel.appendLine as Mock).mock.calls);
+        console.log((outputChannel.append as Mock).mock.calls);
     }
 
     async function run(file?: string, filter?: string) {

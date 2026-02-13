@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { Files, PHPUnitXML, TestDefinition, TestDefinitions, TestParser } from '../PHPUnit';

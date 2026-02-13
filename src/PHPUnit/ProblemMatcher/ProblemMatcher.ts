@@ -35,6 +35,8 @@ export class ProblemMatcher {
             case TeamcityEvent.testSuiteFinished:
             case TeamcityEvent.testFinished:
                 return this.handleFinished(result as TestSuiteFinished | TestFinished);
+            default:
+                return undefined;
         }
     }
 
