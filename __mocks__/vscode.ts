@@ -14,7 +14,7 @@ enum TestRunProfileKind {
     Coverage = 3,
 }
 
-const TestRunRequest = vi.fn().mockImplementation((include: any) => {
+const TestRunRequest = vi.fn().mockImplementation(function (include: any) {
     return {
         include,
     };
@@ -161,11 +161,11 @@ class Disposable {
     dispose = (): any => vi.fn();
 }
 
-const Location = vi.fn().mockImplementation((uri: URI, rangeOrPosition: any) => {
+const Location = vi.fn().mockImplementation(function (uri: URI, rangeOrPosition: any) {
     return { uri, range: rangeOrPosition };
 });
 
-const Range = vi.fn().mockImplementation((start: any, end: any) => {
+const Range = vi.fn().mockImplementation(function (start: any, end: any) {
     return { start, end };
 });
 
@@ -177,11 +177,11 @@ class Position {
     }
 }
 
-const DocumentLink = vi.fn().mockImplementation((range: Range, target?: URI) => {
+const DocumentLink = vi.fn().mockImplementation(function (range: Range, target?: URI) {
     return { range, target };
 });
 
-const CancellationTokenSource = vi.fn().mockImplementation(() => {
+const CancellationTokenSource = vi.fn().mockImplementation(function () {
     return {
         token: { isCancellationRequested: false, onCancellationRequested: vi.fn() },
         cancel: vi.fn(),
@@ -277,7 +277,7 @@ const languages = {
 
 const RelativePattern = vi
     .fn()
-    .mockImplementation((workspaceFolder: WorkspaceFolder | URI | string, pattern: string) => {
+    .mockImplementation(function (workspaceFolder: WorkspaceFolder | URI | string, pattern: string) {
         if (typeof workspaceFolder === 'string') {
             workspaceFolder = URI.file(workspaceFolder);
         }
@@ -312,7 +312,7 @@ const commands = (function () {
     };
 })();
 
-const EventEmitter = vi.fn().mockImplementation(() => {
+const EventEmitter = vi.fn().mockImplementation(function () {
     return {
         fire: vi.fn(),
         event: vi.fn(),
