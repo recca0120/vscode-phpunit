@@ -1,12 +1,15 @@
 import { Container } from 'inversify';
 import { EventEmitter, OutputChannel, TestController, Uri, workspace } from 'vscode';
 import { Configuration } from './Configuration';
+import { ContinuousTestRunner } from './ContinuousTestRunner';
 import { Handler } from './Handler';
 import { CollisionPrinter } from './Observers';
 import { PHPUnitXML } from './PHPUnit';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
 import { TestCollection } from './TestCollection';
 import { TestCommandRegistry } from './TestCommandRegistry';
+import { TestFileDiscovery } from './TestFileDiscovery';
+import { TestFileWatcher } from './TestFileWatcher';
 import { TestRunnerFactory } from './TestRunnerFactory';
 import { TYPES } from './types';
 
@@ -63,6 +66,30 @@ export function createContainer(
 
     container.bind(TYPES.testCommandRegistry).toDynamicValue((ctx) =>
         new TestCommandRegistry(ctx.get(TYPES.testCollection)),
+    ).inSingletonScope();
+
+    container.bind(TYPES.testFileDiscovery).toDynamicValue((ctx) =>
+        new TestFileDiscovery(
+            ctx.get(TYPES.configuration),
+            ctx.get(TYPES.phpUnitXML),
+            ctx.get(TYPES.testCollection),
+        ),
+    ).inSingletonScope();
+
+    container.bind(TYPES.testFileWatcher).toDynamicValue((ctx) =>
+        new TestFileWatcher(
+            ctx.get(TYPES.testFileDiscovery),
+            ctx.get(TYPES.testCollection),
+            ctx.get(TYPES.fileChangedEmitter),
+        ),
+    ).inSingletonScope();
+
+    container.bind(TYPES.continuousTestRunner).toDynamicValue((ctx) =>
+        new ContinuousTestRunner(
+            ctx.get(TYPES.handler),
+            ctx.get(TYPES.testCollection),
+            ctx.get(TYPES.fileChangedEmitter),
+        ),
     ).inSingletonScope();
 
     return container;

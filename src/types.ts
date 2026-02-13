@@ -10,4 +10,7 @@ export const TYPES = {
     phpUnitLinkProvider: Symbol.for('PHPUnitLinkProvider'),
     testCommandRegistry: Symbol.for('TestCommandRegistry'),
     fileChangedEmitter: Symbol.for('FileChangedEmitter'),
+    testFileDiscovery: Symbol.for('TestFileDiscovery'),
+    testFileWatcher: Symbol.for('TestFileWatcher'),
+    continuousTestRunner: Symbol.for('ContinuousTestRunner'),
 };
