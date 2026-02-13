@@ -64,7 +64,7 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     const [classFQN, methodName] = expected.id.split('::');
     const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
     const type = !methodName ? TestType.class : TestType.method;
-    const converter = TransformerFactory.factory(classFQN);
+    const converter = TransformerFactory.create(classFQN);
     expected.id = converter.uniqueId({ type, classFQN, methodName });
 
     const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find((call: any) => {

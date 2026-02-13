@@ -16,7 +16,7 @@ export class TestCase {
     update(builder: ProcessBuilder, index: number) {
         return builder.clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))
-            .setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
+            .setArguments(FilterStrategyFactory.create(this.testDefinition).getFilter());
     }
 
     inRange = (test: TestItem, position: Position) => {

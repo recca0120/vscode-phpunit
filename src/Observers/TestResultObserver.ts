@@ -26,42 +26,42 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        this.doRun(result, (test) => this.testRun.started(test));
+        this.doRun(result, (testItem) => this.testRun.started(testItem));
     }
 
     testStarted(result: TestStarted): void {
-        this.doRun(result, (test) => this.testRun.started(test));
+        this.doRun(result, (testItem) => this.testRun.started(testItem));
     }
 
     testFinished(result: TestFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (testItem) => this.testRun.passed(testItem));
     }
 
     testFailed(result: TestFailed): void {
-        this.doRun(result, (test) =>
-            this.testRun.failed(test, this.message(result, test), result.duration),
+        this.doRun(result, (testItem) =>
+            this.testRun.failed(testItem, this.message(result, testItem), result.duration),
         );
     }
 
     testIgnored(result: TestIgnored): void {
-        this.doRun(result, (test) => this.testRun.skipped(test));
+        this.doRun(result, (testItem) => this.testRun.skipped(testItem));
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (testItem) => this.testRun.passed(testItem));
     }
 
-    private message(result: TestFailed | TestIgnored, test: TestItem) {
+    private message(result: TestFailed | TestIgnored, testItem: TestItem) {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
-            const current = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
-            const line = current ? current.line - 1 : test.range!.start.line;
+            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
+            const line = matchingDetail ? matchingDetail.line - 1 : testItem.range!.start.line;
 
-            message.location = new Location(test.uri!, new Range(new Position(line, 0), new Position(line, 0)));
+            message.location = new Location(testItem.uri!, new Range(new Position(line, 0), new Position(line, 0)));
 
             message.stackTrace = details
-                .filter(({ file, line }) => file.endsWith(result.file ?? '') && line !== current.line)
+                .filter(({ file, line }) => file.endsWith(result.file ?? '') && line !== matchingDetail.line)
                 .map(({ file, line }) => new TestMessageStackFrame(
                     `${file}:${line}`, URI.file(file), new Position(line, 0),
                 ));
@@ -70,13 +70,13 @@ export class TestResultObserver implements TestRunnerObserver {
         return message;
     }
 
-    private doRun(result: TestResult, callback: (test: TestItem) => void) {
-        const test = this.find(result);
-        if (!test) {
+    private doRun(result: TestResult, updateTestRun: (testItem: TestItem) => void) {
+        const testItem = this.find(result);
+        if (!testItem) {
             return;
         }
 
-        callback(test);
+        updateTestRun(testItem);
     }
 
     private find(result: TestResult) {

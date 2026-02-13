@@ -67,7 +67,7 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
 }
 
 export class FilterStrategyFactory {
-    static getStrategy(testDefinition: TestDefinition) {
+    static create(testDefinition: TestDefinition) {
         if (testDefinition.type === TestType.namespace) {
             return new NamespaceFilterStrategy(testDefinition);
         }

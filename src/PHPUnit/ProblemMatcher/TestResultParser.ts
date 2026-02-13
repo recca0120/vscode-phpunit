@@ -77,6 +77,6 @@ export class TestResultParser implements IParser<TestResult | undefined> {
             return {};
         }
 
-        return TransformerFactory.factory(argv.locationHint).fromLocationHit(argv.locationHint, argv.name);
+        return TransformerFactory.create(argv.locationHint).fromLocationHit(argv.locationHint, argv.name);
     }
 }

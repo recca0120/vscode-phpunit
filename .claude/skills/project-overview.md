@@ -12,7 +12,7 @@ src/
 ├── Handler.ts                # Orchestrates test runs (creates ProcessBuilder, TestRunner, Observers)
 ├── TestCommandRegistry.ts    # Registers VS Code commands (run-all, run-file, run-test-at-cursor, rerun)
 ├── Configuration.ts          # VS Code workspace configuration wrapper (extends BaseConfiguration)
-├── CloverParser.ts           # Parses Clover XML coverage reports
+├── CloverParser.ts           # Parses Clover XML coverage reports (uses XmlElement)
 ├── PHPUnitLinkProvider.ts    # Document link provider for PHPUnit output
 ├── uri.test.ts               # URI utility tests
 │
@@ -33,7 +33,7 @@ src/
 ├── PHPUnit/                  # Core logic (framework-agnostic, no VS Code dependency)
 │   ├── Configuration.ts      # Base configuration interface (IConfiguration) and default implementation
 │   ├── PHPUnitXML.ts         # Parses phpunit.xml to determine test directories and patterns
-│   ├── Element.ts            # XML element wrapper using fast-xml-parser
+│   ├── Element.ts            # XmlElement class - XML element wrapper using fast-xml-parser
 │   ├── TestRunner.ts         # Spawns PHPUnit process, emits events (TestRunner + TestRunnerProcess)
 │   ├── TestRunnerObserver.ts # Event types, observer interface, and TestRunnerEventProxy
 │   ├── types.ts              # Core types: TestType, TestDefinition, Position, Annotations

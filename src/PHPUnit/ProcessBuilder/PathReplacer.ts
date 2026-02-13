@@ -78,8 +78,8 @@ export class PathReplacer {
     }
 
     private replacePaths(path: string, fn: (currentPath: string, remotePath: string, localPath: string) => string) {
-        return Array.from(this.pathLookup.entries()).reduce((path, [remotePath, localPath]) => {
-            return fn(path, remotePath, localPath);
+        return Array.from(this.pathLookup.entries()).reduce((result, [remotePath, localPath]) => {
+            return fn(result, remotePath, localPath);
         }, path);
     }
 
