@@ -66,10 +66,11 @@ jobs:
 
       - name: Install Composer dependencies (PHPUnit stubs)
         run: |
-          declare -A MIN_PHP=(${{ env.PHPUNIT_MIN_PHP }})
+          lookup="${{ env.PHPUNIT_MIN_PHP }}"
           for dir in $(ls -d ${{ env.PHPUNIT_PROJECT }}/v*/ | sort -V); do
             stub=$(basename "$dir")
-            min=${MIN_PHP[$stub]:-99}
+            min=$(echo "$lookup" | tr ' ' '\n' | grep "^${stub}=" | cut -d= -f2)
+            min=${min:-99}
             if php -r "exit(version_compare('${{ matrix.php }}','$min','>=') ? 0 : 1);"; then
               echo "::group::Installing $stub (PHP >= $min)"
               (cd "$dir" && composer install --prefer-dist --no-interaction --no-progress) || true
@@ -81,10 +82,11 @@ jobs:
 
       - name: Install Composer dependencies (Pest stubs)
         run: |
-          declare -A MIN_PHP=(${{ env.PEST_MIN_PHP }})
+          lookup="${{ env.PEST_MIN_PHP }}"
           for dir in $(ls -d ${{ env.PEST_PROJECT }}/v*/ | sort -V); do
             stub=$(basename "$dir")
-            min=${MIN_PHP[$stub]:-99}
+            min=$(echo "$lookup" | tr ' ' '\n' | grep "^${stub}=" | cut -d= -f2)
+            min=${min:-99}
             if php -r "exit(version_compare('${{ matrix.php }}','$min','>=') ? 0 : 1);"; then
               echo "::group::Installing $stub (PHP >= $min)"
               (cd "$dir" && composer install --prefer-dist --no-interaction --no-progress) || true
