@@ -72,11 +72,11 @@ const getTestController = () => {
     return (tests.createTestController as Mock).mock.results[0].value;
 };
 
-const getRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) => {
-    const profile = (ctrl.createRunProfile as Mock).mock.results[0].value;
-    profile.kind = kind;
+const getTestRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) => {
+    const testRunProfile = (ctrl.createRunProfile as Mock).mock.results[0].value;
+    testRunProfile.kind = kind;
 
-    return profile;
+    return testRunProfile;
 };
 
 const findTest = (items: TestItemCollection, id: string): TestItem | undefined => {
@@ -117,6 +117,13 @@ const countItems = (testItemCollection: TestItemCollection) => {
     sum += testItemCollection.size;
 
     return sum;
+};
+
+const resolveExpected = <T>(version: string, map: [string, T][], fallback: T): T => {
+    for (const [minVersion, expected] of map) {
+        if (semver.gte(version, minVersion)) return expected;
+    }
+    return fallback;
 };
 
 describe('Extension Test', () => {
@@ -160,14 +167,30 @@ describe('Extension Test', () => {
     }) => {
         await activate(context);
         const ctrl = getTestController();
-        const runProfile = getRunProfile(ctrl, opts?.kind);
+        const testRunProfile = getTestRunProfile(ctrl, opts?.kind);
         const ids = opts?.include;
         const include = ids
-            ? (Array.isArray(ids) ? ids : [ids]).map((id) => findTest(ctrl.items, id))
+            ? [ids].flat().map((id) => findTest(ctrl.items, id))
             : undefined;
-        const request = { include, exclude: [], profile: runProfile };
-        await runProfile.runHandler(request, new CancellationTokenSource().token);
+        const request = { include, exclude: [], profile: testRunProfile };
+        await testRunProfile.runHandler(request, new CancellationTokenSource().token);
         return ctrl;
+    };
+
+    const expectSpawnCalled = (
+        args: (string | RegExp)[],
+        envOverrides?: Record<string, string>,
+    ) => {
+        expect(spawn).toHaveBeenCalledWith(
+            phpBinary,
+            expect.arrayContaining(
+                args.map((a) => (a instanceof RegExp ? expect.stringMatching(a) : a)),
+            ),
+            expect.objectContaining({
+                cwd,
+                ...(envOverrides && { env: expect.objectContaining(envOverrides) }),
+            }),
+        );
     };
 
     describe.each(detectPhpUnitStubs())('PHPUnit on $name (PHPUnit $phpUnitVersion)', ({
@@ -214,26 +237,18 @@ describe('Extension Test', () => {
                 'phpUnitTestController',
                 'PHPUnit',
             );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
+            for (const cmd of [
                 'phpunit.reload',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-all',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-file',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.run-test-at-cursor',
-                expect.any(Function),
-            );
-            expect(commands.registerCommand).toHaveBeenCalledWith(
                 'phpunit.rerun',
-                expect.any(Function),
-            );
+            ]) {
+                expect(commands.registerCommand).toHaveBeenCalledWith(
+                    cmd,
+                    expect.any(Function),
+                );
+            }
             expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
         });
 
@@ -265,14 +280,10 @@ describe('Extension Test', () => {
         it('should run all tests', async () => {
             const ctrl = await activateAndRun();
 
-            let expected: Record<string, number>;
-            if (semver.gte(phpUnitVersion, '12.0.0')) {
-                expected = { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 };
-            } else if (semver.gte(phpUnitVersion, '10.0.0')) {
-                expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
-            } else {
-                expected = { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
-            }
+            const expected = resolveExpected(phpUnitVersion, [
+                ['12.0.0', { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 }],
+                ['10.0.0', { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 }],
+            ], { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 });
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -280,14 +291,10 @@ describe('Extension Test', () => {
         it('should run test by namespace', async () => {
             const ctrl = await activateAndRun({ include: 'namespace:Tests' });
 
-            let expected: Record<string, number>;
-            if (semver.gte(phpUnitVersion, '12.0.0')) {
-                expected = { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 };
-            } else if (semver.gte(phpUnitVersion, '10.0.0')) {
-                expected = { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 };
-            } else {
-                expected = { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
-            }
+            const expected = resolveExpected(phpUnitVersion, [
+                ['12.0.0', { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 }],
+                ['10.0.0', { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 }],
+            ], { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 });
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -297,15 +304,14 @@ describe('Extension Test', () => {
                 include: 'Assertions (Tests\\Assertions)',
             });
 
-            const expected = semver.gte(phpUnitVersion, '12.0.0')
-                ? { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }
-                : { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 };
+            const expected = resolveExpected(phpUnitVersion, [
+                ['12.0.0', { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }],
+            ], { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 });
 
             expectTestResultCalled(ctrl, expected);
         });
 
         it('should run test case', async () => {
-            const method = 'test_throw_exception';
             const id = `Calculator (Tests\\Calculator)::Throw exception`;
             const ctrl = await activateAndRun({ include: id });
 
@@ -387,16 +393,12 @@ describe('Extension Test', () => {
 
             await commands.executeCommand('phpunit.run-file');
 
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                expect.arrayContaining([
-                    binary,
-                    normalPath(phpUnitProject('tests/AssertionsTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ]),
-                expect.objectContaining({ cwd }),
-            );
+            expectSpawnCalled([
+                binary,
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ]);
         });
 
         it('run phpunit.run-test-at-cursor', async () => {
@@ -408,40 +410,29 @@ describe('Extension Test', () => {
 
             await commands.executeCommand('phpunit.run-test-at-cursor');
 
-            const method = 'test_passed';
-
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                expect.arrayContaining([
-                    binary,
-                    expect.stringMatching(filterPattern(method)),
-                    normalPath(phpUnitProject('tests/AssertionsTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ]),
-                expect.objectContaining({ cwd }),
-            );
+            expectSpawnCalled([
+                binary,
+                filterPattern('test_passed'),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ]);
         });
 
         describe('Xdebug', () => {
             it('Debug', async () => {
                 await activateAndRun({ kind: TestRunProfileKind.Debug });
 
-                expect(spawn).toHaveBeenCalledWith(
-                    phpBinary,
-                    expect.arrayContaining([
+                expectSpawnCalled(
+                    [
                         '-dxdebug.mode=debug',
                         '-dxdebug.start_with_request=1',
-                        expect.stringMatching(/-dxdebug\.client_port=\d+/),
+                        /-dxdebug\.client_port=\d+/,
                         binary,
                         '--colors=never',
                         '--teamcity',
-                    ]),
-                    expect.objectContaining({
-                        env: expect.objectContaining({
-                            XDEBUG_MODE: 'debug',
-                        }),
-                    }),
+                    ],
+                    { XDEBUG_MODE: 'debug' },
                 );
 
                 expect(debug.startDebugging).toHaveBeenCalledWith(expect.anything(), {
@@ -459,22 +450,17 @@ describe('Extension Test', () => {
                     kind: TestRunProfileKind.Coverage,
                 });
                 ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
-                    expect(spawn).toHaveBeenCalledWith(
-                        phpBinary,
-                        expect.arrayContaining([
+                    expectSpawnCalled(
+                        [
                             '-dxdebug.mode=coverage',
                             binary,
-                            expect.stringMatching(file),
+                            new RegExp(file),
                             '--colors=never',
                             '--teamcity',
                             '--coverage-clover',
-                            expect.stringMatching(`phpunit-${i}.xml`),
-                        ]),
-                        expect.objectContaining({
-                            env: expect.objectContaining({
-                                XDEBUG_MODE: 'coverage',
-                            }),
-                        }),
+                            new RegExp(`phpunit-${i}.xml`),
+                        ],
+                        { XDEBUG_MODE: 'coverage' },
                     );
                 });
             });
@@ -501,18 +487,14 @@ describe('Extension Test', () => {
 
             const method = 'test_passed';
 
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                expect.arrayContaining([
-                    binary,
-                    expect.stringMatching(filterPattern(method)),
-                    normalPath(phpUnitProject('tests/AssertionsTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                    '--functional',
-                ]),
-                expect.objectContaining({ cwd }),
-            );
+            expectSpawnCalled([
+                binary,
+                filterPattern(method),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+                '--functional',
+            ]);
 
             expect(window.showErrorMessage).not.toHaveBeenCalled();
 
@@ -532,18 +514,14 @@ describe('Extension Test', () => {
         it('should run all tests', async () => {
             const ctrl = await activateAndRun();
 
-            let expected: Record<string, number>;
-            if (semver.gte(pestVersion, '3.0.0')) {
-                expected = { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 };
-            } else {
-                expected = { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 };
-            }
+            const expected = resolveExpected(pestVersion, [
+                ['3.0.0', { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 }],
+            ], { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 });
 
             expectTestResultCalled(ctrl, expected);
         });
 
         it('should run test case', async () => {
-            const method = 'test_description';
             const id = `tests/Unit/ExampleTest.php::test_description`;
             const ctrl = await activateAndRun({ include: id });
 
@@ -557,13 +535,12 @@ describe('Extension Test', () => {
         });
 
         it('should run test case with dataset', async () => {
-            const method = `it has user's email`;
-            const id = `tests/Unit/ExampleTest.php::${method}`;
+            const id = `tests/Unit/ExampleTest.php::it has user's email`;
             const ctrl = await activateAndRun({ include: id });
 
-            const expected = semver.gte(pestVersion, '3.0.0')
-                ? { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }
-                : { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 };
+            const expected = resolveExpected(pestVersion, [
+                ['3.0.0', { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }],
+            ], { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 });
 
             expectTestResultCalled(ctrl, expected);
         });
