@@ -1,9 +1,11 @@
-import { TestDefinition, TestType } from '../types';
+import { type TestDefinition, TestType } from '../types';
 import { capitalize, snakeCase, titleCase } from '../utils';
 import { Transformer } from './Transformer';
 
 export class PHPUnitTransformer extends Transformer {
-    uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string {
+    uniqueId(
+        testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
+    ): string {
         let { type, classFQN } = testDefinition;
         classFQN = classFQN!.replace(/Test$/i, '');
         const partsFQN = classFQN.replace(/Test$/i, '').split('\\');
@@ -19,10 +21,13 @@ export class PHPUnitTransformer extends Transformer {
         }
 
         return [classFQN, this.getMethodName({ methodName: testDefinition.methodName })].join('::');
-    };
+    }
 
     fromLocationHit(locationHint: string, _name: string) {
-        const partsLocation = locationHint.replace(/^php_qn:\/\//, '').replace(/::\\/g, '::').split('::');
+        const partsLocation = locationHint
+            .replace(/^php_qn:\/\//, '')
+            .replace(/::\\/g, '::')
+            .split('::');
         const file = partsLocation.shift();
         const [classFQN, methodName] = partsLocation;
 
@@ -33,8 +38,8 @@ export class PHPUnitTransformer extends Transformer {
     }
 
     protected normalizeMethodName(methodName: string) {
-        return capitalize(snakeCase(
-            methodName.replace(/^test/i, '').replace(/_/g, ' ').trim(),
-        )).replace(/_/g, ' ');
+        return capitalize(
+            snakeCase(methodName.replace(/^test/i, '').replace(/_/g, ' ').trim()),
+        ).replace(/_/g, ' ');
     }
 }

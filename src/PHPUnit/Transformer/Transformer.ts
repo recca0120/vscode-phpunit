@@ -1,14 +1,19 @@
-import { TestResultIdentify } from '../ProblemMatcher';
-import { TestDefinition, TestType } from '../types';
+import type { TestResultIdentify } from '../ProblemMatcher';
+import { type TestDefinition, TestType } from '../types';
 
 export abstract class Transformer {
     static generateSearchText(input: string) {
-        return input.replace(/([\[\]()*+$!\\])/g, '\\$1').replace(/@/g, '[\\W]');
+        return input.replace(/([[\]()*+$!\\])/g, '\\$1').replace(/@/g, '[\\W]');
     }
 
-    generateLabel(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'> & {
-        label?: string
-    }): string {
+    generateLabel(
+        testDefinition: Pick<
+            TestDefinition,
+            'type' | 'classFQN' | 'className' | 'methodName' | 'annotations'
+        > & {
+            label?: string;
+        },
+    ): string {
         const { type, classFQN, className, methodName, annotations, label } = testDefinition;
 
         if (annotations?.testdox && annotations.testdox.length > 0) {
@@ -30,19 +35,23 @@ export abstract class Transformer {
         return methodName!.replace(/`/g, '');
     }
 
-    abstract uniqueId(testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>): string ;
+    abstract uniqueId(
+        testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
+    ): string;
 
-    abstract fromLocationHit(locationHint: string, name: string): TestResultIdentify
+    abstract fromLocationHit(locationHint: string, name: string): TestResultIdentify;
 
-    protected abstract normalizeMethodName(methodName: string): string
+    protected abstract normalizeMethodName(methodName: string): string;
 
     protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>) {
         let { methodName, annotations } = testDefinition;
         let dataset = '';
-        const matched = methodName!.match(/(?<methodName>.*)(?<dataset>\swith\sdata\sset\s[#"].+$)/);
-        if (matched && matched.groups) {
-            methodName = matched.groups['methodName'];
-            dataset = matched.groups['dataset'];
+        const matched = methodName?.match(
+            /(?<methodName>.*)(?<dataset>\swith\sdata\sset\s[#"].+$)/,
+        );
+        if (matched?.groups) {
+            methodName = matched.groups.methodName;
+            dataset = matched.groups.dataset;
         }
 
         if (annotations?.testdox && annotations.testdox.length > 0) {

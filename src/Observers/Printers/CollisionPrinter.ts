@@ -1,8 +1,18 @@
-import { readFileSync } from 'node:fs';
-import { EOL, TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestSuiteFinished } from '../../PHPUnit';
-import { Printer } from './Printer';
+import { injectable, injectFromBase } from 'inversify';
+import {
+    EOL,
+    TeamcityEvent,
+    type TestFailed,
+    type TestFinished,
+    type TestIgnored,
+    type TestSuiteFinished,
+} from '../../PHPUnit';
+import { OutputFormatter } from './OutputFormatter';
+import { readSourceSnippet } from './SourceFileReader';
 
-export class CollisionPrinter extends Printer {
+@injectable()
+@injectFromBase()
+export class CollisionPrinter extends OutputFormatter {
     private errors: TestFailed[] = [];
 
     start() {
@@ -45,7 +55,9 @@ export class CollisionPrinter extends Printer {
             this.getFileContent(result),
             this.formatDetails(result),
             '',
-        ].filter((content) => content !== undefined).join(EOL);
+        ]
+            .filter((content) => content !== undefined)
+            .join(EOL);
     }
 
     private formatErrorTitle(result: TestFailed) {
@@ -84,35 +96,22 @@ export class CollisionPrinter extends Printer {
             return undefined;
         }
 
-        try {
-            const data = readFileSync(this.phpUnitXML.path(detail.file), 'utf8');
-            const position = Math.max(0, detail.line - 5);
-            const lines = data.split(/\r\n|\n/).splice(position, 10).map((line, index) => {
-                const currentPosition = position + index + 1;
-                const prefix = detail.line === currentPosition ? '➜ ' : '  ';
-
-                return `${prefix}${String(currentPosition).padStart(2, ' ')} ▕ ${line}`;
-            });
-
-            return [
-                '',
-                `at ${Printer.fileFormat(detail.file, detail.line)}`,
-                ...lines,
-            ].join(EOL);
-        } catch (e) {
-            return undefined;
-        }
+        return readSourceSnippet(this.phpUnitXML.path(detail.file), detail.line)?.join(EOL);
     }
 
     private formatDetails(result: TestFailed) {
-        return EOL + result.details
-            .map(({ file, line }) => Printer.fileFormat(file, line))
-            .map((file, index) => `${index + 1}. ${file}`).join(EOL);
+        return (
+            EOL +
+            result.details
+                .map(({ file, line }) => OutputFormatter.fileFormat(file, line))
+                .map((file, index) => `${index + 1}. ${file}`)
+                .join(EOL)
+        );
     }
 
     private formatExpected(expected: string, prefix: string) {
         return expected
-            .replace(/^Array\s+&0\s+[(\[]/, '')
+            .replace(/^Array\s+&0\s+[([]/, '')
             .replace(/[)\]]$/, '')
             .trim()
             .split(/\r\n|\n/)

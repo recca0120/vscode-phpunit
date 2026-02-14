@@ -1,6 +1,6 @@
-import { TestDefinition } from '../types';
-import { PHPDefinition } from './PHPDefinition';
+import type { TestDefinition } from '../types';
+import type { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 export interface Parser {
-    parse(definition: PHPDefinition): TestDefinition[] | undefined;
+    parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined;
 }

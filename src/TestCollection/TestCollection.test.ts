@@ -1,7 +1,7 @@
-import { expect } from '@jest/globals';
-import { RelativePattern, TestController, tests, Uri, workspace } from 'vscode';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { Files, PHPUnitXML, TestDefinition, TestDefinitions, TestParser } from '../PHPUnit';
+import { PHPUnitXML, type TestDefinition } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestCollection } from './TestCollection';
 
@@ -17,9 +17,9 @@ describe('Extension TestCollection', () => {
         return new TestCollection(ctrl, phpUnitXML);
     };
 
-    const toTree = (items: any) => {
-        const results = [] as any[];
-        items.forEach((item: any) => {
+    const toTree = (items: import('vscode').TestItemCollection) => {
+        const results: { id: string; label: string; children: ReturnType<typeof toTree> }[] = [];
+        items.forEach((item: import('vscode').TestItem) => {
             results.push({
                 id: item.id,
                 label: item.label,
@@ -30,25 +30,20 @@ describe('Extension TestCollection', () => {
         return results;
     };
 
-    const shouldBe = async (_collection: TestCollection, testsuites: any) => {
-        const phpUnitXML = new PHPUnitXML();
-        phpUnitXML.setRoot(phpUnitProject(''));
-        const testParser = new TestParser(phpUnitXML);
-        const expected = new Files<TestDefinition[]>;
-        for (const [name, files] of Object.entries(testsuites)) {
-            const tests = new TestDefinitions<TestDefinition[]>();
-            for (const uri of (files as URI[])) {
-                tests.set(uri, await testParser.parseFile(uri.fsPath) ?? []);
+    const collectTestItemFiles = (items: import('vscode').TestItemCollection): string[] => {
+        const files: string[] = [];
+        items.forEach((item: import('vscode').TestItem) => {
+            if (item.uri) {
+                files.push(item.uri.fsPath);
             }
-            expected.set(name, tests);
-        }
-
-        // expect(_collection.items()).toEqual(expected);
+            files.push(...collectTestItemFiles(item.children));
+        });
+        return [...new Set(files)];
     };
 
     beforeEach(() => {
         ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('without namespace', async () => {
@@ -57,20 +52,23 @@ describe('Extension TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         await collection.add(URI.file(phpUnitProject('tests/NoNamespaceTest.php')));
 
-        expect(toTree(ctrl.items)).toEqual([{
-            id: 'No Namespace',
-            label: '$(symbol-class) NoNamespaceTest',
-            children: [{
-                id: 'No Namespace::No namespace',
-                label: '$(symbol-method) test_no_namespace',
-                children: [],
-            }],
-        }]);
+        expect(toTree(ctrl.items)).toEqual([
+            {
+                id: 'No Namespace',
+                label: '$(symbol-class) NoNamespaceTest',
+                children: [
+                    {
+                        id: 'No Namespace::No namespace',
+                        label: '$(symbol-method) test_no_namespace',
+                        children: [],
+                    },
+                ],
+            },
+        ]);
     });
 
     it('with namespace', async () => {
@@ -79,29 +77,26 @@ describe('Extension TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
         await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([
-            expect.objectContaining(
-                {
-                    id: 'namespace:Tests',
-                    label: '$(symbol-namespace) Tests',
-                    children: [
-                        expect.objectContaining({
-                            id: 'Assertions (Tests\\Assertions)',
-                            label: '$(symbol-class) AssertionsTest',
-                        }),
-                        expect.objectContaining({
-                            id: 'Attribute (Tests\\Attribute)',
-                            label: '$(symbol-class) AttributeTest',
-                        }),
-                    ],
-                },
-            ),
+            expect.objectContaining({
+                id: 'namespace:Tests',
+                label: '$(symbol-namespace) Tests',
+                children: [
+                    expect.objectContaining({
+                        id: 'Assertions (Tests\\Assertions)',
+                        label: '$(symbol-class) AssertionsTest',
+                    }),
+                    expect.objectContaining({
+                        id: 'Attribute (Tests\\Attribute)',
+                        label: '$(symbol-class) AttributeTest',
+                    }),
+                ],
+            }),
         ]);
     });
 
@@ -114,8 +109,7 @@ describe('Extension TestCollection', () => {
                 <testsuite name="Feature">
                     <directory>tests/Feature</directory>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
 
         await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
         await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
@@ -156,8 +150,7 @@ describe('Extension TestCollection', () => {
                 <testsuite name="default">
                     <directory>tests</directory>
                 </testsuite>
-            </testsuites>`,
-        );
+            </testsuites>`);
         const includes: string[] = ['**/*.php'];
         const excludes: string[] = ['**/.git/**', '**/node_modules/**', '**/vendor/**'];
 
@@ -169,16 +162,14 @@ describe('Extension TestCollection', () => {
             await collection.add(file);
         }
 
-        const skips = [
-            'phpunit-stub/src/',
-            'phpunit-stub\\src\\',
-            'AbstractTest.php',
-        ];
+        const skips = ['phpunit-stub/src/', 'phpunit-stub\\src\\', 'AbstractTest.php'];
+        const expectedFiles = files
+            .filter((file) => !skips.some((skip) => file.fsPath.includes(skip)))
+            .map((file) => file.fsPath)
+            .sort();
 
-        await shouldBe(collection, {
-            default: files.filter((file) => !skips.find((skip) => {
-                return file.fsPath.indexOf(skip) !== -1;
-            })),
-        });
+        const actualFiles = collectTestItemFiles(ctrl.items).sort();
+
+        expect(actualFiles).toEqual(expectedFiles);
     });
 });

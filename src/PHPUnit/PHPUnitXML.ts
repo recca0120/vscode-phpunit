@@ -1,60 +1,23 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, isAbsolute, join, normalize, relative } from 'node:path';
-import { URI } from 'vscode-uri';
-import { Element } from './Element';
+import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
+import { TestGlobPattern } from './TestGlobPattern';
+import { XmlElement } from './XmlElement';
 
-type Source = { tag: string; value: string; prefix?: string; suffix?: string; };
+export { TestGlobPattern };
+
+type Source = { tag: string; value: string; prefix?: string; suffix?: string };
 
 export type TestSuite = Source & { name: string };
 
-export class Pattern {
-    private readonly relativePath: string;
-
-    constructor(private root: string, private testPath: string, private items: string[] = []) {
-        this.relativePath = Pattern.normalizePath(relative(this.root, this.testPath));
-    }
-
-    private static normalizePath(...paths: string[]) {
-        return normalize(paths.join('/')).replace(/\\|\/+/g, '/');
-    }
-
-    push(item: TestSuite, extension: string = '') {
-        const args = [this.relativePath, item.value];
-        if (item.tag !== 'file') {
-            args.push('**/*' + (item.suffix ?? extension));
-        }
-
-        this.items.push(Pattern.normalizePath(...args));
-    }
-
-    toGlobPattern() {
-        const arrayUnique = (items: (string | undefined)[]) => Array.from(new Set(items));
-        const dirs = arrayUnique(this.items.map((item) => {
-            return /^\*/.test(item) ? undefined : item.substring(0, item.indexOf('/'));
-        }));
-
-        const legalDirs = dirs.filter(value => !!value);
-        const isSingle = dirs.length === 1 && legalDirs.length === 1;
-        if (!isSingle) {
-            return { uri: URI.file(this.root), pattern: `{${this.items}}` };
-        }
-
-        const dir = legalDirs[0];
-        const items = this.items.map((item) => item.replace(new RegExp('^' + dir + '[\\/]?'), ''));
-        const pattern = `{${items}}`;
-
-        return { uri: URI.file(join(this.root, dir!)), pattern };
-    }
-}
-
 export class PHPUnitXML {
-    private element?: Element;
+    private element?: XmlElement;
     private _file: string = '';
+    private _configRoot: string = '';
     private _root: string = '';
-    private readonly cached: Map<string, any> = new Map();
+    private readonly cached: Map<string, unknown[]> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
-        this.element = Element.load(text.toString());
+        this.element = XmlElement.load(text.toString());
         this._file = file;
         this.setRoot(dirname(file));
 
@@ -69,6 +32,7 @@ export class PHPUnitXML {
 
     setRoot(root: string) {
         this.cached.clear();
+        this._configRoot = root;
         this._root = root;
 
         return this;
@@ -79,40 +43,84 @@ export class PHPUnitXML {
     }
 
     root() {
+        if (this._root === this._configRoot && this.element) {
+            this._root = this.resolveProjectRoot();
+        }
+
         return this._root;
     }
 
     path(file: string): string {
-        const root = this.root();
+        const configRoot = this._configRoot;
 
-        return isAbsolute(file) || !root ? file : join(root, file);
+        return isAbsolute(file) || !configRoot ? file : join(configRoot, file);
+    }
+
+    private resolveToRoot(root: string, value: string): string {
+        if (this._configRoot === root) {
+            return value;
+        }
+
+        return normalize(relative(root, resolve(this._configRoot, value)));
+    }
+
+    private resolveProjectRoot(): string {
+        const configRoot = this._configRoot;
+        if (!this.element) {
+            return configRoot;
+        }
+
+        for (const parent of this.element.querySelectorAll('phpunit testsuites testsuite')) {
+            for (const node of parent.querySelectorAll('directory')) {
+                const dir = node.getText();
+                if (dir.startsWith('..')) {
+                    const resolvedAbs = resolve(configRoot, dir);
+                    const configRootAbs = resolve(configRoot);
+
+                    if (!resolvedAbs.startsWith(configRootAbs)) {
+                        return normalize(resolve(configRoot, dir, '..'));
+                    }
+                }
+            }
+        }
+
+        return configRoot;
     }
 
     getTestSuites(): TestSuite[] {
-        const callback = (tag: string, node: Element, parent: Element) => {
+        const root = this.root();
+
+        const callback = (tag: string, node: XmlElement, parent: XmlElement) => {
             const name = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
 
-            return { tag, name, value: node.getText(), prefix, suffix };
+            return { tag, name, value: this.resolveToRoot(root, node.getText()), prefix, suffix };
         };
 
         const testSuites = this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
-            directory: callback, file: callback, exclude: callback,
+            directory: callback,
+            file: callback,
+            exclude: callback,
         });
 
-        return testSuites.length > 0 ? testSuites : [
-            { tag: 'directory', name: 'default', value: '', suffix: '.php' },
-            { tag: 'exclude', name: 'default', value: 'vendor' },
-        ];
+        return testSuites.length > 0
+            ? testSuites
+            : [
+                  { tag: 'directory', name: 'default', value: '', suffix: '.php' },
+                  { tag: 'exclude', name: 'default', value: 'vendor' },
+              ];
     }
 
     getPatterns(root: string) {
-        const includes = new Pattern(root, this.root());
-        const excludes = new Pattern(root, this.root(), ['**/.git/**', '**/node_modules/**']);
+        const includes = new TestGlobPattern(root, this.root());
+        const excludes = new TestGlobPattern(root, this.root(), [
+            '**/.git/**',
+            '**/node_modules/**',
+        ]);
 
         this.getTestSuites().forEach((item) => {
-            (item.tag !== 'exclude') ? includes.push(item, '.php') : excludes.push(item);
+            item.tag !== 'exclude' ? includes.push(item, '.php') : excludes.push(item);
         });
 
         return { includes, excludes };
@@ -127,8 +135,7 @@ export class PHPUnitXML {
     }
 
     getSources() {
-        const appendType = (type: string, objs: Source[]) =>
-            objs.map((obj) => ({ type, ...obj }));
+        const appendType = (type: string, objs: Source[]) => objs.map((obj) => ({ type, ...obj }));
 
         return [
             ...appendType('include', this.getIncludes()),
@@ -136,48 +143,51 @@ export class PHPUnitXML {
         ];
     }
 
-    private fromCache<T>(key: string, callback: () => T[]) {
+    private fromCache<T>(key: string, callback: () => T[]): T[] {
         if (!this.cached.has(key)) {
             this.cached.set(key, callback() ?? []);
         }
 
-        return this.cached.get(key)!;
+        return this.cached.get(key) as T[];
     }
 
     private getIncludesOrExcludes(key: string): Source[] {
         return this.getDirectoriesAndFiles<Source>(key, {
-            directory: (tag: string, node: Element) => {
+            directory: (tag: string, node: XmlElement) => {
                 const prefix = node.getAttribute('prefix');
                 const suffix = node.getAttribute('suffix');
 
                 return { tag, value: node.getText(), prefix, suffix };
             },
-            file: (tag: string, node: Element) => ({ tag, value: node.getText() }),
+            file: (tag: string, node: XmlElement) => ({ tag, value: node.getText() }),
         });
     }
 
     private getDirectoriesAndFiles<T>(
         selector: string,
-        callbacks: { [key: string]: (tag: string, node: Element, parent: Element) => T; },
+        callbacks: { [key: string]: (tag: string, node: XmlElement, parent: XmlElement) => T },
     ) {
         if (!this.element) {
             return [];
         }
 
         return this.fromCache<T>(selector, () => {
-            return this.element!.querySelectorAll(selector).reduce((results: T[], parent: Element) => {
-                for (const [type, callback] of Object.entries(callbacks)) {
-                    const temp = parent
-                        .querySelectorAll(type)
-                        .map((node) => callback(type, node, parent));
+            return this.element!.querySelectorAll(selector).reduce(
+                (results: T[], parent: XmlElement) => {
+                    for (const [type, callback] of Object.entries(callbacks)) {
+                        const temp = parent
+                            .querySelectorAll(type)
+                            .map((node) => callback(type, node, parent));
 
-                    if (temp) {
-                        results.push(...temp);
+                        if (temp) {
+                            results.push(...temp);
+                        }
                     }
-                }
 
-                return results;
-            }, []);
+                    return results;
+                },
+                [],
+            );
         });
     }
 }

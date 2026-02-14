@@ -1,11 +1,12 @@
-import { TeamcityEvent } from '.';
+import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
+import { TeamcityEvent } from '.';
 import { ProblemMatcher } from './ProblemMatcher';
 
 const problemMatcher = new ProblemMatcher();
 
 describe('PHPUnit ProblemMatcher Text', () => {
-    const resultShouldBe = (content: string, expected: any) => {
+    const resultShouldBe = (content: string, expected: Record<string, unknown> | undefined) => {
         const actual = problemMatcher.parse(content);
 
         if (expected === undefined) {
@@ -57,111 +58,144 @@ describe('PHPUnit ProblemMatcher Text', () => {
         });
 
         it('testSuiteStarted Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
-            resultShouldBe(`##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
-                event: TeamcityEvent.testSuiteStarted,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testSuiteStarted,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testStarted passed', () => {
-            resultShouldBe(`##teamcity[testStarted name='test_passed' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']`, {
-                event: TeamcityEvent.testStarted,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testStarted name='test_passed' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testStarted,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testFinished', () => {
-            resultShouldBe(`##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`, {
-                event: TeamcityEvent.testFinished,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testFinished,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testStarted failed', () => {
-            resultShouldBe(`##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='8024']`, {
-                event: TeamcityEvent.testStarted,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testStarted,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testFailed', () => {
-            resultShouldBe(`##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests\\AssertionsTest.php')}:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`, undefined);
+            resultShouldBe(
+                `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests\\AssertionsTest.php')}:32|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`,
+                undefined,
+            );
         });
 
         it('testFinished failed', () => {
-            resultShouldBe(`##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']`, {
-                event: TeamcityEvent.testFailed,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
-                message: 'Failed asserting that two arrays are identical.',
-                details: [
-                    {
-                        file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                        line: 27,
-                    },
-                ],
-                duration: 0,
-                type: 'comparisonFailure',
-                actual: `Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n)`,
-                expected: `Array &0 (\n    'a' => 'b'\n    'c' => 'd'\n)`,
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testFailed,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Is not same',
+                    message: 'Failed asserting that two arrays are identical.',
+                    details: [
+                        {
+                            file: phpUnitProjectWin('tests/AssertionsTest.php'),
+                            line: 32,
+                        },
+                    ],
+                    duration: 0,
+                    type: 'comparisonFailure',
+                    actual: `Array &0 (\n    'e' => 'f'\n    0 => 'g'\n    1 => 'h'\n)`,
+                    expected: `Array &0 (\n    'a' => 'b'\n    'c' => 'd'\n)`,
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testSuiteStarted addition_provider', () => {
-            resultShouldBe(`##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider' flowId='8024']`, {
-                event: TeamcityEvent.testSuiteStarted,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
-                file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider`,
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testSuiteStarted,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                    file: phpUnitProjectWin('tests/AssertionsTest.php'),
+                    locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider`,
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testStarted addition_provider', () => {
-            resultShouldBe(`##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`, {
-                event: TeamcityEvent.testStarted,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
-                file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testStarted,
+                    // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                    file: phpUnitProjectWin('tests/AssertionsTest.php'),
+                    locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testFailed addition_provider with failed', () => {
-            resultShouldBe(`##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:60|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`, undefined);
+            resultShouldBe(
+                `##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:66|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`,
+                undefined,
+            );
 
-            resultShouldBe(`##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`, {
-                event: TeamcityEvent.testFailed,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
-                file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
-                message: 'Failed asserting that 1 matches expected 2.',
-                details: [
-                    {
-                        file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                        line: 60,
-                    },
-                ],
-                type: 'comparisonFailure',
-                actual: '1',
-                expected: '2',
-                duration: 0,
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testFailed,
+                    // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                    file: phpUnitProjectWin('tests/AssertionsTest.php'),
+                    locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
+                    message: 'Failed asserting that 1 matches expected 2.',
+                    details: [
+                        {
+                            file: phpUnitProjectWin('tests/AssertionsTest.php'),
+                            line: 66,
+                        },
+                    ],
+                    type: 'comparisonFailure',
+                    actual: '1',
+                    expected: '2',
+                    duration: 0,
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testSuiteFinished Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
-            resultShouldBe(`##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`, {
-                event: TeamcityEvent.testSuiteFinished,
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
-                flowId: 8024,
-            });
+            resultShouldBe(
+                `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`,
+                {
+                    event: TeamcityEvent.testSuiteFinished,
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)',
+                    flowId: 8024,
+                },
+            );
         });
 
         it('testSuiteFinished default', () => {
@@ -181,17 +215,20 @@ describe('PHPUnit ProblemMatcher Text', () => {
         });
 
         it('TestSummary', () => {
-            resultShouldBe('Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.', {
-                event: TeamcityEvent.testResultSummary,
-                text: 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
-                tests: 19,
-                assertions: 15,
-                errors: 2,
-                failures: 4,
-                skipped: 1,
-                incomplete: 1,
-                risky: 2,
-            });
+            resultShouldBe(
+                'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
+                {
+                    event: TeamcityEvent.testResultSummary,
+                    text: 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
+                    tests: 19,
+                    assertions: 15,
+                    errors: 2,
+                    failures: 4,
+                    skipped: 1,
+                    incomplete: 1,
+                    risky: 2,
+                },
+            );
         });
 
         it('empty line', () => {
@@ -248,15 +285,19 @@ describe('PHPUnit ProblemMatcher Text', () => {
             expect.objectContaining({
                 event: TeamcityEvent.testFailed,
                 name: 'testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
-                locationHint: 'php_qn:///srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::\\App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
+                locationHint:
+                    'php_qn:///srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php::\\App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest::testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
                 flowId: 5161,
                 id: 'Price Synchronizer (App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer)::Product need update returns false when price sync not enabled',
                 file: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php',
-                message: 'Error: Class "App\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer" not found',
-                details: [{
-                    file: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php',
-                    line: 28,
-                }],
+                message:
+                    'Error: Class "App\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizer" not found',
+                details: [
+                    {
+                        file: '/srv/app/tests/Ecommerce/Offer/Synchronizer/PriceSynchronizerTest.php',
+                        line: 28,
+                    },
+                ],
                 duration: 0,
             }),
         );
@@ -277,7 +318,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
             expect.objectContaining({
                 event: TeamcityEvent.testIgnored,
                 name: 'test_permission',
-                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_permission',
+                locationHint:
+                    'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_permission',
                 flowId: 22946,
                 id: 'Chat Controller (Tests\\Feature\\ChatController)::Permission',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',
@@ -290,7 +332,8 @@ describe('PHPUnit ProblemMatcher Text', () => {
             expect.objectContaining({
                 event: TeamcityEvent.testIgnored,
                 name: 'test_grant_chat_token',
-                locationHint: 'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_grant_chat_token',
+                locationHint:
+                    'php_qn:///var/www/html/tests/Feature/ChatControllerTest.php::\\Tests\\Feature\\ChatControllerTest::test_grant_chat_token',
                 flowId: 22946,
                 id: 'Chat Controller (Tests\\Feature\\ChatController)::Grant chat token',
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',

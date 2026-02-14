@@ -1,56 +1,51 @@
+import 'reflect-metadata';
+import type { Container } from 'inversify';
 import {
-    CancellationToken, EventEmitter, ExtensionContext, extensions, GlobPattern, languages, RelativePattern, TestItem,
-    TestRunProfile, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder,
+    type EventEmitter,
+    type ExtensionContext,
+    extensions,
+    languages,
+    type OutputChannel,
+    type TestController,
+    type TestRunProfile,
+    TestRunProfileKind,
+    tests,
+    type Uri,
+    window,
+    workspace,
 } from 'vscode';
-import { PHPUnitFileCoverage } from './CloverParser';
-import { CommandHandler } from './CommandHandler';
+import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
 import { Configuration } from './Configuration';
-import { Handler } from './Handler';
-import { CollisionPrinter } from './Observers';
-import { Pattern, PHPUnitXML } from './PHPUnit';
-import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
+import type { PHPUnitFileCoverage } from './Coverage';
+import { createContainer } from './container';
 import { TestCollection } from './TestCollection';
-
-const phpUnitXML = new PHPUnitXML();
-const printer = new CollisionPrinter(phpUnitXML);
-let testCollection: TestCollection;
+import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
+import { TYPES } from './types';
 
 export async function activate(context: ExtensionContext) {
     const ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
-    context.subscriptions.push(ctrl);
-    testCollection = new TestCollection(ctrl, phpUnitXML);
-
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
-    context.subscriptions.push(outputChannel);
+    const container = createContainer(ctrl, outputChannel);
 
-    context.subscriptions.push(languages.registerDocumentLinkProvider({ language: 'phpunit' }, new PHPUnitLinkProvider(phpUnitXML)));
+    const testFileDiscovery = container.get(TestFileDiscovery);
+    const testFileWatcher = container.get(TestFileWatcher);
+    const testWatchManager = container.get(TestWatchManager);
+    const testCollection = container.get(TestCollection);
+    const testCommandRegistry = container.get(TestCommandRegistry);
 
-    const configuration = new Configuration(workspace.getConfiguration('phpunit'));
-    context.subscriptions.push(workspace.onDidChangeConfiguration(() => configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'))));
-
-    const configurationFile = await configuration.getConfigurationFile(workspace.workspaceFolders![0].uri.fsPath);
-    if (configurationFile) {
-        testCollection.reset();
-        await phpUnitXML.loadFile(configurationFile);
-    }
-
+    // Initial load
+    await testFileDiscovery.loadWorkspaceConfiguration();
     await Promise.all(workspace.textDocuments.map((document) => testCollection.add(document.uri)));
 
-    const reload = async () => {
-        await Promise.all(
-            (await getWorkspaceTestPatterns()).map(({ pattern, exclude }) => findInitialFiles(pattern, exclude)),
-        );
-    };
+    // Listeners
+    testFileWatcher.registerDocumentListeners(context);
+    testWatchManager.setupFileChangeListener();
 
-    context.subscriptions.push(
-        workspace.onDidOpenTextDocument((document) => testCollection.add(document.uri)),
-        workspace.onDidChangeTextDocument((e) => testCollection.change(e.document.uri)),
-    );
-
-    ctrl.refreshHandler = reload;
+    // Test controller
+    ctrl.refreshHandler = () => testFileDiscovery.reloadAll();
     ctrl.resolveHandler = async (item) => {
         if (!item) {
-            context.subscriptions.push(...(await startWatchingWorkspace(fileChangedEmitter)));
+            context.subscriptions.push(...(await testFileWatcher.startWatching()));
             return;
         }
 
@@ -59,117 +54,84 @@ export async function activate(context: ExtensionContext) {
         }
     };
 
-    const handler = new Handler(ctrl, phpUnitXML, configuration, testCollection, outputChannel, printer);
+    // Run profiles, commands, and disposables
+    const testRunProfile = createRunProfiles(ctrl, testWatchManager);
+    registerCommands(context, testCommandRegistry, testRunProfile);
+    registerDisposables(context, ctrl, outputChannel, container);
+}
 
-    const fileChangedEmitter = new EventEmitter<Uri>();
-    const watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
+function createRunProfiles(ctrl: TestController, testWatchManager: TestWatchManager) {
+    const runHandler = testWatchManager.createRunHandler();
 
-    fileChangedEmitter.event(uri => {
-        if (watchingTests.has('ALL')) {
-            handler.startTestRun(new TestRunRequest(undefined, undefined, watchingTests.get('ALL'), true));
-            return;
-        }
+    const testRunProfile = ctrl.createRunProfile(
+        'Run Tests',
+        TestRunProfileKind.Run,
+        runHandler,
+        true,
+        undefined,
+        true,
+    );
 
-        const include: TestItem[] = [];
-        let profile: TestRunProfile | undefined;
-        for (const [item, thisProfile] of watchingTests) {
-            const cast = item as TestItem;
-            if (cast.uri?.toString() === uri.toString()) {
-                include.push(...testCollection.findTestsByFile(cast.uri!));
-                profile = thisProfile;
-            }
-        }
-
-        if (include.length) {
-            handler.startTestRun(new TestRunRequest(include, undefined, profile, true));
-        }
-    });
-
-    const runHandler = async (request: TestRunRequest, cancellation: CancellationToken) => {
-        if (!request.continuous) {
-            return handler.startTestRun(request, cancellation);
-        }
-
-        if (request.include === undefined) {
-            watchingTests.set('ALL', request.profile);
-            cancellation.onCancellationRequested(() => watchingTests.delete('ALL'));
-        } else {
-            request.include.forEach(item => watchingTests.set(item, request.profile));
-            cancellation.onCancellationRequested(() => request.include!.forEach(item => watchingTests.delete(item)));
-        }
-    };
-    const testRunProfile = ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, undefined, true);
     if (extensions.getExtension('xdebug.php-debug') !== undefined) {
-        ctrl.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, undefined, false);
+        ctrl.createRunProfile(
+            'Debug Tests',
+            TestRunProfileKind.Debug,
+            runHandler,
+            true,
+            undefined,
+            false,
+        );
     }
-    const coverageProfile = ctrl.createRunProfile('Run with Coverage', TestRunProfileKind.Coverage, runHandler, true, undefined, false); // TODO Continuous
+
+    const coverageProfile = ctrl.createRunProfile(
+        'Run with Coverage',
+        TestRunProfileKind.Coverage,
+        runHandler,
+        true,
+        undefined,
+        false,
+    );
     coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
         return (<PHPUnitFileCoverage>coverage).generateDetailedCoverage();
     };
-    const commandHandler = new CommandHandler(testCollection, testRunProfile);
 
-    context.subscriptions.push(commandHandler.reload(reload));
-    context.subscriptions.push(commandHandler.runAll());
-    context.subscriptions.push(commandHandler.runFile());
-    context.subscriptions.push(commandHandler.runTestAtCursor());
-    context.subscriptions.push(commandHandler.rerun(handler));
-    context.subscriptions.push(commandHandler.runByGroup(handler));
+    return testRunProfile;
 }
 
-async function getWorkspaceTestPatterns() {
-    if (!workspace.workspaceFolders) {
-        return [];
-    }
-
-    const configuration = new Configuration(workspace.getConfiguration('phpunit'));
-
-    return Promise.all(workspace.workspaceFolders.map(async (workspaceFolder: WorkspaceFolder) => {
-        const configurationFile = await configuration.getConfigurationFile(workspaceFolder.uri.fsPath);
-        configurationFile
-            ? await phpUnitXML.loadFile(Uri.file(configurationFile).fsPath)
-            : phpUnitXML.setRoot(workspaceFolder.uri.fsPath);
-        const { includes, excludes } = phpUnitXML.getPatterns(workspaceFolder.uri.fsPath);
-
-        const generateRelativePattern = (includeOrExclude: Pattern) => {
-            const { uri, pattern } = includeOrExclude.toGlobPattern();
-
-            return new RelativePattern(uri, pattern);
-        };
-
-        return {
-            workspaceFolder,
-            pattern: generateRelativePattern(includes),
-            exclude: generateRelativePattern(excludes),
-        };
-    }));
+function registerCommands(
+    context: ExtensionContext,
+    testCommandRegistry: TestCommandRegistry,
+    testRunProfile: TestRunProfile,
+) {
+    testCommandRegistry.setTestRunProfile(testRunProfile);
+    context.subscriptions.push(testCommandRegistry.reload());
+    context.subscriptions.push(testCommandRegistry.runAll());
+    context.subscriptions.push(testCommandRegistry.runFile());
+    context.subscriptions.push(testCommandRegistry.runTestAtCursor());
+    context.subscriptions.push(testCommandRegistry.rerun());
 }
 
-async function findInitialFiles(pattern: GlobPattern, exclude: GlobPattern) {
-    testCollection.reset();
-    const files = await workspace.findFiles(pattern, exclude);
-    await Promise.all(files.map((file) => testCollection.add(file)));
-}
+function registerDisposables(
+    context: ExtensionContext,
+    ctrl: TestController,
+    outputChannel: OutputChannel,
+    container: Container,
+) {
+    const configuration = container.get(Configuration);
+    const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.FileChangedEmitter);
 
-async function startWatchingWorkspace(fileChangedEmitter: EventEmitter<Uri>) {
-    return Promise.all((await getWorkspaceTestPatterns()).map(async ({ pattern, exclude }) => {
-        const watcher = workspace.createFileSystemWatcher(pattern);
-
-        watcher.onDidCreate((uri) => {
-            testCollection.add(uri);
-            fileChangedEmitter.fire(uri);
-        });
-
-        watcher.onDidChange((uri) => {
-            testCollection.change(uri);
-            fileChangedEmitter.fire(uri);
-        });
-
-        watcher.onDidDelete((uri) => {
-            testCollection.delete(uri);
-        });
-
-        await findInitialFiles(pattern, exclude);
-
-        return watcher;
-    }));
+    context.subscriptions.push(
+        ctrl,
+        outputChannel,
+        fileChangedEmitter,
+        workspace.onDidChangeConfiguration((event) => {
+            if (event.affectsConfiguration('phpunit')) {
+                configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'));
+            }
+        }),
+        languages.registerDocumentLinkProvider(
+            { language: 'phpunit' },
+            container.get(PHPUnitLinkProvider),
+        ),
+    );
 }

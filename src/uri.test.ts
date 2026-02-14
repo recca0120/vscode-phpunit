@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { Uri } from 'vscode';
 import { URI } from 'vscode-uri';
 import { phpUnitProject } from './PHPUnit/__tests__/utils';

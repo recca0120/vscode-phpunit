@@ -1,13 +1,32 @@
-import { Location, Position, Range, TestItem, TestMessage, TestMessageStackFrame, TestRun } from 'vscode';
+import {
+    Location,
+    Position,
+    Range,
+    type TestItem,
+    TestMessage,
+    TestMessageStackFrame,
+    type TestRun,
+} from 'vscode';
 import { URI } from 'vscode-uri';
 import {
-    EOL, PestV2Fixer, TestFailed, TestFinished, TestIgnored, TestResult, TestRunnerObserver, TestStarted, TestSuiteFinished,
-    TestSuiteStarted,
+    EOL,
+    PestV2Fixer,
+    type TestFailed,
+    type TestFinished,
+    type TestIgnored,
+    type TestResult,
+    type TestRunnerObserver,
+    type TestStarted,
+    type TestSuiteFinished,
+    type TestSuiteStarted,
 } from '../PHPUnit';
-import { TestCase } from '../TestCollection';
+import type { TestCase } from '../TestCollection';
 
 export class TestResultObserver implements TestRunnerObserver {
-    constructor(private queue: Map<TestCase, TestItem>, private testRun: TestRun) { }
+    constructor(
+        private queue: Map<TestCase, TestItem>,
+        private testRun: TestRun,
+    ) {}
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -55,34 +74,48 @@ export class TestResultObserver implements TestRunnerObserver {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
-            const current = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
-            const line = current ? current.line - 1 : test.range!.start.line;
+            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
+            const line = matchingDetail ? matchingDetail.line - 1 : test.range!.start.line;
 
-            message.location = new Location(test.uri!, new Range(new Position(line, 0), new Position(line, 0)));
+            message.location = new Location(
+                test.uri!,
+                new Range(new Position(line, 0), new Position(line, 0)),
+            );
 
             message.stackTrace = details
-                .filter(({ file, line }) => file.endsWith(result.file ?? '') && line !== current.line)
-                .map(({ file, line }) => new TestMessageStackFrame(
-                    `${file}:${line}`, URI.file(file), new Position(line, 0),
-                ));
+                .filter(
+                    ({ file, line }) =>
+                        file.endsWith(result.file ?? '') && line !== matchingDetail.line,
+                )
+                .map(
+                    ({ file, line }) =>
+                        new TestMessageStackFrame(
+                            `${file}:${line}`,
+                            URI.file(file),
+                            new Position(line, 0),
+                        ),
+                );
         }
 
         return message;
     }
 
-    private doRun(result: TestResult, callback: (test: TestItem) => void) {
-        const test = this.find(result);
-        if (!test) {
+    private doRun(result: TestResult, updateTestRun: (testItem: TestItem) => void) {
+        const testItem = this.find(result);
+        if (!testItem) {
             return;
         }
 
-        callback(test);
+        updateTestRun(testItem);
     }
 
     private find(result: TestResult) {
         if ('id' in result) {
             for (const [_, testItem] of this.queue) {
-                if (result.id === testItem.id || PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)) {
+                if (
+                    result.id === testItem.id ||
+                    PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)
+                ) {
                     return testItem;
                 }
             }

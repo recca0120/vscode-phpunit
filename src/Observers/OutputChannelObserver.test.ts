@@ -1,13 +1,18 @@
-import 'jest';
 import * as semver from 'semver';
+import { beforeEach, describe, expect, it, type Mock } from 'vitest';
+import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
-import { OutputChannel, TestRunRequest } from 'vscode';
-import { Builder, Configuration, EOL, PHPUnitXML, TestRunner } from '../PHPUnit';
-import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
-import { OutputChannelObserver, Printer } from './index';
+import { Configuration, EOL, PHPUnitXML, ProcessBuilder, TestRunner } from '../PHPUnit';
+import { detectPhpUnitStubs, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
 
-describe('OutputChannelObserver', () => {
+describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $phpUnitVersion)', ({
+    root,
+    phpUnitVersion,
+    binary,
+    args: stubArgs,
+}) => {
     let testRunner: TestRunner;
     let outputChannel: OutputChannel;
     let configuration: Configuration;
@@ -15,8 +20,8 @@ describe('OutputChannelObserver', () => {
     beforeEach(() => {
         configuration = new Configuration({
             php: 'php',
-            phpunit: 'vendor/bin/phpunit',
-            args: ['-c', 'phpunit.xml'],
+            phpunit: binary,
+            args: ['-c', 'phpunit.xml', ...stubArgs],
             clearOutputOnRun: true,
             showAfterExecution: 'onFailure',
         });
@@ -26,20 +31,13 @@ describe('OutputChannelObserver', () => {
             outputChannel,
             configuration,
             new PrettyPrinter(new PHPUnitXML()),
-            { continuous: false } as TestRunRequest,
         );
+        observer.setRequest({ continuous: false } as TestRunRequest);
         testRunner.observe(observer);
     });
 
-    const PHPUNIT_VERSION: string = getPhpUnitVersion();
-
     function getOutputChannel(): OutputChannel {
-        return (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
-    }
-
-    function debug(outputChannel: OutputChannel) {
-        console.log((outputChannel.appendLine as jest.Mock).mock.calls);
-        console.log((outputChannel.append as jest.Mock).mock.calls);
+        return (vscode.window.createOutputChannel as Mock).mock.results[0].value;
     }
 
     async function run(file?: string, filter?: string) {
@@ -47,8 +45,8 @@ describe('OutputChannelObserver', () => {
             filter = `--filter='^.*::(${filter})( with data set .*)?$'`;
         }
 
-        const cwd = phpUnitProject('');
-        const builder = new Builder(configuration, { cwd });
+        const cwd = root;
+        const builder = new ProcessBuilder(configuration, { cwd });
         builder.setArguments([file, filter].join(' '));
 
         await testRunner.run(builder).run();
@@ -60,7 +58,11 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            `php vendor/bin/phpunit --configuration=phpunit.xml ${testFile} --colors=never --teamcity`,
+            expect.stringMatching(
+                new RegExp(
+                    `php .+phpunit .+${testFile.replace(/[/\\]/g, '.')} --colors=never --teamcity`,
+                ),
+            ),
         );
     });
 
@@ -75,7 +77,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testRuntime', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -89,7 +91,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testConfiguration', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -145,12 +147,14 @@ describe('OutputChannelObserver', () => {
             expect.stringMatching(/\s+❌\sfailed\s\d+\sms/),
         );
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringContaining([
-                `     ┐ `,
-                `     ├ Failed asserting that false is true.`,
-                `     │ `,
-                `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
-            ].join(EOL)),
+            expect.stringContaining(
+                [
+                    `     ┐ `,
+                    `     ├ Failed asserting that false is true.`,
+                    `     │ `,
+                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+                ].join(EOL),
+            ),
         );
     });
 
@@ -158,7 +162,7 @@ describe('OutputChannelObserver', () => {
         let DOT = '';
         let ARRAY_OPEN = '(';
         let ARRAY_CLOSE = ')';
-        if (semver.gte(PHPUNIT_VERSION, '10.4.2')) {
+        if (semver.gte(phpUnitVersion, '10.4.2')) {
             DOT = ',';
             ARRAY_OPEN = '[';
             ARRAY_CLOSE = ']';
@@ -173,21 +177,23 @@ describe('OutputChannelObserver', () => {
             expect.stringMatching(/\s+❌\sis_not_same\s\d+\sms/),
         );
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringContaining([
-                `     ┐ `,
-                `     ├ Failed asserting that two arrays are identical.`,
-                `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}`,
-                `     ┊     'a' => 'b'${DOT}`,
-                `     ┊     'c' => 'd'${DOT}`,
-                `     ┊ ${ARRAY_CLOSE}`,
-                `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}`,
-                `     ┊     'e' => 'f'${DOT}`,
-                `     ┊     0 => 'g'${DOT}`,
-                `     ┊     1 => 'h'${DOT}`,
-                `     ┊ ${ARRAY_CLOSE}`,
-                `     │ `,
-                `     │ ${Printer.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
-            ].join(EOL)),
+            expect.stringContaining(
+                [
+                    `     ┐ `,
+                    `     ├ Failed asserting that two arrays are identical.`,
+                    `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}`,
+                    `     ┊     'a' => 'b'${DOT}`,
+                    `     ┊     'c' => 'd'${DOT}`,
+                    `     ┊ ${ARRAY_CLOSE}`,
+                    `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}`,
+                    `     ┊     'e' => 'f'${DOT}`,
+                    `     ┊     0 => 'g'${DOT}`,
+                    `     ┊     1 => 'h'${DOT}`,
+                    `     ┊ ${ARRAY_CLOSE}`,
+                    `     │ `,
+                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 32)}`,
+                ].join(EOL),
+            ),
         );
     });
 
@@ -203,7 +209,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testResultSummary', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -217,7 +223,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testDuration', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -237,7 +243,9 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringMatching('❌'));
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
+        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+            expect.stringMatching(/NotFound\.php/),
+        );
     });
 
     it('always show output channel', async () => {
@@ -299,7 +307,7 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.show).not.toHaveBeenCalled();
     });
 
-    it('never show output channel when failure', async () => {
+    it('never show output channel when not found', async () => {
         await configuration.update('showAfterExecution', 'never');
         const testFile = phpUnitProject('tests/NotFound.php');
         await run(testFile, undefined);
@@ -334,7 +342,16 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output when die');
+        if (semver.gte(phpUnitVersion, '12.0.0')) {
+            expect(outputChannel.appendLine).toHaveBeenCalledWith(
+                expect.stringMatching(/🟨 printed output when die/),
+            );
+            expect(outputChannel.appendLine).toHaveBeenCalledWith(
+                expect.stringMatching(/Fatal error: Premature end of PHP process/),
+            );
+        } else {
+            expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output when die');
+        }
         expect(outputChannel.show).toHaveBeenCalled();
     });
 });

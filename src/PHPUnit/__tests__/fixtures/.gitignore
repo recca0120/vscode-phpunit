@@ -1,0 +1,9 @@
+.vendor-cache/
+.phpunit.cache/
+.phpunit.result.cache
+phpunit-stub/.vscode/
+pest-stub/.vscode/
+phpunit-stub/v*/vendor/
+phpunit-stub/v*/composer.lock
+pest-stub/v*/vendor/
+pest-stub/v*/composer.lock

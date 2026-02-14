@@ -1,0 +1,37 @@
+import { inject, injectable } from 'inversify';
+import type { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
+import { TestType } from '../PHPUnit';
+import { type TestCase, TestCollection } from '../TestCollection';
+
+@injectable()
+export class TestQueueBuilder {
+    constructor(@inject(TestCollection) private testCollection: TestCollection) {}
+
+    async build(
+        tests: Iterable<TestItem>,
+        request: TestRunRequest,
+        queue = new Map<TestCase, TestItem>(),
+    ): Promise<Map<TestCase, TestItem>> {
+        for (const testItem of tests) {
+            if (request.exclude?.includes(testItem)) {
+                continue;
+            }
+
+            const testCase = this.testCollection.getTestCase(testItem);
+            if (testCase?.type === TestType.method) {
+                queue.set(testCase, testItem);
+            } else {
+                await this.build(this.collectItems(testItem.children), request, queue);
+            }
+        }
+
+        return queue;
+    }
+
+    collectItems(collection: TestItemCollection): TestItem[] {
+        const testItems: TestItem[] = [];
+        collection.forEach((testItem) => testItems.push(testItem));
+
+        return testItems;
+    }
+}

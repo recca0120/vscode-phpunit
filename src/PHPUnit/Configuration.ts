@@ -8,9 +8,9 @@ interface ConfigurationItem {
 export interface IConfiguration {
     get(key: string, defaultValue?: unknown): unknown | undefined;
 
-    has(key: string): any;
+    has(key: string): boolean;
 
-    update(key: string, value: any): Promise<void>;
+    update(key: string, value: unknown): Promise<void>;
 
     getArguments(input: string): string[];
 
@@ -20,9 +20,9 @@ export interface IConfiguration {
 export abstract class BaseConfiguration implements IConfiguration {
     abstract get(key: string, defaultValue?: unknown): unknown | undefined;
 
-    abstract has(key: string): any;
+    abstract has(key: string): boolean;
 
-    abstract update(key: string, value: any): Promise<void>;
+    abstract update(key: string, value: unknown): Promise<void>;
 
     getArguments(input: string = ''): string[] {
         const parameters = [input, ...(this.get('args', []) as string[])];
@@ -31,15 +31,22 @@ export abstract class BaseConfiguration implements IConfiguration {
     }
 
     async getConfigurationFile(root: string = ''): Promise<string | undefined> {
-        let files = ['phpunit.xml', 'phpunit.xml.dist', 'phpunit.dist.xml'].map((file) => join(root, file));
+        let files = ['phpunit.xml', 'phpunit.xml.dist', 'phpunit.dist.xml'].map((file) =>
+            join(root, file),
+        );
 
-        const configuration = this.getArguments().find((parameter: string) => parameter.startsWith('--configuration'));
+        const configuration = this.getArguments().find((parameter: string) =>
+            parameter.startsWith('--configuration'),
+        );
         if (configuration) {
             const configurationFile = configuration.replace('--configuration=', '');
             files = [configurationFile, join(root, configurationFile), ...files];
         }
 
-        return await findAsyncSequential<string>(files, async (file) => await checkFileExists(file));
+        return await findAsyncSequential<string>(
+            files,
+            async (file) => await checkFileExists(file),
+        );
     }
 }
 
@@ -50,7 +57,7 @@ export class Configuration extends BaseConfiguration {
         super();
         if (items instanceof Map) {
             this.items = items;
-        } else if (!!items) {
+        } else if (items) {
             for (const x in items) {
                 this.items.set(x, items[x]);
             }
@@ -65,7 +72,7 @@ export class Configuration extends BaseConfiguration {
         return this.items.has(key);
     }
 
-    async update(key: string, value: any) {
+    async update(key: string, value: unknown) {
         this.items.set(key, value);
     }
 }

@@ -1,88 +1,101 @@
-import {
-    TeamcityEvent, TestFailed, TestFinished, TestIgnored, TestResult, TestResultParser, TestStarted, TestSuiteFinished,
-    TestSuiteStarted,
-} from '.';
 import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../Transformer';
+import {
+    TeamcityEvent,
+    type TestFailed,
+    type TestFinished,
+    type TestIgnored,
+    type TestResult,
+    TestResultParser,
+    type TestStarted,
+    type TestSuiteFinished,
+    type TestSuiteStarted,
+} from '.';
+import { TestResultCache } from './TestResultCache';
 
 export class ProblemMatcher {
-    private cache = new Map<string, TestResult>();
+    private cache = new TestResultCache();
 
-    private lookup: { [p: string]: (result: any) => TestResult | undefined } = {
-        [TeamcityEvent.testSuiteStarted]: this.handleStarted,
-        [TeamcityEvent.testStarted]: this.handleStarted,
-        [TeamcityEvent.testFinished]: this.handleFinished,
-        [TeamcityEvent.testFailed]: this.handleFault,
-        [TeamcityEvent.testIgnored]: this.handleFault,
-        [TeamcityEvent.testSuiteFinished]: this.handleFinished,
-    };
-
-    constructor(private testResultParser: TestResultParser = new TestResultParser()) { }
+    constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
 
     parse(input: string | Buffer): TestResult | undefined {
         let result = this.testResultParser.parse(input.toString());
-        result = PestV1Fixer.fixFlowId(this.cache, result);
+        result = PestV1Fixer.fixFlowId(this.cache.asMap(), result);
 
-        return this.isResult(result) ? this.lookup[result!.event]?.call(this, result) : result;
+        if (!this.isDispatchable(result)) {
+            return result;
+        }
+
+        return this.dispatch(result!);
     }
 
-    private isResult(result?: TestResult): boolean {
+    private isDispatchable(result?: TestResult): boolean {
         return !!result && 'event' in result && 'name' in result && 'flowId' in result;
     }
 
-    private handleStarted(testResult: TestSuiteStarted | TestStarted) {
-        const cacheId = this.cacheId(testResult);
-        this.cache.set(cacheId, testResult);
+    private dispatch(result: TestResult): TestResult | undefined {
+        switch (result.event) {
+            case TeamcityEvent.testSuiteStarted:
+            case TeamcityEvent.testStarted:
+                return this.handleStarted(result as TestSuiteStarted | TestStarted);
+            case TeamcityEvent.testFailed:
+            case TeamcityEvent.testIgnored:
+                return this.handleFault(result as TestFailed | TestIgnored);
+            case TeamcityEvent.testSuiteFinished:
+            case TeamcityEvent.testFinished:
+                return this.handleFinished(result as TestSuiteFinished | TestFinished);
+            default:
+                return undefined;
+        }
+    }
 
-        return this.cache.get(cacheId);
+    private handleStarted(testResult: TestSuiteStarted | TestStarted) {
+        this.cache.set(testResult, testResult);
+
+        return this.cache.get(testResult);
     }
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
-        const cacheId = this.cacheId(testResult);
-        let prevTestResult = this.cache.get(cacheId) as (TestFailed | TestIgnored);
+        const prevTestResult = this.cache.get(testResult) as TestFailed | TestIgnored;
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
-                this.cache,
-                PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
+                this.cache.asMap(),
+                PHPUnitFixer.fixNoTestStarted(this.cache.asMap(), testResult),
             );
         }
 
         if (prevTestResult.event === TeamcityEvent.testStarted) {
-            this.cache.set(cacheId, { ...(prevTestResult ?? {}), ...testResult });
-
-            return;
+            this.cache.set(testResult, { ...prevTestResult, ...testResult });
+            return undefined;
         }
 
-        if (testResult.message) {
-            prevTestResult.message += '\n\n' + testResult.message;
-        }
-        prevTestResult.details.push(...testResult.details);
-
-        this.cache.set(cacheId, prevTestResult);
+        this.mergeFaultDetails(prevTestResult, testResult);
+        this.cache.set(testResult, prevTestResult);
 
         return undefined;
     }
 
-    private handleFinished(testResult: TestSuiteFinished | TestFinished) {
-        const cacheId = this.cacheId(testResult);
+    private mergeFaultDetails(target: TestFailed | TestIgnored, source: TestFailed | TestIgnored) {
+        if (source.message) {
+            target.message += `\n\n${source.message}`;
+        }
+        target.details.push(...source.details);
+    }
 
-        if (!this.cache.has(cacheId)) {
+    private handleFinished(testResult: TestSuiteFinished | TestFinished) {
+        if (!this.cache.has(testResult)) {
             return;
         }
 
-        const prevTestResult = this.cache.get(cacheId)!;
+        const prevTestResult = this.cache.get(testResult)!;
         const event = this.isFault(prevTestResult) ? prevTestResult.event : testResult.event;
         const result = { ...prevTestResult, ...testResult, event };
-        this.cache.delete(cacheId);
+        this.cache.delete(testResult);
 
         return result;
     }
 
     private isFault(testResult: TestResult) {
         return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
-    }
-
-    private cacheId(testResult: TestSuiteStarted | TestStarted | TestFailed | TestIgnored | TestSuiteFinished | TestFinished) {
-        return `${testResult.name}-${testResult.flowId}`;
     }
 }

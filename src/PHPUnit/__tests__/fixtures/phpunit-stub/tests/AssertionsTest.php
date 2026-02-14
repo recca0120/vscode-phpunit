@@ -3,17 +3,22 @@
 namespace Tests;
 
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 class AssertionsTest extends TestCase
 {
     use MockeryPHPUnitIntegration;
 
+    /**
+     * @group integration
+     */
     public function test_passed()
     {
         $this->assertTrue(true);
     }
 
+    #[Group('integration')]
     /**
      * @depends test_passed
      */
@@ -32,6 +37,7 @@ class AssertionsTest extends TestCase
         $a = 1;
     }
 
+    #[\PHPUnit\Framework\Attributes\Group('integration')]
     /**
      * @test
      */

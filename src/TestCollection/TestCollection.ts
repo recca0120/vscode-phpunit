@@ -1,34 +1,39 @@
-import { Position, TestController, TestItem, TestRunRequest } from 'vscode';
-import { URI } from 'vscode-uri';
+import { inject, injectable } from 'inversify';
+import type { Position, TestController, TestItem, TestRunRequest } from 'vscode';
+import type { URI } from 'vscode-uri';
 import {
-    CustomWeakMap, File, PHPUnitXML, TestCollection as BaseTestCollection, TestDefinition, TestType,
+    TestCollection as BaseTestCollection,
+    CustomWeakMap,
+    type File,
+    PHPUnitXML,
+    type TestDefinition,
+    TestType,
 } from '../PHPUnit';
-import { TestCase } from './TestCase';
+import { TYPES } from '../types';
+import type { TestCase } from './TestCase';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
+@injectable()
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
+    private testCaseIndex = new Map<string, TestCase>();
 
-    constructor(private ctrl: TestController, phpUnitXML: PHPUnitXML) {
+    constructor(
+        @inject(TYPES.TestController) private ctrl: TestController,
+        @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
+    ) {
         super(phpUnitXML);
     }
 
     getTestCase(testItem: TestItem): TestCase | undefined {
-        for (const [, testData] of this.getTestData()) {
-            const testCase = testData.get(testItem);
-            if (testCase) {
-                return testCase;
-            }
-        }
-
-        return;
+        return this.testCaseIndex.get(testItem.id);
     }
 
     findTestsByFile(uri: URI): TestItem[] {
-        const tests = [] as TestItem[];
-        for (const [test, testCase] of this.getTestCases(uri)) {
+        const tests: TestItem[] = [];
+        for (const [testItem, testCase] of this.getTestCases(uri)) {
             if (testCase.type === TestType.class) {
-                tests.push(test);
+                tests.push(testItem);
             }
         }
 
@@ -41,21 +46,18 @@ export class TestCollection extends BaseTestCollection {
         return items.length > 0 ? [items[0]] : this.findTestsByFile(uri);
     }
 
-
     findTestsByRequest(request?: TestRunRequest) {
         if (!request || !request.include) {
             return undefined;
         }
 
-        const include = request.include;
+        const includeIds = new Set(request.include.map((item) => item.id));
         const tests: TestItem[] = [];
         for (const [, testData] of this.getTestData()) {
             testData.forEach((_, testItem: TestItem) => {
-                include.forEach((test) => {
-                    if (test.id === testItem.id) {
-                        tests.push(testItem);
-                    }
-                });
+                if (includeIds.has(testItem.id)) {
+                    tests.push(testItem);
+                }
             });
         }
 
@@ -65,9 +67,12 @@ export class TestCollection extends BaseTestCollection {
     reset() {
         for (const [, testData] of this.getTestData()) {
             for (const [testItem] of testData) {
-                testItem.parent ? testItem.parent.children.delete(testItem.id) : this.ctrl.items.delete(testItem.id);
+                testItem.parent
+                    ? testItem.parent.children.delete(testItem.id)
+                    : this.ctrl.items.delete(testItem.id);
             }
         }
+        this.testCaseIndex.clear();
 
         return super.reset();
     }
@@ -82,6 +87,7 @@ export class TestCollection extends BaseTestCollection {
         testData.clear();
         for (const [testItem, testCase] of testHierarchyBuilder.get()) {
             testData.set(testItem, testCase);
+            this.testCaseIndex.set(testItem.id, testCase);
         }
 
         return testDefinitionBuilder.get();
@@ -105,7 +111,10 @@ export class TestCollection extends BaseTestCollection {
     private getTestData() {
         const workspace = this.getWorkspace();
         if (!this.testItems.has(workspace.fsPath)) {
-            this.testItems.set(workspace.fsPath, new Map<string, CustomWeakMap<TestItem, TestCase>>());
+            this.testItems.set(
+                workspace.fsPath,
+                new Map<string, CustomWeakMap<TestItem, TestCase>>(),
+            );
         }
 
         return this.testItems.get(workspace.fsPath)!;
@@ -113,9 +122,9 @@ export class TestCollection extends BaseTestCollection {
 
     private inRangeTestItems(uri: URI, position: Position) {
         const items: TestItem[] = [];
-        for (const [test, testCase] of this.getTestCases(uri)) {
-            if (testCase.inRange(test, position)) {
-                items.push(test);
+        for (const [testItem, testCase] of this.getTestCases(uri)) {
+            if (testCase.inRange(testItem, position)) {
+                items.push(testItem);
             }
         }
         items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
@@ -135,18 +144,18 @@ export class TestCollection extends BaseTestCollection {
                 return;
             }
 
-            let item = testItem;
-            while (item.parent) {
-                const parent = item.parent;
+            let current = testItem;
+            while (current.parent) {
+                const parent = current.parent;
                 const children = parent.children;
-                children.delete(item.id);
+                children.delete(current.id);
                 if (children.size !== 0) {
                     break;
                 }
 
-                item = parent;
-                if (!item.parent) {
-                    this.ctrl.items.delete(item.id);
+                current = parent;
+                if (!current.parent) {
+                    this.ctrl.items.delete(current.id);
                 }
             }
         });

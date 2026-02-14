@@ -1,4 +1,4 @@
-import { WorkspaceConfiguration } from 'vscode';
+import type { WorkspaceConfiguration } from 'vscode';
 import { BaseConfiguration } from './PHPUnit';
 
 export class Configuration extends BaseConfiguration {
@@ -14,11 +14,11 @@ export class Configuration extends BaseConfiguration {
         return this.workspaceConfiguration.get(key, defaultValue);
     }
 
-    has(key: string): any {
+    has(key: string): boolean {
         return this.workspaceConfiguration.has(key);
     }
 
-    async update(key: string, value: any): Promise<void> {
+    async update(key: string, value: unknown): Promise<void> {
         return this.workspaceConfiguration.update(key, value);
     }
 }

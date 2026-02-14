@@ -1,22 +1,21 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import { Declaration, Node } from 'php-parser';
-import { PHPUnitXML } from '../PHPUnitXML';
-import { TestDefinition, TestType } from '../types';
+import type { Comment, Declaration, Node } from 'php-parser';
+import type { PHPUnitXML } from '../PHPUnitXML';
+import type { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
-import { Parser } from './Parser';
+import type { Parser } from './Parser';
 import { PestParser } from './PestParser';
-import { PHPDefinition } from './PHPDefinition';
 import { PHPUnitParser } from './PHPUnitParser';
+import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestParser {
     private parsers: Parser[] = [new PestParser(), new PHPUnitParser()];
-    private eventEmitter = new EventEmitter;
+    private eventEmitter = new EventEmitter();
 
-    constructor(private phpUnitXML: PHPUnitXML) {
-    }
+    constructor(private phpUnitXML: PHPUnitXML) {}
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
         this.eventEmitter.on(`${eventName}`, callback);
@@ -27,27 +26,12 @@ export class TestParser {
     }
 
     parse(text: Buffer | string, file: string, testsuite?: string) {
-        text = text.toString();
-
-        // Todo https://github.com/glayzzle/php-parser/issues/170
-        text = text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
-
         try {
-            const ast = engine.parseCode(text, file);
-
-            // https://github.com/glayzzle/php-parser/issues/155
-            // currently inline comments include the line break at the end, we need to
-            // strip those out and update the end location for each comment manually
-            ast.comments?.forEach((comment) => {
-                if (comment.value[comment.value.length - 1] === '\r') {
-                    comment.value = comment.value.slice(0, -1);
-                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
-                }
-                if (comment.value[comment.value.length - 1] === '\n') {
-                    comment.value = comment.value.slice(0, -1);
-                    comment.loc!.end.offset = comment.loc!.end.offset - 1;
-                }
-            });
+            const preprocessed = applyInlinePlaceholderWorkaround(text.toString());
+            const ast = engine.parseCode(preprocessed, file);
+            if (ast.comments) {
+                normalizeCommentLineBreaks(ast.comments);
+            }
 
             return this.parseAst(ast, file, testsuite);
         } catch (e) {
@@ -57,12 +41,19 @@ export class TestParser {
         }
     }
 
-    private parseAst(declaration: Declaration | Node, file: string, testsuite?: string): TestDefinition[] | undefined {
-        const definition = new PHPDefinition(declaration, { phpUnitXML: this.phpUnitXML, file });
+    private parseAst(
+        declaration: Declaration | Node,
+        file: string,
+        testsuite?: string,
+    ): TestDefinition[] | undefined {
+        const definition = new PhpAstNodeWrapper(declaration, {
+            phpUnitXML: this.phpUnitXML,
+            file,
+        });
 
         for (const parser of this.parsers) {
             const tests = parser.parse(definition);
-            tests?.forEach((testDefinition) => testDefinition.testsuite = testsuite);
+            tests?.forEach((testDefinition) => (testDefinition.testsuite = testsuite));
             if (tests) {
                 return this.emit(tests);
             }
@@ -72,7 +63,7 @@ export class TestParser {
     }
 
     private emit(tests: TestDefinition[]) {
-        tests.forEach(test => {
+        tests.forEach((test) => {
             this.eventEmitter.emit(`${test.type}`, test);
             if (test.children && test.children.length > 0) {
                 this.emit(test.children);
@@ -81,4 +72,25 @@ export class TestParser {
 
         return tests;
     }
+}
+
+/** Workaround for https://github.com/glayzzle/php-parser/issues/170 */
+function applyInlinePlaceholderWorkaround(text: string): string {
+    return text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
+}
+
+/** Workaround for https://github.com/glayzzle/php-parser/issues/155 */
+function normalizeCommentLineBreaks(comments: Comment[]): void {
+    comments.forEach((comment) => {
+        if (comment.value[comment.value.length - 1] === '\r') {
+            comment.value = comment.value.slice(0, -1);
+            // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
+            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+        }
+        if (comment.value[comment.value.length - 1] === '\n') {
+            comment.value = comment.value.slice(0, -1);
+            // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
+            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+        }
+    });
 }

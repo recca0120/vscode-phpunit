@@ -1,8 +1,20 @@
-import { Builder } from './CommandBuilder';
-import {
-    TeamcityEvent, TestConfiguration, TestCount, TestDuration, TestFailed, TestFinished, TestIgnored, TestProcesses,
-    TestResult, TestResultSummary, TestRuntime, TestStarted, TestSuiteFinished, TestSuiteStarted, TestVersion,
+import type {
+    TestConfiguration,
+    TestCount,
+    TestDuration,
+    TestFailed,
+    TestFinished,
+    TestIgnored,
+    TestProcesses,
+    TestResultSummary,
+    TestRuntime,
+    TestStarted,
+    TestSuiteFinished,
+    TestSuiteStarted,
+    TestVersion,
 } from './ProblemMatcher';
+import { TeamcityEvent, type TestResult } from './ProblemMatcher';
+import type { ProcessBuilder } from './ProcessBuilder';
 
 export enum TestRunnerEvent {
     start = 'start',
@@ -18,7 +30,7 @@ export enum TestRunnerEvent {
 
 export type EventResultMap = {
     [TestRunnerEvent.start]: undefined;
-    [TestRunnerEvent.run]: Builder;
+    [TestRunnerEvent.run]: ProcessBuilder;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;
@@ -43,100 +55,85 @@ export type EventResultMap = {
 
 export type TestRunnerObserver = Partial<{
     [K in keyof EventResultMap]: (result: EventResultMap[K]) => void;
-} & { [p in TeamcityEvent]: (result: EventResultMap[p]) => void }>
+}>;
 
 export class TestRunnerEventProxy implements TestRunnerObserver {
-    private listeners: { [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void> } = {};
+    private listeners: {
+        [K in keyof EventResultMap]?: Array<(result: EventResultMap[K]) => void>;
+    } = {};
 
     start(): void {
-        this.emit(TestRunnerEvent.start, undefined);
+        this.notify(TestRunnerEvent.start, undefined);
     }
-
-    run(builder: Builder): void {
-        this.emit(TestRunnerEvent.run, builder);
+    run(builder: ProcessBuilder): void {
+        this.notify(TestRunnerEvent.run, builder);
     }
-
     line(line: string): void {
-        this.emit(TestRunnerEvent.line, line);
+        this.notify(TestRunnerEvent.line, line);
     }
-
-    output(output: string): void {
-        this.emit(TestRunnerEvent.output, output);
-    }
-
-    error(error: string): void {
-        this.emit(TestRunnerEvent.error, error);
-    }
-
-    close(code: number | null): void {
-        this.emit(TestRunnerEvent.close, code);
-    }
-
-    abort(): void {
-        this.emit(TestRunnerEvent.abort, undefined);
-    }
-
-    done(): void {
-        this.emit(TestRunnerEvent.done, undefined);
-    }
-
     result(result: TestResult): void {
-        this.emit(TestRunnerEvent.result, result);
+        this.notify(TestRunnerEvent.result, result);
+    }
+    output(output: string): void {
+        this.notify(TestRunnerEvent.output, output);
+    }
+    error(error: string): void {
+        this.notify(TestRunnerEvent.error, error);
+    }
+    close(code: number | null): void {
+        this.notify(TestRunnerEvent.close, code);
+    }
+    abort(): void {
+        this.notify(TestRunnerEvent.abort, undefined);
+    }
+    done(): void {
+        this.notify(TestRunnerEvent.done, undefined);
     }
 
     testVersion(result: TestVersion): void {
-        this.emit(TeamcityEvent.testVersion, result);
+        this.notify(TeamcityEvent.testVersion, result);
     }
-
     testProcesses(result: TestProcesses): void {
-        this.emit(TeamcityEvent.testProcesses, result);
+        this.notify(TeamcityEvent.testProcesses, result);
     }
-
     testRuntime(result: TestRuntime): void {
-        this.emit(TeamcityEvent.testRuntime, result);
+        this.notify(TeamcityEvent.testRuntime, result);
     }
-
     testConfiguration(result: TestConfiguration): void {
-        this.emit(TeamcityEvent.testConfiguration, result);
+        this.notify(TeamcityEvent.testConfiguration, result);
     }
-
     testSuiteStarted(result: TestSuiteStarted): void {
-        this.emit(TeamcityEvent.testSuiteStarted, result);
+        this.notify(TeamcityEvent.testSuiteStarted, result);
     }
-
     testCount(result: TestCount): void {
-        this.emit(TeamcityEvent.testCount, result);
+        this.notify(TeamcityEvent.testCount, result);
     }
-
     testStarted(result: TestStarted): void {
-        this.emit(TeamcityEvent.testStarted, result);
+        this.notify(TeamcityEvent.testStarted, result);
     }
-
     testFinished(result: TestFinished): void {
-        this.emit(TeamcityEvent.testFinished, result);
+        this.notify(TeamcityEvent.testFinished, result);
     }
-
     testFailed(result: TestFailed): void {
-        this.emit(TeamcityEvent.testFailed, result);
+        this.notify(TeamcityEvent.testFailed, result);
     }
-
     testIgnored(result: TestIgnored): void {
-        this.emit(TeamcityEvent.testIgnored, result);
+        this.notify(TeamcityEvent.testIgnored, result);
     }
-
     testSuiteFinished(result: TestSuiteFinished): void {
-        this.emit(TeamcityEvent.testSuiteFinished, result);
+        this.notify(TeamcityEvent.testSuiteFinished, result);
     }
-
     testDuration(result: TestDuration): void {
-        this.emit(TeamcityEvent.testDuration, result);
+        this.notify(TeamcityEvent.testDuration, result);
     }
-
     testResultSummary(result: TestResultSummary): void {
-        this.emit(TeamcityEvent.testResultSummary, result);
+        this.notify(TeamcityEvent.testResultSummary, result);
     }
 
-    on<K extends keyof EventResultMap>(eventName: K, fn: (result: EventResultMap[K]) => void): this {
+    on<K extends keyof EventResultMap>(
+        eventName: K,
+        fn: (result: EventResultMap[K]) => void,
+    ): this {
         if (!this.listeners[eventName]) {
             this.listeners[eventName] = [];
         }
@@ -145,7 +142,7 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
         return this;
     }
 
-    private emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void {
-        this.listeners[eventName]?.forEach(callback => callback(result));
+    private notify<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void {
+        this.listeners[eventName]?.forEach((callback) => callback(result));
     }
 }

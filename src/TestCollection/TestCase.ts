@@ -1,22 +1,23 @@
-import { Position, TestItem } from 'vscode';
-import { Builder, TestDefinition, TestType } from '../PHPUnit';
-import { FilterStrategyFactory } from '../PHPUnit/CommandBuilder/FilterStrategy';
+import type { Position, TestItem } from 'vscode';
+import {
+    FilterStrategyFactory,
+    type ProcessBuilder,
+    type TestDefinition,
+    TestType,
+} from '../PHPUnit';
 
 export class TestCase {
-    constructor(private testDefinition: TestDefinition) { }
+    constructor(private testDefinition: TestDefinition) {}
 
     get type() {
         return this.testDefinition.type;
     }
 
-    get groups(): string[] {
-        return (this.testDefinition.annotations?.group as string[]) ?? [];
-    }
-
-    update(builder: Builder, index: number) {
-        return builder.clone()
+    configureProcessBuilder(builder: ProcessBuilder, index: number) {
+        return builder
+            .clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))
-            .setArguments(FilterStrategyFactory.getStrategy(this.testDefinition).getFilter());
+            .setArguments(FilterStrategyFactory.create(this.testDefinition).getFilter());
     }
 
     inRange = (test: TestItem, position: Position) => {

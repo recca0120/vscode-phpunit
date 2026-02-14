@@ -1,14 +1,14 @@
-import { expect } from '@jest/globals';
-import { TestController, tests } from 'vscode';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { type TestController, tests } from 'vscode';
 import { PHPUnitXML, TestParser } from '../PHPUnit';
 import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 type CODE = {
-    testsuite: { name: string, path: string },
-    file: string,
-    code: string
-}
+    testsuite: { name: string; path: string };
+    file: string;
+    code: string;
+};
 
 export const generateXML = (text: string) => {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -26,20 +26,24 @@ ${namespace};
 
 class ${className} extends TestCase 
 {
-${methods.map((name) => `
+${methods
+    .map(
+        (name) => `
     public function ${name}() {
         $this->assertTrue(true);
     }
-`).join('')}
+`,
+    )
+    .join('')}
 }`;
 
 describe('TestHierarchyBuilder', () => {
     let ctrl: TestController;
     let configurationFile: string;
 
-    const toTree = (items: any) => {
-        const results = [] as any[];
-        items.forEach((item: any) => {
+    const toTree = (items: import('vscode').TestItemCollection) => {
+        const results: { id: string; label: string; children: ReturnType<typeof toTree> }[] = [];
+        items.forEach((item: import('vscode').TestItem) => {
             results.push({ id: item.id, label: item.label, children: toTree(item.children) });
         });
 
@@ -47,25 +51,30 @@ describe('TestHierarchyBuilder', () => {
     };
 
     const givenCodes = (codes: CODE[]) => {
-        const testsuites = Object.entries(codes
-            .map(({ testsuite }) => testsuite)
-            .reduce((items, item) => {
-                if (!(item.name in items)) {
-                    items[item.name] = [];
-                }
-                items[item.name].push(item.path);
+        const testsuites = Object.entries(
+            codes
+                .map(({ testsuite }) => testsuite)
+                .reduce(
+                    (items, item) => {
+                        if (!(item.name in items)) {
+                            items[item.name] = [];
+                        }
+                        items[item.name].push(item.path);
 
-                return items;
-            }, {} as { [index: string]: string[] }))
-            .map(([name, paths]) => {
-                const directories = paths.map(path => `<directory>${path}</directory>`).join('');
+                        return items;
+                    },
+                    {} as { [index: string]: string[] },
+                ),
+        ).map(([name, paths]) => {
+            const directories = paths.map((path) => `<directory>${path}</directory>`).join('');
 
-                return `<testsuite name="${name}">${directories}</testsuite>`;
-            });
+            return `<testsuite name="${name}">${directories}</testsuite>`;
+        });
 
-        const phpUnitXml = (new PHPUnitXML()).load(generateXML(
-            `<testsuites>${testsuites.join('')}</testsuites>`,
-        ), configurationFile);
+        const phpUnitXml = new PHPUnitXML().load(
+            generateXML(`<testsuites>${testsuites.join('')}</testsuites>`),
+            configurationFile,
+        );
 
         const testParser = new TestParser(phpUnitXml);
         const builder = new TestHierarchyBuilder(ctrl, testParser);
@@ -80,14 +89,16 @@ describe('TestHierarchyBuilder', () => {
     });
 
     describe('PHPUnit', () => {
-        beforeEach(() => configurationFile = phpUnitProject('phpunit.xml'));
+        beforeEach(() => (configurationFile = phpUnitProject('phpunit.xml')));
 
         it('no namespace', () => {
-            givenCodes([{
-                testsuite: { name: 'default', path: 'tests' },
-                file: phpUnitProject('tests/AssertionsTest.php'),
-                code: givenPhp('', 'AssertionsTest', ['test_passed', 'test_failed']),
-            }]);
+            givenCodes([
+                {
+                    testsuite: { name: 'default', path: 'tests' },
+                    file: phpUnitProject('tests/AssertionsTest.php'),
+                    code: givenPhp('', 'AssertionsTest', ['test_passed', 'test_failed']),
+                },
+            ]);
 
             expect(toTree(ctrl.items)).toEqual([
                 {
@@ -110,11 +121,13 @@ describe('TestHierarchyBuilder', () => {
         });
 
         it('nested namespace', () => {
-            givenCodes([{
-                testsuite: { name: 'default', path: 'tests' },
-                file: phpUnitProject('tests/AssertionsTest.php'),
-                code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
-            }]);
+            givenCodes([
+                {
+                    testsuite: { name: 'default', path: 'tests' },
+                    file: phpUnitProject('tests/AssertionsTest.php'),
+                    code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
+                },
+            ]);
 
             expect(toTree(ctrl.items)).toEqual([
                 {
@@ -138,15 +151,18 @@ describe('TestHierarchyBuilder', () => {
         });
 
         it('sibling namespace', () => {
-            givenCodes([{
-                testsuite: { name: 'default', path: 'tests' },
-                file: phpUnitProject('tests/AssertionsTest.php'),
-                code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
-            }, {
-                testsuite: { name: 'default', path: 'tests' },
-                file: phpUnitProject('tests/Assertions2Test.php'),
-                code: givenPhp('namespace Tests', 'Assertions2Test', ['test_passed']),
-            }]);
+            givenCodes([
+                {
+                    testsuite: { name: 'default', path: 'tests' },
+                    file: phpUnitProject('tests/AssertionsTest.php'),
+                    code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
+                },
+                {
+                    testsuite: { name: 'default', path: 'tests' },
+                    file: phpUnitProject('tests/Assertions2Test.php'),
+                    code: givenPhp('namespace Tests', 'Assertions2Test', ['test_passed']),
+                },
+            ]);
 
             expect(toTree(ctrl.items)).toEqual([
                 {
@@ -181,22 +197,23 @@ describe('TestHierarchyBuilder', () => {
         });
 
         it('two testsuites', () => {
-            givenCodes([{
-                testsuite: { name: 'Unit', path: 'tests/Unit' },
-                file: phpUnitProject('tests/Feature/ExampleTest.php'),
-                code: givenPhp('namespace Tests\\Unit', 'ExampleTest', ['test_passed']),
-            }, {
-                testsuite: { name: 'Feature', path: 'tests/Feature' },
-                file: phpUnitProject('tests/Feature/ExampleTest.php'),
-                code: givenPhp('namespace Tests\\Feature', 'ExampleTest', ['test_passed']),
-            }]);
-
-            // console.log(toTree(ctrl.items));
+            givenCodes([
+                {
+                    testsuite: { name: 'Unit', path: 'tests/Unit' },
+                    file: phpUnitProject('tests/Feature/ExampleTest.php'),
+                    code: givenPhp('namespace Tests\\Unit', 'ExampleTest', ['test_passed']),
+                },
+                {
+                    testsuite: { name: 'Feature', path: 'tests/Feature' },
+                    file: phpUnitProject('tests/Feature/ExampleTest.php'),
+                    code: givenPhp('namespace Tests\\Feature', 'ExampleTest', ['test_passed']),
+                },
+            ]);
         });
     });
 
     describe('PEST', () => {
-        beforeEach(() => configurationFile = pestProject('phpunit.xml'));
+        beforeEach(() => (configurationFile = pestProject('phpunit.xml')));
 
         it('nested describe', () => {
             const code = `<?php
@@ -228,55 +245,61 @@ test('Test3', function () {
     expect(true)->toBe(false);
 });
 `;
-            givenCodes([{
-                testsuite: { name: 'default', path: 'tests' },
-                file: pestProject('tests/ExampleTest.php'),
-                code: code,
-            }]);
+            givenCodes([
+                {
+                    testsuite: { name: 'default', path: 'tests' },
+                    file: pestProject('tests/ExampleTest.php'),
+                    code: code,
+                },
+            ]);
 
-            expect(toTree(ctrl.items)).toEqual([{
-                id: 'namespace:Tests',
-                label: '$(symbol-namespace) Tests',
-                children: [{
-                    id: 'Tests\\ExampleTest',
-                    label: '$(symbol-class) ExampleTest',
+            expect(toTree(ctrl.items)).toEqual([
+                {
+                    id: 'namespace:Tests',
+                    label: '$(symbol-namespace) Tests',
                     children: [
-                        expect.objectContaining({
-                            id: 'tests/ExampleTest.php::`Given something ...`',
-                            label: '$(symbol-class) Given something ...',
-                        }),
                         {
-                            id: 'tests/ExampleTest.php::Test1',
-                            label: '$(symbol-method) Test1',
-                            children: [],
-                        },
-                        {
-                            id: 'tests/ExampleTest.php::`Given something else...`',
-                            label: '$(symbol-class) Given something else...',
+                            id: 'Tests\\ExampleTest',
+                            label: '$(symbol-class) ExampleTest',
                             children: [
                                 expect.objectContaining({
-                                    id: 'tests/ExampleTest.php::`Given something else...` → `When...`',
-                                    label: '$(symbol-class) When...',
+                                    id: 'tests/ExampleTest.php::`Given something ...`',
+                                    label: '$(symbol-class) Given something ...',
                                 }),
                                 {
-                                    id: 'tests/ExampleTest.php::`Given something else...` → Test2',
-                                    label: '$(symbol-method) Test2',
+                                    id: 'tests/ExampleTest.php::Test1',
+                                    label: '$(symbol-method) Test1',
                                     children: [],
                                 },
-                                expect.objectContaining({
-                                    id: 'tests/ExampleTest.php::`Given something else...` → `When also...`',
-                                    label: '$(symbol-class) When also...',
-                                }),
+                                {
+                                    id: 'tests/ExampleTest.php::`Given something else...`',
+                                    label: '$(symbol-class) Given something else...',
+                                    children: [
+                                        expect.objectContaining({
+                                            id: 'tests/ExampleTest.php::`Given something else...` → `When...`',
+                                            label: '$(symbol-class) When...',
+                                        }),
+                                        {
+                                            id: 'tests/ExampleTest.php::`Given something else...` → Test2',
+                                            label: '$(symbol-method) Test2',
+                                            children: [],
+                                        },
+                                        expect.objectContaining({
+                                            id: 'tests/ExampleTest.php::`Given something else...` → `When also...`',
+                                            label: '$(symbol-class) When also...',
+                                        }),
+                                    ],
+                                },
+                                {
+                                    id: 'tests/ExampleTest.php::Test3',
+                                    label: '$(symbol-method) Test3',
+                                    children: [],
+                                },
                             ],
                         },
-                        {
-                            id: 'tests/ExampleTest.php::Test3',
-                            label: '$(symbol-method) Test3',
-                            children: [],
-                        },
                     ],
-                }],
-            }]);
+                },
+            ]);
         });
     });
 });

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { titleCase } from './utils';
 
 describe('utils', () => {

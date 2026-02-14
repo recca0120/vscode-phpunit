@@ -5,6 +5,10 @@ node_modules
 *.vsix
 
 .idea/
-coverage/
+/coverage/
+build/
 .DS_Store
 *.zip
+
+.claude/
+CLAUDE.md

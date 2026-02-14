@@ -1,6 +1,6 @@
 import { camelCase } from '../utils';
-import { TeamcityEvent, TestResultSummary } from './types';
-import { IParser } from './ValueParser';
+import { TeamcityEvent, type TestResultSummary } from './types';
+import type { IParser } from './ValueParser';
 
 export class TestResultSummaryParser implements IParser<TestResultSummary> {
     private readonly pattern = (() => {
@@ -19,7 +19,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
         return new RegExp(
             [
                 `^OK\\s+\\(\\d+\\stest(s)?`,
-                `\s*${tests}${assertions}((${items.join('|')}):${end})*`,
+                `s*${tests}${assertions}((${items.join('|')}):${end})*`,
             ].join('|'),
             'ig',
         );
@@ -30,14 +30,11 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
     }
 
     public parse(text: string) {
-        const pattern = new RegExp(
-            `((?<name>[\\w\\s]+):\\s(?<count>\\d+)|(?<count2>\\d+)\\s(?<name2>\\w+))[.s,]?`,
-            'ig',
-        );
+        const pattern = /((?<name>[\w\s]+):\s(?<count>\d+)|(?<count2>\d+)\s(?<name2>\w+))[.s,]?/gi;
         const event = TeamcityEvent.testResultSummary;
 
         return [...text.matchAll(pattern)].reduce(
-            (result: any, match) => {
+            (result: TestResultSummary & Record<string, unknown>, match) => {
                 const matched = match.groups!;
                 const [name, count] = matched.name
                     ? [matched.name, matched.count]
