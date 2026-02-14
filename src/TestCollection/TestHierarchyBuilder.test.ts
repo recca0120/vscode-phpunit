@@ -209,7 +209,6 @@ describe('TestHierarchyBuilder', () => {
                     code: givenPhp('namespace Tests\\Feature', 'ExampleTest', ['test_passed']),
                 },
             ]);
-
         });
     });
 

@@ -3,11 +3,16 @@ import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
 import { Configuration, EOL, PHPUnitXML, ProcessBuilder, TestRunner } from '../PHPUnit';
-import { getPhpUnitVersion, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { detectPhpUnitStubs, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
 
-describe('OutputChannelObserver', () => {
+describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $phpUnitVersion)', ({
+    root,
+    phpUnitVersion,
+    binary,
+    args: stubArgs,
+}) => {
     let testRunner: TestRunner;
     let outputChannel: OutputChannel;
     let configuration: Configuration;
@@ -15,8 +20,8 @@ describe('OutputChannelObserver', () => {
     beforeEach(() => {
         configuration = new Configuration({
             php: 'php',
-            phpunit: 'vendor/bin/phpunit',
-            args: ['-c', 'phpunit.xml'],
+            phpunit: binary,
+            args: ['-c', 'phpunit.xml', ...stubArgs],
             clearOutputOnRun: true,
             showAfterExecution: 'onFailure',
         });
@@ -31,8 +36,6 @@ describe('OutputChannelObserver', () => {
         testRunner.observe(observer);
     });
 
-    const PHPUNIT_VERSION: string = getPhpUnitVersion();
-
     function getOutputChannel(): OutputChannel {
         return (vscode.window.createOutputChannel as Mock).mock.results[0].value;
     }
@@ -42,7 +45,7 @@ describe('OutputChannelObserver', () => {
             filter = `--filter='^.*::(${filter})( with data set .*)?$'`;
         }
 
-        const cwd = phpUnitProject('');
+        const cwd = root;
         const builder = new ProcessBuilder(configuration, { cwd });
         builder.setArguments([file, filter].join(' '));
 
@@ -55,7 +58,11 @@ describe('OutputChannelObserver', () => {
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            `php vendor/bin/phpunit --configuration=phpunit.xml ${testFile} --colors=never --teamcity`,
+            expect.stringMatching(
+                new RegExp(
+                    `php .+phpunit .+${testFile.replace(/[/\\]/g, '.')} --colors=never --teamcity`,
+                ),
+            ),
         );
     });
 
@@ -70,7 +77,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testRuntime', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -84,7 +91,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testConfiguration', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -155,7 +162,7 @@ describe('OutputChannelObserver', () => {
         let DOT = '';
         let ARRAY_OPEN = '(';
         let ARRAY_CLOSE = ')';
-        if (semver.gte(PHPUNIT_VERSION, '10.4.2')) {
+        if (semver.gte(phpUnitVersion, '10.4.2')) {
             DOT = ',';
             ARRAY_OPEN = '[';
             ARRAY_CLOSE = ']';
@@ -202,7 +209,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testResultSummary', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -216,7 +223,7 @@ describe('OutputChannelObserver', () => {
     });
 
     it('should trigger testDuration', async () => {
-        if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+        if (semver.lt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -335,7 +342,16 @@ describe('OutputChannelObserver', () => {
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output when die');
+        if (semver.gte(phpUnitVersion, '12.0.0')) {
+            expect(outputChannel.appendLine).toHaveBeenCalledWith(
+                expect.stringMatching(/🟨 printed output when die/),
+            );
+            expect(outputChannel.appendLine).toHaveBeenCalledWith(
+                expect.stringMatching(/Fatal error: Premature end of PHP process/),
+            );
+        } else {
+            expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output when die');
+        }
         expect(outputChannel.show).toHaveBeenCalled();
     });
 });

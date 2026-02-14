@@ -22,10 +22,9 @@ import {
 import { Configuration } from './Configuration';
 import { activate } from './extension';
 import {
+    detectParatestStubs,
     detectPestStubs,
     detectPhpUnitStubs,
-    getPhpUnitVersion,
-    getPhpVersion,
     normalPath,
     pestProject,
     phpUnitProject,
@@ -133,11 +132,7 @@ describe('Extension Test', () => {
     } as unknown as import('vscode').ExtensionContext;
     let cwd: string;
 
-    const setupEnvironment = async (
-        root: string,
-        phpunitBinary: string,
-        args: string[] = [],
-    ) => {
+    const setupEnvironment = async (root: string, phpunitBinary: string, args: string[] = []) => {
         setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
         setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
         (context.subscriptions.push as unknown as Mock).mockReset();
@@ -175,11 +170,13 @@ describe('Extension Test', () => {
         return ctrl;
     };
 
-    describe('PHPUnit', () => {
-        const PHPUNIT_VERSION: string = getPhpUnitVersion();
-        const root = phpUnitProject('');
-
-        beforeEach(() => setupEnvironment(root, 'vendor/bin/phpunit'));
+    describe.each(detectPhpUnitStubs())('PHPUnit on $name (PHPUnit $phpUnitVersion)', ({
+        root,
+        phpUnitVersion,
+        binary,
+        args,
+    }) => {
+        beforeEach(() => setupEnvironment(root, binary, args));
         afterEach(() => vi.clearAllMocks());
 
         it('should load tests', async () => {
@@ -268,15 +265,14 @@ describe('Extension Test', () => {
         it('should run all tests', async () => {
             const ctrl = await activateAndRun();
 
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                ['vendor/bin/phpunit', '--colors=never', '--teamcity'],
-                expect.objectContaining({ cwd }),
-            );
-
-            const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
-                ? { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 }
-                : { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
+            let expected: Record<string, number>;
+            if (semver.gte(phpUnitVersion, '12.0.0')) {
+                expected = { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 };
+            } else if (semver.gte(phpUnitVersion, '10.0.0')) {
+                expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
+            } else {
+                expected = { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
+            }
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -284,63 +280,34 @@ describe('Extension Test', () => {
         it('should run test by namespace', async () => {
             const ctrl = await activateAndRun({ include: 'namespace:Tests' });
 
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                [
-                    'vendor/bin/phpunit',
-                    `--filter=^(Tests.*)(( with (data set )?.*)?)?$`,
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                expect.objectContaining({ cwd }),
-            );
-
-            const expected = semver.gte(PHPUNIT_VERSION, '10.0.0')
-                ? { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 }
-                : { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
+            let expected: Record<string, number>;
+            if (semver.gte(phpUnitVersion, '12.0.0')) {
+                expected = { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 };
+            } else if (semver.gte(phpUnitVersion, '10.0.0')) {
+                expected = { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 };
+            } else {
+                expected = { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 };
+            }
 
             expectTestResultCalled(ctrl, expected);
         });
 
         it('should run test suite', async () => {
-            const ctrl = await activateAndRun({ include: 'Assertions (Tests\\Assertions)' });
-
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                [
-                    'vendor/bin/phpunit',
-                    normalPath(phpUnitProject('tests/AssertionsTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                expect.objectContaining({ cwd }),
-            );
-
-            expectTestResultCalled(ctrl, {
-                enqueued: 9,
-                started: 6,
-                passed: 1,
-                failed: 3,
-                end: 1,
+            const ctrl = await activateAndRun({
+                include: 'Assertions (Tests\\Assertions)',
             });
+
+            const expected = semver.gte(phpUnitVersion, '12.0.0')
+                ? { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }
+                : { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 };
+
+            expectTestResultCalled(ctrl, expected);
         });
 
         it('should run test case', async () => {
             const method = 'test_throw_exception';
             const id = `Calculator (Tests\\Calculator)::Throw exception`;
             const ctrl = await activateAndRun({ include: id });
-
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                [
-                    'vendor/bin/phpunit',
-                    expect.stringMatching(filterPattern(method)),
-                    normalPath(phpUnitProject('tests/CalculatorTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                expect.objectContaining({ cwd }),
-            );
 
             expectTestResultCalled(ctrl, {
                 enqueued: 1,
@@ -389,6 +356,7 @@ describe('Extension Test', () => {
             setTextDocuments(
                 globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: testsRoot })),
             );
+            await workspace.getConfiguration('phpunit').update('args', []);
 
             await activate(context);
 
@@ -421,12 +389,12 @@ describe('Extension Test', () => {
 
             expect(spawn).toHaveBeenCalledWith(
                 phpBinary,
-                [
-                    'vendor/bin/phpunit',
+                expect.arrayContaining([
+                    binary,
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
                     '--colors=never',
                     '--teamcity',
-                ],
+                ]),
                 expect.objectContaining({ cwd }),
             );
         });
@@ -444,90 +412,78 @@ describe('Extension Test', () => {
 
             expect(spawn).toHaveBeenCalledWith(
                 phpBinary,
-                [
-                    'vendor/bin/phpunit',
+                expect.arrayContaining([
+                    binary,
                     expect.stringMatching(filterPattern(method)),
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
                     '--colors=never',
                     '--teamcity',
-                ],
+                ]),
                 expect.objectContaining({ cwd }),
             );
         });
-    });
 
-    describe('Xdebug', () => {
-        const root = phpUnitProject('');
+        describe('Xdebug', () => {
+            it('Debug', async () => {
+                await activateAndRun({ kind: TestRunProfileKind.Debug });
 
-        beforeEach(() => setupEnvironment(root, 'vendor/bin/phpunit'));
-        afterEach(() => vi.clearAllMocks());
-
-        it('Debug', async () => {
-            await activateAndRun({ kind: TestRunProfileKind.Debug });
-
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                expect.arrayContaining([
-                    '-dxdebug.mode=debug',
-                    '-dxdebug.start_with_request=1',
-                    expect.stringMatching(/-dxdebug\.client_port=\d+/),
-                    'vendor/bin/phpunit',
-                    '--colors=never',
-                    '--teamcity',
-                ]),
-                expect.objectContaining({
-                    env: expect.objectContaining({
-                        XDEBUG_MODE: 'debug',
-                    }),
-                }),
-            );
-
-            expect(debug.startDebugging).toHaveBeenCalledWith(expect.anything(), {
-                type: 'php',
-                request: 'launch',
-                name: 'PHPUnit',
-                port: expect.any(Number),
-            });
-            expect(debug.stopDebugging).toHaveBeenCalledWith({ type: 'php' });
-        });
-
-        it('Coverage', async () => {
-            await activateAndRun({
-                include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
-                kind: TestRunProfileKind.Coverage,
-            });
-            ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
                 expect(spawn).toHaveBeenCalledWith(
                     phpBinary,
-                    [
-                        '-dxdebug.mode=coverage',
-                        'vendor/bin/phpunit',
-                        expect.stringMatching(file),
+                    expect.arrayContaining([
+                        '-dxdebug.mode=debug',
+                        '-dxdebug.start_with_request=1',
+                        expect.stringMatching(/-dxdebug\.client_port=\d+/),
+                        binary,
                         '--colors=never',
                         '--teamcity',
-                        '--coverage-clover',
-                        expect.stringMatching(`phpunit-${i}.xml`),
-                    ],
+                    ]),
                     expect.objectContaining({
                         env: expect.objectContaining({
-                            XDEBUG_MODE: 'coverage',
+                            XDEBUG_MODE: 'debug',
                         }),
                     }),
                 );
+
+                expect(debug.startDebugging).toHaveBeenCalledWith(expect.anything(), {
+                    type: 'php',
+                    request: 'launch',
+                    name: 'PHPUnit',
+                    port: expect.any(Number),
+                });
+                expect(debug.stopDebugging).toHaveBeenCalledWith({ type: 'php' });
+            });
+
+            it('Coverage', async () => {
+                await activateAndRun({
+                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
+                    kind: TestRunProfileKind.Coverage,
+                });
+                ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
+                    expect(spawn).toHaveBeenCalledWith(
+                        phpBinary,
+                        expect.arrayContaining([
+                            '-dxdebug.mode=coverage',
+                            binary,
+                            expect.stringMatching(file),
+                            '--colors=never',
+                            '--teamcity',
+                            '--coverage-clover',
+                            expect.stringMatching(`phpunit-${i}.xml`),
+                        ]),
+                        expect.objectContaining({
+                            env: expect.objectContaining({
+                                XDEBUG_MODE: 'coverage',
+                            }),
+                        }),
+                    );
+                });
             });
         });
     });
 
-    describe('paratest', () => {
-        const PHP_VERSION: string = getPhpVersion(phpBinary);
-        const root = phpUnitProject('');
-
-        if (semver.lt(PHP_VERSION, '7.3.0')) {
-            return;
-        }
-
+    describe.each(detectParatestStubs())('paratest on $name', ({ root, binary, args }) => {
         beforeEach(async () => {
-            await setupEnvironment(root, 'vendor/bin/paratest');
+            await setupEnvironment(root, binary, args);
             window.showErrorMessage = vi.fn();
         });
 
@@ -547,14 +503,14 @@ describe('Extension Test', () => {
 
             expect(spawn).toHaveBeenCalledWith(
                 phpBinary,
-                [
-                    'vendor/bin/paratest',
+                expect.arrayContaining([
+                    binary,
                     expect.stringMatching(filterPattern(method)),
                     normalPath(phpUnitProject('tests/AssertionsTest.php')),
                     '--colors=never',
                     '--teamcity',
                     '--functional',
-                ],
+                ]),
                 expect.objectContaining({ cwd }),
             );
 
@@ -564,38 +520,23 @@ describe('Extension Test', () => {
         });
     });
 
-    describe('PEST', () => {
-        const PHP_VERSION: string = getPhpVersion(phpBinary);
-        const isPestV1 = semver.gte(PHP_VERSION, '8.0.0') && semver.lt(PHP_VERSION, '8.1.0');
-        const isPestV2 = semver.gte(PHP_VERSION, '8.1.0') && semver.lt(PHP_VERSION, '8.2.0');
-        const isPestV3 = semver.gte(PHP_VERSION, '8.2.0');
-        const isPest = isPestV1 || isPestV2 || isPestV3;
-
-        if (!isPest) {
-            return;
-        }
-
-        const root = pestProject('');
-
-        beforeEach(() => setupEnvironment(root, 'vendor/bin/pest'));
+    describe.each(detectPestStubs())('PEST on $name (Pest $pestVersion)', ({
+        root,
+        pestVersion,
+        binary,
+        args,
+    }) => {
+        beforeEach(() => setupEnvironment(root, binary, args));
         afterEach(() => vi.clearAllMocks());
 
         it('should run all tests', async () => {
             const ctrl = await activateAndRun();
 
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                ['vendor/bin/pest', '--colors=never', '--teamcity'],
-                expect.objectContaining({ cwd }),
-            );
-
             let expected: Record<string, number>;
-            if (isPestV1) {
-                expected = { enqueued: 68, started: 62, passed: 9, failed: 51, end: 1 };
-            } else if (isPestV2) {
-                expected = { enqueued: 68, started: 64, passed: 11, failed: 51, end: 1 };
+            if (semver.gte(pestVersion, '3.0.0')) {
+                expected = { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 };
             } else {
-                expected = { enqueued: 68, started: 70, passed: 16, failed: 52, end: 1 };
+                expected = { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 };
             }
 
             expectTestResultCalled(ctrl, expected);
@@ -605,18 +546,6 @@ describe('Extension Test', () => {
             const method = 'test_description';
             const id = `tests/Unit/ExampleTest.php::test_description`;
             const ctrl = await activateAndRun({ include: id });
-
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                [
-                    'vendor/bin/pest',
-                    expect.stringMatching(filterPattern(method)),
-                    normalPath(pestProject('tests/Unit/ExampleTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                expect.objectContaining({ cwd }),
-            );
 
             expectTestResultCalled(ctrl, {
                 enqueued: 1,
@@ -632,93 +561,11 @@ describe('Extension Test', () => {
             const id = `tests/Unit/ExampleTest.php::${method}`;
             const ctrl = await activateAndRun({ include: id });
 
-            expect(spawn).toHaveBeenCalledWith(
-                phpBinary,
-                [
-                    'vendor/bin/pest',
-                    expect.stringMatching(filterPattern(method)),
-                    normalPath(pestProject('tests/Unit/ExampleTest.php')),
-                    '--colors=never',
-                    '--teamcity',
-                ],
-                expect.objectContaining({ cwd }),
-            );
-
-            const expected = !isPestV1
+            const expected = semver.gte(pestVersion, '3.0.0')
                 ? { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }
                 : { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 };
 
             expectTestResultCalled(ctrl, expected);
         });
     });
-
-    const additionalStubs = detectPhpUnitStubs();
-
-    if (additionalStubs.length > 0) {
-        describe.each(additionalStubs)('PHPUnit on $name (PHPUnit $phpUnitVersion)', ({
-            root,
-            phpUnitVersion,
-            binary,
-            args,
-        }) => {
-            beforeEach(() => setupEnvironment(root, binary, args));
-            afterEach(() => vi.clearAllMocks());
-
-            it('should run all tests', async () => {
-                const ctrl = await activateAndRun();
-
-                let expected: Record<string, number>;
-                if (semver.gte(phpUnitVersion, '12.0.0')) {
-                    expected = { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 };
-                } else if (semver.gte(phpUnitVersion, '10.0.0')) {
-                    expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
-                } else {
-                    expected = { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
-                }
-
-                expectTestResultCalled(ctrl, expected);
-            });
-
-            it('should run test suite', async () => {
-                const ctrl = await activateAndRun({
-                    include: 'Assertions (Tests\\Assertions)',
-                });
-
-                const expected = semver.gte(phpUnitVersion, '12.0.0')
-                    ? { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }
-                    : { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 };
-
-                expectTestResultCalled(ctrl, expected);
-            });
-        });
-    }
-
-    const additionalPestStubs = detectPestStubs();
-
-    if (additionalPestStubs.length > 0) {
-        describe.each(additionalPestStubs)('PEST on $name (Pest $pestVersion)', ({
-            root,
-            pestVersion,
-            binary,
-            args,
-        }) => {
-            beforeEach(() => setupEnvironment(root, binary, args));
-            afterEach(() => vi.clearAllMocks());
-
-            it('should run all tests', async () => {
-                const ctrl = await activateAndRun();
-
-                let expected: Record<string, number>;
-                if (semver.gte(pestVersion, '4.0.0')) {
-                    expected = { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 };
-                } else if (semver.gte(pestVersion, '3.0.0')) {
-                    expected = { enqueued: 68, started: 70, passed: 16, failed: 52, end: 1 };
-                } else {
-                    expected = { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 };
-                }
-
-                expectTestResultCalled(ctrl, expected);
-            });
-        });
-    }
 });

@@ -13,17 +13,11 @@ export const normalPath = (path: string) =>
     path.replace(/^\w:/, (matched) => matched.toLowerCase());
 
 export const getPhpUnitVersion = (): string => {
-    const output = execSync('php vendor/bin/phpunit --version', {
-        cwd: phpUnitProject(''),
-    }).toString();
-
-    return output.match(/PHPUnit\s([\d.]+)/)![1];
-};
-
-export const getPhpVersion = (phpBinary = 'php'): string => {
-    const output = execSync(`${phpBinary} --version`, { cwd: phpUnitProject('') }).toString();
-
-    return output.match(/PHP\s([\d.]+)/)![1];
+    const stubs = detectPhpUnitStubs();
+    if (stubs.length === 0) {
+        throw new Error('No PHPUnit stubs found');
+    }
+    return stubs[0].phpUnitVersion;
 };
 
 export const parseTestFile = (buffer: Buffer | string, file: string, root: string) => {
@@ -77,13 +71,47 @@ export function detectPhpUnitStubs(): PhpUnitStub[] {
                 timeout: 10000,
             }).toString();
             const phpUnitVersion = output.match(/PHPUnit\s([\d.]+)/)![1];
-            return [{
-                name: `phpunit-v${v}`,
-                root,
-                phpUnitVersion,
-                binary,
-                args: ['-c', join(root, `v${v}/phpunit.xml`)],
-            }];
+            return [
+                {
+                    name: `phpunit-v${v}`,
+                    root,
+                    phpUnitVersion,
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`)],
+                },
+            ];
+        } catch {
+            return [];
+        }
+    });
+}
+
+export interface ParatestStub {
+    name: string;
+    root: string;
+    binary: string;
+    args: string[];
+}
+
+export function detectParatestStubs(): ParatestStub[] {
+    const versions = [9, 10, 11, 12];
+    const root = phpUnitProject('');
+
+    return versions.flatMap((v) => {
+        const binary = `v${v}/vendor/bin/paratest`;
+        try {
+            execSync(`php ${binary} --version`, {
+                cwd: root,
+                timeout: 10000,
+            });
+            return [
+                {
+                    name: `paratest-v${v}`,
+                    root,
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`)],
+                },
+            ];
         } catch {
             return [];
         }
@@ -110,13 +138,15 @@ export function detectPestStubs(): PestStub[] {
                 timeout: 10000,
             }).toString();
             const pestVersion = output.match(/(\d+\.\d+\.\d+)/)![1];
-            return [{
-                name: `pest-v${v}`,
-                root,
-                pestVersion,
-                binary,
-                args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
-            }];
+            return [
+                {
+                    name: `pest-v${v}`,
+                    root,
+                    pestVersion,
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
+                },
+            ];
         } catch {
             return [];
         }

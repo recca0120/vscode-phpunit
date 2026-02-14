@@ -59,7 +59,10 @@ describe('PestTransformer', () => {
             ['%%HurHUnw7zM!', '__pest_evaluable___HurHUnw7zM_'],
             ['rundeliekend', '__pest_evaluable_rundeliekend'],
             ['g%%c!Jt9$fy#Kf', '__pest_evaluable_g__c_Jt9_fy_Kf'],
-            ['NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX', '__pest_evaluable_NRs_Gz2_hmB_W_BPD__b2U_3P_z_apnwSX'],
+            [
+                'NRs*Gz2@hmB$W$BPD%%b2U%3P%z%apnwSX',
+                '__pest_evaluable_NRs_Gz2_hmB_W_BPD__b2U_3P_z_apnwSX',
+            ],
             ['ÀÄ¤{¼÷', '__pest_evaluable_ÀÄ¤_¼÷'],
             ['ìèéàòç', '__pest_evaluable_ìèéàòç'],
             ['زهراء المعادي', '__pest_evaluable_زهراء_المعادي'],
@@ -96,11 +99,23 @@ describe('PestTransformer', () => {
             ['Німеччина', '__pest_evaluable_Німеччина'],
             ['Nam Định', '__pest_evaluable_Nam_Định'],
             ['呼和浩特', '__pest_evaluable_呼和浩特'],
-            ['test /** with comment */ should do', '__pest_evaluable_test_____with_comment____should_do'],
-            ['ensures the given closures reports the correct class name and suggests the [pest()] function', '__pest_evaluable_ensures_the_given_closures_reports_the_correct_class_name_and_suggests_the__pest____function'],
+            [
+                'test /** with comment */ should do',
+                '__pest_evaluable_test_____with_comment____should_do',
+            ],
+            [
+                'ensures the given closures reports the correct class name and suggests the [pest()] function',
+                '__pest_evaluable_ensures_the_given_closures_reports_the_correct_class_name_and_suggests_the__pest____function',
+            ],
             ['adds coverage if --min exist', '__pest_evaluable_adds_coverage_if___min_exist'],
-            [`it has emails with data set "(|'enunomaduro@gmail.com|')"`, '__pest_evaluable_it_has_emails"(\'enunomaduro@gmail.com\')"'],
-            ['test /** with comment {@*} should do', '__pest_evaluable_test_____with_comment____should_do'],
+            [
+                `it has emails with data set "(|'enunomaduro@gmail.com|')"`,
+                '__pest_evaluable_it_has_emails"(\'enunomaduro@gmail.com\')"',
+            ],
+            [
+                'test /** with comment {@*} should do',
+                '__pest_evaluable_test_____with_comment____should_do',
+            ],
         ])('PestV2Fixer.methodName(%j) → %s', (input, expected) => {
             expect(PestV2Fixer.methodName(input)).toEqual(expected);
         });
