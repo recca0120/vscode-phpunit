@@ -9,3 +9,6 @@ node_modules
 build/
 .DS_Store
 *.zip
+
+.claude/
+CLAUDE.md
