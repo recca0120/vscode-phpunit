@@ -152,7 +152,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
                     `     ┐ `,
                     `     ├ Failed asserting that false is true.`,
                     `     │ `,
-                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
                 ].join(EOL),
             ),
         );
@@ -191,7 +191,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
                     `     ┊     1 => 'h'${DOT}`,
                     `     ┊ ${ARRAY_CLOSE}`,
                     `     │ `,
-                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 32)}`,
                 ].join(EOL),
             ),
         );

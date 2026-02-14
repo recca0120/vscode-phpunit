@@ -43,6 +43,13 @@ const Uri = new Proxy(URI, {
     },
 });
 
+class FakeTestTag {
+    readonly id: string;
+    constructor(id: string) {
+        this.id = id;
+    }
+}
+
 class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem]> {
     private items = new Map<string, TestItem>();
     private readonly parent: any;
@@ -369,4 +376,5 @@ export {
     StatementCoverage,
     DocumentLink,
     debug,
+    FakeTestTag as TestTag,
 };

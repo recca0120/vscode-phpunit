@@ -63,7 +63,7 @@ describe('PrettyPrinter', () => {
             details: [
                 {
                     file: phpUnitProject('tests/AssertionsTest.php'),
-                    line: 22,
+                    line: 27,
                 },
             ],
             duration: 0,
@@ -75,7 +75,7 @@ describe('PrettyPrinter', () => {
                 `     ┐ `,
                 `     ├ Failed asserting that false is true.`,
                 `     │ `,
-                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 22)}`,
+                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
                 `     ┴ `,
                 ``,
             ].join(EOL),
@@ -94,7 +94,7 @@ describe('PrettyPrinter', () => {
             details: [
                 {
                     file: phpUnitProject('tests/AssertionsTest.php'),
-                    line: 27,
+                    line: 32,
                 },
             ],
             duration: 29,
@@ -118,7 +118,7 @@ describe('PrettyPrinter', () => {
                 `     ┊     1 => 'h',`,
                 `     ┊ ]`,
                 `     │ `,
-                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
+                `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 32)}`,
                 `     ┴ `,
                 ``,
             ].join(EOL),

@@ -169,9 +169,7 @@ describe('Extension Test', () => {
         const ctrl = getTestController();
         const testRunProfile = getTestRunProfile(ctrl, opts?.kind);
         const ids = opts?.include;
-        const include = ids
-            ? [ids].flat().map((id) => findTest(ctrl.items, id))
-            : undefined;
+        const include = ids ? [ids].flat().map((id) => findTest(ctrl.items, id)) : undefined;
         const request = { include, exclude: [], profile: testRunProfile };
         await testRunProfile.runHandler(request, new CancellationTokenSource().token);
         return ctrl;
@@ -225,9 +223,12 @@ describe('Extension Test', () => {
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
                     label: '$(symbol-method) test_passed',
                     range: {
-                        start: expect.objectContaining({ line: 11, character: 4 }),
-                        end: expect.objectContaining({ line: 14, character: 5 }),
+                        start: expect.objectContaining({ line: 15, character: 4 }),
+                        end: expect.objectContaining({ line: 18, character: 5 }),
                     },
+                    tags: expect.arrayContaining([
+                        expect.objectContaining({ id: 'group:integration' }),
+                    ]),
                 }),
             );
 
@@ -243,14 +244,10 @@ describe('Extension Test', () => {
                 'phpunit.run-file',
                 'phpunit.run-test-at-cursor',
                 'phpunit.rerun',
-                'phpunit.run-by-group',
             ]) {
-                expect(commands.registerCommand).toHaveBeenCalledWith(
-                    cmd,
-                    expect.any(Function),
-                );
+                expect(commands.registerCommand).toHaveBeenCalledWith(cmd, expect.any(Function));
             }
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(8);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
         });
 
         it('should only update configuration when phpunit settings change', async () => {
@@ -281,10 +278,14 @@ describe('Extension Test', () => {
         it('should run all tests', async () => {
             const ctrl = await activateAndRun();
 
-            const expected = resolveExpected(phpUnitVersion, [
-                ['12.0.0', { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 }],
-                ['10.0.0', { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 }],
-            ], { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 });
+            const expected = resolveExpected(
+                phpUnitVersion,
+                [
+                    ['12.0.0', { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 }],
+                    ['10.0.0', { enqueued: 28, started: 34, passed: 22, failed: 10, end: 1 }],
+                ],
+                { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 },
+            );
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -292,10 +293,14 @@ describe('Extension Test', () => {
         it('should run test by namespace', async () => {
             const ctrl = await activateAndRun({ include: 'namespace:Tests' });
 
-            const expected = resolveExpected(phpUnitVersion, [
-                ['12.0.0', { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 }],
-                ['10.0.0', { enqueued: 27, started: 34, passed: 23, failed: 9, end: 1 }],
-            ], { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 });
+            const expected = resolveExpected(
+                phpUnitVersion,
+                [
+                    ['12.0.0', { enqueued: 27, started: 25, passed: 15, failed: 8, end: 1 }],
+                    ['10.0.0', { enqueued: 27, started: 33, passed: 22, failed: 9, end: 1 }],
+                ],
+                { enqueued: 27, started: 28, passed: 16, failed: 10, end: 1 },
+            );
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -305,9 +310,14 @@ describe('Extension Test', () => {
                 include: 'Assertions (Tests\\Assertions)',
             });
 
-            const expected = resolveExpected(phpUnitVersion, [
-                ['12.0.0', { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }],
-            ], { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 });
+            const expected = resolveExpected(
+                phpUnitVersion,
+                [
+                    ['12.0.0', { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }],
+                    ['10.0.0', { enqueued: 9, started: 11, passed: 5, failed: 4, end: 1 }],
+                ],
+                { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 },
+            );
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -337,6 +347,64 @@ describe('Extension Test', () => {
                     },
                 }),
             );
+        });
+
+        it('should run all tests with group arg', async () => {
+            const configuration = workspace.getConfiguration('phpunit');
+            await configuration.update('args', ['--group=integration']);
+
+            await activateAndRun();
+
+            expectSpawnCalled([
+                binary,
+                '--group=integration',
+                '--colors=never',
+                '--teamcity',
+            ]);
+
+            await configuration.update('args', []);
+        });
+
+        it('should run class with group', async () => {
+            await activateAndRun({ include: 'Attribute (Tests\\Attribute)' });
+
+            expectSpawnCalled([
+                binary,
+                '--group=integration',
+                normalPath(phpUnitProject('tests/AttributeTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
+
+        it('should run method with group', async () => {
+            await activateAndRun({ include: 'Assertions (Tests\\Assertions)::Passed' });
+
+            expectSpawnCalled([
+                binary,
+                filterPattern('test_passed'),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
+
+        it('should run at cursor with group', async () => {
+            await activate(context);
+            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                line: 17,
+                character: 14,
+            });
+
+            await commands.executeCommand('phpunit.run-test-at-cursor');
+
+            expectSpawnCalled([
+                binary,
+                filterPattern('test_passed'),
+                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                '--colors=never',
+                '--teamcity',
+            ]);
         });
 
         it('should refresh tests', async () => {
@@ -405,7 +473,7 @@ describe('Extension Test', () => {
         it('run phpunit.run-test-at-cursor', async () => {
             await activate(context);
             setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
-                line: 13,
+                line: 17,
                 character: 14,
             });
 
@@ -480,7 +548,7 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
-                line: 13,
+                line: 17,
                 character: 14,
             });
 
@@ -515,9 +583,11 @@ describe('Extension Test', () => {
         it('should run all tests', async () => {
             const ctrl = await activateAndRun();
 
-            const expected = resolveExpected(pestVersion, [
-                ['3.0.0', { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 }],
-            ], { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 });
+            const expected = resolveExpected(
+                pestVersion,
+                [['3.0.0', { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 }]],
+                { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 },
+            );
 
             expectTestResultCalled(ctrl, expected);
         });
@@ -539,11 +609,29 @@ describe('Extension Test', () => {
             const id = `tests/Unit/ExampleTest.php::it has user's email`;
             const ctrl = await activateAndRun({ include: id });
 
-            const expected = resolveExpected(pestVersion, [
-                ['3.0.0', { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }],
-            ], { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 });
+            const expected = resolveExpected(
+                pestVersion,
+                [['3.0.0', { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }]],
+                { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 },
+            );
 
             expectTestResultCalled(ctrl, expected);
+        });
+
+        it('should run all tests with group arg', async () => {
+            const configuration = workspace.getConfiguration('phpunit');
+            await configuration.update('args', ['--group=integration']);
+
+            await activateAndRun();
+
+            expectSpawnCalled([
+                binary,
+                '--group=integration',
+                '--colors=never',
+                '--teamcity',
+            ]);
+
+            await configuration.update('args', []);
         });
     });
 });

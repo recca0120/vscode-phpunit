@@ -39,7 +39,7 @@ export class AnnotationParser {
                 if (value) {
                     annotations[property] = [
                         ...((annotations[property] as unknown[] | undefined) ?? []),
-                        value.trim(),
+                        value.replace(/\s*\*\/\s*$/, '').trim(),
                     ];
                 }
             }

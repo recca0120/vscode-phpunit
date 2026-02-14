@@ -128,7 +128,7 @@ describe('TestResultParser', () => {
     });
 
     it('parse test_failed testFailed', () => {
-        const text = `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:22|n ' duration='0' flowId='8024'] `;
+        const text = `##teamcity[testFailed name='test_failed' message='Failed asserting that false is true.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:27|n ' duration='0' flowId='8024'] `;
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testFailed,
@@ -137,7 +137,7 @@ describe('TestResultParser', () => {
             details: [
                 {
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                    line: 22,
+                    line: 27,
                 },
             ],
             duration: 0,
@@ -146,7 +146,7 @@ describe('TestResultParser', () => {
     });
 
     it('parse test_is_not_same testFailed', () => {
-        const text = `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`;
+        const text = `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:32|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`;
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testFailed,
@@ -155,7 +155,7 @@ describe('TestResultParser', () => {
             details: [
                 {
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                    line: 27,
+                    line: 32,
                 },
             ],
             duration: 0,
@@ -230,7 +230,7 @@ describe('TestResultParser', () => {
     });
 
     it('parse test_skipped testIgnored', () => {
-        const text = `##teamcity[testIgnored name='test_skipped' message='The MySQLi extension is not available.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:45|n ' duration='0' flowId='8024']`;
+        const text = `##teamcity[testIgnored name='test_skipped' message='The MySQLi extension is not available.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:51|n ' duration='0' flowId='8024']`;
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testIgnored,
@@ -239,7 +239,7 @@ describe('TestResultParser', () => {
             details: [
                 {
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                    line: 45,
+                    line: 51,
                 },
             ],
             duration: 0,
@@ -248,7 +248,7 @@ describe('TestResultParser', () => {
     });
 
     it('parse test_incomplete testIgnored', () => {
-        const text = `##teamcity[testIgnored name='test_incomplete' message='This test has not been implemented yet.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:50|n ' duration='0' flowId='8024']`;
+        const text = `##teamcity[testIgnored name='test_incomplete' message='This test has not been implemented yet.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:56|n ' duration='0' flowId='8024']`;
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testIgnored,
@@ -257,7 +257,7 @@ describe('TestResultParser', () => {
             details: [
                 {
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                    line: 50,
+                    line: 56,
                 },
             ],
             duration: 0,
@@ -266,7 +266,7 @@ describe('TestResultParser', () => {
     });
 
     it('parse test_risky testFailed', () => {
-        const text = `##teamcity[testFailed name='test_risky' message='This test did not perform any assertions|n|n${phpUnitProjectWin('tests/AssertionsTest.php')}:30' details=' ' duration='0' flowId='8024']`;
+        const text = `##teamcity[testFailed name='test_risky' message='This test did not perform any assertions|n|n${phpUnitProjectWin('tests/AssertionsTest.php')}:35' details=' ' duration='0' flowId='8024']`;
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testFailed,
@@ -275,7 +275,7 @@ describe('TestResultParser', () => {
             details: [
                 {
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                    line: 30,
+                    line: 35,
                 },
             ],
             duration: 0,

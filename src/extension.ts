@@ -109,7 +109,6 @@ function registerCommands(
     context.subscriptions.push(testCommandRegistry.runFile());
     context.subscriptions.push(testCommandRegistry.runTestAtCursor());
     context.subscriptions.push(testCommandRegistry.rerun());
-    context.subscriptions.push(testCommandRegistry.runByGroup());
 }
 
 function registerDisposables(

@@ -6,6 +6,11 @@ abstract class FilterStrategy {
 
     abstract getFilter(): string;
 
+    protected getGroupFilter(): string | undefined {
+        const groups = (this.testDefinition.annotations?.group as string[]) ?? [];
+        return groups.length > 0 ? `--group=${groups.join(',')}` : undefined;
+    }
+
     protected parseFilter(filter: string) {
         return `--filter="${filter}(( with (data set )?.*)?)?$"`;
     }
@@ -19,7 +24,9 @@ class NamespaceFilterStrategy extends FilterStrategy {
 
 class ClassFilterStrategy extends FilterStrategy {
     getFilter() {
-        return this.testDefinition.file!;
+        return [this.getGroupFilter(), this.testDefinition.file!]
+            .filter((value) => !!value)
+            .join(' ');
     }
 }
 

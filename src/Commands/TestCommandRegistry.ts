@@ -7,7 +7,7 @@ import {
     TestRunRequest,
     window,
 } from 'vscode';
-import { GroupRegistry, TestCollection } from '../TestCollection';
+import { TestCollection } from '../TestCollection';
 import { TestFileDiscovery } from '../TestDiscovery';
 import { TestRunHandler } from '../TestExecution';
 
@@ -73,28 +73,6 @@ export class TestCommandRegistry {
             return this.run(
                 this.testCollection.findTestsByRequest(this.handler.getPreviousRequest()),
             );
-        });
-    }
-
-    runByGroup() {
-        return commands.registerCommand('phpunit.run-by-group', async () => {
-            const groups = GroupRegistry.getInstance().getAll();
-            if (groups.length === 0) {
-                window.showInformationMessage('No PHPUnit groups found. Add @group annotations or #[Group] attributes to your tests.');
-                return;
-            }
-
-            const selectedGroup = await window.showQuickPick(groups, {
-                placeHolder: 'Select a PHPUnit group to run',
-                title: 'Run Tests by Group',
-            });
-
-            if (!selectedGroup) {
-                return;
-            }
-
-            const cancellation = new CancellationTokenSource().token;
-            await this.handler.startGroupTestRun(selectedGroup, cancellation);
         });
     }
 

@@ -83,8 +83,8 @@ const adjustFailedDetails = (
     details: { file: string; line: number }[],
     projectPath: (path: string) => string,
 ) => {
-    if (hasFile(actual, 'AssertionsTest', 5)) {
-        details = [{ file: projectPath('tests/AssertionsTest.php'), line: 5 }, ...details];
+    if (hasFile(actual, 'AssertionsTest', 6)) {
+        details = [{ file: projectPath('tests/AssertionsTest.php'), line: 6 }, ...details];
     }
     if (hasFile(actual, 'phpunit', 60)) {
         details = [...details, { file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 }];
@@ -173,7 +173,7 @@ const generateTestResult = (
     }
 
     if ([TeamcityEvent.testFailed].includes(event)) {
-        let details = `${file}:22|n`;
+        let details = `${file}:26|n`;
         if (phpVfsComposer) {
             details += ` phpvfscomposer://${appPath('vendor/phpunit/phpunit/phpunit')}:60`;
         }
@@ -182,7 +182,7 @@ const generateTestResult = (
                 appPath,
                 [
                     `##teamcity[testStarted name='${name}' locationHint='${locationHint}::test_failed' flowId='8024']`,
-                    `##teamcity[testFailed name='${name}' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${details} ' duration='0' flowId='8024']`,
+                    `##teamcity[testFailed name='${name}' message='Failed asserting that false is true.|n|n${file}:6|n' details=' ${details} ' duration='0' flowId='8024']`,
                     `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
                 ],
                 'Tests: 1, Assertions: 1, Failures: 1',
@@ -317,7 +317,7 @@ describe('TestRunner Test', () => {
                     startEvent(TeamcityEvent.testFailed, { name: 'test_failed' }),
                     finishedEvent(TeamcityEvent.testFailed, `${TEST_CLASS}::test_failed`, {
                         message: 'Failed asserting that false is true.',
-                        details: [{ file: localFile, line: 22 }],
+                        details: [{ file: localFile, line: 26 }],
                     }),
                 );
             });
@@ -333,7 +333,7 @@ describe('TestRunner Test', () => {
                         }),
                         finishedEvent(TeamcityEvent.testFailed, `${TEST_CLASS}::test_failed`, {
                             message: 'Failed asserting that false is true.',
-                            details: [{ file: localFile, line: 22 }],
+                            details: [{ file: localFile, line: 26 }],
                         }),
                     );
                 });

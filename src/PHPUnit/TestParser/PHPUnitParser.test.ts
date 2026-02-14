@@ -38,8 +38,8 @@ describe('PHPUnitParser Test', () => {
                     classFQN: 'Tests\\AssertionsTest',
                     namespace: 'Tests',
                     className: 'AssertionsTest',
-                    start: { line: 8, character: 0 },
-                    end: { line: 83, character: 1 },
+                    start: { line: 9, character: 0 },
+                    end: { line: 89, character: 1 },
                     depth: 1,
                 }),
             );
@@ -55,8 +55,9 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'test_passed',
-                    start: { line: 12, character: 4 },
-                    end: { line: 15, character: 5 },
+                    annotations: { group: ['integration'] },
+                    start: { line: 16, character: 4 },
+                    end: { line: 19, character: 5 },
                     depth: 2,
                 }),
             );
@@ -72,9 +73,9 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'test_failed',
-                    annotations: { depends: ['test_passed'] },
-                    start: { line: 20, character: 4 },
-                    end: { line: 23, character: 5 },
+                    annotations: { depends: ['test_passed'], group: ['integration'] },
+                    start: { line: 25, character: 4 },
+                    end: { line: 28, character: 5 },
                     depth: 2,
                 }),
             );
@@ -90,8 +91,8 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'test_is_not_same',
-                    start: { line: 25, character: 4 },
-                    end: { line: 28, character: 5 },
+                    start: { line: 30, character: 4 },
+                    end: { line: 33, character: 5 },
                     depth: 2,
                 }),
             );
@@ -107,8 +108,8 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'test_risky',
-                    start: { line: 30, character: 4 },
-                    end: { line: 33, character: 5 },
+                    start: { line: 35, character: 4 },
+                    end: { line: 38, character: 5 },
                     depth: 2,
                 }),
             );
@@ -124,8 +125,9 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'annotation_test',
-                    start: { line: 38, character: 4 },
-                    end: { line: 41, character: 5 },
+                    annotations: { group: ['integration'] },
+                    start: { line: 44, character: 4 },
+                    end: { line: 47, character: 5 },
                     depth: 2,
                 }),
             );
@@ -141,8 +143,8 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'test_skipped',
-                    start: { line: 43, character: 4 },
-                    end: { line: 46, character: 5 },
+                    start: { line: 49, character: 4 },
+                    end: { line: 52, character: 5 },
                     depth: 2,
                 }),
             );
@@ -158,8 +160,8 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'test_incomplete',
-                    start: { line: 48, character: 4 },
-                    end: { line: 51, character: 5 },
+                    start: { line: 54, character: 4 },
+                    end: { line: 57, character: 5 },
                     depth: 2,
                 }),
             );
@@ -176,8 +178,8 @@ describe('PHPUnitParser Test', () => {
                     className: 'AssertionsTest',
                     methodName: 'addition_provider',
                     annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
-                    start: { line: 60, character: 4 },
-                    end: { line: 63, character: 5 },
+                    start: { line: 66, character: 4 },
+                    end: { line: 69, character: 5 },
                     depth: 2,
                 }),
             );
@@ -194,8 +196,8 @@ describe('PHPUnitParser Test', () => {
                     className: 'AssertionsTest',
                     methodName: 'balanceIsInitiallyZero',
                     annotations: { testdox: ['has an initial balance of zero'] },
-                    start: { line: 79, character: 4 },
-                    end: { line: 82, character: 5 },
+                    start: { line: 85, character: 4 },
+                    end: { line: 88, character: 5 },
                     depth: 2,
                 }),
             );
@@ -317,6 +319,23 @@ describe('PHPUnitParser Test', () => {
         let content: string;
         beforeAll(async () => (content = (await readFile(file)).toString()));
 
+        it('parse class with Group attribute', () => {
+            expect(givenTest(file, content, 'AttributeTest')).toEqual(
+                expect.objectContaining({
+                    type: TestType.class,
+                    file,
+                    id: 'Attribute (Tests\\Attribute)',
+                    classFQN: 'Tests\\AttributeTest',
+                    namespace: 'Tests',
+                    className: 'AttributeTest',
+                    annotations: { group: ['integration'] },
+                    start: { line: 13, character: 0 },
+                    end: { line: 61, character: 1 },
+                    depth: 1,
+                }),
+            );
+        });
+
         it('parse Test Attribute', () => {
             expect(givenTest(file, content, 'hi')).toEqual(
                 expect.objectContaining({
@@ -327,8 +346,8 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests',
                     className: 'AttributeTest',
                     methodName: 'hi',
-                    start: { line: 14, character: 4 },
-                    end: { line: 17, character: 5 },
+                    start: { line: 16, character: 4 },
+                    end: { line: 19, character: 5 },
                     depth: 2,
                 }),
             );
@@ -345,8 +364,8 @@ describe('PHPUnitParser Test', () => {
                     className: 'AttributeTest',
                     methodName: 'testAdd',
                     annotations: { dataProvider: ['additionProvider'] },
-                    start: { line: 20, character: 4 },
-                    end: { line: 23, character: 5 },
+                    start: { line: 22, character: 4 },
+                    end: { line: 25, character: 5 },
                     depth: 2,
                 }),
             );
@@ -363,8 +382,8 @@ describe('PHPUnitParser Test', () => {
                     className: 'AttributeTest',
                     methodName: 'testPush',
                     annotations: { depends: ['testEmpty'] },
-                    start: { line: 44, character: 4 },
-                    end: { line: 51, character: 5 },
+                    start: { line: 46, character: 4 },
+                    end: { line: 53, character: 5 },
                     depth: 2,
                 }),
             );
@@ -381,8 +400,8 @@ describe('PHPUnitParser Test', () => {
                     className: 'AttributeTest',
                     methodName: 'balanceIsInitiallyZero',
                     annotations: { testdox: ['has an initial balance of zero'] },
-                    start: { line: 55, character: 4 },
-                    end: { line: 58, character: 5 },
+                    start: { line: 57, character: 4 },
+                    end: { line: 60, character: 5 },
                     depth: 2,
                 }),
             );
@@ -523,16 +542,18 @@ final class GroupTest extends TestCase {
     }
 }
 `;
-        expect(givenTest(file, content, 'test_with_groups')).toEqual(expect.objectContaining({
-            type: TestType.method,
-            file,
-            id: 'Group::With groups',
-            classFQN: 'GroupTest',
-            className: 'GroupTest',
-            methodName: 'test_with_groups',
-            annotations: { group: ['integration', 'slow'] },
-            depth: 2,
-        }));
+        expect(givenTest(file, content, 'test_with_groups')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                file,
+                id: 'Group::With groups',
+                classFQN: 'GroupTest',
+                className: 'GroupTest',
+                methodName: 'test_with_groups',
+                annotations: { group: ['integration', 'slow'] },
+                depth: 2,
+            }),
+        );
     });
 
     it('parse #[Group] attribute', () => {
@@ -550,16 +571,18 @@ final class GroupAttributeTest extends TestCase {
     }
 }
 `;
-        expect(givenTest(file, content, 'test_with_group_attributes')).toEqual(expect.objectContaining({
-            type: TestType.method,
-            file,
-            id: 'Group Attribute::With group attributes',
-            classFQN: 'GroupAttributeTest',
-            className: 'GroupAttributeTest',
-            methodName: 'test_with_group_attributes',
-            annotations: { group: ['plaid', 'api'] },
-            depth: 2,
-        }));
+        expect(givenTest(file, content, 'test_with_group_attributes')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                file,
+                id: 'Group Attribute::With group attributes',
+                classFQN: 'GroupAttributeTest',
+                className: 'GroupAttributeTest',
+                methodName: 'test_with_group_attributes',
+                annotations: { group: ['plaid', 'api'] },
+                depth: 2,
+            }),
+        );
     });
 
     it('parse single @group annotation', () => {
@@ -577,11 +600,13 @@ final class SingleGroupTest extends TestCase {
     }
 }
 `;
-        expect(givenTest(file, content, 'test_unit')).toEqual(expect.objectContaining({
-            type: TestType.method,
-            file,
-            methodName: 'test_unit',
-            annotations: { group: ['unit'] },
-        }));
+        expect(givenTest(file, content, 'test_unit')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                file,
+                methodName: 'test_unit',
+                annotations: { group: ['unit'] },
+            }),
+        );
     });
 });

@@ -103,7 +103,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testFailed', () => {
             resultShouldBe(
-                `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests\\AssertionsTest.php')}:27|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`,
+                `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests\\AssertionsTest.php')}:32|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`,
                 undefined,
             );
         });
@@ -118,7 +118,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
                     details: [
                         {
                             file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                            line: 27,
+                            line: 32,
                         },
                     ],
                     duration: 0,
@@ -159,7 +159,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
 
         it('testFailed addition_provider with failed', () => {
             resultShouldBe(
-                `##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:60|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`,
+                `##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:66|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`,
                 undefined,
             );
 
@@ -175,7 +175,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
                     details: [
                         {
                             file: phpUnitProjectWin('tests/AssertionsTest.php'),
-                            line: 60,
+                            line: 66,
                         },
                     ],
                     type: 'comparisonFailure',

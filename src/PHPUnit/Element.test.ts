@@ -8,10 +8,10 @@ describe('Element Test', () => {
                 project: {
                     package: [
                         { file: { '@_name': 'file1.php' } },
-                        { file: { '@_name': 'file2.php' } }
-                    ]
-                }
-            }
+                        { file: { '@_name': 'file2.php' } },
+                    ],
+                },
+            },
         };
 
         const element = new XmlElement(data);
@@ -28,17 +28,13 @@ describe('Element Test', () => {
                 project: [
                     { file: { '@_name': 'file.php' } },
                     {
-                        package: [
-                            { file: { '@_name': 'file1.php' } },
-                        ]
+                        package: [{ file: { '@_name': 'file1.php' } }],
                     },
                     {
-                        package: [
-                            { file: { '@_name': 'file2.php' } }
-                        ]
-                    }
-                ]
-            }
+                        package: [{ file: { '@_name': 'file2.php' } }],
+                    },
+                ],
+            },
         };
 
         const element = new XmlElement(data);

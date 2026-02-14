@@ -75,30 +75,6 @@ export class TestRunHandler {
         }
     }
 
-    async startGroupTestRun(group: string, cancellation?: CancellationToken) {
-        const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
-        builder.setArguments(`--group ${group}`);
-
-        const request = new TestRunRequest();
-        const testRun = this.ctrl.createTestRun(request);
-
-        const queue = await this.testQueueBuilder.build(
-            this.testQueueBuilder.collectItems(this.ctrl.items),
-            request,
-        );
-        queue.forEach((testItem) => testRun.enqueued(testItem));
-
-        const runner = this.testRunnerBuilder.build(queue, testRun, request);
-        runner.emit(TestRunnerEvent.start, undefined);
-
-        const process = runner.run(builder);
-        cancellation?.onCancellationRequested(() => process.abort());
-
-        await process.run();
-        runner.emit(TestRunnerEvent.done, undefined);
-        testRun.end();
-    }
-
     private async runTestQueue(
         builder: ProcessBuilder,
         testRun: TestRun,

@@ -13,10 +13,6 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
-    get groups(): string[] {
-        return (this.testDefinition.annotations?.group as string[]) ?? [];
-    }
-
     configureProcessBuilder(builder: ProcessBuilder, index: number) {
         return builder
             .clone()

@@ -8,34 +8,6 @@ import {
 } from '../PHPUnit';
 import { TestCase } from './TestCase';
 
-export class GroupRegistry {
-    private static instance: GroupRegistry;
-    private groups = new Set<string>();
-
-    static getInstance(): GroupRegistry {
-        if (!GroupRegistry.instance) {
-            GroupRegistry.instance = new GroupRegistry();
-        }
-        return GroupRegistry.instance;
-    }
-
-    add(group: string) {
-        this.groups.add(group);
-    }
-
-    addAll(groups: string[]) {
-        groups.forEach(g => this.groups.add(g));
-    }
-
-    getAll(): string[] {
-        return Array.from(this.groups).sort();
-    }
-
-    clear() {
-        this.groups.clear();
-    }
-}
-
 export class TestHierarchyBuilder {
     private icons = {
         [TestType.namespace]: '$(symbol-namespace)',
@@ -131,12 +103,12 @@ export class TestHierarchyBuilder {
 
         // Inherit group tags from parent class to methods for proper filter inheritance
         if (testDefinition.type === TestType.method && parent.type === TestType.class) {
-            const parentTags = (parent.item.tags ?? []).filter(t => t.id.startsWith('group:'));
+            const parentTags = (parent.item.tags ?? []).filter((t) => t.id.startsWith('group:'));
             if (parentTags.length > 0) {
                 const ownTags = testItem.tags ?? [];
                 testItem.tags = [
                     ...ownTags,
-                    ...parentTags.filter(pt => !ownTags.some(ot => ot.id === pt.id)),
+                    ...parentTags.filter((pt) => !ownTags.some((ot) => ot.id === pt.id)),
                 ];
             }
         }
@@ -160,8 +132,7 @@ export class TestHierarchyBuilder {
 
         const groups = (testDefinition.annotations?.group as string[]) ?? [];
         if (groups.length > 0) {
-            GroupRegistry.getInstance().addAll(groups);
-            testItem.tags = groups.map(g => new TestTag(`group:${g}`));
+            testItem.tags = groups.map((g) => new TestTag(`group:${g}`));
         }
 
         return testItem;
