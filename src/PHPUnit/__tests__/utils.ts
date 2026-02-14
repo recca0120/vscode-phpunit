@@ -66,7 +66,7 @@ export interface PhpUnitStub {
 }
 
 export function detectPhpUnitStubs(): PhpUnitStub[] {
-    const versions = [9, 10, 11];
+    const versions = [9, 10, 11, 12];
     const root = phpUnitProject('');
 
     return versions.flatMap((v) => {
@@ -82,7 +82,7 @@ export function detectPhpUnitStubs(): PhpUnitStub[] {
                 root,
                 phpUnitVersion,
                 binary,
-                args: ['-c', join(root, `phpunit-v${v}.xml`)],
+                args: ['-c', join(root, `v${v}/phpunit.xml`)],
             }];
         } catch {
             return [];
@@ -99,7 +99,7 @@ export interface PestStub {
 }
 
 export function detectPestStubs(): PestStub[] {
-    const versions = [2, 4];
+    const versions = [2, 3, 4];
     const root = pestProject('');
 
     return versions.flatMap((v) => {
@@ -115,7 +115,7 @@ export function detectPestStubs(): PestStub[] {
                 root,
                 pestVersion,
                 binary,
-                args: ['-c', join(root, `phpunit-v${v}.xml`), '--test-directory=../tests'],
+                args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
             }];
         } catch {
             return [];

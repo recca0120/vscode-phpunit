@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, isAbsolute, join } from 'node:path';
+import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
 import { TestGlobPattern } from './TestGlobPattern';
 import { XmlElement } from './XmlElement';
 
@@ -12,9 +12,9 @@ export type TestSuite = Source & { name: string };
 export class PHPUnitXML {
     private element?: XmlElement;
     private _file: string = '';
+    private _configRoot: string = '';
     private _root: string = '';
-    // biome-ignore lint/suspicious/noExplicitAny: cache stores heterogeneous typed arrays
-    private readonly cached: Map<string, any[]> = new Map();
+    private readonly cached: Map<string, unknown[]> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
         this.element = XmlElement.load(text.toString());
@@ -32,6 +32,7 @@ export class PHPUnitXML {
 
     setRoot(root: string) {
         this.cached.clear();
+        this._configRoot = root;
         this._root = root;
 
         return this;
@@ -42,22 +43,59 @@ export class PHPUnitXML {
     }
 
     root() {
+        if (this._root === this._configRoot && this.element) {
+            this._root = this.resolveProjectRoot();
+        }
+
         return this._root;
     }
 
     path(file: string): string {
-        const root = this.root();
+        const configRoot = this._configRoot;
 
-        return isAbsolute(file) || !root ? file : join(root, file);
+        return isAbsolute(file) || !configRoot ? file : join(configRoot, file);
+    }
+
+    private resolveToRoot(root: string, value: string): string {
+        if (this._configRoot === root) {
+            return value;
+        }
+
+        return normalize(relative(root, resolve(this._configRoot, value)));
+    }
+
+    private resolveProjectRoot(): string {
+        const configRoot = this._configRoot;
+        if (!this.element) {
+            return configRoot;
+        }
+
+        for (const parent of this.element.querySelectorAll('phpunit testsuites testsuite')) {
+            for (const node of parent.querySelectorAll('directory')) {
+                const dir = node.getText();
+                if (dir.startsWith('..')) {
+                    const resolvedAbs = resolve(configRoot, dir);
+                    const configRootAbs = resolve(configRoot);
+
+                    if (!resolvedAbs.startsWith(configRootAbs)) {
+                        return normalize(resolve(configRoot, dir, '..'));
+                    }
+                }
+            }
+        }
+
+        return configRoot;
     }
 
     getTestSuites(): TestSuite[] {
+        const root = this.root();
+
         const callback = (tag: string, node: XmlElement, parent: XmlElement) => {
             const name = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
 
-            return { tag, name, value: node.getText(), prefix, suffix };
+            return { tag, name, value: this.resolveToRoot(root, node.getText()), prefix, suffix };
         };
 
         const testSuites = this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
@@ -105,12 +143,12 @@ export class PHPUnitXML {
         ];
     }
 
-    private fromCache<T>(key: string, callback: () => T[]) {
+    private fromCache<T>(key: string, callback: () => T[]): T[] {
         if (!this.cached.has(key)) {
             this.cached.set(key, callback() ?? []);
         }
 
-        return this.cached.get(key)!;
+        return this.cached.get(key) as T[];
     }
 
     private getIncludesOrExcludes(key: string): Source[] {

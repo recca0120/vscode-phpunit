@@ -353,3 +353,99 @@ describe('PHPUnit XML Test', () => {
         expect(phpUnitXML.getTestSuites().length).not.toEqual(0);
     });
 });
+
+describe('PHPUnit XML in subdirectory (../tests)', () => {
+    const parentRoot = phpUnitProject('');
+    const phpUnitXML = new PHPUnitXML();
+
+    it('should resolve root to parent when test directories use ../', () => {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
+>
+    <testsuites>
+        <testsuite name="default">
+            <directory>../tests</directory>
+            <exclude>../tests/Output</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>`;
+
+        phpUnitXML.load(xml, phpUnitProject('v9/phpunit.xml'));
+
+        expect(phpUnitXML.root()).toEqual(parentRoot);
+    });
+
+    it('should generate correct glob patterns for parent test directories', () => {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
+>
+    <testsuites>
+        <testsuite name="default">
+            <directory>../tests</directory>
+            <exclude>../tests/Output</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>`;
+
+        phpUnitXML.load(xml, phpUnitProject('v9/phpunit.xml'));
+
+        const { includes, excludes } = phpUnitXML.getPatterns(parentRoot);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(parentRoot, 'tests')),
+            pattern: '{**/*.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(parentRoot),
+            pattern: '{**/.git/**,**/node_modules/**,tests/Output/**/*}',
+        });
+    });
+
+    it('should resolve root to parent when test directories use deeply nested ../../../', () => {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
+>
+    <testsuites>
+        <testsuite name="default">
+            <directory>../../../tests</directory>
+            <exclude>../../../tests/Output</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>`;
+
+        phpUnitXML.load(xml, phpUnitProject('a/b/c/phpunit.xml'));
+
+        expect(phpUnitXML.root()).toEqual(parentRoot);
+
+        const { includes, excludes } = phpUnitXML.getPatterns(parentRoot);
+        expect(includes.toGlobPattern()).toEqual({
+            uri: URI.file(join(parentRoot, 'tests')),
+            pattern: '{**/*.php}',
+        });
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(parentRoot),
+            pattern: '{**/.git/**,**/node_modules/**,tests/Output/**/*}',
+        });
+    });
+
+    it('should resolve bootstrap path relative to config directory', () => {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
+>
+    <testsuites>
+        <testsuite name="default">
+            <directory>../tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>`;
+
+        phpUnitXML.load(xml, phpUnitProject('v9/phpunit.xml'));
+
+        expect(phpUnitXML.path('vendor/autoload.php')).toEqual(
+            phpUnitProject('v9/vendor/autoload.php'),
+        );
+    });
+});
