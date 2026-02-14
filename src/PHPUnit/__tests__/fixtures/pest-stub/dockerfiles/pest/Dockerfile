@@ -1,7 +1,7 @@
-ARG PHP_VERSION=8.3
-FROM php:${PHP_VERSION}-cli-alpine
+FROM php:8.3-cli-alpine
 
 WORKDIR /app
+
 ENV TZ=UTC
 
 RUN apk update && apk add --no-cache tzdata git openssh && \
@@ -13,11 +13,6 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 RUN chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions xdebug && \
     install-php-extensions @composer
-
-RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
-    echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
-    echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
-    echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 RUN mkdir -p /root/.ssh \
     && chmod 0700 /root/.ssh \

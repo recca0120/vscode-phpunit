@@ -1,0 +1,18 @@
+services:
+  pest:
+    build:
+      context: ./dockerfiles/pest
+      dockerfile: Dockerfile
+    container_name: pest
+    tty: true
+    ports:
+      - ${SSH_PORT:-2222}:22
+    volumes:
+      - .:/app
+      - ./dockerfiles/pest/id_rsa.pub:/root/.ssh/authorized_keys
+    networks:
+      - vscode-phpunit-network
+
+networks:
+  vscode-phpunit-network:
+    driver: "bridge"

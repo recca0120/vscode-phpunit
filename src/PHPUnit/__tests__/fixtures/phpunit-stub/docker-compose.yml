@@ -1,0 +1,18 @@
+services:
+  phpunit:
+    build:
+      context: ./dockerfiles/phpunit
+      dockerfile: Dockerfile
+    container_name: phpunit
+    tty: true
+    ports:
+      - ${SSH_PORT:-2222}:22
+    volumes:
+      - .:/app
+      - ./dockerfiles/phpunit/id_rsa.pub:/root/.ssh/authorized_keys
+    networks:
+      - vscode-phpunit-network
+
+networks:
+  vscode-phpunit-network:
+    driver: "bridge"
