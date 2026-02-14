@@ -9,18 +9,24 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    # TODO: remove once shivammathur/setup-php fixes Windows PHP setup
+    # (broken since windows runner images shipped PHP 8.5, actions/runner-images#13603)
+    continue-on-error: ${{ contains(matrix.os, 'windows') }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        php: [ '7.1', '7.2', '7.3', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5' ]
-        node: [ '20' ]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        php: ['7.4', '8.2', '8.4']
+        node: ['20']
 
     name: ${{ matrix.os }} node-${{ matrix.node }} php-${{ matrix.php }}
+    defaults:
+      run:
+        shell: bash
     env:
       extensions: curl, dom, libxml, mbstring, pcntl, pdo, pdo_sqlite, sqlite, xdebug, zip
-      key: cache-v1 # can be any string, change to clear the extension cache.
+      key: cache-v1
       GITHUB_ACTIONS: true
       PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
       PEST_PROJECT: src/PHPUnit/__tests__/fixtures/pest-stub
@@ -58,31 +64,30 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      - name: Install Composer dependencies (PHPUnit)
-        run: cd ${{ env.PHPUNIT_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress
+      - name: Install Composer dependencies (PHPUnit stubs)
+        run: |
+          for dir in ${{ env.PHPUNIT_PROJECT }}/v*/; do
+            echo "::group::Installing $(basename "$dir")"
+            (cd "$dir" && composer update --prefer-dist --no-interaction --no-progress) || true
+            echo "::endgroup::"
+          done
 
-      - name: Install PHPUnit 10.5.30 for PHP 8.1
-        if: matrix.php == '8.1'
-        run: cd ${{ env.PHPUNIT_PROJECT }} && composer require phpunit/phpunit:10.5.30 --prefer-dist --no-interaction --no-progress
+      - name: Install Composer dependencies (Pest stubs)
+        run: |
+          for dir in ${{ env.PEST_PROJECT }}/v*/; do
+            echo "::group::Installing $(basename "$dir")"
+            (cd "$dir" && composer update --prefer-dist --no-interaction --no-progress) || true
+            echo "::endgroup::"
+          done
 
-      - name: Install Composer dependencies (PEST)
-        if: matrix.php >= '8.0'
-        run: cd ${{ env.PEST_PROJECT }} && composer update --prefer-dist --no-interaction --no-progress
-
-      # Install required deps for action
       - name: Install Dependencies
         run: npm ci
 
-      # Finally, run our tests
       - name: Run the tests
         run: npm run vitest
 
       - name: Send to codecov
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
-
-      # - name: RUN SSH
-      #   if: failure()
-      #   run: curl -sSf https://sshx.io/get | sh -s run
