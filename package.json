@@ -66,6 +66,10 @@
       {
         "command": "phpunit.rerun",
         "title": "PHPUnit: Repeat the last test run"
+      },
+      {
+        "command": "phpunit.run-by-group",
+        "title": "PHPUnit: Run tests by group"
       }
     ],
     "keybindings": [

@@ -9,6 +9,10 @@ export class TestCase {
         return this.testDefinition.type;
     }
 
+    get groups(): string[] {
+        return (this.testDefinition.annotations?.group as string[]) ?? [];
+    }
+
     update(builder: Builder, index: number) {
         return builder.clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))

@@ -51,6 +51,31 @@ export class Handler {
         this.previousRequest = request;
     }
 
+    async startGroupTestRun(group: string, cancellation?: CancellationToken) {
+        const builder = new Builder(this.configuration, { cwd: this.phpUnitXML.root() });
+        builder.setArguments(`--group ${group}`);
+
+        const request = new TestRunRequest();
+        const testRun = this.ctrl.createTestRun(request);
+
+        const runner = new TestRunner();
+        const queue = await this.discoverTests(this.gatherTestItems(this.ctrl.items), request);
+        queue.forEach((testItem) => testRun.enqueued(testItem));
+
+        runner.observe(new TestResultObserver(queue, testRun));
+        runner.observe(new OutputChannelObserver(this.outputChannel, this.configuration, this.printer, request));
+        runner.observe(new MessageObserver(this.configuration));
+
+        runner.emit(TestRunnerEvent.start, undefined);
+
+        const process = runner.run(builder);
+        cancellation?.onCancellationRequested(() => process.abort());
+
+        await process.run();
+        runner.emit(TestRunnerEvent.done, undefined);
+        testRun.end();
+    }
+
     private async runTestQueue(builder: Builder, testRun: TestRun, request: TestRunRequest, cancellation?: CancellationToken) {
         const queue = await this.discoverTests(request.include ?? this.gatherTestItems(this.ctrl.items), request);
         queue.forEach((testItem) => testRun.enqueued(testItem));
