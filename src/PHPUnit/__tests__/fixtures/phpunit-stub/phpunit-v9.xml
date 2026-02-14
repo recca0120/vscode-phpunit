@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         xsi:noNamespaceSchemaLocation="v9/vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="v9/vendor/autoload.php"
+         cacheResultFile=".phpunit.cache/test-results"
          executionOrder="depends,defects"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutTodoAnnotatedTests="true"
@@ -14,9 +15,9 @@
             <exclude>tests/Output</exclude>
         </testsuite>
     </testsuites>
-    <source>
+    <coverage>
         <include>
             <directory suffix=".php">src</directory>
         </include>
-    </source>
+    </coverage>
 </phpunit>

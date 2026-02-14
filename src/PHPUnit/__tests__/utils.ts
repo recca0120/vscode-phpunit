@@ -61,20 +61,29 @@ export interface PhpUnitStub {
     name: string;
     root: string;
     phpUnitVersion: string;
+    binary: string;
+    args: string[];
 }
 
 export function detectPhpUnitStubs(): PhpUnitStub[] {
-    const stubDirs = ['phpunit-stub-9', 'phpunit-stub-10', 'phpunit-stub-11'];
+    const versions = [9, 10, 11];
+    const root = phpUnitProject('');
 
-    return stubDirs.flatMap((dir) => {
-        const root = fixturePath(dir);
+    return versions.flatMap((v) => {
+        const binary = `v${v}/vendor/bin/phpunit`;
         try {
-            const output = execSync('php vendor/bin/phpunit --version', {
+            const output = execSync(`php ${binary} --version`, {
                 cwd: root,
                 timeout: 10000,
             }).toString();
             const phpUnitVersion = output.match(/PHPUnit\s([\d.]+)/)![1];
-            return [{ name: dir, root, phpUnitVersion }];
+            return [{
+                name: `phpunit-v${v}`,
+                root,
+                phpUnitVersion,
+                binary,
+                args: ['-c', join(root, `phpunit-v${v}.xml`)],
+            }];
         } catch {
             return [];
         }
@@ -85,20 +94,29 @@ export interface PestStub {
     name: string;
     root: string;
     pestVersion: string;
+    binary: string;
+    args: string[];
 }
 
 export function detectPestStubs(): PestStub[] {
-    const stubDirs = ['pest-stub-2', 'pest-stub-4'];
+    const versions = [2, 4];
+    const root = pestProject('');
 
-    return stubDirs.flatMap((dir) => {
-        const root = fixturePath(dir);
+    return versions.flatMap((v) => {
+        const binary = `v${v}/vendor/bin/pest`;
         try {
-            const output = execSync('php vendor/bin/pest --version', {
+            const output = execSync(`php ${binary} --version --test-directory=../tests`, {
                 cwd: root,
                 timeout: 10000,
             }).toString();
             const pestVersion = output.match(/(\d+\.\d+\.\d+)/)![1];
-            return [{ name: dir, root, pestVersion }];
+            return [{
+                name: `pest-v${v}`,
+                root,
+                pestVersion,
+                binary,
+                args: ['-c', join(root, `phpunit-v${v}.xml`), '--test-directory=../tests'],
+            }];
         } catch {
             return [];
         }

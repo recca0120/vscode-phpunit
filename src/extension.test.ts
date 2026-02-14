@@ -136,16 +136,16 @@ describe('Extension Test', () => {
     const setupEnvironment = async (
         root: string,
         phpunitBinary: string,
-        options?: { follow?: boolean },
+        args: string[] = [],
     ) => {
         setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
-        setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root, follow: options?.follow }));
+        setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
         (context.subscriptions.push as unknown as Mock).mockReset();
         cwd = normalPath(root);
         const configuration = workspace.getConfiguration('phpunit');
         await configuration.update('php', phpBinary);
         await configuration.update('phpunit', phpunitBinary);
-        await configuration.update('args', []);
+        await configuration.update('args', args);
     };
 
     const setActiveTextEditor = (file: string, selection?: { line: number; character: number }) => {
@@ -658,8 +658,10 @@ describe('Extension Test', () => {
         describe.each(additionalStubs)('PHPUnit on $name (PHPUnit $phpUnitVersion)', ({
             root,
             phpUnitVersion,
+            binary,
+            args,
         }) => {
-            beforeEach(() => setupEnvironment(root, 'vendor/bin/phpunit', { follow: true }));
+            beforeEach(() => setupEnvironment(root, binary, args));
             afterEach(() => vi.clearAllMocks());
 
             it('should run all tests', async () => {
@@ -697,8 +699,10 @@ describe('Extension Test', () => {
         describe.each(additionalPestStubs)('PEST on $name (Pest $pestVersion)', ({
             root,
             pestVersion,
+            binary,
+            args,
         }) => {
-            beforeEach(() => setupEnvironment(root, 'vendor/bin/pest', { follow: true }));
+            beforeEach(() => setupEnvironment(root, binary, args));
             afterEach(() => vi.clearAllMocks());
 
             it('should run all tests', async () => {
