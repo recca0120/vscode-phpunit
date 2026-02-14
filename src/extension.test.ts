@@ -243,13 +243,14 @@ describe('Extension Test', () => {
                 'phpunit.run-file',
                 'phpunit.run-test-at-cursor',
                 'phpunit.rerun',
+                'phpunit.run-by-group',
             ]) {
                 expect(commands.registerCommand).toHaveBeenCalledWith(
                     cmd,
                     expect.any(Function),
                 );
             }
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(8);
         });
 
         it('should only update configuration when phpunit settings change', async () => {
