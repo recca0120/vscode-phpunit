@@ -26,39 +26,6 @@
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "${workspaceFolder}/dist/**/*.js"],
             "preLaunchTask": "tasks: watch-tests"
-        },
-        {
-            "name": "Run Extension (Docker)",
-            "type": "extensionHost",
-            "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/${input:project}"
-            ],
-            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
-            "preLaunchTask": "docker-dev"
-        }
-    ],
-    "inputs": [
-        {
-            "id": "phpVersion",
-            "type": "pickString",
-            "description": "Select PHP version",
-            "options": [
-                "php71", "php72", "php73",
-                "php80", "php81", "php82", "php83", "php84", "php85"
-            ],
-            "default": "php83"
-        },
-        {
-            "id": "project",
-            "type": "pickString",
-            "description": "Select project",
-            "options": [
-                "phpunit-stub",
-                "pest-stub"
-            ],
-            "default": "phpunit-stub"
         }
     ]
 }
