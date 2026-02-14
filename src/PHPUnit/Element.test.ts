@@ -1,4 +1,5 @@
-import { Element } from './Element';
+import { describe, expect, it } from 'vitest';
+import { XmlElement } from './XmlElement';
 
 describe('Element Test', () => {
     it('querySelectorAll should traverse arrays', () => {
@@ -13,7 +14,7 @@ describe('Element Test', () => {
             }
         };
 
-        const element = new Element(data);
+        const element = new XmlElement(data);
         const files = element.querySelectorAll('coverage project package file');
 
         expect(files.length).toEqual(2);
@@ -40,7 +41,7 @@ describe('Element Test', () => {
             }
         };
 
-        const element = new Element(data);
+        const element = new XmlElement(data);
 
         const files1 = element.querySelectorAll('coverage project package file');
         expect(files1.length).toEqual(2);
@@ -54,7 +55,7 @@ describe('Element Test', () => {
 
     it('getAttribute should retrieve values', () => {
         const data = { '@_version': '1.0' };
-        const element = new Element(data);
+        const element = new XmlElement(data);
         expect(element.getAttribute('version')).toEqual('1.0');
     });
 });
