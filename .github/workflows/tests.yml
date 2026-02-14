@@ -63,17 +63,17 @@ jobs:
 
       - name: Install Composer dependencies (PHPUnit stubs)
         run: |
-          for dir in ${{ env.PHPUNIT_PROJECT }}/v*/; do
+          for dir in $(ls -d ${{ env.PHPUNIT_PROJECT }}/v*/ | sort -V); do
             echo "::group::Installing $(basename "$dir")"
-            (cd "$dir" && composer update --prefer-dist --no-interaction --no-progress) || true
+            (cd "$dir" && composer install --prefer-dist --no-interaction --no-progress --ignore-platform-reqs) || true
             echo "::endgroup::"
           done
 
       - name: Install Composer dependencies (Pest stubs)
         run: |
-          for dir in ${{ env.PEST_PROJECT }}/v*/; do
+          for dir in $(ls -d ${{ env.PEST_PROJECT }}/v*/ | sort -V); do
             echo "::group::Installing $(basename "$dir")"
-            (cd "$dir" && composer update --prefer-dist --no-interaction --no-progress) || true
+            (cd "$dir" && composer install --prefer-dist --no-interaction --no-progress --ignore-platform-reqs) || true
             echo "::endgroup::"
           done
 
