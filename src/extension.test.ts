@@ -374,7 +374,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 '--group=integration',
-                phpUnitProject('tests/AttributeTest.php'),
+                Uri.file(phpUnitProject('tests/AttributeTest.php')).fsPath,
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -386,7 +386,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern('test_passed'),
-                phpUnitProject('tests/AssertionsTest.php'),
+                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -404,7 +404,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern('test_passed'),
-                phpUnitProject('tests/AssertionsTest.php'),
+                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -467,7 +467,7 @@ describe('Extension Test', () => {
 
             expectSpawnCalled([
                 binary,
-                phpUnitProject('tests/AssertionsTest.php'),
+                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -485,7 +485,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern('test_passed'),
-                phpUnitProject('tests/AssertionsTest.php'),
+                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -562,7 +562,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern(method),
-                phpUnitProject('tests/AssertionsTest.php'),
+                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
                 '--colors=never',
                 '--teamcity',
                 '--functional',

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
+import { EOL, PHPUnitXML, TeamcityEvent, type TestSuiteFinished } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { CollisionPrinter } from './CollisionPrinter';
 import { OutputFormatter } from './OutputFormatter';
@@ -29,7 +29,7 @@ describe('CollisionPrinter', () => {
             event: TeamcityEvent.testSuiteFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,
-        } as unknown as import('../../PHPUnit').TestSuiteFinished);
+        } as unknown as TestSuiteFinished);
 
         expect(output).toEqual('');
     });
