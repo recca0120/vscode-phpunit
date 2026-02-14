@@ -197,7 +197,7 @@ describe('PathReplacer', () => {
 
         const path = './tests/AssertionsTest.php';
 
-        expect(pathReplacer.toLocal(path)).toEqual('C:\\vscode\\tests\\AssertionsTest.php');
+        expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectWin('tests/AssertionsTest.php'));
     });
 
     it("can't replace path when ${workspaceFolder} is /", () => {

@@ -25,7 +25,6 @@ import {
     detectParatestStubs,
     detectPestStubs,
     detectPhpUnitStubs,
-    normalPath,
     pestProject,
     phpUnitProject,
 } from './PHPUnit/__tests__/utils';
@@ -143,7 +142,7 @@ describe('Extension Test', () => {
         setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
         setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root }));
         (context.subscriptions.push as unknown as Mock).mockReset();
-        cwd = normalPath(root);
+        cwd = root;
         const configuration = workspace.getConfiguration('phpunit');
         await configuration.update('php', phpBinary);
         await configuration.update('phpunit', phpunitBinary);
@@ -182,10 +181,14 @@ describe('Extension Test', () => {
         expect(spawn).toHaveBeenCalledWith(
             phpBinary,
             expect.arrayContaining(
-                args.map((a) => (a instanceof RegExp ? expect.stringMatching(a) : a)),
+                args.map((a) =>
+                    a instanceof RegExp
+                        ? expect.stringMatching(a)
+                        : expect.stringMatching(new RegExp(`^${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')),
+                ),
             ),
             expect.objectContaining({
-                cwd,
+                cwd: expect.stringMatching(new RegExp(`^${cwd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')),
                 ...(envOverrides && { env: expect.objectContaining(envOverrides) }),
             }),
         );
@@ -371,7 +374,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 '--group=integration',
-                normalPath(phpUnitProject('tests/AttributeTest.php')),
+                phpUnitProject('tests/AttributeTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -383,7 +386,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern('test_passed'),
-                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                phpUnitProject('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -401,7 +404,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern('test_passed'),
-                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                phpUnitProject('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -464,7 +467,7 @@ describe('Extension Test', () => {
 
             expectSpawnCalled([
                 binary,
-                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                phpUnitProject('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -482,7 +485,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern('test_passed'),
-                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                phpUnitProject('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -559,7 +562,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern(method),
-                normalPath(phpUnitProject('tests/AssertionsTest.php')),
+                phpUnitProject('tests/AssertionsTest.php'),
                 '--colors=never',
                 '--teamcity',
                 '--functional',

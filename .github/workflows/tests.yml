@@ -9,9 +9,6 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    # TODO: remove once shivammathur/setup-php fixes Windows PHP setup
-    # (broken since windows runner images shipped PHP 8.5, actions/runner-images#13603)
-    continue-on-error: ${{ contains(matrix.os, 'windows') }}
 
     strategy:
       fail-fast: false
