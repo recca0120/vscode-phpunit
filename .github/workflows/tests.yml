@@ -27,6 +27,9 @@ jobs:
       GITHUB_ACTIONS: true
       PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
       PEST_PROJECT: src/PHPUnit/__tests__/fixtures/pest-stub
+      # Minimum PHP version per stub (used to skip incompatible installs)
+      PHPUNIT_MIN_PHP: v9=7.3 v10=8.1 v11=8.2 v12=8.3
+      PEST_MIN_PHP: v2=8.2 v3=8.2 v4=8.3
 
     steps:
       - name: Checkout
@@ -63,35 +66,31 @@ jobs:
 
       - name: Install Composer dependencies (PHPUnit stubs)
         run: |
-          # PHPUnit minimum PHP version lookup
-          declare -A MIN_PHP=([v9]=7.3 [v10]=8.1 [v11]=8.2 [v12]=8.3)
-          PHP=${{ matrix.php }}
+          declare -A MIN_PHP=(${{ env.PHPUNIT_MIN_PHP }})
           for dir in $(ls -d ${{ env.PHPUNIT_PROJECT }}/v*/ | sort -V); do
             stub=$(basename "$dir")
             min=${MIN_PHP[$stub]:-99}
-            if php -r "exit(version_compare('$PHP','$min','>=') ? 0 : 1);"; then
+            if php -r "exit(version_compare('${{ matrix.php }}','$min','>=') ? 0 : 1);"; then
               echo "::group::Installing $stub (PHP >= $min)"
               (cd "$dir" && composer install --prefer-dist --no-interaction --no-progress) || true
               echo "::endgroup::"
             else
-              echo "Skipping $stub (requires PHP >= $min, have $PHP)"
+              echo "Skipping $stub (requires PHP >= $min, have ${{ matrix.php }})"
             fi
           done
 
       - name: Install Composer dependencies (Pest stubs)
         run: |
-          # Pest minimum PHP version lookup
-          declare -A MIN_PHP=([v2]=8.2 [v3]=8.2 [v4]=8.3)
-          PHP=${{ matrix.php }}
+          declare -A MIN_PHP=(${{ env.PEST_MIN_PHP }})
           for dir in $(ls -d ${{ env.PEST_PROJECT }}/v*/ | sort -V); do
             stub=$(basename "$dir")
             min=${MIN_PHP[$stub]:-99}
-            if php -r "exit(version_compare('$PHP','$min','>=') ? 0 : 1);"; then
+            if php -r "exit(version_compare('${{ matrix.php }}','$min','>=') ? 0 : 1);"; then
               echo "::group::Installing $stub (PHP >= $min)"
               (cd "$dir" && composer install --prefer-dist --no-interaction --no-progress) || true
               echo "::endgroup::"
             else
-              echo "Skipping $stub (requires PHP >= $min, have $PHP)"
+              echo "Skipping $stub (requires PHP >= $min, have ${{ matrix.php }})"
             fi
           done
 
