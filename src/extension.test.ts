@@ -22,6 +22,8 @@ import {
 import { Configuration } from './Configuration';
 import { activate } from './extension';
 import {
+    detectPestStubs,
+    detectPhpUnitStubs,
     getPhpUnitVersion,
     getPhpVersion,
     normalPath,
@@ -131,9 +133,13 @@ describe('Extension Test', () => {
     } as unknown as import('vscode').ExtensionContext;
     let cwd: string;
 
-    const setupEnvironment = async (root: string, phpunitBinary: string) => {
+    const setupEnvironment = async (
+        root: string,
+        phpunitBinary: string,
+        options?: { follow?: boolean },
+    ) => {
         setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(root) }]);
-        setTextDocuments(globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: root })));
+        setTextDocuments(globTextDocuments('**/*Test.php', { cwd: root, follow: options?.follow }));
         (context.subscriptions.push as unknown as Mock).mockReset();
         cwd = normalPath(root);
         const configuration = workspace.getConfiguration('phpunit');
@@ -645,4 +651,70 @@ describe('Extension Test', () => {
             expectTestResultCalled(ctrl, expected);
         });
     });
+
+    const additionalStubs = detectPhpUnitStubs();
+
+    if (additionalStubs.length > 0) {
+        describe.each(additionalStubs)('PHPUnit on $name (PHPUnit $phpUnitVersion)', ({
+            root,
+            phpUnitVersion,
+        }) => {
+            beforeEach(() => setupEnvironment(root, 'vendor/bin/phpunit', { follow: true }));
+            afterEach(() => vi.clearAllMocks());
+
+            it('should run all tests', async () => {
+                const ctrl = await activateAndRun();
+
+                let expected: Record<string, number>;
+                if (semver.gte(phpUnitVersion, '12.0.0')) {
+                    expected = { enqueued: 28, started: 26, passed: 15, failed: 9, end: 1 };
+                } else if (semver.gte(phpUnitVersion, '10.0.0')) {
+                    expected = { enqueued: 28, started: 35, passed: 23, failed: 10, end: 1 };
+                } else {
+                    expected = { enqueued: 28, started: 29, passed: 16, failed: 11, end: 1 };
+                }
+
+                expectTestResultCalled(ctrl, expected);
+            });
+
+            it('should run test suite', async () => {
+                const ctrl = await activateAndRun({
+                    include: 'Assertions (Tests\\Assertions)',
+                });
+
+                const expected = semver.gte(phpUnitVersion, '12.0.0')
+                    ? { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }
+                    : { enqueued: 9, started: 12, passed: 6, failed: 4, end: 1 };
+
+                expectTestResultCalled(ctrl, expected);
+            });
+        });
+    }
+
+    const additionalPestStubs = detectPestStubs();
+
+    if (additionalPestStubs.length > 0) {
+        describe.each(additionalPestStubs)('PEST on $name (Pest $pestVersion)', ({
+            root,
+            pestVersion,
+        }) => {
+            beforeEach(() => setupEnvironment(root, 'vendor/bin/pest', { follow: true }));
+            afterEach(() => vi.clearAllMocks());
+
+            it('should run all tests', async () => {
+                const ctrl = await activateAndRun();
+
+                let expected: Record<string, number>;
+                if (semver.gte(pestVersion, '4.0.0')) {
+                    expected = { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 };
+                } else if (semver.gte(pestVersion, '3.0.0')) {
+                    expected = { enqueued: 68, started: 70, passed: 16, failed: 52, end: 1 };
+                } else {
+                    expected = { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 };
+                }
+
+                expectTestResultCalled(ctrl, expected);
+            });
+        });
+    }
 });

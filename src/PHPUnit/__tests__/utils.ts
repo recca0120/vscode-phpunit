@@ -1,8 +1,8 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { PHPUnitXML } from '../PHPUnitXML';
-import { type TestDefinition, TestType } from '../types';
 import { TestParser } from '../TestParser/TestParser';
+import { type TestDefinition, TestType } from '../types';
 
 export const fixturePath = (uri: string) => join(__dirname, 'fixtures', uri);
 export const phpUnitProject = (uri: string) => fixturePath(join('phpunit-stub', uri));
@@ -56,6 +56,54 @@ export const findTest = (tests: TestDefinition[], id: string) => {
 
     return undefined;
 };
+
+export interface PhpUnitStub {
+    name: string;
+    root: string;
+    phpUnitVersion: string;
+}
+
+export function detectPhpUnitStubs(): PhpUnitStub[] {
+    const stubDirs = ['phpunit-stub-9', 'phpunit-stub-10', 'phpunit-stub-11'];
+
+    return stubDirs.flatMap((dir) => {
+        const root = fixturePath(dir);
+        try {
+            const output = execSync('php vendor/bin/phpunit --version', {
+                cwd: root,
+                timeout: 10000,
+            }).toString();
+            const phpUnitVersion = output.match(/PHPUnit\s([\d.]+)/)![1];
+            return [{ name: dir, root, phpUnitVersion }];
+        } catch {
+            return [];
+        }
+    });
+}
+
+export interface PestStub {
+    name: string;
+    root: string;
+    pestVersion: string;
+}
+
+export function detectPestStubs(): PestStub[] {
+    const stubDirs = ['pest-stub-2', 'pest-stub-4'];
+
+    return stubDirs.flatMap((dir) => {
+        const root = fixturePath(dir);
+        try {
+            const output = execSync('php vendor/bin/pest --version', {
+                cwd: root,
+                timeout: 10000,
+            }).toString();
+            const pestVersion = output.match(/(\d+\.\d+\.\d+)/)![1];
+            return [{ name: dir, root, pestVersion }];
+        } catch {
+            return [];
+        }
+    });
+}
 
 export const generateXML = (text: string) => {
     return `<?xml version="1.0" encoding="UTF-8"?>
