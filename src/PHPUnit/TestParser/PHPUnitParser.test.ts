@@ -1,45 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../__tests__/utils';
-import { PHPUnitXML } from '../PHPUnitXML';
+import { findTest, parseTestFile, phpUnitProject } from '../__tests__/utils';
 import { type TestDefinition, TestType } from '../types';
-import { TestParser } from './TestParser';
 
-export const parse = (buffer: Buffer | string, file: string) => {
-    const tests: TestDefinition[] = [];
-    const phpUnitXML = new PHPUnitXML();
-    phpUnitXML.setRoot(phpUnitProject(''));
-    const testParser = new TestParser(phpUnitXML);
-    testParser.on(TestType.namespace, (testDefinition: TestDefinition) =>
-        tests.push(testDefinition),
-    );
-    testParser.on(TestType.class, (testDefinition: TestDefinition) => tests.push(testDefinition));
-    testParser.on(TestType.method, (testDefinition: TestDefinition) => tests.push(testDefinition));
-    testParser.parse(buffer, file);
-
-    return tests;
-};
+export const parse = (buffer: Buffer | string, file: string) =>
+    parseTestFile(buffer, file, phpUnitProject(''));
 
 describe('PHPUnitParser Test', () => {
-    const findTest = (tests: TestDefinition[], id: string) => {
-        const lookup = {
-            [TestType.method]: (test: TestDefinition) => test.methodName === id,
-            [TestType.class]: (test: TestDefinition) => test.className === id && !test.methodName,
-            [TestType.namespace]: (test: TestDefinition) =>
-                test.classFQN === id && !test.className && !test.methodName,
-        } as { [key: string]: Function };
-
-        for (const [, fn] of Object.entries(lookup)) {
-            const test = tests.find((test: TestDefinition) => fn(test));
-
-            if (test) {
-                return test;
-            }
-        }
-
-        return undefined;
-    };
-
     const givenTest = (file: string, content: string, id: string) => {
         return findTest(parse(content, file), id);
     };

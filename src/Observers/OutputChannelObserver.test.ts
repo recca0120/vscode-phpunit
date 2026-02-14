@@ -37,11 +37,6 @@ describe('OutputChannelObserver', () => {
         return (vscode.window.createOutputChannel as Mock).mock.results[0].value;
     }
 
-    function _debug(outputChannel: OutputChannel) {
-        console.log((outputChannel.appendLine as Mock).mock.calls);
-        console.log((outputChannel.append as Mock).mock.calls);
-    }
-
     async function run(file?: string, filter?: string) {
         if (filter) {
             filter = `--filter='^.*::(${filter})( with data set .*)?$'`;
@@ -305,7 +300,7 @@ describe('OutputChannelObserver', () => {
         expect(outputChannel.show).not.toHaveBeenCalled();
     });
 
-    it('never show output channel when failure', async () => {
+    it('never show output channel when not found', async () => {
         await configuration.update('showAfterExecution', 'never');
         const testFile = phpUnitProject('tests/NotFound.php');
         await run(testFile, undefined);

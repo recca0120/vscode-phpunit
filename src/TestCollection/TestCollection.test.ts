@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, type TestDefinition, TestParser } from '../PHPUnit';
+import { PHPUnitXML, type TestDefinition } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestCollection } from './TestCollection';
 
@@ -30,11 +30,15 @@ describe('Extension TestCollection', () => {
         return results;
     };
 
-    const shouldBe = async (
-        _collection: TestCollection,
-        _testsuites: Record<string, import('vscode-uri').URI[]>,
-    ) => {
-        // Assertion was previously commented out; kept as placeholder
+    const collectTestItemFiles = (items: import('vscode').TestItemCollection): string[] => {
+        const files: string[] = [];
+        items.forEach((item: import('vscode').TestItem) => {
+            if (item.uri) {
+                files.push(item.uri.fsPath);
+            }
+            files.push(...collectTestItemFiles(item.children));
+        });
+        return [...new Set(files)];
     };
 
     beforeEach(() => {
@@ -159,14 +163,13 @@ describe('Extension TestCollection', () => {
         }
 
         const skips = ['phpunit-stub/src/', 'phpunit-stub\\src\\', 'AbstractTest.php'];
+        const expectedFiles = files
+            .filter((file) => !skips.some((skip) => file.fsPath.includes(skip)))
+            .map((file) => file.fsPath)
+            .sort();
 
-        await shouldBe(collection, {
-            default: files.filter(
-                (file) =>
-                    !skips.find((skip) => {
-                        return file.fsPath.indexOf(skip) !== -1;
-                    }),
-            ),
-        });
+        const actualFiles = collectTestItemFiles(ctrl.items).sort();
+
+        expect(actualFiles).toEqual(expectedFiles);
     });
 });

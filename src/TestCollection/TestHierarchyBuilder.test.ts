@@ -210,7 +210,6 @@ describe('TestHierarchyBuilder', () => {
                 },
             ]);
 
-            // console.log(toTree(ctrl.items));
         });
     });
 

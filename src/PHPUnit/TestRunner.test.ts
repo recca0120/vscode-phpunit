@@ -65,55 +65,54 @@ const hasFile = (
         return !!file.match(new RegExp(pattern)) && line === l;
     });
 
-// biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
-function expectedTestResult(expected: any, projectPath: (path: string) => string): void {
-    const [classFQN, methodName] = expected.id.split('::');
-    const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
+const resolveTestId = (rawId: string) => {
+    const [classFQN, methodName] = rawId.split('::');
     const type = !methodName ? TestType.class : TestType.method;
-    const converter = TransformerFactory.create(classFQN);
-    expected.id = converter.uniqueId({ type, classFQN, methodName });
+    return TransformerFactory.create(classFQN).uniqueId({ type, classFQN, methodName });
+};
 
-    const actual = onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
-        // biome-ignore lint/suspicious/noExplicitAny: test mock calls have dynamic shape
-        (call: any) => {
-            return call[0].id === expected.id && call[0].event === expected.event;
-        },
+const findResultCall = (id: string, event: TeamcityEvent) =>
+    onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
+        // biome-ignore lint/suspicious/noExplicitAny: vitest mock calls have dynamic shape
+        (call: any) => call[0].id === id && call[0].event === event,
     );
 
+const adjustFailedDetails = (
+    // biome-ignore lint/suspicious/noExplicitAny: test result with dynamic detail entries
+    actual: any,
+    details: { file: string; line: number }[],
+    projectPath: (path: string) => string,
+) => {
+    if (hasFile(actual, 'AssertionsTest', 5)) {
+        details = [{ file: projectPath('tests/AssertionsTest.php'), line: 5 }, ...details];
+    }
+    if (hasFile(actual, 'phpunit', 60)) {
+        details = [...details, { file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 }];
+    }
+    return details;
+};
+
+// biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
+function expectedTestResult(expected: any, projectPath: (path: string) => string): void {
+    const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
+    expected.id = resolveTestId(expected.id);
+
+    const actual = findResultCall(expected.id, expected.event);
     expect(actual).not.toBeUndefined();
 
     if (expected.event === TeamcityEvent.testFailed) {
-        if (hasFile(actual!, 'AssertionsTest', 5)) {
-            expected.details = [
-                {
-                    file: projectPath('tests/AssertionsTest.php'),
-                    line: 5,
-                },
-                ...expected.details,
-            ];
-        }
-
-        if (hasFile(actual!, 'phpunit', 60)) {
-            expected.details = [
-                ...expected.details,
-                {
-                    file: projectPath('vendor/phpunit/phpunit/phpunit'),
-                    line: 60,
-                },
-            ];
-        }
+        expected.details = adjustFailedDetails(actual!, expected.details, projectPath);
         expect(actual![0].details).toEqual(expected.details);
     }
 
-    expect(actual![0]).toEqual(expect.objectContaining({ ...expected, locationHint }));
+    const expectedWithHint = { ...expected, locationHint };
+    expect(actual![0]).toEqual(expect.objectContaining(expectedWithHint));
     expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
-        expect.objectContaining({ ...expected, locationHint }),
+        expect.objectContaining(expectedWithHint),
     );
 
     if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
         expect(onTestResultEvents.get(TeamcityEvent.testVersion)).toHaveBeenCalled();
-        // expect(onTestResultEvents.get(TestResultEvent.testRuntime)).toHaveBeenCalled();
-        // expect(onTestResultEvents.get(TestResultEvent.testConfiguration)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TeamcityEvent.testCount)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TeamcityEvent.testDuration)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TeamcityEvent.testResultSummary)).toHaveBeenCalled();
@@ -122,6 +121,20 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     expect(onTestRunnerEvents.get(TestRunnerEvent.run)).toHaveBeenCalled();
     expect(onTestRunnerEvents.get(TestRunnerEvent.close)).toHaveBeenCalled();
 }
+
+const teamcityOutput = (
+    appPath: (path: string) => string,
+    events: string[],
+    summary = 'OK (1 test, 1 assertion)',
+) => [
+    'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
+    'Runtime:       PHP 8.1.12',
+    `Configuration: '${appPath('phpunit.xml')}`,
+    "##teamcity[testCount count='1' flowId='8024']",
+    ...events,
+    'Time: 00:00.049, Memory: 6.00 MB',
+    summary,
+];
 
 const generateTestResult = (
     testResult: {
@@ -136,32 +149,27 @@ const generateTestResult = (
 ) => {
     const { event, name, file, id } = testResult;
     const locationHint = `php_qn://${file}::\\${id}`;
-    const phpUnitXml = appPath('phpunit.xml');
 
     if ([TeamcityEvent.testSuiteStarted, TeamcityEvent.testSuiteFinished].includes(event)) {
-        fakeSpawn([
-            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
-            'Runtime:       PHP 8.1.12',
-            `Configuration: '${phpUnitXml}`,
-            "##teamcity[testCount count='1' flowId='8024']",
-            `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
-            `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
-            'Time: 00:00.049, Memory: 6.00 MB',
-            'OK (1 test, 1 assertion)',
-        ]);
+        fakeSpawn(
+            teamcityOutput(appPath, [
+                `##teamcity[testSuiteStarted name='${id}' locationHint='${locationHint}' flowId='8024']`,
+                `##teamcity[testSuiteFinished name='${id}' flowId='8024']`,
+            ]),
+        );
     }
 
     if ([TeamcityEvent.testStarted, TeamcityEvent.testFinished].includes(event)) {
-        fakeSpawn([
-            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
-            'Runtime:       PHP 8.1.12',
-            `Configuration: '${phpUnitXml}`,
-            "##teamcity[testCount count='1' flowId='8024']",
-            `##teamcity[testStarted name='${name}' locationHint='${locationHint}::${name}' flowId='8024']`,
-            `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
-            'Time: 00:00.049, Memory: 6.00 MB',
-            'Tests: 1, Assertions: 1, Failures: 1',
-        ]);
+        fakeSpawn(
+            teamcityOutput(
+                appPath,
+                [
+                    `##teamcity[testStarted name='${name}' locationHint='${locationHint}::${name}' flowId='8024']`,
+                    `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
+                ],
+                'Tests: 1, Assertions: 1, Failures: 1',
+            ),
+        );
     }
 
     if ([TeamcityEvent.testFailed].includes(event)) {
@@ -169,17 +177,17 @@ const generateTestResult = (
         if (phpVfsComposer) {
             details += ` phpvfscomposer://${appPath('vendor/phpunit/phpunit/phpunit')}:60`;
         }
-        fakeSpawn([
-            'PHPUnit 9.5.26 by Sebastian Bergmann and contributors.',
-            'Runtime:       PHP 8.1.12',
-            `Configuration: '${phpUnitXml}`,
-            "##teamcity[testCount count='1' flowId='8024']",
-            `##teamcity[testStarted name='${name}' locationHint='${locationHint}::test_failed' flowId='8024']`,
-            `##teamcity[testFailed name='${name}' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${details} ' duration='0' flowId='8024']`,
-            `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
-            'Time: 00:00.049, Memory: 6.00 MB',
-            'Tests: 1, Assertions: 1, Failures: 1',
-        ]);
+        fakeSpawn(
+            teamcityOutput(
+                appPath,
+                [
+                    `##teamcity[testStarted name='${name}' locationHint='${locationHint}::test_failed' flowId='8024']`,
+                    `##teamcity[testFailed name='${name}' message='Failed asserting that false is true.|n|n${file}:5|n' details=' ${details} ' duration='0' flowId='8024']`,
+                    `##teamcity[testFinished name='${name}' duration='0' flowId='8024']`,
+                ],
+                'Tests: 1, Assertions: 1, Failures: 1',
+            ),
+        );
     }
 };
 
@@ -197,143 +205,7 @@ const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
     expect([call[0], ...call[1]]).toEqual(expected);
 };
 
-const shouldRunTest = async (
-    expected: string[],
-    builder: ProcessBuilder,
-    projectPath: (path: string) => string,
-    appPath: (path: string) => string,
-    start: {
-        event: TeamcityEvent;
-        name?: string;
-        file: string;
-        id: string;
-        phpVfsComposer?: boolean;
-    },
-    // biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
-    finished: any,
-) => {
-    generateTestResult(start, appPath, start.phpVfsComposer);
-
-    await expectedCommand(builder, expected);
-
-    expectedTestResult(finished, projectPath);
-};
-
-const shouldRunAllTest = async (
-    expected: string[],
-    builder: ProcessBuilder,
-    projectPath: (path: string) => string,
-    appPath: (path: string) => string,
-) => {
-    await shouldRunTest(
-        expected,
-        builder,
-        projectPath,
-        appPath,
-        {
-            event: TeamcityEvent.testStarted,
-            name: 'test_passed',
-            file: appPath('tests/AssertionsTest.php'),
-            id: 'Tests\\AssertionsTest',
-        },
-        {
-            event: TeamcityEvent.testFinished,
-            name: 'test_passed',
-            flowId: expect.any(Number),
-            id: 'Tests\\AssertionsTest::test_passed',
-            file: projectPath('tests/AssertionsTest.php'),
-        },
-    );
-};
-
-const shouldRunTestSuite = async (
-    expected: string[],
-    builder: ProcessBuilder,
-    projectPath: (uri: string) => string,
-    appPath: (path: string) => string,
-) => {
-    builder.setArguments(projectPath('tests/AssertionsTest.php'));
-
-    await shouldRunTest(
-        expected,
-        builder,
-        projectPath,
-        appPath,
-        {
-            event: TeamcityEvent.testSuiteStarted,
-            file: appPath('tests/AssertionsTest.php'),
-            id: 'Tests\\AssertionsTest',
-        },
-        {
-            event: TeamcityEvent.testSuiteFinished,
-            flowId: expect.any(Number),
-            id: 'Tests\\AssertionsTest',
-            file: projectPath('tests/AssertionsTest.php'),
-        },
-    );
-};
-
-const shouldRunTestPassed = async (
-    expected: string[],
-    builder: ProcessBuilder,
-    projectPath: (path: string) => string,
-    appPath: (path: string) => string,
-) => {
-    const filter = `^.*::(test_passed)( with data set .*)?$`;
-    builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
-
-    await shouldRunTest(
-        expected,
-        builder,
-        projectPath,
-        appPath,
-        {
-            event: TeamcityEvent.testStarted,
-            name: 'test_passed',
-            file: appPath('tests/AssertionsTest.php'),
-            id: 'Tests\\AssertionsTest',
-        },
-        {
-            event: TeamcityEvent.testFinished,
-            flowId: expect.any(Number),
-            id: 'Tests\\AssertionsTest::test_passed',
-            file: projectPath('tests/AssertionsTest.php'),
-        },
-    );
-};
-
-const shouldRunTestFailed = async (
-    expected: string[],
-    builder: ProcessBuilder,
-    projectPath: (uri: string) => string,
-    appPath: (path: string) => string,
-    phpVfsComposer: boolean = false,
-) => {
-    const filter = `^.*::(test_passed|test_failed)( with data set .*)?$`;
-    builder.setArguments(`${projectPath('tests/AssertionsTest.php')} --filter "${filter}"`);
-
-    await shouldRunTest(
-        expected,
-        builder,
-        projectPath,
-        appPath,
-        {
-            event: TeamcityEvent.testFailed,
-            name: 'test_failed',
-            file: appPath('tests/AssertionsTest.php'),
-            id: 'Tests\\AssertionsTest',
-            phpVfsComposer,
-        },
-        {
-            event: TeamcityEvent.testFailed,
-            flowId: expect.any(Number),
-            id: 'Tests\\AssertionsTest::test_failed',
-            file: projectPath('tests/AssertionsTest.php'),
-            message: 'Failed asserting that false is true.',
-            details: [{ file: projectPath('tests/AssertionsTest.php'), line: 22 }],
-        },
-    );
-};
+const TEST_CLASS = 'Tests\\AssertionsTest';
 
 describe('TestRunner Test', () => {
     beforeEach(() => vi.restoreAllMocks());
@@ -361,463 +233,211 @@ describe('TestRunner Test', () => {
         expect(onTestRunnerEvents.get(TestRunnerEvent.close)!).toHaveBeenCalledTimes(1);
     });
 
-    describe('local', () => {
-        const projectPath = phpUnitProject;
-        const appPath = phpUnitProject;
-        const cwd = projectPath('');
-        const configuration = new Configuration({
+    const testEnvironment = (
+        name: string,
+        projectPath: (path: string) => string,
+        appPath: (path: string) => string,
+        configuration: Configuration,
+        buildCommand: (...middle: string[]) => string[],
+        options?: { skipPhpVfsComposer?: boolean },
+    ) => {
+        const passedPattern = `^.*::(test_passed)( with data set .*)?$`;
+        const failedPattern = `^.*::(test_passed|test_failed)( with data set .*)?$`;
+        const filterPassed = `--filter=${passedPattern}`;
+        const filterFailed = `--filter=${failedPattern}`;
+        const testFile = appPath('tests/AssertionsTest.php');
+        const localFile = projectPath('tests/AssertionsTest.php');
+
+        const startEvent = (
+            event: TeamcityEvent,
+            opts?: { name?: string; phpVfsComposer?: boolean },
+        ) => ({ event, file: testFile, id: TEST_CLASS, ...opts });
+
+        // biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
+        const finishedEvent = (event: TeamcityEvent, id: string, opts?: Record<string, any>) => ({
+            event,
+            flowId: expect.any(Number),
+            id,
+            file: localFile,
+            ...opts,
+        });
+
+        describe(name, () => {
+            const builder = new ProcessBuilder(configuration, { cwd: projectPath('') });
+
+            const runTest = async (
+                expected: string[],
+                start: {
+                    event: TeamcityEvent;
+                    name?: string;
+                    file: string;
+                    id: string;
+                    phpVfsComposer?: boolean;
+                },
+                // biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
+                finished: any,
+            ) => {
+                generateTestResult(start, appPath, start.phpVfsComposer);
+                await expectedCommand(builder, expected);
+                expectedTestResult(finished, projectPath);
+            };
+
+            it('should run all tests', async () => {
+                await runTest(
+                    buildCommand(),
+                    startEvent(TeamcityEvent.testStarted, { name: 'test_passed' }),
+                    finishedEvent(TeamcityEvent.testFinished, `${TEST_CLASS}::test_passed`, {
+                        name: 'test_passed',
+                    }),
+                );
+            });
+
+            it('should run test suite', async () => {
+                builder.setArguments(localFile);
+                await runTest(
+                    buildCommand(testFile),
+                    startEvent(TeamcityEvent.testSuiteStarted),
+                    finishedEvent(TeamcityEvent.testSuiteFinished, TEST_CLASS),
+                );
+            });
+
+            it('should run test passed', async () => {
+                builder.setArguments(`${localFile} --filter "${passedPattern}"`);
+                await runTest(
+                    buildCommand(filterPassed, testFile),
+                    startEvent(TeamcityEvent.testStarted, { name: 'test_passed' }),
+                    finishedEvent(TeamcityEvent.testFinished, `${TEST_CLASS}::test_passed`),
+                );
+            });
+
+            it('should run test failed', async () => {
+                builder.setArguments(`${localFile} --filter "${failedPattern}"`);
+                await runTest(
+                    buildCommand(filterFailed, testFile),
+                    startEvent(TeamcityEvent.testFailed, { name: 'test_failed' }),
+                    finishedEvent(TeamcityEvent.testFailed, `${TEST_CLASS}::test_failed`, {
+                        message: 'Failed asserting that false is true.',
+                        details: [{ file: localFile, line: 22 }],
+                    }),
+                );
+            });
+
+            if (!options?.skipPhpVfsComposer) {
+                it('should run test failed with phpvfscomposer', async () => {
+                    builder.setArguments(`${localFile} --filter "${failedPattern}"`);
+                    await runTest(
+                        buildCommand(filterFailed, testFile),
+                        startEvent(TeamcityEvent.testFailed, {
+                            name: 'test_failed',
+                            phpVfsComposer: true,
+                        }),
+                        finishedEvent(TeamcityEvent.testFailed, `${TEST_CLASS}::test_failed`, {
+                            message: 'Failed asserting that false is true.',
+                            details: [{ file: localFile, line: 22 }],
+                        }),
+                    );
+                });
+            }
+        });
+    };
+
+    const remoteAppPath = (path: string) => (path ? `/app/${path}` : '/app');
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: original test behavior preserved
+    const winAppPath = (path: string) => (path ? `./${path}` : '.').replace(/\/g/, '\\');
+
+    testEnvironment(
+        'local',
+        phpUnitProject,
+        phpUnitProject,
+        new Configuration({
             php: 'php',
             phpunit: '${workspaceFolder}/vendor/bin/phpunit',
             args: ['-c', '${workspaceFolder}/phpunit.xml'],
-        });
-        const builder = new ProcessBuilder(configuration, { cwd });
+        }),
+        (...middle) => [
+            'php',
+            phpUnitProject('vendor/bin/phpunit'),
+            `--configuration=${phpUnitProject('phpunit.xml')}`,
+            ...middle,
+            '--colors=never',
+            '--teamcity',
+        ],
+        { skipPhpVfsComposer: true },
+    );
 
-        it('should run all tests', async () => {
-            const expected = [
-                'php',
-                appPath('vendor/bin/phpunit'),
-                `--configuration=${appPath('phpunit.xml')}`,
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunAllTest(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test suite', async () => {
-            const expected = [
-                'php',
-                appPath('vendor/bin/phpunit'),
-                `--configuration=${appPath('phpunit.xml')}`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestSuite(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test passed', async () => {
-            const expected = [
-                'php',
-                appPath('vendor/bin/phpunit'),
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestPassed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed', async () => {
-            const expected = [
-                'php',
-                appPath('vendor/bin/phpunit'),
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath);
-        });
-    });
-
-    describe('SSH', () => {
-        const projectPath = phpUnitProject;
-        const appPath = (path?: string) => (path ? `/app/${path}` : '/app');
-        const cwd = projectPath('');
-        const configuration = new Configuration({
+    const sshPrefix = [
+        'ssh',
+        '-i',
+        'dockerfiles/sshd/id_rsa',
+        '-p',
+        '2222',
+        'root@localhost',
+        '-o',
+        'StrictHostKeyChecking=no',
+        'cd',
+        '/app;',
+    ];
+    testEnvironment(
+        'SSH',
+        phpUnitProject,
+        remoteAppPath,
+        new Configuration({
             command:
                 'ssh -i dockerfiles/sshd/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '/app/phpunit.xml'],
-            paths: { '${PWD}': appPath('') },
-        });
-        const builder = new ProcessBuilder(configuration, { cwd });
+            paths: { '${PWD}': remoteAppPath('') },
+        }),
+        (...middle) => [
+            ...sshPrefix,
+            [
+                'php',
+                'vendor/bin/phpunit',
+                `--configuration=${remoteAppPath('phpunit.xml')}`,
+                ...middle.map((a) => (a.startsWith('--filter') ? `'${a}'` : a)),
+                '--colors=never',
+                '--teamcity',
+            ].join(' '),
+        ],
+    );
 
-        it('should run all tests for SSH', async () => {
-            const expected = [
-                'ssh',
-                '-i',
-                'dockerfiles/sshd/id_rsa',
-                '-p',
-                '2222',
-                'root@localhost',
-                '-o',
-                'StrictHostKeyChecking=no',
-                'cd',
-                '/app;',
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    `--configuration=${appPath('phpunit.xml')}`,
-                    `--colors=never`,
-                    `--teamcity`,
-                ].join(' '),
-            ];
+    const dockerPrefix = (projectPath: (p: string) => string) => [
+        'docker',
+        'run',
+        '-i',
+        '--rm',
+        '-v',
+        `${projectPath('')}:/app`,
+        '-w',
+        '/app',
+        'phpunit-stub',
+    ];
 
-            await shouldRunAllTest(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test suite for SSH', async () => {
-            const expected = [
-                'ssh',
-                '-i',
-                'dockerfiles/sshd/id_rsa',
-                '-p',
-                '2222',
-                'root@localhost',
-                '-o',
-                'StrictHostKeyChecking=no',
-                'cd',
-                '/app;',
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    `--configuration=${appPath('phpunit.xml')}`,
-                    appPath('tests/AssertionsTest.php'),
-                    `--colors=never`,
-                    `--teamcity`,
-                ].join(' '),
-            ];
-
-            await shouldRunTestSuite(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test passed for SSH', async () => {
-            const expected = [
-                'ssh',
-                '-i',
-                'dockerfiles/sshd/id_rsa',
-                '-p',
-                '2222',
-                'root@localhost',
-                '-o',
-                'StrictHostKeyChecking=no',
-                'cd',
-                '/app;',
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    `--configuration=${appPath('phpunit.xml')}`,
-                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
-                    appPath('tests/AssertionsTest.php'),
-                    `--colors=never`,
-                    `--teamcity`,
-                ].join(' '),
-            ];
-
-            await shouldRunTestPassed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed for SSH', async () => {
-            const expected = [
-                'ssh',
-                '-i',
-                'dockerfiles/sshd/id_rsa',
-                '-p',
-                '2222',
-                'root@localhost',
-                '-o',
-                'StrictHostKeyChecking=no',
-                'cd',
-                '/app;',
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    `--configuration=${appPath('phpunit.xml')}`,
-                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
-                    appPath('tests/AssertionsTest.php'),
-                    `--colors=never`,
-                    `--teamcity`,
-                ].join(' '),
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed with phpvfscomposer for Docker', async () => {
-            const expected = [
-                'ssh',
-                '-i',
-                'dockerfiles/sshd/id_rsa',
-                '-p',
-                '2222',
-                'root@localhost',
-                '-o',
-                'StrictHostKeyChecking=no',
-                'cd',
-                '/app;',
-                [
-                    'php',
-                    'vendor/bin/phpunit',
-                    `--configuration=${appPath('phpunit.xml')}`,
-                    `'--filter=^.*::(test_passed|test_failed)( with data set .*)?$'`,
-                    appPath('tests/AssertionsTest.php'),
-                    `--colors=never`,
-                    `--teamcity`,
-                ].join(' '),
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
-        });
-    });
-
-    describe('Docker', () => {
-        const projectPath = phpUnitProject;
-        const appPath = (path?: string) => (path ? `/app/${path}` : '/app');
-        const cwd = projectPath('');
-        const configuration = new Configuration({
-            command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
-            php: 'php',
-            phpunit: 'vendor/bin/phpunit',
-            args: ['-c', '${PWD}/phpunit.xml'],
-            paths: { '${PWD}': appPath('') },
-        });
-
-        const builder = new ProcessBuilder(configuration, { cwd });
-
-        it('should run all tests for Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
+    for (const [name, projectPath, appPath] of [
+        ['Docker', phpUnitProject, remoteAppPath],
+        ['Windows Docker', phpUnitProjectWin, winAppPath],
+    ] as const) {
+        testEnvironment(
+            name,
+            projectPath,
+            appPath,
+            new Configuration({
+                command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
+                php: 'php',
+                phpunit: 'vendor/bin/phpunit',
+                args: ['-c', '${PWD}/phpunit.xml'],
+                paths: { '${PWD}': appPath('') },
+            }),
+            (...middle) => [
+                ...dockerPrefix(projectPath),
                 'php',
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
+                ...middle,
                 '--colors=never',
                 '--teamcity',
-            ];
-
-            await shouldRunAllTest(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test suite for Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestSuite(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test passed for Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestPassed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed for Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed with phpvfscomposer for Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
-        });
-    });
-
-    describe('Windows Docker', () => {
-        const projectPath = phpUnitProjectWin;
-        const appPath = (path?: string) => (path ? `./${path}` : '.').replace(/\/g/, '\\');
-        const cwd = projectPath('');
-        const configuration = new Configuration({
-            command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
-            php: 'php',
-            phpunit: 'vendor/bin/phpunit',
-            args: ['-c', '${PWD}/phpunit.xml'],
-            paths: { '${PWD}': appPath('') },
-        });
-        const builder = new ProcessBuilder(configuration, { cwd });
-
-        it('should run all tests for Windows Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunAllTest(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test suite for Windows Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestSuite(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test passed for Windows Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestPassed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed for Windows Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath);
-        });
-
-        it('should run test failed with phpvfscomposer for Windows Docker', async () => {
-            const expected = [
-                'docker',
-                'run',
-                '-i',
-                '--rm',
-                '-v',
-                `${projectPath('')}:/app`,
-                '-w',
-                '/app',
-                'phpunit-stub',
-                'php',
-                'vendor/bin/phpunit',
-                `--configuration=${appPath('phpunit.xml')}`,
-                `--filter=^.*::(test_passed|test_failed)( with data set .*)?$`,
-                appPath('tests/AssertionsTest.php'),
-                '--colors=never',
-                '--teamcity',
-            ];
-
-            await shouldRunTestFailed(expected, builder, projectPath, appPath, true);
-        });
-    });
+            ],
+        );
+    }
 });

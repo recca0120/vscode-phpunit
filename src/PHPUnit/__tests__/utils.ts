@@ -1,5 +1,8 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
+import { PHPUnitXML } from '../PHPUnitXML';
+import { type TestDefinition, TestType } from '../types';
+import { TestParser } from '../TestParser/TestParser';
 
 export const fixturePath = (uri: string) => join(__dirname, 'fixtures', uri);
 export const phpUnitProject = (uri: string) => fixturePath(join('phpunit-stub', uri));
@@ -21,6 +24,37 @@ export const getPhpVersion = (phpBinary = 'php'): string => {
     const output = execSync(`${phpBinary} --version`, { cwd: phpUnitProject('') }).toString();
 
     return output.match(/PHP\s([\d.]+)/)![1];
+};
+
+export const parseTestFile = (buffer: Buffer | string, file: string, root: string) => {
+    const tests: TestDefinition[] = [];
+    const phpUnitXML = new PHPUnitXML();
+    phpUnitXML.setRoot(root);
+    const testParser = new TestParser(phpUnitXML);
+    for (const type of Object.values(TestType).filter((v) => typeof v === 'number') as TestType[]) {
+        testParser.on(type, (testDefinition: TestDefinition) => tests.push(testDefinition));
+    }
+    testParser.parse(buffer, file);
+
+    return tests;
+};
+
+export const findTest = (tests: TestDefinition[], id: string) => {
+    const lookup: Record<number, (test: TestDefinition) => boolean> = {
+        [TestType.method]: (test) => test.methodName === id,
+        [TestType.describe]: (test) => test.methodName === id,
+        [TestType.class]: (test) => test.className === id && !test.methodName,
+        [TestType.namespace]: (test) => test.classFQN === id && !test.className && !test.methodName,
+    };
+
+    for (const fn of Object.values(lookup)) {
+        const test = tests.find(fn);
+        if (test) {
+            return test;
+        }
+    }
+
+    return undefined;
 };
 
 export const generateXML = (text: string) => {
