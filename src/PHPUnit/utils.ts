@@ -2,7 +2,6 @@ import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
 import yargsParser from 'yargs-parser';
 
-export { CustomWeakMap } from './CustomWeakMap';
 export { escapeValue, parseTeamcity } from './ProblemMatcher/parseTeamcity';
 
 export const EOL = '\r\n';

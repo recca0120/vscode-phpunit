@@ -1,5 +1,4 @@
 export * from './Configuration';
-export * from './CustomWeakMap';
 export * from './PHPUnitXML';
 export * from './ProblemMatcher';
 export * from './ProcessBuilder';

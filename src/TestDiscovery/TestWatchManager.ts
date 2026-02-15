@@ -13,7 +13,9 @@ import { TYPES } from '../types';
 
 @injectable()
 export class TestWatchManager {
-    private watchingTests = new Map<TestItem | 'ALL', TestRunProfile | undefined>();
+    private watchAllProfile: TestRunProfile | undefined;
+    private isWatchingAll = false;
+    private watchingTests = new Map<TestItem, TestRunProfile | undefined>();
 
     constructor(
         @inject(TestRunHandler) private handler: TestRunHandler,
@@ -21,34 +23,29 @@ export class TestWatchManager {
         @inject(TYPES.FileChangedEmitter) private fileChangedEmitter: EventEmitter<Uri>,
     ) {}
 
-    createRunHandler(): (
-        request: TestRunRequest,
-        cancellation: CancellationToken,
-    ) => Promise<void> {
-        return async (request: TestRunRequest, cancellation: CancellationToken) => {
-            if (!request.continuous) {
-                return this.handler.startTestRun(request, cancellation);
-            }
-
-            if (request.include === undefined) {
-                this.watchingTests.set('ALL', request.profile);
-                cancellation.onCancellationRequested(() => this.watchingTests.delete('ALL'));
-            } else {
-                request.include.forEach((testItem) =>
-                    this.watchingTests.set(testItem, request.profile),
-                );
-                cancellation.onCancellationRequested(() =>
-                    request.include?.forEach((testItem) => this.watchingTests.delete(testItem)),
-                );
-            }
-        };
+    handleContinuousRun(request: TestRunRequest, cancellation: CancellationToken): void {
+        if (request.include === undefined) {
+            this.isWatchingAll = true;
+            this.watchAllProfile = request.profile;
+            cancellation.onCancellationRequested(() => {
+                this.isWatchingAll = false;
+                this.watchAllProfile = undefined;
+            });
+        } else {
+            request.include.forEach((testItem) =>
+                this.watchingTests.set(testItem, request.profile),
+            );
+            cancellation.onCancellationRequested(() =>
+                request.include?.forEach((testItem) => this.watchingTests.delete(testItem)),
+            );
+        }
     }
 
     setupFileChangeListener(): void {
         this.fileChangedEmitter.event((uri) => {
-            if (this.watchingTests.has('ALL')) {
+            if (this.isWatchingAll) {
                 this.handler.startTestRun(
-                    new TestRunRequest(undefined, undefined, this.watchingTests.get('ALL'), true),
+                    new TestRunRequest(undefined, undefined, this.watchAllProfile, true),
                 );
                 return;
             }
@@ -56,9 +53,8 @@ export class TestWatchManager {
             const include: TestItem[] = [];
             let profile: TestRunProfile | undefined;
             for (const [testItem, thisProfile] of this.watchingTests) {
-                const cast = testItem as TestItem;
-                if (cast.uri?.toString() === uri.toString()) {
-                    include.push(...this.testCollection.findTestsByFile(cast.uri!));
+                if (testItem.uri?.toString() === uri.toString()) {
+                    include.push(...this.testCollection.findTestsByFile(testItem.uri));
                     profile = thisProfile;
                 }
             }

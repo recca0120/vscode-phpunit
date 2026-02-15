@@ -11,7 +11,18 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/phpunit/__tests__/fixtures/phpunit-stub"
+                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/phpunit-stub"
+            ],
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
+            "name": "Run Extension (Multi-Workspace)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/multi-workspace.code-workspace"
             ],
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"

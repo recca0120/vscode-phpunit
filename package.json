@@ -11,6 +11,10 @@
     "type": "git",
     "url": "https://github.com/recca0120/vscode-phpunit"
   },
+  "packageManager": "pnpm@10.12.4",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
   "engines": {
     "vscode": "^1.88.0"
   },
@@ -96,17 +100,20 @@
         "phpunit.php": {
           "type": "string",
           "description": "Absolute path to php. Fallback to global php if it exists on the command line.",
-          "default": "php"
+          "default": "php",
+          "scope": "resource"
         },
         "phpunit.phpunit": {
           "type": "string",
           "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line",
-          "default": "vendor/bin/phpunit"
+          "default": "vendor/bin/phpunit",
+          "scope": "resource"
         },
         "phpunit.command": {
           "markdownDescription": "Custom command to for running and debugging tests. Use variables `${phpunit}`, `${phpunitxml}`, `${phpunitargs}`, `${php}`, `${phpargs}`, `${cwd}`.\n\nExample:\n\n`ddev exec phpunit -c ${phpunitxml} ${phpunitargs}`",
           "type": "string",
           "default": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
+          "scope": "resource",
           "examples": [
             "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
             "Custom command to run. Ex: `docker exec -t [container_id] /bin/sh -c \"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
@@ -115,20 +122,24 @@
         "phpunit.args": {
           "type": "array",
           "default": [],
-          "description": "Any phpunit args (phpunit --help) E.g. --configuration ${workspaceFolder}/phpunit.xml.dist"
+          "description": "Any phpunit args (phpunit --help) E.g. --configuration ${workspaceFolder}/phpunit.xml.dist",
+          "scope": "resource"
         },
         "phpunit.paths": {
           "type": "object",
-          "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }"
+          "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }",
+          "scope": "resource"
         },
         "phpunit.environment": {
           "type": "object",
-          "title": "Set environment variables before running the phpunit command"
+          "title": "Set environment variables before running the phpunit command",
+          "scope": "resource"
         },
         "phpunit.clearOutputOnRun": {
           "type": "boolean",
           "default": true,
-          "description": "True will clear the output when we run a new test. False will leave the output after every test."
+          "description": "True will clear the output when we run a new test. False will leave the output after every test.",
+          "scope": "resource"
         },
         "phpunit.showAfterExecution": {
           "type": "string",
@@ -144,12 +155,14 @@
         "phpunit.debuggerConfig": {
           "type": "string",
           "default": null,
-          "description": "The name of a launch configuration to use for debugging PHPUnit tests"
+          "description": "The name of a launch configuration to use for debugging PHPUnit tests",
+          "scope": "resource"
         },
         "phpunit.xdebugPort": {
           "type": "integer",
           "default": 0,
-          "description": "The port that is used to communicate between Xdebug in phpunit and the debug extension. 0 (default) will use a random port."
+          "description": "The port that is used to communicate between Xdebug in phpunit and the debug extension. 0 (default) will use a random port.",
+          "scope": "resource"
         }
       }
     }
@@ -168,6 +181,7 @@
     "lint:fix": "biome check --write src",
     "format": "biome format --write src",
     "test": "node ./out/test/runTest.js",
+    "test:e2e": "node ./out/test/runTest.js",
     "vitest": "vitest run",
     "vitest:watch": "vitest",
     "download-api": "npx vscode-dts main && npx vscode-dts dev",
@@ -182,6 +196,7 @@
     "@types/semver": "^7.7.1",
     "@types/sinon": "^21.0.0",
     "@types/yargs-parser": "^21.0.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "@vscode/dts": "^0.4.1",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",

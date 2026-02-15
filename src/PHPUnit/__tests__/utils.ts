@@ -73,7 +73,7 @@ export function detectPhpUnitStubs(): PhpUnitStub[] {
             const phpUnitVersion = output.match(/PHPUnit\s([\d.]+)/)![1];
             return [
                 {
-                    name: `phpunit-v${v}`,
+                    name: `v${v}`,
                     root,
                     phpUnitVersion,
                     binary,
@@ -106,7 +106,7 @@ export function detectParatestStubs(): ParatestStub[] {
             });
             return [
                 {
-                    name: `paratest-v${v}`,
+                    name: `v${v}`,
                     root,
                     binary,
                     args: ['-c', join(root, `v${v}/phpunit.xml`)],
@@ -140,7 +140,7 @@ export function detectPestStubs(): PestStub[] {
             const pestVersion = output.match(/(\d+\.\d+\.\d+)/)![1];
             return [
                 {
-                    name: `pest-v${v}`,
+                    name: `v${v}`,
                     root,
                     pestVersion,
                     binary,

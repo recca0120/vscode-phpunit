@@ -7,17 +7,17 @@ import {
     type TestRunRequest,
     workspace,
 } from 'vscode';
-import { Configuration } from '../Configuration';
 import { CoverageCollector } from '../Coverage';
 import {
+    FilterStrategyFactory,
     Mode,
-    PHPUnitXML,
-    ProcessBuilder,
+    type ProcessBuilder,
     type TestRunner,
     TestRunnerEvent,
-    Xdebug,
+    type Xdebug,
 } from '../PHPUnit';
-import { TestCollection } from '../TestCollection';
+import { type TestCase, TestCollection } from '../TestCollection';
+import type { ProcessBuilderFactory } from '../types';
 import { TYPES } from '../types';
 import { TestQueueBuilder } from './TestQueueBuilder';
 import { TestRunnerBuilder } from './TestRunnerBuilder';
@@ -25,11 +25,11 @@ import { TestRunnerBuilder } from './TestRunnerBuilder';
 @injectable()
 export class TestRunHandler {
     private previousRequest: TestRunRequest | undefined;
+    private lastRunAt = 0;
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
-        @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
-        @inject(Configuration) private configuration: Configuration,
+        @inject(TYPES.ProcessBuilderFactory) private createProcessBuilder: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
         @inject(CoverageCollector) private coverageCollector: CoverageCollector,
@@ -40,8 +40,12 @@ export class TestRunHandler {
         return this.previousRequest;
     }
 
+    getLastRunAt() {
+        return this.lastRunAt;
+    }
+
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const builder = await this.createProcessBuilder(request);
+        const builder = await this.createProcessBuilder(request.profile?.kind);
         const xdebug = builder.getXdebug()!;
 
         await this.manageDebugSession(xdebug, async () => {
@@ -50,21 +54,13 @@ export class TestRunHandler {
         });
 
         this.previousRequest = request;
-    }
-
-    private async createProcessBuilder(request: TestRunRequest): Promise<ProcessBuilder> {
-        const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
-        const xdebug = new Xdebug(this.configuration);
-        builder.setXdebug(xdebug);
-        await xdebug.setMode(request.profile?.kind);
-
-        return builder;
+        this.lastRunAt = Date.now();
     }
 
     private async manageDebugSession(xdebug: Xdebug, fn: () => Promise<void>): Promise<void> {
         if (xdebug.mode === Mode.debug) {
-            const wsf = workspace.getWorkspaceFolder(this.testCollection.getWorkspace());
-            // TODO: perhaps wait for the debug session
+            const wsf = workspace.getWorkspaceFolder(this.testCollection.getRootUri());
+            // TODO(#346): await debug session attachment before running tests
             await debug.startDebugging(wsf, xdebug.name ?? (await xdebug.getDebugConfiguration()));
         }
 
@@ -108,7 +104,19 @@ export class TestRunHandler {
 
         return request.include
             .map((testItem) => this.testCollection.getTestCase(testItem)!)
-            .map((testCase, index) => testCase.configureProcessBuilder(builder, index))
-            .map((builder) => runner.run(builder));
+            .map((testCase, index) => this.configureBuilderForTestCase(builder, testCase, index))
+            .map((configured) => runner.run(configured));
+    }
+
+    private configureBuilderForTestCase(
+        builder: ProcessBuilder,
+        testCase: TestCase,
+        index: number,
+    ): ProcessBuilder {
+        const filter = FilterStrategyFactory.create(testCase.definition).getFilter();
+        return builder
+            .clone()
+            .setXdebug(builder.getXdebug()?.clone().setIndex(index))
+            .setArguments(filter);
     }
 }

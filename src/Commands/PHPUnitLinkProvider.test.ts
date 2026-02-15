@@ -1,6 +1,6 @@
 import { relative } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { type DocumentLink, Position, Range } from 'vscode';
+import { type CancellationToken, type DocumentLink, Position, Range, type TextDocument as VscodeTextDocument } from 'vscode';
 import { PHPUnitXML } from '../PHPUnit';
 import { phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
@@ -44,7 +44,7 @@ describe('PHPUnitLinkProvider', () => {
     };
 
     let provider: PHPUnitLinkProvider;
-    beforeEach(() => (provider = new PHPUnitLinkProvider(phpUnitXML)));
+    beforeEach(() => (provider = new PHPUnitLinkProvider(() => [phpUnitXML])));
 
     it('get PHPUnit links', () => {
         const document =
@@ -64,8 +64,8 @@ MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery
 
         const links = (
             provider.provideDocumentLinks(
-                document as unknown as import('vscode').TextDocument,
-                {} as unknown as import('vscode').CancellationToken,
+                document as unknown as VscodeTextDocument,
+                {} as unknown as CancellationToken,
             ) as DocumentLink[]
         ).map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
 
@@ -92,14 +92,14 @@ MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery
     });
 
     it('get PEST links', () => {
-        const document = new TextDocument(`❌ FAILED  tests/Unit/ArchTest.php > preset  → strict 
+        const document = new TextDocument(`❌ FAILED  tests/Unit/ArchTest.php > preset  → strict
 Expecting 'src/Calculator.php' to be final.
 
 at src/Calculator.php:7
    3 ▕ namespace App;
-   4 ▕ 
+   4 ▕
    5 ▕ use Exception;
-   6 ▕ 
+   6 ▕
 ➜  7 ▕ class Calculator
    8 ▕ {
    9 ▕     public function sum($a, $b)
@@ -122,8 +122,8 @@ at src/Calculator.php:7
 
         const links = (
             provider.provideDocumentLinks(
-                document as unknown as import('vscode').TextDocument,
-                {} as unknown as import('vscode').CancellationToken,
+                document as unknown as VscodeTextDocument,
+                {} as unknown as CancellationToken,
             ) as DocumentLink[]
         ).map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
 
@@ -142,5 +142,19 @@ at src/Calculator.php:7
             ['vendor/pestphp/pest-plugin-arch/src/SingleArchExpectation.php', 'L156'],
             ['vendor/pestphp/pest-plugin-arch/src/SingleArchExpectation.php', 'L140'],
         ]);
+    });
+
+    it('should dynamically resolve from multiple PHPUnitXMLs', () => {
+        const xml1 = new PHPUnitXML().setRoot('/project-a');
+        const xml2 = new PHPUnitXML().setRoot('/project-b');
+        const multiProvider = new PHPUnitLinkProvider(() => [xml1, xml2]);
+
+        const document = new TextDocument('1. src/Foo.php:10');
+        const links = multiProvider.provideDocumentLinks(
+            document as unknown as import('vscode').TextDocument,
+            {} as unknown as import('vscode').CancellationToken,
+        ) as DocumentLink[];
+
+        expect(links).toHaveLength(1);
     });
 });

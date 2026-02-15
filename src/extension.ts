@@ -1,67 +1,64 @@
 import 'reflect-metadata';
-import type { Container } from 'inversify';
 import {
-    type EventEmitter,
+    type CancellationToken,
     type ExtensionContext,
     extensions,
     languages,
     type OutputChannel,
     type TestController,
-    type TestRunProfile,
     TestRunProfileKind,
+    TestRunRequest,
     tests,
     type Uri,
+    type WorkspaceFolder,
     window,
     workspace,
 } from 'vscode';
 import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
 import { Configuration } from './Configuration';
 import type { PHPUnitFileCoverage } from './Coverage';
-import { createContainer } from './container';
-import { TestCollection } from './TestCollection';
-import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
+import { createParentContainer } from './container';
+import { PHPUnitXML } from './PHPUnit';
+import { TestRunDispatcher } from './TestExecution';
 import { TYPES } from './types';
+import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
 export async function activate(context: ExtensionContext) {
-    const ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
+    const ctrl = tests.createTestController('phpunit', 'PHPUnit');
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
-    const container = createContainer(ctrl, outputChannel);
+    const parentContainer = createParentContainer(ctrl, outputChannel);
+    const folderManager = parentContainer.get(WorkspaceFolderManager);
 
-    const testFileDiscovery = container.get(TestFileDiscovery);
-    const testFileWatcher = container.get(TestFileWatcher);
-    const testWatchManager = container.get(TestWatchManager);
-    const testCollection = container.get(TestCollection);
-    const testCommandRegistry = container.get(TestCommandRegistry);
+    // Initialize folders, load config, apply roots, add documents, register listeners
+    await folderManager.initialize(context);
 
-    // Initial load
-    await testFileDiscovery.loadWorkspaceConfiguration();
-    await Promise.all(workspace.textDocuments.map((document) => testCollection.add(document.uri)));
+    // Test controller handlers
+    folderManager.setupControllerHandlers(context);
 
-    // Listeners
-    testFileWatcher.registerDocumentListeners(context);
-    testWatchManager.setupFileChangeListener();
+    // Run profiles with multi-folder dispatch
+    const dispatcher = parentContainer.get(TestRunDispatcher);
+    const testRunProfile = createRunProfiles(ctrl, dispatcher);
 
-    // Test controller
-    ctrl.refreshHandler = () => testFileDiscovery.reloadAll();
-    ctrl.resolveHandler = async (item) => {
-        if (!item) {
-            context.subscriptions.push(...(await testFileWatcher.startWatching()));
-            return;
-        }
+    // Commands
+    const testCommandRegistry = new TestCommandRegistry(
+        (uri) => folderManager.getContextForUri(uri),
+        () => folderManager.getAllContexts(),
+        testRunProfile,
+    );
+    registerCommands(context, testCommandRegistry);
 
-        if (item.uri) {
-            await testCollection.add(item.uri);
-        }
-    };
+    // Disposables
+    registerDisposables(context, ctrl, outputChannel, folderManager);
 
-    // Run profiles, commands, and disposables
-    const testRunProfile = createRunProfiles(ctrl, testWatchManager);
-    registerCommands(context, testCommandRegistry, testRunProfile);
-    registerDisposables(context, ctrl, outputChannel, container);
+    return { testController: ctrl };
 }
 
-function createRunProfiles(ctrl: TestController, testWatchManager: TestWatchManager) {
-    const runHandler = testWatchManager.createRunHandler();
+function createRunProfiles(
+    ctrl: TestController,
+    dispatcher: TestRunDispatcher,
+) {
+    const runHandler = (request: TestRunRequest, cancellation: CancellationToken) =>
+        dispatcher.dispatch(request, cancellation);
 
     const testRunProfile = ctrl.createRunProfile(
         'Run Tests',
@@ -101,37 +98,43 @@ function createRunProfiles(ctrl: TestController, testWatchManager: TestWatchMana
 function registerCommands(
     context: ExtensionContext,
     testCommandRegistry: TestCommandRegistry,
-    testRunProfile: TestRunProfile,
 ) {
-    testCommandRegistry.setTestRunProfile(testRunProfile);
-    context.subscriptions.push(testCommandRegistry.reload());
-    context.subscriptions.push(testCommandRegistry.runAll());
-    context.subscriptions.push(testCommandRegistry.runFile());
-    context.subscriptions.push(testCommandRegistry.runTestAtCursor());
-    context.subscriptions.push(testCommandRegistry.rerun());
+    context.subscriptions.push(
+        testCommandRegistry.reload(),
+        testCommandRegistry.runAll(),
+        testCommandRegistry.runFile(),
+        testCommandRegistry.runTestAtCursor(),
+        testCommandRegistry.rerun(),
+    );
 }
 
 function registerDisposables(
     context: ExtensionContext,
     ctrl: TestController,
     outputChannel: OutputChannel,
-    container: Container,
+    folderManager: WorkspaceFolderManager,
 ) {
-    const configuration = container.get(Configuration);
-    const fileChangedEmitter = container.get<EventEmitter<Uri>>(TYPES.FileChangedEmitter);
+    const linkProvider = new PHPUnitLinkProvider(
+        () => folderManager.getAll().map((c) => c.get(PHPUnitXML)),
+    );
 
     context.subscriptions.push(
         ctrl,
         outputChannel,
-        fileChangedEmitter,
+        folderManager,
         workspace.onDidChangeConfiguration((event) => {
             if (event.affectsConfiguration('phpunit')) {
-                configuration.updateWorkspaceConfiguration(workspace.getConfiguration('phpunit'));
+                for (const child of folderManager) {
+                    const folder = child.get<WorkspaceFolder>(TYPES.WorkspaceFolder);
+                    child.get(Configuration).updateWorkspaceConfiguration(
+                        workspace.getConfiguration('phpunit', folder.uri),
+                    );
+                }
             }
         }),
         languages.registerDocumentLinkProvider(
             { language: 'phpunit' },
-            container.get(PHPUnitLinkProvider),
+            linkProvider,
         ),
     );
 }

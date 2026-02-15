@@ -1,6 +1,5 @@
-import { Position, Range, type TestController, type TestItem, TestTag, Uri } from 'vscode';
+import { Position, Range, type TestController, type TestItem, type TestItemCollection, TestTag, Uri } from 'vscode';
 import {
-    CustomWeakMap,
     type TestDefinition,
     type TestParser,
     TestType,
@@ -19,28 +18,23 @@ export class TestHierarchyBuilder {
     private readonly ancestors: [{ item: TestItem; type: TestType; children: TestItem[] }] = [
         { item: this.createRootItem(), type: TestType.namespace, children: [] },
     ];
-    private testData = new CustomWeakMap<TestItem, TestCase>();
+    private testData = new Map<TestItem, TestCase>();
 
     constructor(
         private ctrl: TestController,
         private testParser: TestParser,
+        private rootItems: TestItemCollection = ctrl.items,
     ) {
         this.onInit();
     }
 
     onInit() {
-        this.testParser.on(TestType.method, (testDefinition, index) => {
-            this.ascend(this.ancestorDepth + testDefinition.depth);
-            this.addTestItem(testDefinition, `${index}`);
-        });
-        this.testParser.on(TestType.describe, (testDefinition) => {
-            this.ascend(this.ancestorDepth + testDefinition.depth);
-            this.addTestItem(testDefinition, testDefinition.id);
-        });
-        this.testParser.on(TestType.class, (testDefinition) => {
-            this.ascend(this.ancestorDepth + testDefinition.depth);
-            this.addTestItem(testDefinition, testDefinition.id);
-        });
+        for (const type of [TestType.method, TestType.describe, TestType.class] as const) {
+            this.testParser.on(type, (testDefinition, index) => {
+                this.ascend(this.ancestorDepth + testDefinition.depth);
+                this.addTestItem(testDefinition, type === TestType.method ? `${index}` : testDefinition.id);
+            });
+        }
         this.testParser.on(TestType.namespace, (testDefinition) => {
             this.ascend(1);
             this.addNamespaceTestItems(testDefinition);
@@ -56,7 +50,7 @@ export class TestHierarchyBuilder {
     private addNamespaceTestItems(testDefinition: TestDefinition) {
         const transformer = TransformerFactory.create(testDefinition.classFQN!);
 
-        let children = this.ctrl.items;
+        let children = this.rootItems;
         let testItem: TestItem | undefined;
         let parts = testDefinition.label?.split('\\') ?? [];
         parts = parts.filter((value) => !!value);
@@ -160,7 +154,7 @@ export class TestHierarchyBuilder {
     }
 
     private createRootItem(): TestItem {
-        return { children: this.ctrl.items } as TestItem;
+        return { children: this.rootItems } as TestItem;
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {

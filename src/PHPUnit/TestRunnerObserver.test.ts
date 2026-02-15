@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TeamcityEvent } from './ProblemMatcher';
+import { TeamcityEvent, type TestFailed } from './ProblemMatcher';
 import {
     TestRunnerEvent,
     TestRunnerEventProxy,
@@ -122,7 +122,7 @@ describe('TestRunnerObserver', () => {
                 event: TeamcityEvent.testFailed,
                 name: 'test',
                 flowId: 1,
-            } as unknown as import('./ProblemMatcher').TestFailed;
+            } as unknown as TestFailed;
             proxy[TeamcityEvent.testFailed](fakeResult);
 
             expect(callback).toHaveBeenCalledWith(fakeResult);

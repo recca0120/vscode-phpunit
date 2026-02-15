@@ -85,7 +85,7 @@ describe('TestHierarchyBuilder', () => {
     };
 
     beforeEach(() => {
-        ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
+        ctrl = tests.createTestController('phpunit', 'PHPUnit');
     });
 
     describe('PHPUnit', () => {

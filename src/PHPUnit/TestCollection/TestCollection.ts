@@ -11,7 +11,8 @@ export interface File<T> {
 }
 
 export class TestCollection {
-    private suites = new Map<string, Map<string, Map<string, TestDefinition[]>>>();
+    private suites = new Map<string, Map<string, TestDefinition[]>>();
+    private matcherCache = new Map<string, Map<string, Minimatch>>();
 
     constructor(private phpUnitXML: PHPUnitXML) {}
 
@@ -19,23 +20,20 @@ export class TestCollection {
         return this.suites.size;
     }
 
-    getWorkspace() {
+    getRootUri() {
         return URI.file(this.phpUnitXML.root());
     }
 
     items() {
-        const workspace = this.getWorkspace();
-        if (!this.suites.has(workspace.fsPath)) {
-            const testsuites = new Map<string, Map<string, TestDefinition[]>>();
+        if (this.suites.size === 0) {
             this.phpUnitXML
                 .getTestSuites()
                 .forEach((suite) =>
-                    testsuites.set(suite.name, new Map<string, TestDefinition[]>()),
+                    this.suites.set(suite.name, new Map<string, TestDefinition[]>()),
                 );
-            this.suites.set(workspace.fsPath, testsuites);
         }
 
-        return this.suites.get(workspace.fsPath)!;
+        return this.suites;
     }
 
     async add(uri: URI) {
@@ -76,7 +74,8 @@ export class TestCollection {
         for (const file of this.gatherFiles()) {
             this.deleteFile(file);
         }
-        this.suites.delete(this.getWorkspace().fsPath);
+        this.suites.clear();
+        this.matcherCache.clear();
 
         return this;
     }
@@ -139,7 +138,7 @@ export class TestCollection {
     }
 
     private match(testSuite: TestSuite, uri: URI) {
-        const workspace = this.getWorkspace();
+        const workspace = this.getRootUri();
         const isFile =
             testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
 
@@ -149,10 +148,20 @@ export class TestCollection {
 
         const suffix = testSuite.suffix ?? '.php';
 
-        const minimatch = new Minimatch(
-            URI.file(join(workspace.fsPath, testSuite.value, `/**/*${suffix}`)).toString(true),
-            { matchBase: true, nocase: true },
-        );
+        let suffixMap = this.matcherCache.get(testSuite.value);
+        if (!suffixMap) {
+            suffixMap = new Map();
+            this.matcherCache.set(testSuite.value, suffixMap);
+        }
+
+        let minimatch = suffixMap.get(suffix);
+        if (!minimatch) {
+            minimatch = new Minimatch(
+                URI.file(join(workspace.fsPath, testSuite.value, `/**/*${suffix}`)).toString(true),
+                { matchBase: true, nocase: true },
+            );
+            suffixMap.set(suffix, minimatch);
+        }
 
         return minimatch.match(uri.toString(true));
     }

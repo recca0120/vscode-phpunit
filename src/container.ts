@@ -1,50 +1,78 @@
 import { Container } from 'inversify';
-import { EventEmitter, type OutputChannel, type TestController, type Uri, workspace } from 'vscode';
-import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
+import { EventEmitter, type OutputChannel, type TestController, type Uri, type WorkspaceFolder, workspace } from 'vscode';
+
 import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
 import { CollisionPrinter, ErrorDialogObserver, OutputChannelObserver } from './Observers';
 import { OutputFormatter } from './Observers/Printers';
-import { PHPUnitXML } from './PHPUnit';
+import { PHPUnitXML, ProcessBuilder, Xdebug } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
-import { TestQueueBuilder, TestRunHandler, TestRunnerBuilder } from './TestExecution';
+import { TestQueueBuilder, TestRunDispatcher, TestRunHandler, TestRunnerBuilder } from './TestExecution';
+import type { ProcessBuilderFactory } from './types';
 import { TYPES } from './types';
+import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
-export function createContainer(ctrl: TestController, outputChannel: OutputChannel): Container {
+export function createParentContainer(ctrl: TestController, outputChannel: OutputChannel): Container {
     const container = new Container();
 
-    // VS Code external objects (use Symbols)
+    // VS Code external objects (shared)
     container.bind(TYPES.TestController).toConstantValue(ctrl);
     container.bind(TYPES.OutputChannel).toConstantValue(outputChannel);
-    container.bind(TYPES.FileChangedEmitter).toConstantValue(new EventEmitter<Uri>());
 
-    // PHPUnit layer (no decorators, use toDynamicValue)
-    container
+    // Shared singleton services (no per-folder deps)
+    container.bind(OutputFormatter).to(CollisionPrinter).inSingletonScope();
+    container.bind(CoverageCollector).toSelf().inSingletonScope();
+
+    // Child container factory
+    container.bind(TYPES.ChildContainerFactory).toConstantValue(
+        (folder: WorkspaceFolder) => createChildContainer(container, folder),
+    );
+
+    // Cross-folder orchestration
+    container.bind(WorkspaceFolderManager).toSelf().inSingletonScope();
+    container.bind(TestRunDispatcher).toSelf().inSingletonScope();
+    return container;
+}
+
+function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolder): Container {
+    const child = new Container({ parent });
+
+    // Per-folder bindings
+    child.bind(TYPES.WorkspaceFolder).toConstantValue(workspaceFolder);
+    child.bind(TYPES.FileChangedEmitter).toConstantValue(new EventEmitter<Uri>());
+
+    child
         .bind(PHPUnitXML)
         .toDynamicValue(() => new PHPUnitXML())
         .inSingletonScope();
-    container
+    child
         .bind(Configuration)
-        .toDynamicValue(() => new Configuration(workspace.getConfiguration('phpunit')))
+        .toDynamicValue(() => new Configuration(workspace.getConfiguration('phpunit', workspaceFolder.uri)))
         .inSingletonScope();
 
-    // Abstract → Concrete
-    container.bind(OutputFormatter).to(CollisionPrinter).inSingletonScope();
+    // Per-folder factories
+    child.bind(TYPES.ProcessBuilderFactory).toConstantValue(
+        (async (profileKind) => {
+            const config = child.get(Configuration);
+            const phpUnitXML = child.get(PHPUnitXML);
+            const builder = new ProcessBuilder(config, { cwd: phpUnitXML.root() });
+            const xdebug = new Xdebug(config);
+            builder.setXdebug(xdebug);
+            await xdebug.setMode(profileKind);
+            return builder;
+        }) as ProcessBuilderFactory,
+    );
 
-    // src/ layer classes (auto-resolve constructors)
-    container.bind(CoverageCollector).toSelf().inSingletonScope();
-    container.bind(ErrorDialogObserver).toSelf().inSingletonScope();
-    container.bind(OutputChannelObserver).toSelf().inSingletonScope();
-    container.bind(TestCollection).toSelf().inSingletonScope();
-    container.bind(TestRunnerBuilder).toSelf().inSingletonScope();
-    container.bind(TestQueueBuilder).toSelf().inSingletonScope();
-    container.bind(TestRunHandler).toSelf().inSingletonScope();
-    container.bind(TestFileDiscovery).toSelf().inSingletonScope();
-    container.bind(TestFileWatcher).toSelf().inSingletonScope();
-    container.bind(TestWatchManager).toSelf().inSingletonScope();
-    container.bind(TestCommandRegistry).toSelf().inSingletonScope();
-    container.bind(PHPUnitLinkProvider).toSelf().inSingletonScope();
-
-    return container;
+    // Per-folder services (depend on Configuration or PHPUnitXML)
+    child.bind(ErrorDialogObserver).toSelf().inSingletonScope();
+    child.bind(OutputChannelObserver).toSelf().inSingletonScope();
+    child.bind(TestRunnerBuilder).toSelf().inSingletonScope();
+    child.bind(TestCollection).toSelf().inSingletonScope();
+    child.bind(TestQueueBuilder).toSelf().inSingletonScope();
+    child.bind(TestRunHandler).toSelf().inSingletonScope();
+    child.bind(TestFileDiscovery).toSelf().inSingletonScope();
+    child.bind(TestFileWatcher).toSelf().inSingletonScope();
+    child.bind(TestWatchManager).toSelf().inSingletonScope();
+    return child;
 }

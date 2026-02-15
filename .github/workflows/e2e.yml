@@ -1,0 +1,99 @@
+name: E2E Tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - '*.x'
+  pull_request:
+jobs:
+  e2e:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    name: e2e (${{ matrix.os }})
+    defaults:
+      run:
+        shell: bash
+    env:
+      extensions: dom, mbstring, xdebug, zip
+      key: cache-v1
+      PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
+      PEST_PROJECT: src/PHPUnit/__tests__/fixtures/pest-stub
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: '8.4'
+          extensions: ${{ env.extensions }}
+          key: ${{ env.key }}
+
+      - name: Cache extensions
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ${{ env.extensions }}
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Cache Composer dependencies (stubs)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PHPUNIT_PROJECT }}/v12/vendor
+            ${{ env.PEST_PROJECT }}/v4/vendor
+          key: composer-e2e-${{ matrix.os }}-php8.4-${{ hashFiles('src/PHPUnit/__tests__/fixtures/**/composer.lock') }}
+          restore-keys: |
+            composer-e2e-${{ matrix.os }}-php8.4-
+
+      - name: Install Composer dependencies (PHPUnit v12)
+        run: |
+          cd ${{ env.PHPUNIT_PROJECT }}/v12
+          composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Install Composer dependencies (Pest v4)
+        run: |
+          cd ${{ env.PEST_PROJECT }}/v4
+          composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache VS Code binary
+        uses: actions/cache@v4
+        with:
+          path: .vscode-test
+          key: vscode-test-${{ matrix.os }}-stable
+
+      - name: Compile extension and tests
+        run: pnpm compile && pnpm compile-tests
+
+      - name: Run e2e tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm test:e2e
+
+      - name: Run e2e tests (non-Linux)
+        if: runner.os != 'Linux'
+        run: pnpm test:e2e
