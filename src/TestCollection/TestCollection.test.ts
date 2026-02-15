@@ -100,6 +100,30 @@ describe('Extension TestCollection', () => {
         ]);
     });
 
+    it('find groups and tests by group', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+
+        expect(collection.findGroups()).toEqual(['integration']);
+        expect(collection.findTestsByGroup('integration')).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: 'Assertions (Tests\\Assertions)::Passed',
+                }),
+                expect.objectContaining({
+                    id: 'Attribute (Tests\\Attribute)::Hi',
+                }),
+            ]),
+        );
+    });
+
     it('with testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>

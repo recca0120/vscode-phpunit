@@ -306,6 +306,8 @@ const window = {
         };
     }),
     showErrorMessage: vi.fn(),
+    showInformationMessage: vi.fn(),
+    showQuickPick: vi.fn(),
 };
 
 const commands = (function () {

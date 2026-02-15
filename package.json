@@ -68,6 +68,10 @@
         "title": "PHPUnit: Run the test at the current cursor position"
       },
       {
+        "command": "phpunit.run-by-group",
+        "title": "PHPUnit: Run tests by group"
+      },
+      {
         "command": "phpunit.rerun",
         "title": "PHPUnit: Repeat the last test run"
       }
