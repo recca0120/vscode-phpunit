@@ -60,26 +60,19 @@ export class TestCollection extends BaseTestCollection {
         }
 
         const includeIds = new Set(request.include.map((item) => item.id));
-        const tests: TestItem[] = [];
-        for (const testData of this.testItems.values()) {
-            testData.forEach((_, testItem: TestItem) => {
-                if (includeIds.has(testItem.id)) {
-                    tests.push(testItem);
-                }
-            });
-        }
+        const tests = this.collectTestItems((testItem) => includeIds.has(testItem.id));
 
         return tests.length > 0 ? tests : undefined;
     }
 
     findGroups(): string[] {
         const groups = new Set<string>();
-        for (const testData of this.testItems.values()) {
-            testData.forEach((_, testItem: TestItem) => {
-                (testItem.tags ?? [])
-                    .filter((tag) => tag.id.startsWith('group:'))
-                    .forEach((tag) => groups.add(tag.id.replace(/^group:/, '')));
-            });
+        for (const [testItem] of this.allTestEntries()) {
+            for (const tag of testItem.tags ?? []) {
+                if (tag.id.startsWith('group:')) {
+                    groups.add(tag.id.slice(6));
+                }
+            }
         }
 
         return [...groups].sort();
@@ -87,20 +80,12 @@ export class TestCollection extends BaseTestCollection {
 
     findTestsByGroup(group: string): TestItem[] {
         const groupTagId = `group:${group}`;
-        const tests: TestItem[] = [];
-        for (const testData of this.testItems.values()) {
-            for (const [testItem, testCase] of testData) {
-                if (testCase.type !== TestType.method) {
-                    continue;
-                }
 
-                if ((testItem.tags ?? []).some((tag) => tag.id === groupTagId)) {
-                    tests.push(testItem);
-                }
-            }
-        }
-
-        return tests;
+        return this.collectTestItems(
+            (testItem, testCase) =>
+                testCase.type === TestType.method &&
+                (testItem.tags ?? []).some((tag) => tag.id === groupTagId),
+        );
     }
 
     reset() {
@@ -134,6 +119,24 @@ export class TestCollection extends BaseTestCollection {
         this.removeTestItems(file.uri);
 
         return super.deleteFile(file);
+    }
+
+    private *allTestEntries(): Iterable<[TestItem, TestCase]> {
+        for (const testData of this.testItems.values()) {
+            yield* testData;
+        }
+    }
+
+    private collectTestItems(
+        predicate: (testItem: TestItem, testCase: TestCase) => boolean,
+    ): TestItem[] {
+        const items: TestItem[] = [];
+        for (const [testItem, testCase] of this.allTestEntries()) {
+            if (predicate(testItem, testCase)) {
+                items.push(testItem);
+            }
+        }
+        return items;
     }
 
     private setTestCase(uri: URI, testItem: TestItem, testCase: TestCase): void {
