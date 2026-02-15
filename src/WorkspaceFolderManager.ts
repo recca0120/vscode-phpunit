@@ -220,6 +220,8 @@ export class WorkspaceFolderManager {
     private toContext(container: Container): FolderTestContext {
         return {
             reloadAll: () => container.get(TestFileDiscovery).reloadAll(),
+            findGroups: () => container.get(TestCollection).findGroups(),
+            findTestsByGroup: (group) => container.get(TestCollection).findTestsByGroup(group),
             findTestsByFile: (uri) => container.get(TestCollection).findTestsByFile(uri),
             findTestsByPosition: (uri, pos) => container.get(TestCollection).findTestsByPosition(uri, pos),
             findTestsByRequest: (req) => container.get(TestCollection).findTestsByRequest(req),

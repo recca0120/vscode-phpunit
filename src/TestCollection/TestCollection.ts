@@ -74,7 +74,7 @@ export class TestCollection extends BaseTestCollection {
 
     findGroups(): string[] {
         const groups = new Set<string>();
-        for (const [, testData] of this.getTestData()) {
+        for (const testData of this.testItems.values()) {
             testData.forEach((_, testItem: TestItem) => {
                 (testItem.tags ?? [])
                     .filter((tag) => tag.id.startsWith('group:'))
@@ -88,7 +88,7 @@ export class TestCollection extends BaseTestCollection {
     findTestsByGroup(group: string): TestItem[] {
         const groupTagId = `group:${group}`;
         const tests: TestItem[] = [];
-        for (const [, testData] of this.getTestData()) {
+        for (const testData of this.testItems.values()) {
             for (const [testItem, testCase] of testData) {
                 if (testCase.type !== TestType.method) {
                     continue;

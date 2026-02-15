@@ -7,6 +7,8 @@ export type ProcessBuilderFactory = (profileKind?: TestRunProfileKind) => Promis
 
 export interface FolderTestContext {
     reloadAll(): Promise<void>;
+    findGroups(): string[];
+    findTestsByGroup(group: string): TestItem[];
     findTestsByFile(uri: Uri): TestItem[];
     findTestsByPosition(uri: Uri, position: Position): TestItem[];
     findTestsByRequest(request?: TestRunRequest): TestItem[] | undefined;

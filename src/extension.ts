@@ -104,6 +104,7 @@ function registerCommands(
         testCommandRegistry.runAll(),
         testCommandRegistry.runFile(),
         testCommandRegistry.runTestAtCursor(),
+        testCommandRegistry.runByGroup(),
         testCommandRegistry.rerun(),
     );
 }

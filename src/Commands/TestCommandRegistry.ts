@@ -43,6 +43,38 @@ export class TestCommandRegistry {
         });
     }
 
+    runByGroup(): Disposable {
+        return commands.registerCommand('phpunit.run-by-group', async () => {
+            const allContexts = this.getAllContexts();
+            let groups = [...new Set(allContexts.flatMap((c) => c.findGroups()))].sort();
+
+            if (groups.length === 0) {
+                await Promise.all(allContexts.map((c) => c.reloadAll()));
+                groups = [...new Set(allContexts.flatMap((c) => c.findGroups()))].sort();
+            }
+
+            if (groups.length === 0) {
+                window.showInformationMessage(
+                    'No PHPUnit groups found. Add @group annotations or #[Group] attributes to your tests.',
+                );
+                return;
+            }
+
+            const selected = await window.showQuickPick(groups, {
+                placeHolder: 'Select a PHPUnit group to run',
+                title: 'Run Tests by Group',
+            });
+            if (!selected) {
+                return;
+            }
+
+            const tests = allContexts.flatMap((c) => c.findTestsByGroup(selected));
+            if (tests.length > 0) {
+                await this.run(tests);
+            }
+        });
+    }
+
     rerun(): Disposable {
         return commands.registerCommand('phpunit.rerun', async () => {
             const ctx = this.findMostRecentTestRun();
