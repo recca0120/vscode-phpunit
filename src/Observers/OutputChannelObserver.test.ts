@@ -1,11 +1,57 @@
 import * as semver from 'semver';
-import { beforeEach, describe, expect, it, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
 import { Configuration, EOL, PHPUnitXML, ProcessBuilder, TestRunner } from '../PHPUnit';
 import { detectPhpUnitStubs, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
+
+describe('OutputChannelObserver clear behavior', () => {
+    const createObserver = () => {
+        const outputChannel = {
+            append: vi.fn(),
+            appendLine: vi.fn(),
+            clear: vi.fn(),
+            show: vi.fn(),
+        } as unknown as OutputChannel;
+        const configuration = new Configuration({
+            clearOutputOnRun: true,
+            showAfterExecution: 'onFailure',
+        });
+        const observer = new OutputChannelObserver(
+            outputChannel,
+            configuration,
+            new PrettyPrinter(new PHPUnitXML()),
+        );
+
+        return { observer, outputChannel };
+    };
+
+    const createBuilder = (command: string) =>
+        ({ toString: () => command }) as unknown as ProcessBuilder;
+
+    it('clears once for multiple processes in the same request', () => {
+        const { observer, outputChannel } = createObserver();
+        observer.setRequest({ continuous: false } as TestRunRequest);
+
+        observer.run(createBuilder('command-1'));
+        observer.run(createBuilder('command-2'));
+
+        expect(outputChannel.clear).toHaveBeenCalledTimes(1);
+    });
+
+    it('clears again for a new request', () => {
+        const { observer, outputChannel } = createObserver();
+        observer.setRequest({ continuous: false } as TestRunRequest);
+        observer.run(createBuilder('command-1'));
+
+        observer.setRequest({ continuous: false } as TestRunRequest);
+        observer.run(createBuilder('command-2'));
+
+        expect(outputChannel.clear).toHaveBeenCalledTimes(2);
+    });
+});
 
 describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $phpUnitVersion)', ({
     root,
