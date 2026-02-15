@@ -14,9 +14,12 @@ enum TestRunProfileKind {
     Coverage = 3,
 }
 
-const TestRunRequest = vi.fn().mockImplementation(function (include: any) {
+const TestRunRequest = vi.fn().mockImplementation(function (include: any, exclude?: any, profile?: any, continuous?: boolean) {
     return {
         include,
+        exclude,
+        profile,
+        continuous: continuous ?? false,
     };
 });
 
@@ -192,7 +195,7 @@ const CancellationTokenSource = vi.fn().mockImplementation(function () {
     return {
         token: { isCancellationRequested: false, onCancellationRequested: vi.fn() },
         cancel: vi.fn(),
-        dispose: new Disposable(),
+        dispose: vi.fn(),
     };
 });
 
@@ -228,14 +231,12 @@ const configurations = new Map<string, Configuration>();
 const workspace = {
     workspaceFolders: [],
     textDocuments: [],
-    getConfiguration: vi.fn().mockImplementation((section: string) => {
-        if (configurations.has(section)) {
-            return configurations.get(section);
+    getConfiguration: vi.fn().mockImplementation((section: string, scope?: URI) => {
+        const key = scope ? `${section}::${scope.toString()}` : section;
+        if (!configurations.has(key)) {
+            configurations.set(key, new Configuration());
         }
-
-        const configuration = new Configuration();
-        configurations.set(section, configuration);
-        return configuration;
+        return configurations.get(key);
     }),
     getWorkspaceFolder: (uri: URI) => {
         return workspace.workspaceFolders.find((folder: WorkspaceFolder) =>
@@ -263,6 +264,7 @@ const workspace = {
     onDidChangeConfiguration: vi.fn().mockImplementation(() => {
         return new Disposable();
     }),
+    onDidChangeWorkspaceFolders: vi.fn().mockReturnValue(new Disposable()),
     onDidOpenTextDocument: vi.fn().mockReturnValue(new Disposable()),
     onDidChangeTextDocument: vi.fn().mockReturnValue(new Disposable()),
     fs: {
@@ -323,6 +325,7 @@ const EventEmitter = vi.fn().mockImplementation(function () {
     return {
         fire: vi.fn(),
         event: vi.fn(),
+        dispose: vi.fn(),
     };
 });
 

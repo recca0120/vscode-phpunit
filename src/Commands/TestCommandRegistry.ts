@@ -1,87 +1,101 @@
-import { inject, injectable } from 'inversify';
 import {
     CancellationTokenSource,
     commands,
+    type Disposable,
     type TestItem,
     type TestRunProfile,
-    TestRunRequest,
+    TestRunRequest as TestRunRequestImpl,
+    type Uri,
     window,
 } from 'vscode';
-import { TestCollection } from '../TestCollection';
-import { TestFileDiscovery } from '../TestDiscovery';
-import { TestRunHandler } from '../TestExecution';
+import type { FolderTestContext } from '../types';
 
-@injectable()
 export class TestCommandRegistry {
-    private testRunProfile!: TestRunProfile;
-
     constructor(
-        @inject(TestCollection) private testCollection: TestCollection,
-        @inject(TestRunHandler) private handler: TestRunHandler,
-        @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
+        private getContextForUri: (uri: Uri) => FolderTestContext | undefined,
+        private getAllContexts: () => FolderTestContext[],
+        private testRunProfile: TestRunProfile,
     ) {}
 
-    setTestRunProfile(profile: TestRunProfile) {
-        this.testRunProfile = profile;
-    }
-
-    reload() {
+    reload(): Disposable {
         return commands.registerCommand('phpunit.reload', async () => {
-            await this.testFileDiscovery.reloadAll();
+            await Promise.all(this.getAllContexts().map((c) => c.reloadAll()));
         });
     }
 
-    runAll() {
+    runAll(): Disposable {
         return commands.registerCommand('phpunit.run-all', async () => {
             await this.run(undefined);
         });
     }
 
-    runFile() {
+    runFile(): Disposable {
         return commands.registerCommand('phpunit.run-file', async () => {
-            const uri = window.activeTextEditor?.document.uri;
-            if (!uri) {
-                return;
-            }
-
-            const tests = this.testCollection.findTestsByFile(uri);
-            if (tests.length > 0) {
-                await this.run(tests);
-            }
+            await this.runWithEditor((ctx, uri) => ctx.findTestsByFile(uri));
         });
     }
 
-    runTestAtCursor() {
+    runTestAtCursor(): Disposable {
         return commands.registerCommand('phpunit.run-test-at-cursor', async () => {
-            const uri = window.activeTextEditor?.document.uri;
-            if (!uri) {
-                return;
-            }
-
-            const tests = this.testCollection.findTestsByPosition(
-                uri,
-                window.activeTextEditor?.selection.active!,
+            await this.runWithEditor((ctx, uri) =>
+                ctx.findTestsByPosition(uri, window.activeTextEditor!.selection.active),
             );
-            if (tests.length > 0) {
-                await this.run(tests);
-            }
         });
     }
 
-    rerun() {
-        return commands.registerCommand('phpunit.rerun', () => {
-            return this.run(
-                this.testCollection.findTestsByRequest(this.handler.getPreviousRequest()),
-            );
+    rerun(): Disposable {
+        return commands.registerCommand('phpunit.rerun', async () => {
+            const ctx = this.findMostRecentTestRun();
+            if (!ctx) {
+                return;
+            }
+
+            await this.run(ctx.findTestsByRequest(ctx.getPreviousRequest()));
         });
+    }
+
+    private async runWithEditor(
+        findTests: (ctx: FolderTestContext, uri: Uri) => TestItem[],
+    ): Promise<void> {
+        const uri = window.activeTextEditor?.document.uri;
+        if (!uri) {
+            return;
+        }
+
+        const ctx = this.getContextForUri(uri);
+        if (!ctx) {
+            return;
+        }
+
+        const tests = findTests(ctx, uri);
+        if (tests.length > 0) {
+            await this.run(tests);
+        }
+    }
+
+    private findMostRecentTestRun(): FolderTestContext | undefined {
+        let mostRecent: FolderTestContext | undefined;
+        let mostRecentTime = -1;
+
+        for (const ctx of this.getAllContexts()) {
+            if (ctx.getPreviousRequest() && ctx.getLastRunAt() > mostRecentTime) {
+                mostRecentTime = ctx.getLastRunAt();
+                mostRecent = ctx;
+            }
+        }
+
+        return mostRecent;
     }
 
     private async run(include: readonly TestItem[] | undefined) {
-        const cancellation = new CancellationTokenSource().token;
-
-        await this.testRunProfile.runHandler(
-            new TestRunRequest(include, undefined, this.testRunProfile),
-            cancellation,
-        );
+        const cts = new CancellationTokenSource();
+        try {
+            await this.testRunProfile.runHandler(
+                new TestRunRequestImpl(include, undefined, this.testRunProfile),
+                cts.token,
+            );
+        } finally {
+            cts.dispose();
+        }
     }
 }

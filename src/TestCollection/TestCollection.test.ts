@@ -42,7 +42,7 @@ describe('Extension TestCollection', () => {
     };
 
     beforeEach(() => {
-        ctrl = tests.createTestController('phpUnitTestController', 'PHPUnit');
+        ctrl = tests.createTestController('phpunit', 'PHPUnit');
         vi.clearAllMocks();
     });
 
@@ -136,6 +136,41 @@ describe('Extension TestCollection', () => {
                             expect.objectContaining({
                                 id: 'Example (Tests\\Feature\\Example)',
                                 label: '$(symbol-class) ExampleTest',
+                            }),
+                        ],
+                    }),
+                ],
+            },
+        ]);
+    });
+
+    it('with folder root (multi-workspace)', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const folderItem = ctrl.createTestItem('folder:test', '$(folder) phpunit-stub');
+        folderItem.canResolveChildren = true;
+        ctrl.items.add(folderItem);
+        collection.setRootItems(folderItem.children);
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        expect(toTree(ctrl.items)).toEqual([
+            {
+                id: 'folder:test',
+                label: '$(folder) phpunit-stub',
+                children: [
+                    expect.objectContaining({
+                        id: 'namespace:Tests',
+                        label: '$(symbol-namespace) Tests',
+                        children: [
+                            expect.objectContaining({
+                                id: 'Assertions (Tests\\Assertions)',
+                                label: '$(symbol-class) AssertionsTest',
                             }),
                         ],
                     }),

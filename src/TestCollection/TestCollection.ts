@@ -1,9 +1,8 @@
 import { inject, injectable } from 'inversify';
-import type { Position, TestController, TestItem, TestRunRequest } from 'vscode';
+import type { Position, TestController, TestItem, TestItemCollection, TestRunRequest } from 'vscode';
 import type { URI } from 'vscode-uri';
 import {
     TestCollection as BaseTestCollection,
-    CustomWeakMap,
     type File,
     PHPUnitXML,
     type TestDefinition,
@@ -15,14 +14,23 @@ import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
 export class TestCollection extends BaseTestCollection {
-    private testItems = new Map<string, Map<string, CustomWeakMap<TestItem, TestCase>>>();
+    private testItems = new Map<string, Map<TestItem, TestCase>>();
     private testCaseIndex = new Map<string, TestCase>();
+    private _rootItems: TestItemCollection | undefined;
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
     ) {
         super(phpUnitXML);
+    }
+
+    get rootItems(): TestItemCollection {
+        return this._rootItems ?? this.ctrl.items;
+    }
+
+    setRootItems(items: TestItemCollection | undefined): void {
+        this._rootItems = items;
     }
 
     getTestCase(testItem: TestItem): TestCase | undefined {
@@ -53,7 +61,7 @@ export class TestCollection extends BaseTestCollection {
 
         const includeIds = new Set(request.include.map((item) => item.id));
         const tests: TestItem[] = [];
-        for (const [, testData] of this.getTestData()) {
+        for (const testData of this.testItems.values()) {
             testData.forEach((_, testItem: TestItem) => {
                 if (includeIds.has(testItem.id)) {
                     tests.push(testItem);
@@ -65,11 +73,11 @@ export class TestCollection extends BaseTestCollection {
     }
 
     reset() {
-        for (const [, testData] of this.getTestData()) {
+        for (const testData of this.testItems.values()) {
             for (const [testItem] of testData) {
                 testItem.parent
                     ? testItem.parent.children.delete(testItem.id)
-                    : this.ctrl.items.delete(testItem.id);
+                    : this.rootItems.delete(testItem.id);
             }
         }
         this.testCaseIndex.clear();
@@ -79,15 +87,13 @@ export class TestCollection extends BaseTestCollection {
 
     protected async parseTests(uri: URI, testsuite: string) {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
-        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl, testParser);
+        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl, testParser, this.rootItems);
         await testParser.parseFile(uri.fsPath, testsuite);
 
         this.removeTestItems(uri);
-        const testData = this.getTestCases(uri);
-        testData.clear();
+        this.clearTestCases(uri);
         for (const [testItem, testCase] of testHierarchyBuilder.get()) {
-            testData.set(testItem, testCase);
-            this.testCaseIndex.set(testItem.id, testCase);
+            this.setTestCase(uri, testItem, testCase);
         }
 
         return testDefinitionBuilder.get();
@@ -99,25 +105,25 @@ export class TestCollection extends BaseTestCollection {
         return super.deleteFile(file);
     }
 
-    private getTestCases(uri: URI) {
-        const testData = this.getTestData();
-        if (!testData.has(uri.toString())) {
-            testData.set(uri.toString(), new CustomWeakMap<TestItem, TestCase>());
-        }
-
-        return testData.get(uri.toString())!;
+    private setTestCase(uri: URI, testItem: TestItem, testCase: TestCase): void {
+        this.getTestCases(uri).set(testItem, testCase);
+        this.testCaseIndex.set(testItem.id, testCase);
     }
 
-    private getTestData() {
-        const workspace = this.getWorkspace();
-        if (!this.testItems.has(workspace.fsPath)) {
-            this.testItems.set(
-                workspace.fsPath,
-                new Map<string, CustomWeakMap<TestItem, TestCase>>(),
-            );
+    private clearTestCases(uri: URI): void {
+        const testData = this.getTestCases(uri);
+        for (const [testItem] of testData) {
+            this.testCaseIndex.delete(testItem.id);
+        }
+        testData.clear();
+    }
+
+    private getTestCases(uri: URI) {
+        if (!this.testItems.has(uri.toString())) {
+            this.testItems.set(uri.toString(), new Map<TestItem, TestCase>());
         }
 
-        return this.testItems.get(workspace.fsPath)!;
+        return this.testItems.get(uri.toString())!;
     }
 
     private inRangeTestItems(uri: URI, position: Position) {
@@ -139,7 +145,7 @@ export class TestCollection extends BaseTestCollection {
     private removeTestItems(uri: URI) {
         this.findTestsByFile(uri).forEach((testItem) => {
             if (!testItem.parent) {
-                this.ctrl.items.delete(testItem.id);
+                this.rootItems.delete(testItem.id);
 
                 return;
             }
@@ -147,15 +153,16 @@ export class TestCollection extends BaseTestCollection {
             let current = testItem;
             while (current.parent) {
                 const parent = current.parent;
-                const children = parent.children;
-                children.delete(current.id);
-                if (children.size !== 0) {
+                parent.children.delete(current.id);
+                if (parent.children.size !== 0) {
                     break;
                 }
 
                 current = parent;
-                if (!current.parent) {
-                    this.ctrl.items.delete(current.id);
+                // Stop when reaching the folder root boundary (identity check: parent.children is the rootItems collection)
+                if (!current.parent || current.parent.children === this._rootItems) {
+                    this.rootItems.delete(current.id);
+                    break;
                 }
             }
         });
