@@ -4,6 +4,7 @@ import {
     debug,
     type TestController,
     type TestItem,
+    type TestRunProfile,
     type TestRun,
     TestRunRequest,
     workspace,
@@ -57,8 +58,9 @@ export class TestRunHandler {
         group: string,
         include: readonly TestItem[],
         cancellation?: CancellationToken,
+        profile?: TestRunProfile,
     ) {
-        const request = new TestRunRequest(include);
+        const request = new TestRunRequest(include, undefined, profile);
         const builder = await this.createProcessBuilder(request);
         const xdebug = builder.getXdebug()!;
         builder.setArguments(`--group=${group}`);

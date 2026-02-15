@@ -70,7 +70,11 @@ export class TestCommandRegistry {
 
     runByGroup() {
         return commands.registerCommand('phpunit.run-by-group', async () => {
-            const groups = this.testCollection.findGroups();
+            let groups = this.testCollection.findGroups();
+            if (groups.length === 0) {
+                await this.testFileDiscovery.reloadAll();
+                groups = this.testCollection.findGroups();
+            }
             if (groups.length === 0) {
                 window.showInformationMessage(
                     'No PHPUnit groups found. Add @group annotations or #[Group] attributes to your tests.',
@@ -93,7 +97,12 @@ export class TestCommandRegistry {
             }
 
             const cancellation = new CancellationTokenSource().token;
-            await this.handler.startGroupTestRun(selectedGroup, tests, cancellation);
+            await this.handler.startGroupTestRun(
+                selectedGroup,
+                tests,
+                cancellation,
+                this.testRunProfile,
+            );
         });
     }
 

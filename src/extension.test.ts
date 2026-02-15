@@ -11,6 +11,7 @@ import {
     type TestController,
     type TestItem,
     type TestItemCollection,
+    TestRunRequest,
     TestRunProfileKind,
     type TextDocument,
     tests,
@@ -374,7 +375,33 @@ describe('Extension Test', () => {
             (window.showQuickPick as Mock).mockResolvedValue('integration');
 
             await commands.executeCommand('phpunit.run-by-group');
+            const testRunRequestCalls = (TestRunRequest as unknown as Mock).mock.calls;
+            const [, , profile] = testRunRequestCalls[testRunRequestCalls.length - 1];
 
+            expect(window.showQuickPick).toHaveBeenCalledWith(
+                expect.arrayContaining(['integration']),
+                expect.objectContaining({
+                    placeHolder: 'Select a PHPUnit group to run',
+                    title: 'Run Tests by Group',
+                }),
+            );
+            expectSpawnCalled([
+                binary,
+                '--group=integration',
+                '--colors=never',
+                '--teamcity',
+            ]);
+            expect(profile).toBe(getTestRunProfile(getTestController()));
+        });
+
+        it('should discover tests before running selected group when tests are not preloaded', async () => {
+            setTextDocuments([]);
+            await activate(context);
+            (window.showQuickPick as Mock).mockResolvedValue('integration');
+
+            await commands.executeCommand('phpunit.run-by-group');
+
+            expect(workspace.findFiles).toHaveBeenCalled();
             expect(window.showQuickPick).toHaveBeenCalledWith(
                 expect.arrayContaining(['integration']),
                 expect.objectContaining({
