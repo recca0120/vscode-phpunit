@@ -9,17 +9,17 @@ import {
     window,
 } from 'vscode';
 import type { FolderTestContext } from '../types';
+import type { WorkspaceFolderManager } from '../WorkspaceFolderManager';
 
 export class TestCommandRegistry {
     constructor(
-        private getContextForUri: (uri: Uri) => FolderTestContext | undefined,
-        private getAllContexts: () => FolderTestContext[],
+        private folderManager: WorkspaceFolderManager,
         private testRunProfile: TestRunProfile,
     ) {}
 
     reload(): Disposable {
         return commands.registerCommand('phpunit.reload', async () => {
-            await Promise.all(this.getAllContexts().map((c) => c.reloadAll()));
+            await this.folderManager.reloadAll();
         });
     }
 
@@ -45,12 +45,11 @@ export class TestCommandRegistry {
 
     runByGroup(): Disposable {
         return commands.registerCommand('phpunit.run-by-group', async () => {
-            const allContexts = this.getAllContexts();
-            let groups = [...new Set(allContexts.flatMap((c) => c.findGroups()))].sort();
+            let groups = this.folderManager.findAllGroups();
 
             if (groups.length === 0) {
-                await Promise.all(allContexts.map((c) => c.reloadAll()));
-                groups = [...new Set(allContexts.flatMap((c) => c.findGroups()))].sort();
+                await this.folderManager.reloadAll();
+                groups = this.folderManager.findAllGroups();
             }
 
             if (groups.length === 0) {
@@ -68,7 +67,7 @@ export class TestCommandRegistry {
                 return;
             }
 
-            const tests = allContexts.flatMap((c) => c.findTestsByGroup(selected));
+            const tests = this.folderManager.findTestsByGroup(selected);
             if (tests.length > 0) {
                 await this.run(tests);
             }
@@ -77,7 +76,7 @@ export class TestCommandRegistry {
 
     rerun(): Disposable {
         return commands.registerCommand('phpunit.rerun', async () => {
-            const ctx = this.findMostRecentTestRun();
+            const ctx = this.folderManager.findMostRecentRun();
             if (!ctx) {
                 return;
             }
@@ -94,7 +93,7 @@ export class TestCommandRegistry {
             return;
         }
 
-        const ctx = this.getContextForUri(uri);
+        const ctx = this.folderManager.getContextForUri(uri);
         if (!ctx) {
             return;
         }
@@ -103,20 +102,6 @@ export class TestCommandRegistry {
         if (tests.length > 0) {
             await this.run(tests);
         }
-    }
-
-    private findMostRecentTestRun(): FolderTestContext | undefined {
-        let mostRecent: FolderTestContext | undefined;
-        let mostRecentTime = -1;
-
-        for (const ctx of this.getAllContexts()) {
-            if (ctx.getPreviousRequest() && ctx.getLastRunAt() > mostRecentTime) {
-                mostRecentTime = ctx.getLastRunAt();
-                mostRecent = ctx;
-            }
-        }
-
-        return mostRecent;
     }
 
     private async run(include: readonly TestItem[] | undefined) {

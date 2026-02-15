@@ -3,6 +3,7 @@ import {
     type EventEmitter,
     type ExtensionContext,
     type TestController,
+    type TestItem,
     type Uri,
     type WorkspaceFolder,
     workspace,
@@ -199,6 +200,32 @@ export class WorkspaceFolderManager {
 
     getAllContexts(): FolderTestContext[] {
         return this.getAll().map((c) => this.toContext(c));
+    }
+
+    async reloadAll(): Promise<void> {
+        await Promise.all(this.getAllContexts().map((c) => c.reloadAll()));
+    }
+
+    findAllGroups(): string[] {
+        return [...new Set(this.getAllContexts().flatMap((c) => c.findGroups()))].sort();
+    }
+
+    findTestsByGroup(group: string): TestItem[] {
+        return this.getAllContexts().flatMap((c) => c.findTestsByGroup(group));
+    }
+
+    findMostRecentRun(): FolderTestContext | undefined {
+        let mostRecent: FolderTestContext | undefined;
+        let mostRecentTime = -1;
+
+        for (const ctx of this.getAllContexts()) {
+            if (ctx.getPreviousRequest() && ctx.getLastRunAt() > mostRecentTime) {
+                mostRecentTime = ctx.getLastRunAt();
+                mostRecent = ctx;
+            }
+        }
+
+        return mostRecent;
     }
 
     dispose(): void {

@@ -40,11 +40,7 @@ export async function activate(context: ExtensionContext) {
     const testRunProfile = createRunProfiles(ctrl, dispatcher);
 
     // Commands
-    const testCommandRegistry = new TestCommandRegistry(
-        (uri) => folderManager.getContextForUri(uri),
-        () => folderManager.getAllContexts(),
-        testRunProfile,
-    );
+    const testCommandRegistry = new TestCommandRegistry(folderManager, testRunProfile);
     registerCommands(context, testCommandRegistry);
 
     // Disposables
