@@ -68,6 +68,35 @@ export class TestCommandRegistry {
         });
     }
 
+    runByGroup() {
+        return commands.registerCommand('phpunit.run-by-group', async () => {
+            const groups = this.testCollection.findGroups();
+            if (groups.length === 0) {
+                window.showInformationMessage(
+                    'No PHPUnit groups found. Add @group annotations or #[Group] attributes to your tests.',
+                );
+                return;
+            }
+
+            const selectedGroup = await window.showQuickPick(groups, {
+                placeHolder: 'Select a PHPUnit group to run',
+                title: 'Run Tests by Group',
+            });
+            if (!selectedGroup) {
+                return;
+            }
+
+            const tests = this.testCollection.findTestsByGroup(selectedGroup);
+            if (tests.length === 0) {
+                window.showInformationMessage(`No tests found for group "${selectedGroup}".`);
+                return;
+            }
+
+            const cancellation = new CancellationTokenSource().token;
+            await this.handler.startGroupTestRun(selectedGroup, tests, cancellation);
+        });
+    }
+
     rerun() {
         return commands.registerCommand('phpunit.rerun', () => {
             return this.run(

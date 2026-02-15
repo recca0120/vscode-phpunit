@@ -64,6 +64,37 @@ export class TestCollection extends BaseTestCollection {
         return tests.length > 0 ? tests : undefined;
     }
 
+    findGroups(): string[] {
+        const groups = new Set<string>();
+        for (const [, testData] of this.getTestData()) {
+            testData.forEach((_, testItem: TestItem) => {
+                (testItem.tags ?? [])
+                    .filter((tag) => tag.id.startsWith('group:'))
+                    .forEach((tag) => groups.add(tag.id.replace(/^group:/, '')));
+            });
+        }
+
+        return [...groups].sort();
+    }
+
+    findTestsByGroup(group: string): TestItem[] {
+        const groupTagId = `group:${group}`;
+        const tests: TestItem[] = [];
+        for (const [, testData] of this.getTestData()) {
+            for (const [testItem, testCase] of testData) {
+                if (testCase.type !== TestType.method) {
+                    continue;
+                }
+
+                if ((testItem.tags ?? []).some((tag) => tag.id === groupTagId)) {
+                    tests.push(testItem);
+                }
+            }
+        }
+
+        return tests;
+    }
+
     reset() {
         for (const [, testData] of this.getTestData()) {
             for (const [testItem] of testData) {

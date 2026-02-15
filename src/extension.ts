@@ -108,6 +108,7 @@ function registerCommands(
     context.subscriptions.push(testCommandRegistry.runAll());
     context.subscriptions.push(testCommandRegistry.runFile());
     context.subscriptions.push(testCommandRegistry.runTestAtCursor());
+    context.subscriptions.push(testCommandRegistry.runByGroup());
     context.subscriptions.push(testCommandRegistry.rerun());
 }
 

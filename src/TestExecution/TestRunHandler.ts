@@ -3,8 +3,9 @@ import {
     type CancellationToken,
     debug,
     type TestController,
+    type TestItem,
     type TestRun,
-    type TestRunRequest,
+    TestRunRequest,
     workspace,
 } from 'vscode';
 import { Configuration } from '../Configuration';
@@ -52,6 +53,22 @@ export class TestRunHandler {
         this.previousRequest = request;
     }
 
+    async startGroupTestRun(
+        group: string,
+        include: readonly TestItem[],
+        cancellation?: CancellationToken,
+    ) {
+        const request = new TestRunRequest(include);
+        const builder = await this.createProcessBuilder(request);
+        const xdebug = builder.getXdebug()!;
+        builder.setArguments(`--group=${group}`);
+
+        await this.manageDebugSession(xdebug, async () => {
+            const testRun = this.ctrl.createTestRun(request);
+            await this.runTestQueue(builder, testRun, request, cancellation, true);
+        });
+    }
+
     private async createProcessBuilder(request: TestRunRequest): Promise<ProcessBuilder> {
         const builder = new ProcessBuilder(this.configuration, { cwd: this.phpUnitXML.root() });
         const xdebug = new Xdebug(this.configuration);
@@ -80,6 +97,7 @@ export class TestRunHandler {
         testRun: TestRun,
         request: TestRunRequest,
         cancellation?: CancellationToken,
+        forceSingleProcess = false,
     ) {
         const queue = await this.testQueueBuilder.build(
             request.include ?? this.testQueueBuilder.collectItems(this.ctrl.items),
@@ -90,7 +108,7 @@ export class TestRunHandler {
         const runner = this.testRunnerBuilder.build(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
-        const processes = this.createProcesses(runner, builder, request);
+        const processes = this.createProcesses(runner, builder, request, forceSingleProcess);
         cancellation?.onCancellationRequested(() =>
             processes.forEach((process) => process.abort()),
         );
@@ -101,8 +119,13 @@ export class TestRunHandler {
         runner.emit(TestRunnerEvent.done, undefined);
     }
 
-    private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
-        if (!request.include) {
+    private createProcesses(
+        runner: TestRunner,
+        builder: ProcessBuilder,
+        request: TestRunRequest,
+        forceSingleProcess = false,
+    ) {
+        if (!request.include || forceSingleProcess) {
             return [runner.run(builder)];
         }
 

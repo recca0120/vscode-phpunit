@@ -246,11 +246,12 @@ describe('Extension Test', () => {
                 'phpunit.run-all',
                 'phpunit.run-file',
                 'phpunit.run-test-at-cursor',
+                'phpunit.run-by-group',
                 'phpunit.rerun',
             ]) {
                 expect(commands.registerCommand).toHaveBeenCalledWith(cmd, expect.any(Function));
             }
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(7);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(8);
         });
 
         it('should only update configuration when phpunit settings change', async () => {
@@ -366,6 +367,27 @@ describe('Extension Test', () => {
             ]);
 
             await configuration.update('args', []);
+        });
+
+        it('should run tests by selected group', async () => {
+            await activate(context);
+            (window.showQuickPick as Mock).mockResolvedValue('integration');
+
+            await commands.executeCommand('phpunit.run-by-group');
+
+            expect(window.showQuickPick).toHaveBeenCalledWith(
+                expect.arrayContaining(['integration']),
+                expect.objectContaining({
+                    placeHolder: 'Select a PHPUnit group to run',
+                    title: 'Run Tests by Group',
+                }),
+            );
+            expectSpawnCalled([
+                binary,
+                '--group=integration',
+                '--colors=never',
+                '--teamcity',
+            ]);
         });
 
         it('should run class with group', async () => {
