@@ -5,11 +5,10 @@ import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
 import { CollisionPrinter, ErrorDialogObserver, OutputChannelObserver } from './Observers';
 import { OutputFormatter } from './Observers/Printers';
-import { PHPUnitXML, ProcessBuilder, Xdebug } from './PHPUnit';
+import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
-import { TestQueueBuilder, TestRunDispatcher, TestRunHandler, TestRunnerBuilder } from './TestExecution';
-import type { ProcessBuilderFactory } from './types';
+import { ProcessBuilderFactory, TestQueueBuilder, TestRunDispatcher, TestRunHandler, TestRunnerBuilder } from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
@@ -51,20 +50,8 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .toDynamicValue(() => new Configuration(workspace.getConfiguration('phpunit', workspaceFolder.uri)))
         .inSingletonScope();
 
-    // Per-folder factories
-    child.bind(TYPES.ProcessBuilderFactory).toConstantValue(
-        (async (profileKind) => {
-            const config = child.get(Configuration);
-            const phpUnitXML = child.get(PHPUnitXML);
-            const builder = new ProcessBuilder(config, { cwd: phpUnitXML.root() });
-            const xdebug = new Xdebug(config);
-            builder.setXdebug(xdebug);
-            await xdebug.setMode(profileKind);
-            return builder;
-        }) as ProcessBuilderFactory,
-    );
-
-    // Per-folder services (depend on Configuration or PHPUnitXML)
+    // Per-folder services
+    child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
     child.bind(ErrorDialogObserver).toSelf().inSingletonScope();
     child.bind(OutputChannelObserver).toSelf().inSingletonScope();
     child.bind(TestRunnerBuilder).toSelf().inSingletonScope();

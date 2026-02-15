@@ -154,9 +154,8 @@ export class WorkspaceFolderManager {
                 const { needsReload, addedContainers } = this.handleFolderChange(event);
 
                 if (needsReload) {
-                    Promise.all(
-                        this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()),
-                    ).catch((err) => console.error('Failed to reload after folder change:', err));
+                    this.reloadAll()
+                        .catch((err) => console.error('Failed to reload after folder change:', err));
                 }
 
                 for (const child of addedContainers) {
@@ -171,9 +170,7 @@ export class WorkspaceFolderManager {
     }
 
     setupControllerHandlers(context: ExtensionContext): void {
-        this.ctrl.refreshHandler = async () => {
-            await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
-        };
+        this.ctrl.refreshHandler = () => this.reloadAll();
 
         this.ctrl.resolveHandler = async (item) => {
             if (!item) {
@@ -198,30 +195,27 @@ export class WorkspaceFolderManager {
         return container ? this.toContext(container) : undefined;
     }
 
-    getAllContexts(): FolderTestContext[] {
-        return this.getAll().map((c) => this.toContext(c));
-    }
-
     async reloadAll(): Promise<void> {
-        await Promise.all(this.getAllContexts().map((c) => c.reloadAll()));
+        await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
     }
 
     findAllGroups(): string[] {
-        return [...new Set(this.getAllContexts().flatMap((c) => c.findGroups()))].sort();
+        return [...new Set(this.getAll().flatMap((c) => c.get(TestCollection).findGroups()))].sort();
     }
 
     findTestsByGroup(group: string): TestItem[] {
-        return this.getAllContexts().flatMap((c) => c.findTestsByGroup(group));
+        return this.getAll().flatMap((c) => c.get(TestCollection).findTestsByGroup(group));
     }
 
     findMostRecentRun(): FolderTestContext | undefined {
         let mostRecent: FolderTestContext | undefined;
         let mostRecentTime = -1;
 
-        for (const ctx of this.getAllContexts()) {
-            if (ctx.getPreviousRequest() && ctx.getLastRunAt() > mostRecentTime) {
-                mostRecentTime = ctx.getLastRunAt();
-                mostRecent = ctx;
+        for (const child of this.getAll()) {
+            const runHandler = child.get(TestRunHandler);
+            if (runHandler.getPreviousRequest() && runHandler.getLastRunAt() > mostRecentTime) {
+                mostRecentTime = runHandler.getLastRunAt();
+                mostRecent = this.toContext(child);
             }
         }
 
@@ -246,9 +240,6 @@ export class WorkspaceFolderManager {
 
     private toContext(container: Container): FolderTestContext {
         return {
-            reloadAll: () => container.get(TestFileDiscovery).reloadAll(),
-            findGroups: () => container.get(TestCollection).findGroups(),
-            findTestsByGroup: (group) => container.get(TestCollection).findTestsByGroup(group),
             findTestsByFile: (uri) => container.get(TestCollection).findTestsByFile(uri),
             findTestsByPosition: (uri, pos) => container.get(TestCollection).findTestsByPosition(uri, pos),
             findTestsByRequest: (req) => container.get(TestCollection).findTestsByRequest(req),

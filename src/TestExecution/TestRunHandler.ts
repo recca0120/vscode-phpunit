@@ -17,8 +17,8 @@ import {
     type Xdebug,
 } from '../PHPUnit';
 import { type TestCase, TestCollection } from '../TestCollection';
-import type { ProcessBuilderFactory } from '../types';
 import { TYPES } from '../types';
+import { ProcessBuilderFactory } from './ProcessBuilderFactory';
 import { TestQueueBuilder } from './TestQueueBuilder';
 import { TestRunnerBuilder } from './TestRunnerBuilder';
 
@@ -29,7 +29,7 @@ export class TestRunHandler {
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
-        @inject(TYPES.ProcessBuilderFactory) private createProcessBuilder: ProcessBuilderFactory,
+        @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
         @inject(CoverageCollector) private coverageCollector: CoverageCollector,
@@ -45,7 +45,7 @@ export class TestRunHandler {
     }
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
-        const builder = await this.createProcessBuilder(request.profile?.kind);
+        const builder = await this.processBuilderFactory.create(request.profile?.kind);
         const xdebug = builder.getXdebug()!;
 
         await this.manageDebugSession(xdebug, async () => {

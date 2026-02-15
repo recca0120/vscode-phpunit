@@ -68,7 +68,6 @@ describe('WorkspaceFolderManager', () => {
             const ctx = manager.getContextForUri(Uri.file('/a/test.php'));
 
             expect(ctx).toBeDefined();
-            expect(ctx!.reloadAll).toBeTypeOf('function');
             expect(ctx!.findTestsByFile).toBeTypeOf('function');
             expect(ctx!.findTestsByPosition).toBeTypeOf('function');
             expect(ctx!.findTestsByRequest).toBeTypeOf('function');
@@ -80,24 +79,6 @@ describe('WorkspaceFolderManager', () => {
             const ctx = manager.getContextForUri(Uri.file('/unknown/test.php'));
 
             expect(ctx).toBeUndefined();
-        });
-    });
-
-    describe('getAllContexts', () => {
-        it('returns contexts for all folders', async () => {
-            const folder1 = makeFolder('a', '/a');
-            const folder2 = makeFolder('b', '/b');
-            Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1, folder2] });
-            Object.defineProperty(workspace, 'textDocuments', { value: [] });
-
-            await manager.initialize({ subscriptions: [] } as any);
-
-            const contexts = manager.getAllContexts();
-
-            expect(contexts).toHaveLength(2);
-            for (const ctx of contexts) {
-                expect(ctx.reloadAll).toBeTypeOf('function');
-            }
         });
     });
 
