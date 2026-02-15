@@ -6,6 +6,7 @@ import { type GlobOptions, glob } from 'glob';
 import * as semver from 'semver';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
+    type CancellationToken,
     CancellationTokenSource,
     commands,
     debug,
@@ -295,6 +296,80 @@ describe('Extension Test', () => {
                 expect(getOutputChannel().clear).toHaveBeenCalledTimes(1);
             } finally {
                 probe.restore();
+            }
+        });
+
+        it('should stop running remaining processes when cancellation is requested mid-run', async () => {
+            await activate(context);
+
+            const ctrl = getTestController();
+            const testRunProfile = getTestRunProfile(ctrl);
+            const include = [
+                'Assertions (Tests\\Assertions)',
+                'Calculator (Tests\\Calculator)',
+            ]
+                .map((id) => findTest(ctrl.items, id))
+                .filter((item): item is TestItem => item !== undefined);
+
+            expect(include).toHaveLength(2);
+
+            const request = { include, exclude: [], profile: testRunProfile };
+            const spawnMock = vi.mocked(spawn);
+            const originalImplementation = spawnMock.getMockImplementation();
+            let cancelled = false;
+            let runCount = 0;
+
+            const cancellation = {
+                get isCancellationRequested() {
+                    return cancelled;
+                },
+                onCancellationRequested: vi
+                    .fn()
+                    .mockReturnValue({ dispose: vi.fn() }),
+            } as unknown as CancellationToken;
+
+            vi.mocked(spawn).mockClear();
+            spawnMock.mockImplementation((() => {
+                runCount += 1;
+
+                const child = new EventEmitter() as EventEmitter & {
+                    stdout?: ChildProcess['stdout'];
+                    stderr?: ChildProcess['stderr'];
+                    killed?: boolean;
+                };
+                const stdout = new EventEmitter();
+                const stderr = new EventEmitter();
+
+                child.stdout = stdout as unknown as ChildProcess['stdout'];
+                child.stderr = stderr as unknown as ChildProcess['stderr'];
+                child.killed = false;
+
+                setTimeout(() => {
+                    cancelled = true;
+                    stdout.emit('end');
+                    child.emit('close', 0);
+                }, 1);
+
+                return child as unknown as ChildProcess;
+            }) as typeof spawn);
+
+            try {
+                await testRunProfile.runHandler(request, cancellation);
+
+                expect(cancellation.onCancellationRequested).toHaveBeenCalledTimes(1);
+                expect(runCount).toBe(1);
+                expect(spawn).toHaveBeenCalledTimes(1);
+                expect(spawn).toHaveBeenCalledWith(
+                    phpBinary,
+                    expect.arrayContaining([
+                        expect.stringContaining('AssertionsTest.php'),
+                    ]),
+                    expect.anything(),
+                );
+            } finally {
+                if (originalImplementation) {
+                    spawnMock.mockImplementation(originalImplementation);
+                }
             }
         });
     });
