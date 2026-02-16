@@ -4,6 +4,7 @@ export const EXTENSION_ID = 'recca0120.vscode-phpunit';
 
 export interface ExtensionApi {
     testController: vscode.TestController;
+    whenReady: () => Promise<void>;
 }
 
 export async function activateExtension(): Promise<ExtensionApi> {

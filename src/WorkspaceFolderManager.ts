@@ -1,11 +1,13 @@
 import { inject, injectable, type Container } from 'inversify';
 import {
+    type Disposable,
     type EventEmitter,
     type ExtensionContext,
     type TestController,
     type TestItem,
     type Uri,
     type WorkspaceFolder,
+    window,
     workspace,
 } from 'vscode';
 import { TestCollection } from './TestCollection';
@@ -17,6 +19,8 @@ import { TYPES } from './types';
 @injectable()
 export class WorkspaceFolderManager {
     private folders = new Map<string, Container>();
+    private activeWatchers: Disposable[] = [];
+    private pendingOperation = Promise.resolve();
 
     constructor(
         @inject(TYPES.ChildContainerFactory) private createChildContainer: ChildContainerFactory,
@@ -151,20 +155,24 @@ export class WorkspaceFolderManager {
         // Watch for folder changes
         context.subscriptions.push(
             workspace.onDidChangeWorkspaceFolders((event) => {
-                const { needsReload, addedContainers } = this.handleFolderChange(event);
+                this.pendingOperation = this.pendingOperation.then(async () => {
+                    const { needsReload, addedContainers } = this.handleFolderChange(event);
 
-                if (needsReload) {
-                    this.reloadAll()
-                        .catch((err) => console.error('Failed to reload after folder change:', err));
-                }
+                    if (needsReload) {
+                        await this.doReloadAll();
+                        return;
+                    }
 
-                for (const child of addedContainers) {
-                    child.get(TestFileDiscovery).loadWorkspaceConfiguration().then(() =>
-                        child.get(TestFileWatcher).startWatching().then((watcher) => {
-                            context.subscriptions.push(watcher);
-                        }),
-                    ).catch((err) => console.error('Failed to initialize folder:', err));
-                }
+                    for (const child of addedContainers) {
+                        await child.get(TestFileDiscovery).loadWorkspaceConfiguration();
+                        await child.get(TestFileDiscovery).reloadAll();
+                        const watcher = await child.get(TestFileWatcher).startWatching();
+                        context.subscriptions.push(watcher);
+                    }
+                }).catch((err) => {
+                    const message = err instanceof Error ? err.message : String(err);
+                    window.showErrorMessage(`PHPUnit: Failed to handle folder change: ${message}`);
+                });
             }),
         );
     }
@@ -174,10 +182,20 @@ export class WorkspaceFolderManager {
 
         this.ctrl.resolveHandler = async (item) => {
             if (!item) {
-                const watchers = await Promise.all(
-                    this.getAll().map((c) => c.get(TestFileWatcher).startWatching()),
-                );
-                context.subscriptions.push(...watchers);
+                await (this.pendingOperation = this.pendingOperation.then(async () => {
+                    for (const watcher of this.activeWatchers) {
+                        watcher.dispose();
+                    }
+                    this.activeWatchers = [];
+
+                    await this.doReloadAll();
+
+                    const watchers = await Promise.all(
+                        this.getAll().map((c) => c.get(TestFileWatcher).startWatching()),
+                    );
+                    this.activeWatchers = watchers;
+                    context.subscriptions.push(...watchers);
+                }));
                 return;
             }
 
@@ -195,7 +213,15 @@ export class WorkspaceFolderManager {
         return container ? this.toContext(container) : undefined;
     }
 
+    async whenReady(): Promise<void> {
+        await this.pendingOperation;
+    }
+
     async reloadAll(): Promise<void> {
+        await (this.pendingOperation = this.pendingOperation.then(() => this.doReloadAll()));
+    }
+
+    private async doReloadAll(): Promise<void> {
         await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
     }
 
@@ -227,6 +253,11 @@ export class WorkspaceFolderManager {
             this.cleanupContainer(container);
         }
         this.folders.clear();
+        this.ctrl.items.replace([]);
+        for (const watcher of this.activeWatchers) {
+            watcher.dispose();
+        }
+        this.activeWatchers = [];
     }
 
     [Symbol.iterator]() {

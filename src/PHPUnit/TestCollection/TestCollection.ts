@@ -25,15 +25,17 @@ export class TestCollection {
     }
 
     items() {
-        if (this.suites.size === 0) {
-            this.phpUnitXML
-                .getTestSuites()
-                .forEach((suite) =>
-                    this.suites.set(suite.name, new Map<string, TestDefinition[]>()),
-                );
+        for (const suite of this.phpUnitXML.getTestSuites()) {
+            if (!this.suites.has(suite.name)) {
+                this.suites.set(suite.name, new Map<string, TestDefinition[]>());
+            }
         }
 
         return this.suites;
+    }
+
+    clearMatcherCache() {
+        this.matcherCache.clear();
     }
 
     async add(uri: URI) {
@@ -108,7 +110,7 @@ export class TestCollection {
         return this.items().get(file.testsuite)?.delete(file.uri.toString());
     }
 
-    private *gatherFiles() {
+    protected *gatherFiles() {
         for (const [testsuite, files] of this.items()) {
             for (const [uriStr, tests] of files) {
                 yield { testsuite, uri: URI.parse(uriStr), tests };

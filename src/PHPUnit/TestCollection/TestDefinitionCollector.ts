@@ -9,18 +9,9 @@ export class TestDefinitionCollector {
     }
 
     onInit() {
-        this.testParser.on(TestType.method, (testDefinition) =>
-            this.testDefinitions.push(testDefinition),
-        );
-        this.testParser.on(TestType.describe, (testDefinition) =>
-            this.testDefinitions.push(testDefinition),
-        );
-        this.testParser.on(TestType.class, (testDefinition) =>
-            this.testDefinitions.push(testDefinition),
-        );
-        this.testParser.on(TestType.namespace, (testDefinition) =>
-            this.testDefinitions.push(testDefinition),
-        );
+        for (const type of [TestType.method, TestType.describe, TestType.class, TestType.namespace] as const) {
+            this.testParser.on(type, (testDefinition) => this.testDefinitions.push(testDefinition));
+        }
     }
 
     get() {

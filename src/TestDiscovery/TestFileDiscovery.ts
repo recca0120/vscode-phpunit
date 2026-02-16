@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
-import { type GlobPattern, RelativePattern, Uri, type WorkspaceFolder, workspace } from 'vscode';
+import { type GlobPattern, RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
+import { URI } from 'vscode-uri';
 import { Configuration } from '../Configuration';
 import { PHPUnitXML, type TestGlobPattern } from '../PHPUnit';
 import { TestCollection } from '../TestCollection';
@@ -47,14 +48,27 @@ export class TestFileDiscovery {
 
     async reloadAll(): Promise<void> {
         this.invalidateCache();
+        this.testCollection.reset();
         const { pattern, exclude } = await this.getWorkspaceTestPattern();
         await this.discoverTestFiles(pattern, exclude);
     }
 
     async discoverTestFiles(pattern: GlobPattern, exclude: GlobPattern): Promise<void> {
-        this.testCollection.reset();
-        const files = await workspace.findFiles(pattern, exclude);
-        await Promise.all(files.map((file) => this.testCollection.add(file)));
+        const newFiles = new Set(
+            (await workspace.findFiles(pattern, exclude)).map((f) => f.toString()),
+        );
+
+        // Remove files that no longer exist
+        for (const file of this.testCollection.getTrackedFiles()) {
+            if (!newFiles.has(file.uri.toString())) {
+                this.testCollection.delete(file.uri);
+            }
+        }
+
+        // Add new files (already existing ones are skipped by add())
+        await Promise.all(
+            [...newFiles].map((f) => this.testCollection.add(URI.parse(f))),
+        );
     }
 
     private invalidateCache(): void {
@@ -70,7 +84,7 @@ export class TestFileDiscovery {
             this.workspaceFolder.uri.fsPath,
         );
         if (configurationFile) {
-            this.testCollection.reset();
+            this.testCollection.clearMatcherCache();
             await this.phpUnitXML.loadFile(configurationFile);
         } else {
             this.phpUnitXML.setRoot(this.workspaceFolder.uri.fsPath);

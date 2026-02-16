@@ -87,10 +87,8 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     private getFileContent(result: TestFailed) {
-        let detail = result.details.find(({ file }) => file === result.file)!;
-        if (result.details.length > 0) {
-            detail = result.details[0];
-        }
+        const detail = result.details.find(({ file }) => file === result.file)
+            ?? result.details[0];
 
         if (!detail) {
             return undefined;

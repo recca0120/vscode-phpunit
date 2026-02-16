@@ -20,6 +20,7 @@ export class PHPUnitXML {
         this.element = XmlElement.load(text.toString());
         this._file = file;
         this.setRoot(dirname(file));
+        this._root = this.resolveProjectRoot();
 
         return this;
     }
@@ -43,10 +44,6 @@ export class PHPUnitXML {
     }
 
     root() {
-        if (this._root === this._configRoot && this.element) {
-            this._root = this.resolveProjectRoot();
-        }
-
         return this._root;
     }
 

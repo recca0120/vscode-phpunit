@@ -54,15 +54,6 @@ class DescribeFilterStrategy extends FilterStrategy {
 }
 
 class MethodFilterStrategy extends DescribeFilterStrategy {
-    getFilter() {
-        return [
-            this.getDependsFilter(),
-            this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ]
-            .filter((value) => !!value)
-            .join(' ');
-    }
-
     protected getDependsFilter() {
         return this.hasChildren() ? '' : super.getDependsFilter();
     }

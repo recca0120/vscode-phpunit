@@ -12,12 +12,13 @@ import {
     FilterStrategyFactory,
     Mode,
     type ProcessBuilder,
+    type TestDefinition,
     type TestRunner,
     TestRunnerEvent,
     type TestRunnerProcess,
     type Xdebug,
 } from '../PHPUnit';
-import { type TestCase, TestCollection } from '../TestCollection';
+import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { ProcessBuilderFactory } from './ProcessBuilderFactory';
 import { TestQueueBuilder } from './TestQueueBuilder';
@@ -117,17 +118,18 @@ export class TestRunHandler {
         }
 
         return request.include
-            .map((testItem) => this.testCollection.getTestCase(testItem)!)
-            .map((testCase, index) => this.configureBuilderForTestCase(builder, testCase, index))
+            .map((testItem) => this.testCollection.getTestDefinition(testItem))
+            .filter((testDef): testDef is TestDefinition => testDef !== undefined)
+            .map((testDef, index) => this.configureBuilderForTestCase(builder, testDef, index))
             .map((configured) => runner.run(configured));
     }
 
     private configureBuilderForTestCase(
         builder: ProcessBuilder,
-        testCase: TestCase,
+        testDefinition: TestDefinition,
         index: number,
     ): ProcessBuilder {
-        const filter = FilterStrategyFactory.create(testCase.definition).getFilter();
+        const filter = FilterStrategyFactory.create(testDefinition).getFilter();
         return builder
             .clone()
             .setXdebug(builder.getXdebug()?.clone().setIndex(index))

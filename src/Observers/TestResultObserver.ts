@@ -20,11 +20,11 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '../PHPUnit';
-import type { TestCase } from '../TestCollection';
+import type { TestDefinition } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
-        private queue: Map<TestCase, TestItem>,
+        private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
     ) {}
 
@@ -74,7 +74,7 @@ export class TestResultObserver implements TestRunnerObserver {
         const message = TestMessage.diff(result.message, result.expected!, result.actual!);
         const details = result.details;
         if (details.length > 0) {
-            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
+            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));
             const line = matchingDetail ? matchingDetail.line - 1 : test.range!.start.line;
 
             message.location = new Location(
@@ -85,7 +85,7 @@ export class TestResultObserver implements TestRunnerObserver {
             message.stackTrace = details
                 .filter(
                     ({ file, line }) =>
-                        file.endsWith(result.file ?? '') && line !== matchingDetail.line,
+                        file.endsWith(result.file ?? '') && (!matchingDetail || line !== matchingDetail.line),
                 )
                 .map(
                     ({ file, line }) =>
@@ -110,14 +110,16 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        if ('id' in result) {
-            for (const [_, testItem] of this.queue) {
-                if (
-                    result.id === testItem.id ||
-                    PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)
-                ) {
-                    return testItem;
-                }
+        if (!('id' in result)) {
+            return undefined;
+        }
+
+        for (const testItem of this.queue.values()) {
+            if (
+                result.id === testItem.id ||
+                PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)
+            ) {
+                return testItem;
             }
         }
 

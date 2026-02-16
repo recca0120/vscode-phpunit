@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import type { TestItem, TestRun, TestRunRequest } from 'vscode';
 import { ErrorDialogObserver, OutputChannelObserver, TestResultObserver } from '../Observers';
 import { TestRunner } from '../PHPUnit';
-import type { TestCase } from '../TestCollection';
+import type { TestDefinition } from '../PHPUnit';
 
 @injectable()
 export class TestRunnerBuilder {
@@ -11,7 +11,7 @@ export class TestRunnerBuilder {
         @inject(ErrorDialogObserver) private errorDialogObserver: ErrorDialogObserver,
     ) {}
 
-    build(queue: Map<TestCase, TestItem>, testRun: TestRun, request: TestRunRequest): TestRunner {
+    build(queue: Map<TestDefinition, TestItem>, testRun: TestRun, request: TestRunRequest): TestRunner {
         this.outputChannelObserver.setRequest(request);
 
         const runner = new TestRunner();

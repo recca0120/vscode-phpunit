@@ -35,8 +35,6 @@ export class TestFileWatcher {
             this.testCollection.delete(uri);
         });
 
-        await this.testFileDiscovery.discoverTestFiles(pattern, exclude);
-
         return watcher;
     }
 }

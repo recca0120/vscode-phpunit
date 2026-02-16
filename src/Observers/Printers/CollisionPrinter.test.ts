@@ -160,6 +160,35 @@ describe('CollisionPrinter', () => {
         );
     });
 
+    it('testFailed should show source snippet from result.file, not first detail', () => {
+        printer.testFinished({
+            event: TeamcityEvent.testFailed,
+            name: 'test_failed',
+            locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed`,
+            flowId: 2369,
+            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_failed',
+            file: phpUnitProject('tests/AssertionsTest.php'),
+            message: 'Failed asserting that false is true.',
+            details: [
+                {
+                    file: 'vendor/framework/Assert.php',
+                    line: 100,
+                },
+                {
+                    file: phpUnitProject('tests/AssertionsTest.php'),
+                    line: 27,
+                },
+            ],
+            duration: 0,
+        });
+
+        const output = printer.end();
+
+        // Should show source snippet from tests/AssertionsTest.php:27 (matching result.file),
+        // NOT from vendor/framework/Assert.php:100 (details[0])
+        expect(output).toContain('➜ 27 ▕         $this->assertTrue(false);');
+    });
+
     it('testFailed and file not found', () => {
         const output = printer.testFinished({
             event: TeamcityEvent.testFailed,

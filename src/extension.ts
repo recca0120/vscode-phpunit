@@ -46,7 +46,10 @@ export async function activate(context: ExtensionContext) {
     // Disposables
     registerDisposables(context, ctrl, outputChannel, folderManager);
 
-    return { testController: ctrl };
+    return {
+        testController: ctrl,
+        whenReady: () => folderManager.whenReady(),
+    };
 }
 
 function createRunProfiles(

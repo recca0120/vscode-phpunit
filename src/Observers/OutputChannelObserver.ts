@@ -99,14 +99,12 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testFailed(result: TestFailed): void {
-        this.appendLine(this.outputFormatter.testFinished(result));
-        this.printedOutput(result);
+        this.testFinished(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testIgnored(result: TestIgnored): void {
-        this.appendLine(this.outputFormatter.testFinished(result));
-        this.printedOutput(result);
+        this.testFinished(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 

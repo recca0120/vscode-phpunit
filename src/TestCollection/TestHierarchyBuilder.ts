@@ -5,7 +5,6 @@ import {
     TestType,
     TransformerFactory,
 } from '../PHPUnit';
-import { TestCase } from './TestCase';
 
 export class TestHierarchyBuilder {
     private icons = {
@@ -18,7 +17,7 @@ export class TestHierarchyBuilder {
     private readonly ancestors: [{ item: TestItem; type: TestType; children: TestItem[] }] = [
         { item: this.createRootItem(), type: TestType.namespace, children: [] },
     ];
-    private testData = new Map<TestItem, TestCase>();
+    private testData = new Map<TestItem, TestDefinition>();
 
     constructor(
         private ctrl: TestController,
@@ -78,7 +77,7 @@ export class TestHierarchyBuilder {
                 testItem.canResolveChildren = true;
                 testItem.sortText = namespaceDefinition.id;
                 children.add(testItem);
-                this.testData.set(testItem, new TestCase(namespaceDefinition));
+                this.testData.set(testItem, namespaceDefinition);
             }
 
             const parent = this.ancestors[this.ancestors.length - 1];
@@ -111,7 +110,7 @@ export class TestHierarchyBuilder {
             this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
         }
 
-        this.testData.set(testItem, new TestCase(testDefinition));
+        this.testData.set(testItem, testDefinition);
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
