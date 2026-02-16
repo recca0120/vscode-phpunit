@@ -4,6 +4,18 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.8.6] - 2026-02-17
+
+### Added
+- Group tests by testsuite name when multiple testsuites defined in phpunit.xml (#136)
+
+### Changed
+- Replace `reduce-concat` with `flatMap` in `getClasses()` and `getMethods()`
+- Convert `parseComments()` from `map/reduce` chain to `for` loop
+- Pre-build RegExp lookup patterns in `AttributeParser` as class-level field
+- Merge consecutive `if` statements in `normalizeCommentLineBreaks` into `while` loop
+- Replace ternary with early return in `TestResultParser.parse()`
+
 ## [3.8.5] - 2026-02-17
 
 ### Fixed
