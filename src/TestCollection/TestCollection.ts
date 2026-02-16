@@ -9,14 +9,13 @@ import {
     TestType,
 } from '../PHPUnit';
 import { TYPES } from '../types';
+import { TestDefinitionIndex } from './TestDefinitionIndex';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<TestItem, TestDefinition>>();
-    private testDefinitionIndex = new Map<string, TestDefinition>();
-    private testItemIndex = new Map<string, TestItem>();
-    private groupIndex = new Map<string, Set<TestItem>>();
+    private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
 
     constructor(
@@ -35,7 +34,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     getTestDefinition(testItem: TestItem): TestDefinition | undefined {
-        return this.testDefinitionIndex.get(testItem.id);
+        return this.index.getDefinition(testItem.id);
     }
 
     findTestsByFile(uri: URI): TestItem[] {
@@ -61,18 +60,18 @@ export class TestCollection extends BaseTestCollection {
         }
 
         const tests = request.include
-            .map((item) => this.testItemIndex.get(item.id))
+            .map((item) => this.index.getItem(item.id))
             .filter((item): item is TestItem => item !== undefined);
 
         return tests.length > 0 ? tests : undefined;
     }
 
     findGroups(): string[] {
-        return [...this.groupIndex.keys()].sort();
+        return this.index.getGroups();
     }
 
     findTestsByGroup(group: string): TestItem[] {
-        return [...(this.groupIndex.get(group) ?? [])];
+        return this.index.getItemsByGroup(group);
     }
 
     getTrackedFiles() {
@@ -87,9 +86,7 @@ export class TestCollection extends BaseTestCollection {
                     : this.rootItems.delete(testItem.id);
             }
         }
-        this.testDefinitionIndex.clear();
-        this.testItemIndex.clear();
-        this.groupIndex.clear();
+        this.index.clear();
 
         return super.reset();
     }
@@ -116,36 +113,13 @@ export class TestCollection extends BaseTestCollection {
 
     private setTestDefinition(uri: URI, testItem: TestItem, testDefinition: TestDefinition): void {
         this.getTestDefinitions(uri).set(testItem, testDefinition);
-        this.testDefinitionIndex.set(testItem.id, testDefinition);
-        this.testItemIndex.set(testItem.id, testItem);
-
-        if (testDefinition.type === TestType.method) {
-            for (const tag of testItem.tags ?? []) {
-                if (tag.id.startsWith('group:')) {
-                    const group = tag.id.slice(6);
-                    if (!this.groupIndex.has(group)) {
-                        this.groupIndex.set(group, new Set());
-                    }
-                    this.groupIndex.get(group)!.add(testItem);
-                }
-            }
-        }
+        this.index.set(testItem, testDefinition);
     }
 
     private clearTestDefinitions(uri: URI): void {
         const testData = this.getTestDefinitions(uri);
         for (const [testItem] of testData) {
-            this.testDefinitionIndex.delete(testItem.id);
-            this.testItemIndex.delete(testItem.id);
-            for (const group of this.groupIndex.values()) {
-                group.delete(testItem);
-            }
-        }
-        // Clean up empty groups
-        for (const [key, items] of this.groupIndex) {
-            if (items.size === 0) {
-                this.groupIndex.delete(key);
-            }
+            this.index.delete(testItem);
         }
         testData.clear();
     }
