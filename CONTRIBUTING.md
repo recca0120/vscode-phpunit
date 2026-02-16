@@ -28,7 +28,7 @@ Open a [Feature Request](https://github.com/recca0120/vscode-phpunit/issues/new?
 ```bash
 git clone https://github.com/recca0120/vscode-phpunit.git
 cd vscode-phpunit
-pnpm install
+pnpm install    # also installs Lefthook git hooks
 ```
 
 ### Running Tests
@@ -42,11 +42,12 @@ pnpm lint             # lint with Biome
 
 To manually test the extension, press `F5` in VS Code to launch the Extension Development Host.
 
-### Code Style
+### Code Quality
+
+The project uses [Biome](https://biomejs.dev/) for linting and formatting, with [Lefthook](https://github.com/evilmartians/lefthook) running `biome check` automatically on pre-commit. You don't need to run lint manually — it runs on every commit.
 
 - Prefer **early returns** (guard clauses) over nested `if-else`
 - Keep changes minimal — don't refactor surrounding code in a bug fix PR
-- Run `pnpm lint` before committing
 
 ## Questions?
 
