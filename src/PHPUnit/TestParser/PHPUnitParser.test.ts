@@ -613,6 +613,33 @@ final class SingleGroupTest extends TestCase {
         );
     });
 
+    it('detect test class not ending with Test but extending TestCase (#342)', () => {
+        const file = phpUnitProject('tests/Example.php');
+        const content = `<?php
+use PHPUnit\\Framework\\TestCase;
+use PHPUnit\\Framework\\Attributes\\Test;
+
+class Example extends TestCase
+{
+    #[Test]
+    public function Test()
+    {
+        self::assertIsInt(1);
+    }
+}
+`;
+        const tests = parse(content, file);
+        const method = tests.find((t) => t.methodName === 'Test');
+        expect(method).toBeDefined();
+        expect(method).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                className: 'Example',
+                methodName: 'Test',
+            }),
+        );
+    });
+
     describe('Inherited test methods with ClassRegistry', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const registry = new ClassRegistry();
