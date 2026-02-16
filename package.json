@@ -49,7 +49,10 @@
       {
         "language": "phpunit",
         "scopeName": "source.phpunit",
-        "path": "./syntaxes/phpunit.tmLanguage.json"
+        "path": "./syntaxes/collision.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.php.phpunit": "php"
+        }
       }
     ],
     "commands": [

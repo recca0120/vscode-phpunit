@@ -26,10 +26,10 @@ export class CollisionPrinter extends OutputFormatter {
         }
 
         if (result.event === TeamcityEvent.testIgnored) {
-            return `${icon} ${name} ➜ ${(result as TestIgnored).message} ${result.duration} ms`;
+            return `  ${icon} ${name} ➜ ${(result as TestIgnored).message} ${result.duration} ms`;
         }
 
-        return `${icon} ${name} ${result.duration} ms`;
+        return `  ${icon} ${name} ${result.duration} ms`;
     }
 
     testSuiteFinished(_result: TestSuiteFinished): string | undefined {
@@ -61,11 +61,11 @@ export class CollisionPrinter extends OutputFormatter {
         const [icon, message] = this.messages.get(result.event)!;
         const parts = result.id.split('::');
         if (parts.length < 2) {
-            return `${icon} ${message}  ${result.id}`;
+            return `  ${icon} ${message}  ${result.id}`;
         }
 
         const [className, method] = parts;
-        return `${icon} ${message}  ${className} > ${method.replace(/^test_/, '')}`;
+        return `  ${icon} ${message}  ${className} > ${method.replace(/^test_/, '')}`;
     }
 
     private formatMessage(result: TestFailed) {
