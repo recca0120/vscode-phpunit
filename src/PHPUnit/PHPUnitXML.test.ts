@@ -194,6 +194,32 @@ describe('PHPUnit XML Test', () => {
         });
     });
 
+    it('exclude with child directory elements', () => {
+        const xml = generateXML(`
+            <testsuites>
+                <testsuite name="Application Test Suite">
+                    <directory suffix="Test.php">.</directory>
+                    <exclude>
+                        <directory>utils</directory>
+                    </exclude>
+                </testsuite>
+            </testsuites>
+        `);
+
+        const parsed = parse(xml);
+
+        expect(parsed.getTestSuites()).toEqual([
+            { tag: 'directory', name: 'Application Test Suite', value: '.', suffix: 'Test.php' },
+            { tag: 'exclude', name: 'Application Test Suite', value: 'utils' },
+        ]);
+
+        const { excludes } = parsed.getPatterns(root);
+        expect(excludes.toGlobPattern()).toEqual({
+            uri: URI.file(phpUnitXML.root()),
+            pattern: '{**/.git/**,**/node_modules/**,utils/**/*}',
+        });
+    });
+
     it('testsuite directory has suffix', () => {
         const xml = generateXML(`
             <testsuites>

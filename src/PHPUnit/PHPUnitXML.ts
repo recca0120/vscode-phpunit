@@ -95,11 +95,42 @@ export class PHPUnitXML {
             return { tag, name, value: this.resolveToRoot(root, node.getText()), prefix, suffix };
         };
 
-        const testSuites = this.getDirectoriesAndFiles<TestSuite>('phpunit testsuites testsuite', {
-            directory: callback,
-            file: callback,
-            exclude: callback,
-        });
+        const excludeCallback = (_tag: string, node: XmlElement, parent: XmlElement) => {
+            const name = parent.getAttribute('name') as string;
+            const text = node.getText();
+            if (text) {
+                return [
+                    { tag: 'exclude', name, value: this.resolveToRoot(root, text) } as TestSuite,
+                ];
+            }
+            // <exclude> with child <directory>/<file> elements
+            const results: TestSuite[] = [];
+            for (const child of node.querySelectorAll('directory')) {
+                results.push({
+                    tag: 'exclude',
+                    name,
+                    value: this.resolveToRoot(root, child.getText()),
+                });
+            }
+            for (const child of node.querySelectorAll('file')) {
+                results.push({
+                    tag: 'exclude',
+                    name,
+                    value: this.resolveToRoot(root, child.getText()),
+                });
+            }
+            return results;
+        };
+
+        const rawTestSuites = this.getDirectoriesAndFiles<TestSuite | TestSuite[]>(
+            'phpunit testsuites testsuite',
+            {
+                directory: callback,
+                file: callback,
+                exclude: excludeCallback,
+            },
+        );
+        const testSuites = rawTestSuites.flat() as TestSuite[];
 
         return testSuites.length > 0
             ? testSuites
