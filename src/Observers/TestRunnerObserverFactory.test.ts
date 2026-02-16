@@ -17,7 +17,7 @@ describe('TestRunnerObserverFactory', () => {
             clear: vi.fn(),
             show: vi.fn(),
         } as unknown as OutputChannel;
-        const configuration = new Configuration({});
+        const configuration = { get: vi.fn() } as unknown as Configuration;
         const phpUnitXML = new PHPUnitXML();
         factory = new TestRunnerObserverFactory(outputChannel, configuration, phpUnitXML);
     });
