@@ -84,6 +84,18 @@ export class PHPUnitXML {
         return configRoot;
     }
 
+    getTestSuiteNames(): string[] {
+        const seen = new Set<string>();
+        const names: string[] = [];
+        for (const suite of this.getTestSuites()) {
+            if (suite.tag !== 'exclude' && !seen.has(suite.name)) {
+                seen.add(suite.name);
+                names.push(suite.name);
+            }
+        }
+        return names;
+    }
+
     getTestSuites(): TestSuite[] {
         const root = this.root();
 

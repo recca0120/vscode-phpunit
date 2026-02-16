@@ -22,7 +22,6 @@ import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 export class TestCollection extends BaseTestCollection {
     private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
-
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
@@ -102,6 +101,7 @@ export class TestCollection extends BaseTestCollection {
             this.ctrl,
             testParser,
             this.rootItems,
+            this.phpUnitXML,
         );
         await testParser.parseFile(uri.fsPath, testsuite);
 

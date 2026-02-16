@@ -77,7 +77,7 @@ describe('TestHierarchyBuilder', () => {
         );
 
         const testParser = new TestParser(phpUnitXml);
-        const builder = new TestHierarchyBuilder(ctrl, testParser);
+        const builder = new TestHierarchyBuilder(ctrl, testParser, ctrl.items, phpUnitXml);
         for (const { testsuite, file, code } of codes) {
             testParser.parse(code, file, testsuite.name);
         }
@@ -196,17 +196,122 @@ describe('TestHierarchyBuilder', () => {
             ]);
         });
 
-        it('two testsuites', () => {
+        it('two testsuites should group by testsuite name', () => {
             givenCodes([
                 {
                     testsuite: { name: 'Unit', path: 'tests/Unit' },
-                    file: phpUnitProject('tests/Feature/ExampleTest.php'),
+                    file: phpUnitProject('tests/Unit/ExampleTest.php'),
                     code: givenPhp('namespace Tests\\Unit', 'ExampleTest', ['test_passed']),
                 },
                 {
                     testsuite: { name: 'Feature', path: 'tests/Feature' },
                     file: phpUnitProject('tests/Feature/ExampleTest.php'),
                     code: givenPhp('namespace Tests\\Feature', 'ExampleTest', ['test_passed']),
+                },
+            ]);
+
+            expect(toTree(ctrl.items)).toEqual([
+                {
+                    id: 'testsuite:Unit',
+                    label: '$(symbol-namespace) Unit',
+                    children: [
+                        {
+                            id: 'Example (Tests\\Unit\\Example)',
+                            label: '$(symbol-class) ExampleTest',
+                            children: [
+                                {
+                                    id: 'Example (Tests\\Unit\\Example)::Passed',
+                                    label: '$(symbol-method) test_passed',
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    id: 'testsuite:Feature',
+                    label: '$(symbol-namespace) Feature',
+                    children: [
+                        {
+                            id: 'Example (Tests\\Feature\\Example)',
+                            label: '$(symbol-class) ExampleTest',
+                            children: [
+                                {
+                                    id: 'Example (Tests\\Feature\\Example)::Passed',
+                                    label: '$(symbol-method) test_passed',
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('two testsuites with one having multiple directories', () => {
+            givenCodes([
+                {
+                    testsuite: { name: 'App', path: 'tests/Unit' },
+                    file: phpUnitProject('tests/Unit/ExampleTest.php'),
+                    code: givenPhp('namespace Tests\\Unit', 'ExampleTest', ['test_unit']),
+                },
+                {
+                    testsuite: { name: 'App', path: 'tests/Feature' },
+                    file: phpUnitProject('tests/Feature/LoginTest.php'),
+                    code: givenPhp('namespace Tests\\Feature', 'LoginTest', ['test_login']),
+                },
+                {
+                    testsuite: { name: 'Integration', path: 'tests/Integration' },
+                    file: phpUnitProject('tests/Integration/ApiTest.php'),
+                    code: givenPhp('namespace Tests\\Integration', 'ApiTest', ['test_api']),
+                },
+            ]);
+
+            expect(toTree(ctrl.items)).toEqual([
+                {
+                    id: 'testsuite:App',
+                    label: '$(symbol-namespace) App',
+                    children: [
+                        {
+                            id: 'Example (Tests\\Unit\\Example)',
+                            label: '$(symbol-class) ExampleTest',
+                            children: [
+                                {
+                                    id: 'Example (Tests\\Unit\\Example)::Unit',
+                                    label: '$(symbol-method) test_unit',
+                                    children: [],
+                                },
+                            ],
+                        },
+                        {
+                            id: 'Login (Tests\\Feature\\Login)',
+                            label: '$(symbol-class) LoginTest',
+                            children: [
+                                {
+                                    id: 'Login (Tests\\Feature\\Login)::Login',
+                                    label: '$(symbol-method) test_login',
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    id: 'testsuite:Integration',
+                    label: '$(symbol-namespace) Integration',
+                    children: [
+                        {
+                            id: 'Api (Tests\\Integration\\Api)',
+                            label: '$(symbol-class) ApiTest',
+                            children: [
+                                {
+                                    id: 'Api (Tests\\Integration\\Api)::Api',
+                                    label: '$(symbol-method) test_api',
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
                 },
             ]);
         });

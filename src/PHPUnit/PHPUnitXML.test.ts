@@ -380,6 +380,56 @@ describe('PHPUnit XML Test', () => {
     });
 });
 
+describe('getTestSuiteNames', () => {
+    const phpUnitXML = new PHPUnitXML();
+
+    it('should return unique testsuite names', () => {
+        const xml = generateXML(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory>tests/Unit</directory>
+                </testsuite>
+                <testsuite name="Feature">
+                    <directory>tests/Feature</directory>
+                </testsuite>
+            </testsuites>
+        `);
+        phpUnitXML.load(xml, phpUnitProject('phpunit.xml'));
+
+        expect(phpUnitXML.getTestSuiteNames()).toEqual(['Unit', 'Feature']);
+    });
+
+    it('should return single name for one testsuite', () => {
+        const xml = generateXML(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory>tests/Unit</directory>
+                </testsuite>
+            </testsuites>
+        `);
+        phpUnitXML.load(xml, phpUnitProject('phpunit.xml'));
+
+        expect(phpUnitXML.getTestSuiteNames()).toEqual(['Unit']);
+    });
+
+    it('should deduplicate names from multiple directories', () => {
+        const xml = generateXML(`
+            <testsuites>
+                <testsuite name="App">
+                    <directory>tests/Unit</directory>
+                    <directory>tests/Feature</directory>
+                </testsuite>
+                <testsuite name="Integration">
+                    <directory>tests/Integration</directory>
+                </testsuite>
+            </testsuites>
+        `);
+        phpUnitXML.load(xml, phpUnitProject('phpunit.xml'));
+
+        expect(phpUnitXML.getTestSuiteNames()).toEqual(['App', 'Integration']);
+    });
+});
+
 describe('PHPUnit XML in subdirectory (../tests)', () => {
     const parentRoot = phpUnitProject('');
     const phpUnitXML = new PHPUnitXML();

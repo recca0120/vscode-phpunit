@@ -7,7 +7,13 @@ import {
     TestTag,
     Uri,
 } from 'vscode';
-import { type TestDefinition, type TestParser, TestType, TransformerFactory } from '../PHPUnit';
+import {
+    type PHPUnitXML,
+    type TestDefinition,
+    type TestParser,
+    TestType,
+    TransformerFactory,
+} from '../PHPUnit';
 
 export class TestHierarchyBuilder {
     private icons = {
@@ -21,12 +27,15 @@ export class TestHierarchyBuilder {
         { item: this.createRootItem(), type: TestType.namespace, children: [] },
     ];
     private testData = new Map<TestItem, TestDefinition>();
+    private multiSuite: boolean;
 
     constructor(
         private ctrl: TestController,
         private testParser: TestParser,
         private rootItems: TestItemCollection = ctrl.items,
+        phpUnitXML?: PHPUnitXML,
     ) {
+        this.multiSuite = (phpUnitXML?.getTestSuiteNames().length ?? 0) > 1;
         this.onInit();
     }
 
@@ -41,8 +50,12 @@ export class TestHierarchyBuilder {
             });
         }
         this.testParser.on(TestType.namespace, (testDefinition) => {
-            this.ascend(1);
-            this.addNamespaceTestItems(testDefinition);
+            if (this.multiSuite) {
+                this.addTestSuiteRoot(testDefinition);
+            } else {
+                this.ascend(1);
+                this.addNamespaceTestItems(testDefinition);
+            }
         });
     }
 
@@ -50,6 +63,46 @@ export class TestHierarchyBuilder {
         this.ascend(0);
 
         return this.testData;
+    }
+
+    private addTestSuiteRoot(testDefinition: TestDefinition) {
+        const suiteName = testDefinition.testsuite;
+        if (!suiteName) {
+            return;
+        }
+
+        // Ascend to root level
+        this.ascend(1);
+
+        const suiteId = `testsuite:${suiteName}`;
+        const existing = this.rootItems.get(suiteId);
+        if (existing) {
+            const parent = this.ancestors[this.ancestors.length - 1];
+            parent.children.push(existing);
+            this.ancestors.push({ item: existing, type: TestType.namespace, children: [] });
+        } else {
+            const suiteDefinition = {
+                type: TestType.namespace,
+                id: suiteId,
+                label: suiteName,
+                depth: 1,
+            } as TestDefinition;
+
+            const testItem = this.ctrl.createTestItem(
+                suiteId,
+                this.parseLabelWithIcon(suiteDefinition),
+            );
+            testItem.canResolveChildren = true;
+            testItem.sortText = suiteId;
+            this.rootItems.add(testItem);
+            this.testData.set(testItem, suiteDefinition);
+
+            const parent = this.ancestors[this.ancestors.length - 1];
+            parent.children.push(testItem);
+            this.ancestors.push({ item: testItem, type: TestType.namespace, children: [] });
+        }
+
+        this.ancestorDepth = this.ancestors.length - 1;
     }
 
     private addNamespaceTestItems(testDefinition: TestDefinition) {
@@ -150,9 +203,19 @@ export class TestHierarchyBuilder {
         testItem.sortText = sortText;
         testItem.range = this.createRange(testDefinition);
 
+        const tags: TestTag[] = [];
+
         const groups = (testDefinition.annotations?.group as string[]) ?? [];
-        if (groups.length > 0) {
-            testItem.tags = groups.map((g) => new TestTag(`group:${g}`));
+        for (const g of groups) {
+            tags.push(new TestTag(`group:${g}`));
+        }
+
+        if (testDefinition.testsuite) {
+            tags.push(new TestTag(`suite:${testDefinition.testsuite}`));
+        }
+
+        if (tags.length > 0) {
+            testItem.tags = tags;
         }
 
         return testItem;
