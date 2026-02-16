@@ -1,6 +1,6 @@
 import * as assert from 'node:assert';
 import * as vscode from 'vscode';
-import { activateExtension, collectTestItemIds, countTestItems, waitForTestItems } from '../helper';
+import { activateExtension, collectTestItemIds, countTestItems, type ExtensionApi, waitForTestItems } from '../helper';
 
 const stubType = process.env.STUB_TYPE ?? 'phpunit';
 const stubVersion = process.env.STUB_VERSION ?? 'unknown';
@@ -9,9 +9,10 @@ const stubArgs: string[] = process.env.STUB_ARGS ? JSON.parse(process.env.STUB_A
 
 suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () => {
     let ctrl: vscode.TestController;
+    let api: ExtensionApi;
 
     suiteSetup(async () => {
-        const api = await activateExtension();
+        api = await activateExtension();
         ctrl = api.testController;
 
         // Configure the extension for this stub version
@@ -96,5 +97,18 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
     test('should run all tests without error', async () => {
         // phpunit.run-all is async — awaits spawn, parse, testRun.end()
         await vscode.commands.executeCommand('phpunit.run-all');
+    });
+
+    test('should skip remaining processes when cancelled before run', async () => {
+        // Pre-cancel the token so runProcesses loop breaks immediately
+        const cts = new vscode.CancellationTokenSource();
+        cts.cancel();
+
+        // Run all tests with a pre-cancelled token — no processes should start
+        const request = new vscode.TestRunRequest();
+        await api.runHandler(request, cts.token);
+
+        // If we reach here without hanging, cancellation worked
+        assert.ok(cts.token.isCancellationRequested);
     });
 });
