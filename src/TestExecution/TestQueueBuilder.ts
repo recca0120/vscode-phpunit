@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import type { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
+import type { TestItem, TestItemCollection, TestRun, TestRunRequest } from 'vscode';
 import { TestType } from '../PHPUnit';
 import { TestCollection } from '../TestCollection';
 import type { TestDefinition } from '../PHPUnit';
@@ -12,6 +12,7 @@ export class TestQueueBuilder {
         tests: Iterable<TestItem>,
         request: TestRunRequest,
         queue = new Map<TestDefinition, TestItem>(),
+        testRun?: TestRun,
     ): Promise<Map<TestDefinition, TestItem>> {
         for (const testItem of tests) {
             if (request.exclude?.includes(testItem)) {
@@ -21,8 +22,9 @@ export class TestQueueBuilder {
             const testDef = this.testCollection.getTestDefinition(testItem);
             if (testDef?.type === TestType.method) {
                 queue.set(testDef, testItem);
+                testRun?.enqueued(testItem);
             } else {
-                await this.build(this.toArray(testItem.children), request, queue);
+                await this.build(this.toArray(testItem.children), request, queue, testRun);
             }
         }
 
@@ -32,8 +34,9 @@ export class TestQueueBuilder {
     buildFromCollection(
         collection: TestItemCollection,
         request: TestRunRequest,
+        testRun?: TestRun,
     ): Promise<Map<TestDefinition, TestItem>> {
-        return this.build(this.toArray(collection), request);
+        return this.build(this.toArray(collection), request, undefined, testRun);
     }
 
     private toArray(collection: TestItemCollection): TestItem[] {

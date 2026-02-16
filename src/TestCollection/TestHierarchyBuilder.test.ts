@@ -212,6 +212,47 @@ describe('TestHierarchyBuilder', () => {
         });
     });
 
+    describe('re-parse (file change)', () => {
+        beforeEach(() => (configurationFile = phpUnitProject('phpunit.xml')));
+
+        it('class children should be replaced, not accumulated, on re-parse', () => {
+            const phpUnitXml = new PHPUnitXML().load(
+                generateXML(`<testsuites><testsuite name="default"><directory>tests</directory></testsuite></testsuites>`),
+                configurationFile,
+            );
+
+            const testParser = new TestParser(phpUnitXml);
+            const builder = new TestHierarchyBuilder(ctrl, testParser);
+
+            // First parse: class with methods A and B
+            testParser.parse(
+                givenPhp('namespace Tests', 'AssertionsTest', ['test_passed', 'test_failed']),
+                phpUnitProject('tests/AssertionsTest.php'),
+                'default',
+            );
+            builder.get();
+
+            // Second parse into SAME builder: class with only method A
+            // (simulates file edit that removed test_failed)
+            const testParser2 = new TestParser(phpUnitXml);
+            const builder2 = new TestHierarchyBuilder(ctrl, testParser2);
+            testParser2.parse(
+                givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
+                phpUnitProject('tests/AssertionsTest.php'),
+                'default',
+            );
+            builder2.get();
+
+            // The class should have exactly 1 method, not 2
+            const ns = ctrl.items.get('namespace:Tests')!;
+            const cls = ns.children.get('Assertions (Tests\\Assertions)')!;
+            const methods: string[] = [];
+            cls.children.forEach((item: import('vscode').TestItem) => methods.push(item.id));
+
+            expect(methods).toEqual(['Assertions (Tests\\Assertions)::Passed']);
+        });
+    });
+
     describe('PEST', () => {
         beforeEach(() => (configurationFile = pestProject('phpunit.xml')));
 

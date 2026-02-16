@@ -134,8 +134,12 @@ export class TestHierarchyBuilder {
     private ascend(depth: number) {
         while (this.ancestors.length > depth) {
             const completedAncestor = this.ancestors.pop()!;
-            for (const child of completedAncestor.children) {
-                completedAncestor.item.children.add(child);
+            if (completedAncestor.type === TestType.namespace) {
+                for (const child of completedAncestor.children) {
+                    completedAncestor.item.children.add(child);
+                }
+            } else {
+                completedAncestor.item.children.replace(completedAncestor.children);
             }
         }
     }

@@ -1,0 +1,86 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { type TestController, type TestRun, tests, Uri } from 'vscode';
+import { PHPUnitXML } from '../PHPUnit';
+import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { TestCollection } from '../TestCollection';
+import { TestQueueBuilder } from './TestQueueBuilder';
+import { URI } from 'vscode-uri';
+
+describe('TestQueueBuilder', () => {
+    let ctrl: TestController;
+    let collection: TestCollection;
+    let builder: TestQueueBuilder;
+    const phpUnitXML = new PHPUnitXML();
+
+    beforeEach(() => {
+        ctrl = tests.createTestController('phpunit', 'PHPUnit');
+        phpUnitXML.load(
+            generateXML(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`),
+            phpUnitProject('phpunit.xml'),
+        );
+        collection = new TestCollection(ctrl, phpUnitXML);
+        builder = new TestQueueBuilder(collection);
+    });
+
+    it('should enqueue test items during build when testRun is provided', async () => {
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const request = { include: [...toArray(ctrl.items)] } as any;
+        const queue = await builder.build(request.include, request, undefined, testRun);
+
+        expect(queue.size).toBeGreaterThan(0);
+        expect(testRun.enqueued).toHaveBeenCalledTimes(queue.size);
+        for (const testItem of queue.values()) {
+            expect(testRun.enqueued).toHaveBeenCalledWith(testItem);
+        }
+    });
+
+    it('should work without testRun (backward compatible)', async () => {
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        const request = { include: [...toArray(ctrl.items)] } as any;
+        const queue = await builder.build(request.include, request);
+
+        expect(queue.size).toBeGreaterThan(0);
+    });
+
+    it('should enqueue via buildFromCollection', async () => {
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const request = {} as any;
+        const queue = await builder.buildFromCollection(ctrl.items, request, testRun);
+
+        expect(queue.size).toBeGreaterThan(0);
+        expect(testRun.enqueued).toHaveBeenCalledTimes(queue.size);
+    });
+
+    it('should exclude items in request.exclude', async () => {
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        const allItems = [...toArray(ctrl.items)];
+        // Get first method item to exclude
+        const methods: import('vscode').TestItem[] = [];
+        ctrl.items.forEach((ns) => ns.children.forEach((cls) => cls.children.forEach((m) => methods.push(m))));
+        const excluded = methods[0];
+
+        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const request = { include: allItems, exclude: [excluded] } as any;
+        const queue = await builder.build(request.include, request, undefined, testRun);
+
+        const queueIds = [...queue.values()].map((item) => item.id);
+        expect(queueIds).not.toContain(excluded.id);
+    });
+});
+
+function toArray(collection: import('vscode').TestItemCollection): import('vscode').TestItem[] {
+    const items: import('vscode').TestItem[] = [];
+    collection.forEach((item) => items.push(item));
+    return items;
+}

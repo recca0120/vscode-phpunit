@@ -10,9 +10,8 @@ jobs:
   e2e:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     name: e2e (${{ matrix.os }})
     defaults:
       run:
