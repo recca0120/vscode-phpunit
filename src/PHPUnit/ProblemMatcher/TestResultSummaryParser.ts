@@ -10,7 +10,7 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
             'Skipped',
             'Incomplete',
             'Risky',
-            'PHPUnitsDeprecations',
+            'PHPUnit Deprecations',
         ];
         const end = '\\s+(\\d+)[\\.\\s,]\\s?';
         const tests = `Test(s)?:${end}`;

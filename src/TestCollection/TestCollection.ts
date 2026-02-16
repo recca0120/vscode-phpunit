@@ -107,6 +107,8 @@ export class TestCollection extends BaseTestCollection {
 
     protected deleteFile(file: File<TestDefinition>) {
         this.removeTestItems(file.uri);
+        this.clearTestDefinitions(file.uri);
+        this.testItems.delete(file.uri.toString());
 
         return super.deleteFile(file);
     }

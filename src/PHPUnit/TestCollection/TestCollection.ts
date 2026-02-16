@@ -52,6 +52,7 @@ export class TestCollection {
         const testDefinitions = await this.parseTests(uri, testsuite);
         if (testDefinitions.length === 0) {
             this.delete(uri);
+            return this;
         }
         files.get(testsuite)?.set(uri.toString(), testDefinitions);
 

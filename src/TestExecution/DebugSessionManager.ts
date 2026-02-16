@@ -16,10 +16,12 @@ export class DebugSessionManager {
             await debug.startDebugging(wsf, xdebug.name ?? (await xdebug.getDebugConfiguration()));
         }
 
-        await fn();
-
-        if (xdebug?.mode === Mode.debug && debug.activeDebugSession?.type === 'php') {
-            debug.stopDebugging(debug.activeDebugSession);
+        try {
+            await fn();
+        } finally {
+            if (xdebug?.mode === Mode.debug && debug.activeDebugSession?.type === 'php') {
+                debug.stopDebugging(debug.activeDebugSession);
+            }
         }
     }
 }

@@ -199,6 +199,32 @@ describe('Extension TestCollection', () => {
         expect(collection.findGroups()).toEqual([]);
     });
 
+    it('delete should clean up testItems and index', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const file = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.add(file);
+
+        // Verify items exist
+        const itemsBefore = collection.findTestsByFile(file);
+        expect(itemsBefore.length).toBeGreaterThan(0);
+        const testDef = collection.getTestDefinition(itemsBefore[0]);
+        expect(testDef).toBeDefined();
+
+        // Delete
+        collection.delete(file);
+
+        // After delete: no test items, no definitions, ctrl.items empty
+        expect(collection.findTestsByFile(file)).toEqual([]);
+        expect(collection.has(file)).toBeFalsy();
+        expect(toTree(ctrl.items)).toEqual([]);
+    });
+
     it('with testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>
