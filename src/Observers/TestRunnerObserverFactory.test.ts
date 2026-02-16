@@ -1,17 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OutputChannel, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { Configuration } from '../Configuration';
-import type { TestDefinition } from '../PHPUnit';
+import { PHPUnitXML, type TestDefinition } from '../PHPUnit';
 import { OutputChannelObserver } from './OutputChannelObserver';
-import { OutputFormatter } from './Printers';
 import { TestResultObserver } from './TestResultObserver';
 import { TestRunnerObserverFactory } from './TestRunnerObserverFactory';
 
 describe('TestRunnerObserverFactory', () => {
     let factory: TestRunnerObserverFactory;
     let outputChannel: OutputChannel;
-    let configuration: Configuration;
-    let outputFormatter: OutputFormatter;
 
     beforeEach(() => {
         outputChannel = {
@@ -20,14 +17,9 @@ describe('TestRunnerObserverFactory', () => {
             clear: vi.fn(),
             show: vi.fn(),
         } as unknown as OutputChannel;
-        configuration = { get: vi.fn() } as unknown as Configuration;
-        outputFormatter = {
-            start: vi.fn(),
-            error: vi.fn(),
-            close: vi.fn(),
-            end: vi.fn(),
-        } as unknown as OutputFormatter;
-        factory = new TestRunnerObserverFactory(outputChannel, configuration, outputFormatter);
+        const configuration = new Configuration({});
+        const phpUnitXML = new PHPUnitXML();
+        factory = new TestRunnerObserverFactory(outputChannel, configuration, phpUnitXML);
     });
 
     it('should create observers including OutputChannelObserver and TestResultObserver', () => {
@@ -42,7 +34,7 @@ describe('TestRunnerObserverFactory', () => {
         expect(observers.some((o) => o instanceof OutputChannelObserver)).toBe(true);
     });
 
-    it('should create a new OutputChannelObserver for each call', () => {
+    it('should create new instances for each call', () => {
         const queue = new Map<TestDefinition, TestItem>();
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const request = { continuous: false } as TestRunRequest;

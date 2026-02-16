@@ -1,4 +1,3 @@
-import { inject, injectable } from 'inversify';
 import {
     EOL,
     PHPUnitXML,
@@ -18,7 +17,6 @@ import {
 } from '../../PHPUnit';
 import { OutputBuffer } from './OutputBuffer';
 
-@injectable()
 export abstract class OutputFormatter {
     protected outputBuffer = new OutputBuffer();
     protected messages = new Map<TeamcityEvent, string[]>([
@@ -28,7 +26,7 @@ export abstract class OutputFormatter {
         [TeamcityEvent.testIgnored, ['➖', 'IGNORED']],
     ]);
 
-    constructor(@inject(PHPUnitXML) protected phpUnitXML: PHPUnitXML) {}
+    constructor(protected phpUnitXML: PHPUnitXML) {}
 
     static fileFormat(file: string, line: number) {
         return `${file}:${line}`;

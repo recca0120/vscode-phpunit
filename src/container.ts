@@ -3,8 +3,7 @@ import { EventEmitter, type OutputChannel, type TestController, type Uri, type W
 
 import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
-import { CollisionPrinter, TestRunnerObserverFactory } from './Observers';
-import { OutputFormatter } from './Observers/Printers';
+import { TestRunnerObserverFactory } from './Observers';
 import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
@@ -20,7 +19,6 @@ export function createParentContainer(ctrl: TestController, outputChannel: Outpu
     container.bind(TYPES.OutputChannel).toConstantValue(outputChannel);
 
     // Shared singleton services (no per-folder deps)
-    container.bind(OutputFormatter).to(CollisionPrinter).inSingletonScope();
     container.bind(CoverageCollector).toSelf().inSingletonScope();
 
     // Child container factory
