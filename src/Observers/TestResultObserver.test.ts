@@ -50,9 +50,9 @@ describe('TestResultObserver', () => {
     beforeEach(() => {
         queue = new Map();
         testRun = createTestRun();
-        observer = new TestResultObserver(queue, testRun);
         testItem = createTestItem();
         queue.set({} as TestDefinition, testItem);
+        observer = new TestResultObserver(queue, testRun);
     });
 
     it('should use TestMessage.diff when expected and actual are present', () => {

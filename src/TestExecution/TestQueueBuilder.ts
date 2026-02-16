@@ -22,17 +22,23 @@ export class TestQueueBuilder {
             if (testDef?.type === TestType.method) {
                 queue.set(testDef, testItem);
             } else {
-                await this.build(this.collectItems(testItem.children), request, queue);
+                await this.build(this.toArray(testItem.children), request, queue);
             }
         }
 
         return queue;
     }
 
-    collectItems(collection: TestItemCollection): TestItem[] {
-        const testItems: TestItem[] = [];
-        collection.forEach((testItem) => testItems.push(testItem));
+    buildFromCollection(
+        collection: TestItemCollection,
+        request: TestRunRequest,
+    ): Promise<Map<TestDefinition, TestItem>> {
+        return this.build(this.toArray(collection), request);
+    }
 
-        return testItems;
+    private toArray(collection: TestItemCollection): TestItem[] {
+        const items: TestItem[] = [];
+        collection.forEach((item) => items.push(item));
+        return items;
     }
 }

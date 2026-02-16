@@ -46,7 +46,7 @@ export class TestRunHandler {
 
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
-        const xdebug = builder.getXdebug()!;
+        const xdebug = builder.getXdebug();
 
         await this.debugSession.wrap(xdebug, async () => {
             const testRun = this.ctrl.createTestRun(request);
@@ -63,10 +63,9 @@ export class TestRunHandler {
         request: TestRunRequest,
         cancellation?: CancellationToken,
     ) {
-        const queue = await this.testQueueBuilder.build(
-            request.include ?? this.testQueueBuilder.collectItems(this.ctrl.items),
-            request,
-        );
+        const queue = request.include
+            ? await this.testQueueBuilder.build(request.include, request)
+            : await this.testQueueBuilder.buildFromCollection(this.ctrl.items, request);
         queue.forEach((testItem) => testRun.enqueued(testItem));
 
         const runner = this.testRunnerBuilder.build(queue, testRun, request);

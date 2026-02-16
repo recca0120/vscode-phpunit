@@ -23,10 +23,16 @@ import {
 import type { TestDefinition } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
+    private testItemById: Map<string, TestItem>;
+
     constructor(
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
-    ) {}
+    ) {
+        this.testItemById = new Map(
+            [...queue.values()].map((item) => [item.id, item]),
+        );
+    }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -112,15 +118,17 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        if (!('id' in result)) {
+        if (!('id' in result) || typeof result.id !== 'string') {
             return undefined;
         }
 
-        for (const testItem of this.queue.values()) {
-            if (
-                result.id === testItem.id ||
-                PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)
-            ) {
+        const exact = this.testItemById.get(result.id);
+        if (exact) {
+            return exact;
+        }
+
+        for (const testItem of this.testItemById.values()) {
+            if (PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)) {
                 return testItem;
             }
         }

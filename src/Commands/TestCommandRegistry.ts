@@ -37,9 +37,10 @@ export class TestCommandRegistry {
 
     runTestAtCursor(): Disposable {
         return commands.registerCommand('phpunit.run-test-at-cursor', async () => {
-            await this.runWithEditor((ctx, uri) =>
-                ctx.findTestsByPosition(uri, window.activeTextEditor!.selection.active),
-            );
+            await this.runWithEditor((ctx, uri) => {
+                const editor = window.activeTextEditor;
+                return editor ? ctx.findTestsByPosition(uri, editor.selection.active) : [];
+            });
         });
     }
 
