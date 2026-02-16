@@ -30,7 +30,6 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
     return {
         event: 'testFailed' as any,
         id: 'Tests\\ExampleTest::test_example',
-        testId: 'Tests\\ExampleTest::test_example',
         flowId: 1,
         name: 'test_example',
         file: '/project/tests/ExampleTest.php',
