@@ -73,7 +73,7 @@ MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery
                 document as unknown as VscodeTextDocument,
                 {} as unknown as CancellationToken,
             ) as DocumentLink[]
-        ).map((link) => [normalizePath(link.target?.fsPath), link.target?.fragment]);
+        ).map((link) => [normalizePath(link.target?.fsPath ?? ''), link.target?.fragment]);
 
         expect(links).toEqual([
             ['vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php', 'L32'],
@@ -131,7 +131,7 @@ at src/Calculator.php:7
                 document as unknown as VscodeTextDocument,
                 {} as unknown as CancellationToken,
             ) as DocumentLink[]
-        ).map((link) => [normalizePath(link.target?.fsPath), link.target?.fragment]);
+        ).map((link) => [normalizePath(link.target?.fsPath ?? ''), link.target?.fragment]);
 
         expect(links).toEqual([
             ['src/Calculator.php', 'L7'],

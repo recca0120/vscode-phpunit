@@ -737,14 +737,16 @@ describe('Extension Test', () => {
             expect(pestFolder).toBeDefined();
             expect(pestFolder?.label).toBe('$(folder) pest-stub');
 
+            if (!phpUnitFolder || !pestFolder) return;
+
             // PHPUnit items should be under phpunit folder
-            const phpUnitItem = findTest(phpUnitFolder?.children, 'Assertions (Tests\\Assertions)');
+            const phpUnitItem = findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)');
             expect(phpUnitItem).toBeDefined();
             expect(phpUnitItem?.label).toContain('AssertionsTest');
 
             // Pest items should be under pest folder
             const pestItem = findTest(
-                pestFolder?.children,
+                pestFolder.children,
                 'tests/Unit/ExampleTest.php::test_description',
             );
             expect(pestItem).toBeDefined();
@@ -763,7 +765,8 @@ describe('Extension Test', () => {
                 ctrl.items,
                 `folder:${Uri.file(phpUnit.root).toString()}`,
             );
-            const testItem = findTest(phpUnitFolder?.children, 'Assertions (Tests\\Assertions)');
+            if (!phpUnitFolder) return;
+            const testItem = findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)');
             expect(testItem).toBeDefined();
 
             cwd = phpUnit.root;
@@ -786,8 +789,9 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
             const testRunProfile = getTestRunProfile(ctrl);
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
+            if (!pestFolder) return;
             const testItem = findTest(
-                pestFolder?.children,
+                pestFolder.children,
                 'tests/Unit/ExampleTest.php::test_description',
             );
             expect(testItem).toBeDefined();
@@ -858,7 +862,7 @@ describe('Extension Test', () => {
             await ctrl.resolveHandler();
 
             const firstWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-                (r: { value: import('vscode').FileSystemWatcher }) => r.value,
+                (r) => (r as { value: import('vscode').FileSystemWatcher }).value,
             );
 
             await ctrl.resolveHandler();
@@ -986,13 +990,14 @@ describe('Extension Test', () => {
 
             // Get all watchers created by createFileSystemWatcher
             const allWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-                (r: { value: import('vscode').FileSystemWatcher }) => r.value,
+                (r) => (r as { value: import('vscode').FileSystemWatcher }).value,
             );
 
             // Only the last batch should be undisposed (1 folder = 1 watcher per resolve)
             const undisposed = allWatchers.filter(
-                (w: { dispose: { mock: { calls: unknown[] } } }) =>
-                    w.dispose.mock.calls.length === 0,
+                (w) =>
+                    (w.dispose as unknown as { mock: { calls: unknown[] } }).mock.calls.length ===
+                    0,
             );
             expect(undisposed.length).toBe(1);
         });

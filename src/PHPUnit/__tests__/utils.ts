@@ -70,7 +70,7 @@ export function detectPhpUnitStubs(): PhpUnitStub[] {
                 cwd: root,
                 timeout: 10000,
             }).toString();
-            const phpUnitVersion = output.match(/PHPUnit\s([\d.]+)/)?.[1];
+            const phpUnitVersion = output.match(/PHPUnit\s([\d.]+)/)?.[1] ?? '';
             return [
                 {
                     name: `v${v}`,
@@ -137,7 +137,7 @@ export function detectPestStubs(): PestStub[] {
                 cwd: root,
                 timeout: 10000,
             }).toString();
-            const pestVersion = output.match(/(\d+\.\d+\.\d+)/)?.[1];
+            const pestVersion = output.match(/(\d+\.\d+\.\d+)/)?.[1] ?? '';
             return [
                 {
                     name: `v${v}`,

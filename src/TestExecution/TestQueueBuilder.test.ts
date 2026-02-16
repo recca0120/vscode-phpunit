@@ -34,7 +34,7 @@ describe('TestQueueBuilder', () => {
         const request = {
             include: [...toArray(ctrl.items)],
         } as unknown as import('vscode').TestRunRequest;
-        const queue = await builder.build(request.include, request, undefined, testRun);
+        const queue = await builder.build(request.include ?? [], request, undefined, testRun);
 
         expect(queue.size).toBeGreaterThan(0);
         expect(testRun.enqueued).toHaveBeenCalledTimes(queue.size);
@@ -49,7 +49,7 @@ describe('TestQueueBuilder', () => {
         const request = {
             include: [...toArray(ctrl.items)],
         } as unknown as import('vscode').TestRunRequest;
-        const queue = await builder.build(request.include, request);
+        const queue = await builder.build(request.include ?? [], request);
 
         expect(queue.size).toBeGreaterThan(0);
     });
@@ -85,7 +85,7 @@ describe('TestQueueBuilder', () => {
             include: allItems,
             exclude: [excluded],
         } as unknown as import('vscode').TestRunRequest;
-        const queue = await builder.build(request.include, request, undefined, testRun);
+        const queue = await builder.build(request.include ?? [], request, undefined, testRun);
 
         const queueIds = [...queue.values()].map((item) => item.id);
         expect(queueIds).not.toContain(excluded.id);

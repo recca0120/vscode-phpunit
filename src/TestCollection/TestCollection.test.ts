@@ -137,7 +137,7 @@ describe('Extension TestCollection', () => {
         const testItem = {
             id: 'Assertions (Tests\\Assertions)::Passed',
         } as import('vscode').TestItem;
-        const request = { include: [testItem] } as import('vscode').TestRunRequest;
+        const request = { include: [testItem] } as unknown as import('vscode').TestRunRequest;
         const result = collection.findTestsByRequest(request);
 
         expect(result).toHaveLength(1);
@@ -156,7 +156,7 @@ describe('Extension TestCollection', () => {
 
         const request = {
             include: [{ id: 'nonexistent' } as import('vscode').TestItem],
-        } as import('vscode').TestRunRequest;
+        } as unknown as import('vscode').TestRunRequest;
         expect(collection.findTestsByRequest(request)).toBeUndefined();
     });
 

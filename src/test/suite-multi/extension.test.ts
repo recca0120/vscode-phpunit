@@ -86,8 +86,9 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         // Capture baseline counts for later assertions
         const phpunitRoot = findTestItem(ctrl.items, `folder:${phpunitFolder?.uri.toString()}`);
         const pestRoot = findTestItem(ctrl.items, `folder:${pestFolder?.uri.toString()}`);
-        initialPhpunitCount = countTestItems(phpunitRoot?.children);
-        initialPestCount = countTestItems(pestRoot?.children);
+        if (!phpunitRoot || !pestRoot) throw new Error('Missing test roots');
+        initialPhpunitCount = countTestItems(phpunitRoot.children);
+        initialPestCount = countTestItems(pestRoot.children);
         initialTotalCount = countTestItems(ctrl.items);
     });
 
