@@ -63,16 +63,16 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         return text
             .trim()
             .split(/\r\n|\n/g)
-            .reduce<{ file: string; line: number }[]>((results, input) => {
+            .flatMap((input) => {
                 const match = input.match(this.filePattern);
-                if (match?.groups) {
-                    results.push({
-                        file: match.groups.file.replace(/^(-)+|^at\s+/, '').trim(),
-                        line: parseInt(match.groups.line, 10),
-                    });
+                if (!match?.groups) {
+                    return [];
                 }
-                return results;
-            }, []);
+                return {
+                    file: match.groups.file.replace(/^(-)+|^at\s+/, '').trim(),
+                    line: Number.parseInt(match.groups.line, 10),
+                };
+            });
     }
 
     private parseLocationHint(argv: Teamcity): Partial<TestResult> {

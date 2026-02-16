@@ -59,35 +59,38 @@ export class TestCollection {
             this.updateTestsForFile(uri, testsuite, testDefinitions);
         }
 
-        // Re-parse child classes that depend on classes defined in this file
         await this.reparseChildClasses(uri);
 
         return this;
     }
 
     private async reparseChildClasses(uri: URI) {
-        // Find all classes registered from this file in the registry
-        const classesInFile = this.classRegistry.getClassesByUri(uri.fsPath);
+        const dependents = this.getDependentClasses(uri.fsPath);
 
-        for (const classInfo of classesInFile) {
-            const dependents = [
+        for (const child of dependents) {
+            await this.reparseFile(URI.file(child.uri));
+        }
+    }
+
+    private getDependentClasses(fsPath: string) {
+        return this.classRegistry
+            .getClassesByUri(fsPath)
+            .flatMap((classInfo) => [
                 ...this.classRegistry.getChildClasses(classInfo.classFQN),
                 ...this.classRegistry.getTraitUsers(classInfo.classFQN),
-            ];
-            for (const child of dependents) {
-                if (child.uri === uri.fsPath) {
-                    continue;
-                }
-                const childUri = URI.file(child.uri);
-                const childTestsuite = this.parseTestsuite(childUri);
-                if (!childTestsuite) {
-                    continue;
-                }
-                const childTests = await this.parseTests(childUri, childTestsuite);
-                if (childTests.length > 0) {
-                    this.updateTestsForFile(childUri, childTestsuite, childTests);
-                }
-            }
+            ])
+            .filter((child) => child.uri !== fsPath);
+    }
+
+    private async reparseFile(uri: URI) {
+        const testsuite = this.parseTestsuite(uri);
+        if (!testsuite) {
+            return;
+        }
+
+        const tests = await this.parseTests(uri, testsuite);
+        if (tests.length > 0) {
+            this.updateTestsForFile(uri, testsuite, tests);
         }
     }
 
