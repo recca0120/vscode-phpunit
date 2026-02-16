@@ -134,6 +134,35 @@ describe('ProcessBuilder Test', () => {
                 '--teamcity',
             ]);
         });
+        it('should handle php binary path with spaces', () => {
+            const builder = givenBuilder({
+                php: 'C:\\Program Files\\PHP\\php',
+                phpunit: 'vendor/bin/phpunit',
+            });
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('C:\\Program Files\\PHP\\php');
+            expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
+        });
+
+        it('should handle phpunit binary path with spaces', () => {
+            const cwd = 'd:\\All Project\\adminservice-collaboration';
+            const builder = givenBuilder(
+                {
+                    phpunit: 'd:\\All Project\\adminservice-collaboration\\vendor\\bin\\phpunit',
+                },
+                cwd,
+            );
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
+            expect(args).toEqual([
+                'd:\\All Project\\adminservice-collaboration\\vendor\\bin\\phpunit',
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
+
         it('should handle paths with spaces', () => {
             const cwd = 'd:\\All Project\\adminservice-collaboration';
             const testFile = 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php';
