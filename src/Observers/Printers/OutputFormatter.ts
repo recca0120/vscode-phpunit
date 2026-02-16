@@ -37,15 +37,13 @@ export abstract class OutputFormatter {
     }
 
     error(text: string) {
-        const message = this.messages.get(TeamcityEvent.testFailed);
-        const [icon] = message ?? ['❌', 'FAILED'];
+        const [icon] = this.getMessage(TeamcityEvent.testFailed);
 
         return `${EOL}${icon} ${text}`;
     }
 
     testVersion(result: TestVersion) {
-        const message = this.messages.get(TeamcityEvent.testVersion);
-        const [icon] = message ?? ['🚀', 'STARTED'];
+        const [icon] = this.getMessage(TeamcityEvent.testVersion);
 
         return `${EOL}${icon} ${result.text}${EOL}`;
     }
@@ -119,6 +117,14 @@ export abstract class OutputFormatter {
 
     append(line: string) {
         this.outputBuffer.append(line);
+    }
+
+    protected getMessage(event: TeamcityEvent): string[] {
+        return this.messages.get(event) ?? [];
+    }
+
+    protected formatTestName(result: TestFinished | TestFailed): string {
+        return /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
     }
 
     private setCurrent(current?: string) {

@@ -10,6 +10,7 @@ import type {
 import type { PHPUnitXML } from '../PHPUnitXML';
 import { type TestDefinition, TestType } from '../types';
 import { AnnotationParser, AttributeParser } from './AnnotationParser';
+import type { TraitAdaptation } from './ClassRegistry';
 import { generatePestClassFQN } from './PestClassFQNGenerator';
 import {
     NamespaceDefinitionBuilder,
@@ -17,21 +18,24 @@ import {
     TestCaseDefinitionBuilder,
     TestSuiteDefinitionBuilder,
 } from './TestDefinitionBuilder';
+import { TraitUseParser } from './TraitUseParser';
+
+const annotationParser = new AnnotationParser();
+const attributeParser = new AttributeParser();
 
 type AST = Node & {
     name?: Identifier | string;
     visibility?: string;
     isAbstract?: boolean;
+    extends?: Identifier | Name | null;
     body?: Node[];
     children?: Node[];
     expression?: AST;
     what?: (Name | PropertyLookup) & { offset?: Identifier };
     arguments?: AST[];
     value?: string;
+    items?: AST[];
 };
-
-export const annotationParser = new AnnotationParser();
-export const attributeParser = new AttributeParser();
 
 export class PhpAstNodeWrapper {
     constructor(
@@ -61,7 +65,7 @@ export class PhpAstNodeWrapper {
             return TestType.namespace;
         }
 
-        if (['program', 'class'].includes(this.kind)) {
+        if (['program', 'class', 'trait'].includes(this.kind)) {
             return TestType.class;
         }
 
@@ -85,11 +89,45 @@ export class PhpAstNodeWrapper {
             return this.name;
         }
 
-        if (this.kind === 'class') {
+        if (this.kind === 'class' || this.kind === 'trait') {
             return [this.parent?.name, this.name].filter((name) => !!name).join('\\');
         }
 
         return this.parent?.classFQN;
+    }
+
+    get isTrait(): boolean {
+        return this.kind === 'trait';
+    }
+
+    get isAbstract(): boolean {
+        return this.ast.isAbstract === true;
+    }
+
+    get extendsName(): string | undefined {
+        const ext = this.ast.extends;
+        if (!ext) {
+            return undefined;
+        }
+
+        if (typeof ext === 'string') {
+            return ext;
+        }
+
+        return (ext as Name).name ?? (ext as Identifier).name;
+    }
+
+    get parentFQN(): string | undefined {
+        if (this.kind !== 'class') {
+            return undefined;
+        }
+
+        const raw = this.extendsName;
+        if (!raw) {
+            return undefined;
+        }
+
+        return this.resolveFQN(raw);
     }
 
     get parent(): PhpAstNodeWrapper | undefined {
@@ -101,7 +139,7 @@ export class PhpAstNodeWrapper {
             return this.getClasses();
         }
 
-        if (this.kind === 'class') {
+        if (this.kind === 'class' || this.kind === 'trait') {
             return this.getMethods();
         }
 
@@ -176,12 +214,13 @@ export class PhpAstNodeWrapper {
         const options = { ...this.options };
         if (this.kind === 'namespace') {
             options.parent = this;
+            options.namespace = this;
+        } else if (this.kind === 'program') {
+            options.namespace = this;
         }
 
         return definitions.concat(
-            (this.ast.children ?? [])
-                .map((node: Node) => new PhpAstNodeWrapper(node, options))
-                .filter((definition: PhpAstNodeWrapper) => definition.kind === 'class'),
+            this.filterChildrenByKind(this.ast.children ?? [], ['class', 'trait'], options),
         );
     }
 
@@ -222,6 +261,10 @@ export class PhpAstNodeWrapper {
             return false;
         }
 
+        if (this.kind === 'trait') {
+            return false;
+        }
+
         if (this.kind === 'class') {
             return (
                 this.name.endsWith('Test') &&
@@ -230,11 +273,7 @@ export class PhpAstNodeWrapper {
         }
 
         if (this.kind === 'method' && this.acceptModifier()) {
-            return (
-                this.name.startsWith('test') ||
-                annotationParser.isTest(this.ast as unknown as Method) ||
-                attributeParser.isTest(this.ast as unknown as Method)
-            );
+            return this.isTestMethod();
         }
 
         if (this.kind === 'call') {
@@ -260,7 +299,87 @@ export class PhpAstNodeWrapper {
         return new NamespaceDefinitionBuilder(this).build();
     }
 
-    private getMethods(): PhpAstNodeWrapper[] {
+    isTestMethod(): boolean {
+        if (this.kind !== 'method' || !this.acceptModifier()) {
+            return false;
+        }
+
+        return (
+            this.name.startsWith('test') ||
+            annotationParser.isTest(this.ast as unknown as Method) ||
+            attributeParser.isTest(this.ast as unknown as Method)
+        );
+    }
+
+    getTraitUses(): { traitFQNs: string[]; adaptations: TraitAdaptation[] } {
+        if (this.kind !== 'class' && this.kind !== 'trait') {
+            return { traitFQNs: [], adaptations: [] };
+        }
+
+        return new TraitUseParser().parse(this.ast.body ?? [], (raw) => this.resolveFQN(raw));
+    }
+
+    private resolveFQN(raw: string): string {
+        if (raw.startsWith('\\')) {
+            return raw.substring(1);
+        }
+
+        const useMap = this.resolveUseStatements();
+        const firstPart = raw.split('\\')[0];
+        const resolved = useMap.get(firstPart);
+        if (resolved) {
+            if (raw.includes('\\')) {
+                return `${resolved}\\${raw.substring(firstPart.length + 1)}`;
+            }
+            return resolved;
+        }
+
+        const ns = this.options.namespace ?? this.options.parent;
+        const namespaceName = ns?.kind === 'namespace' ? ns.name : undefined;
+        if (namespaceName) {
+            return `${namespaceName}\\${raw}`;
+        }
+
+        return raw;
+    }
+
+    private resolveUseStatements(): Map<string, string> {
+        const useMap = new Map<string, string>();
+
+        // Find the container with use statements (namespace or program node)
+        const container = this.options.namespace ?? this.options.parent;
+        if (!container) {
+            return useMap;
+        }
+
+        const children = (container.ast.children ?? []) as AST[];
+        for (const child of children) {
+            if (child.kind !== 'usegroup') {
+                continue;
+            }
+
+            const items = (child.items ?? []) as AST[];
+            for (const item of items) {
+                if (item.kind !== 'useitem') {
+                    continue;
+                }
+
+                const fqn = typeof item.name === 'string' ? item.name : (item.name as Name)?.name;
+                if (!fqn) {
+                    continue;
+                }
+
+                // alias is the last part of the FQN, or the explicit alias
+                const parts = fqn.split('\\');
+                const alias = parts[parts.length - 1];
+                useMap.set(alias, fqn);
+            }
+        }
+
+        return useMap;
+    }
+
+    getMethods(): PhpAstNodeWrapper[] {
         if (['program', 'namespace'].includes(this.ast.kind)) {
             return this.getClasses().reduce(
                 (definitions: PhpAstNodeWrapper[], definition: PhpAstNodeWrapper) => {
@@ -271,13 +390,11 @@ export class PhpAstNodeWrapper {
         }
 
         const options = { ...this.options };
-        if (this.kind === 'class') {
+        if (this.kind === 'class' || this.kind === 'trait') {
             options.parent = this;
         }
 
-        return (this.ast.body ?? [])
-            .map((node: Node) => new PhpAstNodeWrapper(node, options))
-            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'method');
+        return this.filterChildrenByKind(this.ast.body ?? [], 'method', options);
     }
 
     private getNamespaces() {
@@ -285,9 +402,18 @@ export class PhpAstNodeWrapper {
             return [];
         }
 
-        return (this.ast.children ?? [])
-            .map((node: Node) => new PhpAstNodeWrapper(node, this.options))
-            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'namespace');
+        return this.filterChildrenByKind(this.ast.children ?? [], 'namespace', this.options);
+    }
+
+    private filterChildrenByKind(
+        source: Node[],
+        kind: string | string[],
+        options: typeof this.options,
+    ): PhpAstNodeWrapper[] {
+        const kinds = Array.isArray(kind) ? kind : [kind];
+        return source
+            .map((node) => new PhpAstNodeWrapper(node, options))
+            .filter((wrapper) => kinds.includes(wrapper.kind));
     }
 
     private acceptModifier() {
@@ -313,10 +439,8 @@ function collectPestFunctions(
         }, [])
         .reduce((definitions, node: AST) => {
             if (
-                !(
-                    node.kind === 'expressionstatement' &&
-                    (node.expression as AST).kind !== 'include'
-                )
+                node.kind !== 'expressionstatement' ||
+                (node.expression as AST).kind === 'include'
             ) {
                 return definitions;
             }

@@ -51,7 +51,7 @@ export class ProblemMatcher {
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
         this.cache.set(testResult, testResult);
 
-        return this.cache.get(testResult);
+        return testResult;
     }
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
@@ -83,10 +83,6 @@ export class ProblemMatcher {
     }
 
     private handleFinished(testResult: TestSuiteFinished | TestFinished) {
-        if (!this.cache.has(testResult)) {
-            return;
-        }
-
         const prevTestResult = this.cache.get(testResult);
         if (!prevTestResult) {
             return;
@@ -100,6 +96,9 @@ export class ProblemMatcher {
     }
 
     private isFault(testResult: TestResult) {
-        return [TeamcityEvent.testFailed, TeamcityEvent.testIgnored].includes(testResult.event);
+        return (
+            testResult.event === TeamcityEvent.testFailed ||
+            testResult.event === TeamcityEvent.testIgnored
+        );
     }
 }

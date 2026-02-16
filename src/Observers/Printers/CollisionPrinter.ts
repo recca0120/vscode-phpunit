@@ -18,12 +18,11 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     testFinished(result: TestFinished | TestFailed | TestIgnored) {
-        const message = this.messages.get(result.event);
-        if (!message) {
+        const [icon] = this.getMessage(result.event);
+        if (!icon) {
             return '';
         }
-        const [icon] = message;
-        const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
+        const name = this.formatTestName(result);
 
         if (result.event === TeamcityEvent.testFailed) {
             this.errors.push(result as TestFailed);
@@ -62,11 +61,10 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     private formatErrorTitle(result: TestFailed) {
-        const message = this.messages.get(result.event);
-        if (!message) {
+        const [icon, messageText] = this.getMessage(result.event);
+        if (!icon) {
             return '';
         }
-        const [icon, messageText] = message;
         const parts = result.id.split('::');
         if (parts.length < 2) {
             return `  ${icon} ${messageText}  ${result.id}`;

@@ -31,7 +31,8 @@ export const getPrevTestResult = (
 
 const isTestStarted = (pattern: RegExp, testResult: TestResult & { locationHint?: string }) => {
     return (
-        [TeamcityEvent.testStarted, TeamcityEvent.testSuiteStarted].includes(testResult.event) &&
+        (testResult.event === TeamcityEvent.testStarted ||
+            testResult.event === TeamcityEvent.testSuiteStarted) &&
         pattern.test(testResult.locationHint ?? '')
     );
 };

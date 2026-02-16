@@ -2,6 +2,7 @@ import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import { type PHPUnitXML, type TestDefinition, TestParser, type TestSuite } from '../index';
+import { ClassRegistry } from '../TestParser/ClassRegistry';
 import { TestDefinitionCollector } from './TestDefinitionCollector';
 
 export interface File<T> {
@@ -14,6 +15,7 @@ export class TestCollection {
     private suites = new Map<string, Map<string, TestDefinition[]>>();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
     private fileIndex = new Map<string, string>();
+    private classRegistry = new ClassRegistry();
 
     constructor(private phpUnitXML: PHPUnitXML) {}
 
@@ -49,16 +51,44 @@ export class TestCollection {
             return this;
         }
 
-        const files = this.items();
+        this.items();
         const testDefinitions = await this.parseTests(uri, testsuite);
         if (testDefinitions.length === 0) {
             this.delete(uri);
-            return this;
+        } else {
+            this.updateTestsForFile(uri, testsuite, testDefinitions);
         }
-        files.get(testsuite)?.set(uri.toString(), testDefinitions);
-        this.fileIndex.set(uri.toString(), testsuite);
+
+        // Re-parse child classes that depend on classes defined in this file
+        await this.reparseChildClasses(uri);
 
         return this;
+    }
+
+    private async reparseChildClasses(uri: URI) {
+        // Find all classes registered from this file in the registry
+        const classesInFile = this.classRegistry.getClassesByUri(uri.fsPath);
+
+        for (const classInfo of classesInFile) {
+            const dependents = [
+                ...this.classRegistry.getChildClasses(classInfo.classFQN),
+                ...this.classRegistry.getTraitUsers(classInfo.classFQN),
+            ];
+            for (const child of dependents) {
+                if (child.uri === uri.fsPath) {
+                    continue;
+                }
+                const childUri = URI.file(child.uri);
+                const childTestsuite = this.parseTestsuite(childUri);
+                if (!childTestsuite) {
+                    continue;
+                }
+                const childTests = await this.parseTests(childUri, childTestsuite);
+                if (childTests.length > 0) {
+                    this.updateTestsForFile(childUri, childTestsuite, childTests);
+                }
+            }
+        }
     }
 
     get(uri: URI) {
@@ -82,6 +112,7 @@ export class TestCollection {
         this.suites.clear();
         this.matcherCache.clear();
         this.fileIndex.clear();
+        this.classRegistry.clear();
 
         return this;
     }
@@ -109,7 +140,7 @@ export class TestCollection {
     }
 
     protected createTestParser() {
-        const testParser = new TestParser(this.phpUnitXML);
+        const testParser = new TestParser(this.phpUnitXML, this.classRegistry);
         const testDefinitionBuilder = new TestDefinitionCollector(testParser);
 
         return { testParser, testDefinitionBuilder };
@@ -126,6 +157,11 @@ export class TestCollection {
                 yield { testsuite, uri: URI.parse(uriStr), tests };
             }
         }
+    }
+
+    private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {
+        this.items().get(testsuite)?.set(uri.toString(), tests);
+        this.fileIndex.set(uri.toString(), testsuite);
     }
 
     private parseTestsuite(uri: URI) {

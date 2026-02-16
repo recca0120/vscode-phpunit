@@ -4,6 +4,7 @@ import type { Comment, Declaration, Node } from 'php-parser';
 import type { PHPUnitXML } from '../PHPUnitXML';
 import type { TestDefinition, TestType } from '../types';
 import { engine } from '../utils';
+import type { ClassRegistry } from './ClassRegistry';
 import type { Parser } from './Parser';
 import { PestParser } from './PestParser';
 import { PHPUnitParser } from './PHPUnitParser';
@@ -12,10 +13,15 @@ import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestParser {
-    private parsers: Parser[] = [new PestParser(), new PHPUnitParser()];
+    private parsers: Parser[];
     private eventEmitter = new EventEmitter();
 
-    constructor(private phpUnitXML: PHPUnitXML) {}
+    constructor(
+        private phpUnitXML: PHPUnitXML,
+        classRegistry?: ClassRegistry,
+    ) {
+        this.parsers = [new PestParser(), new PHPUnitParser(classRegistry)];
+    }
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {
         this.eventEmitter.on(`${eventName}`, callback);
