@@ -1,75 +1,139 @@
 # PHPUnit & Pest Test Explorer for VS Code
 
 [![Version](https://img.shields.io/vscode-marketplace/v/recca0120.vscode-phpunit.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
-[![Downloads](https://img.shields.io/vscode-marketplace/d/recca0120.vscode-phpunit.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
+[![Installs](https://img.shields.io/vscode-marketplace/i/recca0120.vscode-phpunit.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
+[![License](https://img.shields.io/github/license/recca0120/vscode-phpunit.svg?style=flat-square)](LICENSE.md)
 
 [繁體中文](README.zh-TW.md)
 
-Run PHPUnit and Pest tests directly in VS Code with the native Test Explorer UI. Supports Docker, SSH, and remote environments with Xdebug step-debugging.
+Run [PHPUnit](https://phpunit.de/) and [Pest](https://pestphp.com/) tests directly in VS Code using the native Test Explorer UI.
 
 ![PHPUnit](img/phpunit.gif)
 
-![Pest](img/pest.png)
+## Quick Start
+
+1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
+2. Open a PHP project that contains a `phpunit.xml` or `phpunit.xml.dist`
+3. Tests appear automatically in the Test Explorer sidebar — click to run
+
+> PHPUnit and Pest are auto-detected from `vendor/bin`. No configuration needed in most projects.
 
 ## Features
 
-- Discovers and displays all PHPUnit / Pest tests in the Test Explorer sidebar
-- Run or debug individual tests, files, suites, or the entire project
-- Colored output channel with syntax-highlighted results and embedded PHP source snippets
-- Clickable file links in error stack traces
-- Supports PHPUnit 7 – 12 and Pest 2 – 3
-- Supports ParaTest for parallel execution
-- Works in Docker, SSH, and other remote environments via custom commands
-- Xdebug integration for step-by-step debugging
-- Continuous test runs on file changes
+- **Test Explorer integration** — discover, run, and debug tests from the sidebar
+- **PHPUnit 7 – 12 & Pest 2 – 3** — broad version support
+- **Colored output** — syntax-highlighted results with embedded PHP source snippets
+- **Clickable stack traces** — jump to file:line directly from error output
+- **Remote environments** — Docker, SSH, Laravel Sail, DDEV via custom commands
+- **Parallel execution** — ParaTest support
+- **Xdebug debugging** — step-through debugging with one click
+- **Continuous runs** — auto-run tests on file changes
 
-## Commands
-
-| Command | Title | Default Keybinding |
-|---|---|---|
-| `phpunit.reload` | Reload tests | — |
-| `phpunit.run-all` | Run all tests | `Cmd+T Cmd+S` |
-| `phpunit.run-file` | Run tests in current file | `Cmd+T Cmd+F` |
-| `phpunit.run-test-at-cursor` | Run test at cursor | `Cmd+T Cmd+T` |
-| `phpunit.run-by-group` | Run tests by group | — |
-| `phpunit.rerun` | Repeat last test run | `Cmd+T Cmd+L` |
+![Pest](img/pest.png)
 
 ## Settings
 
-All settings are under the `phpunit.*` namespace. Add them to `.vscode/settings.json`.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `phpunit.php` | `string` | `"php"` | Path to the PHP binary. Falls back to the global `php` on PATH. |
-| `phpunit.phpunit` | `string` | `"vendor/bin/phpunit"` | Path to PHPUnit or Pest binary. Auto-detected from `vendor/bin`, project root, or global PATH. |
-| `phpunit.command` | `string` | `"${php}" ${phpargs} "${phpunit}" ${phpunitargs}` | Custom command template. Available variables: `${php}`, `${phpargs}`, `${phpunit}`, `${phpunitargs}`, `${phpunitxml}`, `${cwd}`. |
-| `phpunit.args` | `string[]` | `[]` | Extra arguments passed to PHPUnit (e.g. `["-c", "phpunit.xml.dist"]`). |
-| `phpunit.paths` | `object` | — | Path mappings for remote environments (e.g. `{ "${workspaceFolder}": "/app" }`). |
-| `phpunit.environment` | `object` | — | Environment variables set before running (e.g. `{ "XDEBUG_MODE": "coverage" }`). |
-| `phpunit.clearOutputOnRun` | `boolean` | `true` | Clear the output channel before each run. |
-| `phpunit.showAfterExecution` | `string` | `"onFailure"` | When to show the output channel: `"always"`, `"onFailure"`, or `"never"`. |
-| `phpunit.debuggerConfig` | `string` | — | Name of a `launch.json` configuration to use when debugging tests. |
-| `phpunit.xdebugPort` | `integer` | `0` | Port for Xdebug communication. `0` uses a random port. |
-
-## Configuration Examples
-
-### Basic
-
-PHPUnit and Pest are auto-detected. No configuration needed in most cases.
-
-To use Pest explicitly:
+Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
 
 ```jsonc
 {
-  "phpunit.phpunit": "vendor/bin/pest"
+  // Path to the PHP binary (default: "php")
+  "phpunit.php": "php",
+
+  // Path to PHPUnit or Pest binary (default: "vendor/bin/phpunit")
+  "phpunit.phpunit": "vendor/bin/phpunit",
+
+  // Custom command template
+  // Variables: ${php}, ${phpargs}, ${phpunit}, ${phpunitargs}, ${phpunitxml}, ${cwd}
+  "phpunit.command": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
+
+  // Extra arguments passed to PHPUnit
+  "phpunit.args": [],
+
+  // Path mappings for remote environments { "local/path": "remote/path" }
+  "phpunit.paths": {},
+
+  // Environment variables set before running
+  "phpunit.environment": {},
+
+  // Clear output channel before each run (default: true)
+  "phpunit.clearOutputOnRun": true,
+
+  // When to show output: "always" | "onFailure" | "never" (default: "onFailure")
+  "phpunit.showAfterExecution": "onFailure",
+
+  // launch.json configuration name for debugging
+  "phpunit.debuggerConfig": "",
+
+  // Xdebug port, 0 = random (default: 0)
+  "phpunit.xdebugPort": 0
 }
 ```
 
-### Laravel Artisan
+## Configuration Examples
+
+### Local
+
+For most local projects, zero configuration is needed. To use a different test runner:
+
+```jsonc
+// Pest
+{ "phpunit.phpunit": "vendor/bin/pest" }
+
+// Laravel Artisan
+{ "phpunit.phpunit": "artisan test" }
+
+// ParaTest (parallel execution)
+{ "phpunit.phpunit": "vendor/bin/paratest" }
+```
+
+### Docker
+
+When running tests inside a Docker container, you need two things:
+
+1. **`phpunit.command`** — tells the extension how to execute commands in the container
+2. **`phpunit.paths`** — maps your local file paths to container paths so the extension can locate test files and parse error output
+
+> **Important:** `${workspaceFolder}` may not resolve correctly on macOS or WSL. If you encounter path issues, replace it with the actual absolute path (e.g. `/home/user/myproject`).
+
+**`docker exec` (existing container):**
 
 ```jsonc
 {
-  "phpunit.phpunit": "artisan test"
+  "phpunit.command": "docker exec -t my_container /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app"
+  }
+}
+```
+
+**`docker run` (ephemeral container):**
+
+```jsonc
+{
+  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest ${php} ${phpargs} ${phpunit} ${phpunitargs}",
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app"
+  }
+}
+```
+
+**Docker Compose:**
+
+```jsonc
+{
+  "phpunit.command": "docker compose exec -t app /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+  "phpunit.paths": {
+    "${workspaceFolder}": "/app"
+  }
+}
+```
+
+If your `docker-compose.yml` is not in the workspace root, use the `-f` flag:
+
+```jsonc
+{
+  "phpunit.command": "docker compose -f /path/to/docker-compose.yml exec -t app /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\""
 }
 ```
 
@@ -81,36 +145,6 @@ To use Pest explicitly:
   "phpunit.phpunit": "artisan test",
   "phpunit.paths": {
     "${workspaceFolder}": "/var/www/html"
-  }
-}
-```
-
-### ParaTest
-
-```jsonc
-{
-  "phpunit.phpunit": "vendor/bin/paratest"
-}
-```
-
-### Docker
-
-```jsonc
-{
-  "phpunit.command": "docker exec -t [container_id] /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
-  "phpunit.paths": {
-    "${workspaceFolder}": "/app"
-  }
-}
-```
-
-Or with `docker run`:
-
-```jsonc
-{
-  "phpunit.command": "docker run --rm -t -v ${PWD}:/app -w /app php:latest ${php} ${phpargs} ${phpunit} ${phpunitargs}",
-  "phpunit.paths": {
-    "${workspaceFolder}": "/app"
   }
 }
 ```
@@ -134,36 +168,46 @@ Or with `docker run`:
 }
 ```
 
-## Debugging with Xdebug
+### WSL + Docker
 
-1. Create a launch configuration in `.vscode/launch.json`:
+When using Docker from a WSL workspace, use the full WSL path as the local key:
 
 ```jsonc
 {
-  "version": "0.2.0",
-  "configurations": [
+  "phpunit.command": "docker exec -t my_container /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+  "phpunit.paths": {
+    "//wsl.localhost/Ubuntu/var/www/myproject": "/var/www/myproject"
+  }
+}
+```
+
+## Debugging with Xdebug
+
+1. Add a launch configuration to `.vscode/launch.json`:
+
+    ```jsonc
     {
       "name": "Listen for Xdebug",
       "type": "php",
       "request": "launch",
       "port": 9003,
       "pathMappings": {
-        "/var/www": "${workspaceRoot}"
+        "/app": "${workspaceFolder}"
       }
     }
-  ]
-}
-```
+    ```
 
-2. Point the extension to that configuration:
+2. Set the configuration name in settings:
 
-```jsonc
-{
-  "phpunit.debuggerConfig": "Listen for Xdebug"
-}
-```
+    ```jsonc
+    {
+      "phpunit.debuggerConfig": "Listen for Xdebug"
+    }
+    ```
 
-If your Xdebug is configured with `xdebug.start_with_request=trigger`, add the trigger variable:
+3. Click the **Debug Test** button in the Test Explorer.
+
+**Using `xdebug.start_with_request=trigger` in Docker:**
 
 ```jsonc
 {
@@ -172,13 +216,29 @@ If your Xdebug is configured with `xdebug.start_with_request=trigger`, add the t
 }
 ```
 
-Then use the **Debug Test** button in the Test Explorer.
+**Breakpoints not hit?** Check that:
+- Xdebug is configured with `xdebug.mode=debug` and `xdebug.start_with_request=yes` (or `trigger`)
+- `phpunit.debuggerConfig` matches the **exact name** in `launch.json`
+- `pathMappings` in `launch.json` correctly maps container paths to local paths
+- The Xdebug port is not blocked by a firewall
+
+## Commands
+
+| Command | Description | Keybinding |
+|---|---|---|
+| `phpunit.reload` | Reload tests | — |
+| `phpunit.run-all` | Run all tests | `Cmd+T Cmd+S` |
+| `phpunit.run-file` | Run tests in current file | `Cmd+T Cmd+F` |
+| `phpunit.run-test-at-cursor` | Run test at cursor | `Cmd+T Cmd+T` |
+| `phpunit.run-by-group` | Run tests by group | — |
+| `phpunit.rerun` | Repeat last test run | `Cmd+T Cmd+L` |
 
 ## Troubleshooting
 
-### `${workspaceFolder}` not resolving in path mappings
+<details>
+<summary><code>${workspaceFolder}</code> resolves to <code>/</code></summary>
 
-Replace `${workspaceFolder}` with the actual absolute path:
+On some systems (macOS, WSL), `${workspaceFolder}` may not resolve correctly. Replace it with the actual absolute path in `phpunit.paths`:
 
 ```jsonc
 {
@@ -187,6 +247,41 @@ Replace `${workspaceFolder}` with the actual absolute path:
   }
 }
 ```
+</details>
+
+<details>
+<summary><code>spawn ${php} ENOENT</code></summary>
+
+Usually caused by another extension (e.g. [DEVSENSE PHP Tools](https://marketplace.visualstudio.com/items?itemName=DEVSENSE.phptools-vscode)) injecting `${php}` as a literal variable. Fix:
+
+```jsonc
+{
+  "phpunit.command": ""
+}
+```
+
+If that doesn't help, disable conflicting PHP extensions, then re-enable **PHPUnit Test Explorer** first.
+</details>
+
+<details>
+<summary>Paths with spaces cause errors</summary>
+
+Ensure your `phpunit.command` template quotes the variables (this is the default):
+
+```jsonc
+{
+  "phpunit.command": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
+}
+```
+</details>
+
+## Contributing
+
+Found a bug? Have an idea? We welcome contributions!
+
+- [Report a bug](https://github.com/recca0120/vscode-phpunit/issues/new?template=bug_report.yml)
+- [Request a feature](https://github.com/recca0120/vscode-phpunit/issues/new?template=feature_request.yml)
+- [Read the contributing guide](CONTRIBUTING.md)
 
 ## License
 

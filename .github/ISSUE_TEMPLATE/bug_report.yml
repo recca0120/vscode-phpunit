@@ -1,0 +1,83 @@
+name: Bug Report
+description: Something isn't working as expected
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! Please fill in the details below so we can reproduce and fix the issue quickly.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the issue. Include screenshots if helpful.
+      placeholder: When I run a test, the extension...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reproduce the issue.
+      placeholder: |
+        1. Open a PHP project with...
+        2. Run the test...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Extension settings
+      description: Your `phpunit.*` settings from `.vscode/settings.json`. Remove any sensitive values.
+      render: jsonc
+      placeholder: |
+        {
+          "phpunit.command": "...",
+          "phpunit.phpunit": "vendor/bin/phpunit",
+          "phpunit.paths": {}
+        }
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output channel log
+      description: |
+        Copy the content from the **PHPUnit** output channel.
+        (View → Output → select "PHPUnit" from the dropdown)
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide the following info.
+      value: |
+        - OS:
+        - VS Code version:
+        - Extension version:
+        - PHP version:
+        - PHPUnit / Pest version:
+        - Run environment: local / Docker / SSH / WSL / other
+    validations:
+      required: true
+
+  - type: textarea
+    id: project-structure
+    attributes:
+      label: Project structure (if relevant)
+      description: A simplified tree of your test directory structure, or a link to a minimal reproduction repository.
+      render: text
+      placeholder: |
+        project/
+        ├── phpunit.xml
+        ├── src/
+        └── tests/
+            ├── Unit/
+            │   └── ExampleTest.php
+            └── Feature/
+                └── ExampleTest.php

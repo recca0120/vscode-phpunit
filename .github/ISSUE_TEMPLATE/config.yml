@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / Help
+    url: https://github.com/recca0120/vscode-phpunit/discussions
+    about: Ask questions and get help from the community
