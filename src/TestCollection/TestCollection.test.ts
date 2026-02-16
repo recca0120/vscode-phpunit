@@ -330,7 +330,12 @@ describe('Extension TestCollection', () => {
             await collection.add(file);
         }
 
-        const skips = ['phpunit-stub/src/', 'phpunit-stub\\src\\', 'AbstractTest.php'];
+        const skips = [
+            'phpunit-stub/src/',
+            'phpunit-stub\\src\\',
+            '/AbstractTest.php',
+            '\\AbstractTest.php',
+        ];
         const expectedFiles = files
             .filter((file) => !skips.some((skip) => file.fsPath.includes(skip)))
             .map((file) => file.fsPath)

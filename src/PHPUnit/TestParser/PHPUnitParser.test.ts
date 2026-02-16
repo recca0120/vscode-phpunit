@@ -1,7 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../__tests__/utils';
-import { TestType } from '../types';
+import { PHPUnitXML } from '../PHPUnitXML';
+import { type TestDefinition, TestType } from '../types';
+import { ClassRegistry } from './ClassRegistry';
+import { TestParser } from './TestParser';
 
 export const parse = (buffer: Buffer | string, file: string) =>
     parseTestFile(buffer, file, phpUnitProject(''));
@@ -608,5 +611,186 @@ final class SingleGroupTest extends TestCase {
                 annotations: { group: ['unit'] },
             }),
         );
+    });
+
+    describe('Inherited test methods with ClassRegistry', () => {
+        const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
+            const registry = new ClassRegistry();
+            const allTests: TestDefinition[] = [];
+            const phpUnitXML = new PHPUnitXML();
+            phpUnitXML.setRoot(root);
+
+            for (const { file, content } of files) {
+                const testParser = new TestParser(phpUnitXML, registry);
+                for (const type of Object.values(TestType).filter(
+                    (v) => typeof v === 'number',
+                ) as TestType[]) {
+                    testParser.on(type, (td: TestDefinition) => allTests.push(td));
+                }
+                testParser.parse(content, file);
+            }
+
+            return allTests;
+        };
+
+        it('should discover inherited test methods in concrete class', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/AbstractTest.php'),
+                        content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+abstract class AbstractTest extends TestCase {
+    public function test_abstract() {}
+}`,
+                    },
+                    {
+                        file: phpUnitProject('tests/ConcreteFromAbstractTest.php'),
+                        content: `<?php
+namespace Tests;
+class ConcreteFromAbstractTest extends AbstractTest {
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const concreteClass = tests.find(
+                (t) => t.className === 'ConcreteFromAbstractTest' && !t.methodName,
+            );
+            expect(concreteClass).toBeDefined();
+
+            const inheritedMethod = tests.find(
+                (t) =>
+                    t.className === 'ConcreteFromAbstractTest' && t.methodName === 'test_abstract',
+            );
+            expect(inheritedMethod).toBeDefined();
+            expect(inheritedMethod).toEqual(
+                expect.objectContaining({
+                    type: TestType.method,
+                    classFQN: 'Tests\\ConcreteFromAbstractTest',
+                    className: 'ConcreteFromAbstractTest',
+                    methodName: 'test_abstract',
+                    file: phpUnitProject('tests/ConcreteFromAbstractTest.php'),
+                }),
+            );
+        });
+
+        it('should merge own and inherited methods', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/AbstractTest.php'),
+                        content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+abstract class AbstractTest extends TestCase {
+    public function test_abstract() {}
+}`,
+                    },
+                    {
+                        file: phpUnitProject('tests/ConcreteWithOwnTest.php'),
+                        content: `<?php
+namespace Tests;
+class ConcreteWithOwnTest extends AbstractTest {
+    public function test_own_method() {
+        $this->assertTrue(true);
+    }
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const ownMethod = tests.find(
+                (t) => t.className === 'ConcreteWithOwnTest' && t.methodName === 'test_own_method',
+            );
+            expect(ownMethod).toBeDefined();
+
+            const inheritedMethod = tests.find(
+                (t) => t.className === 'ConcreteWithOwnTest' && t.methodName === 'test_abstract',
+            );
+            expect(inheritedMethod).toBeDefined();
+            expect(inheritedMethod?.classFQN).toBe('Tests\\ConcreteWithOwnTest');
+        });
+
+        it('should resolve use statement FQN correctly', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/UseTestCase.php'),
+                        content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+class UseTestCaseTest extends TestCase {
+    public function test_something() {}
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const method = tests.find((t) => t.methodName === 'test_something');
+            expect(method).toBeDefined();
+        });
+
+        it('should handle fully qualified extends', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/FQNTest.php'),
+                        content: `<?php
+namespace Tests;
+class FQNTest extends \\PHPUnit\\Framework\\TestCase {
+    public function test_fqn() {}
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const method = tests.find((t) => t.methodName === 'test_fqn');
+            expect(method).toBeDefined();
+        });
+
+        it('child class override should take precedence', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/AbstractTest.php'),
+                        content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+abstract class AbstractTest extends TestCase {
+    public function test_override() {}
+}`,
+                    },
+                    {
+                        file: phpUnitProject('tests/OverrideTest.php'),
+                        content: `<?php
+namespace Tests;
+class OverrideTest extends AbstractTest {
+    public function test_override() {
+        $this->assertTrue(true);
+    }
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const overrideMethods = tests.filter(
+                (t) => t.className === 'OverrideTest' && t.methodName === 'test_override',
+            );
+            // Should only appear once (own method, not duplicated from parent)
+            expect(overrideMethods).toHaveLength(1);
+            expect(overrideMethods[0].file).toBe(phpUnitProject('tests/OverrideTest.php'));
+        });
     });
 });

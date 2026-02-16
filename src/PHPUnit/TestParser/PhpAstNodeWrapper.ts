@@ -18,20 +18,22 @@ import {
     TestSuiteDefinitionBuilder,
 } from './TestDefinitionBuilder';
 
+const annotationParser = new AnnotationParser();
+const attributeParser = new AttributeParser();
+
 type AST = Node & {
     name?: Identifier | string;
     visibility?: string;
     isAbstract?: boolean;
+    extends?: Identifier | Name | null;
     body?: Node[];
     children?: Node[];
     expression?: AST;
     what?: (Name | PropertyLookup) & { offset?: Identifier };
     arguments?: AST[];
     value?: string;
+    items?: AST[];
 };
-
-export const annotationParser = new AnnotationParser();
-export const attributeParser = new AttributeParser();
 
 export class PhpAstNodeWrapper {
     constructor(
@@ -90,6 +92,59 @@ export class PhpAstNodeWrapper {
         }
 
         return this.parent?.classFQN;
+    }
+
+    get isAbstract(): boolean {
+        return this.ast.isAbstract === true;
+    }
+
+    get extendsName(): string | undefined {
+        const ext = this.ast.extends;
+        if (!ext) {
+            return undefined;
+        }
+
+        if (typeof ext === 'string') {
+            return ext;
+        }
+
+        return (ext as Name).name ?? (ext as Identifier).name;
+    }
+
+    get parentFQN(): string | undefined {
+        if (this.kind !== 'class') {
+            return undefined;
+        }
+
+        const raw = this.extendsName;
+        if (!raw) {
+            return undefined;
+        }
+
+        // Already fully qualified
+        if (raw.startsWith('\\')) {
+            return raw.substring(1);
+        }
+
+        // Check use statements
+        const useMap = this.resolveUseStatements();
+        const firstPart = raw.split('\\')[0];
+        const resolved = useMap.get(firstPart);
+        if (resolved) {
+            if (raw.includes('\\')) {
+                return `${resolved}\\${raw.substring(firstPart.length + 1)}`;
+            }
+            return resolved;
+        }
+
+        // Fall back to current namespace + raw name
+        const ns = this.options.namespace ?? this.options.parent;
+        const namespaceName = ns?.kind === 'namespace' ? ns.name : undefined;
+        if (namespaceName) {
+            return `${namespaceName}\\${raw}`;
+        }
+
+        return raw;
     }
 
     get parent(): PhpAstNodeWrapper | undefined {
@@ -176,6 +231,9 @@ export class PhpAstNodeWrapper {
         const options = { ...this.options };
         if (this.kind === 'namespace') {
             options.parent = this;
+            options.namespace = this;
+        } else if (this.kind === 'program') {
+            options.namespace = this;
         }
 
         return definitions.concat(
@@ -258,6 +316,58 @@ export class PhpAstNodeWrapper {
 
     createNamespaceTestDefinition(): TestDefinition {
         return new NamespaceDefinitionBuilder(this).build();
+    }
+
+    getAllMethods(): PhpAstNodeWrapper[] {
+        return this.getMethods();
+    }
+
+    isTestMethod(): boolean {
+        if (this.kind !== 'method' || !this.acceptModifier()) {
+            return false;
+        }
+
+        return (
+            this.name.startsWith('test') ||
+            annotationParser.isTest(this.ast as unknown as Method) ||
+            attributeParser.isTest(this.ast as unknown as Method)
+        );
+    }
+
+    private resolveUseStatements(): Map<string, string> {
+        const useMap = new Map<string, string>();
+
+        // Find the container with use statements (namespace or program node)
+        const container = this.options.namespace ?? this.options.parent;
+        if (!container) {
+            return useMap;
+        }
+
+        const children = (container.ast.children ?? []) as AST[];
+        for (const child of children) {
+            if (child.kind !== 'usegroup') {
+                continue;
+            }
+
+            const items = (child.items ?? []) as AST[];
+            for (const item of items) {
+                if (item.kind !== 'useitem') {
+                    continue;
+                }
+
+                const fqn = typeof item.name === 'string' ? item.name : (item.name as Name)?.name;
+                if (!fqn) {
+                    continue;
+                }
+
+                // alias is the last part of the FQN, or the explicit alias
+                const parts = fqn.split('\\');
+                const alias = parts[parts.length - 1];
+                useMap.set(alias, fqn);
+            }
+        }
+
+        return useMap;
     }
 
     private getMethods(): PhpAstNodeWrapper[] {
