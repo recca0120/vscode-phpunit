@@ -83,32 +83,40 @@ export class PestTestDefinitionBuilder extends TestDefinitionBuilder {
             return this.generate({ namespace: partsFQN.join('\\'), className, depth: 1 });
         }
 
-        let depth = 2;
-
         let { methodName, label } = this.parseMethodNameAndLabel();
 
         if (this.definition.type === TestType.describe) {
             methodName = `\`${methodName}\``;
         }
 
+        const { ancestor, describeNames } = this.collectDescribeChain();
+        const depth = 2 + describeNames.length;
+
+        if (describeNames.length > 0) {
+            methodName = describeNames.reverse().concat(methodName).join(' → ');
+        }
+
+        const { classFQN, namespace, className } = ancestor?.toTestDefinition() ?? {};
+
+        return this.generate({ classFQN, namespace, className, methodName, label, depth });
+    }
+
+    private collectDescribeChain(): {
+        ancestor: PhpAstNodeWrapper | undefined;
+        describeNames: string[];
+    } {
         let parent = this.definition.parent;
         while (parent && parent.kind === 'call' && parent.type !== TestType.describe) {
             parent = parent.parent;
         }
 
-        if (parent?.type === TestType.describe) {
-            const describeNames: string[] = [];
-            while (parent && parent.type === TestType.describe) {
-                describeNames.push(`\`${parent.arguments[0].name}\``);
-                parent = parent.parent;
-                depth++;
-            }
-            methodName = describeNames.reverse().concat(methodName).join(' → ');
+        const describeNames: string[] = [];
+        while (parent?.type === TestType.describe) {
+            describeNames.push(`\`${parent.arguments[0].name}\``);
+            parent = parent.parent;
         }
 
-        const { classFQN, namespace, className } = parent?.toTestDefinition() ?? {};
-
-        return this.generate({ classFQN, namespace, className, methodName, label, depth });
+        return { ancestor: parent, describeNames };
     }
 
     private parseMethodNameAndLabel() {

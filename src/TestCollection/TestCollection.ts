@@ -143,29 +143,30 @@ export class TestCollection extends BaseTestCollection {
     }
 
     private removeTestItems(uri: URI) {
-        this.findTestsByFile(uri).forEach((testItem) => {
+        for (const testItem of this.findTestsByFile(uri)) {
             if (!testItem.parent) {
                 this.rootItems.delete(testItem.id);
+                continue;
+            }
+            this.pruneEmptyParents(testItem);
+        }
+    }
 
+    private pruneEmptyParents(testItem: TestItem) {
+        let current = testItem;
+        while (current.parent) {
+            const parent = current.parent;
+            parent.children.delete(current.id);
+            if (parent.children.size !== 0) {
                 return;
             }
 
-            let current = testItem;
-            while (current.parent) {
-                const parent = current.parent;
-                parent.children.delete(current.id);
-                if (parent.children.size !== 0) {
-                    break;
-                }
-
-                current = parent;
-                // Stop when reaching the folder root boundary (identity check: parent.children is the rootItems collection)
-                if (!current.parent || current.parent.children === this._rootItems) {
-                    this.rootItems.delete(current.id);
-                    break;
-                }
+            current = parent;
+            if (!current.parent || current.parent.children === this._rootItems) {
+                this.rootItems.delete(current.id);
+                return;
             }
-        });
+        }
     }
 
     private *allDefinitions(): IterableIterator<[TestItem, TestDefinition]> {

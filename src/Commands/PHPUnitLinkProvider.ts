@@ -24,37 +24,32 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
 
         for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
             const line = document.lineAt(lineIndex);
-            let match: RegExpExecArray | null;
 
-            while (true) {
-                match = this.regex.exec(line.text);
-                if (match === null) {
-                    break;
-                }
+            for (const match of line.text.matchAll(this.regex)) {
                 const [fullMatch, filePath, lineStr] = match;
-                const lineNumber = parseInt(lineStr, 10);
-
-                // Try each PHPUnitXML to resolve the path
-                let resolvedPath = filePath;
-                for (const xml of phpUnitXMLs) {
-                    const resolved = xml.path(filePath);
-                    if (resolved !== filePath) {
-                        resolvedPath = resolved;
-                        break;
-                    }
-                }
+                const lineNumber = Number.parseInt(lineStr, 10);
+                const resolvedPath = this.resolvePath(filePath, phpUnitXMLs);
 
                 const targetUri = URI.file(resolvedPath).with({
                     fragment: `L${lineNumber}`,
                 });
                 const start = new Position(lineIndex, match.index);
                 const end = new Position(lineIndex, match.index + fullMatch.length);
-                const range = new Range(start, end);
 
-                links.push(new DocumentLink(range, targetUri));
+                links.push(new DocumentLink(new Range(start, end), targetUri));
             }
         }
 
         return links;
+    }
+
+    private resolvePath(filePath: string, phpUnitXMLs: PHPUnitXML[]): string {
+        for (const xml of phpUnitXMLs) {
+            const resolved = xml.path(filePath);
+            if (resolved !== filePath) {
+                return resolved;
+            }
+        }
+        return filePath;
     }
 }
