@@ -100,9 +100,11 @@ export class TestCommandRegistry {
         }
 
         const tests = findTests(ctx, uri);
-        if (tests.length > 0) {
-            await this.run(tests);
+        if (tests.length === 0) {
+            return;
         }
+
+        await this.run(tests);
     }
 
     private async run(include: readonly TestItem[] | undefined) {

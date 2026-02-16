@@ -13,6 +13,7 @@ export interface File<T> {
 export class TestCollection {
     private suites = new Map<string, Map<string, TestDefinition[]>>();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
+    private fileIndex = new Map<string, string>();
 
     constructor(private phpUnitXML: PHPUnitXML) {}
 
@@ -55,6 +56,7 @@ export class TestCollection {
             return this;
         }
         files.get(testsuite)?.set(uri.toString(), testDefinitions);
+        this.fileIndex.set(uri.toString(), testsuite);
 
         return this;
     }
@@ -79,18 +81,24 @@ export class TestCollection {
         }
         this.suites.clear();
         this.matcherCache.clear();
+        this.fileIndex.clear();
 
         return this;
     }
 
     findFile(uri: URI): File<TestDefinition> | undefined {
-        for (const file of this.gatherFiles()) {
-            if (uri.toString() === file.uri.toString()) {
-                return file;
-            }
+        const uriStr = uri.toString();
+        const testsuite = this.fileIndex.get(uriStr);
+        if (!testsuite) {
+            return undefined;
         }
 
-        return undefined;
+        const tests = this.items().get(testsuite)?.get(uriStr);
+        if (!tests) {
+            return undefined;
+        }
+
+        return { testsuite, uri, tests };
     }
 
     protected async parseTests(uri: URI, testsuite: string) {
@@ -108,6 +116,7 @@ export class TestCollection {
     }
 
     protected deleteFile(file: File<TestDefinition>) {
+        this.fileIndex.delete(file.uri.toString());
         return this.items().get(file.testsuite)?.delete(file.uri.toString());
     }
 

@@ -1,19 +1,19 @@
 import { inject, injectable } from 'inversify';
-import { debug, workspace } from 'vscode';
+import type { WorkspaceFolder } from 'vscode';
+import { debug } from 'vscode';
 import { Mode, type Xdebug } from '../PHPUnit';
-import { TestCollection } from '../TestCollection';
+import { TYPES } from '../types';
 
 @injectable()
 export class DebugSessionManager {
     constructor(
-        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder,
     ) {}
 
     async wrap(xdebug: Xdebug | undefined, fn: () => Promise<void>): Promise<void> {
         if (xdebug?.mode === Mode.debug) {
-            const wsf = workspace.getWorkspaceFolder(this.testCollection.getRootUri());
             // TODO(#346): await debug session attachment before running tests
-            await debug.startDebugging(wsf, xdebug.name ?? (await xdebug.getDebugConfiguration()));
+            await debug.startDebugging(this.workspaceFolder, xdebug.name ?? (await xdebug.getDebugConfiguration()));
         }
 
         try {

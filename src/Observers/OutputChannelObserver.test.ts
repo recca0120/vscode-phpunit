@@ -8,7 +8,7 @@ import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
 
 describe('OutputChannelObserver clear behavior', () => {
-    const createObserver = (config: Record<string, unknown> = {}) => {
+    const createObserver = (config: Record<string, unknown> = {}, request: TestRunRequest = { continuous: false } as TestRunRequest) => {
         const outputChannel = vscode.window.createOutputChannel('phpunit');
         const configuration = new Configuration({
             clearOutputOnRun: true,
@@ -19,6 +19,7 @@ describe('OutputChannelObserver clear behavior', () => {
             outputChannel,
             configuration,
             new PrettyPrinter(new PHPUnitXML()),
+            request,
         );
 
         return { observer, outputChannel };
@@ -30,7 +31,6 @@ describe('OutputChannelObserver clear behavior', () => {
 
     it('clears once for multiple processes in the same request', () => {
         const { observer, outputChannel } = createObserver();
-        observer.setRequest({ continuous: false } as TestRunRequest);
 
         observer.run(createBuilder('command-1'));
         observer.run(createBuilder('command-2'));
@@ -39,8 +39,7 @@ describe('OutputChannelObserver clear behavior', () => {
     });
 
     it('should show output channel when continuous is undefined (standard run)', () => {
-        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' });
-        observer.setRequest({} as TestRunRequest);
+        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' }, {} as TestRunRequest);
 
         observer.run(createBuilder('command-1'));
 
@@ -48,21 +47,25 @@ describe('OutputChannelObserver clear behavior', () => {
     });
 
     it('should not show output channel when continuous is true', () => {
-        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' });
-        observer.setRequest({ continuous: true } as TestRunRequest);
+        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' }, { continuous: true } as TestRunRequest);
 
         observer.run(createBuilder('command-1'));
 
         expect(outputChannel.show).not.toHaveBeenCalled();
     });
 
-    it('clears again for a new request', () => {
-        const { observer, outputChannel } = createObserver();
-        observer.setRequest({ continuous: false } as TestRunRequest);
-        observer.run(createBuilder('command-1'));
+    it('each observer instance clears independently', () => {
+        const { outputChannel } = createObserver();
+        const config = {
+            clearOutputOnRun: true,
+            showAfterExecution: 'onFailure',
+        };
+        const configuration = new Configuration(config);
+        const observer1 = new OutputChannelObserver(outputChannel, configuration, new PrettyPrinter(new PHPUnitXML()), { continuous: false } as TestRunRequest);
+        const observer2 = new OutputChannelObserver(outputChannel, configuration, new PrettyPrinter(new PHPUnitXML()), { continuous: false } as TestRunRequest);
 
-        observer.setRequest({ continuous: false } as TestRunRequest);
-        observer.run(createBuilder('command-2'));
+        observer1.run(createBuilder('command-1'));
+        observer2.run(createBuilder('command-2'));
 
         expect(outputChannel.clear).toHaveBeenCalledTimes(2);
     });
@@ -92,8 +95,8 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
             outputChannel,
             configuration,
             new PrettyPrinter(new PHPUnitXML()),
+            { continuous: false } as TestRunRequest,
         );
-        observer.setRequest({ continuous: false } as TestRunRequest);
         testRunner.observe(observer);
     });
 

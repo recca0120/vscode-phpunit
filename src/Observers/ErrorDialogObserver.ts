@@ -1,11 +1,8 @@
-import { inject, injectable } from 'inversify';
 import { window } from 'vscode';
-import { Configuration } from '../Configuration';
 import type { IConfiguration, TestRunnerObserver } from '../PHPUnit';
 
-@injectable()
 export class ErrorDialogObserver implements TestRunnerObserver {
-    constructor(@inject(Configuration) private configuration: IConfiguration) {}
+    constructor(private configuration: IConfiguration) {}
 
     async error(error: string) {
         if (error.includes('Pest\\Exceptions\\InvalidPestCommand')) {

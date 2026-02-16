@@ -64,9 +64,8 @@ export class TestRunHandler {
         cancellation?: CancellationToken,
     ) {
         const queue = request.include
-            ? await this.testQueueBuilder.build(request.include, request)
-            : await this.testQueueBuilder.buildFromCollection(this.ctrl.items, request);
-        queue.forEach((testItem) => testRun.enqueued(testItem));
+            ? await this.testQueueBuilder.build(request.include, request, undefined, testRun)
+            : await this.testQueueBuilder.buildFromCollection(this.ctrl.items, request, testRun);
 
         const runner = this.testRunnerBuilder.build(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);

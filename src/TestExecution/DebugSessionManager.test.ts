@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { debug } from 'vscode';
-import { URI } from 'vscode-uri';
+import type { WorkspaceFolder } from 'vscode';
+import { debug, Uri } from 'vscode';
 import { Mode } from '../PHPUnit';
-import type { TestCollection } from '../TestCollection';
 import { DebugSessionManager } from './DebugSessionManager';
 
 describe('DebugSessionManager', () => {
@@ -10,10 +9,12 @@ describe('DebugSessionManager', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        const testCollection = {
-            getRootUri: () => URI.file('/workspace'),
-        } as unknown as TestCollection;
-        manager = new DebugSessionManager(testCollection);
+        const workspaceFolder = {
+            index: 0,
+            name: 'test',
+            uri: Uri.file('/workspace'),
+        } as WorkspaceFolder;
+        manager = new DebugSessionManager(workspaceFolder);
     });
 
     it('should stop debugging even if fn throws', async () => {

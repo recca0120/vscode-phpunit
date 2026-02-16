@@ -14,7 +14,6 @@ import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
 export class TestCollection extends BaseTestCollection {
-    private testItems = new Map<string, Map<TestItem, TestDefinition>>();
     private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
 
@@ -39,7 +38,7 @@ export class TestCollection extends BaseTestCollection {
 
     findTestsByFile(uri: URI): TestItem[] {
         const tests: TestItem[] = [];
-        for (const [testItem, testDef] of this.getTestDefinitions(uri)) {
+        for (const [testItem, testDef] of this.index.getDefinitionsByUri(uri.toString())) {
             if (testDef.type === TestType.class) {
                 tests.push(testItem);
             }
@@ -79,8 +78,8 @@ export class TestCollection extends BaseTestCollection {
     }
 
     reset() {
-        for (const testData of this.testItems.values()) {
-            for (const [testItem] of testData) {
+        for (const [testItem, testDef] of this.allDefinitions()) {
+            if (testDef.type === TestType.class) {
                 testItem.parent
                     ? testItem.parent.children.delete(testItem.id)
                     : this.rootItems.delete(testItem.id);
@@ -97,9 +96,9 @@ export class TestCollection extends BaseTestCollection {
         await testParser.parseFile(uri.fsPath, testsuite);
 
         this.removeTestItems(uri);
-        this.clearTestDefinitions(uri);
+        this.index.deleteByUri(uri.toString());
         for (const [testItem, testDef] of testHierarchyBuilder.get()) {
-            this.setTestDefinition(uri, testItem, testDef);
+            this.index.set(uri.toString(), testItem, testDef);
         }
 
         return testDefinitionBuilder.get();
@@ -107,36 +106,14 @@ export class TestCollection extends BaseTestCollection {
 
     protected deleteFile(file: File<TestDefinition>) {
         this.removeTestItems(file.uri);
-        this.clearTestDefinitions(file.uri);
-        this.testItems.delete(file.uri.toString());
+        this.index.deleteByUri(file.uri.toString());
 
         return super.deleteFile(file);
     }
 
-    private setTestDefinition(uri: URI, testItem: TestItem, testDefinition: TestDefinition): void {
-        this.getTestDefinitions(uri).set(testItem, testDefinition);
-        this.index.set(testItem, testDefinition);
-    }
-
-    private clearTestDefinitions(uri: URI): void {
-        const testData = this.getTestDefinitions(uri);
-        for (const [testItem] of testData) {
-            this.index.delete(testItem);
-        }
-        testData.clear();
-    }
-
-    private getTestDefinitions(uri: URI) {
-        if (!this.testItems.has(uri.toString())) {
-            this.testItems.set(uri.toString(), new Map<TestItem, TestDefinition>());
-        }
-
-        return this.testItems.get(uri.toString())!;
-    }
-
     private inRangeTestItems(uri: URI, position: Position) {
         const items: TestItem[] = [];
-        for (const [testItem, testDef] of this.getTestDefinitions(uri)) {
+        for (const [testItem, testDef] of this.index.getDefinitionsByUri(uri.toString())) {
             if (
                 (testDef.type === TestType.describe || testDef.type === TestType.method) &&
                 position.line >= testItem.range!.start.line &&
@@ -178,5 +155,11 @@ export class TestCollection extends BaseTestCollection {
                 }
             }
         });
+    }
+
+    private *allDefinitions(): IterableIterator<[TestItem, TestDefinition]> {
+        for (const file of this.gatherFiles()) {
+            yield* this.index.getDefinitionsByUri(file.uri.toString());
+        }
     }
 }

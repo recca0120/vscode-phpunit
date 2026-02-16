@@ -176,9 +176,7 @@ export class PHPUnitXML {
                             .querySelectorAll(type)
                             .map((node) => callback(type, node, parent));
 
-                        if (temp) {
-                            results.push(...temp);
-                        }
+                        results.push(...temp);
                     }
 
                     return results;

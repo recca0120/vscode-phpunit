@@ -29,11 +29,13 @@ export class AttributeParser {
     }
 
     public isTest(method: Method) {
-        return !method.attrGroups
-            ? false
-            : this.parseAttributes(method).some(
-                  (attribute: ParsedAttribute) => attribute.name === 'Test',
-              );
+        if (!method.attrGroups) {
+            return false;
+        }
+
+        return this.parseAttributes(method).some(
+            (attribute: ParsedAttribute) => attribute.name === 'Test',
+        );
     }
 
     private parseAttributes(declaration: Declaration): ParsedAttribute[] {

@@ -3,7 +3,7 @@ import { EventEmitter, type OutputChannel, type TestController, type Uri, type W
 
 import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
-import { CollisionPrinter, ErrorDialogObserver, OutputChannelObserver } from './Observers';
+import { CollisionPrinter, TestRunnerObserverFactory } from './Observers';
 import { OutputFormatter } from './Observers/Printers';
 import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
@@ -52,8 +52,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
 
     // Per-folder services
     child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
-    child.bind(ErrorDialogObserver).toSelf().inSingletonScope();
-    child.bind(OutputChannelObserver).toSelf().inSingletonScope();
+    child.bind(TestRunnerObserverFactory).toSelf().inSingletonScope();
     child.bind(TestRunnerBuilder).toSelf().inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();
     child.bind(TestQueueBuilder).toSelf().inSingletonScope();
