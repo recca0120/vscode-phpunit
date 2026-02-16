@@ -1,9 +1,10 @@
 import { ProblemMatcher, type TestResult } from './ProblemMatcher';
 import type { ProcessBuilder } from './ProcessBuilder';
 import {
+    createTestRunnerEventProxy,
     type EventResultMap,
     TestRunnerEvent,
-    TestRunnerEventProxy,
+    type TestRunnerEventProxy,
     type TestRunnerObserver,
 } from './TestRunnerObserver';
 import { TestRunnerProcess } from './TestRunnerProcess';
@@ -15,7 +16,7 @@ export class TestRunner {
     private observers: TestRunnerObserver[] = [];
 
     constructor() {
-        this.defaultObserver = new TestRunnerEventProxy();
+        this.defaultObserver = createTestRunnerEventProxy();
         this.observe(this.defaultObserver);
     }
 

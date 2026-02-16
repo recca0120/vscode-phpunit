@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TeamcityEvent, type TestFailed } from './ProblemMatcher';
 import {
+    createTestRunnerEventProxy,
     TestRunnerEvent,
-    TestRunnerEventProxy,
     type TestRunnerObserver,
 } from './TestRunnerObserver';
 
@@ -81,9 +81,7 @@ describe('TestRunnerObserver', () => {
             const allRunnerEvents = Object.values(TestRunnerEvent);
             const mapKeys = new Set<string>();
 
-            // EventResultMap keys are verified by TypeScript at compile time,
-            // but we verify at runtime that the proxy registers all events
-            const proxy = new TestRunnerEventProxy();
+            const proxy = createTestRunnerEventProxy();
             for (const event of allRunnerEvents) {
                 expect(typeof proxy[event]).toBe('function');
                 mapKeys.add(event);
@@ -94,7 +92,7 @@ describe('TestRunnerObserver', () => {
 
         it('should have keys for every TeamcityEvent', () => {
             const allTeamcityEvents = Object.values(TeamcityEvent);
-            const proxy = new TestRunnerEventProxy();
+            const proxy = createTestRunnerEventProxy();
 
             for (const event of allTeamcityEvents) {
                 expect(typeof proxy[event]).toBe('function');
@@ -104,7 +102,7 @@ describe('TestRunnerObserver', () => {
 
     describe('TestRunnerEventProxy', () => {
         it('should notify listeners when event is emitted', () => {
-            const proxy = new TestRunnerEventProxy();
+            const proxy = createTestRunnerEventProxy();
             const callback = vi.fn();
 
             proxy.on(TestRunnerEvent.line, callback);
@@ -114,7 +112,7 @@ describe('TestRunnerObserver', () => {
         });
 
         it('should notify listeners for teamcity events', () => {
-            const proxy = new TestRunnerEventProxy();
+            const proxy = createTestRunnerEventProxy();
             const callback = vi.fn();
 
             proxy.on(TeamcityEvent.testFailed, callback);
@@ -129,7 +127,7 @@ describe('TestRunnerObserver', () => {
         });
 
         it('should support multiple listeners for the same event', () => {
-            const proxy = new TestRunnerEventProxy();
+            const proxy = createTestRunnerEventProxy();
             const callback1 = vi.fn();
             const callback2 = vi.fn();
 

@@ -42,15 +42,19 @@ export class ClassRegistry {
     }
 
     extendsTestCase(classFQN: string): boolean {
-        let found = false;
-        this.walkAncestors(classFQN, (current) => {
+        const visited = new Set<string>();
+        let current: string | undefined = classFQN;
+        while (current) {
             if (current === 'PHPUnit\\Framework\\TestCase') {
-                found = true;
                 return true;
             }
-            return false;
-        });
-        return found;
+            if (visited.has(current)) {
+                return false;
+            }
+            visited.add(current);
+            current = this.registry.get(current)?.parentFQN;
+        }
+        return false;
     }
 
     resolveInheritedMethods(classFQN: string): TestDefinition[] {

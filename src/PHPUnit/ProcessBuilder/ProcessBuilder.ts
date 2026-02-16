@@ -137,11 +137,11 @@ export class ProcessBuilder {
     }
 
     private getCommand() {
-        return (this.configuration.get('command') as string) ?? '';
+        return this.getConfigString('command');
     }
 
     private getPhp() {
-        return (this.configuration.get('php') as string) ?? '';
+        return this.getConfigString('php');
     }
 
     private getPhpArgs() {
@@ -149,7 +149,11 @@ export class ProcessBuilder {
     }
 
     private getPhpUnit() {
-        return (this.configuration.get('phpunit') as string) ?? '';
+        return this.getConfigString('phpunit');
+    }
+
+    private getConfigString(key: string) {
+        return (this.configuration.get(key) as string) ?? '';
     }
 
     private getPhpUnitArgs() {
