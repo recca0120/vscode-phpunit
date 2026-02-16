@@ -4,6 +4,13 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.8.4] - 2026-02-17
+
+### Fixed
+- Resolve flaky test caused by race condition in parallel file loading — shared namespace items were incorrectly deleted when a single file's URI was removed
+- Fix paths with spaces causing "file not found" errors when running tests (#335)
+- Separate stdout/stderr buffers in TestRunnerProcess to prevent stream interleaving
+
 ## [3.8.3] - 2026-02-17
 
 ### Added
