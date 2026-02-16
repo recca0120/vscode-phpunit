@@ -139,7 +139,7 @@ export class PhpAstNodeWrapper {
             return this.getClasses();
         }
 
-        if (this.kind === 'class') {
+        if (this.kind === 'class' || this.kind === 'trait') {
             return this.getMethods();
         }
 
@@ -220,7 +220,7 @@ export class PhpAstNodeWrapper {
         }
 
         return definitions.concat(
-            this.filterChildrenByKinds(this.ast.children ?? [], ['class', 'trait'], options),
+            this.filterChildrenByKind(this.ast.children ?? [], ['class', 'trait'], options),
         );
     }
 
@@ -405,24 +405,15 @@ export class PhpAstNodeWrapper {
         return this.filterChildrenByKind(this.ast.children ?? [], 'namespace', this.options);
     }
 
-    private filterChildrenByKinds(
+    private filterChildrenByKind(
         source: Node[],
-        kinds: string[],
+        kind: string | string[],
         options: typeof this.options,
     ): PhpAstNodeWrapper[] {
+        const kinds = Array.isArray(kind) ? kind : [kind];
         return source
             .map((node) => new PhpAstNodeWrapper(node, options))
             .filter((wrapper) => kinds.includes(wrapper.kind));
-    }
-
-    private filterChildrenByKind(
-        source: Node[],
-        kind: string,
-        options: typeof this.options,
-    ): PhpAstNodeWrapper[] {
-        return source
-            .map((node) => new PhpAstNodeWrapper(node, options))
-            .filter((wrapper) => wrapper.kind === kind);
     }
 
     private acceptModifier() {

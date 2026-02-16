@@ -59,22 +59,30 @@ export class TraitUseParser {
         }
     }
 
+    private extractTraitAndMethod(
+        adapt: AST,
+    ): { traitName?: string; methodName: string } | undefined {
+        const a = adapt as unknown as { trait: unknown; method: unknown };
+        const traitName = extractName(a.trait);
+        const methodName = extractName(a.method);
+        if (!methodName) {
+            return undefined;
+        }
+        return { traitName, methodName };
+    }
+
     private parsePrecedence(
         adapt: AST,
         resolveFQN: (raw: string) => string,
         adaptations: TraitAdaptation[],
     ): void {
-        const a = adapt as unknown as {
-            trait: unknown;
-            method: unknown;
-            instead: unknown[];
-        };
-        const traitName = extractName(a.trait);
-        const methodName = extractName(a.method);
-        if (!methodName) {
+        const extracted = this.extractTraitAndMethod(adapt);
+        if (!extracted) {
             return;
         }
 
+        const { traitName, methodName } = extracted;
+        const a = adapt as unknown as { instead: unknown[] };
         const insteadNames = (a.instead ?? []).map((i) => resolveFQN(extractName(i) ?? ''));
         adaptations.push({
             kind: 'insteadof',
@@ -89,18 +97,13 @@ export class TraitUseParser {
         resolveFQN: (raw: string) => string,
         adaptations: TraitAdaptation[],
     ): void {
-        const a = adapt as unknown as {
-            trait: unknown;
-            method: unknown;
-            as: unknown;
-            visibility: string | null;
-        };
-        const traitName = extractName(a.trait);
-        const methodName = extractName(a.method);
-        if (!methodName) {
+        const extracted = this.extractTraitAndMethod(adapt);
+        if (!extracted) {
             return;
         }
 
+        const { traitName, methodName } = extracted;
+        const a = adapt as unknown as { as: unknown; visibility: string | null };
         const alias = extractName(a.as);
         adaptations.push({
             kind: 'as',

@@ -89,7 +89,17 @@ export class ClassRegistry {
     }
 
     private resolveTraitMethods(info: ClassInfo, visited?: Set<string>): TestDefinition[] {
-        const seen = visited ?? new Set<string>();
+        const collected = this.collectTraitMethods(info, visited ?? new Set<string>());
+        this.applyInsteadofAdaptations(collected, info.traitAdaptations);
+        this.applyAliasAdaptations(collected, info.traitAdaptations);
+
+        return [...collected.values()].map((e) => e.method);
+    }
+
+    private collectTraitMethods(
+        info: ClassInfo,
+        seen: Set<string>,
+    ): Map<string, { trait: string; method: TestDefinition }> {
         const collected = new Map<string, { trait: string; method: TestDefinition }>();
 
         for (const traitFQN of info.traitFQNs) {
@@ -119,8 +129,14 @@ export class ClassRegistry {
             }
         }
 
-        // Apply insteadof adaptations
-        for (const adapt of info.traitAdaptations) {
+        return collected;
+    }
+
+    private applyInsteadofAdaptations(
+        collected: Map<string, { trait: string; method: TestDefinition }>,
+        adaptations: TraitAdaptation[],
+    ): void {
+        for (const adapt of adaptations) {
             if (adapt.kind !== 'insteadof' || !adapt.trait || !adapt.instead) {
                 continue;
             }
@@ -128,11 +144,9 @@ export class ClassRegistry {
             if (!entry) {
                 continue;
             }
-            // Keep only the specified trait's version
             if (entry.trait !== adapt.trait && !adapt.instead.includes(entry.trait)) {
                 continue;
             }
-            // Find the method from the specified trait
             const preferredTrait = this.registry.get(adapt.trait);
             if (!preferredTrait) {
                 continue;
@@ -144,14 +158,17 @@ export class ClassRegistry {
                 collected.set(adapt.method, { trait: adapt.trait, method: preferredMethod });
             }
         }
+    }
 
-        // Apply as (alias) adaptations
-        for (const adapt of info.traitAdaptations) {
+    private applyAliasAdaptations(
+        collected: Map<string, { trait: string; method: TestDefinition }>,
+        adaptations: TraitAdaptation[],
+    ): void {
+        for (const adapt of adaptations) {
             if (adapt.kind !== 'as' || !adapt.alias) {
                 continue;
             }
 
-            // Find the source method
             let sourceMethod: TestDefinition | undefined;
             if (adapt.trait) {
                 const traitInfo = this.registry.get(adapt.trait);
@@ -167,8 +184,6 @@ export class ClassRegistry {
                 });
             }
         }
-
-        return [...collected.values()].map((e) => e.method);
     }
 
     private walkAncestors(

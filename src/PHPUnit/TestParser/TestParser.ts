@@ -20,11 +20,7 @@ export class TestParser {
         private phpUnitXML: PHPUnitXML,
         classRegistry?: ClassRegistry,
     ) {
-        const phpunitParser = new PHPUnitParser();
-        if (classRegistry) {
-            phpunitParser.setClassRegistry(classRegistry);
-        }
-        this.parsers = [new PestParser(), phpunitParser];
+        this.parsers = [new PestParser(), new PHPUnitParser(classRegistry)];
     }
 
     on(eventName: TestType, callback: (testDefinition: TestDefinition, index?: number) => void) {

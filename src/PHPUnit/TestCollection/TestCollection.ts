@@ -51,7 +51,7 @@ export class TestCollection {
             return this;
         }
 
-        const files = this.items();
+        this.items();
         const testDefinitions = await this.parseTests(uri, testsuite);
         if (testDefinitions.length === 0) {
             this.delete(uri);

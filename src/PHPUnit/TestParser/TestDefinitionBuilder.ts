@@ -34,23 +34,20 @@ export class NamespaceDefinitionBuilder extends TestDefinitionBuilder {
     build() {
         const type = TestType.namespace;
         const depth = 0;
+        const parts = (this.definition.classFQN ?? '').split('\\');
 
-        const classFQN = this.definition.classFQN;
         if (this.definition.kind === 'program') {
-            const partsFQN = classFQN?.split('\\') ?? [];
-            const namespace = partsFQN.slice(0, -1).join('\\');
-
+            const namespace = parts.slice(0, -1).join('\\');
             return this.generate({ type, depth, namespace, classFQN: namespace });
         }
 
         if (this.definition.kind === 'class') {
-            const partsFQN = classFQN?.split('\\');
-            const className = partsFQN?.pop();
-            const namespace = partsFQN?.join('\\');
-
+            const className = parts.pop();
+            const namespace = parts.join('\\');
             return this.generate({ type, depth, namespace, classFQN: namespace, className });
         }
 
+        const classFQN = this.definition.classFQN;
         return this.generate({ type, depth, namespace: classFQN, classFQN });
     }
 }
