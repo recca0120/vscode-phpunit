@@ -106,7 +106,7 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
 
         // Run all tests with a pre-cancelled token — no processes should start
         const request = new vscode.TestRunRequest();
-        await api.runHandler(request, cts.token);
+        await api.testRunProfile.runHandler(request, cts.token);
 
         // If we reach here without hanging, cancellation worked
         assert.ok(cts.token.isCancellationRequested);

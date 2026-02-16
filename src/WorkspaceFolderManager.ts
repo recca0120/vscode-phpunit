@@ -1,6 +1,8 @@
 import { inject, injectable, type Container } from 'inversify';
 import {
     type Disposable,
+    type Event,
+    EventEmitter as VscodeEventEmitter,
     type EventEmitter,
     type ExtensionContext,
     type TestController,
@@ -21,6 +23,8 @@ export class WorkspaceFolderManager {
     private folders = new Map<string, Container>();
     private activeWatchers: Disposable[] = [];
     private pendingOperation = Promise.resolve();
+    private readonly _onDidReload = new VscodeEventEmitter<void>();
+    readonly onDidReload: Event<void> = this._onDidReload.event;
 
     constructor(
         @inject(TYPES.ChildContainerFactory) private createChildContainer: ChildContainerFactory,
@@ -169,6 +173,7 @@ export class WorkspaceFolderManager {
                         const watcher = await child.get(TestFileWatcher).startWatching();
                         context.subscriptions.push(watcher);
                     }
+                    this._onDidReload.fire();
                 }).catch((err) => {
                     const message = err instanceof Error ? err.message : String(err);
                     window.showErrorMessage(`PHPUnit: Failed to handle folder change: ${message}`);
@@ -213,16 +218,13 @@ export class WorkspaceFolderManager {
         return container ? this.toContext(container) : undefined;
     }
 
-    async whenReady(): Promise<void> {
-        await this.pendingOperation;
-    }
-
     async reloadAll(): Promise<void> {
         await (this.pendingOperation = this.pendingOperation.then(() => this.doReloadAll()));
     }
 
     private async doReloadAll(): Promise<void> {
         await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
+        this._onDidReload.fire();
     }
 
     findAllGroups(): string[] {
@@ -258,6 +260,7 @@ export class WorkspaceFolderManager {
             watcher.dispose();
         }
         this.activeWatchers = [];
+        this._onDidReload.dispose();
     }
 
     [Symbol.iterator]() {

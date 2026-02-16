@@ -36,7 +36,7 @@ function phpTestFile(className: string, methods: string[]): string {
 
 suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E`, () => {
     let ctrl: vscode.TestController;
-    let whenReady: () => Promise<void>;
+    let onDidReload: vscode.Event<void>;
     let workspaceFileBackup: string;
     const tempFiles: string[] = [];
     let initialPhpunitCount: number;
@@ -52,7 +52,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         const api = await activateExtension();
         ctrl = api.testController;
-        whenReady = api.whenReady;
+        onDidReload = api.onDidReload;
 
         const folders = vscode.workspace.workspaceFolders ?? [];
 
@@ -116,15 +116,14 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
     async function restoreMultiWorkspace(removedFolderUri: vscode.Uri) {
         if ((vscode.workspace.workspaceFolders?.length ?? 0) < 2) {
-            const folderChanged = new Promise<void>((resolve) => {
-                const disposable = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            const reloaded = new Promise<void>((resolve) => {
+                const disposable = onDidReload(() => {
                     disposable.dispose();
                     resolve();
                 });
             });
             vscode.workspace.updateWorkspaceFolders(1, 0, { uri: removedFolderUri });
-            await folderChanged;
-            await whenReady();
+            await reloaded;
         }
     }
 
@@ -356,12 +355,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         removedFolderUri = folders[1].uri;
 
-        const folderChanged = new Promise<void>(resolve => {
-            const d = vscode.workspace.onDidChangeWorkspaceFolders(() => { d.dispose(); resolve(); });
+        const reloaded = new Promise<void>(resolve => {
+            const d = onDidReload(() => { d.dispose(); resolve(); });
         });
         vscode.workspace.updateWorkspaceFolders(1, 1);
-        await folderChanged;
-        await whenReady();
+        await reloaded;
 
         // Should have phpunit items in flat structure (no folder roots)
         let hasFolderRoot = false;

@@ -48,9 +48,8 @@ export async function activate(context: ExtensionContext) {
 
     return {
         testController: ctrl,
-        whenReady: () => folderManager.whenReady(),
-        runHandler: (request: TestRunRequest, cancellation: CancellationToken) =>
-            dispatcher.dispatch(request, cancellation),
+        testRunProfile,
+        onDidReload: folderManager.onDidReload,
     };
 }
 

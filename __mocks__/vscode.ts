@@ -349,10 +349,21 @@ const commands = (function () {
     };
 })();
 
-class FakeEventEmitter {
-    fire() {}
-    event() {}
-    dispose() {}
+class FakeEventEmitter<T = void> {
+    private listeners: Array<(e: T) => void> = [];
+
+    event = (listener: (e: T) => void) => {
+        this.listeners.push(listener);
+        return new Disposable();
+    };
+
+    fire(data: T) {
+        this.listeners.forEach((fn) => fn(data));
+    }
+
+    dispose() {
+        this.listeners = [];
+    }
 }
 const EventEmitter = FakeEventEmitter;
 
