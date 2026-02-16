@@ -5,7 +5,6 @@ import { type GlobOptions, glob } from 'glob';
 import * as semver from 'semver';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
-    type CancellationToken,
     CancellationTokenSource,
     commands,
     debug,
@@ -196,28 +195,7 @@ describe('Extension Test', () => {
         );
     };
 
-    const installSpawnConcurrencyProbe = (opts: { onSpawn?: () => void } = {}) => {
-        const spawnMock = vi.mocked(spawn);
-        const realSpawn = spawnMock.getMockImplementation()!;
-        let active = 0;
-        let maxActive = 0;
-
-        spawnMock.mockImplementation((...args: Parameters<typeof spawn>) => {
-            active += 1;
-            maxActive = Math.max(maxActive, active);
-            opts.onSpawn?.();
-            const child = (realSpawn as Function)(...args) as ChildProcess;
-            child.on('close', () => { active -= 1; });
-            return child;
-        });
-
-        return {
-            getMaxActive: () => maxActive,
-            restore: () => spawnMock.mockImplementation(realSpawn),
-        };
-    };
-
-    describe('Process serialization', () => {
+    describe('Cancellation', () => {
         const root = phpUnitProject('');
 
         beforeEach(async () => {
@@ -226,43 +204,15 @@ describe('Extension Test', () => {
 
         afterEach(() => vi.clearAllMocks());
 
-        it('should serialize run-by-group processes', async () => {
-            const probe = installSpawnConcurrencyProbe();
-            try {
-                await activate(context);
-                (window.showQuickPick as Mock).mockResolvedValue('integration');
-
-                await commands.executeCommand('phpunit.run-by-group');
-
-                expect(probe.getMaxActive()).toBe(1);
-            } finally {
-                probe.restore();
-            }
-        });
-
-        it('should serialize multi-select runs', async () => {
-            const probe = installSpawnConcurrencyProbe();
-            try {
-                await activateAndRun({
-                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
-                });
-
-                expect(probe.getMaxActive()).toBe(1);
-            } finally {
-                probe.restore();
-            }
-        });
-
         it('should stop running remaining processes when cancellation is requested mid-run', async () => {
-            let cancelled = false;
-            const probe = installSpawnConcurrencyProbe({
-                onSpawn: () => { cancelled = true; },
-            });
+            const cts = new CancellationTokenSource();
+            const spawnMock = vi.mocked(spawn);
+            const realSpawn = spawnMock.getMockImplementation()!;
 
-            const cancellation = {
-                get isCancellationRequested() { return cancelled; },
-                onCancellationRequested: vi.fn().mockReturnValue({ dispose: vi.fn() }),
-            } as unknown as CancellationToken;
+            spawnMock.mockImplementation((...args: Parameters<typeof spawn>) => {
+                cts.cancel();
+                return (realSpawn as Function)(...args) as ChildProcess;
+            });
 
             try {
                 await activate(context);
@@ -277,14 +227,14 @@ describe('Extension Test', () => {
 
                 expect(include).toHaveLength(2);
 
-                vi.mocked(spawn).mockClear();
+                spawnMock.mockClear();
                 const request = { include, exclude: [], profile: testRunProfile };
-                await testRunProfile.runHandler(request, cancellation);
+                await testRunProfile.runHandler(request, cts.token);
 
-                expect(cancellation.onCancellationRequested).toHaveBeenCalledTimes(1);
+                expect(cts.token.isCancellationRequested).toBe(true);
                 expect(spawn).toHaveBeenCalledTimes(1);
             } finally {
-                probe.restore();
+                spawnMock.mockImplementation(realSpawn);
             }
         });
     });

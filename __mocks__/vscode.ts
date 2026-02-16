@@ -192,8 +192,21 @@ class FakeDocumentLink {
 const DocumentLink = FakeDocumentLink;
 
 class FakeCancellationTokenSource {
-    token = { isCancellationRequested: false, onCancellationRequested: vi.fn() };
-    cancel() {}
+    private listeners: Array<() => void> = [];
+
+    token = {
+        isCancellationRequested: false,
+        onCancellationRequested: (listener: () => void) => {
+            this.listeners.push(listener);
+            return new Disposable();
+        },
+    };
+
+    cancel() {
+        this.token.isCancellationRequested = true;
+        this.listeners.forEach((fn) => fn());
+    }
+
     dispose() {}
 }
 const CancellationTokenSource = FakeCancellationTokenSource;
