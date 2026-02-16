@@ -205,11 +205,7 @@ export class PhpAstNodeWrapper {
 
     getClasses() {
         const definitions: PhpAstNodeWrapper[] =
-            this.kind !== 'program'
-                ? []
-                : this.getNamespaces().reduce((definitions, definition: PhpAstNodeWrapper) => {
-                      return definitions.concat(definition.getClasses());
-                  }, [] as PhpAstNodeWrapper[]);
+            this.kind !== 'program' ? [] : this.getNamespaces().flatMap((ns) => ns.getClasses());
 
         const options = { ...this.options };
         if (this.kind === 'namespace') {
@@ -381,12 +377,7 @@ export class PhpAstNodeWrapper {
 
     getMethods(): PhpAstNodeWrapper[] {
         if (['program', 'namespace'].includes(this.ast.kind)) {
-            return this.getClasses().reduce(
-                (definitions: PhpAstNodeWrapper[], definition: PhpAstNodeWrapper) => {
-                    return definitions.concat(definition.getMethods());
-                },
-                [],
-            );
+            return this.getClasses().flatMap((cls) => cls.getMethods());
         }
 
         const options = { ...this.options };
@@ -431,34 +422,35 @@ function collectPestFunctions(
     },
     parentNode: PhpAstNodeWrapper,
 ): PhpAstNodeWrapper[] {
-    return children
-        .reduce((flatChildren: AST[], node) => {
-            return flatChildren.concat(
-                node.kind === 'namespace' ? (node as Namespace).children : [node],
-            );
-        }, [])
-        .reduce((definitions, node: AST) => {
-            if (
-                node.kind !== 'expressionstatement' ||
-                (node.expression as AST).kind === 'include'
-            ) {
-                return definitions;
+    const flatChildren = children.flatMap((node) =>
+        node.kind === 'namespace' ? (node as Namespace).children : [node],
+    );
+
+    const definitions: PhpAstNodeWrapper[] = [];
+    for (const node of flatChildren) {
+        if (
+            node.kind !== 'expressionstatement' ||
+            ((node as AST).expression as AST).kind === 'include'
+        ) {
+            continue;
+        }
+
+        const parent = ['block'].includes(parentNode.kind) ? parentNode.parent : parentNode;
+        const opts = { ...options, parent };
+
+        let ast = (node as AST).expression as AST;
+        while (ast.what) {
+            if (ast.what.kind === 'name') {
+                break;
             }
-
-            const parent = ['block'].includes(parentNode.kind) ? parentNode.parent : parentNode;
-            const opts = { ...options, parent };
-
-            let ast = node.expression as AST;
-            while (ast.what) {
-                if (ast.what.kind === 'name') {
-                    break;
-                }
-                if (ast.kind === 'call') {
-                    opts.parent = new PhpAstNodeWrapper(ast, { ...opts });
-                }
-                ast = ast.what as AST;
+            if (ast.kind === 'call') {
+                opts.parent = new PhpAstNodeWrapper(ast, { ...opts });
             }
+            ast = ast.what as AST;
+        }
 
-            return definitions.concat(new PhpAstNodeWrapper(ast, opts));
-        }, [] as PhpAstNodeWrapper[]);
+        definitions.push(new PhpAstNodeWrapper(ast, opts));
+    }
+
+    return definitions;
 }

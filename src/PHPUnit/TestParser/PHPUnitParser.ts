@@ -8,25 +8,6 @@ export class PHPUnitParser implements Parser {
 
     parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined {
         const testDefinitions: TestDefinition[] = [];
-        const getParent = (definition: PhpAstNodeWrapper) => {
-            const testDefinition = definition.toTestDefinition();
-            if (!definition.parent) {
-                testDefinitions.push(testDefinition);
-
-                return testDefinition;
-            }
-
-            let namespace = testDefinitions.find(
-                (item: TestDefinition) => item.namespace === definition.parent?.name,
-            );
-            if (!namespace) {
-                namespace = definition.parent.createNamespaceTestDefinition();
-                testDefinitions.push(namespace);
-            }
-            (namespace.children as TestDefinition[]).push(testDefinition);
-
-            return testDefinition;
-        };
 
         const allClasses = definition.getClasses();
 
@@ -39,7 +20,7 @@ export class PHPUnitParser implements Parser {
         const testClasses = allClasses.filter((cls) => this.isTestClass(cls));
 
         for (const classDef of testClasses) {
-            const parent = getParent(classDef);
+            const parent = this.getOrCreateParent(testDefinitions, classDef);
 
             // Get own test methods
             const ownMethods = (classDef.children ?? [])
@@ -57,6 +38,28 @@ export class PHPUnitParser implements Parser {
         }
 
         return testDefinitions.length === 0 ? undefined : testDefinitions;
+    }
+
+    private getOrCreateParent(
+        testDefinitions: TestDefinition[],
+        classDef: PhpAstNodeWrapper,
+    ): TestDefinition {
+        const testDefinition = classDef.toTestDefinition();
+        if (!classDef.parent) {
+            testDefinitions.push(testDefinition);
+            return testDefinition;
+        }
+
+        let namespace = testDefinitions.find(
+            (item: TestDefinition) => item.namespace === classDef.parent?.name,
+        );
+        if (!namespace) {
+            namespace = classDef.parent.createNamespaceTestDefinition();
+            testDefinitions.push(namespace);
+        }
+        (namespace.children as TestDefinition[]).push(testDefinition);
+
+        return testDefinition;
     }
 
     private registerClass(classDef: PhpAstNodeWrapper): void {

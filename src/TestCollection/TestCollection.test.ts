@@ -249,28 +249,22 @@ describe('Extension TestCollection', () => {
 
         expect(toTree(ctrl.items)).toEqual([
             {
-                id: 'namespace:Tests',
-                label: '$(symbol-namespace) Tests',
+                id: 'testsuite:Unit',
+                label: '$(symbol-namespace) Unit',
                 children: [
                     expect.objectContaining({
-                        id: 'namespace:Unit (Tests\\Unit)',
-                        label: '$(symbol-namespace) Unit',
-                        children: [
-                            expect.objectContaining({
-                                id: 'Example (Tests\\Unit\\Example)',
-                                label: '$(symbol-class) ExampleTest',
-                            }),
-                        ],
+                        id: 'Example (Tests\\Unit\\Example)',
+                        label: '$(symbol-class) ExampleTest',
                     }),
+                ],
+            },
+            {
+                id: 'testsuite:Feature',
+                label: '$(symbol-namespace) Feature',
+                children: [
                     expect.objectContaining({
-                        id: 'namespace:Feature (Tests\\Feature)',
-                        label: '$(symbol-namespace) Feature',
-                        children: [
-                            expect.objectContaining({
-                                id: 'Example (Tests\\Feature\\Example)',
-                                label: '$(symbol-class) ExampleTest',
-                            }),
-                        ],
+                        id: 'Example (Tests\\Feature\\Example)',
+                        label: '$(symbol-class) ExampleTest',
                     }),
                 ],
             },

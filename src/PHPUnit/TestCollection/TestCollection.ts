@@ -17,7 +17,7 @@ export class TestCollection {
     private fileIndex = new Map<string, string>();
     private classRegistry = new ClassRegistry();
 
-    constructor(private phpUnitXML: PHPUnitXML) {}
+    constructor(protected phpUnitXML: PHPUnitXML) {}
 
     get size() {
         return this.suites.size;

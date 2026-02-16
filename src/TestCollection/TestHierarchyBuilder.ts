@@ -7,7 +7,13 @@ import {
     TestTag,
     Uri,
 } from 'vscode';
-import { type TestDefinition, type TestParser, TestType, TransformerFactory } from '../PHPUnit';
+import {
+    type PHPUnitXML,
+    type TestDefinition,
+    type TestParser,
+    TestType,
+    TransformerFactory,
+} from '../PHPUnit';
 
 export class TestHierarchyBuilder {
     private icons = {
@@ -21,12 +27,15 @@ export class TestHierarchyBuilder {
         { item: this.createRootItem(), type: TestType.namespace, children: [] },
     ];
     private testData = new Map<TestItem, TestDefinition>();
+    private multiSuite: boolean;
 
     constructor(
         private ctrl: TestController,
         private testParser: TestParser,
         private rootItems: TestItemCollection = ctrl.items,
+        phpUnitXML?: PHPUnitXML,
     ) {
+        this.multiSuite = (phpUnitXML?.getTestSuiteNames().length ?? 0) > 1;
         this.onInit();
     }
 
@@ -41,8 +50,12 @@ export class TestHierarchyBuilder {
             });
         }
         this.testParser.on(TestType.namespace, (testDefinition) => {
-            this.ascend(1);
-            this.addNamespaceTestItems(testDefinition);
+            if (this.multiSuite) {
+                this.addTestSuiteRoot(testDefinition);
+            } else {
+                this.ascend(1);
+                this.addNamespaceTestItems(testDefinition);
+            }
         });
     }
 
@@ -50,6 +63,43 @@ export class TestHierarchyBuilder {
         this.ascend(0);
 
         return this.testData;
+    }
+
+    private addTestSuiteRoot(testDefinition: TestDefinition) {
+        const suiteName = testDefinition.testsuite;
+        if (!suiteName) {
+            return;
+        }
+
+        this.ascend(1);
+
+        const suiteId = `testsuite:${suiteName}`;
+        const testItem = this.rootItems.get(suiteId) ?? this.createSuiteItem(suiteId, suiteName);
+
+        const parent = this.ancestors[this.ancestors.length - 1];
+        parent.children.push(testItem);
+        this.ancestors.push({ item: testItem, type: TestType.namespace, children: [] });
+        this.ancestorDepth = this.ancestors.length - 1;
+    }
+
+    private createSuiteItem(suiteId: string, suiteName: string): TestItem {
+        const suiteDefinition = {
+            type: TestType.namespace,
+            id: suiteId,
+            label: suiteName,
+            depth: 1,
+        } as TestDefinition;
+
+        const testItem = this.ctrl.createTestItem(
+            suiteId,
+            this.parseLabelWithIcon(suiteDefinition),
+        );
+        testItem.canResolveChildren = true;
+        testItem.sortText = suiteId;
+        this.rootItems.add(testItem);
+        this.testData.set(testItem, suiteDefinition);
+
+        return testItem;
     }
 
     private addNamespaceTestItems(testDefinition: TestDefinition) {
@@ -116,23 +166,30 @@ export class TestHierarchyBuilder {
         const parent = this.ancestors[this.ancestors.length - 1];
         parent.children.push(testItem);
 
-        // Inherit group tags from parent class to methods for proper filter inheritance
-        if (testDefinition.type === TestType.method && parent.type === TestType.class) {
-            const parentTags = (parent.item.tags ?? []).filter((t) => t.id.startsWith('group:'));
-            if (parentTags.length > 0) {
-                const ownTags = testItem.tags ?? [];
-                testItem.tags = [
-                    ...ownTags,
-                    ...parentTags.filter((pt) => !ownTags.some((ot) => ot.id === pt.id)),
-                ];
-            }
-        }
+        this.inheritParentTags(testItem, parent);
 
         if (testDefinition.type !== TestType.method) {
             this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
         }
 
         this.testData.set(testItem, testDefinition);
+    }
+
+    private inheritParentTags(testItem: TestItem, parent: { item: TestItem; type: TestType }) {
+        if (parent.type !== TestType.class) {
+            return;
+        }
+
+        const parentTags = (parent.item.tags ?? []).filter((t) => t.id.startsWith('group:'));
+        if (parentTags.length === 0) {
+            return;
+        }
+
+        const ownTags = testItem.tags ?? [];
+        testItem.tags = [
+            ...ownTags,
+            ...parentTags.filter((pt) => !ownTags.some((ot) => ot.id === pt.id)),
+        ];
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
@@ -150,9 +207,19 @@ export class TestHierarchyBuilder {
         testItem.sortText = sortText;
         testItem.range = this.createRange(testDefinition);
 
+        const tags: TestTag[] = [];
+
         const groups = (testDefinition.annotations?.group as string[]) ?? [];
-        if (groups.length > 0) {
-            testItem.tags = groups.map((g) => new TestTag(`group:${g}`));
+        for (const g of groups) {
+            tags.push(new TestTag(`group:${g}`));
+        }
+
+        if (testDefinition.testsuite) {
+            tags.push(new TestTag(`suite:${testDefinition.testsuite}`));
+        }
+
+        if (tags.length > 0) {
+            testItem.tags = tags;
         }
 
         return testItem;

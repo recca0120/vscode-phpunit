@@ -9,16 +9,18 @@ interface ParsedAttribute {
 }
 
 export class AttributeParser {
+    private readonly lookupPatterns = new Map(
+        lookup.map((name) => [name, new RegExp(name, 'i')] as const),
+    );
+
     public parse(declaration: Declaration) {
         const attributes = this.parseAttributes(declaration);
         const annotations = {} as Annotations;
 
-        for (const property of lookup) {
+        for (const [property, pattern] of this.lookupPatterns) {
             const values = attributes
-                .filter((attribute: ParsedAttribute) =>
-                    new RegExp(property, 'i').test(attribute.name),
-                )
-                .map((attribute: ParsedAttribute) => attribute.args[0]);
+                .filter((attr) => pattern.test(attr.name))
+                .map((attr) => attr.args[0]);
 
             if (values.length > 0) {
                 annotations[property] = values;
