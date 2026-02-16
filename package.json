@@ -1,7 +1,7 @@
 {
   "name": "vscode-phpunit",
-  "description": "The VS Code PHPUnit Test Explorer extension supports PHPUnit and Pest, enabling test execution in Docker and SSH environments. It integrates with vscode-xdebug for step-by-step debugging within VS Code.",
-  "displayName": "PHPUnit Test Explorer",
+  "description": "Run PHPUnit and Pest tests in VS Code with the native Test Explorer. Supports Docker, SSH, Laravel Sail, ParaTest, and Xdebug step-debugging.",
+  "displayName": "PHPUnit & Pest Test Explorer",
   "icon": "img/icon.png",
   "publisher": "recca0120",
   "version": "3.8.2",
