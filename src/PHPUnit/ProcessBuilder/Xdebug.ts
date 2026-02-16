@@ -73,14 +73,14 @@ export class Xdebug {
     }
 
     getEnvironment() {
-        if (this.mode && [Mode.debug, Mode.coverage].includes(this.mode)) {
-            return {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                XDEBUG_MODE: this.mode,
-            };
+        if (!this.mode) {
+            return {};
         }
 
-        return {};
+        return {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            XDEBUG_MODE: this.mode,
+        };
     }
 
     getPhpArgs() {

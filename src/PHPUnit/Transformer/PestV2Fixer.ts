@@ -39,9 +39,9 @@ export class PestV2Fixer {
         methodName = methodName.replace(/\{@\*}/g, '*/');
         const matched = methodName.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
         let dataset = '';
-        if (matched) {
-            methodName = matched.groups!.method;
-            dataset = matched.groups!.dataset.replace(/\|'/g, "'");
+        if (matched?.groups) {
+            methodName = matched.groups.method;
+            dataset = matched.groups.dataset.replace(/\|'/g, "'");
         }
 
         return Str.evaluable(methodName) + dataset;

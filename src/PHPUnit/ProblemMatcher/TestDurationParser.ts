@@ -10,7 +10,7 @@ export class TestDurationParser implements IParser<TestDuration> {
     }
 
     public parse(text: string): TestDuration {
-        const { time, memory } = text.match(this.pattern)?.groups!;
+        const { time, memory } = text.match(this.pattern)?.groups ?? {};
         const event = TeamcityEvent.testDuration;
 
         return { time, memory, event, text };

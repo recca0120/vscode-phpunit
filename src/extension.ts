@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
 import { Configuration } from './Configuration';
-import type { PHPUnitFileCoverage } from './Coverage';
+import { PHPUnitFileCoverage } from './Coverage';
 import { createParentContainer } from './container';
 import { PHPUnitXML } from './PHPUnit';
 import { TestRunDispatcher } from './TestExecution';
@@ -89,7 +89,10 @@ function createRunProfiles(
         false,
     );
     coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
-        return (<PHPUnitFileCoverage>coverage).generateDetailedCoverage();
+        if (coverage instanceof PHPUnitFileCoverage) {
+            return coverage.generateDetailedCoverage();
+        }
+        return [];
     };
 
     return testRunProfile;

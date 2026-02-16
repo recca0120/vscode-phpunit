@@ -71,15 +71,17 @@ export class TestRunHandler {
         const runner = this.testRunnerBuilder.build(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
-        const processes = this.createProcesses(runner, builder, request);
-        cancellation?.onCancellationRequested(() =>
-            processes.forEach((process) => process.abort()),
-        );
+        try {
+            const processes = this.createProcesses(runner, builder, request);
+            cancellation?.onCancellationRequested(() =>
+                processes.forEach((process) => process.abort()),
+            );
 
-        await this.runProcesses(processes, cancellation);
-        await this.coverageCollector.collect(processes, testRun);
-
-        runner.emit(TestRunnerEvent.done, undefined);
+            await this.runProcesses(processes, cancellation);
+            await this.coverageCollector.collect(processes, testRun);
+        } finally {
+            runner.emit(TestRunnerEvent.done, undefined);
+        }
     }
 
     private async runProcesses(

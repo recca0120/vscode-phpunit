@@ -40,13 +40,7 @@ export class TestRunnerProcess {
 
     abort() {
         this.abortController.abort();
-
-        const killed = this.child?.killed;
-        if (killed) {
-            this.emitter.emit('abort');
-        }
-
-        return killed;
+        this.emitter.emit('abort');
     }
 
     private execute() {

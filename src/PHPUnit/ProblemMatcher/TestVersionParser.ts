@@ -9,7 +9,7 @@ export class TestVersionParser implements IParser<TestVersion> {
     }
 
     parse(text: string) {
-        const matched = text.match(this.pattern)?.groups!;
+        const matched = text.match(this.pattern)?.groups ?? {};
 
         return {
             event: TeamcityEvent.testVersion,
