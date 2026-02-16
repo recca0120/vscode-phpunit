@@ -1,10 +1,12 @@
-import { spawn } from 'node:child_process';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type GlobOptions, glob } from 'glob';
 import * as semver from 'semver';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
+    type CancellationToken,
     CancellationTokenSource,
     commands,
     debug,
@@ -195,6 +197,182 @@ describe('Extension Test', () => {
             }),
         );
     };
+
+    const installSpawnConcurrencyProbe = (delayMs = 1, output = '') => {
+        const spawnMock = vi.mocked(spawn);
+        const originalImplementation = spawnMock.getMockImplementation();
+        let active = 0;
+        let maxActive = 0;
+
+        const implementation = (() => {
+            active += 1;
+            maxActive = Math.max(maxActive, active);
+
+            const child = new EventEmitter() as EventEmitter & {
+                stdout?: ChildProcess['stdout'];
+                stderr?: ChildProcess['stderr'];
+                killed?: boolean;
+            };
+            const stdout = new EventEmitter();
+            const stderr = new EventEmitter();
+
+            child.stdout = stdout as unknown as ChildProcess['stdout'];
+            child.stderr = stderr as unknown as ChildProcess['stderr'];
+            child.killed = false;
+
+            setTimeout(() => {
+                if (output.length > 0) {
+                    stdout.emit('data', output);
+                }
+                stdout.emit('end');
+                active -= 1;
+                child.emit('close', 0);
+            }, delayMs);
+
+            return child as unknown as ChildProcess;
+        }) as typeof spawn;
+
+        spawnMock.mockImplementation(implementation);
+
+        return {
+            getMaxActive: () => maxActive,
+            restore: () => {
+                if (originalImplementation) {
+                    spawnMock.mockImplementation(originalImplementation);
+                }
+            },
+        };
+    };
+
+    describe('Process serialization', () => {
+        const root = phpUnitProject('');
+
+        beforeEach(async () => {
+            await setupEnvironment(root, 'vendor/bin/phpunit');
+        });
+
+        afterEach(() => vi.clearAllMocks());
+
+        it('should serialize run-by-group processes', async () => {
+            const probe = installSpawnConcurrencyProbe();
+            try {
+                await activate(context);
+                (window.showQuickPick as Mock).mockResolvedValue('integration');
+
+                await commands.executeCommand('phpunit.run-by-group');
+
+                expect(probe.getMaxActive()).toBe(1);
+            } finally {
+                probe.restore();
+            }
+        });
+
+        it('should serialize multi-select runs', async () => {
+            const probe = installSpawnConcurrencyProbe();
+            try {
+                await activateAndRun({
+                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
+                });
+
+                expect(probe.getMaxActive()).toBe(1);
+            } finally {
+                probe.restore();
+            }
+        });
+
+        it('should clear output once for a multi-select request', async () => {
+            const probe = installSpawnConcurrencyProbe(
+                1,
+                "##teamcity[testSuiteStarted name='Test Suite' flowId='1']\n",
+            );
+            try {
+                const configuration = workspace.getConfiguration('phpunit', Uri.file(root));
+                await configuration.update('clearOutputOnRun', true);
+
+                await activateAndRun({
+                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
+                });
+
+                expect(getOutputChannel().clear).toHaveBeenCalledTimes(1);
+            } finally {
+                probe.restore();
+            }
+        });
+
+        it('should stop running remaining processes when cancellation is requested mid-run', async () => {
+            await activate(context);
+
+            const ctrl = getTestController();
+            const testRunProfile = getTestRunProfile(ctrl);
+            const include = [
+                'Assertions (Tests\\Assertions)',
+                'Calculator (Tests\\Calculator)',
+            ]
+                .map((id) => findTest(ctrl.items, id))
+                .filter((item): item is TestItem => item !== undefined);
+
+            expect(include).toHaveLength(2);
+
+            const request = { include, exclude: [], profile: testRunProfile };
+            const spawnMock = vi.mocked(spawn);
+            const originalImplementation = spawnMock.getMockImplementation();
+            let cancelled = false;
+            let runCount = 0;
+
+            const cancellation = {
+                get isCancellationRequested() {
+                    return cancelled;
+                },
+                onCancellationRequested: vi
+                    .fn()
+                    .mockReturnValue({ dispose: vi.fn() }),
+            } as unknown as CancellationToken;
+
+            vi.mocked(spawn).mockClear();
+            spawnMock.mockImplementation((() => {
+                runCount += 1;
+
+                const child = new EventEmitter() as EventEmitter & {
+                    stdout?: ChildProcess['stdout'];
+                    stderr?: ChildProcess['stderr'];
+                    killed?: boolean;
+                };
+                const stdout = new EventEmitter();
+                const stderr = new EventEmitter();
+
+                child.stdout = stdout as unknown as ChildProcess['stdout'];
+                child.stderr = stderr as unknown as ChildProcess['stderr'];
+                child.killed = false;
+
+                setTimeout(() => {
+                    cancelled = true;
+                    stdout.emit('end');
+                    child.emit('close', 0);
+                }, 1);
+
+                return child as unknown as ChildProcess;
+            }) as typeof spawn);
+
+            try {
+                await testRunProfile.runHandler(request, cancellation);
+
+                expect(cancellation.onCancellationRequested).toHaveBeenCalledTimes(1);
+                expect(runCount).toBe(1);
+                expect(spawn).toHaveBeenCalledTimes(1);
+                expect(spawn).toHaveBeenCalledWith(
+                    phpBinary,
+                    expect.arrayContaining([
+                        expect.stringContaining('AssertionsTest.php'),
+                    ]),
+                    expect.anything(),
+                );
+            } finally {
+                if (originalImplementation) {
+                    spawnMock.mockImplementation(originalImplementation);
+                }
+            }
+        });
+    });
 
     describe.each(detectPhpUnitStubs())('PHPUnit $name ($phpUnitVersion)', ({
         root,

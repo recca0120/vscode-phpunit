@@ -14,6 +14,7 @@ import {
     type ProcessBuilder,
     type TestRunner,
     TestRunnerEvent,
+    type TestRunnerProcess,
     type Xdebug,
 } from '../PHPUnit';
 import { type TestCase, TestCollection } from '../TestCollection';
@@ -91,10 +92,23 @@ export class TestRunHandler {
             processes.forEach((process) => process.abort()),
         );
 
-        await Promise.all(processes.map((process) => process.run()));
+        await this.runProcesses(processes, cancellation);
         await this.coverageCollector.collect(processes, testRun);
 
         runner.emit(TestRunnerEvent.done, undefined);
+    }
+
+    private async runProcesses(
+        processes: TestRunnerProcess[],
+        cancellation?: CancellationToken,
+    ): Promise<void> {
+        for (const process of processes) {
+            if (cancellation?.isCancellationRequested) {
+                break;
+            }
+
+            await process.run();
+        }
     }
 
     private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {

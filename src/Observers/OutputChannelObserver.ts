@@ -31,6 +31,7 @@ enum ShowOutputState {
 @injectable()
 export class OutputChannelObserver implements TestRunnerObserver {
     private lastCommand = '';
+    private hasClearedCurrentRequest = false;
     private request!: TestRunRequest;
 
     constructor(
@@ -41,6 +42,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
 
     setRequest(request: TestRunRequest) {
         this.request = request;
+        this.hasClearedCurrentRequest = false;
     }
 
     run(builder: ProcessBuilder): void {
@@ -168,8 +170,14 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     private clearOutputOnRun() {
+        if (this.hasClearedCurrentRequest) {
+            return;
+        }
+
         if (this.configuration.get('clearOutputOnRun') === true) {
             this.outputChannel.clear();
         }
+
+        this.hasClearedCurrentRequest = true;
     }
 }
