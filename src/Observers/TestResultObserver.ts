@@ -71,7 +71,9 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {
-        const message = TestMessage.diff(result.message, result.expected!, result.actual!);
+        const message = result.expected !== undefined && result.actual !== undefined
+            ? TestMessage.diff(result.message, result.expected, result.actual)
+            : new TestMessage(result.message);
         const details = result.details;
         if (details.length > 0) {
             const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));

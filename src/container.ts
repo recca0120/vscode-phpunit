@@ -8,7 +8,7 @@ import { OutputFormatter } from './Observers/Printers';
 import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
-import { ProcessBuilderFactory, TestQueueBuilder, TestRunDispatcher, TestRunHandler, TestRunnerBuilder } from './TestExecution';
+import { DebugSessionManager, ProcessBuilderFactory, TestQueueBuilder, TestRunDispatcher, TestRunHandler, TestRunnerBuilder } from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
@@ -57,6 +57,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
     child.bind(TestRunnerBuilder).toSelf().inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();
     child.bind(TestQueueBuilder).toSelf().inSingletonScope();
+    child.bind(DebugSessionManager).toSelf().inSingletonScope();
     child.bind(TestRunHandler).toSelf().inSingletonScope();
     child.bind(TestFileDiscovery).toSelf().inSingletonScope();
     child.bind(TestFileWatcher).toSelf().inSingletonScope();

@@ -124,6 +124,81 @@ describe('Extension TestCollection', () => {
         );
     });
 
+    it('findTestsByRequest should return matching items by id lookup', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        const testItem = { id: 'Assertions (Tests\\Assertions)::Passed' } as any;
+        const request = { include: [testItem] } as any;
+        const result = collection.findTestsByRequest(request);
+
+        expect(result).toHaveLength(1);
+        expect(result![0].id).toBe('Assertions (Tests\\Assertions)::Passed');
+    });
+
+    it('findTestsByRequest should return undefined for no match', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        const request = { include: [{ id: 'nonexistent' }] } as any;
+        expect(collection.findTestsByRequest(request)).toBeUndefined();
+    });
+
+    it('findTestsByRequest should return undefined when no request', () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        expect(collection.findTestsByRequest(undefined)).toBeUndefined();
+        expect(collection.findTestsByRequest({ include: undefined } as any)).toBeUndefined();
+    });
+
+    it('group index should update when tests are re-parsed', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+        expect(collection.findGroups()).toEqual(['integration']);
+
+        // Re-add same file (simulates file change) - groups should still be correct
+        await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+        expect(collection.findGroups()).toEqual(['integration']);
+    });
+
+    it('group index should be empty after reset', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+        expect(collection.findGroups()).toEqual(['integration']);
+
+        collection.reset();
+        expect(collection.findGroups()).toEqual([]);
+    });
+
     it('with testsuites', async () => {
         const collection = givenTestCollection(`
             <testsuites>

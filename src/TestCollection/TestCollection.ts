@@ -15,6 +15,8 @@ import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 export class TestCollection extends BaseTestCollection {
     private testItems = new Map<string, Map<TestItem, TestDefinition>>();
     private testDefinitionIndex = new Map<string, TestDefinition>();
+    private testItemIndex = new Map<string, TestItem>();
+    private groupIndex = new Map<string, Set<TestItem>>();
     private _rootItems: TestItemCollection | undefined;
 
     constructor(
@@ -58,33 +60,19 @@ export class TestCollection extends BaseTestCollection {
             return undefined;
         }
 
-        const includeIds = new Set(request.include.map((item) => item.id));
-        const tests = this.collectTestItems((testItem) => includeIds.has(testItem.id));
+        const tests = request.include
+            .map((item) => this.testItemIndex.get(item.id))
+            .filter((item): item is TestItem => item !== undefined);
 
         return tests.length > 0 ? tests : undefined;
     }
 
     findGroups(): string[] {
-        const groups = new Set<string>();
-        for (const [testItem] of this.allTestEntries()) {
-            for (const tag of testItem.tags ?? []) {
-                if (tag.id.startsWith('group:')) {
-                    groups.add(tag.id.slice(6));
-                }
-            }
-        }
-
-        return [...groups].sort();
+        return [...this.groupIndex.keys()].sort();
     }
 
     findTestsByGroup(group: string): TestItem[] {
-        const groupTagId = `group:${group}`;
-
-        return this.collectTestItems(
-            (testItem, testDef) =>
-                testDef.type === TestType.method &&
-                (testItem.tags ?? []).some((tag) => tag.id === groupTagId),
-        );
+        return [...(this.groupIndex.get(group) ?? [])];
     }
 
     getTrackedFiles() {
@@ -100,6 +88,8 @@ export class TestCollection extends BaseTestCollection {
             }
         }
         this.testDefinitionIndex.clear();
+        this.testItemIndex.clear();
+        this.groupIndex.clear();
 
         return super.reset();
     }
@@ -124,33 +114,38 @@ export class TestCollection extends BaseTestCollection {
         return super.deleteFile(file);
     }
 
-    private *allTestEntries(): Iterable<[TestItem, TestDefinition]> {
-        for (const testData of this.testItems.values()) {
-            yield* testData;
-        }
-    }
-
-    private collectTestItems(
-        predicate: (testItem: TestItem, testDefinition: TestDefinition) => boolean,
-    ): TestItem[] {
-        const items: TestItem[] = [];
-        for (const [testItem, testDef] of this.allTestEntries()) {
-            if (predicate(testItem, testDef)) {
-                items.push(testItem);
-            }
-        }
-        return items;
-    }
-
     private setTestDefinition(uri: URI, testItem: TestItem, testDefinition: TestDefinition): void {
         this.getTestDefinitions(uri).set(testItem, testDefinition);
         this.testDefinitionIndex.set(testItem.id, testDefinition);
+        this.testItemIndex.set(testItem.id, testItem);
+
+        if (testDefinition.type === TestType.method) {
+            for (const tag of testItem.tags ?? []) {
+                if (tag.id.startsWith('group:')) {
+                    const group = tag.id.slice(6);
+                    if (!this.groupIndex.has(group)) {
+                        this.groupIndex.set(group, new Set());
+                    }
+                    this.groupIndex.get(group)!.add(testItem);
+                }
+            }
+        }
     }
 
     private clearTestDefinitions(uri: URI): void {
         const testData = this.getTestDefinitions(uri);
         for (const [testItem] of testData) {
             this.testDefinitionIndex.delete(testItem.id);
+            this.testItemIndex.delete(testItem.id);
+            for (const group of this.groupIndex.values()) {
+                group.delete(testItem);
+            }
+        }
+        // Clean up empty groups
+        for (const [key, items] of this.groupIndex) {
+            if (items.size === 0) {
+                this.groupIndex.delete(key);
+            }
         }
         testData.clear();
     }

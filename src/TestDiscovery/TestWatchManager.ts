@@ -6,6 +6,7 @@ import {
     type TestRunProfile,
     TestRunRequest,
     type Uri,
+    window,
 } from 'vscode';
 import { TestCollection } from '../TestCollection';
 import { TestRunHandler } from '../TestExecution';
@@ -16,6 +17,7 @@ export class TestWatchManager {
     private watchAllProfile: TestRunProfile | undefined;
     private isWatchingAll = false;
     private watchingTests = new Map<TestItem, TestRunProfile | undefined>();
+    private pendingRun = Promise.resolve();
 
     constructor(
         @inject(TestRunHandler) private handler: TestRunHandler,
@@ -43,25 +45,36 @@ export class TestWatchManager {
 
     setupFileChangeListener(): void {
         this.fileChangedEmitter.event((uri) => {
-            if (this.isWatchingAll) {
-                this.handler.startTestRun(
-                    new TestRunRequest(undefined, undefined, this.watchAllProfile, true),
-                );
+            const request = this.buildRequest(uri);
+            if (!request) {
                 return;
             }
 
-            const include: TestItem[] = [];
-            let profile: TestRunProfile | undefined;
-            for (const [testItem, thisProfile] of this.watchingTests) {
-                if (testItem.uri?.toString() === uri.toString()) {
-                    include.push(...this.testCollection.findTestsByFile(testItem.uri));
-                    profile = thisProfile;
-                }
-            }
-
-            if (include.length) {
-                this.handler.startTestRun(new TestRunRequest(include, undefined, profile, true));
-            }
+            this.pendingRun = this.pendingRun
+                .then(() => this.handler.startTestRun(request))
+                .catch((err) => {
+                    const message = err instanceof Error ? err.message : String(err);
+                    window.showErrorMessage(`PHPUnit: Failed to run continuous tests: ${message}`);
+                });
         });
+    }
+
+    private buildRequest(uri: Uri): TestRunRequest | undefined {
+        if (this.isWatchingAll) {
+            return new TestRunRequest(undefined, undefined, this.watchAllProfile, true);
+        }
+
+        const include: TestItem[] = [];
+        let profile: TestRunProfile | undefined;
+        for (const [testItem, thisProfile] of this.watchingTests) {
+            if (testItem.uri?.toString() === uri.toString()) {
+                include.push(...this.testCollection.findTestsByFile(testItem.uri));
+                profile = thisProfile;
+            }
+        }
+
+        return include.length
+            ? new TestRunRequest(include, undefined, profile, true)
+            : undefined;
     }
 }

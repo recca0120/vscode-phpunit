@@ -1,25 +1,22 @@
 import { inject, injectable } from 'inversify';
 import {
     type CancellationToken,
-    debug,
     type TestController,
     type TestRun,
     type TestRunRequest,
-    workspace,
 } from 'vscode';
 import { CoverageCollector } from '../Coverage';
 import {
     FilterStrategyFactory,
-    Mode,
     type ProcessBuilder,
     type TestDefinition,
     type TestRunner,
     TestRunnerEvent,
     type TestRunnerProcess,
-    type Xdebug,
 } from '../PHPUnit';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
+import { DebugSessionManager } from './DebugSessionManager';
 import { ProcessBuilderFactory } from './ProcessBuilderFactory';
 import { TestQueueBuilder } from './TestQueueBuilder';
 import { TestRunnerBuilder } from './TestRunnerBuilder';
@@ -36,6 +33,7 @@ export class TestRunHandler {
         @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
         @inject(CoverageCollector) private coverageCollector: CoverageCollector,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
+        @inject(DebugSessionManager) private debugSession: DebugSessionManager,
     ) {}
 
     getPreviousRequest() {
@@ -50,27 +48,13 @@ export class TestRunHandler {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
         const xdebug = builder.getXdebug()!;
 
-        await this.manageDebugSession(xdebug, async () => {
+        await this.debugSession.wrap(xdebug, async () => {
             const testRun = this.ctrl.createTestRun(request);
             await this.runTestQueue(builder, testRun, request, cancellation);
         });
 
         this.previousRequest = request;
         this.lastRunAt = Date.now();
-    }
-
-    private async manageDebugSession(xdebug: Xdebug, fn: () => Promise<void>): Promise<void> {
-        if (xdebug.mode === Mode.debug) {
-            const wsf = workspace.getWorkspaceFolder(this.testCollection.getRootUri());
-            // TODO(#346): await debug session attachment before running tests
-            await debug.startDebugging(wsf, xdebug.name ?? (await xdebug.getDebugConfiguration()));
-        }
-
-        await fn();
-
-        if (xdebug.mode === Mode.debug && debug.activeDebugSession?.type === 'php') {
-            debug.stopDebugging(debug.activeDebugSession);
-        }
     }
 
     private async runTestQueue(

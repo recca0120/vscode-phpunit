@@ -158,11 +158,17 @@ const createTestController = vi
 
 const tests = { createTestController };
 
-const TestMessage = {
-    diff(message: string | MarkdownString, expected: string, actual: string) {
-        return { message, expected, actual };
-    },
-};
+class FakeTestMessage {
+    constructor(public message: string | MarkdownString) {}
+
+    static diff(message: string | MarkdownString, expected: string, actual: string) {
+        const msg = new FakeTestMessage(message);
+        (msg as any).expected = expected;
+        (msg as any).actual = actual;
+        return msg;
+    }
+}
+const TestMessage = FakeTestMessage;
 
 class Disposable {
     dispose() {}
