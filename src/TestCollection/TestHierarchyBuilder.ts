@@ -1,10 +1,13 @@
-import { Position, Range, type TestController, type TestItem, type TestItemCollection, TestTag, Uri } from 'vscode';
 import {
-    type TestDefinition,
-    type TestParser,
-    TestType,
-    TransformerFactory,
-} from '../PHPUnit';
+    Position,
+    Range,
+    type TestController,
+    type TestItem,
+    type TestItemCollection,
+    TestTag,
+    Uri,
+} from 'vscode';
+import { type TestDefinition, type TestParser, TestType, TransformerFactory } from '../PHPUnit';
 
 export class TestHierarchyBuilder {
     private icons = {
@@ -31,7 +34,10 @@ export class TestHierarchyBuilder {
         for (const type of [TestType.method, TestType.describe, TestType.class] as const) {
             this.testParser.on(type, (testDefinition, index) => {
                 this.ascend(this.ancestorDepth + testDefinition.depth);
-                this.addTestItem(testDefinition, type === TestType.method ? `${index}` : testDefinition.id);
+                this.addTestItem(
+                    testDefinition,
+                    type === TestType.method ? `${index}` : testDefinition.id,
+                );
             });
         }
         this.testParser.on(TestType.namespace, (testDefinition) => {
@@ -47,7 +53,8 @@ export class TestHierarchyBuilder {
     }
 
     private addNamespaceTestItems(testDefinition: TestDefinition) {
-        const transformer = TransformerFactory.create(testDefinition.classFQN!);
+        const classFQN = testDefinition.classFQN ?? '';
+        const transformer = TransformerFactory.create(classFQN);
 
         let children = this.rootItems;
         let testItem: TestItem | undefined;
@@ -114,10 +121,15 @@ export class TestHierarchyBuilder {
     }
 
     private createTestItem(testDefinition: TestDefinition, sortText: string) {
+        const file = testDefinition.file;
+        if (!file) {
+            throw new Error(`Test definition ${testDefinition.id} has no file`);
+        }
+
         const testItem = this.ctrl.createTestItem(
             testDefinition.id,
             this.parseLabelWithIcon(testDefinition),
-            Uri.file(testDefinition.file!),
+            Uri.file(file),
         );
         testItem.canResolveChildren = testDefinition.type === TestType.class;
         testItem.sortText = sortText;
@@ -133,7 +145,10 @@ export class TestHierarchyBuilder {
 
     private ascend(depth: number) {
         while (this.ancestors.length > depth) {
-            const completedAncestor = this.ancestors.pop()!;
+            const completedAncestor = this.ancestors.pop();
+            if (!completedAncestor) {
+                break;
+            }
             if (completedAncestor.type === TestType.namespace) {
                 for (const child of completedAncestor.children) {
                     completedAncestor.item.children.add(child);
@@ -146,8 +161,11 @@ export class TestHierarchyBuilder {
 
     private createRange(testDefinition: TestDefinition) {
         return new Range(
-            new Position(testDefinition.start!.line - 1, testDefinition.start!.character),
-            new Position(testDefinition.end!.line - 1, testDefinition.end!.character),
+            new Position(
+                (testDefinition.start?.line ?? 1) - 1,
+                testDefinition.start?.character ?? 0,
+            ),
+            new Position((testDefinition.end?.line ?? 1) - 1, testDefinition.end?.character ?? 0),
         );
     }
 

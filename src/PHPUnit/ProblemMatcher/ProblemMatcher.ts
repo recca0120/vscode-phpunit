@@ -21,11 +21,11 @@ export class ProblemMatcher {
         let result = this.testResultParser.parse(input.toString());
         result = PestV1Fixer.fixFlowId(this.cache.asMap(), result);
 
-        if (!this.isDispatchable(result)) {
+        if (!this.isDispatchable(result) || !result) {
             return result;
         }
 
-        return this.dispatch(result!);
+        return this.dispatch(result);
     }
 
     private isDispatchable(result?: TestResult): boolean {
@@ -87,7 +87,11 @@ export class ProblemMatcher {
             return;
         }
 
-        const prevTestResult = this.cache.get(testResult)!;
+        const prevTestResult = this.cache.get(testResult);
+        if (!prevTestResult) {
+            return;
+        }
+
         const event = this.isFault(prevTestResult) ? prevTestResult.event : testResult.event;
         const result = { ...prevTestResult, ...testResult, event };
         this.cache.delete(testResult);

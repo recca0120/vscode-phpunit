@@ -2,8 +2,8 @@ import type { TestFailed, TestIgnored, TestResult } from '../ProblemMatcher';
 import { TransformerFactory } from './TransformerFactory';
 import { getPrevTestResult } from './utils';
 
-export class PHPUnitFixer {
-    static fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
+export const PHPUnitFixer = {
+    fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
         if (testResult.id) {
             return testResult;
         }
@@ -27,5 +27,5 @@ export class PHPUnitFixer {
         testResult.file = file;
 
         return testResult;
-    }
-}
+    },
+};

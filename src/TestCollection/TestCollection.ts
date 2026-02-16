@@ -1,5 +1,11 @@
 import { inject, injectable } from 'inversify';
-import type { Position, TestController, TestItem, TestItemCollection, TestRunRequest } from 'vscode';
+import type {
+    Position,
+    TestController,
+    TestItem,
+    TestItemCollection,
+    TestRunRequest,
+} from 'vscode';
 import type { URI } from 'vscode-uri';
 import {
     TestCollection as BaseTestCollection,
@@ -92,7 +98,11 @@ export class TestCollection extends BaseTestCollection {
 
     protected async parseTests(uri: URI, testsuite: string) {
         const { testParser, testDefinitionBuilder } = this.createTestParser();
-        const testHierarchyBuilder = new TestHierarchyBuilder(this.ctrl, testParser, this.rootItems);
+        const testHierarchyBuilder = new TestHierarchyBuilder(
+            this.ctrl,
+            testParser,
+            this.rootItems,
+        );
         await testParser.parseFile(uri.fsPath, testsuite);
 
         this.removeTestItems(uri);
@@ -116,8 +126,9 @@ export class TestCollection extends BaseTestCollection {
         for (const [testItem, testDef] of this.index.getDefinitionsByUri(uri.toString())) {
             if (
                 (testDef.type === TestType.describe || testDef.type === TestType.method) &&
-                position.line >= testItem.range!.start.line &&
-                position.line <= testItem.range!.end.line
+                testItem.range &&
+                position.line >= testItem.range.start.line &&
+                position.line <= testItem.range.end.line
             ) {
                 items.push(testItem);
             }
@@ -128,7 +139,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     private compareFn(testItem: TestItem, position: Position) {
-        return testItem.range!.start.line - position.line;
+        return (testItem.range?.start.line ?? 0) - position.line;
     }
 
     private removeTestItems(uri: URI) {

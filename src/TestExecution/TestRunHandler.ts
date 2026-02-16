@@ -1,10 +1,5 @@
 import { inject, injectable } from 'inversify';
-import {
-    type CancellationToken,
-    type TestController,
-    type TestRun,
-    type TestRunRequest,
-} from 'vscode';
+import type { CancellationToken, TestController, TestRun, TestRunRequest } from 'vscode';
 import { CoverageCollector } from '../Coverage';
 import {
     FilterStrategyFactory,
@@ -72,9 +67,11 @@ export class TestRunHandler {
 
         try {
             const processes = this.createProcesses(runner, builder, request);
-            cancellation?.onCancellationRequested(() =>
-                processes.forEach((process) => process.abort()),
-            );
+            cancellation?.onCancellationRequested(() => {
+                for (const process of processes) {
+                    process.abort();
+                }
+            });
 
             await this.runProcesses(processes, cancellation);
             await this.coverageCollector.collect(processes, testRun);

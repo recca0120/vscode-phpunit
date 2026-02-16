@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML, type TestDefinition } from '../PHPUnit';
+import { PHPUnitXML } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestCollection } from './TestCollection';
 
@@ -134,12 +134,14 @@ describe('Extension TestCollection', () => {
 
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const testItem = { id: 'Assertions (Tests\\Assertions)::Passed' } as any;
-        const request = { include: [testItem] } as any;
+        const testItem = {
+            id: 'Assertions (Tests\\Assertions)::Passed',
+        } as import('vscode').TestItem;
+        const request = { include: [testItem] } as import('vscode').TestRunRequest;
         const result = collection.findTestsByRequest(request);
 
         expect(result).toHaveLength(1);
-        expect(result![0].id).toBe('Assertions (Tests\\Assertions)::Passed');
+        expect(result?.[0].id).toBe('Assertions (Tests\\Assertions)::Passed');
     });
 
     it('findTestsByRequest should return undefined for no match', async () => {
@@ -152,7 +154,9 @@ describe('Extension TestCollection', () => {
 
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const request = { include: [{ id: 'nonexistent' }] } as any;
+        const request = {
+            include: [{ id: 'nonexistent' } as import('vscode').TestItem],
+        } as import('vscode').TestRunRequest;
         expect(collection.findTestsByRequest(request)).toBeUndefined();
     });
 
@@ -165,7 +169,11 @@ describe('Extension TestCollection', () => {
             </testsuites>`);
 
         expect(collection.findTestsByRequest(undefined)).toBeUndefined();
-        expect(collection.findTestsByRequest({ include: undefined } as any)).toBeUndefined();
+        expect(
+            collection.findTestsByRequest({
+                include: undefined,
+            } as unknown as import('vscode').TestRunRequest),
+        ).toBeUndefined();
     });
 
     it('group index should update when tests are re-parsed', async () => {

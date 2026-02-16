@@ -42,9 +42,7 @@ describe('CoverageCollector', () => {
     });
 
     it('should skip when no clover files', async () => {
-        const processes = [
-            { getCloverFile: () => undefined },
-        ] as unknown as TestRunnerProcess[];
+        const processes = [{ getCloverFile: () => undefined }] as unknown as TestRunnerProcess[];
 
         await collector.collect(processes, testRun);
 

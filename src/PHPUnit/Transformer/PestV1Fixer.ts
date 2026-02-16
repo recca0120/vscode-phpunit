@@ -1,15 +1,23 @@
 import { TeamcityEvent, type TestResult } from '../ProblemMatcher';
 
-export class PestV1Fixer {
-    static fixLocationHint(locationHint: string) {
-        return PestV1Fixer.fixDataSet(
+function fixDataSet(locationHint: string) {
+    const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
+
+    return matched?.groups?.description
+        ? `${matched.groups.description} with data set "('${matched.groups.data}')"`
+        : locationHint;
+}
+
+export const PestV1Fixer = {
+    fixLocationHint(locationHint: string) {
+        return fixDataSet(
             /^tests\//.test(locationHint)
                 ? locationHint
                 : locationHint.substring(locationHint.lastIndexOf('tests/')),
         );
-    }
+    },
 
-    static fixFlowId(cache: Map<string, TestResult>, testResult?: TestResult) {
+    fixFlowId(cache: Map<string, TestResult>, testResult?: TestResult) {
         if (!testResult) {
             return testResult;
         }
@@ -40,13 +48,5 @@ export class PestV1Fixer {
         tr.flowId = (result as (TestResult & { flowId?: number }) | undefined)?.flowId;
 
         return testResult;
-    }
-
-    private static fixDataSet(locationHint: string) {
-        const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
-
-        return matched?.groups?.description
-            ? `${matched.groups.description} with data set "('${matched.groups.data}')"`
-            : locationHint;
-    }
-}
+    },
+};

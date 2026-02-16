@@ -1,10 +1,10 @@
 import type { TestResult } from '../ProblemMatcher';
 import { capitalize } from '../utils';
 
-class Str {
-    static prefix = '__pest_evaluable_';
+const Str = {
+    prefix: '__pest_evaluable_',
 
-    static evaluable(code: string) {
+    evaluable(code: string) {
         return (
             Str.prefix +
             code
@@ -12,16 +12,20 @@ class Str {
                 .replace(/\s/g, '_')
                 .replace(/[^a-zA-Z0-9_\u0080-\uFFFF]/g, '_')
         );
-    }
+    },
+};
+
+function hasPrefix(id?: string) {
+    return id?.includes(Str.prefix) ?? false;
 }
 
-export class PestV2Fixer {
-    static fixId(location: string, name: string) {
-        return PestV2Fixer.hasPrefix(name) ? name : location;
-    }
+export const PestV2Fixer = {
+    fixId(location: string, name: string) {
+        return hasPrefix(name) ? name : location;
+    },
 
-    static isEqualsPestV2DataSetId(result: TestResult, testItemId: string) {
-        if (!('id' in result) || !PestV2Fixer.hasPrefix(result.id)) {
+    isEqualsPestV2DataSetId(result: TestResult, testItemId: string) {
+        if (!('id' in result) || !hasPrefix(result.id)) {
             return false;
         }
 
@@ -29,13 +33,9 @@ export class PestV2Fixer {
         classFQN = capitalize(classFQN.replace(/\//g, '\\').replace(/\.php$/, ''));
 
         return [classFQN, PestV2Fixer.methodName(method)].join('::') === result.id;
-    }
+    },
 
-    private static hasPrefix(id?: string) {
-        return id?.includes(Str.prefix) ?? false;
-    }
-
-    static methodName(methodName: string) {
+    methodName(methodName: string) {
         methodName = methodName.replace(/\{@\*}/g, '*/');
         const matched = methodName.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
         let dataset = '';
@@ -45,5 +45,5 @@ export class PestV2Fixer {
         }
 
         return Str.evaluable(methodName) + dataset;
-    }
-}
+    },
+};

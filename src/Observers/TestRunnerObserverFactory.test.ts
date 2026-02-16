@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OutputChannel, TestItem, TestRun, TestRunRequest } from 'vscode';
-import { Configuration } from '../Configuration';
+import type { Configuration } from '../Configuration';
 import { PHPUnitXML, type TestDefinition } from '../PHPUnit';
 import { OutputChannelObserver } from './OutputChannelObserver';
 import { TestResultObserver } from './TestResultObserver';

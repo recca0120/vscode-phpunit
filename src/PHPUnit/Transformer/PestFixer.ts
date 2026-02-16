@@ -4,8 +4,8 @@ import { getPrevTestResult } from './utils';
 export { PestV1Fixer } from './PestV1Fixer';
 export { PestV2Fixer } from './PestV2Fixer';
 
-export class PestFixer {
-    static fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
+export const PestFixer = {
+    fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
         if (testResult.id) {
             return testResult;
         }
@@ -33,5 +33,5 @@ export class PestFixer {
         }
 
         return testResult;
-    }
-}
+    },
+};

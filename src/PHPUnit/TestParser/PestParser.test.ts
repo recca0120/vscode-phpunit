@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, pestProject } from '../__tests__/utils';
-import { type TestDefinition, TestType } from '../types';
+import { TestType } from '../types';
 
 export const parse = (buffer: Buffer | string, file: string) =>
     parseTestFile(buffer, file, pestProject(''));

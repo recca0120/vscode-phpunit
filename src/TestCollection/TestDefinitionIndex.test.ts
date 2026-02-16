@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { TestItem } from 'vscode';
-import { TestType, type TestDefinition } from '../PHPUnit';
+import { type TestDefinition, TestType } from '../PHPUnit';
 import { TestDefinitionIndex } from './TestDefinitionIndex';
 
 function createTestItem(id: string, tags: { id: string }[] = []): TestItem {
-    return { id, tags, children: { size: 0 } } as any;
+    return { id, tags, children: { size: 0 } } as unknown as TestItem;
 }
 
 function createTestDef(type: TestType): TestDefinition {
@@ -71,7 +71,11 @@ describe('TestDefinitionIndex', () => {
 
     it('should clear all entries', () => {
         const index = new TestDefinitionIndex();
-        index.set('file:///a.php', createTestItem('t1', [{ id: 'group:unit' }]), createTestDef(TestType.method));
+        index.set(
+            'file:///a.php',
+            createTestItem('t1', [{ id: 'group:unit' }]),
+            createTestDef(TestType.method),
+        );
         index.set('file:///b.php', createTestItem('t2'), createTestDef(TestType.class));
 
         index.clear();
@@ -116,7 +120,10 @@ describe('TestDefinitionIndex', () => {
         index.set('file:///b.php', createTestItem('t3'), createTestDef(TestType.method));
 
         const result = index.getDefinitionsByUri('file:///a.php');
-        expect(result).toEqual([[item1, def1], [item2, def2]]);
+        expect(result).toEqual([
+            [item1, def1],
+            [item2, def2],
+        ]);
     });
 
     it('should return empty array for unknown URI', () => {

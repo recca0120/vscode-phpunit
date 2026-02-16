@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../__tests__/utils';
-import { type TestDefinition, TestType } from '../types';
+import { TestType } from '../types';
 
 export const parse = (buffer: Buffer | string, file: string) =>
     parseTestFile(buffer, file, phpUnitProject(''));

@@ -143,6 +143,11 @@ export class TestRunnerEventProxy implements TestRunnerObserver {
     }
 
     private notify<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void {
-        this.listeners[eventName]?.forEach((callback) => callback(result));
+        const callbacks = this.listeners[eventName];
+        if (callbacks) {
+            for (const callback of callbacks) {
+                callback(result);
+            }
+        }
     }
 }

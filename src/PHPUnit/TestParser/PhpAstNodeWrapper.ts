@@ -118,8 +118,9 @@ export class PhpAstNodeWrapper {
 
     get name(): string {
         if (this.ast.kind === 'namedargument') {
-            if ((this.ast.value as unknown as AST).kind === 'string') {
-                return (this.ast.value as unknown as AST).value!;
+            const astValue = this.ast.value as unknown as AST;
+            if (astValue.kind === 'string') {
+                return astValue.value ?? '';
             }
         }
 
@@ -140,7 +141,7 @@ export class PhpAstNodeWrapper {
         }
 
         if (this.ast.kind === 'string') {
-            return this.ast.value!;
+            return this.ast.value ?? '';
         }
 
         return '';
@@ -154,7 +155,10 @@ export class PhpAstNodeWrapper {
     }
 
     get position() {
-        const loc = this.ast.loc!;
+        const loc = this.ast.loc;
+        if (!loc) {
+            return { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
+        }
         const start = { line: loc.start.line, character: loc.start.column };
         const end = { line: loc.end.line, character: loc.end.column };
 
@@ -221,7 +225,7 @@ export class PhpAstNodeWrapper {
         if (this.kind === 'class') {
             return (
                 this.name.endsWith('Test') &&
-                this.children!.some((definition): boolean => definition.isTest())
+                (this.children?.some((definition): boolean => definition.isTest()) ?? false)
             );
         }
 

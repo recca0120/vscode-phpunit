@@ -1,4 +1,5 @@
 import type { SpawnOptions } from 'node:child_process';
+import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
 
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -17,12 +18,17 @@ export class PathReplacer {
     ) {
         this.cwd = this.normalizePath((this.options?.cwd as string) ?? (process.env.cwd as string));
         this.pathVariables = new Map<string, string>();
-        this.pathVariables.set('${PWD}', this.cwd);
-        this.pathVariables.set('${workspaceFolder}', this.cwd);
+        this.pathVariables.set(VAR_PWD, this.cwd);
+        this.pathVariables.set(VAR_WORKSPACE_FOLDER, this.cwd);
         for (const [key, value] of Object.entries(paths ?? {})) {
-            this.pathVariables.has(key)
-                ? this.pathLookup.set(this.pathVariables.get(key)!, value)
-                : this.pathLookup.set(key, value);
+            if (this.pathVariables.has(key)) {
+                const pathValue = this.pathVariables.get(key);
+                if (pathValue) {
+                    this.pathLookup.set(pathValue, value);
+                }
+            } else {
+                this.pathLookup.set(key, value);
+            }
         }
     }
 
@@ -88,9 +94,12 @@ export class PathReplacer {
     }
 
     private replaceRelative(path: string) {
-        return path.startsWith('./')
-            ? path.replace(/^\./, this.pathVariables.get('${workspaceFolder}')!)
-            : path;
+        if (!path.startsWith('./')) {
+            return path;
+        }
+
+        const workspaceFolder = this.pathVariables.get(VAR_WORKSPACE_FOLDER);
+        return workspaceFolder ? path.replace(/^\./, workspaceFolder) : path;
     }
 
     private removePhpVfsComposer(path: string) {

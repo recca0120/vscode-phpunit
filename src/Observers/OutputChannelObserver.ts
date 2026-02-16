@@ -41,7 +41,8 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.showOutputChannel(ShowOutputState.always);
 
         this.outputFormatter.start();
-        this.appendLine((this.lastCommand = builder.toString()));
+        this.lastCommand = builder.toString();
+        this.appendLine(this.lastCommand);
     }
 
     error(error: string): void {

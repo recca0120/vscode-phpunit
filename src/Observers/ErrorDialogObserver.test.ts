@@ -12,9 +12,7 @@ describe('ErrorDialogObserver', () => {
         window.showInformationMessage = vi.fn();
         configuration = new Configuration();
         errorDialogObserver = new ErrorDialogObserver(configuration);
-    });
 
-    beforeEach(() => {
         (window.showErrorMessage as Mock).mockReset();
         (window.showWarningMessage as Mock).mockReset();
         (window.showInformationMessage as Mock).mockReset();

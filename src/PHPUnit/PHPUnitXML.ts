@@ -169,19 +169,20 @@ export class PHPUnitXML {
         }
 
         return this.fromCache<T>(selector, () => {
-            return this.element!.querySelectorAll(selector).reduce(
-                (results: T[], parent: XmlElement) => {
-                    for (const [type, callback] of Object.entries(callbacks)) {
-                        const temp = parent
-                            .querySelectorAll(type)
-                            .map((node) => callback(type, node, parent));
+            return (
+                this.element
+                    ?.querySelectorAll(selector)
+                    .reduce((results: T[], parent: XmlElement) => {
+                        for (const [type, callback] of Object.entries(callbacks)) {
+                            const temp = parent
+                                .querySelectorAll(type)
+                                .map((node) => callback(type, node, parent));
 
-                        results.push(...temp);
-                    }
+                            results.push(...temp);
+                        }
 
-                    return results;
-                },
-                [],
+                        return results;
+                    }, []) ?? []
             );
         });
     }

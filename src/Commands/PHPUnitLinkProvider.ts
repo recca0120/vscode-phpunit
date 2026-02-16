@@ -8,7 +8,7 @@ import {
     type TextDocument,
 } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML } from '../PHPUnit';
+import type { PHPUnitXML } from '../PHPUnit';
 
 export class PHPUnitLinkProvider implements DocumentLinkProvider {
     private regex = /((?:[A-Z]:)?(?:\.{0,2}[\\/])?[^\s:]+\.php):(\d+)(?::(\d+))?/gi;
@@ -26,7 +26,11 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
             const line = document.lineAt(lineIndex);
             let match: RegExpExecArray | null;
 
-            while ((match = this.regex.exec(line.text)) !== null) {
+            while (true) {
+                match = this.regex.exec(line.text);
+                if (match === null) {
+                    break;
+                }
                 const [fullMatch, filePath, lineStr] = match;
                 const lineNumber = parseInt(lineStr, 10);
 

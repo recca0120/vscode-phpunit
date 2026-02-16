@@ -35,7 +35,10 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
 
         return [...text.matchAll(pattern)].reduce(
             (result: TestResultSummary & Record<string, unknown>, match) => {
-                const matched = match.groups!;
+                const matched = match.groups;
+                if (!matched) {
+                    return result;
+                }
                 const [name, count] = matched.name
                     ? [matched.name, matched.count]
                     : [matched.name2, matched.count2];

@@ -1,6 +1,6 @@
 import {
     EOL,
-    PHPUnitXML,
+    type PHPUnitXML,
     TeamcityEvent,
     type TestConfiguration,
     type TestDuration,
@@ -37,13 +37,15 @@ export abstract class OutputFormatter {
     }
 
     error(text: string) {
-        const [icon] = this.messages.get(TeamcityEvent.testFailed)!;
+        const message = this.messages.get(TeamcityEvent.testFailed);
+        const [icon] = message ?? ['❌', 'FAILED'];
 
         return `${EOL}${icon} ${text}`;
     }
 
     testVersion(result: TestVersion) {
-        const [icon] = this.messages.get(TeamcityEvent.testVersion)!;
+        const message = this.messages.get(TeamcityEvent.testVersion);
+        const [icon] = message ?? ['🚀', 'STARTED'];
 
         return `${EOL}${icon} ${result.text}${EOL}`;
     }

@@ -10,7 +10,12 @@ async function getFreePort(): Promise<number> {
         const server = net.createServer();
         server.on('error', (err) => reject(err));
         server.listen(0, '127.0.0.1', () => {
-            const freePort = (server.address()! as net.AddressInfo).port;
+            const address = server.address();
+            if (!address || typeof address === 'string') {
+                server.close(() => reject(new Error('Failed to get server address')));
+                return;
+            }
+            const freePort = address.port;
             server.close(() => resolve(freePort));
         });
     });
@@ -34,11 +39,11 @@ export class Xdebug {
     }
 
     getCloverFile() {
-        if (this.mode !== Mode.coverage) {
+        if (this.mode !== Mode.coverage || !this.temporaryDirectory) {
             return undefined;
         }
 
-        return join(this.temporaryDirectory!, `phpunit-${this.index}.xml`);
+        return join(this.temporaryDirectory, `phpunit-${this.index}.xml`);
     }
 
     setIndex(index: number) {
@@ -104,7 +109,12 @@ export class Xdebug {
             return [];
         }
 
-        return ['--coverage-clover', this.getCloverFile()!];
+        const cloverFile = this.getCloverFile();
+        if (!cloverFile) {
+            return [];
+        }
+
+        return ['--coverage-clover', cloverFile];
     }
 
     clone() {

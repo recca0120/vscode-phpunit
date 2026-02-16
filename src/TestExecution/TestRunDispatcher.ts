@@ -1,4 +1,4 @@
-import { inject, injectable, type Container } from 'inversify';
+import { type Container, inject, injectable } from 'inversify';
 import {
     type CancellationToken,
     type TestItem,
@@ -8,8 +8,8 @@ import {
     workspace,
 } from 'vscode';
 import { TestWatchManager } from '../TestDiscovery';
-import { WorkspaceFolderManager } from '../WorkspaceFolderManager';
 import { TYPES } from '../types';
+import { WorkspaceFolderManager } from '../WorkspaceFolderManager';
 import { TestRunHandler } from './TestRunHandler';
 
 @injectable()
@@ -39,11 +39,7 @@ export class TestRunDispatcher {
 
         await Promise.all(
             [...groups.values()].map(({ container, items }) => {
-                const subrequest = new TestRunRequest(
-                    items,
-                    request.exclude,
-                    request.profile,
-                );
+                const subrequest = new TestRunRequest(items, request.exclude, request.profile);
                 return container.get(TestRunHandler).startTestRun(subrequest, cancellation);
             }),
         );
@@ -85,7 +81,7 @@ export class TestRunDispatcher {
             if (!groups.has(childKey)) {
                 groups.set(childKey, { container: child, items: [] });
             }
-            groups.get(childKey)!.items.push(testItem);
+            groups.get(childKey)?.items.push(testItem);
         }
     }
 

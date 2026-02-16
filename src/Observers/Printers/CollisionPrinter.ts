@@ -18,7 +18,11 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     testFinished(result: TestFinished | TestFailed | TestIgnored) {
-        const [icon] = this.messages.get(result.event)!;
+        const message = this.messages.get(result.event);
+        if (!message) {
+            return '';
+        }
+        const [icon] = message;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
         if (result.event === TeamcityEvent.testFailed) {
@@ -58,14 +62,18 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     private formatErrorTitle(result: TestFailed) {
-        const [icon, message] = this.messages.get(result.event)!;
+        const message = this.messages.get(result.event);
+        if (!message) {
+            return '';
+        }
+        const [icon, messageText] = message;
         const parts = result.id.split('::');
         if (parts.length < 2) {
-            return `  ${icon} ${message}  ${result.id}`;
+            return `  ${icon} ${messageText}  ${result.id}`;
         }
 
         const [className, method] = parts;
-        return `  ${icon} ${message}  ${className} > ${method.replace(/^test_/, '')}`;
+        return `  ${icon} ${messageText}  ${className} > ${method.replace(/^test_/, '')}`;
     }
 
     private formatMessage(result: TestFailed) {
@@ -87,8 +95,7 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     private getFileContent(result: TestFailed) {
-        const detail = result.details.find(({ file }) => file === result.file)
-            ?? result.details[0];
+        const detail = result.details.find(({ file }) => file === result.file) ?? result.details[0];
 
         if (!detail) {
             return undefined;

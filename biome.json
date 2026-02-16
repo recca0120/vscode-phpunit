@@ -1,64 +1,34 @@
 {
     "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
-    "vcs": {
-        "enabled": true,
-        "clientKind": "git",
-        "useIgnoreFile": true
-    },
+    "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
     "files": {
         "includes": ["**", "!**/out", "!**/dist", "!**/coverage", "!**/.vscode-test", "!**/*.d.ts"]
     },
-    "formatter": {
-        "indentStyle": "space",
-        "indentWidth": 4,
-        "lineWidth": 100
-    },
+    "formatter": { "indentStyle": "space", "indentWidth": 4, "lineWidth": 100 },
     "javascript": {
-        "parser": {
-            "unsafeParameterDecoratorsEnabled": true
-        },
-        "formatter": {
-            "quoteStyle": "single",
-            "trailingCommas": "all"
-        }
+        "parser": { "unsafeParameterDecoratorsEnabled": true },
+        "formatter": { "quoteStyle": "single", "trailingCommas": "all" }
     },
     "linter": {
         "rules": {
-            "style": {
-                "noNonNullAssertion": "warn"
-            },
-            "complexity": {
-                "noStaticOnlyClass": "warn",
-                "noBannedTypes": "warn"
-            },
-            "performance": {
-                "noAccumulatingSpread": "warn"
-            },
-            "suspicious": {
-                "noDoubleEquals": "warn",
-                "noExplicitAny": "error",
-                "noNonNullAssertedOptionalChain": "warn",
-                "useIterableCallbackReturn": "warn",
-                "noDuplicateTestHooks": "warn",
-                "noAssignInExpressions": "warn",
-                "noImplicitAnyLet": "warn",
-                "noExportsInTest": "warn",
-                "noTemplateCurlyInString": "warn"
-            },
-            "correctness": {
-                "noUnusedVariables": "warn",
-                "noUnusedImports": "warn",
-                "noUnsafeOptionalChaining": "warn"
-            }
+            "recommended": true
         }
     },
     "overrides": [
         {
-            "includes": ["**/*.test.ts"],
+            "includes": ["**/*.test.ts", "**/test/**"],
             "linter": {
                 "rules": {
                     "suspicious": { "noConsole": "off", "noExportsInTest": "off" },
-                    "correctness": { "noUnusedFunctionParameters": "off" },
+                    "correctness": { "noUnusedFunctionParameters": "off" }
+                }
+            }
+        },
+        {
+            "includes": ["**/__mocks__/**"],
+            "linter": {
+                "rules": {
+                    "suspicious": { "noExplicitAny": "off", "noRedeclare": "off" },
                     "style": { "noNonNullAssertion": "off" }
                 }
             }

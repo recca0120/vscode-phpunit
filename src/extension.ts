@@ -7,9 +7,8 @@ import {
     type OutputChannel,
     type TestController,
     TestRunProfileKind,
-    TestRunRequest,
+    type TestRunRequest,
     tests,
-    type Uri,
     type WorkspaceFolder,
     window,
     workspace,
@@ -53,10 +52,7 @@ export async function activate(context: ExtensionContext) {
     };
 }
 
-function createRunProfiles(
-    ctrl: TestController,
-    dispatcher: TestRunDispatcher,
-) {
+function createRunProfiles(ctrl: TestController, dispatcher: TestRunDispatcher) {
     const runHandler = (request: TestRunRequest, cancellation: CancellationToken) =>
         dispatcher.dispatch(request, cancellation);
 
@@ -98,10 +94,7 @@ function createRunProfiles(
     return testRunProfile;
 }
 
-function registerCommands(
-    context: ExtensionContext,
-    testCommandRegistry: TestCommandRegistry,
-) {
+function registerCommands(context: ExtensionContext, testCommandRegistry: TestCommandRegistry) {
     context.subscriptions.push(
         testCommandRegistry.reload(),
         testCommandRegistry.runAll(),
@@ -118,8 +111,8 @@ function registerDisposables(
     outputChannel: OutputChannel,
     folderManager: WorkspaceFolderManager,
 ) {
-    const linkProvider = new PHPUnitLinkProvider(
-        () => folderManager.getAll().map((c) => c.get(PHPUnitXML)),
+    const linkProvider = new PHPUnitLinkProvider(() =>
+        folderManager.getAll().map((c) => c.get(PHPUnitXML)),
     );
 
     context.subscriptions.push(
@@ -130,15 +123,14 @@ function registerDisposables(
             if (event.affectsConfiguration('phpunit')) {
                 for (const child of folderManager) {
                     const folder = child.get<WorkspaceFolder>(TYPES.WorkspaceFolder);
-                    child.get(Configuration).updateWorkspaceConfiguration(
-                        workspace.getConfiguration('phpunit', folder.uri),
-                    );
+                    child
+                        .get(Configuration)
+                        .updateWorkspaceConfiguration(
+                            workspace.getConfiguration('phpunit', folder.uri),
+                        );
                 }
             }
         }),
-        languages.registerDocumentLinkProvider(
-            { language: 'phpunit' },
-            linkProvider,
-        ),
+        languages.registerDocumentLinkProvider({ language: 'phpunit' }, linkProvider),
     );
 }

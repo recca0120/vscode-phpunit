@@ -1,4 +1,4 @@
-import type { AttrGroup, Attribute, Declaration, Method } from 'php-parser';
+import type { AttrGroup, Declaration, Method } from 'php-parser';
 import type { Annotations } from '../types';
 
 export const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
@@ -43,19 +43,15 @@ export class AttributeParser {
             return [];
         }
 
-        return (declaration.attrGroups as AttrGroup[]).reduce(
-            (attributes: ParsedAttribute[], group: AttrGroup) => {
-                return [
-                    ...attributes,
-                    ...group.attrs.map((attr: Attribute) => {
-                        return {
-                            name: attr.name,
-                            args: attr.args.map((arg: { value?: unknown }) => arg.value),
-                        };
-                    }),
-                ];
-            },
-            [],
-        );
+        const result: ParsedAttribute[] = [];
+        for (const group of declaration.attrGroups as AttrGroup[]) {
+            for (const attr of group.attrs) {
+                result.push({
+                    name: attr.name,
+                    args: attr.args.map((arg: { value?: unknown }) => arg.value),
+                });
+            }
+        }
+        return result;
     }
 }

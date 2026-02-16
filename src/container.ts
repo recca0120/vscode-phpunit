@@ -1,5 +1,12 @@
 import { Container } from 'inversify';
-import { EventEmitter, type OutputChannel, type TestController, type Uri, type WorkspaceFolder, workspace } from 'vscode';
+import {
+    EventEmitter,
+    type OutputChannel,
+    type TestController,
+    type Uri,
+    type WorkspaceFolder,
+    workspace,
+} from 'vscode';
 
 import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
@@ -7,11 +14,21 @@ import { TestRunnerObserverFactory } from './Observers';
 import { PHPUnitXML } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
-import { DebugSessionManager, ProcessBuilderFactory, TestQueueBuilder, TestRunDispatcher, TestRunHandler, TestRunnerBuilder } from './TestExecution';
+import {
+    DebugSessionManager,
+    ProcessBuilderFactory,
+    TestQueueBuilder,
+    TestRunDispatcher,
+    TestRunHandler,
+    TestRunnerBuilder,
+} from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
-export function createParentContainer(ctrl: TestController, outputChannel: OutputChannel): Container {
+export function createParentContainer(
+    ctrl: TestController,
+    outputChannel: OutputChannel,
+): Container {
     const container = new Container();
 
     // VS Code external objects (shared)
@@ -22,9 +39,9 @@ export function createParentContainer(ctrl: TestController, outputChannel: Outpu
     container.bind(CoverageCollector).toSelf().inSingletonScope();
 
     // Child container factory
-    container.bind(TYPES.ChildContainerFactory).toConstantValue(
-        (folder: WorkspaceFolder) => createChildContainer(container, folder),
-    );
+    container
+        .bind(TYPES.ChildContainerFactory)
+        .toConstantValue((folder: WorkspaceFolder) => createChildContainer(container, folder));
 
     // Cross-folder orchestration
     container.bind(WorkspaceFolderManager).toSelf().inSingletonScope();
@@ -45,7 +62,9 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .inSingletonScope();
     child
         .bind(Configuration)
-        .toDynamicValue(() => new Configuration(workspace.getConfiguration('phpunit', workspaceFolder.uri)))
+        .toDynamicValue(
+            () => new Configuration(workspace.getConfiguration('phpunit', workspaceFolder.uri)),
+        )
         .inSingletonScope();
 
     // Per-folder services

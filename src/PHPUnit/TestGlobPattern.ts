@@ -41,9 +41,13 @@ export class TestGlobPattern {
         }
 
         const dir = legalDirs[0];
+        if (!dir) {
+            return { uri: URI.file(this.root), pattern: `{${this.items}}` };
+        }
+
         const items = this.items.map((item) => item.replace(new RegExp(`^${dir}[\\/]?`), ''));
         const pattern = `{${items}}`;
 
-        return { uri: URI.file(join(this.root, dir!)), pattern };
+        return { uri: URI.file(join(this.root, dir)), pattern };
     }
 }

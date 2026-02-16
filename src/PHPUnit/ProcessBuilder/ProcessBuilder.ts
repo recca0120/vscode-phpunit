@@ -5,6 +5,7 @@ import type { TestResult } from '../ProblemMatcher';
 import { cloneInstance } from '../utils';
 import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
 import { type Path, PathReplacer } from './PathReplacer';
+import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from './placeholders';
 import type { Xdebug } from './Xdebug';
 
 const isSSH = (command: string) => /^ssh/.test(command);
@@ -52,12 +53,12 @@ export class ProcessBuilder {
     }
 
     replacePath(result: TestResult) {
-        if ('locationHint' in result) {
-            result.locationHint = this.pathReplacer.toLocal(result.locationHint!);
+        if ('locationHint' in result && result.locationHint) {
+            result.locationHint = this.pathReplacer.toLocal(result.locationHint);
         }
 
-        if ('file' in result) {
-            result.file = this.pathReplacer.toLocal(result.file!);
+        if ('file' in result && result.file) {
+            result.file = this.pathReplacer.toLocal(result.file);
         }
 
         if ('details' in result) {
@@ -98,12 +99,7 @@ export class ProcessBuilder {
             return command;
         }
 
-        return (
-            command +
-            (isRemoteCommand
-                ? ' "${php} ${phpargs} ${phpunit} ${phpunitargs}"'
-                : ' ${php} ${phpargs} ${phpunit} ${phpunitargs}')
-        );
+        return command + (isRemoteCommand ? ` ${CMD_TEMPLATE_QUOTED}` : ` ${CMD_TEMPLATE}`);
     }
 
     private convertSingleToDoubleQuotes(command: string) {

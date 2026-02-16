@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import type { TestItem, TestItemCollection, TestRun, TestRunRequest } from 'vscode';
+import type { TestDefinition } from '../PHPUnit';
 import { TestType } from '../PHPUnit';
 import { TestCollection } from '../TestCollection';
-import type { TestDefinition } from '../PHPUnit';
 
 @injectable()
 export class TestQueueBuilder {
@@ -41,7 +41,9 @@ export class TestQueueBuilder {
 
     private toArray(collection: TestItemCollection): TestItem[] {
         const items: TestItem[] = [];
-        collection.forEach((item) => items.push(item));
+        for (const [, item] of collection) {
+            items.push(item);
+        }
         return items;
     }
 }

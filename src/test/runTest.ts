@@ -21,13 +21,15 @@ function detectPhpUnitStubs(): StubInfo[] {
         const binary = `v${v}/vendor/bin/phpunit`;
         try {
             execSync(`php ${binary} --version`, { cwd: root, timeout: 10000 });
-            return [{
-                name: `v${v}`,
-                type: 'phpunit' as const,
-                binary,
-                args: ['-c', join(root, `v${v}/phpunit.xml`)],
-                launchArgs: [root],
-            }];
+            return [
+                {
+                    name: `v${v}`,
+                    type: 'phpunit' as const,
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`)],
+                    launchArgs: [root],
+                },
+            ];
         } catch {
             return [];
         }
@@ -45,13 +47,15 @@ function detectPestStubs(): StubInfo[] {
                 cwd: root,
                 timeout: 10000,
             });
-            return [{
-                name: `v${v}`,
-                type: 'pest' as const,
-                binary,
-                args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
-                launchArgs: [root],
-            }];
+            return [
+                {
+                    name: `v${v}`,
+                    type: 'pest' as const,
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
+                    launchArgs: [root],
+                },
+            ];
         } catch {
             return [];
         }
@@ -63,10 +67,7 @@ async function runStubTest(stub: StubInfo, extensionTestsPath: string): Promise<
     await runTests({
         extensionDevelopmentPath,
         extensionTestsPath,
-        launchArgs: [
-            ...stub.launchArgs,
-            '--disable-extensions',
-        ],
+        launchArgs: [...stub.launchArgs, '--disable-extensions'],
         extensionTestsEnv: {
             STUB_TYPE: stub.type,
             STUB_VERSION: stub.name,
@@ -93,10 +94,7 @@ async function runMultiWorkspaceTest(): Promise<void> {
     await runTests({
         extensionDevelopmentPath,
         extensionTestsPath: resolve(__dirname, './suite-multi/index'),
-        launchArgs: [
-            workspacePath,
-            '--disable-extensions',
-        ],
+        launchArgs: [workspacePath, '--disable-extensions'],
         extensionTestsEnv: {
             PHPUNIT_STUB_VERSION: phpUnit.name,
             PHPUNIT_STUB_BINARY: phpUnit.binary,

@@ -244,7 +244,7 @@ describe('PHPUnit ProblemMatcher Text', () => {
             `##teamcity[testFinished name='test_throw_exception' duration='15' flowId='28756']`,
         ];
 
-        let result;
+        let result: ReturnType<typeof problemMatcher.parse>;
         for (const content of contents) {
             result = problemMatcher.parse(content);
         }

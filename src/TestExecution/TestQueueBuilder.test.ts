@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { type TestController, type TestRun, tests, Uri } from 'vscode';
+import { type TestController, type TestRun, tests } from 'vscode';
+import { URI } from 'vscode-uri';
 import { PHPUnitXML } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { TestCollection } from '../TestCollection';
 import { TestQueueBuilder } from './TestQueueBuilder';
-import { URI } from 'vscode-uri';
 
 describe('TestQueueBuilder', () => {
     let ctrl: TestController;
@@ -31,7 +31,9 @@ describe('TestQueueBuilder', () => {
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
-        const request = { include: [...toArray(ctrl.items)] } as any;
+        const request = {
+            include: [...toArray(ctrl.items)],
+        } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(request.include, request, undefined, testRun);
 
         expect(queue.size).toBeGreaterThan(0);
@@ -44,7 +46,9 @@ describe('TestQueueBuilder', () => {
     it('should work without testRun (backward compatible)', async () => {
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const request = { include: [...toArray(ctrl.items)] } as any;
+        const request = {
+            include: [...toArray(ctrl.items)],
+        } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(request.include, request);
 
         expect(queue.size).toBeGreaterThan(0);
@@ -54,7 +58,7 @@ describe('TestQueueBuilder', () => {
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
-        const request = {} as any;
+        const request = {} as unknown as import('vscode').TestRunRequest;
         const queue = await builder.buildFromCollection(ctrl.items, request, testRun);
 
         expect(queue.size).toBeGreaterThan(0);
@@ -67,11 +71,20 @@ describe('TestQueueBuilder', () => {
         const allItems = [...toArray(ctrl.items)];
         // Get first method item to exclude
         const methods: import('vscode').TestItem[] = [];
-        ctrl.items.forEach((ns) => ns.children.forEach((cls) => cls.children.forEach((m) => methods.push(m))));
+        for (const [, ns] of ctrl.items) {
+            for (const [, cls] of ns.children) {
+                for (const [, m] of cls.children) {
+                    methods.push(m);
+                }
+            }
+        }
         const excluded = methods[0];
 
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
-        const request = { include: allItems, exclude: [excluded] } as any;
+        const request = {
+            include: allItems,
+            exclude: [excluded],
+        } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(request.include, request, undefined, testRun);
 
         const queueIds = [...queue.values()].map((item) => item.id);
@@ -81,6 +94,8 @@ describe('TestQueueBuilder', () => {
 
 function toArray(collection: import('vscode').TestItemCollection): import('vscode').TestItem[] {
     const items: import('vscode').TestItem[] = [];
-    collection.forEach((item) => items.push(item));
+    for (const [, item] of collection) {
+        items.push(item);
+    }
     return items;
 }

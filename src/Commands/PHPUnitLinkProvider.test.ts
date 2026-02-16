@@ -1,6 +1,12 @@
 import { relative } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { type CancellationToken, type DocumentLink, Position, Range, type TextDocument as VscodeTextDocument } from 'vscode';
+import {
+    type CancellationToken,
+    type DocumentLink,
+    Position,
+    Range,
+    type TextDocument as VscodeTextDocument,
+} from 'vscode';
 import { PHPUnitXML } from '../PHPUnit';
 import { phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
@@ -67,7 +73,7 @@ MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery
                 document as unknown as VscodeTextDocument,
                 {} as unknown as CancellationToken,
             ) as DocumentLink[]
-        ).map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
+        ).map((link) => [normalizePath(link.target?.fsPath), link.target?.fragment]);
 
         expect(links).toEqual([
             ['vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php', 'L32'],
@@ -125,7 +131,7 @@ at src/Calculator.php:7
                 document as unknown as VscodeTextDocument,
                 {} as unknown as CancellationToken,
             ) as DocumentLink[]
-        ).map((link) => [normalizePath(link.target!.fsPath), link.target!.fragment]);
+        ).map((link) => [normalizePath(link.target?.fsPath), link.target?.fragment]);
 
         expect(links).toEqual([
             ['src/Calculator.php', 'L7'],

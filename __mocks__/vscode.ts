@@ -1,10 +1,19 @@
-import { vi } from 'vitest';
+import { readFile } from 'node:fs/promises';
 import { glob } from 'glob';
 import { minimatch } from 'minimatch';
-import { readFile } from 'node:fs/promises';
-import {
-    CancellationToken, DocumentFilter, MarkdownString, TestController, TestCoverageCount, TestItem, TestItemCollection,
-    TestRunRequest as BaseTestRunRequest, TestTag, TextDocument, WorkspaceFolder,
+import { vi } from 'vitest';
+import type {
+    TestRunRequest as BaseTestRunRequest,
+    CancellationToken,
+    DocumentFilter,
+    MarkdownString,
+    TestController,
+    TestCoverageCount,
+    TestItem,
+    TestItemCollection,
+    TestTag,
+    TextDocument,
+    WorkspaceFolder,
 } from 'vscode';
 import { URI } from 'vscode-uri';
 
@@ -83,7 +92,9 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
 
     replace(items: readonly TestItem[]) {
         this.items.clear();
-        items.forEach((item) => this.add(item));
+        for (const item of items) {
+            this.add(item);
+        }
     }
 
     forEach(
@@ -111,16 +122,18 @@ const createTestItem = vi
 
 const createRunProfile = vi
     .fn()
-    .mockImplementation((
-        label: string,
-        kind: TestRunProfileKind,
-        runHandler: (
-            request: BaseTestRunRequest,
-            token: CancellationToken,
-        ) => Thenable<void> | void,
-        isDefault?: boolean,
-        tag?: TestTag,
-    ) => ({ label, kind, isDefault, tag, runHandler }));
+    .mockImplementation(
+        (
+            label: string,
+            kind: TestRunProfileKind,
+            runHandler: (
+                request: BaseTestRunRequest,
+                token: CancellationToken,
+            ) => Thenable<void> | void,
+            isDefault?: boolean,
+            tag?: TestTag,
+        ) => ({ label, kind, isDefault, tag, runHandler }),
+    );
 
 const createTestRun = vi
     .fn()
@@ -175,17 +188,26 @@ class Disposable {
 }
 
 class FakeLocation {
-    constructor(public uri: URI, public range: any) {}
+    constructor(
+        public uri: URI,
+        public range: any,
+    ) {}
 }
 const Location = FakeLocation;
 
 class FakeRange {
-    constructor(public start: any, public end: any) {}
+    constructor(
+        public start: any,
+        public end: any,
+    ) {}
 }
 const Range = FakeRange;
 
 class Position {
-    constructor(public line: number, public character: number) {}
+    constructor(
+        public line: number,
+        public character: number,
+    ) {}
 
     translate(lineDelta?: number, characterDelta?: number) {
         return new Position(this.line + (lineDelta ?? 0), characterDelta ?? this.character);
@@ -193,7 +215,10 @@ class Position {
 }
 
 class FakeDocumentLink {
-    constructor(public range: any, public target?: URI) {}
+    constructor(
+        public range: any,
+        public target?: URI,
+    ) {}
 }
 const DocumentLink = FakeDocumentLink;
 
@@ -210,7 +235,9 @@ class FakeCancellationTokenSource {
 
     cancel() {
         this.token.isCancellationRequested = true;
-        this.listeners.forEach((fn) => fn());
+        for (const fn of this.listeners) {
+            fn();
+        }
     }
 
     dispose() {}
@@ -223,7 +250,7 @@ export class Configuration {
     constructor(items: Map<string, unknown> | { [p: string]: string } | undefined = undefined) {
         if (items instanceof Map) {
             this.items = items;
-        } else if (!!items) {
+        } else if (items) {
             for (const x in items) {
                 this.items.set(x, items[x]);
             }
@@ -261,25 +288,33 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: Object.assign(vi.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
-        workspace.findFiles._concurrentCount++;
-        workspace.findFiles._maxConcurrent = Math.max(
-            workspace.findFiles._maxConcurrent,
-            workspace.findFiles._concurrentCount,
-        );
-        try {
-            const splitPattern = (pattern: string) => {
-                return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
-            };
-            return (await glob(splitPattern(pattern.pattern), {
-                absolute: true,
-                ignore: exclude ? splitPattern(exclude.pattern) : undefined,
-                cwd: pattern.uri.fsPath,
-            })).map((file) => URI.file(file.replace(/^\w:/, (matched) => matched.toLowerCase())));
-        } finally {
-            workspace.findFiles._concurrentCount--;
-        }
-    }), { _concurrentCount: 0, _maxConcurrent: 0 }),
+    findFiles: Object.assign(
+        vi.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
+            workspace.findFiles._concurrentCount++;
+            workspace.findFiles._maxConcurrent = Math.max(
+                workspace.findFiles._maxConcurrent,
+                workspace.findFiles._concurrentCount,
+            );
+            try {
+                const splitPattern = (pattern: string) => {
+                    return pattern
+                        .replace(/^{|}$/g, '')
+                        .split(',')
+                        .map((v) => v.trim());
+                };
+                return (
+                    await glob(splitPattern(pattern.pattern), {
+                        absolute: true,
+                        ignore: exclude ? splitPattern(exclude.pattern) : undefined,
+                        cwd: pattern.uri.fsPath,
+                    })
+                ).map((file) => URI.file(file.replace(/^\w:/, (matched) => matched.toLowerCase())));
+            } finally {
+                workspace.findFiles._concurrentCount--;
+            }
+        }),
+        { _concurrentCount: 0, _maxConcurrent: 0 },
+    ),
     createFileSystemWatcher: vi.fn().mockImplementation(() => {
         return {
             onDidCreate: vi.fn(),
@@ -342,13 +377,15 @@ const window = {
     showQuickPick: vi.fn(),
 };
 
-const commands = (function () {
+const commands = (() => {
     const commands = new Map<string, (...rest: any[]) => void>();
     return {
-        registerCommand: vi.fn().mockImplementation((command: string, callback: (...rest: any[]) => void) => {
-            commands.set(command, callback);
-            return new Disposable();
-        }),
+        registerCommand: vi
+            .fn()
+            .mockImplementation((command: string, callback: (...rest: any[]) => void) => {
+                commands.set(command, callback);
+                return new Disposable();
+            }),
         executeCommand: async (command: string, ...rest: any[]) => {
             return commands.get(command)!(...rest);
         },
@@ -364,7 +401,9 @@ class FakeEventEmitter<T = void> {
     };
 
     fire(data: T) {
-        this.listeners.forEach((fn) => fn(data));
+        for (const fn of this.listeners) {
+            fn(data);
+        }
     }
 
     dispose() {
@@ -381,15 +420,24 @@ const extensions = {
 };
 
 class FileCoverage {
-    constructor(public uri: URI, public statementCoverage: TestCoverageCount) {}
+    constructor(
+        public uri: URI,
+        public statementCoverage: TestCoverageCount,
+    ) {}
 }
 
 class TestCoverageCount {
-    constructor(public covered: number, public total: number) {}
+    constructor(
+        public covered: number,
+        public total: number,
+    ) {}
 }
 
 class StatementCoverage {
-    constructor(public executed: number | boolean, public location: any) {}
+    constructor(
+        public executed: number | boolean,
+        public location: any,
+    ) {}
 }
 
 const debug = {

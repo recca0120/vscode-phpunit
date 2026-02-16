@@ -34,12 +34,16 @@ export class TestWatchManager {
                 this.watchAllProfile = undefined;
             });
         } else {
-            request.include.forEach((testItem) =>
-                this.watchingTests.set(testItem, request.profile),
-            );
-            cancellation.onCancellationRequested(() =>
-                request.include?.forEach((testItem) => this.watchingTests.delete(testItem)),
-            );
+            for (const testItem of request.include) {
+                this.watchingTests.set(testItem, request.profile);
+            }
+            cancellation.onCancellationRequested(() => {
+                if (request.include) {
+                    for (const testItem of request.include) {
+                        this.watchingTests.delete(testItem);
+                    }
+                }
+            });
         }
     }
 
@@ -73,8 +77,6 @@ export class TestWatchManager {
             }
         }
 
-        return include.length
-            ? new TestRunRequest(include, undefined, profile, true)
-            : undefined;
+        return include.length ? new TestRunRequest(include, undefined, profile, true) : undefined;
     }
 }

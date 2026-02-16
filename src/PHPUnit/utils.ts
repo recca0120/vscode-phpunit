@@ -39,17 +39,17 @@ export const parseArguments = (parameters: string[], excludes: string[]) => {
         },
     });
 
-    return Object.entries(argv)
-        .filter(([key]) => !excludes.includes(key))
-        .reduce(
-            (parameters: string[], [key, value]) => [
-                ...parseValue(key, value as string | boolean | string[]),
-                ...parameters,
-            ],
-            _.map((parameter) =>
-                typeof parameter === 'number' ? String(parameter) : decodeURIComponent(parameter),
-            ),
-        );
+    const positionals = _.map((parameter) =>
+        typeof parameter === 'number' ? String(parameter) : decodeURIComponent(parameter),
+    );
+
+    const entries = Object.entries(argv).filter(([key]) => !excludes.includes(key));
+    const options: string[] = [];
+    for (const [key, value] of entries.reverse()) {
+        options.push(...parseValue(key, value as string | boolean | string[]));
+    }
+
+    return [...options, ...positionals];
 };
 
 export async function checkFileExists(filePath: string): Promise<boolean> {

@@ -53,8 +53,10 @@ export class TestParser {
 
         for (const parser of this.parsers) {
             const tests = parser.parse(definition);
-            tests?.forEach((testDefinition) => (testDefinition.testsuite = testsuite));
             if (tests) {
+                for (const testDefinition of tests) {
+                    testDefinition.testsuite = testsuite;
+                }
                 return this.emit(tests);
             }
         }

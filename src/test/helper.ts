@@ -9,7 +9,10 @@ export interface ExtensionApi {
 }
 
 export async function activateExtension(): Promise<ExtensionApi> {
-    const ext = vscode.extensions.getExtension<ExtensionApi>(EXTENSION_ID)!;
+    const ext = vscode.extensions.getExtension<ExtensionApi>(EXTENSION_ID);
+    if (!ext) {
+        throw new Error(`Extension ${EXTENSION_ID} not found`);
+    }
     if (!ext.isActive) {
         return ext.activate();
     }
@@ -34,7 +37,9 @@ export function findTestItem(
 
 export function countTestItems(items: vscode.TestItemCollection): number {
     let sum = 0;
-    items.forEach((item) => (sum += countTestItems(item.children)));
+    for (const [, item] of items) {
+        sum += countTestItems(item.children);
+    }
     sum += items.size;
     return sum;
 }

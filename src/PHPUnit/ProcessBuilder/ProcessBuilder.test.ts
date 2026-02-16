@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
 import { ProcessBuilder } from './ProcessBuilder';
+import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
 
 describe('ProcessBuilder Test', () => {
     describe('LocalCommand', () => {
@@ -145,7 +146,7 @@ describe('ProcessBuilder Test', () => {
         it('run paratest with --functional', () => {
             const cwd = phpUnitProject('');
             const builder = givenBuilder({
-                command: 'docker run -i --rm -v ${PWD}:/app -w /app phpunit-stub',
+                command: `docker run -i --rm -v ${VAR_PWD}:/app -w /app phpunit-stub`,
                 phpunit: 'vendor/bin/paratest',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -194,13 +195,13 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('should replace workspaceFolder', () => {
+        it(`should replace ${VAR_WORKSPACE_FOLDER}`, () => {
             const testFile = phpUnitProject('tests/AssertionsTest.php');
             const builder = givenBuilder({
                 command: 'docker exec --workdir=/var/www/ container_name',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
-                    '${workspaceFolder}': '/var/www',
+                    [VAR_WORKSPACE_FOLDER]: '/var/www',
                 },
             }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -219,7 +220,7 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('should replace workspaceFolder for Windows Path', () => {
+        it(`should replace ${VAR_WORKSPACE_FOLDER} for Windows Path`, () => {
             const cwd = phpUnitProjectWin('');
             const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
             const builder = givenBuilder(
@@ -227,7 +228,7 @@ describe('ProcessBuilder Test', () => {
                     command: 'docker exec --workdir=/var/www/ container_name',
                     phpunit: 'vendor/bin/phpunit',
                     paths: {
-                        '${workspaceFolder}': '/var/www',
+                        [VAR_WORKSPACE_FOLDER]: '/var/www',
                     },
                 },
                 cwd,
@@ -308,7 +309,7 @@ describe('ProcessBuilder Test', () => {
         const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
             return new ProcessBuilder(
                 new Configuration({
-                    command: '${php} ${phpargs} ${phpunit} ${phpunitargs}',
+                    command: CMD_TEMPLATE,
                     php: 'php',
                     ...configuration,
                 }),
@@ -316,7 +317,7 @@ describe('ProcessBuilder Test', () => {
             );
         };
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs}', () => {
+        it(`command is ${CMD_TEMPLATE}`, () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/phpunit',
             });
@@ -326,7 +327,7 @@ describe('ProcessBuilder Test', () => {
             expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} --functional', () => {
+        it(`command is ${CMD_TEMPLATE} --functional`, () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/paratest',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
@@ -342,9 +343,9 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} and phpunit is artisan test', () => {
+        it(`command is ${CMD_TEMPLATE} and phpunit is artisan test`, () => {
             const builder = givenBuilder({
-                command: '${php} ${phpargs} ${phpunit} ${phpunitargs}',
+                command: CMD_TEMPLATE,
                 phpunit: 'artisan test',
             });
 
@@ -353,10 +354,9 @@ describe('ProcessBuilder Test', () => {
             expect(args).toEqual(['artisan', 'test', '--colors=never', '--teamcity']);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} and environment', () => {
+        it(`command is ${CMD_TEMPLATE} and environment`, () => {
             const builder = givenBuilder({
-                command:
-                    'XDEBUG_MODE=coverage MEMORY_LIMIT=-1 ${php} ${phpargs} ${phpunit} ${phpunitargs}',
+                command: `XDEBUG_MODE=coverage MEMORY_LIMIT=-1 ${CMD_TEMPLATE}`,
                 phpunit: 'vendor/bin/phpunit',
             });
 
@@ -371,10 +371,9 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with ssh', () => {
+        it(`command is ${CMD_TEMPLATE} with ssh`, () => {
             const builder = givenBuilder({
-                command:
-                    'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${php} ${phpargs} ${phpunit} ${phpunitargs}"',
+                command: `ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${CMD_TEMPLATE}"`,
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -401,10 +400,9 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('command is ${php} ${phpargs} ${phpunit} ${phpunitargs} with docker', () => {
+        it(`command is ${CMD_TEMPLATE} with docker`, () => {
             const builder = givenBuilder({
-                command:
-                    "docker exec -t container_name /bin/sh -c '${php} ${phpargs} ${phpunit} ${phpunitargs}'",
+                command: `docker exec -t container_name /bin/sh -c '${CMD_TEMPLATE}'`,
                 phpunit: 'vendor/bin/phpunit',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { PathReplacer } from './PathReplacer';
+import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
 
 describe('PathReplacer', () => {
     const givenPathReplacer = (paths?: Record<string, string>, cwd?: string) => {
         return new PathReplacer(
             { cwd: cwd ?? phpUnitProject('') },
             paths ?? {
-                '${workspaceFolder}': '/app',
+                [VAR_WORKSPACE_FOLDER]: '/app',
             },
         );
     };
@@ -18,7 +19,7 @@ describe('PathReplacer', () => {
         return new PathReplacer(
             { cwd: cwd ?? phpUnitProjectWin('') },
             paths ?? {
-                '${workspaceFolder}': '/app',
+                [VAR_WORKSPACE_FOLDER]: '/app',
             },
         );
     };
@@ -39,18 +40,18 @@ describe('PathReplacer', () => {
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
 
-    it('to remote replace ${workspaceFolder} to /app/', () => {
+    it(`to remote replace ${VAR_WORKSPACE_FOLDER} to /app/`, () => {
         const pathReplacer = givenPathReplacer();
 
-        const path = '${workspaceFolder}/tests/AssertionsTest.php';
+        const path = `${VAR_WORKSPACE_FOLDER}/tests/AssertionsTest.php`;
 
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
 
-    it('to remote replace ${PWD} to /app/', () => {
+    it(`to remote replace ${VAR_PWD} to /app/`, () => {
         const pathReplacer = givenPathReplacer();
 
-        const path = '${PWD}/tests/AssertionsTest.php';
+        const path = `${VAR_PWD}/tests/AssertionsTest.php`;
 
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
@@ -119,18 +120,18 @@ describe('PathReplacer', () => {
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
 
-    it('to remote replace ${workspaceFolder} to /app/ for windows', () => {
+    it(`to remote replace ${VAR_WORKSPACE_FOLDER} to /app/ for windows`, () => {
         const pathReplacer = givenPathReplacerForWindows();
 
-        const path = toWindows('${workspaceFolder}/tests/AssertionsTest.php');
+        const path = toWindows(`${VAR_WORKSPACE_FOLDER}/tests/AssertionsTest.php`);
 
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
 
-    it('to remote replace ${PWD} to /app/ for windows', () => {
+    it(`to remote replace ${VAR_PWD} to /app/ for windows`, () => {
         const pathReplacer = givenPathReplacerForWindows();
 
-        const path = toWindows('${PWD}/tests/AssertionsTest.php');
+        const path = toWindows(`${VAR_PWD}/tests/AssertionsTest.php`);
 
         expect(pathReplacer.toRemote(path)).toEqual('/app/tests/AssertionsTest.php');
     });
@@ -180,19 +181,19 @@ describe('PathReplacer', () => {
         );
     });
 
-    it('to remote replace ${workspaceFolder} is . for windows', () => {
+    it(`to remote replace ${VAR_WORKSPACE_FOLDER} is . for windows`, () => {
         const pathReplacer = givenPathReplacerForWindows({
-            '${workspaceFolder}': '.',
+            [VAR_WORKSPACE_FOLDER]: '.',
         });
 
-        const path = '${PWD}/phpunit.xml';
+        const path = `${VAR_PWD}/phpunit.xml`;
 
         expect(pathReplacer.toRemote(path)).toEqual('./phpunit.xml');
     });
 
-    it('to local replace ${workspaceFolder} is . for windows', () => {
+    it(`to local replace ${VAR_WORKSPACE_FOLDER} is . for windows`, () => {
         const pathReplacer = givenPathReplacerForWindows({
-            '${workspaceFolder}': '.',
+            [VAR_WORKSPACE_FOLDER]: '.',
         });
 
         const path = './tests/AssertionsTest.php';
@@ -200,10 +201,10 @@ describe('PathReplacer', () => {
         expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectWin('tests/AssertionsTest.php'));
     });
 
-    it("can't replace path when ${workspaceFolder} is /", () => {
+    it(`can't replace path when ${VAR_WORKSPACE_FOLDER} is /`, () => {
         const pathReplacer = givenPathReplacer(
             {
-                '${workspaceFolder}': '/app',
+                [VAR_WORKSPACE_FOLDER]: '/app',
             },
             '/',
         );

@@ -30,9 +30,7 @@ export class TestFileDiscovery {
     async getWorkspaceTestPattern(): Promise<WorkspaceTestPattern> {
         await this.ensureConfigLoaded();
 
-        const { includes, excludes } = this.phpUnitXML.getPatterns(
-            this.workspaceFolder.uri.fsPath,
-        );
+        const { includes, excludes } = this.phpUnitXML.getPatterns(this.workspaceFolder.uri.fsPath);
 
         const toRelativePattern = (pattern: TestGlobPattern) => {
             const { uri, pattern: glob } = pattern.toGlobPattern();
@@ -66,9 +64,7 @@ export class TestFileDiscovery {
         }
 
         // Add new files (already existing ones are skipped by add())
-        await Promise.all(
-            [...newFiles].map((f) => this.testCollection.add(URI.parse(f))),
-        );
+        await Promise.all([...newFiles].map((f) => this.testCollection.add(URI.parse(f))));
     }
 
     private invalidateCache(): void {

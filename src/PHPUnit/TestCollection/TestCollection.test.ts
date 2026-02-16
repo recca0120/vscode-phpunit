@@ -34,10 +34,12 @@ describe('TestCollection', () => {
                 await testParser.parseFile(uri.fsPath, testsuite);
             }
             const actual: TestDefinition[] = [];
-            collection
-                .items()
-                .get(testsuite)
-                ?.forEach((tests) => actual.push(...tests));
+            const testsuiteTests = collection.items().get(testsuite);
+            if (testsuiteTests) {
+                for (const [, tests] of testsuiteTests) {
+                    actual.push(...tests);
+                }
+            }
             expect(actual).toEqual(expected);
         }
     };

@@ -20,10 +20,10 @@ function createFakeContainer(
     const uri = URI.file(folderUri);
     const folder = { uri, name: folderUri, index: 0 } as WorkspaceFolder;
     return {
-        get: (token: any) => {
+        get: (token: unknown) => {
             if (token === TestRunHandler) return handler;
             if (token === TYPES.WorkspaceFolder) return folder;
-            throw new Error(`Unexpected token: ${token}`);
+            throw new Error(`Unexpected token: ${String(token)}`);
         },
     };
 }
@@ -33,7 +33,7 @@ function createTestItem(id: string, uriPath: string): TestItem {
         id,
         uri: URI.file(uriPath),
         children: { size: 0, [Symbol.iterator]: () => [][Symbol.iterator]() },
-    } as any;
+    } as unknown as TestItem;
 }
 
 describe('TestRunDispatcher', () => {
@@ -51,7 +51,7 @@ describe('TestRunDispatcher', () => {
         const folderAUri = URI.file('/workspace/folder-a');
         const folderBUri = URI.file('/workspace/folder-b');
 
-        (workspace as any).workspaceFolders = [
+        (workspace as unknown as { workspaceFolders: WorkspaceFolder[] }).workspaceFolders = [
             { uri: folderAUri, name: 'folder-a', index: 0 },
             { uri: folderBUri, name: 'folder-b', index: 1 },
         ];
@@ -63,7 +63,7 @@ describe('TestRunDispatcher', () => {
                 if (key === folderBUri.toString()) return containerB;
                 return undefined;
             },
-        } as any as WorkspaceFolderManager;
+        } as unknown as WorkspaceFolderManager;
 
         dispatcher = new TestRunDispatcher(folderManager);
     });

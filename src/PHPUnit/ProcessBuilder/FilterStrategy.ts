@@ -24,7 +24,7 @@ class NamespaceFilterStrategy extends FilterStrategy {
 
 class ClassFilterStrategy extends FilterStrategy {
     getFilter() {
-        return [this.getGroupFilter(), this.testDefinition.file!]
+        return [this.getGroupFilter(), this.testDefinition.file]
             .filter((value) => !!value)
             .join(' ');
     }
@@ -49,7 +49,8 @@ class DescribeFilterStrategy extends FilterStrategy {
     }
 
     protected getMethodNamePattern() {
-        return `${Transformer.generateSearchText(this.testDefinition.methodName!)}.*`;
+        const methodName = this.testDefinition.methodName ?? '';
+        return `${Transformer.generateSearchText(methodName)}.*`;
     }
 }
 
@@ -63,12 +64,13 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
     }
 
     protected getMethodNamePattern() {
-        return Transformer.generateSearchText(this.testDefinition.methodName!);
+        const methodName = this.testDefinition.methodName ?? '';
+        return Transformer.generateSearchText(methodName);
     }
 }
 
-export class FilterStrategyFactory {
-    static create(testDefinition: TestDefinition) {
+export const FilterStrategyFactory = {
+    create(testDefinition: TestDefinition) {
         if (testDefinition.type === TestType.namespace) {
             return new NamespaceFilterStrategy(testDefinition);
         }
@@ -82,5 +84,5 @@ export class FilterStrategyFactory {
         }
 
         return new MethodFilterStrategy(testDefinition);
-    }
-}
+    },
+};

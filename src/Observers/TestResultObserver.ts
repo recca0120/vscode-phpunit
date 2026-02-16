@@ -8,6 +8,7 @@ import {
     type TestRun,
 } from 'vscode';
 import { URI } from 'vscode-uri';
+import type { TestDefinition } from '../PHPUnit';
 import {
     EOL,
     PestV2Fixer,
@@ -20,7 +21,6 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '../PHPUnit';
-import type { TestDefinition } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
     private testItemById: Map<string, TestItem>;
@@ -29,9 +29,7 @@ export class TestResultObserver implements TestRunnerObserver {
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
     ) {
-        this.testItemById = new Map(
-            [...queue.values()].map((item) => [item.id, item]),
-        );
+        this.testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
     }
 
     line(line: string): void {
@@ -43,7 +41,9 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     abort(): void {
-        this.queue.forEach((testItem) => this.testRun.skipped(testItem));
+        for (const testItem of this.queue.values()) {
+            this.testRun.skipped(testItem);
+        }
     }
 
     done(): void {
@@ -77,23 +77,29 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {
-        const message = result.expected !== undefined && result.actual !== undefined
-            ? TestMessage.diff(result.message, result.expected, result.actual)
-            : new TestMessage(result.message);
+        const message =
+            result.expected !== undefined && result.actual !== undefined
+                ? TestMessage.diff(result.message, result.expected, result.actual)
+                : new TestMessage(result.message);
         const details = result.details;
         if (details.length > 0) {
             const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));
-            const line = matchingDetail ? matchingDetail.line - 1 : test.range!.start.line;
+            const line = matchingDetail ? matchingDetail.line - 1 : (test.range?.start.line ?? 0);
+
+            if (!test.uri) {
+                return message;
+            }
 
             message.location = new Location(
-                test.uri!,
+                test.uri,
                 new Range(new Position(line, 0), new Position(line, 0)),
             );
 
             message.stackTrace = details
                 .filter(
                     ({ file, line }) =>
-                        file.endsWith(result.file ?? '') && (!matchingDetail || line !== matchingDetail.line),
+                        file.endsWith(result.file ?? '') &&
+                        (!matchingDetail || line !== matchingDetail.line),
                 )
                 .map(
                     ({ file, line }) =>

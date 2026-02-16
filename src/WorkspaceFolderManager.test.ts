@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type TestController, tests, Uri, workspace } from 'vscode';
-import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 import { createParentContainer } from './container';
+import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
 const makeFolder = (name: string, path: string) => ({
     index: 0,
@@ -15,7 +15,12 @@ describe('WorkspaceFolderManager', () => {
 
     beforeEach(() => {
         ctrl = tests.createTestController('phpunit', 'PHPUnit');
-        const outputChannel = { append: vi.fn(), appendLine: vi.fn(), clear: vi.fn(), show: vi.fn() } as any;
+        const outputChannel = {
+            append: vi.fn(),
+            appendLine: vi.fn(),
+            clear: vi.fn(),
+            show: vi.fn(),
+        } as unknown as import('vscode').OutputChannel;
         const parentContainer = createParentContainer(ctrl, outputChannel);
         manager = parentContainer.get(WorkspaceFolderManager);
     });
@@ -26,7 +31,9 @@ describe('WorkspaceFolderManager', () => {
             Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1] });
             Object.defineProperty(workspace, 'textDocuments', { value: [] });
 
-            await manager.initialize({ subscriptions: [] } as any);
+            await manager.initialize({
+                subscriptions: [],
+            } as unknown as import('vscode').ExtensionContext);
 
             expect(manager.getAll()).toHaveLength(1);
             expect(ctrl.items.size).toBe(0);
@@ -38,7 +45,9 @@ describe('WorkspaceFolderManager', () => {
             Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1, folder2] });
             Object.defineProperty(workspace, 'textDocuments', { value: [] });
 
-            await manager.initialize({ subscriptions: [] } as any);
+            await manager.initialize({
+                subscriptions: [],
+            } as unknown as import('vscode').ExtensionContext);
 
             expect(manager.getAll()).toHaveLength(2);
             expect(ctrl.items.size).toBe(2);
@@ -47,10 +56,14 @@ describe('WorkspaceFolderManager', () => {
 
     describe('setupControllerHandlers', () => {
         it('sets refreshHandler and resolveHandler on ctrl', () => {
-            Object.defineProperty(workspace, 'workspaceFolders', { value: [makeFolder('a', '/a')] });
+            Object.defineProperty(workspace, 'workspaceFolders', {
+                value: [makeFolder('a', '/a')],
+            });
             Object.defineProperty(workspace, 'textDocuments', { value: [] });
 
-            manager.setupControllerHandlers({ subscriptions: [] } as any);
+            manager.setupControllerHandlers({
+                subscriptions: [],
+            } as unknown as import('vscode').ExtensionContext);
 
             expect(ctrl.refreshHandler).toBeTypeOf('function');
             expect(ctrl.resolveHandler).toBeTypeOf('function');
@@ -63,16 +76,18 @@ describe('WorkspaceFolderManager', () => {
             Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1] });
             Object.defineProperty(workspace, 'textDocuments', { value: [] });
 
-            await manager.initialize({ subscriptions: [] } as any);
+            await manager.initialize({
+                subscriptions: [],
+            } as unknown as import('vscode').ExtensionContext);
 
             const ctx = manager.getContextForUri(Uri.file('/a/test.php'));
 
             expect(ctx).toBeDefined();
-            expect(ctx!.findTestsByFile).toBeTypeOf('function');
-            expect(ctx!.findTestsByPosition).toBeTypeOf('function');
-            expect(ctx!.findTestsByRequest).toBeTypeOf('function');
-            expect(ctx!.getPreviousRequest).toBeTypeOf('function');
-            expect(ctx!.getLastRunAt).toBeTypeOf('function');
+            expect(ctx?.findTestsByFile).toBeTypeOf('function');
+            expect(ctx?.findTestsByPosition).toBeTypeOf('function');
+            expect(ctx?.findTestsByRequest).toBeTypeOf('function');
+            expect(ctx?.getPreviousRequest).toBeTypeOf('function');
+            expect(ctx?.getLastRunAt).toBeTypeOf('function');
         });
 
         it('returns undefined for unknown uri', () => {
@@ -89,7 +104,9 @@ describe('WorkspaceFolderManager', () => {
             Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1, folder2] });
             Object.defineProperty(workspace, 'textDocuments', { value: [] });
 
-            await manager.initialize({ subscriptions: [] } as any);
+            await manager.initialize({
+                subscriptions: [],
+            } as unknown as import('vscode').ExtensionContext);
 
             manager.dispose();
 

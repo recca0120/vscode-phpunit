@@ -1,10 +1,5 @@
 import { inject, injectable } from 'inversify';
-import {
-    type Disposable,
-    type EventEmitter,
-    type Uri,
-    workspace,
-} from 'vscode';
+import { type Disposable, type EventEmitter, type Uri, workspace } from 'vscode';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
@@ -18,7 +13,7 @@ export class TestFileWatcher {
     ) {}
 
     async startWatching(): Promise<Disposable> {
-        const { pattern, exclude } = await this.testFileDiscovery.getWorkspaceTestPattern();
+        const { pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
         const watcher = workspace.createFileSystemWatcher(pattern);
 
         watcher.onDidCreate((uri) => {

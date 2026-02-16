@@ -6,18 +6,24 @@ import { activateExtension, countTestItems, findTestItem, waitForTestItems } fro
 
 const phpunitVersion = process.env.PHPUNIT_STUB_VERSION ?? '';
 const phpunitBinary = process.env.PHPUNIT_STUB_BINARY ?? '';
-const phpunitArgs: string[] = process.env.PHPUNIT_STUB_ARGS ? JSON.parse(process.env.PHPUNIT_STUB_ARGS) : [];
+const phpunitArgs: string[] = process.env.PHPUNIT_STUB_ARGS
+    ? JSON.parse(process.env.PHPUNIT_STUB_ARGS)
+    : [];
 const pestVersion = process.env.PEST_STUB_VERSION ?? '';
 const pestBinary = process.env.PEST_STUB_BINARY ?? '';
 const pestArgs: string[] = process.env.PEST_STUB_ARGS ? JSON.parse(process.env.PEST_STUB_ARGS) : [];
 
 function phpTestFile(className: string, methods: string[]): string {
-    const methodBodies = methods.map((m) => [
-        `    public function test_${m}()`,
-        '    {',
-        '        $this->assertTrue(true);',
-        '    }',
-    ].join('\n')).join('\n\n');
+    const methodBodies = methods
+        .map((m) =>
+            [
+                `    public function test_${m}()`,
+                '    {',
+                '        $this->assertTrue(true);',
+                '    }',
+            ].join('\n'),
+        )
+        .join('\n\n');
 
     return [
         '<?php',
@@ -59,7 +65,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const phpunitFolder = folders.find((f) => f.name === 'phpunit-stub');
         if (phpunitFolder) {
             const config = vscode.workspace.getConfiguration('phpunit', phpunitFolder.uri);
-            await config.update('phpunit', phpunitBinary, vscode.ConfigurationTarget.WorkspaceFolder);
+            await config.update(
+                'phpunit',
+                phpunitBinary,
+                vscode.ConfigurationTarget.WorkspaceFolder,
+            );
             await config.update('args', phpunitArgs, vscode.ConfigurationTarget.WorkspaceFolder);
         }
 
@@ -74,10 +84,10 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await waitForTestItems(ctrl, 2, 30_000);
 
         // Capture baseline counts for later assertions
-        const phpunitRoot = findTestItem(ctrl.items, `folder:${phpunitFolder!.uri.toString()}`);
-        const pestRoot = findTestItem(ctrl.items, `folder:${pestFolder!.uri.toString()}`);
-        initialPhpunitCount = countTestItems(phpunitRoot!.children);
-        initialPestCount = countTestItems(pestRoot!.children);
+        const phpunitRoot = findTestItem(ctrl.items, `folder:${phpunitFolder?.uri.toString()}`);
+        const pestRoot = findTestItem(ctrl.items, `folder:${pestFolder?.uri.toString()}`);
+        initialPhpunitCount = countTestItems(phpunitRoot?.children);
+        initialPestCount = countTestItems(pestRoot?.children);
         initialTotalCount = countTestItems(ctrl.items);
     });
 
@@ -95,7 +105,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const folders = vscode.workspace.workspaceFolders ?? [];
         const phpunitFolder = folders.find((f) => f.name === 'phpunit-stub');
         assert.ok(phpunitFolder, 'phpunit-stub folder should exist');
-        return join(phpunitFolder!.uri.fsPath, 'tests');
+        return join(phpunitFolder?.uri.fsPath, 'tests');
     }
 
     function countItemsByGroupTag(items: vscode.TestItemCollection, groupTagId: string): number {
@@ -146,19 +156,31 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
     test('should have correct phpunit item count under phpunit folder', () => {
         const phpunitCount = getFolderItemCount('phpunit-stub');
-        assert.strictEqual(phpunitCount, initialPhpunitCount, `phpunit-stub should have ${initialPhpunitCount} items`);
+        assert.strictEqual(
+            phpunitCount,
+            initialPhpunitCount,
+            `phpunit-stub should have ${initialPhpunitCount} items`,
+        );
     });
 
     test('should have correct pest item count under pest folder', () => {
         const pestCount = getFolderItemCount('pest-stub');
-        assert.strictEqual(pestCount, initialPestCount, `pest-stub should have ${initialPestCount} items`);
+        assert.strictEqual(
+            pestCount,
+            initialPestCount,
+            `pest-stub should have ${initialPestCount} items`,
+        );
     });
 
     test('should run all tests across both workspaces without error', async () => {
         const countBefore = countTestItems(ctrl.items);
         await vscode.commands.executeCommand('phpunit.run-all');
         const countAfter = countTestItems(ctrl.items);
-        assert.strictEqual(countAfter, countBefore, 'Item count should remain stable after run-all');
+        assert.strictEqual(
+            countAfter,
+            countBefore,
+            'Item count should remain stable after run-all',
+        );
     });
 
     // --- Run commands (run-file, run-test-at-cursor, rerun) ---
@@ -171,7 +193,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await vscode.commands.executeCommand('phpunit.run-file');
 
         const countAfter = countTestItems(ctrl.items);
-        assert.strictEqual(countAfter, initialTotalCount, 'Item count should remain stable after run-file');
+        assert.strictEqual(
+            countAfter,
+            initialTotalCount,
+            'Item count should remain stable after run-file',
+        );
     });
 
     test('should run test at cursor position', async () => {
@@ -186,7 +212,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
 
         const countAfter = countTestItems(ctrl.items);
-        assert.strictEqual(countAfter, initialTotalCount, 'Item count should remain stable after run-test-at-cursor');
+        assert.strictEqual(
+            countAfter,
+            initialTotalCount,
+            'Item count should remain stable after run-test-at-cursor',
+        );
     });
 
     test('should rerun previous test', async () => {
@@ -194,7 +224,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await vscode.commands.executeCommand('phpunit.rerun');
 
         const countAfter = countTestItems(ctrl.items);
-        assert.strictEqual(countAfter, initialTotalCount, 'Item count should remain stable after rerun');
+        assert.strictEqual(
+            countAfter,
+            initialTotalCount,
+            'Item count should remain stable after rerun',
+        );
     });
 
     // --- Group filtering ---
@@ -205,11 +239,17 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         // Verify specific items have the tag
         const passedItem = findTestItem(ctrl.items, 'Assertions (Tests\\Assertions)::Passed');
         assert.ok(passedItem, 'Should find Assertions::Passed test item');
-        assert.ok(passedItem!.tags.some((t) => t.id === groupTagId), 'test_passed should have group:integration tag');
+        assert.ok(
+            passedItem?.tags.some((t) => t.id === groupTagId),
+            'test_passed should have group:integration tag',
+        );
 
         const attributeHiItem = findTestItem(ctrl.items, 'Attribute (Tests\\Attribute)::Hi');
         assert.ok(attributeHiItem, 'Should find Attribute::Hi test item');
-        assert.ok(attributeHiItem!.tags.some((t) => t.id === groupTagId), 'Attribute::Hi should have group:integration tag');
+        assert.ok(
+            attributeHiItem?.tags.some((t) => t.id === groupTagId),
+            'Attribute::Hi should have group:integration tag',
+        );
 
         // Count all items with group:integration tag
         const groupItems: vscode.TestItem[] = [];
@@ -223,9 +263,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         };
         collectGroupItems(ctrl.items);
 
-        assert.ok(groupItems.length > 0,
-            'Should have items with group:integration tag',
-        );
+        assert.ok(groupItems.length > 0, 'Should have items with group:integration tag');
 
         // Store for later verification
         initialGroupCount = groupItems.length;
@@ -237,18 +275,24 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const folders = vscode.workspace.workspaceFolders ?? [];
         const config = vscode.workspace.getConfiguration('phpunit', folders[0].uri);
 
-        await config.update('args', [...phpunitArgs, '--verbose'], vscode.ConfigurationTarget.WorkspaceFolder);
+        await config.update(
+            'args',
+            [...phpunitArgs, '--verbose'],
+            vscode.ConfigurationTarget.WorkspaceFolder,
+        );
         await vscode.commands.executeCommand('phpunit.reload');
         await waitForTestItems(ctrl, 2, 30_000);
 
         assert.strictEqual(
-            countTestItems(ctrl.items), initialTotalCount,
+            countTestItems(ctrl.items),
+            initialTotalCount,
             'Total item count should match after config change + reload',
         );
 
         // Verify group count preserved after config change
         assert.strictEqual(
-            countItemsByGroupTag(ctrl.items, 'group:integration'), initialGroupCount,
+            countItemsByGroupTag(ctrl.items, 'group:integration'),
+            initialGroupCount,
             'Group item count should be preserved after config change',
         );
 
@@ -256,7 +300,10 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);
-        editor.selection = new vscode.Selection(new vscode.Position(15, 0), new vscode.Position(15, 0));
+        editor.selection = new vscode.Selection(
+            new vscode.Position(15, 0),
+            new vscode.Position(15, 0),
+        );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
 
         await config.update('args', phpunitArgs, vscode.ConfigurationTarget.WorkspaceFolder);
@@ -277,7 +324,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         const classItem = findTestItem(ctrl.items, classId);
         assert.ok(classItem, 'file add: should discover new test class');
-        assert.strictEqual(classItem!.children.size, 1, 'file add: class should have 1 method');
+        assert.strictEqual(classItem?.children.size, 1, 'file add: class should have 1 method');
         assert.ok(
             findTestItem(ctrl.items, `${classId}::First method`),
             'file add: should have First method',
@@ -294,7 +341,10 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const doc = await vscode.workspace.openTextDocument(testFilePath);
         const editor = await vscode.window.showTextDocument(doc);
         // Position cursor on test_first_method (line 9, 0-indexed: 8)
-        editor.selection = new vscode.Selection(new vscode.Position(8, 0), new vscode.Position(8, 0));
+        editor.selection = new vscode.Selection(
+            new vscode.Position(8, 0),
+            new vscode.Position(8, 0),
+        );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
 
         // --- File change ---
@@ -304,7 +354,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         const updatedClassItem = findTestItem(ctrl.items, classId);
         assert.ok(updatedClassItem, 'file change: class should still exist');
-        assert.strictEqual(updatedClassItem!.children.size, 2, 'file change: class should now have 2 methods');
+        assert.strictEqual(
+            updatedClassItem?.children.size,
+            2,
+            'file change: class should now have 2 methods',
+        );
         assert.ok(
             findTestItem(ctrl.items, `${classId}::First method`),
             'file change: should still have First method',
@@ -323,7 +377,10 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         // Verify run-at-cursor works after file change (second method at line 14, 0-indexed: 13)
         const doc2 = await vscode.workspace.openTextDocument(testFilePath);
         const editor2 = await vscode.window.showTextDocument(doc2);
-        editor2.selection = new vscode.Selection(new vscode.Position(13, 0), new vscode.Position(13, 0));
+        editor2.selection = new vscode.Selection(
+            new vscode.Position(13, 0),
+            new vscode.Position(13, 0),
+        );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
 
         // --- File remove ---
@@ -337,7 +394,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         const countAfterRemove = countTestItems(ctrl.items);
         assert.strictEqual(
-            countAfterRemove, initialTotalCount,
+            countAfterRemove,
+            initialTotalCount,
             'file remove: total count should return to initial',
         );
 
@@ -355,15 +413,20 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         removedFolderUri = folders[1].uri;
 
-        const reloaded = new Promise<void>(resolve => {
-            const d = onDidReload(() => { d.dispose(); resolve(); });
+        const reloaded = new Promise<void>((resolve) => {
+            const d = onDidReload(() => {
+                d.dispose();
+                resolve();
+            });
         });
         vscode.workspace.updateWorkspaceFolders(1, 1);
         await reloaded;
 
         // Should have phpunit items in flat structure (no folder roots)
         let hasFolderRoot = false;
-        ctrl.items.forEach((item) => { if (item.id.startsWith('folder:')) hasFolderRoot = true; });
+        ctrl.items.forEach((item) => {
+            if (item.id.startsWith('folder:')) hasFolderRoot = true;
+        });
         assert.ok(!hasFolderRoot, 'Should not have folder roots in single-folder mode');
 
         const remainingCount = countTestItems(ctrl.items);
@@ -373,7 +436,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await vscode.commands.executeCommand('phpunit.reload');
         const countAfterReload = countTestItems(ctrl.items);
         assert.strictEqual(
-            countAfterReload, remainingCount,
+            countAfterReload,
+            remainingCount,
             'Reload should preserve item count in single-folder mode',
         );
 
@@ -381,7 +445,10 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);
-        editor.selection = new vscode.Selection(new vscode.Position(15, 0), new vscode.Position(15, 0));
+        editor.selection = new vscode.Selection(
+            new vscode.Position(15, 0),
+            new vscode.Position(15, 0),
+        );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
     });
 
@@ -396,7 +463,9 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         // Verify folder roots exist
         let folderRootCount = 0;
-        ctrl.items.forEach((item) => { if (item.id.startsWith('folder:')) folderRootCount++; });
+        ctrl.items.forEach((item) => {
+            if (item.id.startsWith('folder:')) folderRootCount++;
+        });
         assert.strictEqual(folderRootCount, 2, 'Should have 2 folder roots');
 
         // Verify each folder has test items
@@ -404,7 +473,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             const folderRoot = findTestItem(ctrl.items, `folder:${folder.uri.toString()}`);
             assert.ok(folderRoot, `Should have folder root for ${folder.name}`);
             assert.ok(
-                countTestItems(folderRoot!.children) > 0,
+                countTestItems(folderRoot?.children) > 0,
                 `${folder.name} should have test items`,
             );
         }
@@ -412,13 +481,15 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         // Verify total count matches initial
         const totalAfterRestore = countTestItems(ctrl.items);
         assert.strictEqual(
-            totalAfterRestore, initialTotalCount,
+            totalAfterRestore,
+            initialTotalCount,
             `Total item count should match initial (expected ${initialTotalCount}, got ${totalAfterRestore})`,
         );
 
         // Verify group count restored
         assert.strictEqual(
-            countItemsByGroupTag(ctrl.items, 'group:integration'), initialGroupCount,
+            countItemsByGroupTag(ctrl.items, 'group:integration'),
+            initialGroupCount,
             'Group item count should be restored after workspace add',
         );
 
@@ -426,7 +497,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await vscode.commands.executeCommand('phpunit.reload');
         await waitForTestItems(ctrl, 2, 30_000);
         assert.strictEqual(
-            countTestItems(ctrl.items), initialTotalCount,
+            countTestItems(ctrl.items),
+            initialTotalCount,
             'Reload should preserve total item count after workspace restore',
         );
 
@@ -434,7 +506,10 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);
-        editor.selection = new vscode.Selection(new vscode.Position(15, 0), new vscode.Position(15, 0));
+        editor.selection = new vscode.Selection(
+            new vscode.Position(15, 0),
+            new vscode.Position(15, 0),
+        );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
     });
 });

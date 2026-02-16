@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EOL, PHPUnitXML, TeamcityEvent, type TestSuiteFinished } from '../../PHPUnit';
+import { EOL, PHPUnitXML, TeamcityEvent } from '../../PHPUnit';
 import { phpUnitProject } from '../../PHPUnit/__tests__/utils';
 import { CollisionPrinter } from './CollisionPrinter';
 import { OutputFormatter } from './OutputFormatter';

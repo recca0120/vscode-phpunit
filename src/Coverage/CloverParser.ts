@@ -8,8 +8,8 @@ import {
 } from 'vscode';
 import { XmlElement } from '../PHPUnit';
 
-export class CloverParser {
-    static async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {
+export const CloverParser = {
+    async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {
         try {
             const element = await XmlElement.loadFile(file);
 
@@ -20,14 +20,17 @@ export class CloverParser {
         } catch (_ex) {
             return [];
         }
-    }
-}
+    },
+};
 
 export class PHPUnitFileCoverage extends FileCoverage {
     constructor(private element: XmlElement) {
         super(Uri.file(element.getAttribute('name') ?? ''), new TestCoverageCount(0, 0));
         const metrics = this.element.querySelector('metrics');
-        this.statementCoverage.covered = parseInt(metrics?.getAttribute('coveredstatements') ?? '0', 10);
+        this.statementCoverage.covered = parseInt(
+            metrics?.getAttribute('coveredstatements') ?? '0',
+            10,
+        );
         this.statementCoverage.total = parseInt(metrics?.getAttribute('statements') ?? '0', 10);
     }
 

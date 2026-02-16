@@ -1,6 +1,12 @@
 import * as assert from 'node:assert';
 import * as vscode from 'vscode';
-import { activateExtension, collectTestItemIds, countTestItems, type ExtensionApi, waitForTestItems } from '../helper';
+import {
+    activateExtension,
+    collectTestItemIds,
+    countTestItems,
+    type ExtensionApi,
+    waitForTestItems,
+} from '../helper';
 
 const stubType = process.env.STUB_TYPE ?? 'phpunit';
 const stubVersion = process.env.STUB_VERSION ?? 'unknown';
@@ -31,7 +37,8 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
     });
 
     test('should activate extension', () => {
-        const ext = vscode.extensions.getExtension('recca0120.vscode-phpunit')!;
+        const ext = vscode.extensions.getExtension('recca0120.vscode-phpunit');
+        assert.ok(ext, 'Extension should exist');
         assert.ok(ext.isActive, 'Extension should be active');
     });
 
@@ -89,9 +96,9 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
 
         const target = findMethodItem(ctrl.items);
         assert.ok(target, 'Should find at least one method-level test item');
-        assert.ok(target!.uri, 'Test item should have a uri');
-        assert.ok(target!.range, 'Test item should have a range');
-        assert.ok(target!.label.length > 0, 'Test item should have a non-empty label');
+        assert.ok(target?.uri, 'Test item should have a uri');
+        assert.ok(target?.range, 'Test item should have a range');
+        assert.ok(target?.label.length > 0, 'Test item should have a non-empty label');
     });
 
     test('should run all tests without error', async () => {

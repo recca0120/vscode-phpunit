@@ -1,7 +1,12 @@
 import { inject, injectable } from 'inversify';
 import type { OutputChannel, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { Configuration } from '../Configuration';
-import { PHPUnitXML, type IConfiguration, type TestDefinition, type TestRunnerObserver } from '../PHPUnit';
+import {
+    type IConfiguration,
+    PHPUnitXML,
+    type TestDefinition,
+    type TestRunnerObserver,
+} from '../PHPUnit';
 import { TYPES } from '../types';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
 import { OutputChannelObserver } from './OutputChannelObserver';
@@ -23,7 +28,12 @@ export class TestRunnerObserverFactory {
     ): TestRunnerObserver[] {
         return [
             new TestResultObserver(queue, testRun),
-            new OutputChannelObserver(this.outputChannel, this.configuration, new CollisionPrinter(this.phpUnitXML), request),
+            new OutputChannelObserver(
+                this.outputChannel,
+                this.configuration,
+                new CollisionPrinter(this.phpUnitXML),
+                request,
+            ),
             new ErrorDialogObserver(this.configuration),
         ];
     }

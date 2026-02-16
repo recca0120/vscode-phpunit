@@ -5,6 +5,7 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests_
 import { Configuration } from './Configuration';
 import { TeamcityEvent } from './ProblemMatcher';
 import { ProcessBuilder } from './ProcessBuilder';
+import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './ProcessBuilder/placeholders';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import { TransformerFactory } from './Transformer';
@@ -42,7 +43,9 @@ const onTestResultEvents = new Map<TeamcityEvent, Mock>([
 
 const fakeSpawn = (contents: string[]) => {
     const stdout = vi.fn().mockImplementation((_event, fn: (data: string) => void) => {
-        contents.forEach((line) => fn(`${line}\n`));
+        for (const line of contents) {
+            fn(`${line}\n`);
+        }
     });
 
     (spawn as Mock).mockReturnValue({
@@ -72,7 +75,7 @@ const resolveTestId = (rawId: string) => {
 };
 
 const findResultCall = (id: string, event: TeamcityEvent) =>
-    onTestRunnerEvents.get(TestRunnerEvent.result)!.mock.calls.find(
+    onTestRunnerEvents.get(TestRunnerEvent.result)?.mock.calls.find(
         // biome-ignore lint/suspicious/noExplicitAny: vitest mock calls have dynamic shape
         (call: any) => call[0].id === id && call[0].event === event,
     );
@@ -100,13 +103,15 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     const actual = findResultCall(expected.id, expected.event);
     expect(actual).not.toBeUndefined();
 
-    if (expected.event === TeamcityEvent.testFailed) {
-        expected.details = adjustFailedDetails(actual!, expected.details, projectPath);
-        expect(actual![0].details).toEqual(expected.details);
+    if (expected.event === TeamcityEvent.testFailed && actual) {
+        expected.details = adjustFailedDetails(actual, expected.details, projectPath);
+        expect(actual[0].details).toEqual(expected.details);
     }
 
     const expectedWithHint = { ...expected, locationHint };
-    expect(actual![0]).toEqual(expect.objectContaining(expectedWithHint));
+    if (actual) {
+        expect(actual[0]).toEqual(expect.objectContaining(expectedWithHint));
+    }
     expect(onTestResultEvents.get(expected.event)).toHaveBeenCalledWith(
         expect.objectContaining(expectedWithHint),
     );
@@ -193,12 +198,12 @@ const generateTestResult = (
 
 const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
     const testRunner = new TestRunner();
-    onTestResultEvents.forEach((fn, eventName) =>
-        testRunner.on(eventName, (test: unknown) => fn(test)),
-    );
-    onTestRunnerEvents.forEach((fn, eventName) =>
-        testRunner.on(eventName, (test: unknown) => fn(test)),
-    );
+    for (const [eventName, fn] of onTestResultEvents) {
+        testRunner.on(eventName, (test: unknown) => fn(test));
+    }
+    for (const [eventName, fn] of onTestRunnerEvents) {
+        testRunner.on(eventName, (test: unknown) => fn(test));
+    }
     await testRunner.run(builder).run();
 
     const call = (spawn as Mock).mock.calls[0];
@@ -216,7 +221,7 @@ describe('TestRunner Test', () => {
         const configuration = new Configuration({
             php: 'foo',
             phpunit: 'vendor/bin/phpunit',
-            args: ['-c', '${PWD}/phpunit.xml'],
+            args: ['-c', `${VAR_PWD}/phpunit.xml`],
         });
 
         const builder = new ProcessBuilder(configuration, { cwd });
@@ -229,8 +234,12 @@ describe('TestRunner Test', () => {
         ];
         await expectedCommand(builder, expected);
 
-        expect(onTestRunnerEvents.get(TestRunnerEvent.error)!).toHaveBeenCalledTimes(1);
-        expect(onTestRunnerEvents.get(TestRunnerEvent.close)!).toHaveBeenCalledTimes(1);
+        const errorEvent = onTestRunnerEvents.get(TestRunnerEvent.error);
+        const closeEvent = onTestRunnerEvents.get(TestRunnerEvent.close);
+        if (errorEvent && closeEvent) {
+            expect(errorEvent).toHaveBeenCalledTimes(1);
+            expect(closeEvent).toHaveBeenCalledTimes(1);
+        }
     });
 
     const testEnvironment = (
@@ -342,7 +351,6 @@ describe('TestRunner Test', () => {
     };
 
     const remoteAppPath = (path: string) => (path ? `/app/${path}` : '/app');
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: original test behavior preserved
     const winAppPath = (path: string) => (path ? `./${path}` : '.').replace(/\/g/, '\\');
 
     testEnvironment(
@@ -351,8 +359,8 @@ describe('TestRunner Test', () => {
         phpUnitProject,
         new Configuration({
             php: 'php',
-            phpunit: '${workspaceFolder}/vendor/bin/phpunit',
-            args: ['-c', '${workspaceFolder}/phpunit.xml'],
+            phpunit: `${VAR_WORKSPACE_FOLDER}/vendor/bin/phpunit`,
+            args: ['-c', `${VAR_WORKSPACE_FOLDER}/phpunit.xml`],
         }),
         (...middle) => [
             'php',
@@ -387,7 +395,7 @@ describe('TestRunner Test', () => {
             php: 'php',
             phpunit: 'vendor/bin/phpunit',
             args: ['-c', '/app/phpunit.xml'],
-            paths: { '${PWD}': remoteAppPath('') },
+            paths: { [VAR_PWD]: remoteAppPath('') },
         }),
         (...middle) => [
             ...sshPrefix,
@@ -423,11 +431,11 @@ describe('TestRunner Test', () => {
             projectPath,
             appPath,
             new Configuration({
-                command: 'docker run -i --rm -v ${workspaceFolder}:/app -w /app phpunit-stub',
+                command: `docker run -i --rm -v ${VAR_WORKSPACE_FOLDER}:/app -w /app phpunit-stub`,
                 php: 'php',
                 phpunit: 'vendor/bin/phpunit',
-                args: ['-c', '${PWD}/phpunit.xml'],
-                paths: { '${PWD}': appPath('') },
+                args: ['-c', `${VAR_PWD}/phpunit.xml`],
+                paths: { [VAR_PWD]: appPath('') },
             }),
             (...middle) => [
                 ...dockerPrefix(projectPath),

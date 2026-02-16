@@ -62,13 +62,16 @@ export class TestRunnerProcess {
         this.output += out;
         this.incompleteLineBuffer += out;
         const lines = this.flushCompleteLines(this.incompleteLineBuffer, 1);
-        this.incompleteLineBuffer = lines.shift()!;
+        this.incompleteLineBuffer = lines.shift() ?? '';
     }
 
     private flushCompleteLines(buffer: string, limit = 0) {
         const lines = buffer.split(/\r\n|\n/);
         while (lines.length > limit) {
-            this.emitter.emit('line', lines.shift()!);
+            const line = lines.shift();
+            if (line !== undefined) {
+                this.emitter.emit('line', line);
+            }
         }
 
         return lines;

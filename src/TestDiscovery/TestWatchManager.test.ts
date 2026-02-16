@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventEmitter, type TestItem, type TestRunProfile, type Uri, window } from 'vscode';
-import { TestCollection } from '../TestCollection';
-import { TestRunHandler } from '../TestExecution';
+import { EventEmitter, type TestItem, type Uri, window } from 'vscode';
+import type { TestCollection } from '../TestCollection';
+import type { TestRunHandler } from '../TestExecution';
 import { TestWatchManager } from './TestWatchManager';
 
 function createMockHandler() {
@@ -12,8 +12,8 @@ function createMockCollection() {
     return { findTestsByFile: vi.fn().mockReturnValue([]) } as unknown as TestCollection;
 }
 
-function createTestItem(uri: Uri): TestItem {
-    return { id: 'test1', uri, children: { size: 0 } } as any;
+function _createTestItem(uri: Uri): TestItem {
+    return { id: 'test1', uri, children: { size: 0 } } as unknown as TestItem;
 }
 
 describe('TestWatchManager', () => {
@@ -35,8 +35,11 @@ describe('TestWatchManager', () => {
         vi.mocked(handler.startTestRun).mockRejectedValueOnce(error);
 
         manager.handleContinuousRun(
-            { include: undefined, continuous: true } as any,
-            { isCancellationRequested: false, onCancellationRequested: vi.fn() } as any,
+            { include: undefined, continuous: true } as unknown as import('vscode').TestRunRequest,
+            {
+                isCancellationRequested: false,
+                onCancellationRequested: vi.fn(),
+            } as unknown as import('vscode').CancellationToken,
         );
 
         emitter.fire({ toString: () => 'file:///test.php' } as Uri);
@@ -57,11 +60,14 @@ describe('TestWatchManager', () => {
             .mockResolvedValueOnce(undefined);
 
         manager.handleContinuousRun(
-            { include: undefined, continuous: true } as any,
-            { isCancellationRequested: false, onCancellationRequested: vi.fn() } as any,
+            { include: undefined, continuous: true } as unknown as import('vscode').TestRunRequest,
+            {
+                isCancellationRequested: false,
+                onCancellationRequested: vi.fn(),
+            } as unknown as import('vscode').CancellationToken,
         );
 
-        const uri = { toString: () => 'file:///test.php' } as Uri;
+        const uri = { toString: () => 'file:///test.php' } as unknown as Uri;
         emitter.fire(uri);
 
         // Wait for first call to be dispatched

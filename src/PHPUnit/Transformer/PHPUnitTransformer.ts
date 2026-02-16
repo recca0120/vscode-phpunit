@@ -7,7 +7,7 @@ export class PHPUnitTransformer extends Transformer {
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string {
         let { type, classFQN } = testDefinition;
-        classFQN = classFQN!.replace(/Test$/i, '');
+        classFQN = classFQN?.replace(/Test$/i, '') ?? '';
         const partsFQN = classFQN.split('\\');
         const className = titleCase(partsFQN.pop() ?? '');
         classFQN = partsFQN.length === 0 ? className : `${className} (${classFQN})`;

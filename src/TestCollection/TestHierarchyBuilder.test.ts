@@ -43,9 +43,9 @@ describe('TestHierarchyBuilder', () => {
 
     const toTree = (items: import('vscode').TestItemCollection) => {
         const results: { id: string; label: string; children: ReturnType<typeof toTree> }[] = [];
-        items.forEach((item: import('vscode').TestItem) => {
+        for (const [, item] of items) {
             results.push({ id: item.id, label: item.label, children: toTree(item.children) });
-        });
+        }
 
         return results;
     };
@@ -78,9 +78,9 @@ describe('TestHierarchyBuilder', () => {
 
         const testParser = new TestParser(phpUnitXml);
         const builder = new TestHierarchyBuilder(ctrl, testParser);
-        codes.map(({ testsuite, file, code }) => {
+        for (const { testsuite, file, code } of codes) {
             testParser.parse(code, file, testsuite.name);
-        });
+        }
         builder.get();
     };
 
@@ -217,7 +217,9 @@ describe('TestHierarchyBuilder', () => {
 
         it('class children should be replaced, not accumulated, on re-parse', () => {
             const phpUnitXml = new PHPUnitXML().load(
-                generateXML(`<testsuites><testsuite name="default"><directory>tests</directory></testsuite></testsuites>`),
+                generateXML(
+                    `<testsuites><testsuite name="default"><directory>tests</directory></testsuite></testsuites>`,
+                ),
                 configurationFile,
             );
 
@@ -244,10 +246,16 @@ describe('TestHierarchyBuilder', () => {
             builder2.get();
 
             // The class should have exactly 1 method, not 2
-            const ns = ctrl.items.get('namespace:Tests')!;
-            const cls = ns.children.get('Assertions (Tests\\Assertions)')!;
+            const ns = ctrl.items.get('namespace:Tests');
+            expect(ns).toBeDefined();
+            const cls = ns?.children.get('Assertions (Tests\\Assertions)');
+            expect(cls).toBeDefined();
             const methods: string[] = [];
-            cls.children.forEach((item: import('vscode').TestItem) => methods.push(item.id));
+            if (cls) {
+                for (const [, item] of cls.children) {
+                    methods.push(item.id);
+                }
+            }
 
             expect(methods).toEqual(['Assertions (Tests\\Assertions)::Passed']);
         });

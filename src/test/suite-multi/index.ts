@@ -14,7 +14,9 @@ export function run(): Promise<void> {
     return new Promise((c, e) => {
         const files = glob.globSync('**/*.test.js', { cwd: testsRoot });
 
-        files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
+        for (const f of files) {
+            mocha.addFile(path.resolve(testsRoot, f));
+        }
 
         try {
             mocha.run((failures: number) => {

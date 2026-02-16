@@ -34,7 +34,10 @@ export class XmlElement {
         const segments = selector.split(' ');
         let current: unknown = this.node;
         while (segments.length > 0) {
-            const segment = segments.shift()!;
+            const segment = segments.shift();
+            if (!segment) {
+                break;
+            }
             if (Array.isArray(current)) {
                 current = current
                     .flatMap((node: Record<string, unknown>) => node[segment] ?? undefined)

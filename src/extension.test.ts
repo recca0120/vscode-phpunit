@@ -112,7 +112,9 @@ const expectTestResultCalled = (ctrl: TestController, expected: Record<string, n
 
 const countItems = (testItemCollection: TestItemCollection) => {
     let sum = 0;
-    testItemCollection.forEach((item) => (sum += countItems(item.children)));
+    for (const [, item] of testItemCollection) {
+        sum += countItems(item.children);
+    }
     sum += testItemCollection.size;
 
     return sum;
@@ -185,11 +187,15 @@ describe('Extension Test', () => {
                 args.map((a) =>
                     a instanceof RegExp
                         ? expect.stringMatching(a)
-                        : expect.stringMatching(new RegExp(`^${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')),
+                        : expect.stringMatching(
+                              new RegExp(`^${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+                          ),
                 ),
             ),
             expect.objectContaining({
-                cwd: expect.stringMatching(new RegExp(`^${cwd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')),
+                cwd: expect.stringMatching(
+                    new RegExp(`^${cwd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+                ),
                 ...(envOverrides && { env: expect.objectContaining(envOverrides) }),
             }),
         );
@@ -207,21 +213,21 @@ describe('Extension Test', () => {
         it('should stop running remaining processes when cancellation is requested mid-run', async () => {
             const cts = new CancellationTokenSource();
             const spawnMock = vi.mocked(spawn);
-            const realSpawn = spawnMock.getMockImplementation()!;
+            const realSpawn = spawnMock.getMockImplementation();
+            if (!realSpawn) {
+                throw new Error('Mock implementation not found');
+            }
 
             spawnMock.mockImplementation((...args: Parameters<typeof spawn>) => {
                 cts.cancel();
-                return (realSpawn as Function)(...args) as ChildProcess;
+                return realSpawn(...args) as ChildProcess;
             });
 
             try {
                 await activate(context);
                 const ctrl = getTestController();
                 const testRunProfile = getTestRunProfile(ctrl);
-                const include = [
-                    'Assertions (Tests\\Assertions)',
-                    'Calculator (Tests\\Calculator)',
-                ]
+                const include = ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)']
                     .map((id) => findTest(ctrl.items, id))
                     .filter((item): item is TestItem => item !== undefined);
 
@@ -254,8 +260,9 @@ describe('Extension Test', () => {
             const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
             const itemId = `Assertions (Tests\\Assertions)`;
 
-            const parent = findTest(ctrl.items, itemId)!;
-            const child = parent.children.get(`${itemId}::Passed`);
+            const parent = findTest(ctrl.items, itemId);
+            expect(parent).toBeDefined();
+            const child = parent?.children.get(`${itemId}::Passed`);
 
             expect(parent).toEqual(
                 expect.objectContaining({
@@ -282,10 +289,7 @@ describe('Extension Test', () => {
 
             expect(workspace.getConfiguration).toHaveBeenCalledWith('phpunit', expect.anything());
             expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit', 'phpunit');
-            expect(tests.createTestController).toHaveBeenCalledWith(
-                'phpunit',
-                'PHPUnit',
-            );
+            expect(tests.createTestController).toHaveBeenCalledWith('phpunit', 'PHPUnit');
             for (const cmd of [
                 'phpunit.reload',
                 'phpunit.run-all',
@@ -384,9 +388,11 @@ describe('Extension Test', () => {
             });
 
             const { failed } = getTestRun(ctrl);
-            const [, message] = (failed as Mock).mock.calls.find(
+            const call = (failed as Mock).mock.calls.find(
                 ([test]: { id: string }[]) => test.id === id,
-            )!;
+            );
+            expect(call).toBeDefined();
+            const [, message] = call ?? [];
 
             expect(message.location).toEqual(
                 expect.objectContaining({
@@ -403,11 +409,7 @@ describe('Extension Test', () => {
 
             await commands.executeCommand('phpunit.run-all');
 
-            expectSpawnCalled([
-                binary,
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expectSpawnCalled([binary, '--colors=never', '--teamcity']);
         });
 
         it('should rerun previous test via rerun command', async () => {
@@ -438,12 +440,7 @@ describe('Extension Test', () => {
 
             await activateAndRun();
 
-            expectSpawnCalled([
-                binary,
-                '--group=integration',
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expectSpawnCalled([binary, '--group=integration', '--colors=never', '--teamcity']);
 
             await configuration.update('args', []);
         });
@@ -462,11 +459,7 @@ describe('Extension Test', () => {
             );
 
             // Group tests are run by selecting specific test items, not --group flag
-            expectSpawnCalled([
-                binary,
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expectSpawnCalled([binary, '--colors=never', '--teamcity']);
         });
 
         it('should run class with group', async () => {
@@ -731,22 +724,31 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
 
             // Multi-workspace should have folder root items at top level
-            const phpUnitFolder = findTest(ctrl.items, `folder:${Uri.file(phpUnitStubs[0].root).toString()}`);
-            const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pestStubs[0].root).toString()}`);
+            const phpUnitFolder = findTest(
+                ctrl.items,
+                `folder:${Uri.file(phpUnitStubs[0].root).toString()}`,
+            );
+            const pestFolder = findTest(
+                ctrl.items,
+                `folder:${Uri.file(pestStubs[0].root).toString()}`,
+            );
             expect(phpUnitFolder).toBeDefined();
-            expect(phpUnitFolder!.label).toBe('$(folder) phpunit-stub');
+            expect(phpUnitFolder?.label).toBe('$(folder) phpunit-stub');
             expect(pestFolder).toBeDefined();
-            expect(pestFolder!.label).toBe('$(folder) pest-stub');
+            expect(pestFolder?.label).toBe('$(folder) pest-stub');
 
             // PHPUnit items should be under phpunit folder
-            const phpUnitItem = findTest(phpUnitFolder!.children, 'Assertions (Tests\\Assertions)');
+            const phpUnitItem = findTest(phpUnitFolder?.children, 'Assertions (Tests\\Assertions)');
             expect(phpUnitItem).toBeDefined();
-            expect(phpUnitItem!.label).toContain('AssertionsTest');
+            expect(phpUnitItem?.label).toContain('AssertionsTest');
 
             // Pest items should be under pest folder
-            const pestItem = findTest(pestFolder!.children, 'tests/Unit/ExampleTest.php::test_description');
+            const pestItem = findTest(
+                pestFolder?.children,
+                'tests/Unit/ExampleTest.php::test_description',
+            );
             expect(pestItem).toBeDefined();
-            expect(pestItem!.label).toContain('test_description');
+            expect(pestItem?.label).toContain('test_description');
         });
 
         it('should run phpunit test with phpunit-stub cwd', async () => {
@@ -757,8 +759,11 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
             const testRunProfile = getTestRunProfile(ctrl);
-            const phpUnitFolder = findTest(ctrl.items, `folder:${Uri.file(phpUnit.root).toString()}`);
-            const testItem = findTest(phpUnitFolder!.children, 'Assertions (Tests\\Assertions)');
+            const phpUnitFolder = findTest(
+                ctrl.items,
+                `folder:${Uri.file(phpUnit.root).toString()}`,
+            );
+            const testItem = findTest(phpUnitFolder?.children, 'Assertions (Tests\\Assertions)');
             expect(testItem).toBeDefined();
 
             cwd = phpUnit.root;
@@ -781,7 +786,10 @@ describe('Extension Test', () => {
             const ctrl = getTestController();
             const testRunProfile = getTestRunProfile(ctrl);
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
-            const testItem = findTest(pestFolder!.children, 'tests/Unit/ExampleTest.php::test_description');
+            const testItem = findTest(
+                pestFolder?.children,
+                'tests/Unit/ExampleTest.php::test_description',
+            );
             expect(testItem).toBeDefined();
 
             cwd = pest.root;
@@ -812,7 +820,12 @@ describe('Extension Test', () => {
             const pushMock = context.subscriptions.push as unknown as Mock;
             for (const call of pushMock.mock.calls) {
                 for (const arg of call) {
-                    if (arg && typeof arg === 'object' && typeof arg.dispose === 'function' && typeof arg[Symbol.iterator] === 'function') {
+                    if (
+                        arg &&
+                        typeof arg === 'object' &&
+                        typeof arg.dispose === 'function' &&
+                        typeof arg[Symbol.iterator] === 'function'
+                    ) {
                         return arg;
                     }
                 }
@@ -845,7 +858,7 @@ describe('Extension Test', () => {
             await ctrl.resolveHandler();
 
             const firstWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-                (r: any) => r.value,
+                (r: { value: import('vscode').FileSystemWatcher }) => r.value,
             );
 
             await ctrl.resolveHandler();
@@ -890,11 +903,21 @@ describe('Extension Test', () => {
                 (call: unknown[]) => typeof call[0] === 'function',
             );
             expect(listenerCall).toBeDefined();
-            const listener = listenerCall![0];
+            const listener = listenerCall?.[0];
 
             // Reset concurrency tracking after activate
-            (workspace.findFiles as any)._maxConcurrent = 0;
-            (workspace.findFiles as any)._concurrentCount = 0;
+            (
+                workspace.findFiles as unknown as {
+                    _maxConcurrent: number;
+                    _concurrentCount: number;
+                }
+            )._maxConcurrent = 0;
+            (
+                workspace.findFiles as unknown as {
+                    _maxConcurrent: number;
+                    _concurrentCount: number;
+                }
+            )._concurrentCount = 0;
 
             // Event 1: add pest (1→2, crosses boundary, reloadAll for 2 folders → 2 concurrent findFiles)
             setWorkspaceFolders([phpUnitFolder, pestFolder]);
@@ -910,7 +933,9 @@ describe('Extension Test', () => {
 
             // Within one reloadAll of 2 folders, Promise.all produces maxConcurrent=2.
             // If NOT serialized, event 2's findFiles would overlap with event 1's → maxConcurrent=3.
-            expect((workspace.findFiles as any)._maxConcurrent).toBeLessThanOrEqual(2);
+            expect(
+                (workspace.findFiles as unknown as { _maxConcurrent: number })._maxConcurrent,
+            ).toBeLessThanOrEqual(2);
         });
 
         it('startWatching should not call discoverTestFiles', async () => {
@@ -961,12 +986,13 @@ describe('Extension Test', () => {
 
             // Get all watchers created by createFileSystemWatcher
             const allWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-                (r: any) => r.value,
+                (r: { value: import('vscode').FileSystemWatcher }) => r.value,
             );
 
             // Only the last batch should be undisposed (1 folder = 1 watcher per resolve)
             const undisposed = allWatchers.filter(
-                (w: any) => w.dispose.mock.calls.length === 0,
+                (w: { dispose: { mock: { calls: unknown[] } } }) =>
+                    w.dispose.mock.calls.length === 0,
             );
             expect(undisposed.length).toBe(1);
         });
@@ -1025,12 +1051,7 @@ describe('Extension Test', () => {
 
             await activateAndRun();
 
-            expectSpawnCalled([
-                binary,
-                '--group=integration',
-                '--colors=never',
-                '--teamcity',
-            ]);
+            expectSpawnCalled([binary, '--group=integration', '--colors=never', '--teamcity']);
 
             await configuration.update('args', []);
         });

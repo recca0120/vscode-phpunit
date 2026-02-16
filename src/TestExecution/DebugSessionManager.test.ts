@@ -24,11 +24,13 @@ describe('DebugSessionManager', () => {
             getDebugConfiguration: vi.fn(),
         };
 
-        (debug as any).activeDebugSession = { type: 'php' };
+        (debug as unknown as { activeDebugSession: { type: string } }).activeDebugSession = {
+            type: 'php',
+        };
 
         const error = new Error('test run failed');
         await expect(
-            manager.wrap(xdebug as any, async () => {
+            manager.wrap(xdebug as unknown as import('../PHPUnit').Xdebug, async () => {
                 throw error;
             }),
         ).rejects.toThrow('test run failed');

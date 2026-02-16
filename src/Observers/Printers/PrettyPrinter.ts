@@ -18,7 +18,11 @@ export class PrettyPrinter extends OutputFormatter {
     };
 
     testFinished(result: TestFinished | TestFailed) {
-        const [icon] = this.messages.get(result.event)!;
+        const message = this.messages.get(result.event);
+        if (!message) {
+            return '';
+        }
+        const [icon] = message;
         const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
 
         const messages = [`  ${icon} ${name} ${result.duration} ms`];

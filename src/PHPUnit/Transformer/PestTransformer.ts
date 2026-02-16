@@ -8,12 +8,13 @@ export class PestTransformer extends PHPUnitTransformer {
     uniqueId(
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string {
-        if (!TransformerFactory.isPest(testDefinition.classFQN!)) {
+        const initialClassFQN = testDefinition.classFQN ?? '';
+        if (!TransformerFactory.isPest(initialClassFQN)) {
             return super.uniqueId(testDefinition);
         }
 
         let { type, classFQN } = testDefinition;
-        classFQN = classFQN!.replace(/^P\\/, '');
+        classFQN = classFQN?.replace(/^P\\/, '') ?? '';
 
         if (type === TestType.namespace) {
             return `namespace:${classFQN}`;
@@ -51,7 +52,9 @@ export class PestTransformer extends PHPUnitTransformer {
         }
 
         const classFQN = matched.groups?.classFQN;
-        const id = this.removeDataset(this.uniqueId({ type: TestType.method, classFQN, methodName }));
+        const id = this.removeDataset(
+            this.uniqueId({ type: TestType.method, classFQN, methodName }),
+        );
 
         return { id, file: '' };
     }

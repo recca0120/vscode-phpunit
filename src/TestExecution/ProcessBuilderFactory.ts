@@ -20,9 +20,12 @@ export class ProcessBuilderFactory {
 
     private toMode(profileKind?: TestRunProfileKind): Mode | undefined {
         switch (profileKind) {
-            case TestRunProfileKind.Debug: return Mode.debug;
-            case TestRunProfileKind.Coverage: return Mode.coverage;
-            default: return undefined;
+            case TestRunProfileKind.Debug:
+                return Mode.debug;
+            case TestRunProfileKind.Coverage:
+                return Mode.coverage;
+            default:
+                return undefined;
         }
     }
 }

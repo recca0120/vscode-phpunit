@@ -9,7 +9,12 @@ export class TestDefinitionCollector {
     }
 
     onInit() {
-        for (const type of [TestType.method, TestType.describe, TestType.class, TestType.namespace] as const) {
+        for (const type of [
+            TestType.method,
+            TestType.describe,
+            TestType.class,
+            TestType.namespace,
+        ] as const) {
             this.testParser.on(type, (testDefinition) => this.testDefinitions.push(testDefinition));
         }
     }

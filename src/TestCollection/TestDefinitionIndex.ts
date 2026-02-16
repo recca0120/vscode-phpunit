@@ -1,5 +1,5 @@
 import type { TestItem } from 'vscode';
-import { TestType, type TestDefinition } from '../PHPUnit';
+import { type TestDefinition, TestType } from '../PHPUnit';
 
 export class TestDefinitionIndex {
     private definitions = new Map<string, TestDefinition>();
@@ -14,7 +14,7 @@ export class TestDefinitionIndex {
         if (!this.byUri.has(uri)) {
             this.byUri.set(uri, new Set());
         }
-        this.byUri.get(uri)!.add(testItem.id);
+        this.byUri.get(uri)?.add(testItem.id);
 
         if (testDefinition.type === TestType.method) {
             for (const tag of testItem.tags ?? []) {
@@ -23,7 +23,7 @@ export class TestDefinitionIndex {
                     if (!this.groups.has(group)) {
                         this.groups.set(group, new Set());
                     }
-                    this.groups.get(group)!.add(testItem);
+                    this.groups.get(group)?.add(testItem);
                 }
             }
         }

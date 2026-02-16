@@ -1,13 +1,13 @@
-import { inject, injectable, type Container } from 'inversify';
+import { type Container, inject, injectable } from 'inversify';
 import {
     type Disposable,
     type Event,
-    EventEmitter as VscodeEventEmitter,
     type EventEmitter,
     type ExtensionContext,
     type TestController,
     type TestItem,
     type Uri,
+    EventEmitter as VscodeEventEmitter,
     type WorkspaceFolder,
     window,
     workspace,
@@ -36,7 +36,11 @@ export class WorkspaceFolderManager {
         if (!this.folders.has(key)) {
             this.folders.set(key, this.createChildContainer(folder));
         }
-        return this.folders.get(key)!;
+        const container = this.folders.get(key);
+        if (!container) {
+            throw new Error(`Failed to create container for folder ${key}`);
+        }
+        return container;
     }
 
     private remove(folder: WorkspaceFolder): void {
@@ -79,9 +83,10 @@ export class WorkspaceFolderManager {
         }
     }
 
-    private handleFolderChange(
-        event: { added: readonly WorkspaceFolder[]; removed: readonly WorkspaceFolder[] },
-    ): { needsReload: boolean; addedContainers: Container[] } {
+    private handleFolderChange(event: {
+        added: readonly WorkspaceFolder[];
+        removed: readonly WorkspaceFolder[];
+    }): { needsReload: boolean; addedContainers: Container[] } {
         const prevCount = this.getAll().length;
 
         for (const folder of event.added) {
@@ -92,7 +97,7 @@ export class WorkspaceFolderManager {
         }
 
         const newCount = this.getAll().length;
-        const crossedBoundary = (prevCount <= 1) !== (newCount <= 1);
+        const crossedBoundary = prevCount <= 1 !== newCount <= 1;
 
         if (crossedBoundary) {
             this.applyFolderRoots();
@@ -159,25 +164,29 @@ export class WorkspaceFolderManager {
         // Watch for folder changes
         context.subscriptions.push(
             workspace.onDidChangeWorkspaceFolders((event) => {
-                this.pendingOperation = this.pendingOperation.then(async () => {
-                    const { needsReload, addedContainers } = this.handleFolderChange(event);
+                this.pendingOperation = this.pendingOperation
+                    .then(async () => {
+                        const { needsReload, addedContainers } = this.handleFolderChange(event);
 
-                    if (needsReload) {
-                        await this.doReloadAll();
-                        return;
-                    }
+                        if (needsReload) {
+                            await this.doReloadAll();
+                            return;
+                        }
 
-                    for (const child of addedContainers) {
-                        await child.get(TestFileDiscovery).loadWorkspaceConfiguration();
-                        await child.get(TestFileDiscovery).reloadAll();
-                        const watcher = await child.get(TestFileWatcher).startWatching();
-                        context.subscriptions.push(watcher);
-                    }
-                    this._onDidReload.fire();
-                }).catch((err) => {
-                    const message = err instanceof Error ? err.message : String(err);
-                    window.showErrorMessage(`PHPUnit: Failed to handle folder change: ${message}`);
-                });
+                        for (const child of addedContainers) {
+                            await child.get(TestFileDiscovery).loadWorkspaceConfiguration();
+                            await child.get(TestFileDiscovery).reloadAll();
+                            const watcher = await child.get(TestFileWatcher).startWatching();
+                            context.subscriptions.push(watcher);
+                        }
+                        this._onDidReload.fire();
+                    })
+                    .catch((err) => {
+                        const message = err instanceof Error ? err.message : String(err);
+                        window.showErrorMessage(
+                            `PHPUnit: Failed to handle folder change: ${message}`,
+                        );
+                    });
             }),
         );
     }
@@ -187,7 +196,7 @@ export class WorkspaceFolderManager {
 
         this.ctrl.resolveHandler = async (item) => {
             if (!item) {
-                await (this.pendingOperation = this.pendingOperation.then(async () => {
+                this.pendingOperation = this.pendingOperation.then(async () => {
                     for (const watcher of this.activeWatchers) {
                         watcher.dispose();
                     }
@@ -200,7 +209,8 @@ export class WorkspaceFolderManager {
                     );
                     this.activeWatchers = watchers;
                     context.subscriptions.push(...watchers);
-                }));
+                });
+                await this.pendingOperation;
                 return;
             }
 
@@ -219,7 +229,8 @@ export class WorkspaceFolderManager {
     }
 
     async reloadAll(): Promise<void> {
-        await (this.pendingOperation = this.pendingOperation.then(() => this.doReloadAll()));
+        this.pendingOperation = this.pendingOperation.then(() => this.doReloadAll());
+        await this.pendingOperation;
     }
 
     private async doReloadAll(): Promise<void> {
@@ -228,7 +239,9 @@ export class WorkspaceFolderManager {
     }
 
     findAllGroups(): string[] {
-        return [...new Set(this.getAll().flatMap((c) => c.get(TestCollection).findGroups()))].sort();
+        return [
+            ...new Set(this.getAll().flatMap((c) => c.get(TestCollection).findGroups())),
+        ].sort();
     }
 
     findTestsByGroup(group: string): TestItem[] {
@@ -275,7 +288,8 @@ export class WorkspaceFolderManager {
     private toContext(container: Container): FolderTestContext {
         return {
             findTestsByFile: (uri) => container.get(TestCollection).findTestsByFile(uri),
-            findTestsByPosition: (uri, pos) => container.get(TestCollection).findTestsByPosition(uri, pos),
+            findTestsByPosition: (uri, pos) =>
+                container.get(TestCollection).findTestsByPosition(uri, pos),
             findTestsByRequest: (req) => container.get(TestCollection).findTestsByRequest(req),
             getPreviousRequest: () => container.get(TestRunHandler).getPreviousRequest(),
             getLastRunAt: () => container.get(TestRunHandler).getLastRunAt(),
@@ -292,5 +306,4 @@ export class WorkspaceFolderManager {
         this.ctrl.items.add(folderItem);
         child.get(TestCollection).setRootItems(folderItem.children);
     }
-
 }

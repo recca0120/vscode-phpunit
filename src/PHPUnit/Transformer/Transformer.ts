@@ -25,14 +25,14 @@ export abstract class Transformer {
         }
 
         if (type === TestType.namespace) {
-            return classFQN!.replace(/^P\\/g, '');
+            return classFQN?.replace(/^P\\/g, '') ?? '';
         }
 
         if (type === TestType.class) {
-            return className ?? classFQN!.replace(/^P\\/g, '');
+            return className ?? classFQN?.replace(/^P\\/g, '') ?? '';
         }
 
-        return methodName!.replace(/`/g, '');
+        return methodName?.replace(/`/g, '') ?? '';
     }
 
     abstract uniqueId(
@@ -57,7 +57,7 @@ export abstract class Transformer {
         if (annotations?.testdox && annotations.testdox.length > 0) {
             methodName = annotations.testdox[annotations.testdox.length - 1];
         } else {
-            methodName = this.normalizeMethodName(methodName!);
+            methodName = this.normalizeMethodName(methodName ?? '');
         }
 
         return methodName + dataset;
