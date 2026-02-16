@@ -7,7 +7,8 @@ export class TestRunnerProcess {
     private child?: ChildProcess;
     private emitter = new EventEmitter();
     private output = '';
-    private incompleteLineBuffer = '';
+    private stdoutBuffer = '';
+    private stderrBuffer = '';
     private abortController: AbortController;
 
     constructor(private builder: ProcessBuilder) {
@@ -45,24 +46,32 @@ export class TestRunnerProcess {
 
     private execute() {
         this.output = '';
-        this.incompleteLineBuffer = '';
+        this.stdoutBuffer = '';
+        this.stderrBuffer = '';
 
         this.emitter.emit('start', this.builder);
         const { runtime, args, options } = this.builder.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
-        this.child.stdout?.on('data', (data) => this.processOutput(data));
-        this.child.stderr?.on('data', (data) => this.processOutput(data));
-        this.child.stdout?.on('end', () => this.flushCompleteLines(this.incompleteLineBuffer));
+        this.child.stdout?.on('data', (data) => this.processStream(data, 'stdout'));
+        this.child.stderr?.on('data', (data) => this.processStream(data, 'stderr'));
+        this.child.stdout?.on('end', () => this.flushCompleteLines(this.stdoutBuffer));
+        this.child.stderr?.on('end', () => this.flushCompleteLines(this.stderrBuffer));
         this.child.on('error', (err: Error) => this.emitter.emit('error', err));
         this.child.on('close', (code) => this.emitter.emit('close', code, this.output));
     }
 
-    private processOutput(data: string) {
+    private processStream(data: string, stream: 'stdout' | 'stderr') {
         const out = data.toString();
         this.output += out;
-        this.incompleteLineBuffer += out;
-        const lines = this.flushCompleteLines(this.incompleteLineBuffer, 1);
-        this.incompleteLineBuffer = lines.shift() ?? '';
+        if (stream === 'stdout') {
+            this.stdoutBuffer += out;
+            const lines = this.flushCompleteLines(this.stdoutBuffer, 1);
+            this.stdoutBuffer = lines.shift() ?? '';
+        } else {
+            this.stderrBuffer += out;
+            const lines = this.flushCompleteLines(this.stderrBuffer, 1);
+            this.stderrBuffer = lines.shift() ?? '';
+        }
     }
 
     private flushCompleteLines(buffer: string, limit = 0) {

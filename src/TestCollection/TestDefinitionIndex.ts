@@ -41,10 +41,21 @@ export class TestDefinitionIndex {
         if (!ids) {
             return;
         }
-        for (const id of ids) {
-            this.deleteById(id);
-        }
         this.byUri.delete(uri);
+        for (const id of ids) {
+            if (!this.isReferencedByOtherUri(id)) {
+                this.deleteById(id);
+            }
+        }
+    }
+
+    private isReferencedByOtherUri(id: string): boolean {
+        for (const [, ids] of this.byUri) {
+            if (ids.has(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private deleteById(id: string): void {

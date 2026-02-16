@@ -95,6 +95,7 @@ export class TestHierarchyBuilder {
 
         const existing = children.get(namespaceDefinition.id);
         if (existing) {
+            this.testData.set(existing, namespaceDefinition);
             return existing;
         }
 
