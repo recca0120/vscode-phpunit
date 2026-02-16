@@ -27,9 +27,17 @@ export class TestResultParser implements IParser<TestResult | undefined> {
     }
 
     public parse(text: string): TestResult | undefined {
-        return this.is(text)
-            ? this.doParse(text)
-            : this.parsers.find((parser) => parser.is(text))?.parse(text);
+        if (this.is(text)) {
+            return this.doParse(text);
+        }
+
+        for (const parser of this.parsers) {
+            if (parser.is(text)) {
+                return parser.parse(text);
+            }
+        }
+
+        return undefined;
     }
 
     private doParse(text: string) {

@@ -25,13 +25,14 @@ export class AnnotationParser {
 
     private parseComments(declaration: Declaration) {
         const comments = declaration.leadingComments ?? [];
-
-        return comments
-            .map((comment) => comment.value.matchAll(this.pattern))
-            .reduce((result, matches) => this.append(result, matches), {} as Annotations);
+        const annotations = {} as Annotations;
+        for (const comment of comments) {
+            this.append(annotations, comment.value.matchAll(this.pattern));
+        }
+        return annotations;
     }
 
-    private append(annotations: Annotations, matches: IterableIterator<RegExpMatchArray>) {
+    private append(annotations: Annotations, matches: IterableIterator<RegExpMatchArray>): void {
         for (const match of matches) {
             const groups = match?.groups;
             for (const property in groups) {
@@ -44,7 +45,5 @@ export class AnnotationParser {
                 }
             }
         }
-
-        return annotations;
     }
 }

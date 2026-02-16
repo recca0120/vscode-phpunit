@@ -90,15 +90,18 @@ function applyInlinePlaceholderWorkaround(text: string): string {
 /** Workaround for https://github.com/glayzzle/php-parser/issues/155 */
 function normalizeCommentLineBreaks(comments: Comment[]): void {
     for (const comment of comments) {
-        if (comment.value[comment.value.length - 1] === '\r') {
+        let trimmed = 0;
+        while (comment.value.length > 0) {
+            const last = comment.value[comment.value.length - 1];
+            if (last !== '\r' && last !== '\n') {
+                break;
+            }
             comment.value = comment.value.slice(0, -1);
-            // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
-            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+            trimmed++;
         }
-        if (comment.value[comment.value.length - 1] === '\n') {
-            comment.value = comment.value.slice(0, -1);
+        if (trimmed > 0) {
             // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
-            comment.loc!.end.offset = comment.loc!.end.offset - 1;
+            comment.loc!.end.offset -= trimmed;
         }
     }
 }
