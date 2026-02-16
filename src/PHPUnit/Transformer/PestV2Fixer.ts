@@ -32,7 +32,7 @@ export class PestV2Fixer {
     }
 
     private static hasPrefix(id?: string) {
-        return id && new RegExp(Str.prefix).test(id);
+        return id?.includes(Str.prefix) ?? false;
     }
 
     static methodName(methodName: string) {

@@ -222,6 +222,22 @@ describe('CollisionPrinter', () => {
         );
     });
 
+    it('testFailed with Pest-style ID without :: should not crash', () => {
+        printer.testFinished({
+            event: TeamcityEvent.testFailed,
+            name: 'it can add numbers',
+            locationHint: 'file://tests/Unit/ExampleTest.php',
+            flowId: 2369,
+            id: 'tests/Unit/ExampleTest.php',
+            file: 'tests/Unit/ExampleTest.php',
+            message: 'Failed asserting that 3 is 4.',
+            details: [],
+            duration: 0,
+        });
+
+        expect(() => printer.end()).not.toThrow();
+    });
+
     it('testIgnored', () => {
         const output = printer.testFinished({
             event: TeamcityEvent.testIgnored,

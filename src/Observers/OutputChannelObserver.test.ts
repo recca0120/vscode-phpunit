@@ -8,16 +8,12 @@ import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
 
 describe('OutputChannelObserver clear behavior', () => {
-    const createObserver = () => {
-        const outputChannel = {
-            append: vi.fn(),
-            appendLine: vi.fn(),
-            clear: vi.fn(),
-            show: vi.fn(),
-        } as unknown as OutputChannel;
+    const createObserver = (config: Record<string, unknown> = {}) => {
+        const outputChannel = vscode.window.createOutputChannel('phpunit');
         const configuration = new Configuration({
             clearOutputOnRun: true,
             showAfterExecution: 'onFailure',
+            ...config,
         });
         const observer = new OutputChannelObserver(
             outputChannel,
@@ -29,8 +25,7 @@ describe('OutputChannelObserver clear behavior', () => {
     };
 
     const createBuilder = (command: string) => {
-        const builder = new ProcessBuilder(new Configuration({ php: command }), { cwd: '.' });
-        return builder;
+        return new ProcessBuilder(new Configuration({ php: command }), { cwd: '.' });
     };
 
     it('clears once for multiple processes in the same request', () => {
@@ -41,6 +36,24 @@ describe('OutputChannelObserver clear behavior', () => {
         observer.run(createBuilder('command-2'));
 
         expect(outputChannel.clear).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show output channel when continuous is undefined (standard run)', () => {
+        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' });
+        observer.setRequest({} as TestRunRequest);
+
+        observer.run(createBuilder('command-1'));
+
+        expect(outputChannel.show).toHaveBeenCalled();
+    });
+
+    it('should not show output channel when continuous is true', () => {
+        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' });
+        observer.setRequest({ continuous: true } as TestRunRequest);
+
+        observer.run(createBuilder('command-1'));
+
+        expect(outputChannel.show).not.toHaveBeenCalled();
     });
 
     it('clears again for a new request', () => {

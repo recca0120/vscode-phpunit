@@ -159,7 +159,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
             ShowOutputState.onFailure;
 
         if (
-            this.request.continuous === false &&
+            !this.request.continuous &&
             showAfterExecution !== ShowOutputState.never &&
             state === showAfterExecution
         ) {
