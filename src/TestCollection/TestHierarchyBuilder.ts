@@ -55,45 +55,59 @@ export class TestHierarchyBuilder {
     private addNamespaceTestItems(testDefinition: TestDefinition) {
         const classFQN = testDefinition.classFQN ?? '';
         const transformer = TransformerFactory.create(classFQN);
+        const parts = (testDefinition.label?.split('\\') ?? []).filter((value) => !!value);
 
         let children = this.rootItems;
-        let testItem: TestItem | undefined;
-        let parts = testDefinition.label?.split('\\') ?? [];
-        parts = parts.filter((value) => !!value);
-
-        parts.forEach((part, index, parts) => {
-            const type = TestType.namespace;
-
-            const classFQN = parts.slice(0, index + 1).join('\\');
-            const id = transformer.uniqueId({ type, classFQN });
-            const label = transformer.generateLabel({ type, classFQN: part });
-            const namespaceDefinition = {
-                type,
-                id,
-                namespace: classFQN,
-                label,
-                depth: index + 1,
-            } as TestDefinition;
-
-            testItem = children.get(namespaceDefinition.id);
-            if (!testItem) {
-                testItem = this.ctrl.createTestItem(
-                    namespaceDefinition.id,
-                    this.parseLabelWithIcon(namespaceDefinition),
-                );
-                testItem.canResolveChildren = true;
-                testItem.sortText = namespaceDefinition.id;
-                children.add(testItem);
-                this.testData.set(testItem, namespaceDefinition);
-            }
+        for (const [index, part] of parts.entries()) {
+            const testItem = this.getOrCreateNamespaceItem(
+                children,
+                transformer,
+                parts,
+                part,
+                index,
+            );
 
             const parent = this.ancestors[this.ancestors.length - 1];
             parent.children.push(testItem);
             this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
 
             children = testItem.children;
-        });
+        }
         this.ancestorDepth = this.ancestors.length - 1;
+    }
+
+    private getOrCreateNamespaceItem(
+        children: TestItemCollection,
+        transformer: ReturnType<typeof TransformerFactory.create>,
+        parts: string[],
+        part: string,
+        index: number,
+    ): TestItem {
+        const type = TestType.namespace;
+        const classFQN = parts.slice(0, index + 1).join('\\');
+        const namespaceDefinition = {
+            type,
+            id: transformer.uniqueId({ type, classFQN }),
+            namespace: classFQN,
+            label: transformer.generateLabel({ type, classFQN: part }),
+            depth: index + 1,
+        } as TestDefinition;
+
+        const existing = children.get(namespaceDefinition.id);
+        if (existing) {
+            return existing;
+        }
+
+        const testItem = this.ctrl.createTestItem(
+            namespaceDefinition.id,
+            this.parseLabelWithIcon(namespaceDefinition),
+        );
+        testItem.canResolveChildren = true;
+        testItem.sortText = namespaceDefinition.id;
+        children.add(testItem);
+        this.testData.set(testItem, namespaceDefinition);
+
+        return testItem;
     }
 
     private addTestItem(testDefinition: TestDefinition, sortText: string) {

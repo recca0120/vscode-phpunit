@@ -81,35 +81,34 @@ export class TestResultObserver implements TestRunnerObserver {
             result.expected !== undefined && result.actual !== undefined
                 ? TestMessage.diff(result.message, result.expected, result.actual)
                 : new TestMessage(result.message);
+
         const details = result.details;
-        if (details.length > 0) {
-            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));
-            const line = matchingDetail ? matchingDetail.line - 1 : (test.range?.start.line ?? 0);
-
-            if (!test.uri) {
-                return message;
-            }
-
-            message.location = new Location(
-                test.uri,
-                new Range(new Position(line, 0), new Position(line, 0)),
-            );
-
-            message.stackTrace = details
-                .filter(
-                    ({ file, line }) =>
-                        file.endsWith(result.file ?? '') &&
-                        (!matchingDetail || line !== matchingDetail.line),
-                )
-                .map(
-                    ({ file, line }) =>
-                        new TestMessageStackFrame(
-                            `${file}:${line}`,
-                            URI.file(file),
-                            new Position(line, 0),
-                        ),
-                );
+        if (details.length === 0 || !test.uri) {
+            return message;
         }
+
+        const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));
+        const line = matchingDetail ? matchingDetail.line - 1 : (test.range?.start.line ?? 0);
+
+        message.location = new Location(
+            test.uri,
+            new Range(new Position(line, 0), new Position(line, 0)),
+        );
+
+        message.stackTrace = details
+            .filter(
+                ({ file, line }) =>
+                    file.endsWith(result.file ?? '') &&
+                    (!matchingDetail || line !== matchingDetail.line),
+            )
+            .map(
+                ({ file, line }) =>
+                    new TestMessageStackFrame(
+                        `${file}:${line}`,
+                        URI.file(file),
+                        new Position(line, 0),
+                    ),
+            );
 
         return message;
     }

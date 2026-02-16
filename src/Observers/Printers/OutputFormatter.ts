@@ -77,15 +77,17 @@ export abstract class OutputFormatter {
     }
 
     timeAndMemory(result: TestDuration) {
-        this.setCurrent(undefined);
-
-        return result.text.trim();
+        return this.clearAndReturn(result.text);
     }
 
     testResultSummary(result: TestResultSummary) {
+        return this.clearAndReturn(result.text);
+    }
+
+    private clearAndReturn(text: string) {
         this.setCurrent(undefined);
 
-        return result.text.trim();
+        return text.trim();
     }
 
     end(): string | undefined {

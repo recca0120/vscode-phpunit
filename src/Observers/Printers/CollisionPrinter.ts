@@ -50,7 +50,7 @@ export class CollisionPrinter extends OutputFormatter {
         return [
             '',
             this.formatErrorTitle(result),
-            this.formatMessage(result),
+            result.message,
             this.formatDiff(result),
             this.getFileContent(result),
             this.formatDetails(result),
@@ -72,10 +72,6 @@ export class CollisionPrinter extends OutputFormatter {
 
         const [className, method] = parts;
         return `  ${icon} ${messageText}  ${className} > ${method.replace(/^test_/, '')}`;
-    }
-
-    private formatMessage(result: TestFailed) {
-        return result.message;
     }
 
     private formatDiff(result: TestFailed) {
