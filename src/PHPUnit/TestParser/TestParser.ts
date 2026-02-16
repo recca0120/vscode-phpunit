@@ -71,12 +71,12 @@ export class TestParser {
     }
 
     private emit(tests: TestDefinition[]) {
-        tests.forEach((test) => {
+        for (const test of tests) {
             this.eventEmitter.emit(`${test.type}`, test);
             if (test.children && test.children.length > 0) {
                 this.emit(test.children);
             }
-        });
+        }
 
         return tests;
     }
@@ -89,7 +89,7 @@ function applyInlinePlaceholderWorkaround(text: string): string {
 
 /** Workaround for https://github.com/glayzzle/php-parser/issues/155 */
 function normalizeCommentLineBreaks(comments: Comment[]): void {
-    comments.forEach((comment) => {
+    for (const comment of comments) {
         if (comment.value[comment.value.length - 1] === '\r') {
             comment.value = comment.value.slice(0, -1);
             // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
@@ -100,5 +100,5 @@ function normalizeCommentLineBreaks(comments: Comment[]): void {
             // biome-ignore lint/style/noNonNullAssertion: loc is always present when withPositions is true
             comment.loc!.end.offset = comment.loc!.end.offset - 1;
         }
-    });
+    }
 }

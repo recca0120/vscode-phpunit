@@ -116,9 +116,9 @@ export class PHPUnitXML {
             '**/node_modules/**',
         ]);
 
-        this.getTestSuites().forEach((item) => {
+        for (const item of this.getTestSuites()) {
             item.tag !== 'exclude' ? includes.push(item, '.php') : excludes.push(item);
-        });
+        }
 
         return { includes, excludes };
     }

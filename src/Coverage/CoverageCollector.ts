@@ -14,9 +14,9 @@ export class CoverageCollector {
 
         await Promise.all(
             cloverFiles.map(async (file) => {
-                (await CloverParser.parseClover(file)).forEach((coverage) => {
+                for (const coverage of await CloverParser.parseClover(file)) {
                     testRun.addCoverage(coverage);
-                });
+                }
             }),
         );
 
