@@ -21,7 +21,7 @@ Run [PHPUnit](https://phpunit.de/) and [Pest](https://pestphp.com/) tests direct
 ## Features
 
 - **Test Explorer integration** — discover, run, and debug tests from the sidebar
-- **PHPUnit 7 – 12 & Pest 2 – 3** — broad version support
+- **PHPUnit 7 – 12 & Pest 1 – 4** — broad version support
 - **Colored output** — syntax-highlighted results with embedded PHP source snippets
 - **Clickable stack traces** — jump to file:line directly from error output
 - **Remote environments** — Docker, SSH, Laravel Sail, DDEV via custom commands

@@ -21,7 +21,7 @@
 ## 功能特色
 
 - **Test Explorer 整合** — 從側邊欄探索、執行、偵錯測試
-- **PHPUnit 7 – 12 & Pest 2 – 3** — 廣泛的版本支援
+- **PHPUnit 7 – 12 & Pest 1 – 4** — 廣泛的版本支援
 - **彩色輸出** — 語法高亮的測試結果，內嵌 PHP 原始碼片段
 - **可點擊的堆疊追蹤** — 從錯誤輸出直接跳轉到 file:line
 - **遠端環境** — 透過自訂命令支援 Docker、SSH、Laravel Sail、DDEV
