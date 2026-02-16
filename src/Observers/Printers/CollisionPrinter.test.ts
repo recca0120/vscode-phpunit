@@ -27,9 +27,10 @@ describe('CollisionPrinter', () => {
     it('testSuiteFinished', () => {
         const output = printer.testSuiteFinished({
             event: TeamcityEvent.testSuiteFinished,
+            name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,
-        } as unknown as TestSuiteFinished);
+        });
 
         expect(output).toEqual('');
     });

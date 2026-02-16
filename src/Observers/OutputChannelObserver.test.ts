@@ -28,8 +28,10 @@ describe('OutputChannelObserver clear behavior', () => {
         return { observer, outputChannel };
     };
 
-    const createBuilder = (command: string) =>
-        ({ toString: () => command }) as unknown as ProcessBuilder;
+    const createBuilder = (command: string) => {
+        const builder = new ProcessBuilder(new Configuration({ php: command }), { cwd: '.' });
+        return builder;
+    };
 
     it('clears once for multiple processes in the same request', () => {
         const { observer, outputChannel } = createObserver();
