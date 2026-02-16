@@ -59,7 +59,7 @@ describe('CollisionPrinter', () => {
             duration: 0,
         });
 
-        expect(output).toEqual('✅ passed 0 ms');
+        expect(output).toEqual('  ✅ passed 0 ms');
     });
 
     it('testFailed', () => {
@@ -80,12 +80,12 @@ describe('CollisionPrinter', () => {
             duration: 0,
         });
 
-        expect(output).toEqual([`❌ failed 0 ms`].join(EOL));
+        expect(output).toEqual([`  ❌ failed 0 ms`].join(EOL));
 
         expect(printer.end()).toEqual(
             [
                 ``,
-                `❌ FAILED  Recca0120\\VSCode\\Tests\\AssertionsTest > failed`,
+                `  ❌ FAILED  Recca0120\\VSCode\\Tests\\AssertionsTest > failed`,
                 `Failed asserting that false is true.`,
                 ``,
                 `at ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
@@ -127,12 +127,12 @@ describe('CollisionPrinter', () => {
             expected: "Array &0 [\n    'a' => 'b',\n    'c' => 'd',\n]",
         });
 
-        expect(output).toEqual([`❌ is_not_same 29 ms`].join(EOL));
+        expect(output).toEqual([`  ❌ is_not_same 29 ms`].join(EOL));
 
         expect(printer.end()).toEqual(
             [
                 ``,
-                `❌ FAILED  Recca0120\\VSCode\\Tests\\AssertionsTest > is_not_same`,
+                `  ❌ FAILED  Recca0120\\VSCode\\Tests\\AssertionsTest > is_not_same`,
                 `Failed asserting that two arrays are identical.`,
                 ` Array &0 [`,
                 `-    'a' => 'b',`,
@@ -208,12 +208,12 @@ describe('CollisionPrinter', () => {
             duration: 0,
         });
 
-        expect(output).toEqual([`❌ failed 0 ms`].join(EOL));
+        expect(output).toEqual([`  ❌ failed 0 ms`].join(EOL));
 
         expect(printer.end()).toEqual(
             [
                 ``,
-                `❌ FAILED  Recca0120\\VSCode\\Tests\\NotFoundTest > failed`,
+                `  ❌ FAILED  Recca0120\\VSCode\\Tests\\NotFoundTest > failed`,
                 `Failed asserting that false is true.`,
                 ``,
                 `1. ${OutputFormatter.fileFormat(phpUnitProject('tests/NotFoundTest.php'), 22)}`,
@@ -251,7 +251,7 @@ describe('CollisionPrinter', () => {
         });
 
         expect(output).toEqual(
-            [`➖ skipped ➜ The MySQLi extension is not available. 0 ms`].join(EOL),
+            [`  ➖ skipped ➜ The MySQLi extension is not available. 0 ms`].join(EOL),
         );
     });
 });
