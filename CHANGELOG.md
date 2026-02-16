@@ -6,28 +6,24 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [3.8.3] - 2026-02-17
 
-### Changed
-- Replace `forEach` with `for...of` loops across codebase for consistency
-- Extract `getDependentClasses()` and `reparseFile()` from `reparseChildClasses()`
-- Replace `reduce` with `flatMap` in `TestResultParser.parseFileAndLine()`
-- Extract `pruneEmptyParents()` from `removeTestItems()`
-- Use `matchAll` in `PHPUnitLinkProvider` replacing stateful `exec` loop
-- Extract `collectDescribeChain()` in `PestTestDefinitionBuilder`
-- Apply early return in `TestResultObserver.message()`
-- Extract `getOrCreateNamespaceItem()` in `TestHierarchyBuilder`
-- DRY `clearAndReturn()` in `OutputFormatter`
-- Inline `formatMessage()` in `CollisionPrinter`
-
-## [3.8.2] - 2026-02-16
-
 ### Added
-- Support inherited test methods from abstract base classes
+- Support inherited test methods from abstract base classes (#352)
 - Support trait method inheritance with `insteadof`/`as` conflict resolution
 - Colored output channel via enhanced TextMate grammar
+- Add lefthook pre-commit hook with biome lint
+- Add issue templates, contributing guide
+
+### Fixed
+- Resolve TypeScript compilation errors from noNonNullAssertion fixes
+- Resolve all biome lint warnings with recommended rules
 
 ### Changed
+- Rewrite README with EN/zh-TW, update description and display name
+- Update Pest version support to 1–4 in README
 - Replace `TestRunnerEventProxy` boilerplate with JS Proxy pattern
-- Simplify `ProblemMatcher` cache operations and comparisons
+- Various code quality refactorings (extract methods, `forEach` → `for...of`, early returns)
+
+## [3.8.2] - 2026-02-16
 - Extract shared methods in `OutputFormatter`, `TestDefinitionIndex`, `TraitUseParser`
 - Convert `PHPUnitParser.classRegistry` to constructor injection
 
