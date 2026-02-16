@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.8.5] - 2026-02-17
+
+### Fixed
+- Handle `<exclude>` element with child `<directory>`/`<file>` nodes in phpunit.xml (#341)
+
 ## [3.8.4] - 2026-02-17
 
 ### Fixed
