@@ -10,6 +10,7 @@ import type {
 import type { PHPUnitXML } from '../PHPUnitXML';
 import { type TestDefinition, TestType } from '../types';
 import { AnnotationParser, AttributeParser } from './AnnotationParser';
+import type { TraitAdaptation } from './ClassRegistry';
 import { generatePestClassFQN } from './PestClassFQNGenerator';
 import {
     NamespaceDefinitionBuilder,
@@ -17,6 +18,7 @@ import {
     TestCaseDefinitionBuilder,
     TestSuiteDefinitionBuilder,
 } from './TestDefinitionBuilder';
+import { TraitUseParser } from './TraitUseParser';
 
 const annotationParser = new AnnotationParser();
 const attributeParser = new AttributeParser();
@@ -63,7 +65,7 @@ export class PhpAstNodeWrapper {
             return TestType.namespace;
         }
 
-        if (['program', 'class'].includes(this.kind)) {
+        if (['program', 'class', 'trait'].includes(this.kind)) {
             return TestType.class;
         }
 
@@ -87,11 +89,15 @@ export class PhpAstNodeWrapper {
             return this.name;
         }
 
-        if (this.kind === 'class') {
+        if (this.kind === 'class' || this.kind === 'trait') {
             return [this.parent?.name, this.name].filter((name) => !!name).join('\\');
         }
 
         return this.parent?.classFQN;
+    }
+
+    get isTrait(): boolean {
+        return this.kind === 'trait';
     }
 
     get isAbstract(): boolean {
@@ -121,30 +127,7 @@ export class PhpAstNodeWrapper {
             return undefined;
         }
 
-        // Already fully qualified
-        if (raw.startsWith('\\')) {
-            return raw.substring(1);
-        }
-
-        // Check use statements
-        const useMap = this.resolveUseStatements();
-        const firstPart = raw.split('\\')[0];
-        const resolved = useMap.get(firstPart);
-        if (resolved) {
-            if (raw.includes('\\')) {
-                return `${resolved}\\${raw.substring(firstPart.length + 1)}`;
-            }
-            return resolved;
-        }
-
-        // Fall back to current namespace + raw name
-        const ns = this.options.namespace ?? this.options.parent;
-        const namespaceName = ns?.kind === 'namespace' ? ns.name : undefined;
-        if (namespaceName) {
-            return `${namespaceName}\\${raw}`;
-        }
-
-        return raw;
+        return this.resolveFQN(raw);
     }
 
     get parent(): PhpAstNodeWrapper | undefined {
@@ -237,9 +220,7 @@ export class PhpAstNodeWrapper {
         }
 
         return definitions.concat(
-            (this.ast.children ?? [])
-                .map((node: Node) => new PhpAstNodeWrapper(node, options))
-                .filter((definition: PhpAstNodeWrapper) => definition.kind === 'class'),
+            this.filterChildrenByKinds(this.ast.children ?? [], ['class', 'trait'], options),
         );
     }
 
@@ -280,6 +261,10 @@ export class PhpAstNodeWrapper {
             return false;
         }
 
+        if (this.kind === 'trait') {
+            return false;
+        }
+
         if (this.kind === 'class') {
             return (
                 this.name.endsWith('Test') &&
@@ -288,11 +273,7 @@ export class PhpAstNodeWrapper {
         }
 
         if (this.kind === 'method' && this.acceptModifier()) {
-            return (
-                this.name.startsWith('test') ||
-                annotationParser.isTest(this.ast as unknown as Method) ||
-                attributeParser.isTest(this.ast as unknown as Method)
-            );
+            return this.isTestMethod();
         }
 
         if (this.kind === 'call') {
@@ -318,10 +299,6 @@ export class PhpAstNodeWrapper {
         return new NamespaceDefinitionBuilder(this).build();
     }
 
-    getAllMethods(): PhpAstNodeWrapper[] {
-        return this.getMethods();
-    }
-
     isTestMethod(): boolean {
         if (this.kind !== 'method' || !this.acceptModifier()) {
             return false;
@@ -332,6 +309,38 @@ export class PhpAstNodeWrapper {
             annotationParser.isTest(this.ast as unknown as Method) ||
             attributeParser.isTest(this.ast as unknown as Method)
         );
+    }
+
+    getTraitUses(): { traitFQNs: string[]; adaptations: TraitAdaptation[] } {
+        if (this.kind !== 'class' && this.kind !== 'trait') {
+            return { traitFQNs: [], adaptations: [] };
+        }
+
+        return new TraitUseParser().parse(this.ast.body ?? [], (raw) => this.resolveFQN(raw));
+    }
+
+    private resolveFQN(raw: string): string {
+        if (raw.startsWith('\\')) {
+            return raw.substring(1);
+        }
+
+        const useMap = this.resolveUseStatements();
+        const firstPart = raw.split('\\')[0];
+        const resolved = useMap.get(firstPart);
+        if (resolved) {
+            if (raw.includes('\\')) {
+                return `${resolved}\\${raw.substring(firstPart.length + 1)}`;
+            }
+            return resolved;
+        }
+
+        const ns = this.options.namespace ?? this.options.parent;
+        const namespaceName = ns?.kind === 'namespace' ? ns.name : undefined;
+        if (namespaceName) {
+            return `${namespaceName}\\${raw}`;
+        }
+
+        return raw;
     }
 
     private resolveUseStatements(): Map<string, string> {
@@ -370,7 +379,7 @@ export class PhpAstNodeWrapper {
         return useMap;
     }
 
-    private getMethods(): PhpAstNodeWrapper[] {
+    getMethods(): PhpAstNodeWrapper[] {
         if (['program', 'namespace'].includes(this.ast.kind)) {
             return this.getClasses().reduce(
                 (definitions: PhpAstNodeWrapper[], definition: PhpAstNodeWrapper) => {
@@ -381,13 +390,11 @@ export class PhpAstNodeWrapper {
         }
 
         const options = { ...this.options };
-        if (this.kind === 'class') {
+        if (this.kind === 'class' || this.kind === 'trait') {
             options.parent = this;
         }
 
-        return (this.ast.body ?? [])
-            .map((node: Node) => new PhpAstNodeWrapper(node, options))
-            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'method');
+        return this.filterChildrenByKind(this.ast.body ?? [], 'method', options);
     }
 
     private getNamespaces() {
@@ -395,9 +402,27 @@ export class PhpAstNodeWrapper {
             return [];
         }
 
-        return (this.ast.children ?? [])
-            .map((node: Node) => new PhpAstNodeWrapper(node, this.options))
-            .filter((definition: PhpAstNodeWrapper) => definition.kind === 'namespace');
+        return this.filterChildrenByKind(this.ast.children ?? [], 'namespace', this.options);
+    }
+
+    private filterChildrenByKinds(
+        source: Node[],
+        kinds: string[],
+        options: typeof this.options,
+    ): PhpAstNodeWrapper[] {
+        return source
+            .map((node) => new PhpAstNodeWrapper(node, options))
+            .filter((wrapper) => kinds.includes(wrapper.kind));
+    }
+
+    private filterChildrenByKind(
+        source: Node[],
+        kind: string,
+        options: typeof this.options,
+    ): PhpAstNodeWrapper[] {
+        return source
+            .map((node) => new PhpAstNodeWrapper(node, options))
+            .filter((wrapper) => wrapper.kind === kind);
     }
 
     private acceptModifier() {
@@ -423,10 +448,8 @@ function collectPestFunctions(
         }, [])
         .reduce((definitions, node: AST) => {
             if (
-                !(
-                    node.kind === 'expressionstatement' &&
-                    (node.expression as AST).kind !== 'include'
-                )
+                node.kind !== 'expressionstatement' ||
+                (node.expression as AST).kind === 'include'
             ) {
                 return definitions;
             }

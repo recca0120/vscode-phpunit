@@ -309,8 +309,8 @@ describe('PHPUnitParser Test', () => {
                     namespace: 'Tests\\SubFolder',
                     className: 'UseTraitTest',
                     methodName: 'use_trait',
-                    start: { line: 12, character: 4 },
-                    end: { line: 15, character: 5 },
+                    start: { line: 33, character: 4 },
+                    end: { line: 36, character: 5 },
                     depth: 2,
                 }),
             );
@@ -756,6 +756,87 @@ class FQNTest extends \\PHPUnit\\Framework\\TestCase {
 
             const method = tests.find((t) => t.methodName === 'test_fqn');
             expect(method).toBeDefined();
+        });
+
+        it('should discover trait test methods', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/TraitMethodTest.php'),
+                        content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+
+trait TestHelperTrait {
+    public function test_from_trait() {
+        $this->assertTrue(true);
+    }
+}
+
+class TraitMethodTest extends TestCase {
+    use TestHelperTrait;
+
+    public function test_own() {
+        $this->assertTrue(true);
+    }
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const traitMethod = tests.find(
+                (t) => t.className === 'TraitMethodTest' && t.methodName === 'test_from_trait',
+            );
+            expect(traitMethod).toBeDefined();
+            expect(traitMethod?.classFQN).toBe('Tests\\TraitMethodTest');
+
+            const ownMethod = tests.find(
+                (t) => t.className === 'TraitMethodTest' && t.methodName === 'test_own',
+            );
+            expect(ownMethod).toBeDefined();
+        });
+
+        it('should handle trait insteadof and as adaptations', () => {
+            const root = phpUnitProject('');
+            const tests = parseWithRegistry(
+                [
+                    {
+                        file: phpUnitProject('tests/TraitConflictTest.php'),
+                        content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+
+trait TraitA {
+    public function test_shared() {}
+    public function test_a_only() {}
+}
+
+trait TraitB {
+    public function test_shared() {}
+    public function test_b_only() {}
+}
+
+class TraitConflictTest extends TestCase {
+    use TraitA, TraitB {
+        TraitA::test_shared insteadof TraitB;
+        TraitB::test_shared as test_shared_from_b;
+    }
+}`,
+                    },
+                ],
+                root,
+            );
+
+            const methodNames = tests
+                .filter((t) => t.className === 'TraitConflictTest' && t.methodName)
+                .map((t) => t.methodName);
+
+            expect(methodNames).toContain('test_shared');
+            expect(methodNames).toContain('test_shared_from_b');
+            expect(methodNames).toContain('test_a_only');
+            expect(methodNames).toContain('test_b_only');
         });
 
         it('child class override should take precedence', () => {

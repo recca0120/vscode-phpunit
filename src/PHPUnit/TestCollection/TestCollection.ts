@@ -56,8 +56,7 @@ export class TestCollection {
         if (testDefinitions.length === 0) {
             this.delete(uri);
         } else {
-            files.get(testsuite)?.set(uri.toString(), testDefinitions);
-            this.fileIndex.set(uri.toString(), testsuite);
+            this.updateTestsForFile(uri, testsuite, testDefinitions);
         }
 
         // Re-parse child classes that depend on classes defined in this file
@@ -71,8 +70,11 @@ export class TestCollection {
         const classesInFile = this.classRegistry.getClassesByUri(uri.fsPath);
 
         for (const classInfo of classesInFile) {
-            const children = this.classRegistry.getChildClasses(classInfo.classFQN);
-            for (const child of children) {
+            const dependents = [
+                ...this.classRegistry.getChildClasses(classInfo.classFQN),
+                ...this.classRegistry.getTraitUsers(classInfo.classFQN),
+            ];
+            for (const child of dependents) {
                 if (child.uri === uri.fsPath) {
                     continue;
                 }
@@ -83,8 +85,7 @@ export class TestCollection {
                 }
                 const childTests = await this.parseTests(childUri, childTestsuite);
                 if (childTests.length > 0) {
-                    this.items().get(childTestsuite)?.set(childUri.toString(), childTests);
-                    this.fileIndex.set(childUri.toString(), childTestsuite);
+                    this.updateTestsForFile(childUri, childTestsuite, childTests);
                 }
             }
         }
@@ -156,6 +157,11 @@ export class TestCollection {
                 yield { testsuite, uri: URI.parse(uriStr), tests };
             }
         }
+    }
+
+    private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {
+        this.items().get(testsuite)?.set(uri.toString(), tests);
+        this.fileIndex.set(uri.toString(), testsuite);
     }
 
     private parseTestsuite(uri: URI) {

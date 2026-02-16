@@ -72,14 +72,19 @@ export class PHPUnitParser implements Parser {
         }
 
         const methods: TestDefinition[] = classDef
-            .getAllMethods()
+            .getMethods()
             .filter((m) => m.isTestMethod())
             .map((m) => m.toTestDefinition());
+
+        const { traitFQNs, adaptations } = classDef.getTraitUses();
 
         const info: ClassInfo = {
             uri: classDef.file,
             classFQN: classDef.classFQN,
             parentFQN: classDef.parentFQN,
+            traitFQNs,
+            traitAdaptations: adaptations,
+            kind: classDef.isTrait ? 'trait' : 'class',
             isAbstract: classDef.isAbstract,
             methods,
         };
