@@ -134,6 +134,46 @@ describe('ProcessBuilder Test', () => {
                 '--teamcity',
             ]);
         });
+        it('should handle paths with spaces', () => {
+            const cwd = 'd:\\All Project\\adminservice-collaboration';
+            const testFile = 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php';
+            const builder = givenBuilder(
+                {
+                    phpunit: 'vendor/bin/phpunit',
+                },
+                cwd,
+            ).setArguments(`"${testFile}"`);
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php',
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
+
+        it('should handle paths with spaces and filter', () => {
+            const cwd = 'd:\\All Project\\adminservice-collaboration';
+            const testFile = 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php';
+            const builder = givenBuilder(
+                {
+                    phpunit: 'vendor/bin/phpunit',
+                },
+                cwd,
+            ).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$' "${testFile}"`);
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('php');
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                `--filter=^.*::(test_passed)( with data set .*)?$`,
+                'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php',
+                '--colors=never',
+                '--teamcity',
+            ]);
+        });
     });
 
     describe('RemoteCommand', () => {

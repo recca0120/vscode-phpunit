@@ -121,9 +121,9 @@ export class ProcessBuilder {
 
     private getArguments() {
         return {
-            php: this.pathReplacer.toRemote(this.getPhp()),
+            php: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getPhp())),
             phpargs: this.getPhpArgs(),
-            phpunit: this.pathReplacer.toRemote(this.getPhpUnit()),
+            phpunit: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getPhpUnit())),
             phpunitargs: this.getPhpUnitArgs(),
         };
     }
@@ -156,10 +156,19 @@ export class ProcessBuilder {
         return (this.configuration.get(key) as string) ?? '';
     }
 
+    private quoteIfNeeded(value: string) {
+        if (value?.includes(' ') && !/^["']/.test(value) && /[/\\]/.test(value)) {
+            return `"${value}"`;
+        }
+        return value;
+    }
+
     private getPhpUnitArgs() {
         const args = this.configuration
             .getArguments(this.arguments)
-            .map((arg: string) => (/^--filter/.test(arg) ? arg : this.pathReplacer.toRemote(arg)))
+            .map((arg: string) =>
+                /^--filter/.test(arg) ? arg : this.quoteIfNeeded(this.pathReplacer.toRemote(arg)),
+            )
             .concat('--colors=never', '--teamcity');
 
         return base64EncodeFilter(this.addParaTestFunctional(args))

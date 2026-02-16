@@ -14,6 +14,13 @@ abstract class FilterStrategy {
     protected parseFilter(filter: string) {
         return `--filter="${filter}(( with (data set )?.*)?)?$"`;
     }
+
+    protected quoteIfSpaces(value: string | undefined) {
+        if (value?.includes(' ') && !/^["']/.test(value)) {
+            return `"${value}"`;
+        }
+        return value;
+    }
 }
 
 class NamespaceFilterStrategy extends FilterStrategy {
@@ -24,7 +31,7 @@ class NamespaceFilterStrategy extends FilterStrategy {
 
 class ClassFilterStrategy extends FilterStrategy {
     getFilter() {
-        return [this.getGroupFilter(), this.testDefinition.file]
+        return [this.getGroupFilter(), this.quoteIfSpaces(this.testDefinition.file)]
             .filter((value) => !!value)
             .join(' ');
     }
