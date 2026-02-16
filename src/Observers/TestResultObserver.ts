@@ -20,13 +20,19 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '../PHPUnit';
-import type { TestCase } from '../TestCollection';
+import type { TestDefinition } from '../PHPUnit';
 
 export class TestResultObserver implements TestRunnerObserver {
+    private testItemById: Map<string, TestItem>;
+
     constructor(
-        private queue: Map<TestCase, TestItem>,
+        private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
-    ) {}
+    ) {
+        this.testItemById = new Map(
+            [...queue.values()].map((item) => [item.id, item]),
+        );
+    }
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -71,10 +77,12 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {
-        const message = TestMessage.diff(result.message, result.expected!, result.actual!);
+        const message = result.expected !== undefined && result.actual !== undefined
+            ? TestMessage.diff(result.message, result.expected, result.actual)
+            : new TestMessage(result.message);
         const details = result.details;
         if (details.length > 0) {
-            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''))!;
+            const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));
             const line = matchingDetail ? matchingDetail.line - 1 : test.range!.start.line;
 
             message.location = new Location(
@@ -85,7 +93,7 @@ export class TestResultObserver implements TestRunnerObserver {
             message.stackTrace = details
                 .filter(
                     ({ file, line }) =>
-                        file.endsWith(result.file ?? '') && line !== matchingDetail.line,
+                        file.endsWith(result.file ?? '') && (!matchingDetail || line !== matchingDetail.line),
                 )
                 .map(
                     ({ file, line }) =>
@@ -110,14 +118,18 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     private find(result: TestResult) {
-        if ('id' in result) {
-            for (const [_, testItem] of this.queue) {
-                if (
-                    result.id === testItem.id ||
-                    PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)
-                ) {
-                    return testItem;
-                }
+        if (!('id' in result) || typeof result.id !== 'string') {
+            return undefined;
+        }
+
+        const exact = this.testItemById.get(result.id);
+        if (exact) {
+            return exact;
+        }
+
+        for (const testItem of this.testItemById.values()) {
+            if (PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)) {
+                return testItem;
             }
         }
 

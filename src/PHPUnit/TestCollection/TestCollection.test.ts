@@ -244,6 +244,22 @@ describe('TestCollection', () => {
         await shouldBe(collection, { default: [] });
     });
 
+    it('change should remove file when it no longer contains tests', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        // AbstractTest.php is abstract, so it has 0 test definitions
+        const abstractFile = URI.file(phpUnitProject('tests/AbstractTest.php'));
+
+        // change() should not leave an empty entry in the collection
+        await collection.change(abstractFile);
+        expect(collection.has(abstractFile)).toBeFalsy();
+    });
+
     it('reset', async () => {
         const collection = givenTestCollection(`
             <testsuites>

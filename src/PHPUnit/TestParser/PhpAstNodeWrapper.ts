@@ -92,8 +92,8 @@ export class PhpAstNodeWrapper {
         return this.parent?.classFQN;
     }
 
-    get parent() {
-        return this.options.parent!;
+    get parent(): PhpAstNodeWrapper | undefined {
+        return this.options.parent;
     }
 
     get children() {
@@ -287,7 +287,7 @@ export class PhpAstNodeWrapper {
     }
 
     private acceptModifier() {
-        return ['', 'public'].includes(this.ast.visibility!);
+        return ['', 'public'].includes(this.ast.visibility ?? '');
     }
 }
 

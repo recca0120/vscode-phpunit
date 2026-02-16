@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
-import type { TestRunProfileKind } from 'vscode';
+import { TestRunProfileKind } from 'vscode';
 import { Configuration } from '../Configuration';
-import { PHPUnitXML, ProcessBuilder, Xdebug } from '../PHPUnit';
+import { Mode, PHPUnitXML, ProcessBuilder, Xdebug } from '../PHPUnit';
 
 @injectable()
 export class ProcessBuilderFactory {
@@ -14,7 +14,15 @@ export class ProcessBuilderFactory {
         const builder = new ProcessBuilder(this.config, { cwd: this.phpUnitXML.root() });
         const xdebug = new Xdebug(this.config);
         builder.setXdebug(xdebug);
-        await xdebug.setMode(profileKind);
+        await xdebug.setMode(this.toMode(profileKind));
         return builder;
+    }
+
+    private toMode(profileKind?: TestRunProfileKind): Mode | undefined {
+        switch (profileKind) {
+            case TestRunProfileKind.Debug: return Mode.debug;
+            case TestRunProfileKind.Coverage: return Mode.coverage;
+            default: return undefined;
+        }
     }
 }

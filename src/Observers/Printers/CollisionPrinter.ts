@@ -61,11 +61,14 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     private formatErrorTitle(result: TestFailed) {
-        let [className, method] = result.id.split('::');
-        method = method.replace(/^test_/, '');
         const [icon, message] = this.messages.get(result.event)!;
+        const parts = result.id.split('::');
+        if (parts.length < 2) {
+            return `${icon} ${message}  ${result.id}`;
+        }
 
-        return `${icon} ${message}  ${className} > ${method}`;
+        const [className, method] = parts;
+        return `${icon} ${message}  ${className} > ${method.replace(/^test_/, '')}`;
     }
 
     private formatMessage(result: TestFailed) {
@@ -79,18 +82,16 @@ export class CollisionPrinter extends OutputFormatter {
 
         return [
             ' Array &0 [',
-            this.formatExpected(result.expected!, '-'),
-            this.formatExpected(result.actual!, '+'),
+            this.formatExpected(result.expected, '-'),
+            this.formatExpected(result.actual, '+'),
             ' ]',
             '',
         ].join(EOL);
     }
 
     private getFileContent(result: TestFailed) {
-        let detail = result.details.find(({ file }) => file === result.file)!;
-        if (result.details.length > 0) {
-            detail = result.details[0];
-        }
+        const detail = result.details.find(({ file }) => file === result.file)
+            ?? result.details[0];
 
         if (!detail) {
             return undefined;

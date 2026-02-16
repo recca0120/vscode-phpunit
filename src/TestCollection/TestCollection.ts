@@ -9,13 +9,13 @@ import {
     TestType,
 } from '../PHPUnit';
 import { TYPES } from '../types';
-import type { TestCase } from './TestCase';
+import { TestDefinitionIndex } from './TestDefinitionIndex';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
 export class TestCollection extends BaseTestCollection {
-    private testItems = new Map<string, Map<TestItem, TestCase>>();
-    private testCaseIndex = new Map<string, TestCase>();
+    private testItems = new Map<string, Map<TestItem, TestDefinition>>();
+    private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
 
     constructor(
@@ -33,14 +33,14 @@ export class TestCollection extends BaseTestCollection {
         this._rootItems = items;
     }
 
-    getTestCase(testItem: TestItem): TestCase | undefined {
-        return this.testCaseIndex.get(testItem.id);
+    getTestDefinition(testItem: TestItem): TestDefinition | undefined {
+        return this.index.getDefinition(testItem.id);
     }
 
     findTestsByFile(uri: URI): TestItem[] {
         const tests: TestItem[] = [];
-        for (const [testItem, testCase] of this.getTestCases(uri)) {
-            if (testCase.type === TestType.class) {
+        for (const [testItem, testDef] of this.getTestDefinitions(uri)) {
+            if (testDef.type === TestType.class) {
                 tests.push(testItem);
             }
         }
@@ -59,33 +59,23 @@ export class TestCollection extends BaseTestCollection {
             return undefined;
         }
 
-        const includeIds = new Set(request.include.map((item) => item.id));
-        const tests = this.collectTestItems((testItem) => includeIds.has(testItem.id));
+        const tests = request.include
+            .map((item) => this.index.getItem(item.id))
+            .filter((item): item is TestItem => item !== undefined);
 
         return tests.length > 0 ? tests : undefined;
     }
 
     findGroups(): string[] {
-        const groups = new Set<string>();
-        for (const [testItem] of this.allTestEntries()) {
-            for (const tag of testItem.tags ?? []) {
-                if (tag.id.startsWith('group:')) {
-                    groups.add(tag.id.slice(6));
-                }
-            }
-        }
-
-        return [...groups].sort();
+        return this.index.getGroups();
     }
 
     findTestsByGroup(group: string): TestItem[] {
-        const groupTagId = `group:${group}`;
+        return this.index.getItemsByGroup(group);
+    }
 
-        return this.collectTestItems(
-            (testItem, testCase) =>
-                testCase.type === TestType.method &&
-                (testItem.tags ?? []).some((tag) => tag.id === groupTagId),
-        );
+    getTrackedFiles() {
+        return [...this.gatherFiles()];
     }
 
     reset() {
@@ -96,7 +86,7 @@ export class TestCollection extends BaseTestCollection {
                     : this.rootItems.delete(testItem.id);
             }
         }
-        this.testCaseIndex.clear();
+        this.index.clear();
 
         return super.reset();
     }
@@ -107,9 +97,9 @@ export class TestCollection extends BaseTestCollection {
         await testParser.parseFile(uri.fsPath, testsuite);
 
         this.removeTestItems(uri);
-        this.clearTestCases(uri);
-        for (const [testItem, testCase] of testHierarchyBuilder.get()) {
-            this.setTestCase(uri, testItem, testCase);
+        this.clearTestDefinitions(uri);
+        for (const [testItem, testDef] of testHierarchyBuilder.get()) {
+            this.setTestDefinition(uri, testItem, testDef);
         }
 
         return testDefinitionBuilder.get();
@@ -117,44 +107,28 @@ export class TestCollection extends BaseTestCollection {
 
     protected deleteFile(file: File<TestDefinition>) {
         this.removeTestItems(file.uri);
+        this.clearTestDefinitions(file.uri);
+        this.testItems.delete(file.uri.toString());
 
         return super.deleteFile(file);
     }
 
-    private *allTestEntries(): Iterable<[TestItem, TestCase]> {
-        for (const testData of this.testItems.values()) {
-            yield* testData;
-        }
+    private setTestDefinition(uri: URI, testItem: TestItem, testDefinition: TestDefinition): void {
+        this.getTestDefinitions(uri).set(testItem, testDefinition);
+        this.index.set(testItem, testDefinition);
     }
 
-    private collectTestItems(
-        predicate: (testItem: TestItem, testCase: TestCase) => boolean,
-    ): TestItem[] {
-        const items: TestItem[] = [];
-        for (const [testItem, testCase] of this.allTestEntries()) {
-            if (predicate(testItem, testCase)) {
-                items.push(testItem);
-            }
-        }
-        return items;
-    }
-
-    private setTestCase(uri: URI, testItem: TestItem, testCase: TestCase): void {
-        this.getTestCases(uri).set(testItem, testCase);
-        this.testCaseIndex.set(testItem.id, testCase);
-    }
-
-    private clearTestCases(uri: URI): void {
-        const testData = this.getTestCases(uri);
+    private clearTestDefinitions(uri: URI): void {
+        const testData = this.getTestDefinitions(uri);
         for (const [testItem] of testData) {
-            this.testCaseIndex.delete(testItem.id);
+            this.index.delete(testItem);
         }
         testData.clear();
     }
 
-    private getTestCases(uri: URI) {
+    private getTestDefinitions(uri: URI) {
         if (!this.testItems.has(uri.toString())) {
-            this.testItems.set(uri.toString(), new Map<TestItem, TestCase>());
+            this.testItems.set(uri.toString(), new Map<TestItem, TestDefinition>());
         }
 
         return this.testItems.get(uri.toString())!;
@@ -162,8 +136,12 @@ export class TestCollection extends BaseTestCollection {
 
     private inRangeTestItems(uri: URI, position: Position) {
         const items: TestItem[] = [];
-        for (const [testItem, testCase] of this.getTestCases(uri)) {
-            if (testCase.inRange(testItem, position)) {
+        for (const [testItem, testDef] of this.getTestDefinitions(uri)) {
+            if (
+                (testDef.type === TestType.describe || testDef.type === TestType.method) &&
+                position.line >= testItem.range!.start.line &&
+                position.line <= testItem.range!.end.line
+            ) {
                 items.push(testItem);
             }
         }

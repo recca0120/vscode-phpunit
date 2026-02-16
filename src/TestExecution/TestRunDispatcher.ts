@@ -27,22 +27,26 @@ export class TestRunDispatcher {
         }
 
         if (!request.include) {
-            for (const child of containers) {
-                await child.get(TestRunHandler).startTestRun(request, cancellation);
-            }
+            await Promise.all(
+                containers.map((child) =>
+                    child.get(TestRunHandler).startTestRun(request, cancellation),
+                ),
+            );
             return;
         }
 
         const groups = this.groupTestItemsByFolder(request.include);
 
-        for (const { container, items } of groups.values()) {
-            const subrequest = new TestRunRequest(
-                items,
-                request.exclude,
-                request.profile,
-            );
-            await container.get(TestRunHandler).startTestRun(subrequest, cancellation);
-        }
+        await Promise.all(
+            [...groups.values()].map(({ container, items }) => {
+                const subrequest = new TestRunRequest(
+                    items,
+                    request.exclude,
+                    request.profile,
+                );
+                return container.get(TestRunHandler).startTestRun(subrequest, cancellation);
+            }),
+        );
     }
 
     private groupTestItemsByFolder(

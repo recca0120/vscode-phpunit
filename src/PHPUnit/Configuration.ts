@@ -14,7 +14,7 @@ export interface IConfiguration {
 
     getArguments(input: string): string[];
 
-    getConfigurationFile(): Promise<string | undefined>;
+    getConfigurationFile(root?: string): Promise<string | undefined>;
 }
 
 export abstract class BaseConfiguration implements IConfiguration {

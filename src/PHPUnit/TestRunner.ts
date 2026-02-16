@@ -79,9 +79,9 @@ export class TestRunner {
         }
 
         result = builder.replacePath(result);
-        if ('event' in result!) {
+        if ('event' in result) {
             this.emit(result.event, result);
         }
-        this.emit(TestRunnerEvent.result, result!);
+        this.emit(TestRunnerEvent.result, result);
     }
 }

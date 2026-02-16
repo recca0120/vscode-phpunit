@@ -20,8 +20,7 @@ export class CoverageCollector {
             }),
         );
 
-        if (cloverFiles.length > 0) {
-            await rm(dirname(cloverFiles[0]), { recursive: true, force: true });
-        }
+        const dirs = new Set(cloverFiles.map((file) => dirname(file)));
+        await Promise.all([...dirs].map((dir) => rm(dir, { recursive: true, force: true })));
     }
 }

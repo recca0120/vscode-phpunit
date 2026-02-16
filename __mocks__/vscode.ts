@@ -14,14 +14,15 @@ enum TestRunProfileKind {
     Coverage = 3,
 }
 
-const TestRunRequest = vi.fn().mockImplementation(function (include: any, exclude?: any, profile?: any, continuous?: boolean) {
-    return {
-        include,
-        exclude,
-        profile,
-        continuous: continuous ?? false,
-    };
-});
+class FakeTestRunRequest {
+    constructor(
+        public include?: any,
+        public exclude?: any,
+        public profile?: any,
+        public continuous: boolean = false,
+    ) {}
+}
+const TestRunRequest = FakeTestRunRequest;
 
 const isWin = process.platform === 'win32';
 
@@ -157,27 +158,31 @@ const createTestController = vi
 
 const tests = { createTestController };
 
-const TestMessage = {
-    diff: vi
-        .fn()
-        .mockImplementation(
-            (message: string | MarkdownString, expected: string, actual: string) => {
-                return { message, expected, actual };
-            },
-        ),
-};
+class FakeTestMessage {
+    constructor(public message: string | MarkdownString) {}
+
+    static diff(message: string | MarkdownString, expected: string, actual: string) {
+        const msg = new FakeTestMessage(message);
+        (msg as any).expected = expected;
+        (msg as any).actual = actual;
+        return msg;
+    }
+}
+const TestMessage = FakeTestMessage;
 
 class Disposable {
-    dispose = (): any => vi.fn();
+    dispose() {}
 }
 
-const Location = vi.fn().mockImplementation(function (uri: URI, rangeOrPosition: any) {
-    return { uri, range: rangeOrPosition };
-});
+class FakeLocation {
+    constructor(public uri: URI, public range: any) {}
+}
+const Location = FakeLocation;
 
-const Range = vi.fn().mockImplementation(function (start: any, end: any) {
-    return { start, end };
-});
+class FakeRange {
+    constructor(public start: any, public end: any) {}
+}
+const Range = FakeRange;
 
 class Position {
     constructor(public line: number, public character: number) {}
@@ -187,17 +192,30 @@ class Position {
     }
 }
 
-const DocumentLink = vi.fn().mockImplementation(function (range: Range, target?: URI) {
-    return { range, target };
-});
+class FakeDocumentLink {
+    constructor(public range: any, public target?: URI) {}
+}
+const DocumentLink = FakeDocumentLink;
 
-const CancellationTokenSource = vi.fn().mockImplementation(function () {
-    return {
-        token: { isCancellationRequested: false, onCancellationRequested: vi.fn() },
-        cancel: vi.fn(),
-        dispose: vi.fn(),
+class FakeCancellationTokenSource {
+    private listeners: Array<() => void> = [];
+
+    token = {
+        isCancellationRequested: false,
+        onCancellationRequested: (listener: () => void) => {
+            this.listeners.push(listener);
+            return new Disposable();
+        },
     };
-});
+
+    cancel() {
+        this.token.isCancellationRequested = true;
+        this.listeners.forEach((fn) => fn());
+    }
+
+    dispose() {}
+}
+const CancellationTokenSource = FakeCancellationTokenSource;
 
 export class Configuration {
     private items = new Map<string, unknown>();
@@ -243,21 +261,31 @@ const workspace = {
             uri.toString().includes(folder.uri.toString()),
         );
     },
-    findFiles: vi.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
-        const splitPattern = (pattern: string) => {
-            return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
-        };
-        return (await glob(splitPattern(pattern.pattern), {
-            absolute: true,
-            ignore: exclude ? splitPattern(exclude.pattern) : undefined,
-            cwd: pattern.uri.fsPath,
-        })).map((file) => URI.file(file.replace(/^\w:/, (matched) => matched.toLowerCase())));
-    }),
+    findFiles: Object.assign(vi.fn().mockImplementation(async (pattern, exclude: any | undefined) => {
+        workspace.findFiles._concurrentCount++;
+        workspace.findFiles._maxConcurrent = Math.max(
+            workspace.findFiles._maxConcurrent,
+            workspace.findFiles._concurrentCount,
+        );
+        try {
+            const splitPattern = (pattern: string) => {
+                return pattern.replace(/^{|}$/g, '').split(',').map((v) => v.trim());
+            };
+            return (await glob(splitPattern(pattern.pattern), {
+                absolute: true,
+                ignore: exclude ? splitPattern(exclude.pattern) : undefined,
+                cwd: pattern.uri.fsPath,
+            })).map((file) => URI.file(file.replace(/^\w:/, (matched) => matched.toLowerCase())));
+        } finally {
+            workspace.findFiles._concurrentCount--;
+        }
+    }), { _concurrentCount: 0, _maxConcurrent: 0 }),
     createFileSystemWatcher: vi.fn().mockImplementation(() => {
         return {
             onDidCreate: vi.fn(),
             onDidChange: vi.fn(),
             onDidDelete: vi.fn(),
+            dispose: vi.fn(),
             disposable: new Disposable(),
         };
     }),
@@ -265,10 +293,10 @@ const workspace = {
         return new Disposable();
     }),
     onDidChangeWorkspaceFolders: vi.fn().mockReturnValue(new Disposable()),
-    onDidOpenTextDocument: vi.fn().mockReturnValue(new Disposable()),
-    onDidChangeTextDocument: vi.fn().mockReturnValue(new Disposable()),
+    onDidOpenTextDocument: (_listener: any) => new Disposable(),
+    onDidChangeTextDocument: (_listener: any) => new Disposable(),
     fs: {
-        readFile: vi.fn().mockImplementation((uri: URI) => readFile(uri.fsPath)),
+        readFile: (uri: URI) => readFile(uri.fsPath),
     },
 };
 
@@ -281,20 +309,24 @@ const languages = {
 
         return minimatch(document.uri.fsPath, pattern) ? 10 : 0;
     },
-    registerDocumentLinkProvider: vi.fn(),
+    registerDocumentLinkProvider: (_selector: any, _provider: any) => new Disposable(),
 };
 
-const RelativePattern = vi
-    .fn()
-    .mockImplementation(function (workspaceFolder: WorkspaceFolder | URI | string, pattern: string) {
+class FakeRelativePattern {
+    uri: URI;
+    base: string;
+    pattern: string;
+    constructor(workspaceFolder: WorkspaceFolder | URI | string, pattern: string) {
         if (typeof workspaceFolder === 'string') {
             workspaceFolder = URI.file(workspaceFolder);
         }
-
         const uri = 'uri' in workspaceFolder ? workspaceFolder.uri : workspaceFolder;
-
-        return { uri, base: uri.fsPath, pattern };
-    });
+        this.uri = uri;
+        this.base = uri.fsPath;
+        this.pattern = pattern;
+    }
+}
+const RelativePattern = FakeRelativePattern;
 
 const window = {
     createOutputChannel: vi.fn().mockImplementation(() => {
@@ -323,20 +355,29 @@ const commands = (function () {
     };
 })();
 
-const EventEmitter = vi.fn().mockImplementation(function () {
-    return {
-        fire: vi.fn(),
-        event: vi.fn(),
-        dispose: vi.fn(),
-    };
-});
+class FakeEventEmitter<T = void> {
+    private listeners: Array<(e: T) => void> = [];
 
-const TestMessageStackFrame = vi.fn();
+    event = (listener: (e: T) => void) => {
+        this.listeners.push(listener);
+        return new Disposable();
+    };
+
+    fire(data: T) {
+        this.listeners.forEach((fn) => fn(data));
+    }
+
+    dispose() {
+        this.listeners = [];
+    }
+}
+const EventEmitter = FakeEventEmitter;
+
+class FakeTestMessageStackFrame {}
+const TestMessageStackFrame = FakeTestMessageStackFrame;
 
 const extensions = {
-    getExtension: vi.fn().mockImplementation(() => {
-        return true;
-    }),
+    getExtension: () => true,
 };
 
 class FileCoverage {

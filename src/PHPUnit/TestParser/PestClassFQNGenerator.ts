@@ -11,7 +11,7 @@ export function generatePestClassFQN(root: string, file: string): string {
     relativePath = join(capitalize(dirname(relativePath)), baseName).replace(/\//g, '\\');
     relativePath = relativePath.replace(/%[a-fA-F0-9][a-fA-F0-9]/g, '');
     relativePath = relativePath.replace(/\\'|\\"/g, '');
-    relativePath = relativePath.replace(/[^A-Za-z0-9\\]/, '');
+    relativePath = relativePath.replace(/[^A-Za-z0-9\\]/g, '');
 
     return `P\\${relativePath}`;
 }

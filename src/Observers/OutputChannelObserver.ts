@@ -99,14 +99,12 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testFailed(result: TestFailed): void {
-        this.appendLine(this.outputFormatter.testFinished(result));
-        this.printedOutput(result);
+        this.testFinished(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testIgnored(result: TestIgnored): void {
-        this.appendLine(this.outputFormatter.testFinished(result));
-        this.printedOutput(result);
+        this.testFinished(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
@@ -161,7 +159,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
             ShowOutputState.onFailure;
 
         if (
-            this.request.continuous === false &&
+            !this.request.continuous &&
             showAfterExecution !== ShowOutputState.never &&
             state === showAfterExecution
         ) {

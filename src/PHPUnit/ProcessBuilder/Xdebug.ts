@@ -6,12 +6,12 @@ import type { IConfiguration } from '../Configuration';
 import { cloneInstance } from '../utils';
 
 async function getFreePort(): Promise<number> {
-    return new Promise<number>((resolve) => {
+    return new Promise<number>((resolve, reject) => {
         const server = net.createServer();
+        server.on('error', (err) => reject(err));
         server.listen(0, '127.0.0.1', () => {
             const freePort = (server.address()! as net.AddressInfo).port;
-            server.close();
-            resolve(freePort);
+            server.close(() => resolve(freePort));
         });
     });
 }
@@ -53,45 +53,34 @@ export class Xdebug {
         return this;
     }
 
-    async setMode(mode?: Mode | number) {
-        if (typeof mode !== 'number') {
-            this.mode = mode;
+    async setMode(mode?: Mode) {
+        this.mode = mode;
 
-            return this;
-        }
-
-        // export enum TestRunProfileKind { Run = 1, Debug = 2, Coverage = 3 }
-        if (mode === 2) {
-            this.mode = Mode.debug;
+        if (mode === Mode.debug) {
             this.port =
                 (this.configuration.get('xdebugPort', 0) as number) || (await getFreePort());
         }
 
-        if (mode === 3) {
-            this.mode = Mode.coverage;
+        if (mode === Mode.coverage) {
             this.setTemporaryDirectory(await mkdtemp(join(tmpdir(), 'phpunit')));
         }
 
         return this;
     }
 
-    private async getPort() {
-        return this.port;
-    }
-
-    async getDebugConfiguration() {
-        return { type: 'php', request: 'launch', name: 'PHPUnit', port: await this.getPort() };
+    getDebugConfiguration() {
+        return { type: 'php', request: 'launch', name: 'PHPUnit', port: this.port };
     }
 
     getEnvironment() {
-        if (this.mode && [Mode.debug, Mode.coverage].includes(this.mode)) {
-            return {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
-                XDEBUG_MODE: this.mode,
-            };
+        if (!this.mode) {
+            return {};
         }
 
-        return {};
+        return {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            XDEBUG_MODE: this.mode,
+        };
     }
 
     getPhpArgs() {

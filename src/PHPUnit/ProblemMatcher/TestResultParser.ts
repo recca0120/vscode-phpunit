@@ -12,7 +12,7 @@ import type { IParser } from './ValueParser';
 
 export class TestResultParser implements IParser<TestResult | undefined> {
     private readonly pattern = /^.*#+teamcity/;
-    private readonly filePattern = /(s+)?(?<file>.+):(?<line>\d+)$/;
+    private readonly filePattern = /(\s+)?(?<file>.+):(?<line>\d+)$/;
     private readonly parsers = [
         new TestVersionParser(),
         new TestRuntimeParser(),
@@ -63,15 +63,16 @@ export class TestResultParser implements IParser<TestResult | undefined> {
         return text
             .trim()
             .split(/\r\n|\n/g)
-            .filter((input: string) => input.match(this.filePattern))
-            .map((input: string) => {
-                const { file, line } = input.match(this.filePattern)?.groups!;
-
-                return {
-                    file: file.replace(/^(-)+|^at\s+/, '').trim(),
-                    line: parseInt(line, 10),
-                };
-            });
+            .reduce<{ file: string; line: number }[]>((results, input) => {
+                const match = input.match(this.filePattern);
+                if (match?.groups) {
+                    results.push({
+                        file: match.groups.file.replace(/^(-)+|^at\s+/, '').trim(),
+                        line: parseInt(match.groups.line, 10),
+                    });
+                }
+                return results;
+            }, []);
     }
 
     private parseLocationHint(argv: Teamcity): Partial<TestResult> {

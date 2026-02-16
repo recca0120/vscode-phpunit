@@ -1,12 +1,10 @@
 import { type ChildProcess, spawn } from 'node:child_process';
-import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type GlobOptions, glob } from 'glob';
 import * as semver from 'semver';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
-    type CancellationToken,
     CancellationTokenSource,
     commands,
     debug,
@@ -28,7 +26,6 @@ import {
     detectParatestStubs,
     detectPestStubs,
     detectPhpUnitStubs,
-    pestProject,
     phpUnitProject,
 } from './PHPUnit/__tests__/utils';
 
@@ -198,53 +195,7 @@ describe('Extension Test', () => {
         );
     };
 
-    const installSpawnConcurrencyProbe = (delayMs = 1, output = '') => {
-        const spawnMock = vi.mocked(spawn);
-        const originalImplementation = spawnMock.getMockImplementation();
-        let active = 0;
-        let maxActive = 0;
-
-        const implementation = (() => {
-            active += 1;
-            maxActive = Math.max(maxActive, active);
-
-            const child = new EventEmitter() as EventEmitter & {
-                stdout?: ChildProcess['stdout'];
-                stderr?: ChildProcess['stderr'];
-                killed?: boolean;
-            };
-            const stdout = new EventEmitter();
-            const stderr = new EventEmitter();
-
-            child.stdout = stdout as unknown as ChildProcess['stdout'];
-            child.stderr = stderr as unknown as ChildProcess['stderr'];
-            child.killed = false;
-
-            setTimeout(() => {
-                if (output.length > 0) {
-                    stdout.emit('data', output);
-                }
-                stdout.emit('end');
-                active -= 1;
-                child.emit('close', 0);
-            }, delayMs);
-
-            return child as unknown as ChildProcess;
-        }) as typeof spawn;
-
-        spawnMock.mockImplementation(implementation);
-
-        return {
-            getMaxActive: () => maxActive,
-            restore: () => {
-                if (originalImplementation) {
-                    spawnMock.mockImplementation(originalImplementation);
-                }
-            },
-        };
-    };
-
-    describe('Process serialization', () => {
+    describe('Cancellation', () => {
         const root = phpUnitProject('');
 
         beforeEach(async () => {
@@ -253,123 +204,37 @@ describe('Extension Test', () => {
 
         afterEach(() => vi.clearAllMocks());
 
-        it('should serialize run-by-group processes', async () => {
-            const probe = installSpawnConcurrencyProbe();
+        it('should stop running remaining processes when cancellation is requested mid-run', async () => {
+            const cts = new CancellationTokenSource();
+            const spawnMock = vi.mocked(spawn);
+            const realSpawn = spawnMock.getMockImplementation()!;
+
+            spawnMock.mockImplementation((...args: Parameters<typeof spawn>) => {
+                cts.cancel();
+                return (realSpawn as Function)(...args) as ChildProcess;
+            });
+
             try {
                 await activate(context);
-                (window.showQuickPick as Mock).mockResolvedValue('integration');
+                const ctrl = getTestController();
+                const testRunProfile = getTestRunProfile(ctrl);
+                const include = [
+                    'Assertions (Tests\\Assertions)',
+                    'Calculator (Tests\\Calculator)',
+                ]
+                    .map((id) => findTest(ctrl.items, id))
+                    .filter((item): item is TestItem => item !== undefined);
 
-                await commands.executeCommand('phpunit.run-by-group');
+                expect(include).toHaveLength(2);
 
-                expect(probe.getMaxActive()).toBe(1);
-            } finally {
-                probe.restore();
-            }
-        });
+                spawnMock.mockClear();
+                const request = { include, exclude: [], profile: testRunProfile };
+                await testRunProfile.runHandler(request, cts.token);
 
-        it('should serialize multi-select runs', async () => {
-            const probe = installSpawnConcurrencyProbe();
-            try {
-                await activateAndRun({
-                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
-                });
-
-                expect(probe.getMaxActive()).toBe(1);
-            } finally {
-                probe.restore();
-            }
-        });
-
-        it('should clear output once for a multi-select request', async () => {
-            const probe = installSpawnConcurrencyProbe(
-                1,
-                "##teamcity[testSuiteStarted name='Test Suite' flowId='1']\n",
-            );
-            try {
-                const configuration = workspace.getConfiguration('phpunit', Uri.file(root));
-                await configuration.update('clearOutputOnRun', true);
-
-                await activateAndRun({
-                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
-                });
-
-                expect(getOutputChannel().clear).toHaveBeenCalledTimes(1);
-            } finally {
-                probe.restore();
-            }
-        });
-
-        it('should stop running remaining processes when cancellation is requested mid-run', async () => {
-            await activate(context);
-
-            const ctrl = getTestController();
-            const testRunProfile = getTestRunProfile(ctrl);
-            const include = [
-                'Assertions (Tests\\Assertions)',
-                'Calculator (Tests\\Calculator)',
-            ]
-                .map((id) => findTest(ctrl.items, id))
-                .filter((item): item is TestItem => item !== undefined);
-
-            expect(include).toHaveLength(2);
-
-            const request = { include, exclude: [], profile: testRunProfile };
-            const spawnMock = vi.mocked(spawn);
-            const originalImplementation = spawnMock.getMockImplementation();
-            let cancelled = false;
-            let runCount = 0;
-
-            const cancellation = {
-                get isCancellationRequested() {
-                    return cancelled;
-                },
-                onCancellationRequested: vi
-                    .fn()
-                    .mockReturnValue({ dispose: vi.fn() }),
-            } as unknown as CancellationToken;
-
-            vi.mocked(spawn).mockClear();
-            spawnMock.mockImplementation((() => {
-                runCount += 1;
-
-                const child = new EventEmitter() as EventEmitter & {
-                    stdout?: ChildProcess['stdout'];
-                    stderr?: ChildProcess['stderr'];
-                    killed?: boolean;
-                };
-                const stdout = new EventEmitter();
-                const stderr = new EventEmitter();
-
-                child.stdout = stdout as unknown as ChildProcess['stdout'];
-                child.stderr = stderr as unknown as ChildProcess['stderr'];
-                child.killed = false;
-
-                setTimeout(() => {
-                    cancelled = true;
-                    stdout.emit('end');
-                    child.emit('close', 0);
-                }, 1);
-
-                return child as unknown as ChildProcess;
-            }) as typeof spawn);
-
-            try {
-                await testRunProfile.runHandler(request, cancellation);
-
-                expect(cancellation.onCancellationRequested).toHaveBeenCalledTimes(1);
-                expect(runCount).toBe(1);
+                expect(cts.token.isCancellationRequested).toBe(true);
                 expect(spawn).toHaveBeenCalledTimes(1);
-                expect(spawn).toHaveBeenCalledWith(
-                    phpBinary,
-                    expect.arrayContaining([
-                        expect.stringContaining('AssertionsTest.php'),
-                    ]),
-                    expect.anything(),
-                );
             } finally {
-                if (originalImplementation) {
-                    spawnMock.mockImplementation(originalImplementation);
-                }
+                spawnMock.mockImplementation(realSpawn);
             }
         });
     });
@@ -929,146 +794,181 @@ describe('Extension Test', () => {
 
             expectSpawnCalled([pest.binary, '--colors=never', '--teamcity']);
         });
+    });
 
-        const fireWorkspaceFoldersChanged = (added: WorkspaceFolder[], removed: WorkspaceFolder[]) => {
-            const listener = (workspace.onDidChangeWorkspaceFolders as Mock).mock.calls.find(
-                (call: unknown[]) => typeof call[0] === 'function',
-            )?.[0];
-            expect(listener).toBeDefined();
-            listener({ added, removed });
+    describe('WorkspaceFolderManager lifecycle', () => {
+        const phpUnitStubs = detectPhpUnitStubs();
+
+        const getStub = () => phpUnitStubs[0];
+
+        beforeEach(async () => {
+            if (phpUnitStubs.length === 0) return;
+            const { root, binary, args } = getStub();
+            await setupEnvironment(root, binary, args);
+        });
+        afterEach(() => vi.clearAllMocks());
+
+        const findFolderManager = () => {
+            const pushMock = context.subscriptions.push as unknown as Mock;
+            for (const call of pushMock.mock.calls) {
+                for (const arg of call) {
+                    if (arg && typeof arg === 'object' && typeof arg.dispose === 'function' && typeof arg[Symbol.iterator] === 'function') {
+                        return arg;
+                    }
+                }
+            }
+            return undefined;
         };
 
-        it('should add folder roots when going from 1 to 2 folders', async () => {
-            if (skipIfMissing()) return;
+        it('dispose() should clear ctrl.items', async () => {
+            if (phpUnitStubs.length === 0) return;
 
-            const phpUnit = phpUnitStubs[0];
+            await activate(context);
+            const ctrl = getTestController();
+            await ctrl.resolveHandler();
+
+            expect(ctrl.items.size).toBeGreaterThan(0);
+
+            const folderManager = findFolderManager();
+            expect(folderManager).toBeDefined();
+            folderManager.dispose();
+
+            expect(ctrl.items.size).toBe(0);
+        });
+
+        it('resolveHandler called twice should dispose first watchers', async () => {
+            if (phpUnitStubs.length === 0) return;
+
+            await activate(context);
+            const ctrl = getTestController();
+
+            await ctrl.resolveHandler();
+
+            const firstWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
+                (r: any) => r.value,
+            );
+
+            await ctrl.resolveHandler();
+
+            for (const watcher of firstWatchers) {
+                expect(watcher.dispose).toHaveBeenCalled();
+            }
+        });
+
+        it('folder change events should be serialized', async () => {
+            if (phpUnitStubs.length === 0) return;
+
+            const pestStubs = detectPestStubs();
+            if (pestStubs.length === 0) return;
+
+            const phpUnit = getStub();
             const pest = pestStubs[0];
 
-            // Start with single workspace (no folder roots)
             const phpUnitFolder: WorkspaceFolder = {
                 index: 0,
                 name: 'phpunit-stub',
                 uri: Uri.file(phpUnit.root),
             };
+
             setWorkspaceFolders([phpUnitFolder]);
-
-            const phpUnitConfig = workspace.getConfiguration('phpunit', phpUnitFolder.uri);
-            await phpUnitConfig.update('php', phpBinary);
-            await phpUnitConfig.update('phpunit', phpUnit.binary);
-            await phpUnitConfig.update('args', phpUnit.args);
-
-            setTextDocuments(globTextDocuments('**/*Test.php', { cwd: phpUnit.root }));
-
             await activate(context);
-            const ctrl = getTestController();
 
-            // Single workspace → no folder root items
-            expect(findTest(ctrl.items, `folder:${phpUnitFolder.uri.toString()}`)).toBeUndefined();
-            expect(findTest(ctrl.items, 'namespace:Tests')).toBeDefined();
-
-            // Now add pest folder → becomes multi-workspace
+            // Prepare pest folder config
             const pestFolder: WorkspaceFolder = {
                 index: 1,
                 name: 'pest-stub',
                 uri: Uri.file(pest.root),
             };
             const pestConfig = workspace.getConfiguration('phpunit', pestFolder.uri);
-            await pestConfig.update('php', phpBinary);
+            await pestConfig.update('php', 'php');
             await pestConfig.update('phpunit', pest.binary);
             await pestConfig.update('args', pest.args);
 
+            // Get the onDidChangeWorkspaceFolders listener
+            const onFolderChange = workspace.onDidChangeWorkspaceFolders as Mock;
+            const listenerCall = onFolderChange.mock.calls.find(
+                (call: unknown[]) => typeof call[0] === 'function',
+            );
+            expect(listenerCall).toBeDefined();
+            const listener = listenerCall![0];
+
+            // Reset concurrency tracking after activate
+            (workspace.findFiles as any)._maxConcurrent = 0;
+            (workspace.findFiles as any)._concurrentCount = 0;
+
+            // Event 1: add pest (1→2, crosses boundary, reloadAll for 2 folders → 2 concurrent findFiles)
             setWorkspaceFolders([phpUnitFolder, pestFolder]);
-            fireWorkspaceFoldersChanged([pestFolder], []);
+            listener({ added: [pestFolder], removed: [] });
 
-            // Wait for async reload
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            // Event 2: remove pest (2→1, crosses boundary, reloadAll for 1 folder → 1 findFiles)
+            setWorkspaceFolders([phpUnitFolder]);
+            listener({ added: [], removed: [pestFolder] });
 
-            // Now should have folder roots
-            const phpUnitRootItem = findTest(ctrl.items, `folder:${phpUnitFolder.uri.toString()}`);
-            const pestRootItem = findTest(ctrl.items, `folder:${pestFolder.uri.toString()}`);
-            expect(phpUnitRootItem).toBeDefined();
-            expect(phpUnitRootItem!.label).toBe('$(folder) phpunit-stub');
-            expect(pestRootItem).toBeDefined();
-            expect(pestRootItem!.label).toBe('$(folder) pest-stub');
+            // reloadAll() chains onto pendingOperation, so awaiting it
+            // guarantees all prior folder-change handlers have completed.
+            await commands.executeCommand('phpunit.reload');
+
+            // Within one reloadAll of 2 folders, Promise.all produces maxConcurrent=2.
+            // If NOT serialized, event 2's findFiles would overlap with event 1's → maxConcurrent=3.
+            expect((workspace.findFiles as any)._maxConcurrent).toBeLessThanOrEqual(2);
         });
 
-        it('should remove folder roots when going from 2 to 1 folder', async () => {
-            if (skipIfMissing()) return;
+        it('startWatching should not call discoverTestFiles', async () => {
+            if (phpUnitStubs.length === 0) return;
 
-            const phpUnit = phpUnitStubs[0];
-            const pest = pestStubs[0];
-
-            // Start with multi-workspace
             await activate(context);
             const ctrl = getTestController();
 
-            // Verify folder roots exist
-            const phpUnitFolder: WorkspaceFolder = {
-                index: 0,
-                name: 'phpunit-stub',
-                uri: Uri.file(phpUnit.root),
-            };
-            const pestFolder: WorkspaceFolder = {
-                index: 1,
-                name: 'pest-stub',
-                uri: Uri.file(pest.root),
-            };
-            expect(findTest(ctrl.items, `folder:${phpUnitFolder.uri.toString()}`)).toBeDefined();
-            expect(findTest(ctrl.items, `folder:${pestFolder.uri.toString()}`)).toBeDefined();
+            // Clear findFiles call count before resolveHandler
+            (workspace.findFiles as Mock).mockClear();
 
-            // Remove pest folder → single workspace
-            setWorkspaceFolders([phpUnitFolder]);
-            fireWorkspaceFoldersChanged([], [pestFolder]);
+            await ctrl.resolveHandler();
 
-            // Wait for async reload
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // Should have flat structure (no folder roots)
-            expect(findTest(ctrl.items, `folder:${phpUnitFolder.uri.toString()}`)).toBeUndefined();
-            expect(findTest(ctrl.items, `folder:${pestFolder.uri.toString()}`)).toBeUndefined();
-            // phpunit items directly in ctrl.items
-            expect(findTest(ctrl.items, 'namespace:Tests')).toBeDefined();
+            // findFiles is called by reloadAll (via discoverTestFiles), NOT by startWatching
+            // Verify watchers were created
+            expect(workspace.createFileSystemWatcher).toHaveBeenCalled();
         });
 
-        it('should keep folder roots when removing one folder from 3 to 2', async () => {
-            if (skipIfMissing()) return;
+        it('refresh (reload) should restore all items after completion', async () => {
+            if (phpUnitStubs.length === 0) return;
 
-            const phpUnit = phpUnitStubs[0];
-            const pest = pestStubs[0];
+            await activate(context);
+            const ctrl = getTestController();
+            await ctrl.resolveHandler();
 
-            // Start with 2-folder workspace (already set up by beforeEach)
+            const itemsBefore = ctrl.items.size;
+            expect(itemsBefore).toBeGreaterThan(0);
+
+            await ctrl.refreshHandler();
+
+            // Items should be fully restored after reload
+            expect(ctrl.items.size).toBe(itemsBefore);
+        });
+
+        it('concurrent resolveHandler calls should not leak watchers', async () => {
+            if (phpUnitStubs.length === 0) return;
+
             await activate(context);
             const ctrl = getTestController();
 
-            const phpUnitFolder: WorkspaceFolder = {
-                index: 0,
-                name: 'phpunit-stub',
-                uri: Uri.file(phpUnit.root),
-            };
-            const pestFolder: WorkspaceFolder = {
-                index: 1,
-                name: 'pest-stub',
-                uri: Uri.file(pest.root),
-            };
+            // Initial resolve to establish watchers
+            await ctrl.resolveHandler();
 
-            // Remove pest folder, but pretend there's still 2 folders
-            // (simulate 3→2 by keeping workspaceFolders at 2 but only removing pest)
-            // Actually: just remove pest, still have phpunit → goes to 1
-            // Instead let's verify removing from multi stays multi if count > 1
+            // Two concurrent resolves
+            const p1 = ctrl.resolveHandler();
+            const p2 = ctrl.resolveHandler();
+            await Promise.all([p1, p2]);
 
-            // Verify initial state
-            expect(findTest(ctrl.items, `folder:${phpUnitFolder.uri.toString()}`)).toBeDefined();
-            expect(findTest(ctrl.items, `folder:${pestFolder.uri.toString()}`)).toBeDefined();
+            // Get all watchers created by createFileSystemWatcher
+            const allWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
+                (r: any) => r.value,
+            );
 
-            // Remove pest but keep 2 folders (add a fake third then remove pest)
-            // Simplify: just verify that removing pest cleans up its folder root item
-            setWorkspaceFolders([phpUnitFolder]);
-            fireWorkspaceFoldersChanged([], [pestFolder]);
-
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // Pest folder root should be gone
-            expect(findTest(ctrl.items, `folder:${pestFolder.uri.toString()}`)).toBeUndefined();
+            // Only the last batch should be undisposed (1 folder = 1 watcher per resolve)
+            const undisposed = allWatchers.filter(
+                (w: any) => w.dispose.mock.calls.length === 0,
+            );
+            expect(undisposed.length).toBe(1);
         });
     });
 

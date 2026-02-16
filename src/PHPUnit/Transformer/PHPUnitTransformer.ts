@@ -8,7 +8,7 @@ export class PHPUnitTransformer extends Transformer {
     ): string {
         let { type, classFQN } = testDefinition;
         classFQN = classFQN!.replace(/Test$/i, '');
-        const partsFQN = classFQN.replace(/Test$/i, '').split('\\');
+        const partsFQN = classFQN.split('\\');
         const className = titleCase(partsFQN.pop() ?? '');
         classFQN = partsFQN.length === 0 ? className : `${className} (${classFQN})`;
 

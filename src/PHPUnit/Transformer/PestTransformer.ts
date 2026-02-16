@@ -51,8 +51,7 @@ export class PestTransformer extends PHPUnitTransformer {
         }
 
         const classFQN = matched.groups?.classFQN;
-        const type = !methodName ? TestType.class : TestType.method;
-        const id = this.removeDataset(this.uniqueId({ type: type, classFQN, methodName }));
+        const id = this.removeDataset(this.uniqueId({ type: TestType.method, classFQN, methodName }));
 
         return { id, file: '' };
     }

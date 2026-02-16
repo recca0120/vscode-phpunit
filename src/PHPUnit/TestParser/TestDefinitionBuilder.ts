@@ -108,7 +108,7 @@ export class PestTestDefinitionBuilder extends TestDefinitionBuilder {
             methodName = describeNames.reverse().concat(methodName).join(' → ');
         }
 
-        const { classFQN, namespace, className } = parent?.toTestDefinition();
+        const { classFQN, namespace, className } = parent?.toTestDefinition() ?? {};
 
         return this.generate({ classFQN, namespace, className, methodName, label, depth });
     }

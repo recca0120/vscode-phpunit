@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
 import type { TestItem, TestItemCollection, TestRunRequest } from 'vscode';
 import { TestType } from '../PHPUnit';
-import { type TestCase, TestCollection } from '../TestCollection';
+import { TestCollection } from '../TestCollection';
+import type { TestDefinition } from '../PHPUnit';
 
 @injectable()
 export class TestQueueBuilder {
@@ -10,28 +11,34 @@ export class TestQueueBuilder {
     async build(
         tests: Iterable<TestItem>,
         request: TestRunRequest,
-        queue = new Map<TestCase, TestItem>(),
-    ): Promise<Map<TestCase, TestItem>> {
+        queue = new Map<TestDefinition, TestItem>(),
+    ): Promise<Map<TestDefinition, TestItem>> {
         for (const testItem of tests) {
             if (request.exclude?.includes(testItem)) {
                 continue;
             }
 
-            const testCase = this.testCollection.getTestCase(testItem);
-            if (testCase?.type === TestType.method) {
-                queue.set(testCase, testItem);
+            const testDef = this.testCollection.getTestDefinition(testItem);
+            if (testDef?.type === TestType.method) {
+                queue.set(testDef, testItem);
             } else {
-                await this.build(this.collectItems(testItem.children), request, queue);
+                await this.build(this.toArray(testItem.children), request, queue);
             }
         }
 
         return queue;
     }
 
-    collectItems(collection: TestItemCollection): TestItem[] {
-        const testItems: TestItem[] = [];
-        collection.forEach((testItem) => testItems.push(testItem));
+    buildFromCollection(
+        collection: TestItemCollection,
+        request: TestRunRequest,
+    ): Promise<Map<TestDefinition, TestItem>> {
+        return this.build(this.toArray(collection), request);
+    }
 
-        return testItems;
+    private toArray(collection: TestItemCollection): TestItem[] {
+        const items: TestItem[] = [];
+        collection.forEach((item) => items.push(item));
+        return items;
     }
 }
