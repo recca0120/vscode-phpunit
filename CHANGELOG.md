@@ -4,6 +4,20 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.8.3] - 2026-02-17
+
+### Changed
+- Replace `forEach` with `for...of` loops across codebase for consistency
+- Extract `getDependentClasses()` and `reparseFile()` from `reparseChildClasses()`
+- Replace `reduce` with `flatMap` in `TestResultParser.parseFileAndLine()`
+- Extract `pruneEmptyParents()` from `removeTestItems()`
+- Use `matchAll` in `PHPUnitLinkProvider` replacing stateful `exec` loop
+- Extract `collectDescribeChain()` in `PestTestDefinitionBuilder`
+- Apply early return in `TestResultObserver.message()`
+- Extract `getOrCreateNamespaceItem()` in `TestHierarchyBuilder`
+- DRY `clearAndReturn()` in `OutputFormatter`
+- Inline `formatMessage()` in `CollisionPrinter`
+
 ## [3.8.2] - 2026-02-16
 
 ### Added
