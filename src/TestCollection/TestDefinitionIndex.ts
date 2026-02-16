@@ -30,14 +30,7 @@ export class TestDefinitionIndex {
     }
 
     delete(testItem: TestItem): void {
-        this.definitions.delete(testItem.id);
-        this.items.delete(testItem.id);
-        for (const [key, members] of this.groups) {
-            members.delete(testItem);
-            if (members.size === 0) {
-                this.groups.delete(key);
-            }
-        }
+        this.deleteById(testItem.id);
         for (const [, ids] of this.byUri) {
             ids.delete(testItem.id);
         }
@@ -49,19 +42,28 @@ export class TestDefinitionIndex {
             return;
         }
         for (const id of ids) {
-            const testItem = this.items.get(id);
-            if (testItem) {
-                this.definitions.delete(id);
-                this.items.delete(id);
-                for (const [key, members] of this.groups) {
-                    members.delete(testItem);
-                    if (members.size === 0) {
-                        this.groups.delete(key);
-                    }
-                }
-            }
+            this.deleteById(id);
         }
         this.byUri.delete(uri);
+    }
+
+    private deleteById(id: string): void {
+        const testItem = this.items.get(id);
+        if (!testItem) {
+            return;
+        }
+        this.definitions.delete(id);
+        this.items.delete(id);
+        this.removeFromGroups(testItem);
+    }
+
+    private removeFromGroups(testItem: TestItem): void {
+        for (const [key, members] of this.groups) {
+            members.delete(testItem);
+            if (members.size === 0) {
+                this.groups.delete(key);
+            }
+        }
     }
 
     getDefinitionsByUri(uri: string): [TestItem, TestDefinition][] {

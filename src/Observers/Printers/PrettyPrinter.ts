@@ -18,12 +18,11 @@ export class PrettyPrinter extends OutputFormatter {
     };
 
     testFinished(result: TestFinished | TestFailed) {
-        const message = this.messages.get(result.event);
-        if (!message) {
+        const [icon] = this.getMessage(result.event);
+        if (!icon) {
             return '';
         }
-        const [icon] = message;
-        const name = /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
+        const name = this.formatTestName(result);
 
         const messages = [`  ${icon} ${name} ${result.duration} ms`];
         if (result.event === TeamcityEvent.testFailed) {

@@ -22,13 +22,14 @@ export const PestV1Fixer = {
             return testResult;
         }
 
-        const events = [
-            TeamcityEvent.testStarted,
-            TeamcityEvent.testFailed,
-            TeamcityEvent.testIgnored,
-        ];
         const tr = testResult as TestResult & { flowId?: number; name?: string; id?: string };
-        if (('event' in testResult && !events.includes(testResult.event)) || tr.flowId) {
+        if (
+            ('event' in testResult &&
+                testResult.event !== TeamcityEvent.testStarted &&
+                testResult.event !== TeamcityEvent.testFailed &&
+                testResult.event !== TeamcityEvent.testIgnored) ||
+            tr.flowId
+        ) {
             return testResult;
         }
 
