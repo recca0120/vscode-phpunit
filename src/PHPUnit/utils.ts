@@ -8,7 +8,7 @@ export const EOL = '\r\n';
 
 export const engine = new Engine({
     ast: { withPositions: true, withSource: true },
-    parser: { extractDoc: true, suppressErrors: false },
+    parser: { extractDoc: true, suppressErrors: false, version: 900 },
     lexer: {
         all_tokens: true,
         short_tags: true,

@@ -640,6 +640,33 @@ class Example extends TestCase
         );
     });
 
+    it('parse PHP 8.4 new without parentheses syntax (#356)', () => {
+        const file = phpUnitProject('tests/Php84SyntaxTest.php');
+        const content = `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+
+class Php84SyntaxTest extends TestCase
+{
+    public function test_new_without_parentheses()
+    {
+        $result = new \\ArrayObject()->count();
+        $this->assertIsInt($result);
+    }
+}
+`;
+        const tests = parse(content, file);
+        const method = tests.find((t) => t.methodName === 'test_new_without_parentheses');
+        expect(method).toBeDefined();
+        expect(method).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                className: 'Php84SyntaxTest',
+                methodName: 'test_new_without_parentheses',
+            }),
+        );
+    });
+
     describe('Inherited test methods with ClassRegistry', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const registry = new ClassRegistry();
