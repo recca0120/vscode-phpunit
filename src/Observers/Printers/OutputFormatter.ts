@@ -112,7 +112,7 @@ export abstract class OutputFormatter {
             'Test code or tested code printed unexpected output',
         ].join('|');
         const matched = message.match(new RegExp(`(${pattern}):(?<output>.*)`, 'i'));
-        const text = !matched ? this.outputBuffer.get(name) : matched?.groups?.output.trim();
+        const text = matched ? matched.groups?.output.trim() : this.outputBuffer.get(name);
 
         return text ? `${icon} ${text}` : undefined;
     }

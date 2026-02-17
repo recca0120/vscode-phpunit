@@ -1,20 +1,20 @@
 import { type TestDefinition, TestType } from '../types';
 import { uncapitalize } from '../utils';
 import { PestV1Fixer, PestV2Fixer } from './PestFixer';
-import { PHPUnitTransformer } from './PHPUnitTransformer';
-import { TransformerFactory } from './TransformerFactory';
+import { PHPUnitTestIdentifier } from './PHPUnitTestIdentifier';
+import { TestIdentifierFactory } from './TestIdentifierFactory';
 
-export class PestTransformer extends PHPUnitTransformer {
+export class PestTestIdentifier extends PHPUnitTestIdentifier {
     uniqueId(
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string {
         const initialClassFQN = testDefinition.classFQN ?? '';
-        if (!TransformerFactory.isPest(initialClassFQN)) {
+        if (!TestIdentifierFactory.isPest(initialClassFQN)) {
             return super.uniqueId(testDefinition);
         }
 
-        let { type, classFQN } = testDefinition;
-        classFQN = classFQN?.replace(/^P\\/, '') ?? '';
+        const { type } = testDefinition;
+        const classFQN = testDefinition.classFQN?.replace(/^P\\/, '') ?? '';
 
         if (type === TestType.namespace) {
             return `namespace:${classFQN}`;

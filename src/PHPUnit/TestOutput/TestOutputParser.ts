@@ -1,27 +1,27 @@
 import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../Transformer';
 import {
     TeamcityEvent,
+    TeamcityLineParser,
     type TestFailed,
     type TestFinished,
     type TestIgnored,
     type TestResult,
-    TestResultParser,
     type TestStarted,
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '.';
 import { TestResultCache } from './TestResultCache';
 
-export class ProblemMatcher {
+export class TestOutputParser {
     private cache = new TestResultCache();
 
-    constructor(private testResultParser: TestResultParser = new TestResultParser()) {}
+    constructor(private testResultParser: TeamcityLineParser = new TeamcityLineParser()) {}
 
     parse(input: string | Buffer): TestResult | undefined {
         let result = this.testResultParser.parse(input.toString());
-        result = PestV1Fixer.fixFlowId(this.cache.asMap(), result);
+        result = PestV1Fixer.fixFlowId(this.cache, result);
 
-        if (!this.isDispatchable(result) || !result) {
+        if (!result || !this.isDispatchable(result)) {
             return result;
         }
 
@@ -59,8 +59,8 @@ export class ProblemMatcher {
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
-                this.cache.asMap(),
-                PHPUnitFixer.fixNoTestStarted(this.cache.asMap(), testResult),
+                this.cache,
+                PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
             );
         }
 

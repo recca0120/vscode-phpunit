@@ -32,22 +32,18 @@ export class XmlElement {
 
     querySelectorAll(selector: string) {
         const segments = selector.split(' ');
-        let current: unknown = this.node;
-        while (segments.length > 0) {
-            const segment = segments.shift();
-            if (!segment) {
-                break;
-            }
+        let current: Record<string, unknown> | Record<string, unknown>[] = this.node;
+        for (const segment of segments) {
             if (Array.isArray(current)) {
                 current = current
-                    .flatMap((node: Record<string, unknown>) => node[segment] ?? undefined)
-                    .filter((node: unknown) => node !== undefined);
+                    .flatMap((node) => node[segment] ?? [])
+                    .filter((node): node is Record<string, unknown> => node !== undefined);
             } else {
-                current = (current as Record<string, unknown>)[segment] ?? undefined;
-            }
-
-            if (current === undefined) {
-                return [];
+                const next = current[segment];
+                if (next === undefined) {
+                    return [];
+                }
+                current = next as Record<string, unknown> | Record<string, unknown>[];
             }
         }
 

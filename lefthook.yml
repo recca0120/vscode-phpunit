@@ -4,3 +4,6 @@ pre-commit:
     - name: lint
       glob: "*.{js,ts,jsx,tsx,json}"
       run: npx biome check --no-errors-on-unmatched {staged_files}
+    - name: typecheck
+      glob: "*.{ts,tsx}"
+      run: npx tsc --noEmit

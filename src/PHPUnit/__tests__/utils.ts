@@ -1,7 +1,11 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { PHPUnitXML } from '../PHPUnitXML';
+import { ChainAstParser } from '../TestParser/ChainAstParser';
+import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { PhpParserAstParser } from '../TestParser/php-parser/PhpParserAstParser';
 import { TestParser } from '../TestParser/TestParser';
+import { TreeSitterAstParser } from '../TestParser/tree-sitter/TreeSitterAstParser';
 import { type TestDefinition, TestType } from '../types';
 
 export const fixturePath = (uri: string) => join(__dirname, 'fixtures', uri);
@@ -21,14 +25,32 @@ export const getPhpUnitVersion = (): string => {
 };
 
 export const parseTestFile = (buffer: Buffer | string, file: string, root: string) => {
-    const tests: TestDefinition[] = [];
     const phpUnitXML = new PHPUnitXML();
     phpUnitXML.setRoot(root);
-    const testParser = new TestParser(phpUnitXML);
-    for (const type of Object.values(TestType).filter((v) => typeof v === 'number') as TestType[]) {
-        testParser.on(type, (testDefinition: TestDefinition) => tests.push(testDefinition));
+    const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
+    const testParser = new TestParser(phpUnitXML, astParser);
+    const classHierarchy = new ClassHierarchy();
+
+    const result = testParser.parse(buffer, file);
+    if (!result) {
+        return [];
     }
-    testParser.parse(buffer, file);
+
+    for (const cls of result.classes) {
+        classHierarchy.register(cls);
+    }
+
+    const enriched = classHierarchy.enrichTests(result.tests);
+    const tests: TestDefinition[] = [];
+    const collect = (defs: TestDefinition[]) => {
+        for (const def of defs) {
+            tests.push(def);
+            if (def.children && def.children.length > 0) {
+                collect(def.children);
+            }
+        }
+    };
+    collect(enriched);
 
     return tests;
 };

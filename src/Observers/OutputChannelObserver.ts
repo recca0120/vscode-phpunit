@@ -73,8 +73,7 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        const id = result.id;
-        if (!id || id.match(/::/)) {
+        if (this.shouldSkipSuite(result.id)) {
             return;
         }
 
@@ -91,18 +90,20 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testFailed(result: TestFailed): void {
-        this.testFinished(result);
-        this.showOutputChannel(ShowOutputState.onFailure);
+        this.handleFaultedTest(result);
     }
 
     testIgnored(result: TestIgnored): void {
+        this.handleFaultedTest(result);
+    }
+
+    private handleFaultedTest(result: TestFailed | TestIgnored): void {
         this.testFinished(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        const id = result.id;
-        if (!id || id.match(/::/)) {
+        if (this.shouldSkipSuite(result.id)) {
             return;
         }
 
@@ -123,6 +124,10 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.appendLine(this.outputFormatter.end());
         this.printedOutput();
         this.outputFormatter.close();
+    }
+
+    private shouldSkipSuite(id?: string): boolean {
+        return !id || !!id.match(/::/);
     }
 
     private printedOutput(result: TestResult | undefined = undefined): void {

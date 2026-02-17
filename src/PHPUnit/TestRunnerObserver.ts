@@ -1,3 +1,4 @@
+import type { ProcessBuilder } from './ProcessBuilder';
 import type {
     TestConfiguration,
     TestCount,
@@ -12,9 +13,8 @@ import type {
     TestSuiteFinished,
     TestSuiteStarted,
     TestVersion,
-} from './ProblemMatcher';
-import { TeamcityEvent, type TestResult } from './ProblemMatcher';
-import type { ProcessBuilder } from './ProcessBuilder';
+} from './TestOutput';
+import { TeamcityEvent, type TestResult } from './TestOutput';
 
 export enum TestRunnerEvent {
     start = 'start',

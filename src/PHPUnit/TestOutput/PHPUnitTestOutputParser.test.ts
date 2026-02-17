@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { TeamcityEvent } from '.';
-import { ProblemMatcher } from './ProblemMatcher';
+import { TestOutputParser } from './TestOutputParser';
 
-const problemMatcher = new ProblemMatcher();
+const problemMatcher = new TestOutputParser();
 
-describe('PHPUnit ProblemMatcher Text', () => {
+describe('PHPUnit TestOutputParser Text', () => {
     const resultShouldBe = (content: string, expected: Record<string, unknown> | undefined) => {
         const actual = problemMatcher.parse(content);
 

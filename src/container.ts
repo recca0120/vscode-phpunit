@@ -11,7 +11,10 @@ import {
 import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
 import { TestRunnerObserverFactory } from './Observers';
-import { PHPUnitXML } from './PHPUnit';
+import { ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
+import { ClassHierarchy } from './PHPUnit/TestParser/ClassHierarchy';
+import { PhpParserAstParser } from './PHPUnit/TestParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from './PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import {
@@ -65,6 +68,22 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .toDynamicValue(
             () => new Configuration(workspace.getConfiguration('phpunit', workspaceFolder.uri)),
         )
+        .inSingletonScope();
+
+    child
+        .bind(ClassHierarchy)
+        .toDynamicValue(() => new ClassHierarchy())
+        .inSingletonScope();
+    child
+        .bind(TestParser)
+        .toDynamicValue((context) => {
+            const phpUnitXML = context.get(PHPUnitXML);
+            const astParser = new ChainAstParser([
+                new TreeSitterAstParser(),
+                new PhpParserAstParser(),
+            ]);
+            return new TestParser(phpUnitXML, astParser);
+        })
         .inSingletonScope();
 
     // Per-folder services

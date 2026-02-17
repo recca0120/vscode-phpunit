@@ -3,10 +3,10 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, pestProject, phpUnitProject } from '../../__tests__/utils';
 import { PHPUnitXML } from '../../PHPUnitXML';
 import { type TestDefinition, TestType } from '../../types';
-import { ClassRegistry } from '../ClassRegistry';
-import { PestParser } from '../PestParser';
-import { PHPUnitParser } from '../PHPUnitParser';
-import { PhpAstNodeWrapper } from '../php-parser/PhpAstNodeWrapper';
+import { ClassHierarchy } from '../ClassHierarchy';
+import { PestTestExtractor } from '../PestTestExtractor';
+import { PHPUnitTestExtractor } from '../PHPUnitTestExtractor';
+import { TestNode } from '../TestNode';
 import { adapt } from './TreeSitterAdapter';
 import { initTreeSitter, parsePhp } from './TreeSitterParser';
 
@@ -34,12 +34,12 @@ function parseWithTreeSitter(
     const phpUnitXML = new PHPUnitXML();
     phpUnitXML.setRoot(root);
 
-    const definition = new PhpAstNodeWrapper(ast, { phpUnitXML, file });
-    const parsers = [new PestParser(), new PHPUnitParser()];
-    for (const parser of parsers) {
-        const result = parser.parse(definition);
+    const definition = new TestNode(ast, { phpUnitXML, file });
+    const extractors = [new PestTestExtractor(), new PHPUnitTestExtractor()];
+    for (const extractor of extractors) {
+        const result = extractor.extract(definition);
         if (result) {
-            return flattenTests(result);
+            return flattenTests(result.tests);
         }
     }
 
@@ -71,7 +71,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     id: 'namespace:Tests',
                     classFQN: 'Tests',
                     namespace: 'Tests',
-                    depth: 0,
                 }),
             );
         });
@@ -87,7 +86,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     className: 'AssertionsTest',
                     start: { line: 9, character: 0 },
                     end: { line: 89, character: 1 },
-                    depth: 1,
                 }),
             );
         });
@@ -105,7 +103,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { group: ['integration'] },
                     start: { line: 16, character: 4 },
                     end: { line: 19, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -123,7 +120,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { depends: ['test_passed'], group: ['integration'] },
                     start: { line: 25, character: 4 },
                     end: { line: 28, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -140,7 +136,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'test_is_not_same',
                     start: { line: 30, character: 4 },
                     end: { line: 33, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -157,7 +152,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'test_risky',
                     start: { line: 35, character: 4 },
                     end: { line: 38, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -175,7 +169,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { group: ['integration'] },
                     start: { line: 44, character: 4 },
                     end: { line: 47, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -192,7 +185,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'test_skipped',
                     start: { line: 49, character: 4 },
                     end: { line: 52, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -209,7 +201,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'test_incomplete',
                     start: { line: 54, character: 4 },
                     end: { line: 57, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -227,7 +218,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
                     start: { line: 66, character: 4 },
                     end: { line: 69, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -245,7 +235,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { testdox: ['has an initial balance of zero'] },
                     start: { line: 85, character: 4 },
                     end: { line: 88, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -282,7 +271,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'test_static_public_fail',
                     start: { line: 9, character: 4 },
                     end: { line: 11, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -309,7 +297,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'property',
                     start: { line: 17, character: 4 },
                     end: { line: 20, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -332,7 +319,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'firstLeadingComments',
                     start: { line: 10, character: 4 },
                     end: { line: 13, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -355,7 +341,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'use_trait',
                     start: { line: 33, character: 4 },
                     end: { line: 36, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -378,7 +363,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { group: ['integration'] },
                     start: { line: 13, character: 0 },
                     end: { line: 61, character: 1 },
-                    depth: 1,
                 }),
             );
         });
@@ -395,7 +379,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'hi',
                     start: { line: 16, character: 4 },
                     end: { line: 19, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -413,7 +396,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { dataProvider: ['additionProvider'] },
                     start: { line: 22, character: 4 },
                     end: { line: 25, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -431,7 +413,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { depends: ['testEmpty'] },
                     start: { line: 46, character: 4 },
                     end: { line: 53, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -449,7 +430,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: { testdox: ['has an initial balance of zero'] },
                     start: { line: 57, character: 4 },
                     end: { line: 60, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -472,7 +452,6 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     label: 'test_no_namespace',
                     start: { line: 7, character: 4 },
                     end: { line: 10, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -499,7 +478,6 @@ final class PDF_testerTest extends TestCase {
                 methodName: 'test_hello',
                 start: { line: 5, character: 4 },
                 end: { line: 7, character: 5 },
-                depth: 2,
             }),
         );
     });
@@ -535,10 +513,10 @@ class PropertyHooksTest extends TestCase
         );
     });
 
-    describe('Inherited test methods with ClassRegistry', () => {
+    describe('Inherited test methods with ClassHierarchy', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
-            const registry = new ClassRegistry();
-            const allTests: TestDefinition[] = [];
+            const hierarchy = new ClassHierarchy();
+            let allTests: TestDefinition[] = [];
             const phpUnitXML = new PHPUnitXML();
             phpUnitXML.setRoot(root);
 
@@ -547,13 +525,18 @@ class PropertyHooksTest extends TestCase
                 const ast = adapt(tree.rootNode);
                 tree.delete();
 
-                const definition = new PhpAstNodeWrapper(ast, { phpUnitXML, file });
-                const parser = new PHPUnitParser(registry);
-                const result = parser.parse(definition);
+                const definition = new TestNode(ast, { phpUnitXML, file });
+                const extractor = new PHPUnitTestExtractor();
+                const result = extractor.extract(definition);
                 if (result) {
-                    allTests.push(...flattenTests(result));
+                    for (const cls of result.classes) {
+                        hierarchy.register(cls);
+                    }
+                    allTests.push(...flattenTests(result.tests));
                 }
             }
+
+            allTests = flattenTests(hierarchy.enrichTests(allTests));
 
             return allTests;
         };
@@ -673,7 +656,6 @@ test('example', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -696,7 +678,6 @@ it('test example', function () {
                 methodName: 'it test example',
                 label: 'it test example',
                 file,
-                depth: 2,
             }),
         );
     });
@@ -717,7 +698,6 @@ describe('something', function () {
                 id: 'tests/Fixtures/ExampleTest.php::`something`',
                 methodName: '`something`',
                 label: 'something',
-                depth: 2,
             }),
         );
 
@@ -727,7 +707,6 @@ describe('something', function () {
                 id: 'tests/Fixtures/ExampleTest.php::`something` → example',
                 methodName: '`something` → example',
                 label: 'example',
-                depth: 3,
             }),
         );
     });
@@ -747,7 +726,6 @@ arch()->preset()->security();
                 id: 'tests/Fixtures/ExampleTest.php::preset  → php ',
                 methodName: 'preset  → php ',
                 label: 'preset → php',
-                depth: 2,
             }),
         );
     });
@@ -768,7 +746,6 @@ describe(description: 'something', test: function () {
                 id: 'tests/Fixtures/ExampleTest.php::`something` → it asserts true is true',
                 methodName: '`something` → it asserts true is true',
                 label: 'it asserts true is true',
-                depth: 3,
             }),
         );
     });
@@ -799,7 +776,6 @@ describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
                 id: 'tests/Fixtures/ExampleTest.php::`something` → it example',
                 methodName: '`something` → it example',
                 label: 'it example',
-                depth: 3,
             }),
         );
     });

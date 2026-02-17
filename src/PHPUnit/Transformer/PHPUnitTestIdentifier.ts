@@ -1,13 +1,13 @@
 import { type TestDefinition, TestType } from '../types';
 import { capitalize, snakeCase, titleCase } from '../utils';
-import { Transformer } from './Transformer';
+import { TestIdentifier } from './TestIdentifier';
 
-export class PHPUnitTransformer extends Transformer {
+export class PHPUnitTestIdentifier extends TestIdentifier {
     uniqueId(
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string {
-        let { type, classFQN } = testDefinition;
-        classFQN = classFQN?.replace(/Test$/i, '') ?? '';
+        const { type } = testDefinition;
+        let classFQN = testDefinition.classFQN?.replace(/Test$/i, '') ?? '';
         const partsFQN = classFQN.split('\\');
         const className = titleCase(partsFQN.pop() ?? '');
         classFQN = partsFQN.length === 0 ? className : `${className} (${classFQN})`;

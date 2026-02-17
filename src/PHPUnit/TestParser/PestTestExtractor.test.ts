@@ -30,7 +30,6 @@ test('example', function () {
                 classFQN: 'P\\Tests\\Fixtures',
                 namespace: 'P\\Tests\\Fixtures',
                 label: 'Tests\\Fixtures',
-                depth: 0,
             }),
         );
     });
@@ -53,7 +52,6 @@ test('example', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 1,
             }),
         );
     });
@@ -78,7 +76,6 @@ test('example', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -103,7 +100,6 @@ it('test example', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -130,7 +126,6 @@ describe('something', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
 
@@ -146,7 +141,6 @@ describe('something', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 3,
             }),
         );
     });
@@ -170,7 +164,6 @@ describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 3,
             }),
         );
     });
@@ -199,7 +192,6 @@ describe('something', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 3,
             }),
         );
 
@@ -217,7 +209,6 @@ describe('something', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 4,
             }),
         );
     });
@@ -240,7 +231,6 @@ it('example 2')->assertTrue(true);
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -280,7 +270,6 @@ it('asserts true is true', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -307,7 +296,6 @@ describe(description: 'something', test: function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 3,
             }),
         );
     });
@@ -333,7 +321,6 @@ arch()->preset()->security();
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
 
@@ -349,7 +336,6 @@ arch()->preset()->security();
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
 
@@ -365,7 +351,6 @@ arch()->preset()->security();
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -389,7 +374,6 @@ arch('Then should pass the PHP preset')->preset()->php();
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -424,7 +408,6 @@ describe('Given a project', function () {
                 file,
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 4,
             }),
         );
     });

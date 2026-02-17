@@ -20,12 +20,13 @@ export class TestQueueBuilder {
             }
 
             const testDef = this.testCollection.getTestDefinition(testItem);
-            if (testDef?.type === TestType.method) {
-                queue.set(testDef, testItem);
-                testRun?.enqueued(testItem);
-            } else {
+            if (testDef?.type !== TestType.method) {
                 await this.build(this.toArray(testItem.children), request, queue, testRun);
+                continue;
             }
+
+            queue.set(testDef, testItem);
+            testRun?.enqueued(testItem);
         }
 
         return queue;

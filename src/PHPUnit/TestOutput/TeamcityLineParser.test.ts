@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
-import { TestResultParser } from '.';
+import { TeamcityLineParser } from '.';
 import { TeamcityEvent } from './types';
 
-describe('TestResultParser', () => {
+describe('TeamcityLineParser', () => {
     const parse = (text: string) => {
-        return new TestResultParser().parse(text);
+        return new TeamcityLineParser().parse(text);
     };
 
     it('parse phpunit version', () => {

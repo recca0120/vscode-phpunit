@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, tests } from 'vscode';
-import { PHPUnitXML, TestParser } from '../PHPUnit';
+import { ChainAstParser, PHPUnitXML, TestParser } from '../PHPUnit';
 import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 type CODE = {
@@ -24,7 +26,7 @@ export const generateXML = (text: string) => {
 const givenPhp = (namespace: string, className: string, methods: string[]) => `<?php
 ${namespace};
 
-class ${className} extends TestCase 
+class ${className} extends TestCase
 {
 ${methods
     .map(
@@ -76,12 +78,15 @@ describe('TestHierarchyBuilder', () => {
             configurationFile,
         );
 
-        const testParser = new TestParser(phpUnitXml);
-        const builder = new TestHierarchyBuilder(ctrl, testParser, ctrl.items, phpUnitXml);
+        const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
+        const testParser = new TestParser(phpUnitXml, astParser);
+        const builder = new TestHierarchyBuilder(ctrl, ctrl.items, phpUnitXml);
         for (const { testsuite, file, code } of codes) {
-            testParser.parse(code, file, testsuite.name);
+            const result = testParser.parse(code, file, testsuite.name);
+            if (result) {
+                builder.build(result.tests);
+            }
         }
-        builder.get();
     };
 
     beforeEach(() => {
@@ -328,27 +333,29 @@ describe('TestHierarchyBuilder', () => {
                 configurationFile,
             );
 
-            const testParser = new TestParser(phpUnitXml);
-            const builder = new TestHierarchyBuilder(ctrl, testParser);
+            const astParser = new ChainAstParser([
+                new TreeSitterAstParser(),
+                new PhpParserAstParser(),
+            ]);
+            const testParser = new TestParser(phpUnitXml, astParser);
 
             // First parse: class with methods A and B
-            testParser.parse(
+            const builder1 = new TestHierarchyBuilder(ctrl, ctrl.items);
+            const result1 = testParser.parse(
                 givenPhp('namespace Tests', 'AssertionsTest', ['test_passed', 'test_failed']),
                 phpUnitProject('tests/AssertionsTest.php'),
                 'default',
             );
-            builder.get();
+            if (result1) builder1.build(result1.tests);
 
-            // Second parse into SAME builder: class with only method A
-            // (simulates file edit that removed test_failed)
-            const testParser2 = new TestParser(phpUnitXml);
-            const builder2 = new TestHierarchyBuilder(ctrl, testParser2);
-            testParser2.parse(
+            // Second parse into new builder: class with only method A
+            const builder2 = new TestHierarchyBuilder(ctrl, ctrl.items);
+            const result2 = testParser.parse(
                 givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
                 phpUnitProject('tests/AssertionsTest.php'),
                 'default',
             );
-            builder2.get();
+            if (result2) builder2.build(result2.tests);
 
             // The class should have exactly 1 method, not 2
             const ns = ctrl.items.get('namespace:Tests');
@@ -385,11 +392,11 @@ describe('Given something else...', function () {
     describe('When...', function () {
         it('Then should...', function () {});
     });
-    
+
     test('Test2', function () {
         expect(true)->toBe(false);
     });
-    
+
     describe('When also...', function () {
         it('Then should...', function () {});
     });

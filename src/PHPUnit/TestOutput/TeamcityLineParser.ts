@@ -1,23 +1,26 @@
-import { TransformerFactory } from '../Transformer';
+import { TestIdentifierFactory } from '../Transformer';
 import type { Teamcity } from '../types';
 import { parseTeamcity } from './parseTeamcity';
-import { TestConfigurationParser } from './TestConfigurationParser';
 import { TestDurationParser } from './TestDurationParser';
-import { TestProcessesParser } from './TestProcessesParser';
 import { TestResultSummaryParser } from './TestResultSummaryParser';
-import { TestRuntimeParser } from './TestRuntimeParser';
 import { TestVersionParser } from './TestVersionParser';
-import type { TestResult } from './types';
-import type { IParser } from './ValueParser';
+import {
+    TeamcityEvent,
+    type TestConfiguration,
+    type TestProcesses,
+    type TestResult,
+    type TestRuntime,
+} from './types';
+import { type IParser, ValueParser } from './ValueParser';
 
-export class TestResultParser implements IParser<TestResult | undefined> {
+export class TeamcityLineParser implements IParser<TestResult | undefined> {
     private readonly pattern = /^.*#+teamcity/;
     private readonly filePattern = /(\s+)?(?<file>.+):(?<line>\d+)$/;
     private readonly parsers = [
         new TestVersionParser(),
-        new TestRuntimeParser(),
-        new TestConfigurationParser(),
-        new TestProcessesParser(),
+        new ValueParser<TestRuntime>('Runtime', TeamcityEvent.testRuntime),
+        new ValueParser<TestConfiguration>('Configuration', TeamcityEvent.testConfiguration),
+        new ValueParser<TestProcesses>('Processes', TeamcityEvent.testProcesses),
         new TestDurationParser(),
         new TestResultSummaryParser(),
     ];
@@ -31,13 +34,8 @@ export class TestResultParser implements IParser<TestResult | undefined> {
             return this.doParse(text);
         }
 
-        for (const parser of this.parsers) {
-            if (parser.is(text)) {
-                return parser.parse(text);
-            }
-        }
-
-        return undefined;
+        const parser = this.parsers.find((p) => p.is(text));
+        return parser?.parse(text);
     }
 
     private doParse(text: string) {
@@ -88,7 +86,7 @@ export class TestResultParser implements IParser<TestResult | undefined> {
             return {};
         }
 
-        return TransformerFactory.create(argv.locationHint).fromLocationHit(
+        return TestIdentifierFactory.create(argv.locationHint).fromLocationHit(
             argv.locationHint,
             argv.name,
         );

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TestType } from '../types';
-import type { ClassInfo } from './ClassRegistry';
-import { ClassRegistry } from './ClassRegistry';
+import type { ClassInfo } from './ClassHierarchy';
+import { ClassHierarchy } from './ClassHierarchy';
 
 const classInfo = (
     overrides: Partial<ClassInfo> & Pick<ClassInfo, 'uri' | 'classFQN'>,
@@ -14,9 +14,9 @@ const classInfo = (
     ...overrides,
 });
 
-describe('ClassRegistry', () => {
+describe('ClassHierarchy', () => {
     it('should register and retrieve class info', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         registry.register(
             classInfo({
                 uri: '/test.php',
@@ -31,7 +31,7 @@ describe('ClassRegistry', () => {
     });
 
     it('should detect TestCase inheritance', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         registry.register(
             classInfo({
                 uri: '/abstract.php',
@@ -54,7 +54,7 @@ describe('ClassRegistry', () => {
     });
 
     it('should detect circular inheritance', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         registry.register(
             classInfo({
                 uri: '/a.php',
@@ -74,15 +74,13 @@ describe('ClassRegistry', () => {
     });
 
     it('should not infinite loop on circular inheritance in resolveInheritedMethods', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         registry.register(
             classInfo({
                 uri: '/a.php',
                 classFQN: 'A',
                 parentFQN: 'B',
-                methods: [
-                    { type: TestType.method, id: 'a', label: 'a', methodName: 'test_a', depth: 2 },
-                ],
+                methods: [{ type: TestType.method, id: 'a', label: 'a', methodName: 'test_a' }],
             }),
         );
         registry.register(
@@ -90,9 +88,7 @@ describe('ClassRegistry', () => {
                 uri: '/b.php',
                 classFQN: 'B',
                 parentFQN: 'A',
-                methods: [
-                    { type: TestType.method, id: 'b', label: 'b', methodName: 'test_b', depth: 2 },
-                ],
+                methods: [{ type: TestType.method, id: 'b', label: 'b', methodName: 'test_b' }],
             }),
         );
 
@@ -103,20 +99,18 @@ describe('ClassRegistry', () => {
     });
 
     it('should resolve inherited methods', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         const parentMethod = {
             type: TestType.method,
             id: 'test',
             label: 'test',
             methodName: 'test_parent',
-            depth: 2,
         };
         const childMethod = {
             type: TestType.method,
             id: 'test',
             label: 'test',
             methodName: 'test_child',
-            depth: 2,
         };
 
         registry.register(
@@ -144,7 +138,7 @@ describe('ClassRegistry', () => {
     });
 
     it('child override should take precedence in resolveInheritedMethods', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
 
         registry.register(
             classInfo({
@@ -159,7 +153,6 @@ describe('ClassRegistry', () => {
                         label: 'p',
                         methodName: 'test_shared',
                         file: '/parent.php',
-                        depth: 2,
                     },
                 ],
             }),
@@ -176,7 +169,6 @@ describe('ClassRegistry', () => {
                         label: 'c',
                         methodName: 'test_shared',
                         file: '/child.php',
-                        depth: 2,
                     },
                 ],
             }),
@@ -188,7 +180,7 @@ describe('ClassRegistry', () => {
     });
 
     it('should find child classes', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         registry.register(classInfo({ uri: '/parent.php', classFQN: 'Parent', isAbstract: true }));
         registry.register(
             classInfo({ uri: '/child1.php', classFQN: 'Child1', parentFQN: 'Parent' }),
@@ -201,16 +193,8 @@ describe('ClassRegistry', () => {
         expect(children).toHaveLength(2);
     });
 
-    it('should delete by URI', () => {
-        const registry = new ClassRegistry();
-        registry.register(classInfo({ uri: '/test.php', classFQN: 'MyClass' }));
-
-        registry.deleteByUri('/test.php');
-        expect(registry.get('MyClass')).toBeUndefined();
-    });
-
     it('should get classes by URI', () => {
-        const registry = new ClassRegistry();
+        const registry = new ClassHierarchy();
         registry.register(classInfo({ uri: '/test.php', classFQN: 'ClassA' }));
         registry.register(classInfo({ uri: '/test.php', classFQN: 'ClassB' }));
         registry.register(classInfo({ uri: '/other.php', classFQN: 'ClassC' }));
@@ -226,11 +210,10 @@ describe('ClassRegistry', () => {
             label: name,
             methodName: name,
             file,
-            depth: 2,
         });
 
         it('should resolve basic trait methods', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/trait.php',
@@ -254,7 +237,7 @@ describe('ClassRegistry', () => {
         });
 
         it('should merge methods from multiple traits', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/t1.php',
@@ -286,7 +269,7 @@ describe('ClassRegistry', () => {
         });
 
         it('should handle insteadof conflict resolution', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/t1.php',
@@ -320,7 +303,7 @@ describe('ClassRegistry', () => {
         });
 
         it('should handle as (alias) adaptation', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/t1.php',
@@ -361,7 +344,7 @@ describe('ClassRegistry', () => {
         });
 
         it('should resolve nested trait use (trait uses trait)', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/inner.php',
@@ -394,7 +377,7 @@ describe('ClassRegistry', () => {
         });
 
         it('should not infinite loop on circular trait use', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/ta.php',
@@ -428,7 +411,7 @@ describe('ClassRegistry', () => {
         });
 
         it('own methods take precedence over trait methods', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/trait.php',
@@ -452,7 +435,7 @@ describe('ClassRegistry', () => {
         });
 
         it('trait methods take precedence over parent methods', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/parent.php',
@@ -483,7 +466,7 @@ describe('ClassRegistry', () => {
         });
 
         it('getTraitUsers returns classes that use a trait', () => {
-            const registry = new ClassRegistry();
+            const registry = new ClassHierarchy();
             registry.register(
                 classInfo({
                     uri: '/trait.php',

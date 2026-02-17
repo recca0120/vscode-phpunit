@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { pestProject } from '../__tests__/utils';
-import { ProblemMatcher } from './ProblemMatcher';
+import { TestOutputParser } from './TestOutputParser';
 import { TeamcityEvent } from './types';
 
-const problemMatcher = new ProblemMatcher();
+const problemMatcher = new TestOutputParser();
 
-describe('Pest ProblemMatcher Text', () => {
+describe('Pest TestOutputParser Text', () => {
     const resultShouldBe = (content: string, expected: Record<string, unknown> | undefined) => {
         const actual = problemMatcher.parse(content);
 
@@ -967,7 +967,7 @@ describe('Pest ProblemMatcher Text', () => {
     });
 
     describe('multi-testsuite (locationHint with absolute path)', () => {
-        const matcher = new ProblemMatcher();
+        const matcher = new TestOutputParser();
         const parse = (content: string) => matcher.parse(content);
 
         it('full lifecycle: testSuiteStarted → testStarted → testFailed → testFinished', () => {

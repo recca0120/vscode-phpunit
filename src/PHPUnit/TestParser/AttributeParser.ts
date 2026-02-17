@@ -1,19 +1,20 @@
-import type { AttrGroup, Declaration, Method } from 'php-parser';
-import type { Annotations } from '../../types';
-
-export const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
+import type { Annotations } from '../types';
+import { lookup } from './AnnotationParser';
+import type { ClassNode, MethodNode } from './AstNode';
 
 interface ParsedAttribute {
     name: string;
     args: unknown[];
 }
 
+type Annotatable = ClassNode | MethodNode;
+
 export class AttributeParser {
     private readonly lookupPatterns = new Map(
         lookup.map((name) => [name, new RegExp(name, 'i')] as const),
     );
 
-    public parse(declaration: Declaration) {
+    public parse(declaration: Annotatable) {
         const attributes = this.parseAttributes(declaration);
         const annotations = {} as Annotations;
 
@@ -30,7 +31,7 @@ export class AttributeParser {
         return annotations;
     }
 
-    public isTest(method: Method) {
+    public isTest(method: Annotatable) {
         if (!method.attrGroups) {
             return false;
         }
@@ -40,13 +41,13 @@ export class AttributeParser {
         );
     }
 
-    private parseAttributes(declaration: Declaration): ParsedAttribute[] {
-        if (!('attrGroups' in declaration)) {
+    private parseAttributes(declaration: Annotatable): ParsedAttribute[] {
+        if (!declaration.attrGroups) {
             return [];
         }
 
         const result: ParsedAttribute[] = [];
-        for (const group of declaration.attrGroups as AttrGroup[]) {
+        for (const group of declaration.attrGroups) {
             for (const attr of group.attrs) {
                 result.push({
                     name: attr.name,

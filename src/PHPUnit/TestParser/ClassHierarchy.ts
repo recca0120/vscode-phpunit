@@ -1,4 +1,4 @@
-import type { TestDefinition } from '../types';
+import { type TestDefinition, TestType } from '../types';
 
 export interface TraitAdaptation {
     kind: 'insteadof' | 'as';
@@ -20,7 +20,7 @@ export interface ClassInfo {
     methods: TestDefinition[];
 }
 
-export class ClassRegistry {
+export class ClassHierarchy {
     private registry = new Map<string, ClassInfo>();
 
     clear(): void {
@@ -33,12 +33,6 @@ export class ClassRegistry {
 
     get(classFQN: string): ClassInfo | undefined {
         return this.registry.get(classFQN);
-    }
-
-    deleteByUri(uri: string): void {
-        for (const info of this.filterValues((i) => i.uri === uri)) {
-            this.registry.delete(info.classFQN);
-        }
     }
 
     extendsTestCase(classFQN: string): boolean {
@@ -78,6 +72,75 @@ export class ClassRegistry {
             return false;
         });
         return [...methodMap.values()];
+    }
+
+    enrichTests(tests: TestDefinition[]): TestDefinition[] {
+        const result: TestDefinition[] = [];
+
+        for (const test of tests) {
+            if (test.type !== TestType.class) {
+                const enriched = this.enrichNonClass(test);
+                if (enriched) {
+                    result.push(enriched);
+                }
+                continue;
+            }
+
+            const enriched = this.enrichClass(test);
+            if (enriched) {
+                result.push(enriched);
+            }
+        }
+
+        return result;
+    }
+
+    private enrichNonClass(test: TestDefinition): TestDefinition | undefined {
+        if (!test.children) {
+            return test;
+        }
+
+        const enrichedChildren = this.enrichTests(test.children);
+        if (enrichedChildren.length === 0) {
+            return undefined;
+        }
+
+        return { ...test, children: enrichedChildren };
+    }
+
+    private enrichClass(test: TestDefinition): TestDefinition | undefined {
+        const isTestCase = test.classFQN && this.extendsTestCase(test.classFQN);
+        const hasOwnTests = test.children && test.children.length > 0;
+
+        if (!isTestCase && !hasOwnTests) {
+            return undefined;
+        }
+
+        if (!isTestCase || !test.classFQN) {
+            return test;
+        }
+
+        const ownMethodNames = new Set(
+            (test.children ?? []).map((m) => m.methodName).filter(Boolean),
+        );
+
+        const allMethods = this.resolveInheritedMethods(test.classFQN);
+        const inheritedMethods = allMethods
+            .filter((m) => m.methodName && !ownMethodNames.has(m.methodName))
+            .map((m) => ({
+                ...m,
+                file: test.file,
+                classFQN: test.classFQN,
+                namespace: test.namespace,
+                className: test.className,
+                start: test.start,
+                end: test.end,
+            }));
+
+        return {
+            ...test,
+            children: [...(test.children ?? []), ...inheritedMethods],
+        };
     }
 
     getClassesByUri(uri: string): ClassInfo[] {

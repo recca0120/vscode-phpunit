@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { TestType } from '../types';
 import { PestV2Fixer } from './PestFixer';
-import { PestTransformer } from './PestTransformer';
+import { PestTestIdentifier } from './PestTestIdentifier';
 
-describe('PestTransformer', () => {
-    const transformer = new PestTransformer();
+describe('PestTestIdentifier', () => {
+    const transformer = new PestTestIdentifier();
 
     describe('generateUniqueId', () => {
         it('test /** with comment */ should do', () => {

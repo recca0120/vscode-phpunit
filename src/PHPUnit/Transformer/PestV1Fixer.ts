@@ -1,4 +1,5 @@
-import { TeamcityEvent, type TestResult } from '../ProblemMatcher';
+import { TeamcityEvent, type TestResult } from '../TestOutput';
+import type { TestResultCache } from '../TestOutput/TestResultCache';
 
 function fixDataSet(locationHint: string) {
     const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
@@ -17,34 +18,35 @@ export const PestV1Fixer = {
         );
     },
 
-    fixFlowId(cache: Map<string, TestResult>, testResult?: TestResult) {
+    fixFlowId(cache: TestResultCache, testResult?: TestResult) {
         if (!testResult) {
             return testResult;
         }
 
         const tr = testResult as TestResult & { flowId?: number; name?: string; id?: string };
+        if (tr.flowId) {
+            return testResult;
+        }
+
         if (
-            ('event' in testResult &&
-                testResult.event !== TeamcityEvent.testStarted &&
-                testResult.event !== TeamcityEvent.testFailed &&
-                testResult.event !== TeamcityEvent.testIgnored) ||
-            tr.flowId
+            'event' in testResult &&
+            testResult.event !== TeamcityEvent.testStarted &&
+            testResult.event !== TeamcityEvent.testFailed &&
+            testResult.event !== TeamcityEvent.testIgnored
         ) {
             return testResult;
         }
 
-        const result = Array.from(cache.values())
-            .reverse()
-            .find((result: TestResult) => {
-                const r = result as TestResult & { name?: string; id?: string };
-                if (testResult.event !== TeamcityEvent.testStarted) {
-                    return result.event === TeamcityEvent.testStarted && r.name === tr.name;
-                }
+        const result = cache.findLast((result: TestResult) => {
+            const r = result as TestResult & { name?: string; id?: string };
+            if (testResult.event !== TeamcityEvent.testStarted) {
+                return result.event === TeamcityEvent.testStarted && r.name === tr.name;
+            }
 
-                const matched = tr.id?.match(/\((?<id>.+)\)/);
+            const matched = tr.id?.match(/\((?<id>.+)\)/);
 
-                return matched && r.id === `${matched.groups?.id.replace(/\\/g, '/')}Test`;
-            });
+            return !!matched && r.id === `${matched.groups?.id.replace(/\\/g, '/')}Test`;
+        });
 
         tr.flowId = (result as (TestResult & { flowId?: number }) | undefined)?.flowId;
 

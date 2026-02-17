@@ -1,39 +1,28 @@
 import type { Node as SyntaxNode } from '@vscode/tree-sitter-wasm';
+import type {
+    AstNode,
+    AstNodeAttrGroup,
+    AstNodeComment,
+    AstNodeLoc,
+    CallNode,
+    TraitAdaptationNode,
+    UseItemNode,
+} from '../AstNode';
 
-interface Loc {
-    start: { line: number; column: number; offset: number };
-    end: { line: number; column: number; offset: number };
+function locOf(node: SyntaxNode): AstNodeLoc {
+    return { start: node.startPosition, end: node.endPosition };
 }
 
-function toLoc(node: SyntaxNode): Loc {
-    return {
-        start: {
-            line: node.startPosition.row + 1,
-            column: node.startPosition.column,
-            offset: node.startIndex,
-        },
-        end: {
-            line: node.endPosition.row + 1,
-            column: node.endPosition.column,
-            offset: node.endIndex,
-        },
-    };
-}
+function collectLeadingComments(node: SyntaxNode): AstNodeComment[] {
+    const comments: AstNodeComment[] = [];
 
-function collectLeadingComments(node: SyntaxNode): any[] {
-    const comments: any[] = [];
-
-    // In tree-sitter, comments can be:
-    // 1. Children of the node (e.g., method_declaration contains comment children)
-    // 2. Previous siblings of the node
-
-    // First check children of the node (for method_declaration, class_declaration)
     for (const child of node.children) {
+        if (!child) continue;
         if (child.type === 'comment') {
             comments.push({
-                kind: child.text.startsWith('/*') ? 'commentblock' : 'commentline',
+                kind: 'comment',
                 value: child.text,
-                loc: toLoc(child),
+                loc: locOf(child),
             });
         }
     }
@@ -42,7 +31,6 @@ function collectLeadingComments(node: SyntaxNode): any[] {
         return comments;
     }
 
-    // Fallback: check previous siblings
     let prev: SyntaxNode | null = node.previousSibling;
     const rawComments: SyntaxNode[] = [];
     while (prev) {
@@ -56,46 +44,52 @@ function collectLeadingComments(node: SyntaxNode): any[] {
 
     for (const c of rawComments) {
         comments.push({
-            kind: c.text.startsWith('/*') ? 'commentblock' : 'commentline',
+            kind: 'comment',
             value: c.text,
-            loc: toLoc(c),
+            loc: locOf(c),
         });
     }
 
     return comments;
 }
 
-function collectAttrGroups(node: SyntaxNode): any[] {
-    const attrGroups: any[] = [];
+function collectAttrGroups(node: SyntaxNode): AstNodeAttrGroup[] {
+    const attrGroups: AstNodeAttrGroup[] = [];
 
     for (const child of node.children) {
+        if (!child) continue;
         if (child.type !== 'attribute_list') {
             continue;
         }
 
         for (const group of child.children) {
+            if (!group) continue;
             if (group.type !== 'attribute_group') {
                 continue;
             }
 
-            const attrs: any[] = [];
+            const attrs: { name: string; args: { value?: unknown }[] }[] = [];
             for (const attr of group.namedChildren) {
+                if (!attr) continue;
                 if (attr.type !== 'attribute') {
                     continue;
                 }
 
                 const nameNode = attr.childForFieldName('name') ?? attr.namedChildren[0];
                 const name = nameNode ? nameNode.text : '';
-                const shortName = name.includes('\\') ? name.split('\\').pop()! : name;
+                const parts = name.split('\\');
+                const shortName = name.includes('\\') ? parts[parts.length - 1] : name;
 
-                const args: any[] = [];
+                const args: { value?: unknown }[] = [];
                 const argList =
                     attr.childForFieldName('parameters') ??
-                    attr.children.find((c) => c.type === 'arguments');
+                    attr.children.find((c) => c?.type === 'arguments');
                 if (argList) {
                     for (const arg of argList.namedChildren) {
+                        if (!arg) continue;
                         if (arg.type === 'argument') {
-                            const valNode = arg.childForFieldName('value') ?? arg.namedChildren[0];
+                            const valNode =
+                                arg.childForFieldName('value') ?? arg.namedChildren[0] ?? null;
                             args.push({ value: extractStringValue(valNode) });
                         } else {
                             args.push({ value: extractStringValue(arg) });
@@ -136,6 +130,7 @@ function extractStringValue(node: SyntaxNode | null): string | undefined {
 
 function adaptVisibility(node: SyntaxNode): string {
     for (const child of node.children) {
+        if (!child) continue;
         if (child.type === 'visibility_modifier') {
             return child.text;
         }
@@ -145,6 +140,7 @@ function adaptVisibility(node: SyntaxNode): string {
 
 function isAbstract(node: SyntaxNode): boolean {
     for (const child of node.children) {
+        if (!child) continue;
         if (child.type === 'abstract_modifier') {
             return true;
         }
@@ -152,38 +148,51 @@ function isAbstract(node: SyntaxNode): boolean {
     return false;
 }
 
-function adaptNamespaceUse(node: SyntaxNode): any {
-    const items: any[] = [];
+function getDeclarationLoc(node: SyntaxNode): AstNodeLoc {
+    for (const child of node.children) {
+        if (!child) continue;
+        if (child.type !== 'attribute_list' && child.type !== 'comment') {
+            return { start: child.startPosition, end: node.endPosition };
+        }
+    }
+    return locOf(node);
+}
+
+function adaptNamespaceUse(node: SyntaxNode): AstNode {
+    const items: UseItemNode[] = [];
 
     for (const child of node.namedChildren) {
+        if (!child) continue;
         if (child.type === 'namespace_use_clause') {
             const nameNode = child.namedChildren[0];
             if (nameNode) {
                 items.push({
-                    kind: 'useitem',
+                    kind: 'namespace_use_clause',
                     name: nameNode.text,
-                    loc: toLoc(child),
+                    loc: locOf(child),
                 });
             }
         }
     }
 
     return {
-        kind: 'usegroup',
+        kind: 'namespace_use_declaration',
         items,
-        loc: toLoc(node),
+        loc: locOf(node),
     };
 }
 
-function adaptTraitUse(node: SyntaxNode): any {
-    const traits: any[] = [];
-    const adaptations: any[] = [];
+function adaptTraitUse(node: SyntaxNode): AstNode {
+    const traits: string[] = [];
+    const adaptations: TraitAdaptationNode[] = [];
 
     for (const child of node.namedChildren) {
+        if (!child) continue;
         if (child.type === 'name' || child.type === 'qualified_name') {
-            traits.push({ kind: 'name', name: child.text });
+            traits.push(child.text);
         } else if (child.type === 'use_list') {
             for (const item of child.namedChildren) {
+                if (!item) continue;
                 if (item.type === 'use_instead_of_clause') {
                     adaptations.push(adaptInsteadOf(item));
                 } else if (item.type === 'use_as_clause') {
@@ -194,47 +203,49 @@ function adaptTraitUse(node: SyntaxNode): any {
     }
 
     return {
-        kind: 'traituse',
+        kind: 'use_declaration',
         traits,
-        adaptations: adaptations.length > 0 ? adaptations : null,
-        loc: toLoc(node),
+        adaptations,
+        loc: locOf(node),
     };
 }
 
-function adaptInsteadOf(node: SyntaxNode): any {
-    let trait: any = null;
-    let method: any = null;
-    const instead: any[] = [];
+function adaptInsteadOf(node: SyntaxNode): TraitAdaptationNode {
+    let trait: string | undefined;
+    let method = '';
+    const instead: string[] = [];
 
     for (const child of node.namedChildren) {
+        if (!child) continue;
         if (child.type === 'class_constant_access_expression') {
             const parts = child.namedChildren;
-            trait = parts[0] ? { kind: 'name', name: parts[0].text } : null;
-            method = parts[1] ? parts[1].text : null;
+            trait = parts[0]?.text;
+            method = parts[1]?.text ?? '';
         } else if (child.type === 'name' || child.type === 'qualified_name') {
-            instead.push({ kind: 'name', name: child.text });
+            instead.push(child.text);
         }
     }
 
     return {
-        kind: 'traitprecedence',
+        kind: 'use_instead_of_clause',
         trait,
         method,
         instead,
     };
 }
 
-function adaptAsAlias(node: SyntaxNode): any {
-    let trait: any = null;
-    let method: any = null;
-    let alias: any = null;
-    let visibility: string | null = null;
+function adaptAsAlias(node: SyntaxNode): TraitAdaptationNode {
+    let trait: string | undefined;
+    let method = '';
+    let alias: string | undefined;
+    let visibility: string | undefined;
 
     for (const child of node.namedChildren) {
+        if (!child) continue;
         if (child.type === 'class_constant_access_expression') {
             const parts = child.namedChildren;
-            trait = parts[0] ? { kind: 'name', name: parts[0].text } : null;
-            method = parts[1] ? parts[1].text : null;
+            trait = parts[0]?.text;
+            method = parts[1]?.text ?? '';
         } else if (child.type === 'visibility_modifier') {
             visibility = child.text;
         } else if (child.type === 'name') {
@@ -247,162 +258,187 @@ function adaptAsAlias(node: SyntaxNode): any {
     }
 
     return {
-        kind: 'traitalias',
+        kind: 'use_as_clause',
         trait,
         method,
-        as: alias,
+        alias,
         visibility,
     };
 }
 
-function getDeclarationLoc(node: SyntaxNode): Loc {
-    // php-parser reports position starting from the keyword (class/public/function),
-    // not from attributes or comments. Find the first non-attribute, non-comment child.
-    for (const child of node.children) {
-        if (child.type !== 'attribute_list' && child.type !== 'comment') {
-            return {
-                start: {
-                    line: child.startPosition.row + 1,
-                    column: child.startPosition.column,
-                    offset: child.startIndex,
-                },
-                end: toLoc(node).end,
-            };
-        }
-    }
-    return toLoc(node);
-}
-
-function adaptMethod(node: SyntaxNode): any {
+function adaptMethod(node: SyntaxNode): AstNode {
     const nameNode = node.childForFieldName('name');
-    const name = nameNode ? nameNode.text : '';
-    const leadingComments = collectLeadingComments(node);
-    const attrGroups = collectAttrGroups(node);
 
     return {
-        kind: 'method',
-        name: { kind: 'identifier', name },
+        kind: 'method_declaration',
+        name: nameNode ? nameNode.text : '',
         visibility: adaptVisibility(node),
         isAbstract: isAbstract(node),
-        leadingComments,
-        attrGroups,
-        body: [],
+        leadingComments: collectLeadingComments(node),
+        attrGroups: collectAttrGroups(node),
         loc: getDeclarationLoc(node),
     };
 }
 
-function adaptClass(node: SyntaxNode): any {
+function adaptClass(node: SyntaxNode): AstNode {
     const nameNode = node.childForFieldName('name');
-    const name = nameNode ? nameNode.text : '';
-    const baseClause = node.children.find((c) => c.type === 'base_clause');
-    let extendsNode: any = null;
+    const baseClause = node.children.find((c) => c?.type === 'base_clause');
+    let extendsName: string | undefined;
 
     if (baseClause) {
         const extName = baseClause.namedChildren[0];
         if (extName) {
-            extendsNode = { kind: 'name', name: extName.text };
+            extendsName = extName.text;
         }
     }
 
     const bodyNode = node.childForFieldName('body');
     const body = bodyNode ? adaptClassBody(bodyNode) : [];
-    const leadingComments = collectLeadingComments(node);
-    const attrGroups = collectAttrGroups(node);
-    const abstract = isAbstract(node);
 
     return {
-        kind: node.type === 'trait_declaration' ? 'trait' : 'class',
-        name: { kind: 'identifier', name },
-        isAbstract: abstract,
-        extends: extendsNode,
+        kind: node.type === 'trait_declaration' ? 'trait_declaration' : 'class_declaration',
+        name: nameNode ? nameNode.text : '',
+        isAbstract: isAbstract(node),
+        extendsName,
         body,
-        leadingComments,
-        attrGroups,
+        leadingComments: collectLeadingComments(node),
+        attrGroups: collectAttrGroups(node),
         loc: getDeclarationLoc(node),
     };
 }
 
-function adaptClassBody(bodyNode: SyntaxNode): any[] {
-    const result: any[] = [];
+function adaptClassBody(bodyNode: SyntaxNode): AstNode[] {
+    const result: AstNode[] = [];
 
     for (const child of bodyNode.namedChildren) {
+        if (!child) continue;
         if (child.type === 'method_declaration') {
             result.push(adaptMethod(child));
         } else if (child.type === 'use_declaration') {
             result.push(adaptTraitUse(child));
         }
-        // Skip property_declaration, property_hook, const_declaration, etc.
     }
 
     return result;
 }
 
-function adaptCallExpression(node: SyntaxNode): any {
+function adaptCall(node: SyntaxNode): CallNode {
     const funcNode = node.childForFieldName('function');
     const argsNode = node.childForFieldName('arguments');
-
-    const what = adaptWhat(funcNode);
     const args = argsNode ? adaptArguments(argsNode) : [];
 
+    const { name, chain } = resolveCallTarget(funcNode);
+
     return {
-        kind: 'call',
-        what,
+        kind: 'function_call_expression',
+        name,
         arguments: args,
-        loc: toLoc(node),
+        chain,
+        loc: locOf(node),
     };
 }
 
-function adaptWhat(node: SyntaxNode | null): any {
+function resolveCallTarget(node: SyntaxNode | null): { name: string; chain?: CallNode } {
     if (!node) {
-        return { kind: 'name', name: '' };
+        return { name: '' };
     }
 
     if (node.type === 'name' || node.type === 'qualified_name') {
-        return { kind: 'name', name: node.text };
+        return { name: node.text };
     }
 
     if (node.type === 'member_call_expression') {
         const objNode = node.childForFieldName('object');
         const nameNode = node.childForFieldName('name');
         const argsNode = node.childForFieldName('arguments');
+        const methodName = nameNode ? nameNode.text : '';
+        const args = argsNode ? adaptArguments(argsNode) : [];
 
-        return {
-            kind: 'call',
-            what: {
-                kind: 'propertylookup',
-                what: adaptWhat(objNode),
-                offset: nameNode ? { kind: 'identifier', name: nameNode.text } : undefined,
-            },
-            arguments: argsNode ? adaptArguments(argsNode) : [],
-            loc: toLoc(node),
-        };
+        if (objNode?.type === 'function_call_expression') {
+            return { name: methodName, chain: adaptCall(objNode) };
+        }
+
+        if (objNode?.type === 'member_call_expression') {
+            const innerCall = adaptMemberCallAsCall(objNode);
+            return { name: methodName, chain: innerCall };
+        }
+
+        if (objNode) {
+            return {
+                name: methodName,
+                chain: {
+                    kind: 'function_call_expression',
+                    name: objNode.text,
+                    arguments: args,
+                    loc: locOf(objNode),
+                },
+            };
+        }
+
+        return { name: methodName };
     }
 
     if (node.type === 'function_call_expression') {
-        return adaptCallExpression(node);
+        const inner = adaptCall(node);
+        return { name: '', chain: inner };
     }
 
-    return { kind: 'name', name: node.text };
+    return { name: node.text };
 }
 
-function adaptArguments(argsNode: SyntaxNode): any[] {
-    const args: any[] = [];
+function adaptMemberCallAsCall(node: SyntaxNode): CallNode {
+    const objNode = node.childForFieldName('object');
+    const nameNode = node.childForFieldName('name');
+    const argsNode = node.childForFieldName('arguments');
+    const methodName = nameNode ? nameNode.text : '';
+    const args = argsNode ? adaptArguments(argsNode) : [];
+
+    const { name: innerName, chain } = resolveCallTarget(objNode);
+
+    if (innerName) {
+        return {
+            kind: 'function_call_expression',
+            name: methodName,
+            arguments: args,
+            chain: {
+                kind: 'function_call_expression',
+                name: innerName,
+                arguments: [],
+                chain,
+                loc: objNode ? locOf(objNode) : undefined,
+            },
+            loc: locOf(node),
+        };
+    }
+
+    return {
+        kind: 'function_call_expression',
+        name: methodName,
+        arguments: args,
+        chain,
+        loc: locOf(node),
+    };
+}
+
+function adaptArguments(argsNode: SyntaxNode): AstNode[] {
+    const args: AstNode[] = [];
 
     for (const child of argsNode.namedChildren) {
+        if (!child) continue;
         if (child.type === 'argument') {
             const nameNode = child.childForFieldName('name');
-            const valueNode = child.namedChildren.find((c) => c !== nameNode && c.type !== 'name');
+            const valueNode = child.namedChildren.find(
+                (c) => c && c !== nameNode && c.type !== 'name',
+            );
 
             if (nameNode && nameNode.type === 'name' && valueNode) {
-                // Named argument: fn(description: 'something', test: function() {})
                 args.push({
-                    kind: 'namedargument',
+                    kind: 'argument',
                     name: nameNode.text,
                     value: adaptExpression(valueNode),
-                    loc: toLoc(child),
+                    loc: locOf(child),
                 });
             } else {
-                // Positional argument
                 const expr = child.namedChildren[0];
                 if (expr) {
                     args.push(adaptExpression(expr));
@@ -416,7 +452,7 @@ function adaptArguments(argsNode: SyntaxNode): any[] {
     return args;
 }
 
-function adaptExpression(node: SyntaxNode): any {
+function adaptExpression(node: SyntaxNode): AstNode {
     if (node.type === 'string' || node.type === 'encapsed_string') {
         const text = node.text;
         let value = text;
@@ -425,7 +461,7 @@ function adaptExpression(node: SyntaxNode): any {
         } else if (text.startsWith('"') && text.endsWith('"')) {
             value = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
         }
-        return { kind: 'string', value, loc: toLoc(node) };
+        return { kind: 'string', value, loc: locOf(node) };
     }
 
     if (
@@ -440,60 +476,50 @@ function adaptExpression(node: SyntaxNode): any {
     }
 
     if (node.type === 'function_call_expression') {
-        return adaptCallExpression(node);
+        return adaptCall(node);
     }
 
     if (node.type === 'member_call_expression') {
-        const objNode = node.childForFieldName('object');
-        const nameNode = node.childForFieldName('name');
-        const argsNode = node.childForFieldName('arguments');
-
-        return {
-            kind: 'call',
-            what: {
-                kind: 'propertylookup',
-                what: adaptWhat(objNode),
-                offset: nameNode ? { kind: 'identifier', name: nameNode.text } : undefined,
-            },
-            arguments: argsNode ? adaptArguments(argsNode) : [],
-            loc: toLoc(node),
-        };
+        return adaptMemberCallAsCall(node);
     }
 
-    return { kind: node.type, value: node.text, loc: toLoc(node) };
+    return { kind: 'string', value: node.text, loc: locOf(node) };
 }
 
-function adaptClosure(node: SyntaxNode): any {
+function adaptClosure(node: SyntaxNode): AstNode {
     const bodyNode = node.childForFieldName('body');
     return {
-        kind: 'closure',
-        body: bodyNode ? adaptBlock(bodyNode) : { kind: 'block', children: [], loc: toLoc(node) },
-        loc: toLoc(node),
+        kind: 'anonymous_function',
+        body: bodyNode
+            ? adaptBlock(bodyNode)
+            : { kind: 'compound_statement', children: [], loc: locOf(node) },
+        loc: locOf(node),
     };
 }
 
-function adaptArrowFunction(node: SyntaxNode): any {
+function adaptArrowFunction(node: SyntaxNode): AstNode {
     const bodyNode = node.childForFieldName('body');
 
     if (bodyNode) {
         return {
-            kind: 'arrowfunc',
+            kind: 'arrow_function',
             body: adaptExpression(bodyNode),
-            loc: toLoc(node),
+            loc: locOf(node),
         };
     }
 
     return {
-        kind: 'arrowfunc',
-        body: { kind: 'noop', loc: toLoc(node) },
-        loc: toLoc(node),
+        kind: 'arrow_function',
+        body: { kind: 'compound_statement', children: [], loc: locOf(node) },
+        loc: locOf(node),
     };
 }
 
-function adaptBlock(node: SyntaxNode): any {
-    const children: any[] = [];
+function adaptBlock(node: SyntaxNode): AstNode {
+    const children: AstNode[] = [];
 
     for (const child of node.namedChildren) {
+        if (!child) continue;
         const adapted = adaptTopLevelNode(child);
         if (adapted) {
             children.push(adapted);
@@ -501,13 +527,13 @@ function adaptBlock(node: SyntaxNode): any {
     }
 
     return {
-        kind: 'block',
+        kind: 'compound_statement',
         children,
-        loc: toLoc(node),
+        loc: locOf(node),
     };
 }
 
-function adaptExpressionStatement(node: SyntaxNode): any {
+function adaptExpressionStatement(node: SyntaxNode): AstNode | null {
     const exprNode = node.namedChildren[0];
     if (!exprNode) {
         return null;
@@ -515,20 +541,20 @@ function adaptExpressionStatement(node: SyntaxNode): any {
 
     if (exprNode.type === 'include_expression' || exprNode.type === 'include_once_expression') {
         return {
-            kind: 'expressionstatement',
-            expression: { kind: 'include' },
-            loc: toLoc(node),
+            kind: 'expression_statement',
+            expression: { kind: 'include_expression' },
+            loc: locOf(node),
         };
     }
 
     return {
-        kind: 'expressionstatement',
+        kind: 'expression_statement',
         expression: adaptExpression(exprNode),
-        loc: toLoc(node),
+        loc: locOf(node),
     };
 }
 
-function adaptTopLevelNode(node: SyntaxNode): any {
+function adaptTopLevelNode(node: SyntaxNode): AstNode | null {
     switch (node.type) {
         case 'namespace_definition':
             return adaptNamespace(node);
@@ -540,70 +566,59 @@ function adaptTopLevelNode(node: SyntaxNode): any {
         case 'namespace_use_declaration':
             return adaptNamespaceUse(node);
         case 'use_declaration':
-            // At top level this shouldn't happen (trait use is inside class body)
             return adaptNamespaceUse(node);
         case 'expression_statement':
             return adaptExpressionStatement(node);
         case 'function_call_expression':
-            return adaptCallExpression(node);
+            return adaptCall(node);
         default:
             return null;
     }
 }
 
-function adaptNamespace(node: SyntaxNode): any {
+function adaptNamespace(node: SyntaxNode): AstNode {
     const nameNode = node.childForFieldName('name');
     const name = nameNode ? nameNode.text : '';
     const bodyNode = node.childForFieldName('body');
 
-    const children: any[] = [];
+    const children: AstNode[] = [];
 
     if (bodyNode) {
-        // Namespace with braces: namespace Foo { ... }
         for (const child of bodyNode.namedChildren) {
+            if (!child) continue;
             const adapted = adaptTopLevelNode(child);
             if (adapted) {
                 children.push(adapted);
             }
         }
     }
-    // For non-braced namespace: namespace Foo;
-    // Children are siblings at the program level — handled in adapt()
 
     return {
-        kind: 'namespace',
+        kind: 'namespace_definition',
         name,
         children,
-        loc: toLoc(node),
+        loc: locOf(node),
     };
 }
 
-export function adapt(rootNode: SyntaxNode): any {
+export function adapt(rootNode: SyntaxNode): AstNode {
     const programChildren = rootNode.namedChildren;
-    const children: any[] = [];
+    const children: AstNode[] = [];
 
-    // Find namespace definitions
-    let nsIndex = -1;
-    for (let i = 0; i < programChildren.length; i++) {
-        if (programChildren[i].type === 'namespace_definition') {
-            nsIndex = i;
-            break;
-        }
-    }
+    const nsIndex = programChildren.findIndex((c) => c?.type === 'namespace_definition');
 
-    if (nsIndex >= 0) {
-        const nsNode = programChildren[nsIndex];
+    const nsNode = nsIndex >= 0 ? programChildren[nsIndex] : undefined;
+    if (nsNode) {
         const hasBraces = nsNode.childForFieldName('body') !== null;
 
         if (hasBraces) {
-            // Braced namespace: just adapt the namespace node
             children.push(adaptNamespace(nsNode));
         } else {
-            // Non-braced namespace: subsequent siblings become children of the namespace
-            const nsChildren: any[] = [];
+            const nsChildren: AstNode[] = [];
 
             for (let i = nsIndex + 1; i < programChildren.length; i++) {
                 const child = programChildren[i];
+                if (!child) continue;
                 const adapted = adaptTopLevelNode(child);
                 if (adapted) {
                     nsChildren.push(adapted);
@@ -614,15 +629,15 @@ export function adapt(rootNode: SyntaxNode): any {
             const name = nameNode ? nameNode.text : '';
 
             children.push({
-                kind: 'namespace',
+                kind: 'namespace_definition',
                 name,
                 children: nsChildren,
-                loc: toLoc(nsNode),
+                loc: locOf(nsNode),
             });
         }
     } else {
-        // No namespace: adapt all children
         for (const child of programChildren) {
+            if (!child) continue;
             if (child.type === 'php_tag' || child.type === 'text') {
                 continue;
             }
@@ -636,6 +651,6 @@ export function adapt(rootNode: SyntaxNode): any {
     return {
         kind: 'program',
         children,
-        loc: toLoc(rootNode),
+        loc: locOf(rootNode),
     };
 }

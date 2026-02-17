@@ -1,18 +1,17 @@
-import type { Declaration, Method } from 'php-parser';
-import type { Annotations } from '../../types';
-import { lookup } from './AttributeParser';
+import type { Annotations } from '../types';
+import type { ClassNode, MethodNode } from './AstNode';
 
-export { AttributeParser } from './AttributeParser';
+export const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
+
+type Annotatable = ClassNode | MethodNode;
 
 export class AnnotationParser {
-    public parse(declaration: Declaration): Annotations {
+    public parse(declaration: Annotatable): Annotations {
         return this.parseComments(declaration);
     }
 
-    public isTest(method: Method) {
-        return !method.leadingComments
-            ? false
-            : /@test/.test(method.leadingComments.map((comment) => comment.value).join('\n'));
+    public isTest(method: Annotatable) {
+        return /@test/.test((method.leadingComments ?? []).map((c) => c.value).join('\n'));
     }
 
     private readonly template = (annotation: string) =>
@@ -23,7 +22,7 @@ export class AnnotationParser {
         'ig',
     );
 
-    private parseComments(declaration: Declaration) {
+    private parseComments(declaration: Annotatable) {
         const comments = declaration.leadingComments ?? [];
         const annotations = {} as Annotations;
         for (const comment of comments) {

@@ -55,12 +55,17 @@ export class Configuration extends BaseConfiguration {
 
     constructor(items: Map<string, unknown> | ConfigurationItem | undefined = undefined) {
         super();
+        if (!items) {
+            return;
+        }
+
         if (items instanceof Map) {
             this.items = items;
-        } else if (items) {
-            for (const x in items) {
-                this.items.set(x, items[x]);
-            }
+            return;
+        }
+
+        for (const x in items) {
+            this.items.set(x, items[x]);
         }
     }
 

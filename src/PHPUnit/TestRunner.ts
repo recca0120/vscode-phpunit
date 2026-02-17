@@ -1,5 +1,5 @@
-import { ProblemMatcher, type TestResult } from './ProblemMatcher';
 import type { ProcessBuilder } from './ProcessBuilder';
+import { TestOutputParser, type TestResult } from './TestOutput';
 import {
     createTestRunnerEventProxy,
     type EventResultMap,
@@ -11,7 +11,7 @@ import { TestRunnerProcess } from './TestRunnerProcess';
 
 export class TestRunner {
     private readonly defaultObserver: TestRunnerEventProxy;
-    private readonly problemMatcher = new ProblemMatcher();
+    private readonly testOutputParser = new TestOutputParser();
     private readonly teamcityPattern = /##teamcity\[/i;
     private observers: TestRunnerObserver[] = [];
 
@@ -70,7 +70,7 @@ export class TestRunner {
     }
 
     private processLine(line: string, builder: ProcessBuilder) {
-        this.emitTestResult(builder, this.problemMatcher.parse(line));
+        this.emitTestResult(builder, this.testOutputParser.parse(line));
         this.emit(TestRunnerEvent.line, line);
     }
 

@@ -33,13 +33,13 @@ export class WorkspaceFolderManager {
 
     private add(folder: WorkspaceFolder): Container {
         const key = folder.uri.toString();
-        if (!this.folders.has(key)) {
-            this.folders.set(key, this.createChildContainer(folder));
+        const existing = this.folders.get(key);
+        if (existing) {
+            return existing;
         }
-        const container = this.folders.get(key);
-        if (!container) {
-            throw new Error(`Failed to create container for folder ${key}`);
-        }
+
+        const container = this.createChildContainer(folder);
+        this.folders.set(key, container);
         return container;
     }
 
@@ -97,7 +97,9 @@ export class WorkspaceFolderManager {
         }
 
         const newCount = this.getAll().length;
-        const crossedBoundary = prevCount <= 1 !== newCount <= 1;
+        const wasMulti = prevCount > 1;
+        const isMulti = newCount > 1;
+        const crossedBoundary = wasMulti !== isMulti;
 
         if (crossedBoundary) {
             this.applyFolderRoots();

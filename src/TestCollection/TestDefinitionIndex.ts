@@ -11,19 +11,18 @@ export class TestDefinitionIndex {
         this.definitions.set(testItem.id, testDefinition);
         this.items.set(testItem.id, testItem);
 
-        if (!this.byUri.has(uri)) {
-            this.byUri.set(uri, new Set());
-        }
-        this.byUri.get(uri)?.add(testItem.id);
+        const uriIds = this.byUri.get(uri) ?? new Set<string>();
+        this.byUri.set(uri, uriIds);
+        uriIds.add(testItem.id);
 
         if (testDefinition.type === TestType.method) {
+            const groupPrefix = 'group:';
             for (const tag of testItem.tags ?? []) {
-                if (tag.id.startsWith('group:')) {
-                    const group = tag.id.slice(6);
-                    if (!this.groups.has(group)) {
-                        this.groups.set(group, new Set());
-                    }
-                    this.groups.get(group)?.add(testItem);
+                if (tag.id.startsWith(groupPrefix)) {
+                    const group = tag.id.slice(groupPrefix.length);
+                    const members = this.groups.get(group) ?? new Set<TestItem>();
+                    this.groups.set(group, members);
+                    members.add(testItem);
                 }
             }
         }

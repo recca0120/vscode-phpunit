@@ -26,9 +26,7 @@ export type TestDefinition = {
     namespace?: string;
     className?: string;
     methodName?: string;
-    parent?: TestDefinition;
     children?: TestDefinition[];
-    depth: number;
     file?: string;
     start?: Position;
     end?: Position;

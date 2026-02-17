@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from '../__tests__/utils';
-import { PHPUnitXML, type TestDefinition, TestParser, TestType } from '../index';
+import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser } from '../index';
+import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { PhpParserAstParser } from '../TestParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../TestParser/tree-sitter/TreeSitterAstParser';
 import { TestCollection } from './TestCollection';
 
 describe('TestCollection', () => {
     const phpUnitXML = new PHPUnitXML();
-    const testCollection = new TestCollection(phpUnitXML);
+    const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
+    const classHierarchy = new ClassHierarchy();
+    const testParser = new TestParser(phpUnitXML, astParser);
+    const testCollection = new TestCollection(phpUnitXML, testParser, classHierarchy);
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
@@ -21,17 +27,22 @@ describe('TestCollection', () => {
     ) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
+        const hierarchy = new ClassHierarchy();
         for (const [testsuite, files] of Object.entries(testsuites)) {
             const expected: TestDefinition[] = [];
             for (const uri of files as URI[]) {
-                const testParser = new TestParser(phpUnitXML);
-                testParser.on(TestType.method, (testDefinition) => expected.push(testDefinition));
-                testParser.on(TestType.class, (testDefinition) => expected.push(testDefinition));
-                testParser.on(TestType.namespace, (testDefinition) =>
-                    expected.push(testDefinition),
-                );
-
-                await testParser.parseFile(uri.fsPath, testsuite);
+                const astParser = new ChainAstParser([
+                    new TreeSitterAstParser(),
+                    new PhpParserAstParser(),
+                ]);
+                const testParser = new TestParser(phpUnitXML, astParser);
+                const result = await testParser.parseFile(uri.fsPath, testsuite);
+                if (result) {
+                    for (const cls of result.classes) {
+                        hierarchy.register(cls);
+                    }
+                    expected.push(...hierarchy.enrichTests(result.tests));
+                }
             }
             const actual: TestDefinition[] = [];
             const testsuiteTests = collection.items().get(testsuite);
@@ -43,6 +54,33 @@ describe('TestCollection', () => {
             expect(actual).toEqual(expected);
         }
     };
+
+    it('should own classHierarchy and clear on reset', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        // ClassHierarchy should have entries after parsing
+        expect(
+            classHierarchy.getClassesByUri(phpUnitProject('tests/AssertionsTest.php')).length,
+        ).toBeGreaterThan(0);
+
+        // reset should clear classHierarchy
+        collection.reset();
+        expect(classHierarchy.getClassesByUri(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
+            [],
+        );
+    });
+
+    it('classHierarchy should be owned by TestCollection, not TestParser', () => {
+        // TestParser should not expose classHierarchy
+        expect(testParser).not.toHaveProperty('classHierarchy');
+    });
 
     it('match testsuite directory', async () => {
         const collection = givenTestCollection(`

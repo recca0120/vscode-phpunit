@@ -2,8 +2,6 @@ import { stat } from 'node:fs/promises';
 import { Engine } from 'php-parser';
 import yargsParser from 'yargs-parser';
 
-export { escapeValue, parseTeamcity } from './ProblemMatcher/parseTeamcity';
-
 export const EOL = '\r\n';
 
 export const engine = new Engine({
@@ -64,9 +62,8 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
             (error as NodeJS.ErrnoException).code === 'ENOENT'
         ) {
             return false;
-        } else {
-            throw error;
         }
+        throw error;
     }
 }
 

@@ -3,8 +3,11 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { type TestDefinition, TestType } from '../types';
-import { ClassRegistry } from './ClassRegistry';
+import { ChainAstParser } from './ChainAstParser';
+import { ClassHierarchy } from './ClassHierarchy';
+import { PhpParserAstParser } from './php-parser/PhpParserAstParser';
 import { TestParser } from './TestParser';
+import { TreeSitterAstParser } from './tree-sitter/TreeSitterAstParser';
 import { initTreeSitter } from './tree-sitter/TreeSitterParser';
 
 export const parse = (buffer: Buffer | string, file: string) =>
@@ -30,7 +33,6 @@ describe('PHPUnitParser Test', () => {
                     id: 'namespace:Tests',
                     classFQN: 'Tests',
                     namespace: 'Tests',
-                    depth: 0,
                 }),
             );
         });
@@ -46,7 +48,6 @@ describe('PHPUnitParser Test', () => {
                     className: 'AssertionsTest',
                     start: { line: 9, character: 0 },
                     end: { line: 89, character: 1 },
-                    depth: 1,
                 }),
             );
         });
@@ -64,7 +65,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { group: ['integration'] },
                     start: { line: 16, character: 4 },
                     end: { line: 19, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -82,7 +82,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { depends: ['test_passed'], group: ['integration'] },
                     start: { line: 25, character: 4 },
                     end: { line: 28, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -99,7 +98,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'test_is_not_same',
                     start: { line: 30, character: 4 },
                     end: { line: 33, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -116,7 +114,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'test_risky',
                     start: { line: 35, character: 4 },
                     end: { line: 38, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -134,7 +131,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { group: ['integration'] },
                     start: { line: 44, character: 4 },
                     end: { line: 47, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -151,7 +147,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'test_skipped',
                     start: { line: 49, character: 4 },
                     end: { line: 52, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -168,7 +163,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'test_incomplete',
                     start: { line: 54, character: 4 },
                     end: { line: 57, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -186,7 +180,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
                     start: { line: 66, character: 4 },
                     end: { line: 69, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -204,7 +197,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { testdox: ['has an initial balance of zero'] },
                     start: { line: 85, character: 4 },
                     end: { line: 88, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -241,7 +233,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'test_static_public_fail',
                     start: { line: 9, character: 4 },
                     end: { line: 11, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -268,7 +259,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'property',
                     start: { line: 17, character: 4 },
                     end: { line: 20, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -291,7 +281,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'firstLeadingComments',
                     start: { line: 10, character: 4 },
                     end: { line: 13, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -314,7 +303,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'use_trait',
                     start: { line: 33, character: 4 },
                     end: { line: 36, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -337,7 +325,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { group: ['integration'] },
                     start: { line: 13, character: 0 },
                     end: { line: 61, character: 1 },
-                    depth: 1,
                 }),
             );
         });
@@ -354,7 +341,6 @@ describe('PHPUnitParser Test', () => {
                     methodName: 'hi',
                     start: { line: 16, character: 4 },
                     end: { line: 19, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -372,7 +358,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { dataProvider: ['additionProvider'] },
                     start: { line: 22, character: 4 },
                     end: { line: 25, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -390,7 +375,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { depends: ['testEmpty'] },
                     start: { line: 46, character: 4 },
                     end: { line: 53, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -408,7 +392,6 @@ describe('PHPUnitParser Test', () => {
                     annotations: { testdox: ['has an initial balance of zero'] },
                     start: { line: 57, character: 4 },
                     end: { line: 60, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -431,7 +414,6 @@ describe('PHPUnitParser Test', () => {
                     label: 'test_no_namespace',
                     start: { line: 7, character: 4 },
                     end: { line: 10, character: 5 },
-                    depth: 2,
                 }),
             );
         });
@@ -458,7 +440,6 @@ final class PDF_testerTest extends TestCase {
                 methodName: 'test_hello',
                 start: { line: 5, character: 4 },
                 end: { line: 7, character: 5 },
-                depth: 2,
             }),
         );
     });
@@ -492,7 +473,6 @@ final class ArrayConstTest extends TestCase {
                 methodName: 'test_hello',
                 start: { line: expect.any(Number), character: 4 },
                 end: { line: expect.any(Number), character: 5 },
-                depth: 2,
             }),
         );
     });
@@ -527,7 +507,6 @@ final class TestDoxTest extends TestCase {
                 annotations: { testdox: ['Do a test'] },
                 start: { line: expect.any(Number), character: expect.any(Number) },
                 end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
             }),
         );
     });
@@ -557,7 +536,6 @@ final class GroupTest extends TestCase {
                 className: 'GroupTest',
                 methodName: 'test_with_groups',
                 annotations: { group: ['integration', 'slow'] },
-                depth: 2,
             }),
         );
     });
@@ -586,7 +564,6 @@ final class GroupAttributeTest extends TestCase {
                 className: 'GroupAttributeTest',
                 methodName: 'test_with_group_attributes',
                 annotations: { group: ['plaid', 'api'] },
-                depth: 2,
             }),
         );
     });
@@ -670,22 +647,39 @@ class Php84SyntaxTest extends TestCase
         );
     });
 
-    describe('Inherited test methods with ClassRegistry', () => {
+    describe('Inherited test methods with ClassHierarchy', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
-            const registry = new ClassRegistry();
-            const allTests: TestDefinition[] = [];
             const phpUnitXML = new PHPUnitXML();
             phpUnitXML.setRoot(root);
+            const astParser = new ChainAstParser([
+                new TreeSitterAstParser(),
+                new PhpParserAstParser(),
+            ]);
+            const testParser = new TestParser(phpUnitXML, astParser);
+            const classHierarchy = new ClassHierarchy();
 
+            const allResults: TestDefinition[] = [];
             for (const { file, content } of files) {
-                const testParser = new TestParser(phpUnitXML, registry);
-                for (const type of Object.values(TestType).filter(
-                    (v) => typeof v === 'number',
-                ) as TestType[]) {
-                    testParser.on(type, (td: TestDefinition) => allTests.push(td));
+                const result = testParser.parse(content, file);
+                if (result) {
+                    for (const cls of result.classes) {
+                        classHierarchy.register(cls);
+                    }
+                    allResults.push(...result.tests);
                 }
-                testParser.parse(content, file);
             }
+
+            const enriched = classHierarchy.enrichTests(allResults);
+            const allTests: TestDefinition[] = [];
+            const collect = (defs: TestDefinition[]) => {
+                for (const def of defs) {
+                    allTests.push(def);
+                    if (def.children && def.children.length > 0) {
+                        collect(def.children);
+                    }
+                }
+            };
+            collect(enriched);
 
             return allTests;
         };

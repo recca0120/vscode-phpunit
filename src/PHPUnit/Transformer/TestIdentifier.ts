@@ -1,7 +1,7 @@
-import type { TestResultIdentify } from '../ProblemMatcher';
+import type { TestResultIdentify } from '../TestOutput';
 import { type TestDefinition, TestType } from '../types';
 
-export abstract class Transformer {
+export abstract class TestIdentifier {
     static generateSearchText(input: string) {
         return input.replace(/([[\]()*+$!\\])/g, '\\$1').replace(/@/g, '[\\W]');
     }

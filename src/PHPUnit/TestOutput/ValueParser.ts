@@ -5,10 +5,10 @@ export interface IParser<T> {
     parse: (text: string) => T;
 }
 
-export abstract class ValueParser<T> implements IParser<T> {
+export class ValueParser<T> implements IParser<T> {
     private pattern = new RegExp(`^${this.name}:\\s+(?<${this.name}>.+)`, 'i');
 
-    protected constructor(
+    constructor(
         private name: string,
         private event: TeamcityEvent,
     ) {}

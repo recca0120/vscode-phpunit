@@ -1,7 +1,7 @@
 import type { SpawnOptions } from 'node:child_process';
 import parseArgsStringToArgv from 'string-argv';
 import { Configuration, type IConfiguration } from '../Configuration';
-import type { TestResult } from '../ProblemMatcher';
+import type { TestResult } from '../TestOutput';
 import { cloneInstance } from '../utils';
 import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
 import { type Path, PathReplacer } from './PathReplacer';
@@ -78,7 +78,7 @@ export class ProcessBuilder {
     }
 
     private create() {
-        let command = this.getCommand();
+        let command = this.getConfigString('command');
         const isRemoteCommand = isSSH(command) || isShellCommand(command);
         const args = this.getArguments();
 
@@ -121,9 +121,11 @@ export class ProcessBuilder {
 
     private getArguments() {
         return {
-            php: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getPhp())),
+            php: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getConfigString('php'))),
             phpargs: this.getPhpArgs(),
-            phpunit: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getPhpUnit())),
+            phpunit: this.quoteIfNeeded(
+                this.pathReplacer.toRemote(this.getConfigString('phpunit')),
+            ),
             phpunitargs: this.getPhpUnitArgs(),
         };
     }
@@ -136,28 +138,20 @@ export class ProcessBuilder {
         };
     }
 
-    private getCommand() {
-        return this.getConfigString('command');
-    }
-
-    private getPhp() {
-        return this.getConfigString('php');
-    }
-
     private getPhpArgs() {
         return this.xdebug?.getPhpArgs().join(' ') ?? '';
     }
 
-    private getPhpUnit() {
-        return this.getConfigString('phpunit');
-    }
-
     private getConfigString(key: string) {
-        return (this.configuration.get(key) as string) ?? '';
+        return String(this.configuration.get(key) ?? '');
     }
 
     private quoteIfNeeded(value: string) {
-        if (value?.includes(' ') && !/^["']/.test(value) && /[/\\]/.test(value)) {
+        const hasSpaces = value?.includes(' ');
+        const isUnquoted = !/^["']/.test(value);
+        const isPath = /[/\\]/.test(value);
+
+        if (hasSpaces && isUnquoted && isPath) {
             return `"${value}"`;
         }
         return value;
@@ -184,7 +178,10 @@ export class ProcessBuilder {
     }
 
     private isParaTest() {
-        return /paratest/.test(this.getCommand()) || /paratest/.test(this.getPhpUnit());
+        return (
+            /paratest/.test(this.getConfigString('command')) ||
+            /paratest/.test(this.getConfigString('phpunit'))
+        );
     }
 
     private resolvePathReplacer(
