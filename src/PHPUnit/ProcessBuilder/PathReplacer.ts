@@ -21,13 +21,14 @@ export class PathReplacer {
         this.pathVariables.set(VAR_PWD, this.cwd);
         this.pathVariables.set(VAR_WORKSPACE_FOLDER, this.cwd);
         for (const [key, value] of Object.entries(paths ?? {})) {
-            if (this.pathVariables.has(key)) {
-                const pathValue = this.pathVariables.get(key);
-                if (pathValue) {
-                    this.pathLookup.set(pathValue, value);
-                }
-            } else {
+            if (!this.pathVariables.has(key)) {
                 this.pathLookup.set(key, value);
+                continue;
+            }
+
+            const pathValue = this.pathVariables.get(key);
+            if (pathValue) {
+                this.pathLookup.set(pathValue, value);
             }
         }
     }
@@ -43,23 +44,25 @@ export class PathReplacer {
     toLocal(path: string) {
         return this.removePhpVfsComposer(path).replace(
             /(php_qn:\/\/|)([^:]+)/,
-            (_, prefix, path) => {
-                path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
-                    return this.allowReplacement(localPath)
-                        ? currentPath.replace(
-                              new RegExp(
-                                  remotePath === '.' ? '.[\\\\/]/' : escapeRegExp(remotePath),
-                                  'g',
-                              ),
-                              localPath,
-                          )
-                        : currentPath;
+            (_, prefix, matched) => {
+                let result = this.replacePaths(matched, (currentPath, localPath, remotePath) => {
+                    if (!this.allowReplacement(localPath)) {
+                        return currentPath;
+                    }
+
+                    return currentPath.replace(
+                        new RegExp(
+                            remotePath === '.' ? '.[\\\\/]/' : escapeRegExp(remotePath),
+                            'g',
+                        ),
+                        localPath,
+                    );
                 });
 
-                path = this.replaceRelative(path);
-                path = this.windowsPath(path);
+                result = this.replaceRelative(result);
+                result = this.windowsPath(result);
 
-                return `${prefix}${path}`;
+                return `${prefix}${result}`;
             },
         );
     }

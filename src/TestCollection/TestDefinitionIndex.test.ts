@@ -8,7 +8,7 @@ function createTestItem(id: string, tags: { id: string }[] = []): TestItem {
 }
 
 function createTestDef(type: TestType): TestDefinition {
-    return { type, id: 'test', label: 'test', depth: 0 };
+    return { type, id: 'test', label: 'test' };
 }
 
 describe('TestDefinitionIndex', () => {

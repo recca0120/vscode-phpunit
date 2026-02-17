@@ -116,23 +116,14 @@ export class PHPUnitXML {
                     { tag: 'exclude', name, value: this.resolveToRoot(root, text) } as TestSuite,
                 ];
             }
-            // <exclude> with child <directory>/<file> elements
-            const results: TestSuite[] = [];
-            for (const child of node.querySelectorAll('directory')) {
-                results.push({
+
+            return ['directory', 'file'].flatMap((type) =>
+                node.querySelectorAll(type).map((child) => ({
                     tag: 'exclude',
                     name,
                     value: this.resolveToRoot(root, child.getText()),
-                });
-            }
-            for (const child of node.querySelectorAll('file')) {
-                results.push({
-                    tag: 'exclude',
-                    name,
-                    value: this.resolveToRoot(root, child.getText()),
-                });
-            }
-            return results;
+                })),
+            );
         };
 
         const rawTestSuites = this.getDirectoriesAndFiles<TestSuite | TestSuite[]>(
@@ -216,17 +207,13 @@ export class PHPUnitXML {
             return (
                 this.element
                     ?.querySelectorAll(selector)
-                    .reduce((results: T[], parent: XmlElement) => {
-                        for (const [type, callback] of Object.entries(callbacks)) {
-                            const temp = parent
+                    .flatMap((parent) =>
+                        Object.entries(callbacks).flatMap(([type, callback]) =>
+                            parent
                                 .querySelectorAll(type)
-                                .map((node) => callback(type, node, parent));
-
-                            results.push(...temp);
-                        }
-
-                        return results;
-                    }, []) ?? []
+                                .map((node) => callback(type, node, parent)),
+                        ),
+                    ) ?? []
             );
         });
     }

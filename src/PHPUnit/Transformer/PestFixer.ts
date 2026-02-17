@@ -1,11 +1,11 @@
-import type { TestFailed, TestIgnored, TestResult } from '../ProblemMatcher';
-import { getPrevTestResult } from './utils';
+import type { TestFailed, TestIgnored } from '../TestOutput';
+import type { TestResultCache } from '../TestOutput/TestResultCache';
 
 export { PestV1Fixer } from './PestV1Fixer';
 export { PestV2Fixer } from './PestV2Fixer';
 
 export const PestFixer = {
-    fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
+    fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {
         if (testResult.id) {
             return testResult;
         }
@@ -23,13 +23,11 @@ export const PestFixer = {
         }
 
         const pattern = /^(pest_qn|file):\/\//;
-        const prevTestResult = getPrevTestResult(pattern, cache, testResult);
+        const prevTestResult = cache.findByPattern(pattern, testResult);
         if (prevTestResult) {
             testResult.id = [prevTestResult.locationHint?.replace(pattern, ''), testResult.name]
                 .filter((v) => !!v)
                 .join('::');
-
-            return testResult;
         }
 
         return testResult;

@@ -1,7 +1,22 @@
+import { copyFileSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
+
+// Copy tree-sitter WASM files to dist/
+mkdirSync(join(__dirname, 'dist'), { recursive: true });
+copyFileSync(
+    join(__dirname, 'node_modules', '@vscode', 'tree-sitter-wasm', 'wasm', 'tree-sitter.wasm'),
+    join(__dirname, 'dist', 'tree-sitter.wasm'),
+);
+copyFileSync(
+    join(__dirname, 'node_modules', '@vscode', 'tree-sitter-wasm', 'wasm', 'tree-sitter-php.wasm'),
+    join(__dirname, 'dist', 'tree-sitter-php.wasm'),
+);
 
 const esbuildProblemMatcherPlugin = {
     name: 'esbuild-problem-matcher',

@@ -1,4 +1,4 @@
-import { Transformer } from '../Transformer';
+import { TestIdentifier } from '../Transformer';
 import { type TestDefinition, TestType } from '../types';
 
 abstract class FilterStrategy {
@@ -13,6 +13,10 @@ abstract class FilterStrategy {
 
     protected parseFilter(filter: string) {
         return `--filter="${filter}(( with (data set )?.*)?)?$"`;
+    }
+
+    protected joinFilters(...filters: (string | undefined)[]): string {
+        return filters.filter((v) => !!v).join(' ');
     }
 
     protected quoteIfSpaces(value: string | undefined) {
@@ -37,20 +41,19 @@ class NamespaceFilterStrategy extends FilterStrategy {
 
 class ClassFilterStrategy extends FilterStrategy {
     getFilter() {
-        return [this.getGroupFilter(), this.quoteIfSpaces(this.testDefinition.file)]
-            .filter((value) => !!value)
-            .join(' ');
+        return this.joinFilters(
+            this.getGroupFilter(),
+            this.quoteIfSpaces(this.testDefinition.file),
+        );
     }
 }
 
 class DescribeFilterStrategy extends FilterStrategy {
     getFilter() {
-        return [
+        return this.joinFilters(
             this.getDependsFilter(),
             this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
-        ]
-            .filter((value) => !!value)
-            .join(' ');
+        );
     }
 
     protected getDependsFilter() {
@@ -63,7 +66,7 @@ class DescribeFilterStrategy extends FilterStrategy {
 
     protected getMethodNamePattern() {
         const methodName = this.testDefinition.methodName ?? '';
-        return `${Transformer.generateSearchText(methodName)}.*`;
+        return `${TestIdentifier.generateSearchText(methodName)}.*`;
     }
 }
 
@@ -78,7 +81,7 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
 
     protected getMethodNamePattern() {
         const methodName = this.testDefinition.methodName ?? '';
-        return Transformer.generateSearchText(methodName);
+        return TestIdentifier.generateSearchText(methodName);
     }
 }
 

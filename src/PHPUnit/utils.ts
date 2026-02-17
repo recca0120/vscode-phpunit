@@ -1,19 +1,7 @@
 import { stat } from 'node:fs/promises';
-import { Engine } from 'php-parser';
 import yargsParser from 'yargs-parser';
 
-export { escapeValue, parseTeamcity } from './ProblemMatcher/parseTeamcity';
-
 export const EOL = '\r\n';
-
-export const engine = new Engine({
-    ast: { withPositions: true, withSource: true },
-    parser: { extractDoc: true, suppressErrors: false, version: 900 },
-    lexer: {
-        all_tokens: true,
-        short_tags: true,
-    },
-});
 
 export const parseValue = (key: string, value: string | boolean | string[]): string[] => {
     if (Array.isArray(value)) {
@@ -64,9 +52,8 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
             (error as NodeJS.ErrnoException).code === 'ENOENT'
         ) {
             return false;
-        } else {
-            throw error;
         }
+        throw error;
     }
 }
 
@@ -101,6 +88,12 @@ export const titleCase = (str: string) =>
             })
             .trim(),
     );
+
+export const splitFQN = (fqn: string): { namespace: string; className: string } => {
+    const parts = fqn.split('\\');
+    const className = parts.pop() ?? '';
+    return { namespace: parts.join('\\'), className };
+};
 
 export const cloneInstance = <T extends object>(obj: T): T => {
     const clone = Object.create(Object.getPrototypeOf(obj));

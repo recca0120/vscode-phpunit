@@ -1,9 +1,8 @@
 import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
-import { type PHPUnitXML, type TestDefinition, TestParser, type TestSuite } from '../index';
-import { ClassRegistry } from '../TestParser/ClassRegistry';
-import { TestDefinitionCollector } from './TestDefinitionCollector';
+import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import type { ClassHierarchy } from '../TestParser/ClassHierarchy';
 
 export interface File<T> {
     testsuite: string;
@@ -11,16 +10,34 @@ export interface File<T> {
     tests: T[];
 }
 
+export interface TestCollectionCallbacks {
+    onTestsParsed?: (uri: URI, tests: TestDefinition[]) => void;
+    onFileDeleted?: (file: File<TestDefinition>) => void;
+    onReset?: () => void;
+}
+
 export class TestCollection {
     private suites = new Map<string, Map<string, TestDefinition[]>>();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
     private fileIndex = new Map<string, string>();
-    private classRegistry = new ClassRegistry();
+    private parseQueue: Promise<void> = Promise.resolve();
+    private callbacks: TestCollectionCallbacks = {};
 
-    constructor(protected phpUnitXML: PHPUnitXML) {}
+    constructor(
+        private phpUnitXML: PHPUnitXML,
+        private testParser: TestParser,
+        private classHierarchy: ClassHierarchy,
+        callbacks?: TestCollectionCallbacks,
+    ) {
+        this.callbacks = callbacks ?? {};
+    }
 
     get size() {
         return this.suites.size;
+    }
+
+    getPhpUnitXML() {
+        return this.phpUnitXML;
     }
 
     getRootUri() {
@@ -28,13 +45,15 @@ export class TestCollection {
     }
 
     items() {
+        return this.suites;
+    }
+
+    initSuites() {
         for (const suite of this.phpUnitXML.getTestSuites()) {
             if (!this.suites.has(suite.name)) {
                 this.suites.set(suite.name, new Map<string, TestDefinition[]>());
             }
         }
-
-        return this.suites;
     }
 
     clearMatcherCache() {
@@ -46,12 +65,21 @@ export class TestCollection {
     }
 
     async change(uri: URI) {
+        return new Promise<this>((resolve, reject) => {
+            this.parseQueue = this.parseQueue.then(
+                () => this.doChange(uri).then(resolve, reject),
+                () => this.doChange(uri).then(resolve, reject),
+            );
+        });
+    }
+
+    private async doChange(uri: URI) {
         const testsuite = this.parseTestsuite(uri);
         if (!testsuite) {
             return this;
         }
 
-        this.items();
+        this.initSuites();
         const testDefinitions = await this.parseTests(uri, testsuite);
         if (testDefinitions.length === 0) {
             this.delete(uri);
@@ -73,11 +101,11 @@ export class TestCollection {
     }
 
     private getDependentClasses(fsPath: string) {
-        return this.classRegistry
+        return this.classHierarchy
             .getClassesByUri(fsPath)
             .flatMap((classInfo) => [
-                ...this.classRegistry.getChildClasses(classInfo.classFQN),
-                ...this.classRegistry.getTraitUsers(classInfo.classFQN),
+                ...this.classHierarchy.getChildClasses(classInfo.classFQN),
+                ...this.classHierarchy.getTraitUsers(classInfo.classFQN),
             ])
             .filter((child) => child.uri !== fsPath);
     }
@@ -109,13 +137,14 @@ export class TestCollection {
     }
 
     reset() {
+        this.callbacks.onReset?.();
         for (const file of this.gatherFiles()) {
             this.deleteFile(file);
         }
         this.suites.clear();
         this.matcherCache.clear();
         this.fileIndex.clear();
-        this.classRegistry.clear();
+        this.classHierarchy.clear();
 
         return this;
     }
@@ -135,31 +164,38 @@ export class TestCollection {
         return { testsuite, uri, tests };
     }
 
-    protected async parseTests(uri: URI, testsuite: string) {
-        const { testParser, testDefinitionBuilder } = this.createTestParser();
-        await testParser.parseFile(uri.fsPath, testsuite);
-
-        return testDefinitionBuilder.get();
+    private parseTests(uri: URI, testsuite: string): Promise<TestDefinition[]> {
+        return this.doParse(uri, testsuite);
     }
 
-    protected createTestParser() {
-        const testParser = new TestParser(this.phpUnitXML, this.classRegistry);
-        const testDefinitionBuilder = new TestDefinitionCollector(testParser);
-
-        return { testParser, testDefinitionBuilder };
-    }
-
-    protected deleteFile(file: File<TestDefinition>) {
-        this.fileIndex.delete(file.uri.toString());
-        return this.items().get(file.testsuite)?.delete(file.uri.toString());
-    }
-
-    protected *gatherFiles() {
+    *gatherFiles() {
         for (const [testsuite, files] of this.items()) {
             for (const [uriStr, tests] of files) {
                 yield { testsuite, uri: URI.parse(uriStr), tests };
             }
         }
+    }
+
+    private async doParse(uri: URI, testsuite: string) {
+        const result = await this.testParser.parseFile(uri.fsPath, testsuite);
+        if (!result) {
+            return [];
+        }
+
+        for (const cls of result.classes) {
+            this.classHierarchy.register(cls);
+        }
+
+        const enriched = this.classHierarchy.enrichTests(result.tests);
+        this.callbacks.onTestsParsed?.(uri, enriched);
+
+        return enriched;
+    }
+
+    private deleteFile(file: File<TestDefinition>) {
+        this.callbacks.onFileDeleted?.(file);
+        this.fileIndex.delete(file.uri.toString());
+        return this.items().get(file.testsuite)?.delete(file.uri.toString());
     }
 
     private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {

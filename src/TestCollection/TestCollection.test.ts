@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { PHPUnitXML } from '../PHPUnit';
+import { ChainAstParser, PHPUnitXML, TestParser } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
+import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
 import { TestCollection } from './TestCollection';
 
 describe('Extension TestCollection', () => {
@@ -14,7 +17,10 @@ describe('Extension TestCollection', () => {
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
 
-        return new TestCollection(ctrl, phpUnitXML);
+        const classHierarchy = new ClassHierarchy();
+        const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
+        const testParser = new TestParser(phpUnitXML, astParser);
+        return new TestCollection(ctrl, phpUnitXML, testParser, classHierarchy);
     };
 
     const toTree = (items: import('vscode').TestItemCollection) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TeamcityEvent, type TestFailed } from './ProblemMatcher';
+import { TeamcityEvent, type TestFailed } from './TestOutput';
 import {
     createTestRunnerEventProxy,
     TestRunnerEvent,

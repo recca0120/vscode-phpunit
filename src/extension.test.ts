@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type GlobOptions, glob } from 'glob';
 import * as semver from 'semver';
-import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
     CancellationTokenSource,
     commands,
@@ -28,6 +28,7 @@ import {
     detectPhpUnitStubs,
     phpUnitProject,
 } from './PHPUnit/__tests__/utils';
+import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
 
 vi.mock('child_process', async () => {
     const actual = await vi.importActual<typeof import('child_process')>('child_process');
@@ -128,6 +129,8 @@ const resolveExpected = <T>(version: string, map: [string, T][], fallback: T): T
 };
 
 describe('Extension Test', () => {
+    beforeAll(async () => initTreeSitter());
+
     const phpBinary = 'php';
 
     const filterPattern = (method: string) =>

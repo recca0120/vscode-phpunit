@@ -30,6 +30,7 @@ export class TestRunnerProcess {
     run() {
         return new Promise((resolve) => {
             this.execute();
+            this.emitter.once('abort', () => resolve(true));
             this.child?.on('error', () => resolve(true));
             this.child?.on('close', () => resolve(true));
         });
@@ -63,14 +64,15 @@ export class TestRunnerProcess {
     private processStream(data: string, stream: 'stdout' | 'stderr') {
         const out = data.toString();
         this.output += out;
+
+        const buffer = (stream === 'stdout' ? this.stdoutBuffer : this.stderrBuffer) + out;
+        const lines = this.flushCompleteLines(buffer, 1);
+        const remaining = lines.shift() ?? '';
+
         if (stream === 'stdout') {
-            this.stdoutBuffer += out;
-            const lines = this.flushCompleteLines(this.stdoutBuffer, 1);
-            this.stdoutBuffer = lines.shift() ?? '';
+            this.stdoutBuffer = remaining;
         } else {
-            this.stderrBuffer += out;
-            const lines = this.flushCompleteLines(this.stderrBuffer, 1);
-            this.stderrBuffer = lines.shift() ?? '';
+            this.stderrBuffer = remaining;
         }
     }
 

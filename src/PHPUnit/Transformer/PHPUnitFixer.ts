@@ -1,14 +1,14 @@
-import type { TestFailed, TestIgnored, TestResult } from '../ProblemMatcher';
-import { TransformerFactory } from './TransformerFactory';
-import { getPrevTestResult } from './utils';
+import type { TestFailed, TestIgnored } from '../TestOutput';
+import type { TestResultCache } from '../TestOutput/TestResultCache';
+import { TestIdentifierFactory } from './TestIdentifierFactory';
 
 export const PHPUnitFixer = {
-    fixNoTestStarted(cache: Map<string, TestResult>, testResult: TestFailed | TestIgnored) {
+    fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {
         if (testResult.id) {
             return testResult;
         }
 
-        const prevTestResult = getPrevTestResult(/^(php_qn):\/\//, cache, testResult);
+        const prevTestResult = cache.findByPattern(/^(php_qn):\/\//, testResult);
         if (!prevTestResult) {
             return testResult;
         }
@@ -21,8 +21,8 @@ export const PHPUnitFixer = {
                 .join('::');
         }
 
-        const transformer = TransformerFactory.create(testResult.locationHint);
-        const { id, file } = transformer.fromLocationHit(testResult.locationHint, testResult.name);
+        const transformer = TestIdentifierFactory.create(testResult.locationHint);
+        const { id, file } = transformer.fromLocationHint(testResult.locationHint, testResult.name);
         testResult.id = id;
         testResult.file = file;
 

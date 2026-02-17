@@ -9,7 +9,6 @@ describe('FilterStrategyFactory', () => {
             id: 'ns:Recca0120\\VSCode',
             label: 'Recca0120\\VSCode',
             namespace: 'Recca0120\\VSCode',
-            depth: 1,
         };
 
         const filter = FilterStrategyFactory.create(testDef).getFilter();
@@ -24,7 +23,6 @@ describe('FilterStrategyFactory', () => {
             id: 'testsuite:Unit',
             label: 'Unit',
             testsuite: 'Unit',
-            depth: 1,
         };
 
         const filter = FilterStrategyFactory.create(testDef).getFilter();
@@ -38,7 +36,6 @@ describe('FilterStrategyFactory', () => {
             id: 'Recca0120\\VSCode\\Tests\\ExampleTest',
             label: 'ExampleTest',
             classFQN: 'Recca0120\\VSCode\\Tests\\ExampleTest',
-            depth: 2,
             file: '/path/to/ExampleTest.php',
         };
 
@@ -55,7 +52,6 @@ describe('FilterStrategyFactory', () => {
             label: 'test_passed',
             classFQN: 'Recca0120\\VSCode\\Tests\\ExampleTest',
             methodName: 'test_passed',
-            depth: 3,
             file: '/path/to/ExampleTest.php',
         };
 

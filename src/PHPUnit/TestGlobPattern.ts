@@ -27,27 +27,22 @@ export class TestGlobPattern {
     }
 
     toGlobPattern() {
-        const arrayUnique = (items: (string | undefined)[]) => Array.from(new Set(items));
-        const dirs = arrayUnique(
-            this.items.map((item) => {
-                return /^\*/.test(item) ? undefined : item.substring(0, item.indexOf('/'));
-            }),
+        const hasWildcard = this.items.some((item) => /^\*/.test(item));
+        const dirs = Array.from(
+            new Set(
+                this.items
+                    .filter((item) => !/^\*/.test(item))
+                    .map((item) => item.substring(0, item.indexOf('/'))),
+            ),
         );
 
-        const legalDirs = dirs.filter((value) => !!value);
-        const isSingle = dirs.length === 1 && legalDirs.length === 1;
-        if (!isSingle) {
+        if (hasWildcard || dirs.length !== 1 || !dirs[0]) {
             return { uri: URI.file(this.root), pattern: `{${this.items}}` };
         }
 
-        const dir = legalDirs[0];
-        if (!dir) {
-            return { uri: URI.file(this.root), pattern: `{${this.items}}` };
-        }
-
+        const dir = dirs[0];
         const items = this.items.map((item) => item.replace(new RegExp(`^${dir}[\\/]?`), ''));
-        const pattern = `{${items}}`;
 
-        return { uri: URI.file(join(this.root, dir)), pattern };
+        return { uri: URI.file(join(this.root, dir)), pattern: `{${items}}` };
     }
 }

@@ -12,21 +12,31 @@ import {
     type File,
     PHPUnitXML,
     type TestDefinition,
+    TestParser,
     TestType,
 } from '../PHPUnit';
+import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { TYPES } from '../types';
 import { TestDefinitionIndex } from './TestDefinitionIndex';
 import { TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
-export class TestCollection extends BaseTestCollection {
+export class TestCollection {
     private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
+    private readonly base: BaseTestCollection;
+
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
+        @inject(TestParser) testParser: TestParser,
+        @inject(ClassHierarchy) classHierarchy: ClassHierarchy,
     ) {
-        super(phpUnitXML);
+        this.base = new BaseTestCollection(phpUnitXML, testParser, classHierarchy, {
+            onTestsParsed: (uri, tests) => this.handleTestsParsed(uri, tests),
+            onFileDeleted: (file) => this.handleFileDeleted(file),
+            onReset: () => this.handleReset(),
+        });
     }
 
     get rootItems(): TestItemCollection {
@@ -79,59 +89,109 @@ export class TestCollection extends BaseTestCollection {
     }
 
     getTrackedFiles() {
-        return [...this.gatherFiles()];
+        return [...this.base.gatherFiles()];
+    }
+
+    // Delegate to base
+    get size() {
+        return this.base.size;
+    }
+
+    getRootUri() {
+        return this.base.getRootUri();
+    }
+
+    items() {
+        return this.base.items();
+    }
+
+    clearMatcherCache() {
+        this.base.clearMatcherCache();
+    }
+
+    async add(uri: URI) {
+        await this.base.add(uri);
+        return this;
+    }
+
+    async change(uri: URI) {
+        await this.base.change(uri);
+        return this;
+    }
+
+    get(uri: URI) {
+        return this.base.get(uri);
+    }
+
+    has(uri: URI) {
+        return this.base.has(uri);
+    }
+
+    delete(uri: URI) {
+        return this.base.delete(uri);
+    }
+
+    findFile(uri: URI) {
+        return this.base.findFile(uri);
     }
 
     reset() {
-        for (const [testItem, testDef] of this.allDefinitions()) {
-            if (testDef.type === TestType.class) {
-                testItem.parent
-                    ? testItem.parent.children.delete(testItem.id)
-                    : this.rootItems.delete(testItem.id);
-            }
-        }
-        this.index.clear();
-
-        return super.reset();
+        this.base.reset();
+        return this;
     }
 
-    protected async parseTests(uri: URI, testsuite: string) {
-        const { testParser, testDefinitionBuilder } = this.createTestParser();
-        const testHierarchyBuilder = new TestHierarchyBuilder(
-            this.ctrl,
-            testParser,
-            this.rootItems,
-            this.phpUnitXML,
-        );
-        await testParser.parseFile(uri.fsPath, testsuite);
-
+    private handleTestsParsed(uri: URI, tests: TestDefinition[]) {
         this.removeTestItems(uri);
         this.index.deleteByUri(uri.toString());
-        for (const [testItem, testDef] of testHierarchyBuilder.get()) {
+
+        const builder = new TestHierarchyBuilder(
+            this.ctrl,
+            this.rootItems,
+            this.base.getPhpUnitXML(),
+        );
+        builder.build(tests);
+        for (const [testItem, testDef] of builder.get()) {
             this.index.set(uri.toString(), testItem, testDef);
         }
-
-        return testDefinitionBuilder.get();
     }
 
-    protected deleteFile(file: File<TestDefinition>) {
+    private handleFileDeleted(file: File<TestDefinition>) {
         this.removeTestItems(file.uri);
         this.index.deleteByUri(file.uri.toString());
+    }
 
-        return super.deleteFile(file);
+    private handleReset() {
+        for (const [testItem, testDef] of this.allDefinitions()) {
+            if (testDef.type !== TestType.class) {
+                continue;
+            }
+
+            if (!testItem.parent) {
+                this.rootItems.delete(testItem.id);
+                continue;
+            }
+
+            testItem.parent.children.delete(testItem.id);
+        }
+        this.index.clear();
     }
 
     private inRangeTestItems(uri: URI, position: Position) {
         const items: TestItem[] = [];
         for (const [testItem, testDef] of this.index.getDefinitionsByUri(uri.toString())) {
-            if (
-                (testDef.type === TestType.describe || testDef.type === TestType.method) &&
-                testItem.range &&
-                position.line >= testItem.range.start.line &&
-                position.line <= testItem.range.end.line
-            ) {
-                items.push(testItem);
+            if (testDef.type !== TestType.describe && testDef.type !== TestType.method) {
+                continue;
             }
+
+            if (
+                !testItem.range ||
+                position.line < testItem.range.start.line ||
+                position.line > testItem.range.end.line
+            ) {
+                continue;
+            }
+
+            items.push(testItem);
         }
         items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
 
@@ -170,7 +230,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     private *allDefinitions(): IterableIterator<[TestItem, TestDefinition]> {
-        for (const file of this.gatherFiles()) {
+        for (const file of this.base.gatherFiles()) {
             yield* this.index.getDefinitionsByUri(file.uri.toString());
         }
     }

@@ -33,18 +33,18 @@ export class TestWatchManager {
                 this.isWatchingAll = false;
                 this.watchAllProfile = undefined;
             });
-        } else {
-            for (const testItem of request.include) {
-                this.watchingTests.set(testItem, request.profile);
-            }
-            cancellation.onCancellationRequested(() => {
-                if (request.include) {
-                    for (const testItem of request.include) {
-                        this.watchingTests.delete(testItem);
-                    }
-                }
-            });
+            return;
         }
+
+        for (const testItem of request.include) {
+            this.watchingTests.set(testItem, request.profile);
+        }
+        const include = request.include;
+        cancellation.onCancellationRequested(() => {
+            for (const testItem of include) {
+                this.watchingTests.delete(testItem);
+            }
+        });
     }
 
     setupFileChangeListener(): void {

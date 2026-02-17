@@ -1,4 +1,4 @@
-import type { TestResult } from '../ProblemMatcher';
+import type { TestResult } from '../TestOutput';
 import { capitalize } from '../utils';
 
 const Str = {

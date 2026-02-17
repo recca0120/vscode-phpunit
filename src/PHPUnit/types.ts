@@ -1,3 +1,6 @@
+export const PHPUNIT_TESTCASE_FQN = 'PHPUnit\\Framework\\TestCase';
+export const PEST_PREFIX = 'P\\';
+
 export type Position = {
     character: number;
     line: number;
@@ -26,9 +29,7 @@ export type TestDefinition = {
     namespace?: string;
     className?: string;
     methodName?: string;
-    parent?: TestDefinition;
     children?: TestDefinition[];
-    depth: number;
     file?: string;
     start?: Position;
     end?: Position;

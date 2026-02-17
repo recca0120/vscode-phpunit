@@ -7,13 +7,7 @@ import {
     TestTag,
     Uri,
 } from 'vscode';
-import {
-    type PHPUnitXML,
-    type TestDefinition,
-    type TestParser,
-    TestType,
-    TransformerFactory,
-} from '../PHPUnit';
+import { type PHPUnitXML, type TestDefinition, TestIdentifierFactory, TestType } from '../PHPUnit';
 
 export class TestHierarchyBuilder {
     private icons = {
@@ -23,74 +17,134 @@ export class TestHierarchyBuilder {
         [TestType.method]: '$(symbol-method)',
         [TestType.describe]: '$(symbol-class)',
     };
-    private ancestorDepth = 1;
-    private readonly ancestors: [{ item: TestItem; type: TestType; children: TestItem[] }] = [
-        { item: this.createRootItem(), type: TestType.namespace, children: [] },
-    ];
     private testData = new Map<TestItem, TestDefinition>();
     private multiSuite: boolean;
 
     constructor(
         private ctrl: TestController,
-        private testParser: TestParser,
         private rootItems: TestItemCollection = ctrl.items,
         phpUnitXML?: PHPUnitXML,
     ) {
         this.multiSuite = (phpUnitXML?.getTestSuiteNames().length ?? 0) > 1;
-        this.onInit();
     }
 
-    onInit() {
-        for (const type of [TestType.method, TestType.describe, TestType.class] as const) {
-            this.testParser.on(type, (testDefinition, index) => {
-                this.ascend(this.ancestorDepth + testDefinition.depth);
-                this.addTestItem(
-                    testDefinition,
-                    type === TestType.method ? `${index}` : testDefinition.id,
-                );
-            });
+    build(tests: TestDefinition[]) {
+        for (const test of tests) {
+            this.processNode(test, this.rootItems);
         }
-        this.testParser.on(TestType.namespace, (testDefinition) => {
-            if (this.multiSuite) {
-                this.addTestSuiteRoot(testDefinition);
-            } else {
-                this.ascend(1);
-                this.addNamespaceTestItems(testDefinition);
-            }
-        });
     }
 
     get() {
-        this.ascend(0);
-
         return this.testData;
     }
 
-    private addTestSuiteRoot(testDefinition: TestDefinition) {
-        const suiteName = testDefinition.testsuite;
-        if (!suiteName) {
+    private processNode(test: TestDefinition, parentChildren: TestItemCollection) {
+        switch (test.type) {
+            case TestType.namespace:
+                this.processNamespace(test, parentChildren);
+                break;
+            case TestType.class:
+            case TestType.describe:
+                this.processClassOrDescribe(test, parentChildren);
+                break;
+            case TestType.method:
+                this.processMethod(test, parentChildren);
+                break;
+        }
+    }
+
+    private processNamespace(test: TestDefinition, parentChildren: TestItemCollection) {
+        const targetChildren = this.multiSuite
+            ? this.addTestSuiteRoot(test, parentChildren)
+            : this.addNamespaceTestItems(test, parentChildren);
+
+        if (!test.children) {
             return;
         }
 
-        this.ascend(1);
-
-        const suiteId = `testsuite:${suiteName}`;
-        const testItem = this.rootItems.get(suiteId) ?? this.createSuiteItem(suiteId, suiteName);
-
-        const parent = this.ancestors[this.ancestors.length - 1];
-        parent.children.push(testItem);
-        this.ancestors.push({ item: testItem, type: TestType.testsuite, children: [] });
-        this.ancestorDepth = this.ancestors.length - 1;
+        for (const child of test.children) {
+            this.processNode(child, targetChildren);
+        }
     }
 
-    private createSuiteItem(suiteId: string, suiteName: string): TestItem {
-        const suiteDefinition = {
+    private processClassOrDescribe(test: TestDefinition, parentChildren: TestItemCollection) {
+        const testItem = this.createTestItem(test, test.id);
+        parentChildren.add(testItem);
+        this.testData.set(testItem, test);
+
+        if (!test.children) {
+            return;
+        }
+
+        const children: TestItem[] = [];
+        for (const child of test.children) {
+            this.processChildIntoList(child, children, testItem);
+        }
+        testItem.children.replace(children);
+    }
+
+    private processChildIntoList(test: TestDefinition, siblings: TestItem[], parentItem: TestItem) {
+        if (test.type === TestType.method) {
+            const idx = siblings.length;
+            const testItem = this.createTestItem(test, `${idx}`);
+            this.inheritParentTags(testItem, parentItem);
+            siblings.push(testItem);
+            this.testData.set(testItem, test);
+            return;
+        }
+
+        // describe nested inside class/describe
+        const testItem = this.createTestItem(test, test.id);
+        this.inheritParentTags(testItem, parentItem);
+        siblings.push(testItem);
+        this.testData.set(testItem, test);
+
+        if (!test.children) {
+            return;
+        }
+
+        const children: TestItem[] = [];
+        for (const child of test.children) {
+            this.processChildIntoList(child, children, testItem);
+        }
+        testItem.children.replace(children);
+    }
+
+    private processMethod(test: TestDefinition, parentChildren: TestItemCollection) {
+        const testItem = this.createTestItem(test, '0');
+        parentChildren.add(testItem);
+        this.testData.set(testItem, test);
+    }
+
+    private addTestSuiteRoot(
+        testDefinition: TestDefinition,
+        parentChildren: TestItemCollection,
+    ): TestItemCollection {
+        const suiteName = testDefinition.testsuite;
+        if (!suiteName) {
+            return parentChildren;
+        }
+
+        const suiteId = `testsuite:${suiteName}`;
+        let testItem = parentChildren.get(suiteId);
+        if (!testItem) {
+            testItem = this.createSuiteItem(suiteId, suiteName, parentChildren);
+        }
+
+        return testItem.children;
+    }
+
+    private createSuiteItem(
+        suiteId: string,
+        suiteName: string,
+        parentChildren: TestItemCollection,
+    ): TestItem {
+        const suiteDefinition: TestDefinition = {
             type: TestType.testsuite,
             id: suiteId,
             label: suiteName,
             testsuite: suiteName,
-            depth: 1,
-        } as TestDefinition;
+        };
 
         const testItem = this.ctrl.createTestItem(
             suiteId,
@@ -98,18 +152,21 @@ export class TestHierarchyBuilder {
         );
         testItem.canResolveChildren = true;
         testItem.sortText = suiteId;
-        this.rootItems.add(testItem);
+        parentChildren.add(testItem);
         this.testData.set(testItem, suiteDefinition);
 
         return testItem;
     }
 
-    private addNamespaceTestItems(testDefinition: TestDefinition) {
+    private addNamespaceTestItems(
+        testDefinition: TestDefinition,
+        parentChildren: TestItemCollection,
+    ): TestItemCollection {
         const classFQN = testDefinition.classFQN ?? '';
-        const transformer = TransformerFactory.create(classFQN);
+        const transformer = TestIdentifierFactory.create(classFQN);
         const parts = (testDefinition.label?.split('\\') ?? []).filter((value) => !!value);
 
-        let children = this.rootItems;
+        let children = parentChildren;
         for (const [index, part] of parts.entries()) {
             const testItem = this.getOrCreateNamespaceItem(
                 children,
@@ -118,32 +175,27 @@ export class TestHierarchyBuilder {
                 part,
                 index,
             );
-
-            const parent = this.ancestors[this.ancestors.length - 1];
-            parent.children.push(testItem);
-            this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
-
             children = testItem.children;
         }
-        this.ancestorDepth = this.ancestors.length - 1;
+
+        return children;
     }
 
     private getOrCreateNamespaceItem(
         children: TestItemCollection,
-        transformer: ReturnType<typeof TransformerFactory.create>,
+        transformer: ReturnType<typeof TestIdentifierFactory.create>,
         parts: string[],
         part: string,
         index: number,
     ): TestItem {
         const type = TestType.namespace;
         const classFQN = parts.slice(0, index + 1).join('\\');
-        const namespaceDefinition = {
+        const namespaceDefinition: TestDefinition = {
             type,
             id: transformer.uniqueId({ type, classFQN }),
             namespace: classFQN,
             label: transformer.generateLabel({ type, classFQN: part }),
-            depth: index + 1,
-        } as TestDefinition;
+        };
 
         const existing = children.get(namespaceDefinition.id);
         if (existing) {
@@ -163,26 +215,8 @@ export class TestHierarchyBuilder {
         return testItem;
     }
 
-    private addTestItem(testDefinition: TestDefinition, sortText: string) {
-        const testItem = this.createTestItem(testDefinition, sortText);
-        const parent = this.ancestors[this.ancestors.length - 1];
-        parent.children.push(testItem);
-
-        this.inheritParentTags(testItem, parent);
-
-        if (testDefinition.type !== TestType.method) {
-            this.ancestors.push({ item: testItem, type: testDefinition.type, children: [] });
-        }
-
-        this.testData.set(testItem, testDefinition);
-    }
-
-    private inheritParentTags(testItem: TestItem, parent: { item: TestItem; type: TestType }) {
-        if (parent.type !== TestType.class) {
-            return;
-        }
-
-        const parentTags = (parent.item.tags ?? []).filter((t) => t.id.startsWith('group:'));
+    private inheritParentTags(testItem: TestItem, parentItem: TestItem) {
+        const parentTags = (parentItem.tags ?? []).filter((t) => t.id.startsWith('group:'));
         if (parentTags.length === 0) {
             return;
         }
@@ -227,25 +261,6 @@ export class TestHierarchyBuilder {
         return testItem;
     }
 
-    private ascend(depth: number) {
-        while (this.ancestors.length > depth) {
-            const completedAncestor = this.ancestors.pop();
-            if (!completedAncestor) {
-                break;
-            }
-            if (
-                completedAncestor.type === TestType.namespace ||
-                completedAncestor.type === TestType.testsuite
-            ) {
-                for (const child of completedAncestor.children) {
-                    completedAncestor.item.children.add(child);
-                }
-            } else {
-                completedAncestor.item.children.replace(completedAncestor.children);
-            }
-        }
-    }
-
     private createRange(testDefinition: TestDefinition) {
         return new Range(
             new Position(
@@ -254,10 +269,6 @@ export class TestHierarchyBuilder {
             ),
             new Position((testDefinition.end?.line ?? 1) - 1, testDefinition.end?.character ?? 0),
         );
-    }
-
-    private createRootItem(): TestItem {
-        return { children: this.rootItems } as TestItem;
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {

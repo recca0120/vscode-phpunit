@@ -18,11 +18,18 @@ import { Configuration } from './Configuration';
 import { PHPUnitFileCoverage } from './Coverage';
 import { createParentContainer } from './container';
 import { PHPUnitXML } from './PHPUnit';
+import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
 import { TestRunDispatcher } from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
 export async function activate(context: ExtensionContext) {
+    // Initialize tree-sitter WASM (non-blocking, fallback to php-parser if it fails)
+    // At runtime, __dirname is the dist/ folder where WASM files are copied by esbuild
+    initTreeSitter().catch(() => {
+        // tree-sitter init failed; TestParser will use php-parser fallback
+    });
+
     const ctrl = tests.createTestController('phpunit', 'PHPUnit');
     const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
     const parentContainer = createParentContainer(ctrl, outputChannel);

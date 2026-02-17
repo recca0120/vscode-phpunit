@@ -4,6 +4,30 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.0] - 2026-02-18
+
+### Added
+- Tree-sitter PHP parser using `@vscode/tree-sitter-wasm` for faster and more accurate code analysis
+
+### Changed
+- Replace `yargs-parser` with regex-based parser in TeamCity output parsing
+- Restructure codebase with tree-sitter alignment and code quality improvements
+- Move `@vscode/tree-sitter-wasm` to devDependencies
+
+### Fixed
+- Use classFQN lookup instead of URI comparison in classHierarchy test
+- Initialize tree-sitter WASM before TestCollection tests
+
+## [3.8.8] - 2026-02-17
+
+### Fixed
+- Support `--testsuite` filter for multi-testsuite phpunit.xml (#357)
+
+## [3.8.7] - 2026-02-17
+
+### Fixed
+- Support PHP 8.4 `new` without parentheses syntax (#356)
+
 ## [3.8.6] - 2026-02-17
 
 ### Added

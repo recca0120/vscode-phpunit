@@ -3,12 +3,12 @@ import * as semver from 'semver';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
 import { Configuration } from './Configuration';
-import { TeamcityEvent } from './ProblemMatcher';
 import { ProcessBuilder } from './ProcessBuilder';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './ProcessBuilder/placeholders';
+import { TeamcityEvent } from './TestOutput';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
-import { TransformerFactory } from './Transformer';
+import { TestIdentifierFactory } from './Transformer';
 import { TestType } from './types';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
@@ -71,7 +71,7 @@ const hasFile = (
 const resolveTestId = (rawId: string) => {
     const [classFQN, methodName] = rawId.split('::');
     const type = !methodName ? TestType.class : TestType.method;
-    return TransformerFactory.create(classFQN).uniqueId({ type, classFQN, methodName });
+    return TestIdentifierFactory.create(classFQN).uniqueId({ type, classFQN, methodName });
 };
 
 const findResultCall = (id: string, event: TeamcityEvent) =>
