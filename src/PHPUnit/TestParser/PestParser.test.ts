@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, pestProject } from '../__tests__/utils';
 import { TestType } from '../types';
+import { initTreeSitter } from './tree-sitter/TreeSitterParser';
 
 export const parse = (buffer: Buffer | string, file: string) =>
     parseTestFile(buffer, file, pestProject(''));
+
+beforeAll(async () => initTreeSitter());
 
 describe('PestParser', () => {
     const givenTest = (file: string, content: string, id: string) => {

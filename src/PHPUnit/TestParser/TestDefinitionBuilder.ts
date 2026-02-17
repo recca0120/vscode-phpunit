@@ -1,6 +1,6 @@
 import { type Transformer, TransformerFactory } from '../Transformer';
 import { type TestDefinition, TestType } from '../types';
-import type { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
+import type { PhpAstNodeWrapper } from './php-parser/PhpAstNodeWrapper';
 
 abstract class TestDefinitionBuilder {
     constructor(protected definition: PhpAstNodeWrapper) {}

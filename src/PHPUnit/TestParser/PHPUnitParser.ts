@@ -1,7 +1,7 @@
 import type { TestDefinition } from '../types';
 import { type ClassInfo, ClassRegistry } from './ClassRegistry';
 import type { Parser } from './Parser';
-import type { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
+import type { PhpAstNodeWrapper } from './php-parser/PhpAstNodeWrapper';
 
 export class PHPUnitParser implements Parser {
     constructor(private classRegistry: ClassRegistry = new ClassRegistry()) {}

@@ -1,20 +1,62 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { findTest, parseTestFile, phpUnitProject } from '../__tests__/utils';
-import { PHPUnitXML } from '../PHPUnitXML';
-import { type TestDefinition, TestType } from '../types';
-import { ClassRegistry } from './ClassRegistry';
-import { TestParser } from './TestParser';
-import { initTreeSitter } from './tree-sitter/TreeSitterParser';
+import { findTest, pestProject, phpUnitProject } from '../../__tests__/utils';
+import { PHPUnitXML } from '../../PHPUnitXML';
+import { type TestDefinition, TestType } from '../../types';
+import { ClassRegistry } from '../ClassRegistry';
+import { PestParser } from '../PestParser';
+import { PHPUnitParser } from '../PHPUnitParser';
+import { PhpAstNodeWrapper } from '../php-parser/PhpAstNodeWrapper';
+import { adapt } from './TreeSitterAdapter';
+import { initTreeSitter, parsePhp } from './TreeSitterParser';
 
-export const parse = (buffer: Buffer | string, file: string) =>
-    parseTestFile(buffer, file, phpUnitProject(''));
+function flattenTests(tests: TestDefinition[]): TestDefinition[] {
+    const result: TestDefinition[] = [];
+    for (const test of tests) {
+        result.push(test);
+        if (test.children && test.children.length > 0) {
+            result.push(...flattenTests(test.children));
+        }
+    }
+    return result;
+}
+
+function parseWithTreeSitter(
+    buffer: Buffer | string,
+    file: string,
+    root: string,
+): TestDefinition[] {
+    const code = buffer.toString();
+    const tree = parsePhp(code);
+    const ast = adapt(tree.rootNode);
+    tree.delete();
+
+    const phpUnitXML = new PHPUnitXML();
+    phpUnitXML.setRoot(root);
+
+    const definition = new PhpAstNodeWrapper(ast, { phpUnitXML, file });
+    const parsers = [new PestParser(), new PHPUnitParser()];
+    for (const parser of parsers) {
+        const result = parser.parse(definition);
+        if (result) {
+            return flattenTests(result);
+        }
+    }
+
+    return [];
+}
+
+const parsePhpUnit = (buffer: Buffer | string, file: string) =>
+    parseWithTreeSitter(buffer, file, phpUnitProject(''));
+
+const parsePest = (buffer: Buffer | string, file: string) =>
+    parseWithTreeSitter(buffer, file, pestProject(''));
 
 beforeAll(async () => initTreeSitter());
 
-describe('PHPUnitParser Test', () => {
+describe('TreeSitterAdapter — PHPUnit', () => {
     const givenTest = (file: string, content: string, id: string) => {
-        return findTest(parse(content, file), id);
+        return findTest(parsePhpUnit(content, file), id);
     };
 
     describe('AssertionsTest', () => {
@@ -26,7 +68,6 @@ describe('PHPUnitParser Test', () => {
             expect(givenTest(file, content, 'Tests')).toEqual(
                 expect.objectContaining({
                     type: TestType.namespace,
-                    // file,
                     id: 'namespace:Tests',
                     classFQN: 'Tests',
                     namespace: 'Tests',
@@ -216,7 +257,7 @@ describe('PHPUnitParser Test', () => {
         beforeAll(async () => (content = (await readFile(file)).toString()));
 
         it('it should not parse abstract class', () => {
-            expect(parse(content, file)).toHaveLength(0);
+            expect(parsePhpUnit(content, file)).toHaveLength(0);
         });
     });
 
@@ -226,7 +267,7 @@ describe('PHPUnitParser Test', () => {
         beforeAll(async () => (content = (await readFile(file)).toString()));
 
         it('StaticMethodTest should has 3 tests', () => {
-            expect(parse(content, file)).toHaveLength(3);
+            expect(parsePhpUnit(content, file)).toHaveLength(3);
         });
 
         it('it should parse test_static_public_fail', () => {
@@ -253,7 +294,7 @@ describe('PHPUnitParser Test', () => {
         beforeAll(async () => (content = (await readFile(file)).toString()));
 
         it('HasPropertyTest should has 3 tests', () => {
-            expect(parse(content, file)).toHaveLength(3);
+            expect(parsePhpUnit(content, file)).toHaveLength(3);
         });
 
         it('it should parse property', () => {
@@ -463,209 +504,33 @@ final class PDF_testerTest extends TestCase {
         );
     });
 
-    it('fix const array problem', () => {
-        const file = phpUnitProject('tests/ArrayConstTest.php');
-        const content = `<?php declare(strict_types=1);
-        
-use PHPUnit\\Framework\\TestCase;
-
-final class ArrayConstTest extends TestCase {
-    public const bool IS_EMAIL = true;
-
-    public const array HTTP_EMAIL_TEMPLATE_RESPONSES = [
-        'a' => 'b',
-        'c' => 'd',
-    ];
-    
-    public function test_hello() {
-        self::assertTrue(true);
-    }
-}
-`;
-        expect(givenTest(file, content, 'test_hello')).toEqual(
-            expect.objectContaining({
-                type: TestType.method,
-                file,
-                id: 'Array Const::Hello',
-                classFQN: 'ArrayConstTest',
-                className: 'ArrayConstTest',
-                methodName: 'test_hello',
-                start: { line: expect.any(Number), character: 4 },
-                end: { line: expect.any(Number), character: 5 },
-                depth: 2,
-            }),
-        );
-    });
-
-    it('ignore annotation string case', () => {
-        const file = phpUnitProject('tests/TestDoxTest.php');
-        const content = `<?php declare(strict_types=1);
-        
-use PHPUnit\\Framework\\TestCase;
-
-final class TestDoxTest extends TestCase {
-    /**
-     * @testDox Do a test
-     * @testWIth [1,1]
-     *           [2,2]
-     *           [3,3]
-     */
-    public function testAtTestWith($a,$b){
-        $this->assertEquals($a,$b);
-    }
-}
-`;
-        expect(givenTest(file, content, 'testAtTestWith')).toEqual(
-            expect.objectContaining({
-                type: TestType.method,
-                file,
-                id: 'Test Dox::At test with',
-                classFQN: 'TestDoxTest',
-                className: 'TestDoxTest',
-                methodName: 'testAtTestWith',
-                label: 'Do a test',
-                annotations: { testdox: ['Do a test'] },
-                start: { line: expect.any(Number), character: expect.any(Number) },
-                end: { line: expect.any(Number), character: expect.any(Number) },
-                depth: 2,
-            }),
-        );
-    });
-
-    it('parse @group annotation', () => {
-        const file = phpUnitProject('tests/GroupTest.php');
-        const content = `<?php declare(strict_types=1);
-
-use PHPUnit\\Framework\\TestCase;
-
-final class GroupTest extends TestCase {
-    /**
-     * @group integration
-     * @group slow
-     */
-    public function test_with_groups() {
-        $this->assertTrue(true);
-    }
-}
-`;
-        expect(givenTest(file, content, 'test_with_groups')).toEqual(
-            expect.objectContaining({
-                type: TestType.method,
-                file,
-                id: 'Group::With groups',
-                classFQN: 'GroupTest',
-                className: 'GroupTest',
-                methodName: 'test_with_groups',
-                annotations: { group: ['integration', 'slow'] },
-                depth: 2,
-            }),
-        );
-    });
-
-    it('parse #[Group] attribute', () => {
-        const file = phpUnitProject('tests/GroupAttributeTest.php');
-        const content = `<?php declare(strict_types=1);
-
-use PHPUnit\\Framework\\TestCase;
-use PHPUnit\\Framework\\Attributes\\Group;
-
-final class GroupAttributeTest extends TestCase {
-    #[Group('plaid')]
-    #[Group('api')]
-    public function test_with_group_attributes() {
-        $this->assertTrue(true);
-    }
-}
-`;
-        expect(givenTest(file, content, 'test_with_group_attributes')).toEqual(
-            expect.objectContaining({
-                type: TestType.method,
-                file,
-                id: 'Group Attribute::With group attributes',
-                classFQN: 'GroupAttributeTest',
-                className: 'GroupAttributeTest',
-                methodName: 'test_with_group_attributes',
-                annotations: { group: ['plaid', 'api'] },
-                depth: 2,
-            }),
-        );
-    });
-
-    it('parse single @group annotation', () => {
-        const file = phpUnitProject('tests/SingleGroupTest.php');
-        const content = `<?php declare(strict_types=1);
-
-use PHPUnit\\Framework\\TestCase;
-
-final class SingleGroupTest extends TestCase {
-    /**
-     * @group unit
-     */
-    public function test_unit() {
-        $this->assertTrue(true);
-    }
-}
-`;
-        expect(givenTest(file, content, 'test_unit')).toEqual(
-            expect.objectContaining({
-                type: TestType.method,
-                file,
-                methodName: 'test_unit',
-                annotations: { group: ['unit'] },
-            }),
-        );
-    });
-
-    it('detect test class not ending with Test but extending TestCase (#342)', () => {
-        const file = phpUnitProject('tests/Example.php');
-        const content = `<?php
-use PHPUnit\\Framework\\TestCase;
-use PHPUnit\\Framework\\Attributes\\Test;
-
-class Example extends TestCase
-{
-    #[Test]
-    public function Test()
-    {
-        self::assertIsInt(1);
-    }
-}
-`;
-        const tests = parse(content, file);
-        const method = tests.find((t) => t.methodName === 'Test');
-        expect(method).toBeDefined();
-        expect(method).toEqual(
-            expect.objectContaining({
-                type: TestType.method,
-                className: 'Example',
-                methodName: 'Test',
-            }),
-        );
-    });
-
-    it('parse PHP 8.4 new without parentheses syntax (#356)', () => {
-        const file = phpUnitProject('tests/Php84SyntaxTest.php');
+    it('parse PHP 8.4 property hooks (#336)', () => {
+        const file = phpUnitProject('tests/PropertyHooksTest.php');
         const content = `<?php
 namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 
-class Php84SyntaxTest extends TestCase
+class PropertyHooksTest extends TestCase
 {
-    public function test_new_without_parentheses()
+    public string $name {
+        get => 'test';
+        set => $value;
+    }
+
+    public function test_something()
     {
-        $result = new \\ArrayObject()->count();
-        $this->assertIsInt($result);
+        $this->assertTrue(true);
     }
 }
 `;
-        const tests = parse(content, file);
-        const method = tests.find((t) => t.methodName === 'test_new_without_parentheses');
+        const tests = parsePhpUnit(content, file);
+        const method = tests.find((t) => t.methodName === 'test_something');
         expect(method).toBeDefined();
         expect(method).toEqual(
             expect.objectContaining({
                 type: TestType.method,
-                className: 'Php84SyntaxTest',
-                methodName: 'test_new_without_parentheses',
+                className: 'PropertyHooksTest',
+                methodName: 'test_something',
             }),
         );
     });
@@ -678,13 +543,16 @@ class Php84SyntaxTest extends TestCase
             phpUnitXML.setRoot(root);
 
             for (const { file, content } of files) {
-                const testParser = new TestParser(phpUnitXML, registry);
-                for (const type of Object.values(TestType).filter(
-                    (v) => typeof v === 'number',
-                ) as TestType[]) {
-                    testParser.on(type, (td: TestDefinition) => allTests.push(td));
+                const tree = parsePhp(content);
+                const ast = adapt(tree.rootNode);
+                tree.delete();
+
+                const definition = new PhpAstNodeWrapper(ast, { phpUnitXML, file });
+                const parser = new PHPUnitParser(registry);
+                const result = parser.parse(definition);
+                if (result) {
+                    allTests.push(...flattenTests(result));
                 }
-                testParser.parse(content, file);
             }
 
             return allTests;
@@ -735,126 +603,6 @@ class ConcreteFromAbstractTest extends AbstractTest {
             );
         });
 
-        it('should merge own and inherited methods', () => {
-            const root = phpUnitProject('');
-            const tests = parseWithRegistry(
-                [
-                    {
-                        file: phpUnitProject('tests/AbstractTest.php'),
-                        content: `<?php
-namespace Tests;
-use PHPUnit\\Framework\\TestCase;
-abstract class AbstractTest extends TestCase {
-    public function test_abstract() {}
-}`,
-                    },
-                    {
-                        file: phpUnitProject('tests/ConcreteWithOwnTest.php'),
-                        content: `<?php
-namespace Tests;
-class ConcreteWithOwnTest extends AbstractTest {
-    public function test_own_method() {
-        $this->assertTrue(true);
-    }
-}`,
-                    },
-                ],
-                root,
-            );
-
-            const ownMethod = tests.find(
-                (t) => t.className === 'ConcreteWithOwnTest' && t.methodName === 'test_own_method',
-            );
-            expect(ownMethod).toBeDefined();
-
-            const inheritedMethod = tests.find(
-                (t) => t.className === 'ConcreteWithOwnTest' && t.methodName === 'test_abstract',
-            );
-            expect(inheritedMethod).toBeDefined();
-            expect(inheritedMethod?.classFQN).toBe('Tests\\ConcreteWithOwnTest');
-        });
-
-        it('should resolve use statement FQN correctly', () => {
-            const root = phpUnitProject('');
-            const tests = parseWithRegistry(
-                [
-                    {
-                        file: phpUnitProject('tests/UseTestCase.php'),
-                        content: `<?php
-namespace Tests;
-use PHPUnit\\Framework\\TestCase;
-class UseTestCaseTest extends TestCase {
-    public function test_something() {}
-}`,
-                    },
-                ],
-                root,
-            );
-
-            const method = tests.find((t) => t.methodName === 'test_something');
-            expect(method).toBeDefined();
-        });
-
-        it('should handle fully qualified extends', () => {
-            const root = phpUnitProject('');
-            const tests = parseWithRegistry(
-                [
-                    {
-                        file: phpUnitProject('tests/FQNTest.php'),
-                        content: `<?php
-namespace Tests;
-class FQNTest extends \\PHPUnit\\Framework\\TestCase {
-    public function test_fqn() {}
-}`,
-                    },
-                ],
-                root,
-            );
-
-            const method = tests.find((t) => t.methodName === 'test_fqn');
-            expect(method).toBeDefined();
-        });
-
-        it('should discover trait test methods', () => {
-            const root = phpUnitProject('');
-            const tests = parseWithRegistry(
-                [
-                    {
-                        file: phpUnitProject('tests/TraitMethodTest.php'),
-                        content: `<?php
-namespace Tests;
-use PHPUnit\\Framework\\TestCase;
-
-trait TestHelperTrait {
-    public function test_from_trait() {
-        $this->assertTrue(true);
-    }
-}
-
-class TraitMethodTest extends TestCase {
-    use TestHelperTrait;
-
-    public function test_own() {
-        $this->assertTrue(true);
-    }
-}`,
-                    },
-                ],
-                root,
-            );
-
-            const traitMethod = tests.find(
-                (t) => t.className === 'TraitMethodTest' && t.methodName === 'test_from_trait',
-            );
-            expect(traitMethod).toBeDefined();
-            expect(traitMethod?.classFQN).toBe('Tests\\TraitMethodTest');
-
-            const ownMethod = tests.find(
-                (t) => t.className === 'TraitMethodTest' && t.methodName === 'test_own',
-            );
-            expect(ownMethod).toBeDefined();
-        });
-
         it('should handle trait insteadof and as adaptations', () => {
             const root = phpUnitProject('');
             const tests = parseWithRegistry(
@@ -895,40 +643,164 @@ class TraitConflictTest extends TestCase {
             expect(methodNames).toContain('test_a_only');
             expect(methodNames).toContain('test_b_only');
         });
+    });
+});
 
-        it('child class override should take precedence', () => {
-            const root = phpUnitProject('');
-            const tests = parseWithRegistry(
-                [
-                    {
-                        file: phpUnitProject('tests/AbstractTest.php'),
-                        content: `<?php
-namespace Tests;
-use PHPUnit\\Framework\\TestCase;
-abstract class AbstractTest extends TestCase {
-    public function test_override() {}
-}`,
-                    },
-                    {
-                        file: phpUnitProject('tests/OverrideTest.php'),
-                        content: `<?php
-namespace Tests;
-class OverrideTest extends AbstractTest {
-    public function test_override() {
-        $this->assertTrue(true);
-    }
-}`,
-                    },
-                ],
-                root,
-            );
+describe('TreeSitterAdapter — Pest', () => {
+    const file = pestProject('tests/Fixtures/ExampleTest.php');
 
-            const overrideMethods = tests.filter(
-                (t) => t.className === 'OverrideTest' && t.methodName === 'test_override',
-            );
-            // Should only appear once (own method, not duplicated from parent)
-            expect(overrideMethods).toHaveLength(1);
-            expect(overrideMethods[0].file).toBe(phpUnitProject('tests/OverrideTest.php'));
-        });
+    const givenTest = (content: string, id: string) => {
+        return findTest(parsePest(content, file), id);
+    };
+
+    it('example', () => {
+        const content = `<?php
+
+test('example', function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(content, 'example')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::example',
+                classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+                namespace: 'P\\Tests\\Fixtures',
+                className: 'ExampleTest',
+                methodName: 'example',
+                label: 'example',
+                file,
+                start: { line: expect.any(Number), character: expect.any(Number) },
+                end: { line: expect.any(Number), character: expect.any(Number) },
+                depth: 2,
+            }),
+        );
+    });
+
+    it('it test example', () => {
+        const content = `<?php
+
+it('test example', function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(content, 'it test example')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it test example',
+                classFQN: 'P\\Tests\\Fixtures\\ExampleTest',
+                namespace: 'P\\Tests\\Fixtures',
+                className: 'ExampleTest',
+                methodName: 'it test example',
+                label: 'it test example',
+                file,
+                depth: 2,
+            }),
+        );
+    });
+
+    it('describe → example', () => {
+        const content = `<?php
+
+describe('something', function () {
+    test('example', function () {
+        expect(true)->toBeTrue();
+    });
+});
+        `;
+
+        expect(givenTest(content, '`something`')).toEqual(
+            expect.objectContaining({
+                type: TestType.describe,
+                id: 'tests/Fixtures/ExampleTest.php::`something`',
+                methodName: '`something`',
+                label: 'something',
+                depth: 2,
+            }),
+        );
+
+        expect(givenTest(content, '`something` → example')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::`something` → example',
+                methodName: '`something` → example',
+                label: 'example',
+                depth: 3,
+            }),
+        );
+    });
+
+    it('arch', () => {
+        const content = `<?php
+
+arch()->preset()->php();
+arch()->preset()->strict();
+arch()->preset()->security();
+
+        `;
+
+        expect(givenTest(content, 'preset  → php ')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::preset  → php ',
+                methodName: 'preset  → php ',
+                label: 'preset → php',
+                depth: 2,
+            }),
+        );
+    });
+
+    it('test with namedargument', () => {
+        const content = `<?php
+
+describe(description: 'something', test: function () {
+    it(description: 'asserts true is true', test: function () {
+        expect(true)->toBe(true);
+    });
+});
+        `;
+
+        expect(givenTest(content, '`something` → it asserts true is true')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::`something` → it asserts true is true',
+                methodName: '`something` → it asserts true is true',
+                label: 'it asserts true is true',
+                depth: 3,
+            }),
+        );
+    });
+
+    it('not it or test', () => {
+        const content = `<?php
+
+function hello(string $description,  callable $closure) {}
+
+hello('hello', function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(content, 'hello')).toBeUndefined();
+    });
+
+    it('arrow function describe', () => {
+        const content = `<?php
+
+describe('something', fn () => it('example', fn() => expect(true)->toBeTrue()));
+
+        `;
+
+        expect(givenTest(content, '`something` → it example')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::`something` → it example',
+                methodName: '`something` → it example',
+                label: 'it example',
+                depth: 3,
+            }),
+        );
     });
 });

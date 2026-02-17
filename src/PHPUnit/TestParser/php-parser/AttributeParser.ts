@@ -1,5 +1,5 @@
 import type { AttrGroup, Declaration, Method } from 'php-parser';
-import type { Annotations } from '../types';
+import type { Annotations } from '../../types';
 
 export const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
 

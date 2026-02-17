@@ -7,17 +7,17 @@ import type {
     Node,
     PropertyLookup,
 } from 'php-parser';
-import type { PHPUnitXML } from '../PHPUnitXML';
-import { type TestDefinition, TestType } from '../types';
-import { AnnotationParser, AttributeParser } from './AnnotationParser';
-import type { TraitAdaptation } from './ClassRegistry';
-import { generatePestClassFQN } from './PestClassFQNGenerator';
+import type { PHPUnitXML } from '../../PHPUnitXML';
+import { type TestDefinition, TestType } from '../../types';
+import type { TraitAdaptation } from '../ClassRegistry';
+import { generatePestClassFQN } from '../PestClassFQNGenerator';
 import {
     NamespaceDefinitionBuilder,
     PestTestDefinitionBuilder,
     TestCaseDefinitionBuilder,
     TestSuiteDefinitionBuilder,
-} from './TestDefinitionBuilder';
+} from '../TestDefinitionBuilder';
+import { AnnotationParser, AttributeParser } from './AnnotationParser';
 import { TraitUseParser } from './TraitUseParser';
 
 const annotationParser = new AnnotationParser();

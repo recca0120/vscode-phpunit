@@ -1,5 +1,5 @@
 import type { Identifier, Name, Node } from 'php-parser';
-import type { TraitAdaptation } from './ClassRegistry';
+import type { TraitAdaptation } from '../ClassRegistry';
 
 type AST = Node & {
     name?: Identifier | string;

@@ -1,5 +1,5 @@
 import type { Declaration, Method } from 'php-parser';
-import type { Annotations } from '../types';
+import type { Annotations } from '../../types';
 import { lookup } from './AttributeParser';
 
 export { AttributeParser } from './AttributeParser';

@@ -8,7 +8,9 @@ import type { ClassRegistry } from './ClassRegistry';
 import type { Parser } from './Parser';
 import { PestParser } from './PestParser';
 import { PHPUnitParser } from './PHPUnitParser';
-import { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
+import { PhpAstNodeWrapper } from './php-parser/PhpAstNodeWrapper';
+import { adapt } from './tree-sitter/TreeSitterAdapter';
+import { isTreeSitterReady, parsePhp } from './tree-sitter/TreeSitterParser';
 
 const textDecoder = new TextDecoder('utf-8');
 
@@ -32,15 +34,51 @@ export class TestParser {
     }
 
     parse(text: Buffer | string, file: string, testsuite?: string) {
+        const code = text.toString();
+
+        // Try tree-sitter first (handles PHP 8.4+ syntax like property hooks)
+        if (isTreeSitterReady()) {
+            const result = this.parseWithTreeSitter(code, file, testsuite);
+            if (result) {
+                return result;
+            }
+        }
+
+        // Fallback to php-parser
+        return this.parseWithPhpParser(code, file, testsuite);
+    }
+
+    private parseWithTreeSitter(
+        code: string,
+        file: string,
+        testsuite?: string,
+    ): TestDefinition[] | undefined {
         try {
-            const preprocessed = applyInlinePlaceholderWorkaround(text.toString());
+            const tree = parsePhp(code);
+            const ast = adapt(tree.rootNode);
+            tree.delete();
+
+            return this.parseAst(ast, file, testsuite);
+        } catch {
+            // tree-sitter failed, will fallback to php-parser
+            return undefined;
+        }
+    }
+
+    private parseWithPhpParser(
+        code: string,
+        file: string,
+        testsuite?: string,
+    ): TestDefinition[] | undefined {
+        try {
+            const preprocessed = applyInlinePlaceholderWorkaround(code);
             const ast = engine.parseCode(preprocessed, file);
             if (ast.comments) {
                 normalizeCommentLineBreaks(ast.comments);
             }
 
             return this.parseAst(ast, file, testsuite);
-        } catch (e) {
+        } catch {
             console.error(e);
 
             return undefined;

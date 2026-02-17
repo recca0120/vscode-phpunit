@@ -1,6 +1,6 @@
 import { type TestDefinition, TestType } from '../types';
 import type { Parser } from './Parser';
-import type { PhpAstNodeWrapper } from './PhpAstNodeWrapper';
+import type { PhpAstNodeWrapper } from './php-parser/PhpAstNodeWrapper';
 
 export class PestParser implements Parser {
     parse(definition: PhpAstNodeWrapper): TestDefinition[] | undefined {
