@@ -164,7 +164,7 @@ export class TestCollection {
         return { testsuite, uri, tests };
     }
 
-    parseTests(uri: URI, testsuite: string): Promise<TestDefinition[]> {
+    private parseTests(uri: URI, testsuite: string): Promise<TestDefinition[]> {
         return this.doParse(uri, testsuite);
     }
 

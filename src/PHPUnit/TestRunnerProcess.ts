@@ -30,6 +30,7 @@ export class TestRunnerProcess {
     run() {
         return new Promise((resolve) => {
             this.execute();
+            this.emitter.once('abort', () => resolve(true));
             this.child?.on('error', () => resolve(true));
             this.child?.on('close', () => resolve(true));
         });

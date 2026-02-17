@@ -1,4 +1,4 @@
-import { type TestDefinition, TestType } from '../types';
+import { PHPUNIT_TESTCASE_FQN, type TestDefinition, TestType } from '../types';
 
 export interface TraitAdaptation {
     kind: 'insteadof' | 'as';
@@ -39,7 +39,7 @@ export class ClassHierarchy {
         const visited = new Set<string>();
         let current: string | undefined = classFQN;
         while (current) {
-            if (current === 'PHPUnit\\Framework\\TestCase') {
+            if (current === PHPUNIT_TESTCASE_FQN) {
                 return true;
             }
             if (visited.has(current)) {

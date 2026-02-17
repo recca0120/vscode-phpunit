@@ -1,4 +1,5 @@
 import { basename, dirname, join, relative } from 'node:path';
+import { PEST_PREFIX } from '../types';
 import { capitalize } from '../utils';
 
 function sanitizeForClassName(value: string): string {
@@ -19,5 +20,5 @@ export function generatePestClassFQN(root: string, file: string): string {
         '\\',
     );
 
-    return `P\\${sanitizeForClassName(relativePath)}`;
+    return `${PEST_PREFIX}${sanitizeForClassName(relativePath)}`;
 }

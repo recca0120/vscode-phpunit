@@ -39,7 +39,7 @@ export abstract class TestIdentifier {
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string;
 
-    abstract fromLocationHit(locationHint: string, name: string): TestResultIdentify;
+    abstract fromLocationHint(locationHint: string, name: string): TestResultIdentify;
 
     protected abstract normalizeMethodName(methodName: string): string;
 

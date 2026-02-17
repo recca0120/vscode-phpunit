@@ -1,5 +1,6 @@
 import { TestIdentifierFactory } from '../Transformer';
 import { type TestDefinition, TestType } from '../types';
+import { splitFQN } from '../utils';
 import type { TestNode } from './TestNode';
 
 function buildTestDefinition(
@@ -29,16 +30,14 @@ function buildTestDefinition(
 
 export function buildNamespaceDefinition(definition: TestNode): TestDefinition {
     const type = TestType.namespace;
-    const parts = (definition.classFQN ?? '').split('\\');
 
     if (definition.kind === 'program') {
-        const namespace = parts.slice(0, -1).join('\\');
+        const { namespace } = splitFQN(definition.classFQN ?? '');
         return buildTestDefinition(definition, { type, namespace, classFQN: namespace });
     }
 
     if (definition.kind === 'class_declaration') {
-        const className = parts.pop();
-        const namespace = parts.join('\\');
+        const { namespace, className } = splitFQN(definition.classFQN ?? '');
         return buildTestDefinition(definition, {
             type,
             namespace,
@@ -68,12 +67,10 @@ export function buildTestCaseDefinition(definition: TestNode): TestDefinition {
 
 export function buildPestTestDefinition(definition: TestNode): TestDefinition {
     if (definition.kind === 'program') {
-        const classFQN = definition.classFQN ?? '';
-        const partsFQN = classFQN.split('\\');
-        const className = partsFQN.pop() ?? '';
+        const { namespace, className } = splitFQN(definition.classFQN ?? '');
 
         return buildTestDefinition(definition, {
-            namespace: partsFQN.join('\\'),
+            namespace,
             className,
         });
     }

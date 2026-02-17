@@ -30,7 +30,7 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
         ].join('::');
     }
 
-    fromLocationHit(locationHint: string, name: string) {
+    fromLocationHint(locationHint: string, name: string) {
         const matched = locationHint.match(
             /(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/,
         );

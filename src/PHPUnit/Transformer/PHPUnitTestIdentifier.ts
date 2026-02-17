@@ -1,5 +1,5 @@
 import { type TestDefinition, TestType } from '../types';
-import { capitalize, snakeCase, titleCase } from '../utils';
+import { capitalize, snakeCase, splitFQN, titleCase } from '../utils';
 import { TestIdentifier } from './TestIdentifier';
 
 export class PHPUnitTestIdentifier extends TestIdentifier {
@@ -7,10 +7,10 @@ export class PHPUnitTestIdentifier extends TestIdentifier {
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string {
         const { type } = testDefinition;
-        let classFQN = testDefinition.classFQN?.replace(/Test$/i, '') ?? '';
-        const partsFQN = classFQN.split('\\');
-        const className = titleCase(partsFQN.pop() ?? '');
-        classFQN = partsFQN.length === 0 ? className : `${className} (${classFQN})`;
+        const stripped = testDefinition.classFQN?.replace(/Test$/i, '') ?? '';
+        const { namespace, className: rawClassName } = splitFQN(stripped);
+        const className = titleCase(rawClassName);
+        const classFQN = namespace.length === 0 ? className : `${className} (${stripped})`;
 
         if (type === TestType.namespace) {
             return `namespace:${classFQN}`;
@@ -23,7 +23,7 @@ export class PHPUnitTestIdentifier extends TestIdentifier {
         return [classFQN, this.getMethodName({ methodName: testDefinition.methodName })].join('::');
     }
 
-    fromLocationHit(locationHint: string, _name: string) {
+    fromLocationHint(locationHint: string, _name: string) {
         const partsLocation = locationHint
             .replace(/^php_qn:\/\//, '')
             .replace(/::\\/g, '::')

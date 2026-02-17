@@ -1,8 +1,17 @@
 import type { Comment } from 'php-parser';
-import { engine } from '../../utils';
+import { Engine } from 'php-parser';
 import type { AstNode } from '../AstNode';
 import type { AstParser } from '../AstParser';
 import { adapt } from './PhpParserAdapter';
+
+const engine = new Engine({
+    ast: { withPositions: true, withSource: true },
+    parser: { extractDoc: true, suppressErrors: false, version: 900 },
+    lexer: {
+        all_tokens: true,
+        short_tags: true,
+    },
+});
 
 export class PhpParserAstParser implements AstParser {
     parse(code: string, file: string): AstNode | undefined {

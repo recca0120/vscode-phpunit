@@ -1,3 +1,6 @@
+export const PHPUNIT_TESTCASE_FQN = 'PHPUnit\\Framework\\TestCase';
+export const PEST_PREFIX = 'P\\';
+
 export type Position = {
     character: number;
     line: number;

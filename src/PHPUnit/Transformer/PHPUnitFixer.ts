@@ -22,7 +22,7 @@ export const PHPUnitFixer = {
         }
 
         const transformer = TestIdentifierFactory.create(testResult.locationHint);
-        const { id, file } = transformer.fromLocationHit(testResult.locationHint, testResult.name);
+        const { id, file } = transformer.fromLocationHint(testResult.locationHint, testResult.name);
         testResult.id = id;
         testResult.file = file;
 

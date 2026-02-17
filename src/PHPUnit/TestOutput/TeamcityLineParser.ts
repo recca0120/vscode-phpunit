@@ -86,7 +86,7 @@ export class TeamcityLineParser implements IParser<TestResult | undefined> {
             return {};
         }
 
-        return TestIdentifierFactory.create(argv.locationHint).fromLocationHit(
+        return TestIdentifierFactory.create(argv.locationHint).fromLocationHint(
             argv.locationHint,
             argv.name,
         );

@@ -27,7 +27,7 @@ export class XmlElement {
     }
 
     querySelector(selector: string) {
-        return this.querySelectorAll(selector)[0] ?? undefined;
+        return this.querySelectorAll(selector)[0];
     }
 
     querySelectorAll(selector: string) {

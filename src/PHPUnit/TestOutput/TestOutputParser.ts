@@ -55,7 +55,7 @@ export class TestOutputParser {
     }
 
     private handleFault(testResult: TestFailed | TestIgnored): TestResult | undefined {
-        const prevTestResult = this.cache.get(testResult) as TestFailed | TestIgnored;
+        const prevTestResult = this.cache.get(testResult);
 
         if (!prevTestResult) {
             return PestFixer.fixNoTestStarted(
@@ -69,7 +69,7 @@ export class TestOutputParser {
             return undefined;
         }
 
-        this.mergeFaultDetails(prevTestResult, testResult);
+        this.mergeFaultDetails(prevTestResult as TestFailed | TestIgnored, testResult);
         this.cache.set(testResult, prevTestResult);
 
         return undefined;
