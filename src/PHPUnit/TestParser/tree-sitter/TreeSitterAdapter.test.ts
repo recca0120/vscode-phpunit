@@ -627,6 +627,76 @@ class TraitConflictTest extends TestCase {
             expect(methodNames).toContain('test_b_only');
         });
     });
+
+    describe('PropertyHooksTest (PHP 8.4 — issue #336)', () => {
+        const file = phpUnitProject('tests/PropertyHooksTest.php');
+        const content = `<?php
+
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class PropertyHooksTest extends TestCase
+{
+    public function test_anonymous_class_with_property_hooks()
+    {
+        $obj = new class {
+            private string $raw = '';
+
+            public string $name {
+                get => strtoupper($this->raw);
+                set (string $value) {
+                    $this->raw = trim($value);
+                }
+            }
+        };
+
+        $obj->name = '  hello  ';
+        $this->assertSame('HELLO', $obj->name);
+    }
+
+    public function test_another_assertion()
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
+
+        it('parse class with property hooks in anonymous class', () => {
+            expect(givenTest(file, content, 'PropertyHooksTest')).toEqual(
+                expect.objectContaining({
+                    type: TestType.class,
+                    file,
+                    classFQN: 'Tests\\PropertyHooksTest',
+                    className: 'PropertyHooksTest',
+                }),
+            );
+        });
+
+        it('should parse test_anonymous_class_with_property_hooks', () => {
+            expect(givenTest(file, content, 'test_anonymous_class_with_property_hooks')).toEqual(
+                expect.objectContaining({
+                    type: TestType.method,
+                    file,
+                    classFQN: 'Tests\\PropertyHooksTest',
+                    className: 'PropertyHooksTest',
+                    methodName: 'test_anonymous_class_with_property_hooks',
+                }),
+            );
+        });
+
+        it('should parse test_another_assertion', () => {
+            expect(givenTest(file, content, 'test_another_assertion')).toEqual(
+                expect.objectContaining({
+                    type: TestType.method,
+                    file,
+                    classFQN: 'Tests\\PropertyHooksTest',
+                    className: 'PropertyHooksTest',
+                    methodName: 'test_another_assertion',
+                }),
+            );
+        });
+    });
 });
 
 describe('TreeSitterAdapter — Pest', () => {

@@ -24,11 +24,18 @@ export const getPhpUnitVersion = (): string => {
     return stubs[0].phpUnitVersion;
 };
 
-export const parseTestFile = (buffer: Buffer | string, file: string, root: string) => {
+export const parseTestFile = (
+    buffer: Buffer | string,
+    file: string,
+    root: string,
+    astParser?: import('../TestParser/AstParser').AstParser,
+) => {
     const phpUnitXML = new PHPUnitXML();
     phpUnitXML.setRoot(root);
-    const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
-    const testParser = new TestParser(phpUnitXML, astParser);
+    const testParser = new TestParser(
+        phpUnitXML,
+        astParser ?? new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]),
+    );
     const classHierarchy = new ClassHierarchy();
 
     const result = testParser.parse(buffer, file);

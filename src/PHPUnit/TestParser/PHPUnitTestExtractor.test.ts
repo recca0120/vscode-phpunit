@@ -3,21 +3,26 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../__tests__/utils';
 import { PHPUnitXML } from '../PHPUnitXML';
 import { type TestDefinition, TestType } from '../types';
-import { ChainAstParser } from './ChainAstParser';
+import type { AstParser } from './AstParser';
 import { ClassHierarchy } from './ClassHierarchy';
 import { PhpParserAstParser } from './php-parser/PhpParserAstParser';
 import { TestParser } from './TestParser';
 import { TreeSitterAstParser } from './tree-sitter/TreeSitterAstParser';
 import { initTreeSitter } from './tree-sitter/TreeSitterParser';
 
-export const parse = (buffer: Buffer | string, file: string) =>
-    parseTestFile(buffer, file, phpUnitProject(''));
+const parsers: [string, () => AstParser][] = [
+    ['tree-sitter', () => new TreeSitterAstParser()],
+    ['php-parser', () => new PhpParserAstParser()],
+];
+
+export const parse = (buffer: Buffer | string, file: string, astParser?: AstParser) =>
+    parseTestFile(buffer, file, phpUnitProject(''), astParser);
 
 beforeAll(async () => initTreeSitter());
 
-describe('PHPUnitParser Test', () => {
+describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
     const givenTest = (file: string, content: string, id: string) => {
-        return findTest(parse(content, file), id);
+        return findTest(parse(content, file, createParser()), id);
     };
 
     describe('AssertionsTest', () => {
@@ -651,11 +656,7 @@ class Php84SyntaxTest extends TestCase
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const phpUnitXML = new PHPUnitXML();
             phpUnitXML.setRoot(root);
-            const astParser = new ChainAstParser([
-                new TreeSitterAstParser(),
-                new PhpParserAstParser(),
-            ]);
-            const testParser = new TestParser(phpUnitXML, astParser);
+            const testParser = new TestParser(phpUnitXML, createParser());
             const classHierarchy = new ClassHierarchy();
 
             const allResults: TestDefinition[] = [];
@@ -924,5 +925,81 @@ class OverrideTest extends AbstractTest {
             expect(overrideMethods).toHaveLength(1);
             expect(overrideMethods[0].file).toBe(phpUnitProject('tests/OverrideTest.php'));
         });
+    });
+});
+
+describe('PropertyHooksTest (PHP 8.4 — issue #336)', () => {
+    const file = phpUnitProject('tests/PropertyHooksTest.php');
+    const content = `<?php
+
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class PropertyHooksTest extends TestCase
+{
+    public function test_anonymous_class_with_property_hooks()
+    {
+        $obj = new class {
+            private string $raw = '';
+
+            public string $name {
+                get => strtoupper($this->raw);
+                set (string $value) {
+                    $this->raw = trim($value);
+                }
+            }
+        };
+
+        $obj->name = '  hello  ';
+        $this->assertSame('HELLO', $obj->name);
+    }
+
+    public function test_another_assertion()
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
+
+    const givenTest = (id: string) => findTest(parse(content, file, new TreeSitterAstParser()), id);
+
+    it('php-parser fails to parse property hooks', () => {
+        expect(parse(content, file, new PhpParserAstParser())).toEqual([]);
+    });
+
+    it('tree-sitter parses class with property hooks', () => {
+        expect(givenTest('PropertyHooksTest')).toEqual(
+            expect.objectContaining({
+                type: TestType.class,
+                file,
+                classFQN: 'Tests\\PropertyHooksTest',
+                className: 'PropertyHooksTest',
+            }),
+        );
+    });
+
+    it('tree-sitter parses test_anonymous_class_with_property_hooks', () => {
+        expect(givenTest('test_anonymous_class_with_property_hooks')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                file,
+                classFQN: 'Tests\\PropertyHooksTest',
+                className: 'PropertyHooksTest',
+                methodName: 'test_anonymous_class_with_property_hooks',
+            }),
+        );
+    });
+
+    it('tree-sitter parses test_another_assertion', () => {
+        expect(givenTest('test_another_assertion')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                file,
+                classFQN: 'Tests\\PropertyHooksTest',
+                className: 'PropertyHooksTest',
+                methodName: 'test_another_assertion',
+            }),
+        );
     });
 });

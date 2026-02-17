@@ -1,16 +1,24 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, pestProject } from '../__tests__/utils';
 import { TestType } from '../types';
+import type { AstParser } from './AstParser';
+import { PhpParserAstParser } from './php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from './tree-sitter/TreeSitterAstParser';
 import { initTreeSitter } from './tree-sitter/TreeSitterParser';
 
-export const parse = (buffer: Buffer | string, file: string) =>
-    parseTestFile(buffer, file, pestProject(''));
+const parsers: [string, () => AstParser][] = [
+    ['tree-sitter', () => new TreeSitterAstParser()],
+    ['php-parser', () => new PhpParserAstParser()],
+];
+
+export const parse = (buffer: Buffer | string, file: string, astParser?: AstParser) =>
+    parseTestFile(buffer, file, pestProject(''), astParser);
 
 beforeAll(async () => initTreeSitter());
 
-describe('PestParser', () => {
+describe.each(parsers)('PestParser (%s)', (_name, createParser) => {
     const givenTest = (file: string, content: string, id: string) => {
-        return findTest(parse(content, file), id);
+        return findTest(parse(content, file, createParser()), id);
     };
 
     const file = pestProject('tests/Fixtures/ExampleTest.php');
