@@ -69,15 +69,11 @@ describe('TestCollection', () => {
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         // ClassHierarchy should have entries after parsing
-        expect(
-            classHierarchy.getClassesByUri(phpUnitProject('tests/AssertionsTest.php')).length,
-        ).toBeGreaterThan(0);
+        expect(classHierarchy.get('Tests\\AssertionsTest')).toBeDefined();
 
         // reset should clear classHierarchy
         collection.reset();
-        expect(classHierarchy.getClassesByUri(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
-            [],
-        );
+        expect(classHierarchy.get('Tests\\AssertionsTest')).toBeUndefined();
     });
 
     it('classHierarchy should be owned by TestCollection, not TestParser', () => {
