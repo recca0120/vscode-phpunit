@@ -18,6 +18,16 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Use classFQN lookup instead of URI comparison in classHierarchy test
 - Initialize tree-sitter WASM before TestCollection tests
 
+## [3.8.8] - 2026-02-17
+
+### Fixed
+- Support `--testsuite` filter for multi-testsuite phpunit.xml (#357)
+
+## [3.8.7] - 2026-02-17
+
+### Fixed
+- Support PHP 8.4 `new` without parentheses syntax (#356)
+
 ## [3.8.6] - 2026-02-17
 
 ### Added
