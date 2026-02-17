@@ -5,6 +5,7 @@ export type Position = {
 
 export enum TestType {
     namespace,
+    testsuite,
     class,
     describe,
     method,

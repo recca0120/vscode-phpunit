@@ -18,6 +18,7 @@ import {
 export class TestHierarchyBuilder {
     private icons = {
         [TestType.namespace]: '$(symbol-namespace)',
+        [TestType.testsuite]: '$(package)',
         [TestType.class]: '$(symbol-class)',
         [TestType.method]: '$(symbol-method)',
         [TestType.describe]: '$(symbol-class)',
@@ -78,15 +79,16 @@ export class TestHierarchyBuilder {
 
         const parent = this.ancestors[this.ancestors.length - 1];
         parent.children.push(testItem);
-        this.ancestors.push({ item: testItem, type: TestType.namespace, children: [] });
+        this.ancestors.push({ item: testItem, type: TestType.testsuite, children: [] });
         this.ancestorDepth = this.ancestors.length - 1;
     }
 
     private createSuiteItem(suiteId: string, suiteName: string): TestItem {
         const suiteDefinition = {
-            type: TestType.namespace,
+            type: TestType.testsuite,
             id: suiteId,
             label: suiteName,
+            testsuite: suiteName,
             depth: 1,
         } as TestDefinition;
 
@@ -231,7 +233,10 @@ export class TestHierarchyBuilder {
             if (!completedAncestor) {
                 break;
             }
-            if (completedAncestor.type === TestType.namespace) {
+            if (
+                completedAncestor.type === TestType.namespace ||
+                completedAncestor.type === TestType.testsuite
+            ) {
                 for (const child of completedAncestor.children) {
                     completedAncestor.item.children.add(child);
                 }

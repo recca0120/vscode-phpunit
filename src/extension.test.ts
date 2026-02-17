@@ -358,7 +358,7 @@ describe('Extension Test', () => {
             expectTestResultCalled(ctrl, expected);
         });
 
-        it('should run test suite', async () => {
+        it('should run test class', async () => {
             const ctrl = await activateAndRun({
                 include: 'Assertions (Tests\\Assertions)',
             });
@@ -744,11 +744,14 @@ describe('Extension Test', () => {
             expect(phpUnitItem).toBeDefined();
             expect(phpUnitItem?.label).toContain('AssertionsTest');
 
-            // Pest items should be under pest folder
-            const pestItem = findTest(
-                pestFolder.children,
-                'tests/Unit/ExampleTest.php::test_description',
-            );
+            // Pest items should be under pest folder, grouped by testsuite
+            const pestUnitSuite = findTest(pestFolder.children, 'testsuite:Unit');
+            expect(pestUnitSuite).toBeDefined();
+            expect(pestUnitSuite?.label).toContain('Unit');
+
+            const pestItem = pestUnitSuite
+                ? findTest(pestUnitSuite.children, 'tests/Unit/ExampleTest.php::test_description')
+                : undefined;
             expect(pestItem).toBeDefined();
             expect(pestItem?.label).toContain('test_description');
         });
@@ -790,8 +793,10 @@ describe('Extension Test', () => {
             const testRunProfile = getTestRunProfile(ctrl);
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
             if (!pestFolder) return;
+            const pestUnitSuite = findTest(pestFolder.children, 'testsuite:Unit');
+            if (!pestUnitSuite) return;
             const testItem = findTest(
-                pestFolder.children,
+                pestUnitSuite.children,
                 'tests/Unit/ExampleTest.php::test_description',
             );
             expect(testItem).toBeDefined();
@@ -805,6 +810,30 @@ describe('Extension Test', () => {
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
             expectSpawnCalled([pest.binary, '--colors=never', '--teamcity']);
+        });
+
+        it('should run pest testsuite with --testsuite flag', async () => {
+            if (skipIfMissing()) return;
+
+            const pest = pestStubs[0];
+
+            await activate(context);
+            const ctrl = getTestController();
+            const testRunProfile = getTestRunProfile(ctrl);
+            const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
+            if (!pestFolder) return;
+            const testItem = findTest(pestFolder.children, 'testsuite:Unit');
+            expect(testItem).toBeDefined();
+
+            cwd = pest.root;
+            const request = {
+                include: [testItem],
+                exclude: [],
+                profile: testRunProfile,
+            };
+            await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+
+            expectSpawnCalled([pest.binary, '--testsuite=Unit', '--colors=never', '--teamcity']);
         });
     });
 

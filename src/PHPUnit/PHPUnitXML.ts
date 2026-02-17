@@ -75,7 +75,8 @@ export class PHPUnitXML {
                     const configRootAbs = resolve(configRoot);
 
                     if (!resolvedAbs.startsWith(configRootAbs)) {
-                        return normalize(resolve(configRoot, dir, '..'));
+                        const dotDotSegments = dir.split(/[/\\]/).filter((s) => s === '..');
+                        return normalize(resolve(configRoot, ...dotDotSegments));
                     }
                 }
             }

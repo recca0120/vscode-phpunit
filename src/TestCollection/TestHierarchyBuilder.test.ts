@@ -213,7 +213,7 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'testsuite:Unit',
-                    label: '$(symbol-namespace) Unit',
+                    label: '$(package) Unit',
                     children: [
                         {
                             id: 'Example (Tests\\Unit\\Example)',
@@ -230,7 +230,7 @@ describe('TestHierarchyBuilder', () => {
                 },
                 {
                     id: 'testsuite:Feature',
-                    label: '$(symbol-namespace) Feature',
+                    label: '$(package) Feature',
                     children: [
                         {
                             id: 'Example (Tests\\Feature\\Example)',
@@ -270,7 +270,7 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'testsuite:App',
-                    label: '$(symbol-namespace) App',
+                    label: '$(package) App',
                     children: [
                         {
                             id: 'Example (Tests\\Unit\\Example)',
@@ -298,7 +298,7 @@ describe('TestHierarchyBuilder', () => {
                 },
                 {
                     id: 'testsuite:Integration',
-                    label: '$(symbol-namespace) Integration',
+                    label: '$(package) Integration',
                     children: [
                         {
                             id: 'Api (Tests\\Integration\\Api)',

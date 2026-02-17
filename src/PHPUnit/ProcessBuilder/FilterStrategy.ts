@@ -23,6 +23,12 @@ abstract class FilterStrategy {
     }
 }
 
+class TestSuiteFilterStrategy extends FilterStrategy {
+    getFilter() {
+        return `--testsuite=${this.testDefinition.testsuite}`;
+    }
+}
+
 class NamespaceFilterStrategy extends FilterStrategy {
     getFilter() {
         return this.parseFilter(`^(${this.testDefinition.namespace?.replace(/\\/g, '\\\\')}.*)`);
@@ -78,6 +84,10 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
 
 export const FilterStrategyFactory = {
     create(testDefinition: TestDefinition) {
+        if (testDefinition.type === TestType.testsuite) {
+            return new TestSuiteFilterStrategy(testDefinition);
+        }
+
         if (testDefinition.type === TestType.namespace) {
             return new NamespaceFilterStrategy(testDefinition);
         }

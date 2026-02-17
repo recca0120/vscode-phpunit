@@ -250,7 +250,7 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             {
                 id: 'testsuite:Unit',
-                label: '$(symbol-namespace) Unit',
+                label: '$(package) Unit',
                 children: [
                     expect.objectContaining({
                         id: 'Example (Tests\\Unit\\Example)',
@@ -260,7 +260,7 @@ describe('Extension TestCollection', () => {
             },
             {
                 id: 'testsuite:Feature',
-                label: '$(symbol-namespace) Feature',
+                label: '$(package) Feature',
                 children: [
                     expect.objectContaining({
                         id: 'Example (Tests\\Feature\\Example)',

@@ -966,6 +966,62 @@ describe('Pest ProblemMatcher Text', () => {
         );
     });
 
+    describe('multi-testsuite (locationHint with absolute path)', () => {
+        const matcher = new ProblemMatcher();
+        const parse = (content: string) => matcher.parse(content);
+
+        it('full lifecycle: testSuiteStarted → testStarted → testFailed → testFinished', () => {
+            // testSuiteStarted for testsuite name
+            const suiteStarted = parse(
+                `##teamcity[testSuiteStarted name='Unit' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ArchTest.php' flowId='36903']`,
+            );
+            expect(suiteStarted).toEqual(
+                expect.objectContaining({
+                    event: TeamcityEvent.testSuiteStarted,
+                    name: 'Unit',
+                    flowId: 36903,
+                }),
+            );
+
+            // testSuiteStarted for class
+            parse(
+                `##teamcity[testSuiteStarted name='Users\\recca0120\\Desktop\\vscodephpunit\\src\\PHPUnit\\tests\\fixtures\\peststub\\tests\\Unit\\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php' flowId='36903']`,
+            );
+
+            // testStarted
+            const started = parse(
+                `##teamcity[testStarted name='test description' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::test description' flowId='36903']`,
+            );
+            expect(started).toEqual(
+                expect.objectContaining({
+                    event: TeamcityEvent.testStarted,
+                    id: 'tests/Unit/ExampleTest.php::test description',
+                    name: 'test description',
+                    file: 'tests/Unit/ExampleTest.php',
+                    flowId: 36903,
+                }),
+            );
+
+            // testFailed (merges with cached testStarted)
+            const failed = parse(
+                `##teamcity[testFailed name='test description' message='Failed asserting that true is identical to false.' details='at /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:4' flowId='36903']`,
+            );
+            expect(failed).toBeUndefined();
+
+            // testFinished (resolves the cached result)
+            const finished = parse(
+                `##teamcity[testFinished name='test description' duration='1' flowId='36903']`,
+            );
+            expect(finished).toEqual(
+                expect.objectContaining({
+                    event: TeamcityEvent.testFailed,
+                    id: 'tests/Unit/ExampleTest.php::test description',
+                    flowId: 36903,
+                }),
+            );
+        });
+    });
+
     it('PHPUnit without TestStarted', () => {
         resultShouldBe(
             `##teamcity[testSuiteStarted name='Tests\\Feature\\AuthenticationTest' locationHint='pest_qn://Authentication (Tests\\Feature\\Authentication)' flowId='6611']`,
