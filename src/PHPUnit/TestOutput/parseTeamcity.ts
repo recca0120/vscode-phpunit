@@ -1,92 +1,43 @@
-import yargsParser from 'yargs-parser';
 import type { Teamcity } from '../types';
 
-class EscapeValue {
-    private readonly mappings: ReadonlyArray<readonly [string, string]> = [
-        ['||', '|'],
-        ["|'", "'"],
-        ['|n', '\n'],
-        ['|r', '\r'],
-        ['|]', ']'],
-        ['|[', '['],
-    ];
+const unescapeMap: Record<string, string> = {
+    '||': '|',
+    "|'": "'",
+    '|n': '\n',
+    '|r': '\r',
+    '|]': ']',
+    '|[': '[',
+};
 
-    private readonly escapePatterns: ReadonlyArray<readonly [RegExp, string]>;
-    private readonly unescapePatterns: ReadonlyArray<readonly [RegExp, string]>;
+const unescapePattern = /\|[|'nr[\]]/g;
 
-    constructor() {
-        this.escapePatterns = this.mappings.map(
-            ([escaped, unescaped]) => [this.toRegExp(unescaped), escaped] as const,
-        );
-        this.unescapePatterns = this.mappings.map(
-            ([escaped, unescaped]) => [this.toRegExp(escaped), unescaped] as const,
-        );
-    }
-
-    public escape(value: string | number | object) {
-        return this.change(value, this.escapePatterns);
-    }
-
-    public unescape(value: string | number | object) {
-        return this.change(value, this.unescapePatterns);
-    }
-
-    public escapeSingleQuote(value: string | number | object) {
-        return this.change(value, [[/\|'/g, '%%%SINGLE_QUOTE%%%']]);
-    }
-
-    public unescapeSingleQuote(value: string | number | object) {
-        return this.change(value, [[/%%%SINGLE_QUOTE%%%/g, "'"]]);
-    }
-
-    private change(
-        value: string | number | object,
-        replacements: ReadonlyArray<readonly [RegExp, string]>,
-    ) {
-        if (typeof value === 'object') {
-            const obj = value as Record<string, unknown>;
-            for (const x in obj) {
-                obj[x] = this.change(obj[x] as string | number | object, replacements);
-            }
-
-            return obj;
-        }
-
-        if (typeof value !== 'string') {
-            return value;
-        }
-
-        for (const [pattern, replacement] of replacements) {
-            value = value.replace(pattern, replacement);
-        }
-
-        return value;
-    }
-
-    private toRegExp(str: string) {
-        return new RegExp(
-            str.replace(/([|\][])/g, (m) => `\\${m}`),
-            'g',
-        );
-    }
+function teamcityUnescape(value: string): string {
+    return value.replace(unescapePattern, (match) => unescapeMap[match] ?? match);
 }
 
-export const escapeValue = new EscapeValue();
+function parseNumber(value: string): string | number {
+    const num = Number(value);
+
+    return Number.isFinite(num) && String(num) === value ? num : value;
+}
+
+const keyValuePattern = /(\w+)='((?:[^']|(?<=\|)')*)'/g;
 
 export const parseTeamcity = (text: string): Teamcity => {
-    text = text
+    const body = text
         .trim()
-        .replace(/^.*#+teamcity/, '')
-        .replace(/^\[|]$/g, '');
-    text = escapeValue.escapeSingleQuote(text) as string;
-    text = escapeValue.unescape(text) as string;
+        .replace(/^.*#+teamcity\[/, '')
+        .replace(/]$/, '');
 
-    const [eventName, ...args] = yargsParser(text)._;
-    const command = [`--event='${eventName}'`, ...args.map((parameter) => `--${parameter}`)];
+    const spaceIndex = body.indexOf(' ');
+    const result: Record<string, string | number> = {
+        event: spaceIndex === -1 ? body : body.substring(0, spaceIndex),
+    };
 
-    const { _, $0, ...argv } = yargsParser(command.join(' '), {
-        string: ['actual', 'expected'],
-    });
+    for (const [, key, value] of body.substring(spaceIndex + 1).matchAll(keyValuePattern)) {
+        const raw = teamcityUnescape(value);
+        result[key] = key === 'actual' || key === 'expected' ? raw : parseNumber(raw);
+    }
 
-    return escapeValue.unescapeSingleQuote(argv) as Teamcity;
+    return result as Teamcity;
 };
