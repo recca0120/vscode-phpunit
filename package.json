@@ -199,6 +199,7 @@
     },
     "devDependencies": {
         "@biomejs/biome": "2.3.15",
+        "@vscode/tree-sitter-wasm": "^0.3.0",
         "@types/chai": "^5.2.3",
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.10",
@@ -229,7 +230,5 @@
         "vscode-uri": "^3.1.0",
         "yargs-parser": "^22.0.0"
     },
-    "dependencies": {
-        "@vscode/tree-sitter-wasm": "^0.3.0"
-    }
+    "dependencies": {}
 }
