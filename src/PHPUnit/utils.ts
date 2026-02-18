@@ -31,7 +31,9 @@ export const parseArguments = (parameters: string[], excludes: string[]): string
                 if (eqIndex === -1 && hasValue(i)) i++;
                 continue;
             }
-            if (eqIndex !== -1 || !hasValue(i)) {
+            if (eqIndex !== -1) {
+                options.push(`--${key}=${stripQuotes(token.substring(eqIndex + 1))}`);
+            } else if (!hasValue(i)) {
                 options.push(token);
             } else {
                 options.push(`--${key}=${stripQuotes(tokens[++i])}`);
