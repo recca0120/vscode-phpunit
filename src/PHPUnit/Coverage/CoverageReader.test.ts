@@ -16,7 +16,7 @@ describe('CoverageReader', () => {
 
     beforeEach(() => {
         cloverParser = new CloverParser();
-        reader = new CoverageReader(cloverParser);
+        reader = new CoverageReader(cloverParser, new PathReplacer());
     });
 
     afterEach(() => vi.restoreAllMocks());

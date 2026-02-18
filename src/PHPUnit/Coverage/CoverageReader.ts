@@ -5,7 +5,7 @@ import type { CloverParser, FileCoverageData } from './CloverParser';
 export class CoverageReader {
     constructor(
         private cloverParser: CloverParser,
-        private pathReplacer?: PathReplacer,
+        private pathReplacer: PathReplacer,
     ) {}
 
     async read(cloverFiles: string[]): Promise<FileCoverageData[]> {
@@ -15,11 +15,8 @@ export class CoverageReader {
 
         await Promise.all(cloverFiles.map((file) => rm(file, { force: true })));
 
-        const toLocal = this.pathReplacer;
         return results
             .flat()
-            .map((data) =>
-                toLocal ? { ...data, filePath: toLocal.toLocal(data.filePath) } : data,
-            );
+            .map((data) => ({ ...data, filePath: this.pathReplacer.toLocal(data.filePath) }));
     }
 }
