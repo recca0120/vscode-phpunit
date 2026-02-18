@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
+import { phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
 import { PathReplacer } from './PathReplacer';
-import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
+import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './ProcessBuilder/placeholders';
 
 describe('PathReplacer', () => {
     const givenPathReplacer = (paths?: Record<string, string>, cwd?: string) => {

@@ -1,5 +1,5 @@
 import { rm } from 'node:fs/promises';
-import type { PathReplacer } from '../ProcessBuilder/PathReplacer';
+import type { PathReplacer } from '../PathReplacer';
 import type { CloverParser, FileCoverageData } from './CloverParser';
 
 export class CoverageReader {

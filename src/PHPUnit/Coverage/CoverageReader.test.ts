@@ -1,6 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PathReplacer } from '../ProcessBuilder/PathReplacer';
+import { PathReplacer } from '../PathReplacer';
 import { VAR_WORKSPACE_FOLDER } from '../ProcessBuilder/placeholders';
 import { CloverParser, type FileCoverageData } from './CloverParser';
 import { CoverageReader } from './CoverageReader';
