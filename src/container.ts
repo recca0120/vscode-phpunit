@@ -102,7 +102,14 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .inSingletonScope();
     child
         .bind(CoverageReader)
-        .toDynamicValue((ctx) => new CoverageReader(ctx.get(CloverParser), ctx.get(PathReplacer)))
+        .toDynamicValue(
+            (ctx) =>
+                new CoverageReader(
+                    workspaceFolder.uri.fsPath,
+                    ctx.get(CloverParser),
+                    ctx.get(PathReplacer),
+                ),
+        )
         .inSingletonScope();
 
     // Per-folder services

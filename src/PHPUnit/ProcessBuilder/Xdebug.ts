@@ -1,8 +1,6 @@
-import { mkdtemp } from 'node:fs/promises';
 import * as net from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import type { IConfiguration } from '../Configuration';
+import type { PathReplacer } from '../PathReplacer';
 import { cloneInstance } from '../utils';
 
 async function getFreePort(): Promise<number> {
@@ -29,8 +27,7 @@ export enum Mode {
 export class Xdebug {
     mode?: Mode;
     private port?: number;
-    private temporaryDirectory?: string;
-    private index: number = 0;
+    private cloverFile?: string;
 
     constructor(private configuration: IConfiguration) {}
 
@@ -39,21 +36,15 @@ export class Xdebug {
     }
 
     getCloverFile() {
-        if (this.mode !== Mode.coverage || !this.temporaryDirectory) {
+        if (this.mode !== Mode.coverage) {
             return undefined;
         }
 
-        return join(this.temporaryDirectory, `phpunit-${this.index}.xml`);
+        return this.cloverFile;
     }
 
-    setIndex(index: number) {
-        this.index = index;
-
-        return this;
-    }
-
-    setTemporaryDirectory(temporaryDirectory: string) {
-        this.temporaryDirectory = temporaryDirectory;
+    setCloverFile(cloverFile: string) {
+        this.cloverFile = cloverFile;
 
         return this;
     }
@@ -64,10 +55,6 @@ export class Xdebug {
         if (mode === Mode.debug) {
             this.port =
                 (this.configuration.get('xdebugPort', 0) as number) || (await getFreePort());
-        }
-
-        if (mode === Mode.coverage) {
-            this.setTemporaryDirectory(await mkdtemp(join(tmpdir(), 'phpunit')));
         }
 
         return this;
@@ -104,17 +91,12 @@ export class Xdebug {
         return [];
     }
 
-    getPhpUnitArgs(): string[] {
-        if (this.mode !== Mode.coverage) {
+    getPhpUnitArgs(pathReplacer: PathReplacer): string[] {
+        if (this.mode !== Mode.coverage || !this.cloverFile) {
             return [];
         }
 
-        const cloverFile = this.getCloverFile();
-        if (!cloverFile) {
-            return [];
-        }
-
-        return ['--coverage-clover', cloverFile];
+        return ['--coverage-clover', pathReplacer.toRemote(this.cloverFile)];
     }
 
     clone() {

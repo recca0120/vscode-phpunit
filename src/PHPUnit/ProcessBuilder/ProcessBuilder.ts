@@ -165,7 +165,7 @@ export class ProcessBuilder {
             .concat('--colors=never', '--teamcity');
 
         return base64EncodeFilter(this.addParaTestFunctional(args))
-            .concat(...(this.xdebug?.getPhpUnitArgs() ?? []))
+            .concat(...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? []))
             .join(' ');
     }
 

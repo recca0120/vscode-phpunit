@@ -10,6 +10,8 @@ import {
     type TestRunnerProcess,
 } from '../PHPUnit';
 import { CoverageReader } from '../PHPUnit/Coverage';
+import type { Xdebug } from '../PHPUnit/ProcessBuilder/Xdebug';
+import { Mode } from '../PHPUnit/ProcessBuilder/Xdebug';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
@@ -43,6 +45,10 @@ export class TestRunHandler {
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
         const xdebug = builder.getXdebug();
+
+        if (xdebug?.mode === Mode.coverage) {
+            await this.coverageReader.prepare();
+        }
 
         await this.debugSession.wrap(xdebug, async () => {
             const testRun = this.ctrl.createTestRun(request);
@@ -108,6 +114,7 @@ export class TestRunHandler {
 
     private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
         if (!request.include) {
+            this.assignCloverFile(builder.getXdebug(), 0);
             return [runner.run(builder)];
         }
 
@@ -124,9 +131,14 @@ export class TestRunHandler {
         index: number,
     ): ProcessBuilder {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        return builder
-            .clone()
-            .setXdebug(builder.getXdebug()?.clone().setIndex(index))
-            .setArguments(filter);
+        const clonedXdebug = builder.getXdebug()?.clone();
+        this.assignCloverFile(clonedXdebug, index);
+        return builder.clone().setXdebug(clonedXdebug).setArguments(filter);
+    }
+
+    private assignCloverFile(xdebug: Xdebug | undefined, index: number) {
+        if (xdebug?.mode === Mode.coverage) {
+            xdebug.setCloverFile(this.coverageReader.generateCloverPath(index));
+        }
     }
 }

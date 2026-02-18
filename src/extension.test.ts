@@ -629,7 +629,7 @@ describe('Extension Test', () => {
                             '--colors=never',
                             '--teamcity',
                             '--coverage-clover',
-                            new RegExp(`phpunit-${i}.xml`),
+                            new RegExp(`coverage-.+-${i}\\.xml`),
                         ],
                         { XDEBUG_MODE: 'coverage' },
                     );

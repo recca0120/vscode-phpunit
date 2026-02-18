@@ -1,4 +1,5 @@
-import { rm } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { phpUnitProjectWin } from '../__tests__/utils';
 import { PathReplacer } from '../PathReplacer';
@@ -8,7 +9,11 @@ import { CoverageReader } from './CoverageReader';
 
 vi.mock('node:fs/promises', async () => {
     const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
-    return { ...actual, rm: vi.fn().mockResolvedValue(undefined) };
+    return {
+        ...actual,
+        mkdir: vi.fn().mockResolvedValue(undefined),
+        rm: vi.fn().mockResolvedValue(undefined),
+    };
 });
 
 describe('CoverageReader', () => {
@@ -17,10 +22,42 @@ describe('CoverageReader', () => {
 
     beforeEach(() => {
         cloverParser = new CloverParser();
-        reader = new CoverageReader(cloverParser, new PathReplacer());
+        reader = new CoverageReader('/workspace', cloverParser, new PathReplacer());
     });
 
     afterEach(() => vi.restoreAllMocks());
+
+    it('prepare creates .phpunit.cache directory', async () => {
+        await reader.prepare();
+
+        expect(mkdir).toHaveBeenCalledWith(join('/workspace', '.phpunit.cache'), {
+            recursive: true,
+        });
+    });
+
+    it('generateCloverPath returns path with runId and index', async () => {
+        await reader.prepare();
+
+        expect(reader.generateCloverPath(0)).toMatch(
+            /[/\\]\.phpunit\.cache[/\\]coverage-.+-0\.xml$/,
+        );
+    });
+
+    it('generateCloverPath uses index for uniqueness within a run', async () => {
+        await reader.prepare();
+
+        expect(reader.generateCloverPath(0)).not.toBe(reader.generateCloverPath(1));
+    });
+
+    it('prepare generates new runId on each call', async () => {
+        await reader.prepare();
+        const path1 = reader.generateCloverPath(0);
+
+        await reader.prepare();
+        const path2 = reader.generateCloverPath(0);
+
+        expect(path1).not.toBe(path2);
+    });
 
     it('reads parsed coverage data from multiple clover files', async () => {
         const fakeData: FileCoverageData[] = [
@@ -50,7 +87,7 @@ describe('CoverageReader', () => {
             { cwd: '/local/workspace' },
             { [VAR_WORKSPACE_FOLDER]: '/app' },
         );
-        reader = new CoverageReader(cloverParser, pathReplacer);
+        reader = new CoverageReader('/local/workspace', cloverParser, pathReplacer);
 
         const fakeData: FileCoverageData[] = [
             { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
@@ -67,7 +104,7 @@ describe('CoverageReader', () => {
             { cwd: phpUnitProjectWin('') },
             { [VAR_WORKSPACE_FOLDER]: '/app' },
         );
-        reader = new CoverageReader(cloverParser, pathReplacer);
+        reader = new CoverageReader(phpUnitProjectWin(''), cloverParser, pathReplacer);
 
         const fakeData: FileCoverageData[] = [
             { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
