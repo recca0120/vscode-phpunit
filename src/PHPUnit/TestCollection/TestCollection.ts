@@ -66,11 +66,60 @@ export class TestCollection {
 
     async change(uri: URI) {
         return new Promise<this>((resolve, reject) => {
-            this.parseQueue = this.parseQueue.then(
-                () => this.doChange(uri).then(resolve, reject),
-                () => this.doChange(uri).then(resolve, reject),
-            );
+            this.parseQueue = this.parseQueue
+                .catch(() => {})
+                .then(() => this.doChange(uri).then(resolve, reject));
         });
+    }
+
+    get(uri: URI) {
+        return this.findFile(uri)?.tests;
+    }
+
+    has(uri: URI) {
+        return !!this.findFile(uri);
+    }
+
+    delete(uri: URI) {
+        const file = this.findFile(uri);
+
+        return file ? this.deleteFile(file) : false;
+    }
+
+    reset() {
+        this.callbacks.onReset?.();
+        for (const file of this.gatherFiles()) {
+            this.deleteFile(file);
+        }
+        this.suites.clear();
+        this.matcherCache.clear();
+        this.fileIndex.clear();
+        this.classHierarchy.clear();
+
+        return this;
+    }
+
+    findFile(uri: URI): File<TestDefinition> | undefined {
+        const uriStr = uri.toString();
+        const testsuite = this.fileIndex.get(uriStr);
+        if (!testsuite) {
+            return undefined;
+        }
+
+        const tests = this.items().get(testsuite)?.get(uriStr);
+        if (!tests) {
+            return undefined;
+        }
+
+        return { testsuite, uri, tests };
+    }
+
+    *gatherFiles() {
+        for (const [testsuite, files] of this.items()) {
+            for (const [uriStr, tests] of files) {
+                yield { testsuite, uri: URI.parse(uriStr), tests };
+            }
+        }
     }
 
     private async doChange(uri: URI) {
@@ -122,61 +171,7 @@ export class TestCollection {
         }
     }
 
-    get(uri: URI) {
-        return this.findFile(uri)?.tests;
-    }
-
-    has(uri: URI) {
-        return !!this.findFile(uri);
-    }
-
-    delete(uri: URI) {
-        const file = this.findFile(uri);
-
-        return file ? this.deleteFile(file) : false;
-    }
-
-    reset() {
-        this.callbacks.onReset?.();
-        for (const file of this.gatherFiles()) {
-            this.deleteFile(file);
-        }
-        this.suites.clear();
-        this.matcherCache.clear();
-        this.fileIndex.clear();
-        this.classHierarchy.clear();
-
-        return this;
-    }
-
-    findFile(uri: URI): File<TestDefinition> | undefined {
-        const uriStr = uri.toString();
-        const testsuite = this.fileIndex.get(uriStr);
-        if (!testsuite) {
-            return undefined;
-        }
-
-        const tests = this.items().get(testsuite)?.get(uriStr);
-        if (!tests) {
-            return undefined;
-        }
-
-        return { testsuite, uri, tests };
-    }
-
-    private parseTests(uri: URI, testsuite: string): Promise<TestDefinition[]> {
-        return this.doParse(uri, testsuite);
-    }
-
-    *gatherFiles() {
-        for (const [testsuite, files] of this.items()) {
-            for (const [uriStr, tests] of files) {
-                yield { testsuite, uri: URI.parse(uriStr), tests };
-            }
-        }
-    }
-
-    private async doParse(uri: URI, testsuite: string) {
+    private async parseTests(uri: URI, testsuite: string) {
         const result = await this.testParser.parseFile(uri.fsPath, testsuite);
         if (!result) {
             return [];

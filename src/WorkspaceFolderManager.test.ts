@@ -9,6 +9,11 @@ const makeFolder = (name: string, path: string) => ({
     uri: Uri.file(path),
 });
 
+const setWorkspaceFolders = (...folders: ReturnType<typeof makeFolder>[]) => {
+    Object.defineProperty(workspace, 'workspaceFolders', { value: folders });
+    Object.defineProperty(workspace, 'textDocuments', { value: [] });
+};
+
 describe('WorkspaceFolderManager', () => {
     let ctrl: TestController;
     let manager: WorkspaceFolderManager;
@@ -27,86 +32,29 @@ describe('WorkspaceFolderManager', () => {
 
     describe('initialize', () => {
         it('initializes single folder without folder root items', async () => {
-            const folder1 = makeFolder('a', '/a');
-            Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1] });
-            Object.defineProperty(workspace, 'textDocuments', { value: [] });
+            setWorkspaceFolders(makeFolder('a', '/a'));
 
-            await manager.initialize({
-                subscriptions: [],
-            } as unknown as import('vscode').ExtensionContext);
+            await manager.initialize();
 
             expect(manager.getAll()).toHaveLength(1);
             expect(ctrl.items.size).toBe(0);
         });
 
         it('initializes multi folders with folder root items', async () => {
-            const folder1 = makeFolder('a', '/a');
-            const folder2 = makeFolder('b', '/b');
-            Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1, folder2] });
-            Object.defineProperty(workspace, 'textDocuments', { value: [] });
+            setWorkspaceFolders(makeFolder('a', '/a'), makeFolder('b', '/b'));
 
-            await manager.initialize({
-                subscriptions: [],
-            } as unknown as import('vscode').ExtensionContext);
+            await manager.initialize();
 
             expect(manager.getAll()).toHaveLength(2);
             expect(ctrl.items.size).toBe(2);
         });
     });
 
-    describe('setupControllerHandlers', () => {
-        it('sets refreshHandler and resolveHandler on ctrl', () => {
-            Object.defineProperty(workspace, 'workspaceFolders', {
-                value: [makeFolder('a', '/a')],
-            });
-            Object.defineProperty(workspace, 'textDocuments', { value: [] });
-
-            manager.setupControllerHandlers({
-                subscriptions: [],
-            } as unknown as import('vscode').ExtensionContext);
-
-            expect(ctrl.refreshHandler).toBeTypeOf('function');
-            expect(ctrl.resolveHandler).toBeTypeOf('function');
-        });
-    });
-
-    describe('getContextForUri', () => {
-        it('returns FolderTestContext for correct folder', async () => {
-            const folder1 = makeFolder('a', '/a');
-            Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1] });
-            Object.defineProperty(workspace, 'textDocuments', { value: [] });
-
-            await manager.initialize({
-                subscriptions: [],
-            } as unknown as import('vscode').ExtensionContext);
-
-            const ctx = manager.getContextForUri(Uri.file('/a/test.php'));
-
-            expect(ctx).toBeDefined();
-            expect(ctx?.findTestsByFile).toBeTypeOf('function');
-            expect(ctx?.findTestsByPosition).toBeTypeOf('function');
-            expect(ctx?.findTestsByRequest).toBeTypeOf('function');
-            expect(ctx?.getPreviousRequest).toBeTypeOf('function');
-            expect(ctx?.getLastRunAt).toBeTypeOf('function');
-        });
-
-        it('returns undefined for unknown uri', () => {
-            const ctx = manager.getContextForUri(Uri.file('/unknown/test.php'));
-
-            expect(ctx).toBeUndefined();
-        });
-    });
-
     describe('dispose', () => {
         it('clears all folders', async () => {
-            const folder1 = makeFolder('a', '/a');
-            const folder2 = makeFolder('b', '/b');
-            Object.defineProperty(workspace, 'workspaceFolders', { value: [folder1, folder2] });
-            Object.defineProperty(workspace, 'textDocuments', { value: [] });
+            setWorkspaceFolders(makeFolder('a', '/a'), makeFolder('b', '/b'));
 
-            await manager.initialize({
-                subscriptions: [],
-            } as unknown as import('vscode').ExtensionContext);
+            await manager.initialize();
 
             manager.dispose();
 

@@ -5,6 +5,7 @@ import type {
     TestItem,
     TestItemCollection,
     TestRunRequest,
+    Uri,
 } from 'vscode';
 import type { URI } from 'vscode-uri';
 import {
@@ -18,7 +19,7 @@ import {
 import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { TYPES } from '../types';
 import { TestDefinitionIndex } from './TestDefinitionIndex';
-import { TestHierarchyBuilder } from './TestHierarchyBuilder';
+import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
 export class TestCollection {
@@ -47,12 +48,27 @@ export class TestCollection {
         this._rootItems = items;
     }
 
-    getTestDefinition(testItem: TestItem): TestDefinition | undefined {
-        return this.index.getDefinition(testItem.id);
+    createFolderRoot(folder: { index: number; name: string; uri: Uri }): TestItem {
+        const id = `folder:${folder.uri.toString()}`;
+        const folderItem = this.ctrl.createTestItem(
+            id,
+            `${icon(TestType.workspace)} ${folder.name}`,
+            folder.uri,
+        );
+        folderItem.sortText = String(folder.index).padStart(5, '0');
+        folderItem.canResolveChildren = true;
+        this._rootItems = folderItem.children;
+        this.registerTestDefinition(folderItem, {
+            type: TestType.workspace,
+            id,
+            label: folder.name,
+        });
+
+        return folderItem;
     }
 
-    registerTestDefinition(testItem: TestItem, testDefinition: TestDefinition): void {
-        this.index.set(testItem.uri?.toString() ?? testItem.id, testItem, testDefinition);
+    getTestDefinition(testItem: TestItem): TestDefinition | undefined {
+        return this.index.getDefinition(testItem.id);
     }
 
     findTestsByFile(uri: URI): TestItem[] {
@@ -96,19 +112,6 @@ export class TestCollection {
         return [...this.base.gatherFiles()];
     }
 
-    // Delegate to base
-    get size() {
-        return this.base.size;
-    }
-
-    getRootUri() {
-        return this.base.getRootUri();
-    }
-
-    items() {
-        return this.base.items();
-    }
-
     clearMatcherCache() {
         this.base.clearMatcherCache();
     }
@@ -123,10 +126,6 @@ export class TestCollection {
         return this;
     }
 
-    get(uri: URI) {
-        return this.base.get(uri);
-    }
-
     has(uri: URI) {
         return this.base.has(uri);
     }
@@ -135,13 +134,13 @@ export class TestCollection {
         return this.base.delete(uri);
     }
 
-    findFile(uri: URI) {
-        return this.base.findFile(uri);
-    }
-
     reset() {
         this.base.reset();
         return this;
+    }
+
+    private registerTestDefinition(testItem: TestItem, testDefinition: TestDefinition): void {
+        this.index.set(testItem.uri?.toString() ?? testItem.id, testItem, testDefinition);
     }
 
     private handleTestsParsed(uri: URI, tests: TestDefinition[]) {
@@ -165,6 +164,8 @@ export class TestCollection {
     }
 
     private handleReset() {
+        const workspaceDefs = this.index.getDefinitionsByType(TestType.workspace);
+
         for (const [testItem, testDef] of this.allDefinitions()) {
             if (testDef.type !== TestType.class) {
                 continue;
@@ -178,6 +179,10 @@ export class TestCollection {
             testItem.parent.children.delete(testItem.id);
         }
         this.index.clear();
+
+        for (const [testItem, testDef] of workspaceDefs) {
+            this.index.set(testItem.uri?.toString() ?? testItem.id, testItem, testDef);
+        }
     }
 
     private inRangeTestItems(uri: URI, position: Position) {

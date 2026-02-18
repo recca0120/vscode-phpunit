@@ -17,6 +17,9 @@ import {
 } from '../../PHPUnit';
 import { OutputBuffer } from './OutputBuffer';
 
+const PRINTED_OUTPUT_PATTERN =
+    /(This test printed output|Test code or tested code printed unexpected output):(?<output>.*)/i;
+
 export abstract class OutputFormatter {
     protected outputBuffer = new OutputBuffer();
     protected messages = new Map<TeamcityEvent, string[]>([
@@ -84,12 +87,6 @@ export abstract class OutputFormatter {
         return this.clearAndReturn(result.text);
     }
 
-    private clearAndReturn(text: string) {
-        this.setCurrent(undefined);
-
-        return text.trim();
-    }
-
     end(): string | undefined {
         return undefined;
     }
@@ -107,11 +104,7 @@ export abstract class OutputFormatter {
         const name = 'name' in result ? result.name : '';
         const message = 'message' in result ? result.message : '';
 
-        const pattern = [
-            'This test printed output',
-            'Test code or tested code printed unexpected output',
-        ].join('|');
-        const matched = message.match(new RegExp(`(${pattern}):(?<output>.*)`, 'i'));
+        const matched = message.match(PRINTED_OUTPUT_PATTERN);
         const text = matched ? matched.groups?.output.trim() : this.outputBuffer.get(name);
 
         return text ? `${icon} ${text}` : undefined;
@@ -127,6 +120,12 @@ export abstract class OutputFormatter {
 
     protected formatTestName(result: TestFinished | TestFailed): string {
         return /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
+    }
+
+    private clearAndReturn(text: string) {
+        this.setCurrent(undefined);
+
+        return text.trim();
     }
 
     private setCurrent(current?: string) {

@@ -6,6 +6,7 @@ export class TestDefinitionIndex {
     private items = new Map<string, TestItem>();
     private groups = new Map<string, Set<TestItem>>();
     private byUri = new Map<string, Set<string>>();
+    private idToUris = new Map<string, Set<string>>();
 
     set(uri: string, testItem: TestItem, testDefinition: TestDefinition): void {
         this.definitions.set(testItem.id, testDefinition);
@@ -14,6 +15,10 @@ export class TestDefinitionIndex {
         const uriIds = this.byUri.get(uri) ?? new Set<string>();
         this.byUri.set(uri, uriIds);
         uriIds.add(testItem.id);
+
+        const uris = this.idToUris.get(testItem.id) ?? new Set<string>();
+        this.idToUris.set(testItem.id, uris);
+        uris.add(uri);
 
         if (testDefinition.type === TestType.method) {
             const groupPrefix = 'group:';
@@ -29,10 +34,14 @@ export class TestDefinitionIndex {
     }
 
     delete(testItem: TestItem): void {
-        this.deleteById(testItem.id);
-        for (const [, ids] of this.byUri) {
-            ids.delete(testItem.id);
+        const uris = this.idToUris.get(testItem.id);
+        if (uris) {
+            for (const uri of uris) {
+                this.byUri.get(uri)?.delete(testItem.id);
+            }
+            this.idToUris.delete(testItem.id);
         }
+        this.deleteById(testItem.id);
     }
 
     deleteByUri(uri: string): void {
@@ -42,36 +51,13 @@ export class TestDefinitionIndex {
         }
         this.byUri.delete(uri);
         for (const id of ids) {
-            if (!this.isReferencedByOtherUri(id)) {
-                this.deleteById(id);
-            }
-        }
-    }
-
-    private isReferencedByOtherUri(id: string): boolean {
-        for (const [, ids] of this.byUri) {
-            if (ids.has(id)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private deleteById(id: string): void {
-        const testItem = this.items.get(id);
-        if (!testItem) {
-            return;
-        }
-        this.definitions.delete(id);
-        this.items.delete(id);
-        this.removeFromGroups(testItem);
-    }
-
-    private removeFromGroups(testItem: TestItem): void {
-        for (const [key, members] of this.groups) {
-            members.delete(testItem);
-            if (members.size === 0) {
-                this.groups.delete(key);
+            const uris = this.idToUris.get(id);
+            if (uris) {
+                uris.delete(uri);
+                if (uris.size === 0) {
+                    this.idToUris.delete(id);
+                    this.deleteById(id);
+                }
             }
         }
     }
@@ -97,6 +83,20 @@ export class TestDefinitionIndex {
         this.items.clear();
         this.groups.clear();
         this.byUri.clear();
+        this.idToUris.clear();
+    }
+
+    getDefinitionsByType(type: TestType): [TestItem, TestDefinition][] {
+        const result: [TestItem, TestDefinition][] = [];
+        for (const [id, def] of this.definitions) {
+            if (def.type === type) {
+                const item = this.items.get(id);
+                if (item) {
+                    result.push([item, def]);
+                }
+            }
+        }
+        return result;
     }
 
     getDefinition(id: string): TestDefinition | undefined {
@@ -113,5 +113,24 @@ export class TestDefinitionIndex {
 
     getItemsByGroup(group: string): TestItem[] {
         return [...(this.groups.get(group) ?? [])];
+    }
+
+    private deleteById(id: string): void {
+        const testItem = this.items.get(id);
+        if (!testItem) {
+            return;
+        }
+        this.definitions.delete(id);
+        this.items.delete(id);
+        this.removeFromGroups(testItem);
+    }
+
+    private removeFromGroups(testItem: TestItem): void {
+        for (const [key, members] of this.groups) {
+            members.delete(testItem);
+            if (members.size === 0) {
+                this.groups.delete(key);
+            }
+        }
     }
 }

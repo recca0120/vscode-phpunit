@@ -12,10 +12,6 @@ type KeyableResult = TestResult & { name: string; flowId: number };
 export class TestResultCache {
     private cache = new Map<string, TestResult>();
 
-    private buildKey(result: KeyableResult): string {
-        return `${result.name}-${result.flowId}`;
-    }
-
     get(result: KeyableResult): TestResult | undefined {
         return this.cache.get(this.buildKey(result));
     }
@@ -55,6 +51,10 @@ export class TestResultCache {
         }
 
         return undefined;
+    }
+
+    private buildKey(result: KeyableResult): string {
+        return `${result.name}-${result.flowId}`;
     }
 
     private isTestStarted(pattern: RegExp, result: TestResult): boolean {

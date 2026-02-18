@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, tests } from 'vscode';
-import { ChainAstParser, PHPUnitXML, TestParser } from '../PHPUnit';
+import { ChainAstParser, PHPUnitXML, TestParser, TestType } from '../PHPUnit';
 import { pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
-import { TestHierarchyBuilder } from './TestHierarchyBuilder';
+import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 type CODE = {
     testsuite: { name: string; path: string };
@@ -108,16 +108,16 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'Assertions',
-                    label: '$(symbol-class) AssertionsTest',
+                    label: `${icon(TestType.class)} AssertionsTest`,
                     children: [
                         {
                             id: 'Assertions::Passed',
-                            label: '$(symbol-method) test_passed',
+                            label: `${icon(TestType.method)} test_passed`,
                             children: [],
                         },
                         {
                             id: 'Assertions::Failed',
-                            label: '$(symbol-method) test_failed',
+                            label: `${icon(TestType.method)} test_failed`,
                             children: [],
                         },
                     ],
@@ -137,15 +137,15 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'namespace:Tests',
-                    label: '$(symbol-namespace) Tests',
+                    label: `${icon(TestType.namespace)} Tests`,
                     children: [
                         {
                             id: 'Assertions (Tests\\Assertions)',
-                            label: '$(symbol-class) AssertionsTest',
+                            label: `${icon(TestType.class)} AssertionsTest`,
                             children: [
                                 {
                                     id: 'Assertions (Tests\\Assertions)::Passed',
-                                    label: '$(symbol-method) test_passed',
+                                    label: `${icon(TestType.method)} test_passed`,
                                     children: [],
                                 },
                             ],
@@ -172,26 +172,26 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'namespace:Tests',
-                    label: '$(symbol-namespace) Tests',
+                    label: `${icon(TestType.namespace)} Tests`,
                     children: [
                         {
                             id: 'Assertions (Tests\\Assertions)',
-                            label: '$(symbol-class) AssertionsTest',
+                            label: `${icon(TestType.class)} AssertionsTest`,
                             children: [
                                 {
                                     id: 'Assertions (Tests\\Assertions)::Passed',
-                                    label: '$(symbol-method) test_passed',
+                                    label: `${icon(TestType.method)} test_passed`,
                                     children: [],
                                 },
                             ],
                         },
                         {
                             id: 'Assertions2 (Tests\\Assertions2)',
-                            label: `$(symbol-class) Assertions2Test`,
+                            label: `${icon(TestType.class)} Assertions2Test`,
                             children: [
                                 {
                                     id: 'Assertions2 (Tests\\Assertions2)::Passed',
-                                    label: '$(symbol-method) test_passed',
+                                    label: `${icon(TestType.method)} test_passed`,
                                     children: [],
                                 },
                             ],
@@ -218,15 +218,15 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'testsuite:Unit',
-                    label: '$(package) Unit',
+                    label: `${icon(TestType.testsuite)} Unit`,
                     children: [
                         {
                             id: 'Example (Tests\\Unit\\Example)',
-                            label: '$(symbol-class) ExampleTest',
+                            label: `${icon(TestType.class)} ExampleTest`,
                             children: [
                                 {
                                     id: 'Example (Tests\\Unit\\Example)::Passed',
-                                    label: '$(symbol-method) test_passed',
+                                    label: `${icon(TestType.method)} test_passed`,
                                     children: [],
                                 },
                             ],
@@ -235,15 +235,15 @@ describe('TestHierarchyBuilder', () => {
                 },
                 {
                     id: 'testsuite:Feature',
-                    label: '$(package) Feature',
+                    label: `${icon(TestType.testsuite)} Feature`,
                     children: [
                         {
                             id: 'Example (Tests\\Feature\\Example)',
-                            label: '$(symbol-class) ExampleTest',
+                            label: `${icon(TestType.class)} ExampleTest`,
                             children: [
                                 {
                                     id: 'Example (Tests\\Feature\\Example)::Passed',
-                                    label: '$(symbol-method) test_passed',
+                                    label: `${icon(TestType.method)} test_passed`,
                                     children: [],
                                 },
                             ],
@@ -275,26 +275,26 @@ describe('TestHierarchyBuilder', () => {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'testsuite:App',
-                    label: '$(package) App',
+                    label: `${icon(TestType.testsuite)} App`,
                     children: [
                         {
                             id: 'Example (Tests\\Unit\\Example)',
-                            label: '$(symbol-class) ExampleTest',
+                            label: `${icon(TestType.class)} ExampleTest`,
                             children: [
                                 {
                                     id: 'Example (Tests\\Unit\\Example)::Unit',
-                                    label: '$(symbol-method) test_unit',
+                                    label: `${icon(TestType.method)} test_unit`,
                                     children: [],
                                 },
                             ],
                         },
                         {
                             id: 'Login (Tests\\Feature\\Login)',
-                            label: '$(symbol-class) LoginTest',
+                            label: `${icon(TestType.class)} LoginTest`,
                             children: [
                                 {
                                     id: 'Login (Tests\\Feature\\Login)::Login',
-                                    label: '$(symbol-method) test_login',
+                                    label: `${icon(TestType.method)} test_login`,
                                     children: [],
                                 },
                             ],
@@ -303,15 +303,15 @@ describe('TestHierarchyBuilder', () => {
                 },
                 {
                     id: 'testsuite:Integration',
-                    label: '$(package) Integration',
+                    label: `${icon(TestType.testsuite)} Integration`,
                     children: [
                         {
                             id: 'Api (Tests\\Integration\\Api)',
-                            label: '$(symbol-class) ApiTest',
+                            label: `${icon(TestType.class)} ApiTest`,
                             children: [
                                 {
                                     id: 'Api (Tests\\Integration\\Api)::Api',
-                                    label: '$(symbol-method) test_api',
+                                    label: `${icon(TestType.method)} test_api`,
                                     children: [],
                                 },
                             ],
@@ -417,43 +417,43 @@ test('Test3', function () {
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'namespace:Tests',
-                    label: '$(symbol-namespace) Tests',
+                    label: `${icon(TestType.namespace)} Tests`,
                     children: [
                         {
                             id: 'Tests\\ExampleTest',
-                            label: '$(symbol-class) ExampleTest',
+                            label: `${icon(TestType.class)} ExampleTest`,
                             children: [
                                 expect.objectContaining({
                                     id: 'tests/ExampleTest.php::`Given something ...`',
-                                    label: '$(symbol-class) Given something ...',
+                                    label: `${icon(TestType.class)} Given something ...`,
                                 }),
                                 {
                                     id: 'tests/ExampleTest.php::Test1',
-                                    label: '$(symbol-method) Test1',
+                                    label: `${icon(TestType.method)} Test1`,
                                     children: [],
                                 },
                                 {
                                     id: 'tests/ExampleTest.php::`Given something else...`',
-                                    label: '$(symbol-class) Given something else...',
+                                    label: `${icon(TestType.class)} Given something else...`,
                                     children: [
                                         expect.objectContaining({
                                             id: 'tests/ExampleTest.php::`Given something else...` → `When...`',
-                                            label: '$(symbol-class) When...',
+                                            label: `${icon(TestType.class)} When...`,
                                         }),
                                         {
                                             id: 'tests/ExampleTest.php::`Given something else...` → Test2',
-                                            label: '$(symbol-method) Test2',
+                                            label: `${icon(TestType.method)} Test2`,
                                             children: [],
                                         },
                                         expect.objectContaining({
                                             id: 'tests/ExampleTest.php::`Given something else...` → `When also...`',
-                                            label: '$(symbol-class) When also...',
+                                            label: `${icon(TestType.class)} When also...`,
                                         }),
                                     ],
                                 },
                                 {
                                     id: 'tests/ExampleTest.php::Test3',
-                                    label: '$(symbol-method) Test3',
+                                    label: `${icon(TestType.method)} Test3`,
                                     children: [],
                                 },
                             ],

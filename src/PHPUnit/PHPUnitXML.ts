@@ -53,38 +53,6 @@ export class PHPUnitXML {
         return isAbsolute(file) || !configRoot ? file : join(configRoot, file);
     }
 
-    private resolveToRoot(root: string, value: string): string {
-        if (this._configRoot === root) {
-            return value;
-        }
-
-        return normalize(relative(root, resolve(this._configRoot, value)));
-    }
-
-    private resolveProjectRoot(): string {
-        const configRoot = this._configRoot;
-        if (!this.element) {
-            return configRoot;
-        }
-
-        for (const parent of this.element.querySelectorAll('phpunit testsuites testsuite')) {
-            for (const node of parent.querySelectorAll('directory')) {
-                const dir = node.getText();
-                if (dir.startsWith('..')) {
-                    const resolvedAbs = resolve(configRoot, dir);
-                    const configRootAbs = resolve(configRoot);
-
-                    if (!resolvedAbs.startsWith(configRootAbs)) {
-                        const dotDotSegments = dir.split(/[/\\]/).filter((s) => s === '..');
-                        return normalize(resolve(configRoot, ...dotDotSegments));
-                    }
-                }
-            }
-        }
-
-        return configRoot;
-    }
-
     getTestSuiteNames(): string[] {
         const seen = new Set<string>();
         const names: string[] = [];
@@ -173,6 +141,38 @@ export class PHPUnitXML {
             ...appendType('include', this.getIncludes()),
             ...appendType('exclude', this.getExcludes()),
         ];
+    }
+
+    private resolveToRoot(root: string, value: string): string {
+        if (this._configRoot === root) {
+            return value;
+        }
+
+        return normalize(relative(root, resolve(this._configRoot, value)));
+    }
+
+    private resolveProjectRoot(): string {
+        const configRoot = this._configRoot;
+        if (!this.element) {
+            return configRoot;
+        }
+
+        for (const parent of this.element.querySelectorAll('phpunit testsuites testsuite')) {
+            for (const node of parent.querySelectorAll('directory')) {
+                const dir = node.getText();
+                if (dir.startsWith('..')) {
+                    const resolvedAbs = resolve(configRoot, dir);
+                    const configRootAbs = resolve(configRoot);
+
+                    if (!resolvedAbs.startsWith(configRootAbs)) {
+                        const dotDotSegments = dir.split(/[/\\]/).filter((s) => s === '..');
+                        return normalize(resolve(configRoot, ...dotDotSegments));
+                    }
+                }
+            }
+        }
+
+        return configRoot;
     }
 
     private fromCache<T>(key: string, callback: () => T[]): T[] {

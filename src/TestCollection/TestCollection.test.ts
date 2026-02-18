@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { ChainAstParser, PHPUnitXML, TestParser } from '../PHPUnit';
+import { ChainAstParser, PHPUnitXML, TestParser, TestType } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
 import { TestCollection } from './TestCollection';
+import { icon } from './TestHierarchyBuilder';
 
 describe('Extension TestCollection', () => {
     const root = phpUnitProject('');
@@ -65,11 +66,11 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             {
                 id: 'No Namespace',
-                label: '$(symbol-class) NoNamespaceTest',
+                label: `${icon(TestType.class)} NoNamespaceTest`,
                 children: [
                     {
                         id: 'No Namespace::No namespace',
-                        label: '$(symbol-method) test_no_namespace',
+                        label: `${icon(TestType.method)} test_no_namespace`,
                         children: [],
                     },
                 ],
@@ -91,15 +92,15 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             expect.objectContaining({
                 id: 'namespace:Tests',
-                label: '$(symbol-namespace) Tests',
+                label: `${icon(TestType.namespace)} Tests`,
                 children: [
                     expect.objectContaining({
                         id: 'Assertions (Tests\\Assertions)',
-                        label: '$(symbol-class) AssertionsTest',
+                        label: `${icon(TestType.class)} AssertionsTest`,
                     }),
                     expect.objectContaining({
                         id: 'Attribute (Tests\\Attribute)',
-                        label: '$(symbol-class) AttributeTest',
+                        label: `${icon(TestType.class)} AttributeTest`,
                     }),
                 ],
             }),
@@ -213,6 +214,30 @@ describe('Extension TestCollection', () => {
         expect(collection.findGroups()).toEqual([]);
     });
 
+    it('workspace folder definition should survive reset', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const folderItem = collection.createFolderRoot(workspaceFolder);
+        ctrl.items.add(folderItem);
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        // workspace definition exists before reset
+        expect(collection.getTestDefinition(folderItem)).toBeDefined();
+        expect(collection.getTestDefinition(folderItem)?.type).toBe(TestType.workspace);
+
+        collection.reset();
+
+        // workspace definition should still exist after reset
+        expect(collection.getTestDefinition(folderItem)).toBeDefined();
+        expect(collection.getTestDefinition(folderItem)?.type).toBe(TestType.workspace);
+    });
+
     it('delete should clean up testItems and index', async () => {
         const collection = givenTestCollection(`
             <testsuites>
@@ -256,21 +281,21 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             {
                 id: 'testsuite:Unit',
-                label: '$(package) Unit',
+                label: `${icon(TestType.testsuite)} Unit`,
                 children: [
                     expect.objectContaining({
                         id: 'Example (Tests\\Unit\\Example)',
-                        label: '$(symbol-class) ExampleTest',
+                        label: `${icon(TestType.class)} ExampleTest`,
                     }),
                 ],
             },
             {
                 id: 'testsuite:Feature',
-                label: '$(package) Feature',
+                label: `${icon(TestType.testsuite)} Feature`,
                 children: [
                     expect.objectContaining({
                         id: 'Example (Tests\\Feature\\Example)',
-                        label: '$(symbol-class) ExampleTest',
+                        label: `${icon(TestType.class)} ExampleTest`,
                     }),
                 ],
             },
@@ -285,25 +310,23 @@ describe('Extension TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        const folderItem = ctrl.createTestItem('folder:test', '$(folder) phpunit-stub');
-        folderItem.canResolveChildren = true;
+        const folderItem = collection.createFolderRoot(workspaceFolder);
         ctrl.items.add(folderItem);
-        collection.setRootItems(folderItem.children);
 
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([
             {
-                id: 'folder:test',
-                label: '$(folder) phpunit-stub',
+                id: `folder:${workspaceFolder.uri.toString()}`,
+                label: `${icon(TestType.workspace)} ${workspaceFolder.name}`,
                 children: [
                     expect.objectContaining({
                         id: 'namespace:Tests',
-                        label: '$(symbol-namespace) Tests',
+                        label: `${icon(TestType.namespace)} Tests`,
                         children: [
                             expect.objectContaining({
                                 id: 'Assertions (Tests\\Assertions)',
-                                label: '$(symbol-class) AssertionsTest',
+                                label: `${icon(TestType.class)} AssertionsTest`,
                             }),
                         ],
                     }),

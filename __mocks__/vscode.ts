@@ -101,13 +101,19 @@ class FakeTestItemCollection implements Iterable<[id: string, testItem: TestItem
         callback: (item: TestItem, collection: TestItemCollection) => unknown,
         _thisArg?: any,
     ): void {
-        for (const [, item] of this.items) {
+        const sorted = [...this.items.values()].sort((a, b) =>
+            (a.sortText || a.label).localeCompare(b.sortText || b.label),
+        );
+        for (const item of sorted) {
             callback(item, Object.assign(this) as TestItemCollection);
         }
     }
 
     [Symbol.iterator](): Iterator<[id: string, testItem: TestItem]> {
-        return this.items.entries();
+        const sorted = [...this.items.entries()].sort(([, a], [, b]) =>
+            (a.sortText || a.label).localeCompare(b.sortText || b.label),
+        );
+        return sorted[Symbol.iterator]();
     }
 }
 
