@@ -16,8 +16,8 @@ import {
 } from 'vscode';
 import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
 import { Configuration } from './Configuration';
-import { PHPUnitFileCoverage } from './Coverage';
 import { createParentContainer } from './container';
+import { FileCoverageAdapter } from './FileCoverageAdapter';
 import { PHPUnitXML } from './PHPUnit';
 import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
 import { TestCollection } from './TestCollection';
@@ -177,7 +177,7 @@ function createRunProfiles(ctrl: TestController, dispatcher: TestRunDispatcher) 
         false,
     );
     coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
-        if (coverage instanceof PHPUnitFileCoverage) {
+        if (coverage instanceof FileCoverageAdapter) {
             return coverage.generateDetailedCoverage();
         }
         return [];

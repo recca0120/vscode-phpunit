@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
-import { PHPUnitFileCoverage } from '../Coverage';
+import { FileCoverageAdapter } from '../FileCoverageAdapter';
 import {
     FilterStrategyFactory,
     type ProcessBuilder,
@@ -101,7 +101,7 @@ export class TestRunHandler {
         const coverageData = await this.coverageReader.read(cloverFiles);
 
         for (const data of coverageData) {
-            testRun.addCoverage(new PHPUnitFileCoverage(data));
+            testRun.addCoverage(new FileCoverageAdapter(data));
         }
     }
 

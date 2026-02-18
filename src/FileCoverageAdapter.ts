@@ -6,9 +6,9 @@ import {
     TestCoverageCount,
     Uri,
 } from 'vscode';
-import type { FileCoverageData } from '../PHPUnit/TestCoverage';
+import type { FileCoverageData } from './PHPUnit/TestCoverage';
 
-export class PHPUnitFileCoverage extends FileCoverage {
+export class FileCoverageAdapter extends FileCoverage {
     constructor(private data: FileCoverageData) {
         super(Uri.file(data.filePath), new TestCoverageCount(data.covered, data.total));
     }
