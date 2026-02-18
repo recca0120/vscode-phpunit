@@ -4,6 +4,12 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.5] - 2026-02-19
+
+### Changed
+- Refactor: rename `PHPUnitFileCoverage` to `FileCoverageAdapter`, remove `src/Coverage/` directory
+- Chore: fix `.vscodeignore` to exclude `vscode.d.ts` (741 KB), `__mocks__/`, `CONTRIBUTING.md`, `README.zh-TW.md` — reduces package size
+
 ## [3.9.4] - 2026-02-19
 
 ### Fixed
