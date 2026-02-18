@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import type { CancellationToken, TestController, TestRun, TestRunRequest } from 'vscode';
+import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { PHPUnitFileCoverage } from '../Coverage';
 import {
     FilterStrategyFactory,
@@ -42,7 +42,11 @@ export class TestRunHandler {
         return this.lastRunAt;
     }
 
-    async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
+    async startTestRun(
+        request: TestRunRequest,
+        include?: readonly TestItem[],
+        cancellation?: CancellationToken,
+    ) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
         const xdebug = builder.getXdebug();
 
@@ -52,7 +56,7 @@ export class TestRunHandler {
 
         await this.debugSession.wrap(xdebug, async () => {
             const testRun = this.ctrl.createTestRun(request);
-            await this.runTestQueue(builder, testRun, request, cancellation);
+            await this.runTestQueue(builder, testRun, request, include, cancellation);
         });
 
         this.previousRequest = request;
@@ -63,17 +67,19 @@ export class TestRunHandler {
         builder: ProcessBuilder,
         testRun: TestRun,
         request: TestRunRequest,
+        include?: readonly TestItem[],
         cancellation?: CancellationToken,
     ) {
-        const queue = request.include
-            ? await this.testQueueBuilder.build(request.include, request, undefined, testRun)
+        const items = include ?? request.include;
+        const queue = items
+            ? await this.testQueueBuilder.build(items, request, undefined, testRun)
             : await this.testQueueBuilder.buildFromCollection(this.ctrl.items, request, testRun);
 
         const runner = this.testRunnerBuilder.build(queue, testRun, request);
         runner.emit(TestRunnerEvent.start, undefined);
 
         try {
-            const processes = this.createProcesses(runner, builder, request);
+            const processes = this.createProcesses(runner, builder, items);
             cancellation?.onCancellationRequested(() => {
                 for (const process of processes) {
                     process.abort();
@@ -112,13 +118,17 @@ export class TestRunHandler {
         }
     }
 
-    private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
-        if (!request.include) {
+    private createProcesses(
+        runner: TestRunner,
+        builder: ProcessBuilder,
+        include: readonly TestItem[] | undefined,
+    ) {
+        if (!include) {
             this.assignCloverFile(builder.getXdebug(), 0);
             return [runner.run(builder)];
         }
 
-        return request.include
+        return include
             .map((testItem) => this.testCollection.getTestDefinition(testItem))
             .filter((testDef): testDef is TestDefinition => testDef !== undefined)
             .map((testDef, index) => this.configureBuilderForTestCase(builder, testDef, index))

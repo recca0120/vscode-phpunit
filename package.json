@@ -4,7 +4,7 @@
     "displayName": "PHPUnit & Pest Test Explorer",
     "icon": "img/icon.png",
     "publisher": "recca0120",
-    "version": "3.9.3",
+    "version": "3.9.4",
     "private": true,
     "license": "MIT",
     "repository": {

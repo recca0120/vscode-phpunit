@@ -4,6 +4,18 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.4] - 2026-02-19
+
+### Fixed
+- Fix Coverage Panel not appearing for partial runs (selected tests): pass original `TestRunRequest` to `createTestRun` instead of creating a new one — VS Code uses object identity to link runs to the coverage profile
+- Fix Docker coverage: use relative `.phpunit.cache/` path for clover files so PHPUnit can write them inside containers
+- Fix Docker coverage: convert container paths to host paths via `toLocal` function when reading clover XML
+
+### Changed
+- Refactor: thread `toLocal` path converter through `CoverageCollector` → `CloverParser` for Docker path mapping
+- Refactor: `Xdebug` generates relative clover paths; `ProcessBuilder` resolves them to absolute host paths via `getLocalCloverFile()`
+- Test: add regression test asserting `createTestRun` receives the original `TestRunRequest` reference
+
 ## [3.9.3] - 2026-02-18
 
 ### Fixed

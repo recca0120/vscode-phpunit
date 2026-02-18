@@ -2,7 +2,7 @@ import { type Container, inject, injectable } from 'inversify';
 import {
     type CancellationToken,
     type TestItem,
-    TestRunRequest,
+    type TestRunRequest,
     type Uri,
     type WorkspaceFolder,
     workspace,
@@ -29,7 +29,7 @@ export class TestRunDispatcher {
         if (!request.include) {
             await Promise.all(
                 containers.map((child) =>
-                    child.get(TestRunHandler).startTestRun(request, cancellation),
+                    child.get(TestRunHandler).startTestRun(request, undefined, cancellation),
                 ),
             );
             return;
@@ -38,10 +38,9 @@ export class TestRunDispatcher {
         const groups = this.groupTestItemsByFolder(request.include);
 
         await Promise.all(
-            [...groups.values()].map(({ container, items }) => {
-                const subrequest = new TestRunRequest(items, request.exclude, request.profile);
-                return container.get(TestRunHandler).startTestRun(subrequest, cancellation);
-            }),
+            [...groups.values()].map(({ container, items }) =>
+                container.get(TestRunHandler).startTestRun(request, items, cancellation),
+            ),
         );
     }
 

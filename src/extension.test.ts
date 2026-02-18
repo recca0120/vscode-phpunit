@@ -624,10 +624,14 @@ describe('Extension Test', () => {
                     .spyOn(CloverParser.prototype, 'parseClover')
                     .mockResolvedValue(fakeData);
 
-                const ctrl = await activateAndRun({
-                    include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
-                    kind: TestRunProfileKind.Coverage,
-                });
+                await activate(context);
+                const ctrl = getTestController();
+                const testRunProfile = getTestRunProfile(ctrl, TestRunProfileKind.Coverage);
+                const include = ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)']
+                    .map((id) => findTest(ctrl.items, id))
+                    .filter((item): item is TestItem => item !== undefined);
+                const request = { include, exclude: [], profile: testRunProfile };
+                await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
                 ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
                     expectSpawnCalled(
@@ -654,6 +658,15 @@ describe('Extension Test', () => {
 
                 const testRun = getTestRun(ctrl);
                 expect(testRun.addCoverage).toHaveBeenCalledTimes(2);
+
+                // createTestRun must receive the ORIGINAL request object (same reference).
+                // VS Code uses object identity to link the TestRun to the coverage profile —
+                // if a new TestRunRequest is created instead, the Coverage Panel won't appear.
+                const createTestRunCalls = (ctrl.createTestRun as Mock).mock.calls;
+                expect(createTestRunCalls.length).toBeGreaterThan(0);
+                for (const [calledRequest] of createTestRunCalls) {
+                    expect(calledRequest).toBe(request);
+                }
             });
         });
     });
