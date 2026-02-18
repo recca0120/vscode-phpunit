@@ -184,6 +184,83 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         );
     });
 
+    // --- Run workspace folder item ---
+
+    test('should run all tests when clicking phpunit workspace folder item', async () => {
+        const phpunitFolder = (vscode.workspace.workspaceFolders ?? []).find(
+            (f) => f.name === 'phpunit-stub',
+        );
+        if (!phpunitFolder) return assert.fail('phpunit-stub folder should exist');
+
+        const folderItem = findTestItem(ctrl.items, `folder:${phpunitFolder.uri.toString()}`);
+        if (!folderItem) return assert.fail('Should find phpunit folder item');
+
+        const api = await activateExtension();
+        const request = new vscode.TestRunRequest([folderItem]);
+        const tokenSource = new vscode.CancellationTokenSource();
+        await api.testRunProfile.runHandler(request, tokenSource.token);
+
+        assert.strictEqual(
+            countTestItems(ctrl.items),
+            initialTotalCount,
+            'Item count should remain stable after running workspace folder',
+        );
+    });
+
+    test('should run all tests when clicking pest workspace folder item', async () => {
+        const pestFolder = (vscode.workspace.workspaceFolders ?? []).find(
+            (f) => f.name === 'pest-stub',
+        );
+        if (!pestFolder) return assert.fail('pest-stub folder should exist');
+
+        const folderItem = findTestItem(ctrl.items, `folder:${pestFolder.uri.toString()}`);
+        if (!folderItem) return assert.fail('Should find pest folder item');
+
+        const api = await activateExtension();
+        const request = new vscode.TestRunRequest([folderItem]);
+        const tokenSource = new vscode.CancellationTokenSource();
+        await api.testRunProfile.runHandler(request, tokenSource.token);
+
+        assert.strictEqual(
+            countTestItems(ctrl.items),
+            initialTotalCount,
+            'Item count should remain stable after running pest workspace folder',
+        );
+    });
+
+    test('should run filtered tests by group when clicking workspace folder with group tag', async () => {
+        const phpunitFolder = (vscode.workspace.workspaceFolders ?? []).find(
+            (f) => f.name === 'phpunit-stub',
+        );
+        if (!phpunitFolder) return assert.fail('phpunit-stub folder should exist');
+
+        const folderItem = findTestItem(ctrl.items, `folder:${phpunitFolder.uri.toString()}`);
+        if (!folderItem) return assert.fail('Should find phpunit folder item');
+
+        const groupItems: vscode.TestItem[] = [];
+        const collectGroupItems = (items: vscode.TestItemCollection) => {
+            items.forEach((item) => {
+                if (item.tags.some((t) => t.id === 'group:integration')) {
+                    groupItems.push(item);
+                }
+                collectGroupItems(item.children);
+            });
+        };
+        collectGroupItems(folderItem.children);
+        assert.ok(groupItems.length > 0, 'Should have items with group:integration tag');
+
+        const api = await activateExtension();
+        const request = new vscode.TestRunRequest(groupItems);
+        const tokenSource = new vscode.CancellationTokenSource();
+        await api.testRunProfile.runHandler(request, tokenSource.token);
+
+        assert.strictEqual(
+            countTestItems(ctrl.items),
+            initialTotalCount,
+            'Item count should remain stable after running group-filtered tests',
+        );
+    });
+
     // --- Run commands (run-file, run-test-at-cursor, rerun) ---
 
     test('should run file for a specific test file', async () => {

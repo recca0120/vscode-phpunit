@@ -7,8 +7,9 @@ export type Position = {
 };
 
 export enum TestType {
-    namespace,
+    workspace,
     testsuite,
+    namespace,
     class,
     describe,
     method,

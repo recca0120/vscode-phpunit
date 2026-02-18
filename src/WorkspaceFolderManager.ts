@@ -12,6 +12,7 @@ import {
     window,
     workspace,
 } from 'vscode';
+import { TestType } from './PHPUnit';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import { TestRunHandler } from './TestExecution';
@@ -303,9 +304,17 @@ export class WorkspaceFolderManager {
         const folderItem = this.ctrl.createTestItem(
             `folder:${folder.uri.toString()}`,
             `$(folder) ${folder.name}`,
+            folder.uri,
         );
         folderItem.canResolveChildren = true;
         this.ctrl.items.add(folderItem);
-        child.get(TestCollection).setRootItems(folderItem.children);
+
+        const testCollection = child.get(TestCollection);
+        testCollection.setRootItems(folderItem.children);
+        testCollection.registerTestDefinition(folderItem, {
+            type: TestType.workspace,
+            id: `folder:${folder.uri.toString()}`,
+            label: folder.name,
+        });
     }
 }

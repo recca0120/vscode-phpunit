@@ -3,6 +3,18 @@ import { type TestDefinition, TestType } from '../types';
 import { FilterStrategyFactory } from './FilterStrategy';
 
 describe('FilterStrategyFactory', () => {
+    it('workspace type returns empty filter (run all tests)', () => {
+        const testDef: TestDefinition = {
+            type: TestType.workspace,
+            id: 'folder:file:///path/to/workspace',
+            label: 'my-workspace',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe('');
+    });
+
     it('namespace with namespace field uses --filter', () => {
         const testDef: TestDefinition = {
             type: TestType.namespace,

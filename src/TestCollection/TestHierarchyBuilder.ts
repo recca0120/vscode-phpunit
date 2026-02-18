@@ -11,8 +11,9 @@ import { type PHPUnitXML, type TestDefinition, TestIdentifierFactory, TestType }
 
 export class TestHierarchyBuilder {
     private icons = {
-        [TestType.namespace]: '$(symbol-namespace)',
+        [TestType.workspace]: '$(folder)',
         [TestType.testsuite]: '$(package)',
+        [TestType.namespace]: '$(symbol-namespace)',
         [TestType.class]: '$(symbol-class)',
         [TestType.method]: '$(symbol-method)',
         [TestType.describe]: '$(symbol-class)',
