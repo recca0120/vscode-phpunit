@@ -1,9 +1,8 @@
 import { rm } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestRun } from 'vscode';
-import type { PHPUnitFileCoverage } from '../Coverage';
 import type { TestRunnerProcess } from '../PHPUnit';
-import { CloverParser } from './CloverParser';
+import { CloverParser, type FileCoverageData } from '../PHPUnit/Coverage';
 import { CoverageCollector } from './CoverageCollector';
 
 vi.mock('node:fs/promises', async () => {
@@ -12,33 +11,37 @@ vi.mock('node:fs/promises', async () => {
 });
 
 describe('CoverageCollector', () => {
+    let cloverParser: CloverParser;
     let collector: CoverageCollector;
     let testRun: TestRun;
 
     beforeEach(() => {
-        collector = new CoverageCollector();
+        cloverParser = new CloverParser();
+        collector = new CoverageCollector(cloverParser);
         testRun = { addCoverage: vi.fn() } as unknown as TestRun;
     });
 
     afterEach(() => vi.restoreAllMocks());
 
     it('should parse clover files and add coverage to test run', async () => {
-        const fakeCoverage = [{ file: 'a.php' }, { file: 'b.php' }];
-        vi.spyOn(CloverParser, 'parseClover').mockResolvedValue(
-            fakeCoverage as unknown as PHPUnitFileCoverage[],
-        );
+        const fakeData: FileCoverageData[] = [
+            { filePath: '/app/a.php', covered: 1, total: 2, lines: [] },
+            { filePath: '/app/b.php', covered: 2, total: 2, lines: [] },
+        ];
+        vi.spyOn(cloverParser, 'parseClover').mockResolvedValue(fakeData);
 
         const processes = [
-            { getCloverFile: () => '/tmp/coverage/phpunit-0.xml' },
-            { getCloverFile: () => '/tmp/coverage/phpunit-1.xml' },
+            { getCloverFile: () => '/tmp/phpunit-0.xml' },
+            { getCloverFile: () => '/tmp/phpunit-1.xml' },
         ] as unknown as TestRunnerProcess[];
 
         await collector.collect(processes, testRun);
 
-        expect(CloverParser.parseClover).toHaveBeenCalledWith('/tmp/coverage/phpunit-0.xml');
-        expect(CloverParser.parseClover).toHaveBeenCalledWith('/tmp/coverage/phpunit-1.xml');
+        expect(cloverParser.parseClover).toHaveBeenCalledWith('/tmp/phpunit-0.xml');
+        expect(cloverParser.parseClover).toHaveBeenCalledWith('/tmp/phpunit-1.xml');
         expect(testRun.addCoverage).toHaveBeenCalledTimes(4);
-        expect(rm).toHaveBeenCalledWith('/tmp/coverage', { recursive: true, force: true });
+        expect(rm).toHaveBeenCalledWith('/tmp/phpunit-0.xml', { force: true });
+        expect(rm).toHaveBeenCalledWith('/tmp/phpunit-1.xml', { force: true });
     });
 
     it('should skip when no clover files', async () => {
