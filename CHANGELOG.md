@@ -4,6 +4,16 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.1] - 2026-02-18
+
+### Fixed
+- Clicking workspace folder item now runs tests for that folder in multi-workspace setups
+
+### Changed
+- Make error arrow symbol red in output channel
+- Organize tmLanguage patterns by category with section comments
+- Reorder TestType enum and icons to workspace, testsuite, namespace, class, method
+
 ## [3.9.0] - 2026-02-18
 
 ### Added
