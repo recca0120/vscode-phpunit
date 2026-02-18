@@ -1,16 +1,16 @@
 import type { TestItem } from 'vscode';
 import { type TestDefinition, TestType } from '../PHPUnit';
 
+type Entry = { item: TestItem; definition: TestDefinition };
+
 export class TestDefinitionIndex {
-    private definitions = new Map<string, TestDefinition>();
-    private items = new Map<string, TestItem>();
+    private entries = new Map<string, Entry>();
     private groups = new Map<string, Set<TestItem>>();
     private byUri = new Map<string, Set<string>>();
     private idToUris = new Map<string, Set<string>>();
 
     set(uri: string, testItem: TestItem, testDefinition: TestDefinition): void {
-        this.definitions.set(testItem.id, testDefinition);
-        this.items.set(testItem.id, testItem);
+        this.entries.set(testItem.id, { item: testItem, definition: testDefinition });
 
         const uriIds = this.byUri.get(uri) ?? new Set<string>();
         this.byUri.set(uri, uriIds);
@@ -69,18 +69,16 @@ export class TestDefinitionIndex {
         }
         const result: [TestItem, TestDefinition][] = [];
         for (const id of ids) {
-            const item = this.items.get(id);
-            const def = this.definitions.get(id);
-            if (item && def) {
-                result.push([item, def]);
+            const entry = this.entries.get(id);
+            if (entry) {
+                result.push([entry.item, entry.definition]);
             }
         }
         return result;
     }
 
     clear(): void {
-        this.definitions.clear();
-        this.items.clear();
+        this.entries.clear();
         this.groups.clear();
         this.byUri.clear();
         this.idToUris.clear();
@@ -88,23 +86,20 @@ export class TestDefinitionIndex {
 
     getDefinitionsByType(type: TestType): [TestItem, TestDefinition][] {
         const result: [TestItem, TestDefinition][] = [];
-        for (const [id, def] of this.definitions) {
-            if (def.type === type) {
-                const item = this.items.get(id);
-                if (item) {
-                    result.push([item, def]);
-                }
+        for (const { item, definition } of this.entries.values()) {
+            if (definition.type === type) {
+                result.push([item, definition]);
             }
         }
         return result;
     }
 
     getDefinition(id: string): TestDefinition | undefined {
-        return this.definitions.get(id);
+        return this.entries.get(id)?.definition;
     }
 
     getItem(id: string): TestItem | undefined {
-        return this.items.get(id);
+        return this.entries.get(id)?.item;
     }
 
     getGroups(): string[] {
@@ -116,13 +111,12 @@ export class TestDefinitionIndex {
     }
 
     private deleteById(id: string): void {
-        const testItem = this.items.get(id);
-        if (!testItem) {
+        const entry = this.entries.get(id);
+        if (!entry) {
             return;
         }
-        this.definitions.delete(id);
-        this.items.delete(id);
-        this.removeFromGroups(testItem);
+        this.entries.delete(id);
+        this.removeFromGroups(entry.item);
     }
 
     private removeFromGroups(testItem: TestItem): void {
