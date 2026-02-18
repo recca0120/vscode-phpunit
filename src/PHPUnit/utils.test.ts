@@ -6,6 +6,7 @@ import {
     cloneInstance,
     findAsyncSequential,
     parseArguments,
+    parseArgv,
     snakeCase,
     splitFQN,
     titleCase,
@@ -13,6 +14,41 @@ import {
 } from './utils';
 
 describe('utils', () => {
+    describe('parseArgv', () => {
+        it('should split simple args', () => {
+            expect(parseArgv('php vendor/bin/phpunit --filter=test_passed')).toEqual([
+                'php',
+                'vendor/bin/phpunit',
+                '--filter=test_passed',
+            ]);
+        });
+
+        it('should keep double-quoted content as single token and strip quotes', () => {
+            expect(parseArgv('ssh -i key "cd /app; php test"')).toEqual([
+                'ssh',
+                '-i',
+                'key',
+                'cd /app; php test',
+            ]);
+        });
+
+        it('should keep single-quoted content as single token and strip quotes', () => {
+            expect(
+                parseArgv(
+                    "php vendor/bin/phpunit '--filter=^.*::(test_passed)( with data set .*)?$'",
+                ),
+            ).toEqual([
+                'php',
+                'vendor/bin/phpunit',
+                '--filter=^.*::(test_passed)( with data set .*)?$',
+            ]);
+        });
+
+        it('should handle empty string', () => {
+            expect(parseArgv('')).toEqual([]);
+        });
+    });
+
     describe('parseArguments', () => {
         it('should parse long option with =', () => {
             expect(parseArguments(['--configuration=/app/phpunit.xml'], [])).toEqual([

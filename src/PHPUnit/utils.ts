@@ -4,16 +4,24 @@ export const EOL = '\r\n';
 
 const aliases: Record<string, string> = { c: 'configuration' };
 
-function stripQuotes(s: string): string {
+export function stripQuotes(s: string): string {
     if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
         return s.slice(1, -1);
     }
     return s;
 }
 
+export function parseArgv(input: string): string[] {
+    return [...input.matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)].map((m) => stripQuotes(m[0]));
+}
+
 export const parseArguments = (parameters: string[], excludes: string[]): string[] => {
-    const input = parameters.join(' ').trim();
-    const tokens = [...input.matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)].map((m) => m[0]);
+    const tokens = [
+        ...parameters
+            .join(' ')
+            .trim()
+            .matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g),
+    ].map((m) => m[0]);
 
     const hasValue = (i: number) =>
         i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-');
