@@ -3,9 +3,10 @@ name: Publish
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
-  publish:
+  package:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,10 +27,37 @@ jobs:
       - name: Package Extension
         run: pnpm vsce package --no-dependencies
 
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: '*.vsix'
+
+  publish-marketplace:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Publish to VS Code Marketplace
-        run: pnpm vsce publish --no-dependencies --packagePath *.vsix
+        run: pnpx @vscode/vsce publish --packagePath *.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  publish-openvsx:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
 
       - name: Publish to Open VSX
         run: npx ovsx publish *.vsix
