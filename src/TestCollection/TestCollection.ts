@@ -165,6 +165,8 @@ export class TestCollection {
     }
 
     private handleReset() {
+        const workspaceDefs = this.index.getDefinitionsByType(TestType.workspace);
+
         for (const [testItem, testDef] of this.allDefinitions()) {
             if (testDef.type !== TestType.class) {
                 continue;
@@ -178,6 +180,10 @@ export class TestCollection {
             testItem.parent.children.delete(testItem.id);
         }
         this.index.clear();
+
+        for (const [testItem, testDef] of workspaceDefs) {
+            this.index.set(testItem.uri?.toString() ?? testItem.id, testItem, testDef);
+        }
     }
 
     private inRangeTestItems(uri: URI, position: Position) {

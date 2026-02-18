@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { ChainAstParser, PHPUnitXML, TestParser } from '../PHPUnit';
+import { ChainAstParser, PHPUnitXML, TestParser, TestType } from '../PHPUnit';
 import { generateXML, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
@@ -211,6 +211,37 @@ describe('Extension TestCollection', () => {
 
         collection.reset();
         expect(collection.findGroups()).toEqual([]);
+    });
+
+    it('workspace folder definition should survive reset', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const folderItem = ctrl.createTestItem('folder:test', '$(folder) phpunit-stub');
+        folderItem.canResolveChildren = true;
+        ctrl.items.add(folderItem);
+        collection.setRootItems(folderItem.children);
+        collection.registerTestDefinition(folderItem, {
+            type: TestType.workspace,
+            id: 'folder:test',
+            label: 'phpunit-stub',
+        });
+
+        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+        // workspace definition exists before reset
+        expect(collection.getTestDefinition(folderItem)).toBeDefined();
+        expect(collection.getTestDefinition(folderItem)?.type).toBe(TestType.workspace);
+
+        collection.reset();
+
+        // workspace definition should still exist after reset
+        expect(collection.getTestDefinition(folderItem)).toBeDefined();
+        expect(collection.getTestDefinition(folderItem)?.type).toBe(TestType.workspace);
     });
 
     it('delete should clean up testItems and index', async () => {

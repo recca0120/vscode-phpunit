@@ -99,6 +99,19 @@ export class TestDefinitionIndex {
         this.byUri.clear();
     }
 
+    getDefinitionsByType(type: TestType): [TestItem, TestDefinition][] {
+        const result: [TestItem, TestDefinition][] = [];
+        for (const [id, def] of this.definitions) {
+            if (def.type === type) {
+                const item = this.items.get(id);
+                if (item) {
+                    result.push([item, def]);
+                }
+            }
+        }
+        return result;
+    }
+
     getDefinition(id: string): TestDefinition | undefined {
         return this.definitions.get(id);
     }
