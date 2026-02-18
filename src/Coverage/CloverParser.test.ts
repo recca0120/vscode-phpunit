@@ -34,10 +34,7 @@ describe('CloverParser test', () => {
   </project>
 </coverage>`);
 
-        expect(cf.map((f) => f.uri.fsPath)).toEqual([
-            '/app/Models/User.php',
-            '/app/Models/Post.php',
-        ]);
+        expect(cf.map((f) => f.uri.path)).toEqual(['/app/Models/User.php', '/app/Models/Post.php']);
     });
 
     it('parses multiple packages', async () => {
@@ -58,7 +55,7 @@ describe('CloverParser test', () => {
   </project>
 </coverage>`);
 
-        expect(cf.map((f) => f.uri.fsPath)).toEqual([
+        expect(cf.map((f) => f.uri.path)).toEqual([
             '/app/Models/User.php',
             '/app/Services/PaymentService.php',
         ]);
@@ -75,7 +72,7 @@ describe('CloverParser test', () => {
   </project>
 </coverage>`);
 
-        expect(cf.map((f) => f.uri.fsPath)).toEqual(['/app/helpers.php']);
+        expect(cf.map((f) => f.uri.path)).toEqual(['/app/helpers.php']);
     });
 
     it('parses mixed global files and packages', async () => {
@@ -99,7 +96,7 @@ describe('CloverParser test', () => {
   </project>
 </coverage>`);
 
-        expect(cf.map((f) => f.uri.fsPath)).toEqual([
+        expect(cf.map((f) => f.uri.path)).toEqual([
             '/app/helpers.php',
             '/app/Models/User.php',
             '/app/Services/PaymentService.php',
@@ -120,7 +117,7 @@ describe('CloverParser test', () => {
   </project>
 </coverage>`);
 
-        expect(cf.map((f) => f.uri.fsPath)).toEqual(['/app/helpers.php', '/app/bootstrap.php']);
+        expect(cf.map((f) => f.uri.path)).toEqual(['/app/helpers.php', '/app/bootstrap.php']);
     });
 
     it('parses package with single file', async () => {
@@ -136,6 +133,6 @@ describe('CloverParser test', () => {
   </project>
 </coverage>`);
 
-        expect(cf.map((f) => f.uri.fsPath)).toEqual(['/app/Models/User.php']);
+        expect(cf.map((f) => f.uri.path)).toEqual(['/app/Models/User.php']);
     });
 });
