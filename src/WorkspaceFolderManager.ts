@@ -306,6 +306,7 @@ export class WorkspaceFolderManager {
             `$(folder) ${folder.name}`,
             folder.uri,
         );
+        folderItem.sortText = String(folder.index).padStart(5, '0');
         folderItem.canResolveChildren = true;
         this.ctrl.items.add(folderItem);
 
