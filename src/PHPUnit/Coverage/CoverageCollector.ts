@@ -1,10 +1,8 @@
 import { rm } from 'node:fs/promises';
-import { inject, injectable } from 'inversify';
-import { CloverParser, type FileCoverageData } from './CloverParser';
+import type { CloverParser, FileCoverageData } from './CloverParser';
 
-@injectable()
 export class CoverageCollector {
-    constructor(@inject(CloverParser) private cloverParser: CloverParser) {}
+    constructor(private cloverParser: CloverParser) {}
 
     async collect(cloverFiles: string[]): Promise<FileCoverageData[]> {
         const results = await Promise.all(

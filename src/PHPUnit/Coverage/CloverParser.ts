@@ -1,5 +1,4 @@
-import { inject, injectable, optional } from 'inversify';
-import { PathReplacer } from '../ProcessBuilder/PathReplacer';
+import type { PathReplacer } from '../ProcessBuilder/PathReplacer';
 import { XmlElement } from '../XmlElement';
 
 export interface LineCoverage {
@@ -14,9 +13,8 @@ export interface FileCoverageData {
     lines: LineCoverage[];
 }
 
-@injectable()
 export class CloverParser {
-    constructor(@inject(PathReplacer) @optional() private pathReplacer?: PathReplacer) {}
+    constructor(private pathReplacer?: PathReplacer) {}
 
     async parseClover(file: string): Promise<FileCoverageData[]> {
         try {

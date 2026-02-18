@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestRun, TestRunRequest } from 'vscode';
-import { CoverageCollector } from '../Coverage';
+import { PHPUnitFileCoverage } from '../Coverage';
 import {
     FilterStrategyFactory,
     type ProcessBuilder,
@@ -9,6 +9,7 @@ import {
     TestRunnerEvent,
     type TestRunnerProcess,
 } from '../PHPUnit';
+import { CoverageCollector } from '../PHPUnit/Coverage';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
@@ -74,9 +75,21 @@ export class TestRunHandler {
             });
 
             await this.runProcesses(processes, cancellation);
-            await this.coverageCollector.collect(processes, testRun);
+            await this.collectCoverage(processes, testRun);
         } finally {
             runner.emit(TestRunnerEvent.done, undefined);
+        }
+    }
+
+    private async collectCoverage(processes: TestRunnerProcess[], testRun: TestRun) {
+        const cloverFiles = processes
+            .map((process) => process.getCloverFile())
+            .filter((file): file is string => !!file);
+
+        const coverageData = await this.coverageCollector.collect(cloverFiles);
+
+        for (const data of coverageData) {
+            testRun.addCoverage(new PHPUnitFileCoverage(data));
         }
     }
 
