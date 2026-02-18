@@ -19,9 +19,11 @@
             "name": "markup.deleted.phpunit"
         },
         {
-            "comment": "Printed output → yellow",
-            "match": "^🟨\\s+.+",
-            "name": "markup.deleted.phpunit"
+            "comment": "Printed output block (dd/dump) → VarDumper highlighting",
+            "begin": "^🟨\\s+",
+            "end": "^(?!\\s+[\\[\\]{}\"\\d+#@&~*…()+\\-]|\\s+\\))",
+            "name": "meta.embedded.vardumper.phpunit",
+            "patterns": [{ "include": "source.vardumper" }]
         },
 
         { "comment": "--- Error details ---" },

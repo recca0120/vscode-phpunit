@@ -542,7 +542,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(59);
+            expect(countItems(ctrl.items)).toEqual(60);
         });
 
         it('should resolve tests with phpunit.xml.dist', async () => {

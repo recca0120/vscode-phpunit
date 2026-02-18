@@ -17,4 +17,21 @@ class OutputTest extends TestCase
         exit('printed output when die');
         self::assertTrue(true);
     }
+
+    public function test_dump()
+    {
+        dump([
+            'name' => 'PHPUnit',
+            'version' => 12,
+            'active' => true,
+            'config' => null,
+            'tags' => ['testing', 'php'],
+            'nested' => [
+                'pi' => 3.14,
+                'enabled' => false,
+            ],
+        ]);
+
+        self::assertTrue(true);
+    }
 }

@@ -52,8 +52,13 @@
                 "scopeName": "source.phpunit",
                 "path": "./syntaxes/collision.tmLanguage.json",
                 "embeddedLanguages": {
-                    "meta.embedded.php.phpunit": "php"
+                    "meta.embedded.php.phpunit": "php",
+                    "meta.embedded.vardumper.phpunit": "phpunit"
                 }
+            },
+            {
+                "scopeName": "source.vardumper",
+                "path": "./syntaxes/vardumper.tmLanguage.json"
             }
         ],
         "commands": [

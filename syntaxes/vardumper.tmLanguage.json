@@ -1,0 +1,93 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "VarDumper",
+    "scopeName": "source.vardumper",
+    "patterns": [
+        {
+            "comment": "Source location comment // file.php:16",
+            "match": "//\\s+\\S+\\.php:\\d+",
+            "name": "comment.line.vardumper"
+        },
+        {
+            "comment": "Array type header: array:N",
+            "match": "\\b(array)(:\\d+)\\b",
+            "captures": {
+                "1": { "name": "support.class.vardumper" },
+                "2": { "name": "constant.numeric.vardumper" }
+            }
+        },
+        {
+            "comment": "Class name with ID: ClassName {#N",
+            "match": "\\b([A-Z][A-Za-z0-9_\\\\]+)\\s+(\\{#\\d+)",
+            "captures": {
+                "1": { "name": "support.class.vardumper" },
+                "2": { "name": "comment.vardumper" }
+            }
+        },
+        {
+            "comment": "Resource: resource @N",
+            "match": "\\b(resource)\\s+(@\\d+)",
+            "captures": {
+                "1": { "name": "support.class.vardumper" },
+                "2": { "name": "comment.vardumper" }
+            }
+        },
+        {
+            "comment": "Property with visibility prefix: +pub #prot -priv ~virtual",
+            "match": "([+#~-])([A-Za-z_][A-Za-z0-9_]*)(:)\\s",
+            "captures": {
+                "1": { "name": "punctuation.definition.variable.vardumper" },
+                "2": { "name": "variable.other.property.vardumper" },
+                "3": { "name": "punctuation.separator.vardumper" }
+            }
+        },
+        {
+            "comment": "String key => or numeric key =>",
+            "match": "(\"[^\"]*\"|\\d+)\\s*(=>)",
+            "captures": {
+                "1": { "name": "string.quoted.double.vardumper" },
+                "2": { "name": "punctuation.separator.key-value.vardumper" }
+            }
+        },
+        {
+            "comment": "Double-quoted string value",
+            "match": "\"[^\"]*\"",
+            "name": "string.quoted.double.vardumper"
+        },
+        {
+            "comment": "Boolean and null constants",
+            "match": "\\b(true|false|null)\\b",
+            "name": "constant.language.vardumper"
+        },
+        {
+            "comment": "Special float constants",
+            "match": "\\b(INF|-INF|NAN)\\b",
+            "name": "constant.language.vardumper"
+        },
+        {
+            "comment": "Numeric values (int and float)",
+            "match": "\\b-?\\d+(\\.\\d+)?\\b",
+            "name": "constant.numeric.vardumper"
+        },
+        {
+            "comment": "Hard reference &N, soft reference @N #N",
+            "match": "[&@#]\\d+",
+            "name": "comment.vardumper"
+        },
+        {
+            "comment": "Truncation indicator …N",
+            "match": "…\\d+",
+            "name": "comment.vardumper"
+        },
+        {
+            "comment": "Fat arrow separator",
+            "match": "=>",
+            "name": "punctuation.separator.key-value.vardumper"
+        },
+        {
+            "comment": "Brackets",
+            "match": "[\\[\\]{}]",
+            "name": "punctuation.definition.vardumper"
+        }
+    ]
+}
