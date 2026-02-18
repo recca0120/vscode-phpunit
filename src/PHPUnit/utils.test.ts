@@ -86,6 +86,18 @@ describe('utils', () => {
             ]);
         });
 
+        it('should strip single quotes from value after =', () => {
+            expect(
+                parseArguments(["--filter='^.*::(test_passed)( with data set .*)?$'"], []),
+            ).toEqual(['--filter=^.*::(test_passed)( with data set .*)?$']);
+        });
+
+        it('should strip double quotes from value after =', () => {
+            expect(
+                parseArguments(['--filter="^.*::(test_passed)( with data set .*)?$"'], []),
+            ).toEqual(['--filter=^.*::(test_passed)( with data set .*)?$']);
+        });
+
         it('should join multiple parameters', () => {
             expect(parseArguments(['-c /app/phpunit.xml', '--verbose'], ['configuration'])).toEqual(
                 ['--verbose'],
