@@ -32,6 +32,12 @@ jobs:
           name: vsix
           path: '*.vsix'
 
+      - name: Upload VSIX to GitHub Release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" *.vsix --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish-marketplace:
     needs: package
     runs-on: ubuntu-latest
