@@ -1,40 +1,77 @@
 import { stat } from 'node:fs/promises';
-import yargsParser from 'yargs-parser';
 
 export const EOL = '\r\n';
 
-export const parseValue = (key: string, value: string | boolean | string[]): string[] => {
-    if (Array.isArray(value)) {
-        return value.reduce(
-            (acc: string[], item: string | boolean | string[]) => acc.concat(parseValue(key, item)),
-            [],
-        );
+const aliases: Record<string, string> = { c: 'configuration' };
+
+function stripQuotes(s: string): string {
+    if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+        return s.slice(1, -1);
     }
-    const dash = key.length === 1 ? '-' : '--';
-    const operator = key.length === 1 ? ' ' : '=';
+    return s;
+}
 
-    return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
-};
+function nextIsOption(token: string): boolean {
+    const stripped = stripQuotes(token);
+    return stripped.startsWith('-');
+}
 
-export const parseArguments = (parameters: string[], excludes: string[]) => {
-    const { _, ...argv } = yargsParser(parameters.join(' ').trim(), {
-        alias: { configuration: ['c'] },
-        configuration: {
-            'camel-case-expansion': false,
-            'boolean-negation': false,
-            'short-option-groups': true,
-            'dot-notation': false,
-        },
-    });
+export const parseArguments = (parameters: string[], excludes: string[]): string[] => {
+    const input = parameters.join(' ').trim();
+    const tokens = [...input.matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)].map((m) => m[0]);
 
-    const positionals = _.map((parameter) =>
-        typeof parameter === 'number' ? String(parameter) : decodeURIComponent(parameter),
-    );
-
-    const entries = Object.entries(argv).filter(([key]) => !excludes.includes(key));
     const options: string[] = [];
-    for (const [key, value] of entries.reverse()) {
-        options.push(...parseValue(key, value as string | boolean | string[]));
+    const positionals: string[] = [];
+    for (let i = 0; i < tokens.length; i++) {
+        const token = stripQuotes(tokens[i]);
+
+        // long option: --key=value or --key value or --flag
+        if (token.startsWith('--')) {
+            const eqIndex = token.indexOf('=');
+            if (eqIndex !== -1) {
+                const key = token.substring(2, eqIndex);
+                if (!excludes.includes(key)) {
+                    options.push(token);
+                }
+                continue;
+            }
+            const key = token.substring(2);
+            if (excludes.includes(key)) {
+                if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
+                    i++;
+                }
+                continue;
+            }
+            if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
+                options.push(`--${key}=${stripQuotes(tokens[++i])}`);
+            } else {
+                options.push(token);
+            }
+            continue;
+        }
+
+        // short option: -x value or -x
+        if (token.startsWith('-') && token.length === 2) {
+            const short = token[1];
+            const longKey = aliases[short];
+            const key = longKey ?? short;
+            if (excludes.includes(key)) {
+                if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
+                    i++;
+                }
+                continue;
+            }
+            if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
+                const value = stripQuotes(tokens[++i]);
+                options.push(longKey ? `--${longKey}=${value}` : `-${short} ${value}`);
+            } else {
+                options.push(longKey ? `--${longKey}` : token);
+            }
+            continue;
+        }
+
+        // positional
+        positionals.push(decodeURIComponent(token));
     }
 
     return [...options, ...positionals];
