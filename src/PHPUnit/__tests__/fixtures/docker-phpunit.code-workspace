@@ -1,0 +1,15 @@
+{
+    "folders": [
+        {
+            "path": "phpunit-stub"
+        }
+    ],
+    "settings": {
+        "phpunit.command": "docker exec -t phpunit /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+        "phpunit.phpunit": "v11/vendor/bin/phpunit",
+        "phpunit.paths": {
+            "${workspaceFolder}": "/app"
+        },
+        "phpunit.debuggerConfig": "PHPUnit"
+    }
+}

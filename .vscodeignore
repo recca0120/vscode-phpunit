@@ -1,27 +1,42 @@
+# VS Code internals
 .vscode/**
 .vscode-test/**
+
+# Build output
 out/**
-node_modules/**
+
+# Source
 src/**
-.gitignore
-.yarnrc
-esbuild.mjs
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
-biome.json
 **/*.map
 **/*.ts
 
-.idea/**
-.github/**
-coverage/**
-sample/**
+# Config files
+**/tsconfig.json
+biome.json
+esbuild.mjs
 vitest.config.ts
-CLAUDE.md
-.claude/**
 lefthook.yml
 qodana.yaml
 pnpm-lock.yaml
+vscode.d.ts
+
+# Dependencies
+node_modules/**
+__mocks__/**
+
+# Docs & meta
+.gitignore
+.github/**
+.idea/**
+vsc-extension-quickstart.md
+CLAUDE.md
+.claude/**
+CONTRIBUTING.md
+README.zh-TW.md
+
+# Assets (keep only icon)
 img/**
 !img/icon.png
+
+# Coverage
+coverage/**

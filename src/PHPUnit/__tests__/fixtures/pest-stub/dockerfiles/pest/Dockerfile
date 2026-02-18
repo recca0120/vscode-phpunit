@@ -12,7 +12,9 @@ RUN apk update && apk add --no-cache tzdata git openssh && \
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions xdebug && \
-    install-php-extensions @composer
+    install-php-extensions @composer && \
+    echo "xdebug.client_host=host.docker.internal" \
+        >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 RUN mkdir -p /root/.ssh \
     && chmod 0700 /root/.ssh \

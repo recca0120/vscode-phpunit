@@ -9,9 +9,9 @@ import {
     TestRunnerEvent,
     type TestRunnerProcess,
 } from '../PHPUnit';
-import { CoverageReader } from '../PHPUnit/Coverage';
 import type { Xdebug } from '../PHPUnit/ProcessBuilder/Xdebug';
 import { Mode } from '../PHPUnit/ProcessBuilder/Xdebug';
+import { CoverageReader } from '../PHPUnit/TestCoverage';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';

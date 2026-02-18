@@ -28,7 +28,7 @@ import {
     detectPhpUnitStubs,
     phpUnitProject,
 } from './PHPUnit/__tests__/utils';
-import { CloverParser, type FileCoverageData } from './PHPUnit/Coverage';
+import { CloverParser, type FileCoverageData } from './PHPUnit/TestCoverage';
 import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
 import { semverGte } from './PHPUnit/utils';
 import { icon } from './TestCollection/TestHierarchyBuilder';

@@ -1,14 +1,25 @@
-out
-dist
-node_modules
-.vscode-test/
-*.vsix
-
-.idea/
+# Build artifacts
+/out/
+/dist/
+/build/
 /coverage/
-build/
-.DS_Store
+
+# Dependencies
+node_modules/
+
+# Package files
+*.vsix
 *.zip
 
+# Testing
+.vscode-test/
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
+
+# Personal / local
 .claude/
 CLAUDE.md

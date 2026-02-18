@@ -28,6 +28,17 @@
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
+            "name": "Run Extension (Docker PHPUnit)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/docker-phpunit.code-workspace"
+            ],
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
             "name": "Extension Tests",
             "type": "extensionHost",
             "request": "launch",
