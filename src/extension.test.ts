@@ -28,6 +28,7 @@ import {
     detectPhpUnitStubs,
     phpUnitProject,
 } from './PHPUnit/__tests__/utils';
+import { CloverParser, type FileCoverageData } from './PHPUnit/Coverage';
 import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
 import { semverGte } from './PHPUnit/utils';
 import { icon } from './TestCollection/TestHierarchyBuilder';
@@ -616,10 +617,18 @@ describe('Extension Test', () => {
             });
 
             it('Coverage', async () => {
-                await activateAndRun({
+                const fakeData: FileCoverageData[] = [
+                    { filePath: join(root, 'src/Foo.php'), covered: 1, total: 2, lines: [] },
+                ];
+                const parseCloverSpy = vi
+                    .spyOn(CloverParser.prototype, 'parseClover')
+                    .mockResolvedValue(fakeData);
+
+                const ctrl = await activateAndRun({
                     include: ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)'],
                     kind: TestRunProfileKind.Coverage,
                 });
+
                 ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
                     expectSpawnCalled(
                         [
@@ -629,11 +638,22 @@ describe('Extension Test', () => {
                             '--colors=never',
                             '--teamcity',
                             '--coverage-clover',
-                            new RegExp(`phpunit-${i}.xml`),
+                            new RegExp(`\\.phpunit\\.cache[/\\\\]coverage-.+-${i}\\.xml`),
                         ],
                         { XDEBUG_MODE: 'coverage' },
                     );
                 });
+
+                expect(parseCloverSpy).toHaveBeenCalledTimes(2);
+                expect(parseCloverSpy.mock.calls[0][0]).toMatch(
+                    /\.phpunit\.cache[/\\]coverage-.+-0\.xml$/,
+                );
+                expect(parseCloverSpy.mock.calls[1][0]).toMatch(
+                    /\.phpunit\.cache[/\\]coverage-.+-1\.xml$/,
+                );
+
+                const testRun = getTestRun(ctrl);
+                expect(testRun.addCoverage).toHaveBeenCalledTimes(2);
             });
         });
     });

@@ -9,9 +9,11 @@ import {
 } from 'vscode';
 
 import { Configuration } from './Configuration';
-import { CoverageCollector } from './Coverage';
 import { TestRunnerObserverFactory } from './Observers';
 import { ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
+import { CloverParser, CoverageReader } from './PHPUnit/Coverage';
+import type { Path } from './PHPUnit/PathReplacer';
+import { PathReplacer } from './PHPUnit/PathReplacer';
 import { ClassHierarchy } from './PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from './PHPUnit/TestParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from './PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
@@ -37,9 +39,6 @@ export function createParentContainer(
     // VS Code external objects (shared)
     container.bind(TYPES.TestController).toConstantValue(ctrl);
     container.bind(TYPES.OutputChannel).toConstantValue(outputChannel);
-
-    // Shared singleton services (no per-folder deps)
-    container.bind(CoverageCollector).toSelf().inSingletonScope();
 
     // Child container factory
     container
@@ -84,6 +83,33 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
             ]);
             return new TestParser(phpUnitXML, astParser);
         })
+        .inSingletonScope();
+
+    // Per-folder coverage (path mapping is workspace-specific)
+    child
+        .bind(PathReplacer)
+        .toDynamicValue((ctx) => {
+            const config = ctx.get(Configuration);
+            return new PathReplacer(
+                { cwd: workspaceFolder.uri.fsPath },
+                config.get('paths') as Path,
+            );
+        })
+        .inSingletonScope();
+    child
+        .bind(CloverParser)
+        .toDynamicValue(() => new CloverParser())
+        .inSingletonScope();
+    child
+        .bind(CoverageReader)
+        .toDynamicValue(
+            (ctx) =>
+                new CoverageReader(
+                    workspaceFolder.uri.fsPath,
+                    ctx.get(CloverParser),
+                    ctx.get(PathReplacer),
+                ),
+        )
         .inSingletonScope();
 
     // Per-folder services

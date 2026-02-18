@@ -1,9 +1,9 @@
 import type { SpawnOptions } from 'node:child_process';
 import { Configuration, type IConfiguration } from '../Configuration';
+import { type Path, PathReplacer } from '../PathReplacer';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance, parseArgv } from '../utils';
 import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
-import { type Path, PathReplacer } from './PathReplacer';
 import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from './placeholders';
 import type { Xdebug } from './Xdebug';
 
@@ -165,7 +165,7 @@ export class ProcessBuilder {
             .concat('--colors=never', '--teamcity');
 
         return base64EncodeFilter(this.addParaTestFunctional(args))
-            .concat(...(this.xdebug?.getPhpUnitArgs() ?? []))
+            .concat(...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? []))
             .join(' ');
     }
 

@@ -1,5 +1,5 @@
 import type { SpawnOptions } from 'node:child_process';
-import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
+import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './ProcessBuilder/placeholders';
 
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestRun, TestRunRequest } from 'vscode';
-import { CoverageCollector } from '../Coverage';
+import { PHPUnitFileCoverage } from '../Coverage';
 import {
     FilterStrategyFactory,
     type ProcessBuilder,
@@ -9,6 +9,9 @@ import {
     TestRunnerEvent,
     type TestRunnerProcess,
 } from '../PHPUnit';
+import { CoverageReader } from '../PHPUnit/Coverage';
+import type { Xdebug } from '../PHPUnit/ProcessBuilder/Xdebug';
+import { Mode } from '../PHPUnit/ProcessBuilder/Xdebug';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
@@ -26,7 +29,7 @@ export class TestRunHandler {
         @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
-        @inject(CoverageCollector) private coverageCollector: CoverageCollector,
+        @inject(CoverageReader) private coverageReader: CoverageReader,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
         @inject(DebugSessionManager) private debugSession: DebugSessionManager,
     ) {}
@@ -42,6 +45,10 @@ export class TestRunHandler {
     async startTestRun(request: TestRunRequest, cancellation?: CancellationToken) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
         const xdebug = builder.getXdebug();
+
+        if (xdebug?.mode === Mode.coverage) {
+            await this.coverageReader.prepare();
+        }
 
         await this.debugSession.wrap(xdebug, async () => {
             const testRun = this.ctrl.createTestRun(request);
@@ -74,9 +81,21 @@ export class TestRunHandler {
             });
 
             await this.runProcesses(processes, cancellation);
-            await this.coverageCollector.collect(processes, testRun);
+            await this.collectCoverage(processes, testRun);
         } finally {
             runner.emit(TestRunnerEvent.done, undefined);
+        }
+    }
+
+    private async collectCoverage(processes: TestRunnerProcess[], testRun: TestRun) {
+        const cloverFiles = processes
+            .map((process) => process.getCloverFile())
+            .filter((file): file is string => !!file);
+
+        const coverageData = await this.coverageReader.read(cloverFiles);
+
+        for (const data of coverageData) {
+            testRun.addCoverage(new PHPUnitFileCoverage(data));
         }
     }
 
@@ -95,6 +114,7 @@ export class TestRunHandler {
 
     private createProcesses(runner: TestRunner, builder: ProcessBuilder, request: TestRunRequest) {
         if (!request.include) {
+            this.assignCloverFile(builder.getXdebug(), 0);
             return [runner.run(builder)];
         }
 
@@ -111,9 +131,14 @@ export class TestRunHandler {
         index: number,
     ): ProcessBuilder {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        return builder
-            .clone()
-            .setXdebug(builder.getXdebug()?.clone().setIndex(index))
-            .setArguments(filter);
+        const clonedXdebug = builder.getXdebug()?.clone();
+        this.assignCloverFile(clonedXdebug, index);
+        return builder.clone().setXdebug(clonedXdebug).setArguments(filter);
+    }
+
+    private assignCloverFile(xdebug: Xdebug | undefined, index: number) {
+        if (xdebug?.mode === Mode.coverage) {
+            xdebug.setCloverFile(this.coverageReader.generateCloverPath(index));
+        }
     }
 }
