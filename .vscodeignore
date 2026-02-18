@@ -18,5 +18,10 @@ biome.json
 coverage/**
 sample/**
 vitest.config.ts
+CLAUDE.md
+.claude/**
+lefthook.yml
+qodana.yaml
+pnpm-lock.yaml
 img/**
 !img/icon.png
