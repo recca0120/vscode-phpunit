@@ -1,4 +1,4 @@
-import { stat } from 'node:fs/promises';
+import { access } from 'node:fs/promises';
 
 export const EOL = '\r\n';
 
@@ -11,14 +11,12 @@ function stripQuotes(s: string): string {
     return s;
 }
 
-function nextIsOption(token: string): boolean {
-    const stripped = stripQuotes(token);
-    return stripped.startsWith('-');
-}
-
 export const parseArguments = (parameters: string[], excludes: string[]): string[] => {
     const input = parameters.join(' ').trim();
     const tokens = [...input.matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)].map((m) => m[0]);
+
+    const hasValue = (i: number) =>
+        i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-');
 
     const options: string[] = [];
     const positionals: string[] = [];
@@ -28,24 +26,15 @@ export const parseArguments = (parameters: string[], excludes: string[]): string
         // long option: --key=value or --key value or --flag
         if (token.startsWith('--')) {
             const eqIndex = token.indexOf('=');
-            if (eqIndex !== -1) {
-                const key = token.substring(2, eqIndex);
-                if (!excludes.includes(key)) {
-                    options.push(token);
-                }
-                continue;
-            }
-            const key = token.substring(2);
+            const key = eqIndex !== -1 ? token.substring(2, eqIndex) : token.substring(2);
             if (excludes.includes(key)) {
-                if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
-                    i++;
-                }
+                if (eqIndex === -1 && hasValue(i)) i++;
                 continue;
             }
-            if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
-                options.push(`--${key}=${stripQuotes(tokens[++i])}`);
-            } else {
+            if (eqIndex !== -1 || !hasValue(i)) {
                 options.push(token);
+            } else {
+                options.push(`--${key}=${stripQuotes(tokens[++i])}`);
             }
             continue;
         }
@@ -56,16 +45,14 @@ export const parseArguments = (parameters: string[], excludes: string[]): string
             const longKey = aliases[short];
             const key = longKey ?? short;
             if (excludes.includes(key)) {
-                if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
-                    i++;
-                }
+                if (hasValue(i)) i++;
                 continue;
             }
-            if (i + 1 < tokens.length && !nextIsOption(tokens[i + 1])) {
+            if (!hasValue(i)) {
+                options.push(longKey ? `--${longKey}` : token);
+            } else {
                 const value = stripQuotes(tokens[++i]);
                 options.push(longKey ? `--${longKey}=${value}` : `-${short} ${value}`);
-            } else {
-                options.push(longKey ? `--${longKey}` : token);
             }
             continue;
         }
@@ -78,20 +65,10 @@ export const parseArguments = (parameters: string[], excludes: string[]): string
 };
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
-    try {
-        await stat(filePath);
-
-        return true;
-    } catch (error: unknown) {
-        if (
-            error instanceof Error &&
-            'code' in error &&
-            (error as NodeJS.ErrnoException).code === 'ENOENT'
-        ) {
-            return false;
-        }
-        throw error;
-    }
+    return access(filePath).then(
+        () => true,
+        () => false,
+    );
 }
 
 export async function findAsyncSequential<T>(
@@ -132,8 +109,5 @@ export const splitFQN = (fqn: string): { namespace: string; className: string } 
     return { namespace: parts.join('\\'), className };
 };
 
-export const cloneInstance = <T extends object>(obj: T): T => {
-    const clone = Object.create(Object.getPrototypeOf(obj));
-
-    return Object.assign(clone, obj);
-};
+export const cloneInstance = <T extends object>(obj: T): T =>
+    Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
