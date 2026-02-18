@@ -1,5 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { phpUnitProjectWin } from '../__tests__/utils';
 import { PathReplacer } from '../PathReplacer';
 import { VAR_WORKSPACE_FOLDER } from '../ProcessBuilder/placeholders';
 import { CloverParser, type FileCoverageData } from './CloverParser';
@@ -59,5 +60,22 @@ describe('CoverageReader', () => {
         const result = await reader.read(['/tmp/phpunit-0.xml']);
 
         expect(result[0].filePath).toBe('/local/workspace/src/Foo.php');
+    });
+
+    it('applies pathReplacer.toLocal to Windows file paths', async () => {
+        const pathReplacer = new PathReplacer(
+            { cwd: phpUnitProjectWin('') },
+            { [VAR_WORKSPACE_FOLDER]: '/app' },
+        );
+        reader = new CoverageReader(cloverParser, pathReplacer);
+
+        const fakeData: FileCoverageData[] = [
+            { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
+        ];
+        vi.spyOn(cloverParser, 'parseClover').mockResolvedValue(fakeData);
+
+        const result = await reader.read(['/tmp/phpunit-0.xml']);
+
+        expect(result[0].filePath).toBe(phpUnitProjectWin('src/Foo.php'));
     });
 });
