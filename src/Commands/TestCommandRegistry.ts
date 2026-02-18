@@ -1,3 +1,4 @@
+import type { Container } from 'inversify';
 import {
     CancellationTokenSource,
     commands,
@@ -7,7 +8,10 @@ import {
     TestRunRequest as TestRunRequestImpl,
     type Uri,
     window,
+    workspace,
 } from 'vscode';
+import { TestCollection } from '../TestCollection/TestCollection';
+import { TestRunHandler } from '../TestExecution/TestRunHandler';
 import type { FolderTestContext } from '../types';
 import type { WorkspaceFolderManager } from '../WorkspaceFolderManager';
 
@@ -46,11 +50,11 @@ export class TestCommandRegistry {
 
     runByGroup(): Disposable {
         return commands.registerCommand('phpunit.run-by-group', async () => {
-            let groups = this.folderManager.findAllGroups();
+            let groups = this.findAllGroups();
 
             if (groups.length === 0) {
                 await this.folderManager.reloadAll();
-                groups = this.folderManager.findAllGroups();
+                groups = this.findAllGroups();
             }
 
             if (groups.length === 0) {
@@ -68,7 +72,7 @@ export class TestCommandRegistry {
                 return;
             }
 
-            const tests = this.folderManager.findTestsByGroup(selected);
+            const tests = this.findTestsByGroup(selected);
             if (tests.length > 0) {
                 await this.run(tests);
             }
@@ -77,13 +81,63 @@ export class TestCommandRegistry {
 
     rerun(): Disposable {
         return commands.registerCommand('phpunit.rerun', async () => {
-            const ctx = this.folderManager.findMostRecentRun();
+            const ctx = this.findMostRecentRun();
             if (!ctx) {
                 return;
             }
 
             await this.run(ctx.findTestsByRequest(ctx.getPreviousRequest()));
         });
+    }
+
+    private findAllGroups(): string[] {
+        return [
+            ...new Set(
+                this.folderManager.getAll().flatMap((c) => c.get(TestCollection).findGroups()),
+            ),
+        ].sort();
+    }
+
+    private findTestsByGroup(group: string): TestItem[] {
+        return this.folderManager
+            .getAll()
+            .flatMap((c) => c.get(TestCollection).findTestsByGroup(group));
+    }
+
+    private findMostRecentRun(): FolderTestContext | undefined {
+        let mostRecent: FolderTestContext | undefined;
+        let mostRecentTime = -1;
+
+        for (const child of this.folderManager.getAll()) {
+            const runHandler = child.get(TestRunHandler);
+            if (runHandler.getPreviousRequest() && runHandler.getLastRunAt() > mostRecentTime) {
+                mostRecentTime = runHandler.getLastRunAt();
+                mostRecent = this.toContext(child);
+            }
+        }
+
+        return mostRecent;
+    }
+
+    private getContextForUri(uri: Uri): FolderTestContext | undefined {
+        const folder = workspace.getWorkspaceFolder(uri);
+        if (!folder) {
+            return undefined;
+        }
+
+        const container = this.folderManager.getByKey(folder.uri.toString());
+        return container ? this.toContext(container) : undefined;
+    }
+
+    private toContext(container: Container): FolderTestContext {
+        return {
+            findTestsByFile: (uri) => container.get(TestCollection).findTestsByFile(uri),
+            findTestsByPosition: (uri, pos) =>
+                container.get(TestCollection).findTestsByPosition(uri, pos),
+            findTestsByRequest: (req) => container.get(TestCollection).findTestsByRequest(req),
+            getPreviousRequest: () => container.get(TestRunHandler).getPreviousRequest(),
+            getLastRunAt: () => container.get(TestRunHandler).getLastRunAt(),
+        };
     }
 
     private async runWithEditor(
@@ -94,7 +148,7 @@ export class TestCommandRegistry {
             return;
         }
 
-        const ctx = this.folderManager.getContextForUri(uri);
+        const ctx = this.getContextForUri(uri);
         if (!ctx) {
             return;
         }

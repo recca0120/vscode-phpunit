@@ -222,18 +222,8 @@ describe('Extension TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        const folderItem = ctrl.createTestItem(
-            'folder:test',
-            `${icon(TestType.workspace)} phpunit-stub`,
-        );
-        folderItem.canResolveChildren = true;
+        const folderItem = collection.createFolderRoot(workspaceFolder);
         ctrl.items.add(folderItem);
-        collection.setRootItems(folderItem.children);
-        collection.registerTestDefinition(folderItem, {
-            type: TestType.workspace,
-            id: 'folder:test',
-            label: 'phpunit-stub',
-        });
 
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
@@ -320,20 +310,15 @@ describe('Extension TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        const folderItem = ctrl.createTestItem(
-            'folder:test',
-            `${icon(TestType.workspace)} phpunit-stub`,
-        );
-        folderItem.canResolveChildren = true;
+        const folderItem = collection.createFolderRoot(workspaceFolder);
         ctrl.items.add(folderItem);
-        collection.setRootItems(folderItem.children);
 
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         expect(toTree(ctrl.items)).toEqual([
             {
-                id: 'folder:test',
-                label: `${icon(TestType.workspace)} phpunit-stub`,
+                id: `folder:${workspaceFolder.uri.toString()}`,
+                label: `${icon(TestType.workspace)} ${workspaceFolder.name}`,
                 children: [
                     expect.objectContaining({
                         id: 'namespace:Tests',

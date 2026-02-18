@@ -305,7 +305,7 @@ describe('Extension Test', () => {
             ]) {
                 expect(commands.registerCommand).toHaveBeenCalledWith(cmd, expect.any(Function));
             }
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(4);
+            expect(context.subscriptions.push).toHaveBeenCalledTimes(5);
         });
 
         it('should only update configuration when phpunit settings change', async () => {

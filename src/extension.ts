@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {
     type CancellationToken,
+    type Disposable,
     type ExtensionContext,
     extensions,
     languages,
@@ -19,6 +20,8 @@ import { PHPUnitFileCoverage } from './Coverage';
 import { createParentContainer } from './container';
 import { PHPUnitXML } from './PHPUnit';
 import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
+import { TestCollection } from './TestCollection';
+import { TestFileWatcher } from './TestDiscovery';
 import { TestRunDispatcher } from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
@@ -35,11 +38,18 @@ export async function activate(context: ExtensionContext) {
     const parentContainer = createParentContainer(ctrl, outputChannel);
     const folderManager = parentContainer.get(WorkspaceFolderManager);
 
-    // Initialize folders, load config, apply roots, add documents, register listeners
-    await folderManager.initialize(context);
+    // Initialize folders, load config, apply roots, setup file change listeners
+    await folderManager.initialize();
 
     // Test controller handlers
-    folderManager.setupControllerHandlers(context);
+    setupControllerHandlers(ctrl, folderManager, context);
+
+    // Add open documents and register document listeners
+    await addOpenDocuments(folderManager);
+    registerDocumentListeners(context, folderManager);
+
+    // Folder change listener
+    context.subscriptions.push(folderManager.registerFolderChangeListener());
 
     // Run profiles with multi-folder dispatch
     const dispatcher = parentContainer.get(TestRunDispatcher);
@@ -57,6 +67,81 @@ export async function activate(context: ExtensionContext) {
         testRunProfile,
         onDidReload: folderManager.onDidReload,
     };
+}
+
+function setupControllerHandlers(
+    ctrl: TestController,
+    folderManager: WorkspaceFolderManager,
+    context: ExtensionContext,
+): void {
+    let activeWatchers: Disposable[] = [];
+
+    ctrl.refreshHandler = () => folderManager.reloadAll();
+
+    ctrl.resolveHandler = async (item) => {
+        if (!item) {
+            await folderManager.enqueue(async () => {
+                for (const watcher of activeWatchers) {
+                    watcher.dispose();
+                }
+                activeWatchers = [];
+
+                await folderManager.reload();
+
+                const watchers = await Promise.all(
+                    folderManager.getAll().map((c) => c.get(TestFileWatcher).startWatching()),
+                );
+                activeWatchers = watchers;
+                context.subscriptions.push(...watchers);
+            });
+            return;
+        }
+
+        if (item.uri) {
+            const container = folderManager.getByUri(item.uri);
+            if (container) {
+                await container.get(TestCollection).add(item.uri);
+            }
+        }
+    };
+
+    context.subscriptions.push({
+        dispose: () => {
+            for (const watcher of activeWatchers) {
+                watcher.dispose();
+            }
+            activeWatchers = [];
+        },
+    });
+}
+
+async function addOpenDocuments(folderManager: WorkspaceFolderManager): Promise<void> {
+    await Promise.all(
+        workspace.textDocuments.flatMap((document) => {
+            const container = folderManager.getByUri(document.uri);
+            return container ? [container.get(TestCollection).add(document.uri)] : [];
+        }),
+    );
+}
+
+function registerDocumentListeners(
+    context: ExtensionContext,
+    folderManager: WorkspaceFolderManager,
+): void {
+    context.subscriptions.push(
+        workspace.onDidOpenTextDocument((document) => {
+            const container = folderManager.getByUri(document.uri);
+            if (container) {
+                container.get(TestCollection).add(document.uri);
+            }
+        }),
+        workspace.onDidChangeTextDocument((e) => {
+            const container = folderManager.getByUri(e.document.uri);
+            if (container) {
+                container.get(TestCollection).change(e.document.uri);
+            }
+        }),
+    );
 }
 
 function createRunProfiles(ctrl: TestController, dispatcher: TestRunDispatcher) {
