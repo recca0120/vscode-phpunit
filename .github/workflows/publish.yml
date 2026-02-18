@@ -3,7 +3,6 @@ name: Publish
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 jobs:
   package:
@@ -42,11 +41,8 @@ jobs:
         with:
           name: vsix
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
       - name: Publish to VS Code Marketplace
-        run: pnpx @vscode/vsce publish --packagePath *.vsix
+        run: npx @vscode/vsce publish --packagePath *.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
