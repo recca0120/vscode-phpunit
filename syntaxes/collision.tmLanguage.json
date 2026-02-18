@@ -2,13 +2,14 @@
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name": "PHPUnit",
     "patterns": [
+        { "comment": "--- Test result lines ---" },
         {
             "comment": "Passed test line → green",
             "match": "^\\s+✅\\s+.+\\d+\\s*ms",
             "name": "markup.inserted.phpunit"
         },
         {
-            "comment": "Failed test line → red (ends with ms)",
+            "comment": "Failed test line → red",
             "match": "^\\s+❌\\s+.+\\d+\\s*ms",
             "name": "invalid.phpunit"
         },
@@ -18,7 +19,14 @@
             "name": "markup.deleted.phpunit"
         },
         {
-            "comment": "FAILED error title → only icon+FAILED red, rest default",
+            "comment": "Printed output → yellow",
+            "match": "^🟨\\s+.+",
+            "name": "markup.deleted.phpunit"
+        },
+
+        { "comment": "--- Error details ---" },
+        {
+            "comment": "FAILED error title → icon+FAILED red, rest default",
             "match": "^(\\s+❌\\s+FAILED)(\\s+.+)",
             "captures": {
                 "1": { "name": "invalid.phpunit" }
@@ -29,11 +37,8 @@
             "match": "^❌\\s+.+",
             "name": "invalid.phpunit"
         },
-        {
-            "comment": "Printed output → yellow",
-            "match": "^🟨\\s+.+",
-            "name": "markup.deleted.phpunit"
-        },
+
+        { "comment": "--- Source code display ---" },
         {
             "comment": "Arrow source line → arrow+number red, ▕ gray, code PHP",
             "match": "(➜\\s+\\d+\\s+)(▕)(\\s?.*$)",
@@ -58,16 +63,15 @@
                 }
             }
         },
+
+        { "comment": "--- File references ---" },
         {
-            "comment": "at file reference → link",
-            "match": "^at\\s+\\S+\\.php:\\d+",
-            "name": "string.link.phpunit"
-        },
-        {
-            "comment": "File path links",
+            "comment": "File path links (with optional 'at' prefix)",
             "match": "\\S+\\.php:\\d+",
             "name": "string.link.phpunit"
         },
+
+        { "comment": "--- Diff ---" },
         {
             "comment": "Diff removed line → red",
             "match": "^-\\s+.+",
@@ -78,11 +82,15 @@
             "match": "^\\+\\s+.+",
             "name": "markup.inserted.phpunit"
         },
+
+        { "comment": "--- Structure ---" },
         {
             "comment": "PrettyPrinter box lines → gray",
             "match": "^\\s+[┐├│┴┊].*",
             "name": "comment.phpunit"
         },
+
+        { "comment": "--- Summary statistics ---" },
         {
             "comment": "Pest summary: N failed → red",
             "match": "\\d+\\s+failed",
@@ -108,6 +116,8 @@
             "match": "(Skipped|Incomplete|Risky|Warnings|PHPUnit Deprecations):\\s+\\d+",
             "name": "markup.deleted.phpunit"
         },
+
+        { "comment": "--- Metadata ---" },
         {
             "comment": "Info lines → gray",
             "match": "^(Time|Duration|Runtime|Configuration|Processes):.*",
