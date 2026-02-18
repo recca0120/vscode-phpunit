@@ -12,7 +12,7 @@ import { Configuration } from './Configuration';
 import { CoverageCollector } from './Coverage';
 import { TestRunnerObserverFactory } from './Observers';
 import { ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
-import { CloverParser } from './PHPUnit/Coverage';
+import { CloverParser, CoverageCollector as DomainCoverageCollector } from './PHPUnit/Coverage';
 import type { Path } from './PHPUnit/ProcessBuilder/PathReplacer';
 import { PathReplacer } from './PHPUnit/ProcessBuilder/PathReplacer';
 import { ClassHierarchy } from './PHPUnit/TestParser/ClassHierarchy';
@@ -98,6 +98,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         })
         .inSingletonScope();
     child.bind(CloverParser).toSelf().inSingletonScope();
+    child.bind(DomainCoverageCollector).toSelf().inSingletonScope();
     child.bind(CoverageCollector).toSelf().inSingletonScope();
 
     // Per-folder services
