@@ -11,15 +11,21 @@ import { XmlElement } from '../PHPUnit';
 export const CloverParser = {
     async parseClover(file: string): Promise<PHPUnitFileCoverage[]> {
         try {
-            const element = await XmlElement.loadFile(file);
-
-            return [
-                ...element.querySelectorAll('coverage project file'),
-                ...element.querySelectorAll('coverage project package file'),
-            ].map((node: XmlElement) => new PHPUnitFileCoverage(node));
+            return this.parseElement(await XmlElement.loadFile(file));
         } catch (_ex) {
             return [];
         }
+    },
+
+    parseCloverXml(xml: string): PHPUnitFileCoverage[] {
+        return this.parseElement(XmlElement.load(xml));
+    },
+
+    parseElement(element: XmlElement): PHPUnitFileCoverage[] {
+        return [
+            ...element.querySelectorAll('coverage project file'),
+            ...element.querySelectorAll('coverage project package file'),
+        ].map((node: XmlElement) => new PHPUnitFileCoverage(node));
     },
 };
 
