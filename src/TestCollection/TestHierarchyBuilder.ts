@@ -69,7 +69,9 @@ export class TestHierarchyBuilder {
     }
 
     private processClassOrDescribe(test: TestDefinition, parentChildren: TestItemCollection) {
-        const testItem = this.createTestItem(test, test.id);
+        const sortText =
+            test.type === TestType.class ? test.id : String(parentChildren.size).padStart(5, '0');
+        const testItem = this.createTestItem(test, sortText);
         parentChildren.add(testItem);
         this.testData.set(testItem, test);
 
@@ -95,7 +97,7 @@ export class TestHierarchyBuilder {
         }
 
         // describe nested inside class/describe
-        const testItem = this.createTestItem(test, test.id);
+        const testItem = this.createTestItem(test, `${siblings.length}`);
         this.inheritParentTags(testItem, parentItem);
         siblings.push(testItem);
         this.testData.set(testItem, test);
@@ -112,7 +114,7 @@ export class TestHierarchyBuilder {
     }
 
     private processMethod(test: TestDefinition, parentChildren: TestItemCollection) {
-        const testItem = this.createTestItem(test, '0');
+        const testItem = this.createTestItem(test, String(parentChildren.size).padStart(5, '0'));
         parentChildren.add(testItem);
         this.testData.set(testItem, test);
     }
@@ -152,7 +154,7 @@ export class TestHierarchyBuilder {
             this.parseLabelWithIcon(suiteDefinition),
         );
         testItem.canResolveChildren = true;
-        testItem.sortText = suiteId;
+        testItem.sortText = String(parentChildren.size).padStart(5, '0');
         parentChildren.add(testItem);
         this.testData.set(testItem, suiteDefinition);
 
