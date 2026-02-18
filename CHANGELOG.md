@@ -4,6 +4,17 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.3] - 2026-02-18
+
+### Fixed
+- Fix workspace folder ordering in Test Explorer
+- Fix sortText to preserve insertion order for user-defined items
+- Fix workspace folder run producing no output after reset
+
+### Changed
+- Refactor: slim down WorkspaceFolderManager by extracting responsibilities
+- Refactor: reorder class members, extract shared icon(), and fix code smells
+
 ## [3.9.2] - 2026-02-18
 
 ### Changed
