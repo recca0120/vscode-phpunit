@@ -11,17 +11,18 @@ export function stripQuotes(s: string): string {
     return s;
 }
 
-export function parseArgv(input: string): string[] {
-    return [...input.matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)].map((m) => stripQuotes(m[0]));
+const TOKEN_PATTERN = /(?:[^\s"']+|"[^"]*"|'[^']*')+/g;
+
+function tokenize(input: string): string[] {
+    return [...input.matchAll(TOKEN_PATTERN)].map((m) => m[0]);
 }
 
-export const parseArguments = (parameters: string[], excludes: string[]): string[] => {
-    const tokens = [
-        ...parameters
-            .join(' ')
-            .trim()
-            .matchAll(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g),
-    ].map((m) => m[0]);
+export function parseArgv(input: string): string[] {
+    return tokenize(input).map(stripQuotes);
+}
+
+export function parseArguments(parameters: string[], excludes: string[]): string[] {
+    const tokens = tokenize(parameters.join(' ').trim());
 
     const hasValue = (i: number) =>
         i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-');
@@ -72,7 +73,7 @@ export const parseArguments = (parameters: string[], excludes: string[]): string
     }
 
     return [...options, ...positionals];
-};
+}
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
     return access(filePath).then(
@@ -122,7 +123,7 @@ export const splitFQN = (fqn: string): { namespace: string; className: string } 
 export const cloneInstance = <T extends object>(obj: T): T =>
     Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 
-export function semverCompare(a: string, b: string): number {
+function semverCompare(a: string, b: string): number {
     const pa = a.split('.').map(Number);
     const pb = b.split('.').map(Number);
     for (let i = 0; i < 3; i++) {
