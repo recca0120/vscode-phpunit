@@ -1,5 +1,7 @@
 import { rm } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PathReplacer } from '../ProcessBuilder/PathReplacer';
+import { VAR_WORKSPACE_FOLDER } from '../ProcessBuilder/placeholders';
 import { CloverParser, type FileCoverageData } from './CloverParser';
 import { CoverageReader } from './CoverageReader';
 
@@ -40,5 +42,22 @@ describe('CoverageReader', () => {
 
         expect(result).toEqual([]);
         expect(rm).not.toHaveBeenCalled();
+    });
+
+    it('applies pathReplacer.toLocal to file paths', async () => {
+        const pathReplacer = new PathReplacer(
+            { cwd: '/local/workspace' },
+            { [VAR_WORKSPACE_FOLDER]: '/app' },
+        );
+        reader = new CoverageReader(cloverParser, pathReplacer);
+
+        const fakeData: FileCoverageData[] = [
+            { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
+        ];
+        vi.spyOn(cloverParser, 'parseClover').mockResolvedValue(fakeData);
+
+        const result = await reader.read(['/tmp/phpunit-0.xml']);
+
+        expect(result[0].filePath).toBe('/local/workspace/src/Foo.php');
     });
 });

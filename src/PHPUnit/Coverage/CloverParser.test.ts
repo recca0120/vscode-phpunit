@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PathReplacer } from '../ProcessBuilder/PathReplacer';
-import { VAR_WORKSPACE_FOLDER } from '../ProcessBuilder/placeholders';
 import { CloverParser } from './CloverParser';
 
 describe('CloverParser', () => {
-    const givenParser = (pathReplacer?: PathReplacer) => new CloverParser(pathReplacer);
+    const givenParser = () => new CloverParser();
 
     it('parseClover from fixture file', async () => {
         const result = await givenParser().parseClover(
@@ -141,27 +139,5 @@ describe('CloverParser', () => {
             { line: 10, count: 2 },
             { line: 15, count: 0 },
         ]);
-    });
-
-    it('applies pathReplacer.toLocal to file paths', () => {
-        const pathReplacer = new PathReplacer(
-            { cwd: '/local/workspace' },
-            { [VAR_WORKSPACE_FOLDER]: '/app' },
-        );
-        const result = givenParser(
-            pathReplacer,
-        ).parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1">
-  <project timestamp="1">
-    <package name="App">
-      <file name="/app/src/Calculator.php">
-        <metrics statements="3" coveredstatements="2"/>
-      </file>
-    </package>
-    <metrics files="1" statements="3" coveredstatements="2"/>
-  </project>
-</coverage>`);
-
-        expect(result[0].filePath).toBe('/local/workspace/src/Calculator.php');
     });
 });

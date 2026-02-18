@@ -1,4 +1,3 @@
-import type { PathReplacer } from '../ProcessBuilder/PathReplacer';
 import { XmlElement } from '../XmlElement';
 
 export interface LineCoverage {
@@ -14,8 +13,6 @@ export interface FileCoverageData {
 }
 
 export class CloverParser {
-    constructor(private pathReplacer?: PathReplacer) {}
-
     async parseClover(file: string): Promise<FileCoverageData[]> {
         try {
             return this.parseElement(await XmlElement.loadFile(file));
@@ -29,21 +26,17 @@ export class CloverParser {
     }
 
     private parseElement(element: XmlElement): FileCoverageData[] {
-        const replacer = this.pathReplacer;
-        const toLocal = replacer ? (p: string) => replacer.toLocal(p) : undefined;
-
         return [
             ...element.querySelectorAll('coverage project file'),
             ...element.querySelectorAll('coverage project package file'),
-        ].map((node) => this.parseFileNode(node, toLocal));
+        ].map((node) => this.parseFileNode(node));
     }
 
-    private parseFileNode(node: XmlElement, toLocal?: (p: string) => string): FileCoverageData {
-        const name = node.getAttribute('name') ?? '';
+    private parseFileNode(node: XmlElement): FileCoverageData {
         const metrics = node.querySelector('metrics');
 
         return {
-            filePath: toLocal ? toLocal(name) : name,
+            filePath: node.getAttribute('name') ?? '',
             covered: parseInt(metrics?.getAttribute('coveredstatements') ?? '0', 10),
             total: parseInt(metrics?.getAttribute('statements') ?? '0', 10),
             lines: node.querySelectorAll('line').map((line) => ({

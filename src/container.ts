@@ -98,11 +98,11 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .inSingletonScope();
     child
         .bind(CloverParser)
-        .toDynamicValue((ctx) => new CloverParser(ctx.get(PathReplacer)))
+        .toDynamicValue(() => new CloverParser())
         .inSingletonScope();
     child
         .bind(CoverageReader)
-        .toDynamicValue((ctx) => new CoverageReader(ctx.get(CloverParser)))
+        .toDynamicValue((ctx) => new CoverageReader(ctx.get(CloverParser), ctx.get(PathReplacer)))
         .inSingletonScope();
 
     // Per-folder services
