@@ -9,7 +9,7 @@ import {
     TestRunnerEvent,
     type TestRunnerProcess,
 } from '../PHPUnit';
-import { CoverageCollector } from '../PHPUnit/Coverage';
+import { CoverageReader } from '../PHPUnit/Coverage';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
@@ -27,7 +27,7 @@ export class TestRunHandler {
         @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
-        @inject(CoverageCollector) private coverageCollector: CoverageCollector,
+        @inject(CoverageReader) private coverageReader: CoverageReader,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
         @inject(DebugSessionManager) private debugSession: DebugSessionManager,
     ) {}
@@ -86,7 +86,7 @@ export class TestRunHandler {
             .map((process) => process.getCloverFile())
             .filter((file): file is string => !!file);
 
-        const coverageData = await this.coverageCollector.collect(cloverFiles);
+        const coverageData = await this.coverageReader.read(cloverFiles);
 
         for (const data of coverageData) {
             testRun.addCoverage(new PHPUnitFileCoverage(data));

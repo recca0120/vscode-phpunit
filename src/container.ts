@@ -11,7 +11,7 @@ import {
 import { Configuration } from './Configuration';
 import { TestRunnerObserverFactory } from './Observers';
 import { ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
-import { CloverParser, CoverageCollector } from './PHPUnit/Coverage';
+import { CloverParser, CoverageReader } from './PHPUnit/Coverage';
 import type { Path } from './PHPUnit/ProcessBuilder/PathReplacer';
 import { PathReplacer } from './PHPUnit/ProcessBuilder/PathReplacer';
 import { ClassHierarchy } from './PHPUnit/TestParser/ClassHierarchy';
@@ -101,8 +101,8 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .toDynamicValue((ctx) => new CloverParser(ctx.get(PathReplacer)))
         .inSingletonScope();
     child
-        .bind(CoverageCollector)
-        .toDynamicValue((ctx) => new CoverageCollector(ctx.get(CloverParser)))
+        .bind(CoverageReader)
+        .toDynamicValue((ctx) => new CoverageReader(ctx.get(CloverParser)))
         .inSingletonScope();
 
     // Per-folder services
