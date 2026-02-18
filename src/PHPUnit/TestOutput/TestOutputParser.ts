@@ -1,4 +1,4 @@
-import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../Transformer';
+import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../TestIdentifier';
 import {
     TeamcityEvent,
     TeamcityLineParser,

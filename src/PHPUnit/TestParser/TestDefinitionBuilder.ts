@@ -1,4 +1,4 @@
-import { TestIdentifierFactory } from '../Transformer';
+import { TestIdentifierFactory } from '../TestIdentifier';
 import { type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
 import type { TestNode } from './TestNode';

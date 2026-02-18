@@ -1,4 +1,4 @@
-import { TestIdentifier } from '../Transformer';
+import { TestIdentifier } from '../TestIdentifier';
 import { type TestDefinition, TestType } from '../types';
 
 abstract class FilterStrategy {

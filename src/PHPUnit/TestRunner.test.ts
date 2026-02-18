@@ -5,10 +5,10 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests_
 import { Configuration } from './Configuration';
 import { ProcessBuilder } from './ProcessBuilder';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './ProcessBuilder/placeholders';
+import { TestIdentifierFactory } from './TestIdentifier';
 import { TeamcityEvent } from './TestOutput';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
-import { TestIdentifierFactory } from './Transformer';
 import { TestType } from './types';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
