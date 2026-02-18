@@ -134,6 +134,12 @@
                         "Custom command to run. Ex: `docker exec -t [container_id] /bin/sh -c \"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
                     ]
                 },
+                "phpunit.saveFilesBeforeRun": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save all open files before running tests.",
+                    "scope": "resource"
+                },
                 "phpunit.args": {
                     "type": "array",
                     "default": [],
