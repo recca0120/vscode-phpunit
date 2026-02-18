@@ -6,7 +6,7 @@ import type { CloverParser, FileCoverageData } from './CloverParser';
 
 export class CoverageReader {
     private readonly cacheDir: string;
-    private runId: string = randomUUID();
+    private runId = '';
 
     constructor(
         cwd: string,
