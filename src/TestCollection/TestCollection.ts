@@ -96,19 +96,6 @@ export class TestCollection {
         return [...this.base.gatherFiles()];
     }
 
-    // Delegate to base
-    get size() {
-        return this.base.size;
-    }
-
-    getRootUri() {
-        return this.base.getRootUri();
-    }
-
-    items() {
-        return this.base.items();
-    }
-
     clearMatcherCache() {
         this.base.clearMatcherCache();
     }
@@ -123,20 +110,12 @@ export class TestCollection {
         return this;
     }
 
-    get(uri: URI) {
-        return this.base.get(uri);
-    }
-
     has(uri: URI) {
         return this.base.has(uri);
     }
 
     delete(uri: URI) {
         return this.base.delete(uri);
-    }
-
-    findFile(uri: URI) {
-        return this.base.findFile(uri);
     }
 
     reset() {

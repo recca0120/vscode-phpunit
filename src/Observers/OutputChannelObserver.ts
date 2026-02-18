@@ -97,11 +97,6 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.handleFaultedTest(result);
     }
 
-    private handleFaultedTest(result: TestFailed | TestIgnored): void {
-        this.testFinished(result);
-        this.showOutputChannel(ShowOutputState.onFailure);
-    }
-
     testSuiteFinished(result: TestSuiteFinished): void {
         if (this.shouldSkipSuite(result.id)) {
             return;
@@ -126,8 +121,13 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputFormatter.close();
     }
 
+    private handleFaultedTest(result: TestFailed | TestIgnored): void {
+        this.testFinished(result);
+        this.showOutputChannel(ShowOutputState.onFailure);
+    }
+
     private shouldSkipSuite(id?: string): boolean {
-        return !id || !!id.match(/::/);
+        return !id || id.includes('::');
     }
 
     private printedOutput(result: TestResult | undefined = undefined): void {

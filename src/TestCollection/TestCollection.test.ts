@@ -7,6 +7,7 @@ import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
 import { TestCollection } from './TestCollection';
+import { icon } from './TestHierarchyBuilder';
 
 describe('Extension TestCollection', () => {
     const root = phpUnitProject('');
@@ -65,11 +66,11 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             {
                 id: 'No Namespace',
-                label: '$(symbol-class) NoNamespaceTest',
+                label: `${icon(TestType.class)} NoNamespaceTest`,
                 children: [
                     {
                         id: 'No Namespace::No namespace',
-                        label: '$(symbol-method) test_no_namespace',
+                        label: `${icon(TestType.method)} test_no_namespace`,
                         children: [],
                     },
                 ],
@@ -91,15 +92,15 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             expect.objectContaining({
                 id: 'namespace:Tests',
-                label: '$(symbol-namespace) Tests',
+                label: `${icon(TestType.namespace)} Tests`,
                 children: [
                     expect.objectContaining({
                         id: 'Assertions (Tests\\Assertions)',
-                        label: '$(symbol-class) AssertionsTest',
+                        label: `${icon(TestType.class)} AssertionsTest`,
                     }),
                     expect.objectContaining({
                         id: 'Attribute (Tests\\Attribute)',
-                        label: '$(symbol-class) AttributeTest',
+                        label: `${icon(TestType.class)} AttributeTest`,
                     }),
                 ],
             }),
@@ -221,7 +222,10 @@ describe('Extension TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        const folderItem = ctrl.createTestItem('folder:test', '$(folder) phpunit-stub');
+        const folderItem = ctrl.createTestItem(
+            'folder:test',
+            `${icon(TestType.workspace)} phpunit-stub`,
+        );
         folderItem.canResolveChildren = true;
         ctrl.items.add(folderItem);
         collection.setRootItems(folderItem.children);
@@ -287,21 +291,21 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             {
                 id: 'testsuite:Unit',
-                label: '$(package) Unit',
+                label: `${icon(TestType.testsuite)} Unit`,
                 children: [
                     expect.objectContaining({
                         id: 'Example (Tests\\Unit\\Example)',
-                        label: '$(symbol-class) ExampleTest',
+                        label: `${icon(TestType.class)} ExampleTest`,
                     }),
                 ],
             },
             {
                 id: 'testsuite:Feature',
-                label: '$(package) Feature',
+                label: `${icon(TestType.testsuite)} Feature`,
                 children: [
                     expect.objectContaining({
                         id: 'Example (Tests\\Feature\\Example)',
-                        label: '$(symbol-class) ExampleTest',
+                        label: `${icon(TestType.class)} ExampleTest`,
                     }),
                 ],
             },
@@ -316,7 +320,10 @@ describe('Extension TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        const folderItem = ctrl.createTestItem('folder:test', '$(folder) phpunit-stub');
+        const folderItem = ctrl.createTestItem(
+            'folder:test',
+            `${icon(TestType.workspace)} phpunit-stub`,
+        );
         folderItem.canResolveChildren = true;
         ctrl.items.add(folderItem);
         collection.setRootItems(folderItem.children);
@@ -326,15 +333,15 @@ describe('Extension TestCollection', () => {
         expect(toTree(ctrl.items)).toEqual([
             {
                 id: 'folder:test',
-                label: '$(folder) phpunit-stub',
+                label: `${icon(TestType.workspace)} phpunit-stub`,
                 children: [
                     expect.objectContaining({
                         id: 'namespace:Tests',
-                        label: '$(symbol-namespace) Tests',
+                        label: `${icon(TestType.namespace)} Tests`,
                         children: [
                             expect.objectContaining({
                                 id: 'Assertions (Tests\\Assertions)',
-                                label: '$(symbol-class) AssertionsTest',
+                                label: `${icon(TestType.class)} AssertionsTest`,
                             }),
                         ],
                     }),

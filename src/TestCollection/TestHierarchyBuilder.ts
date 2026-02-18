@@ -9,15 +9,20 @@ import {
 } from 'vscode';
 import { type PHPUnitXML, type TestDefinition, TestIdentifierFactory, TestType } from '../PHPUnit';
 
+const TEST_ICONS: Record<TestType, string> = {
+    [TestType.workspace]: '$(folder)',
+    [TestType.testsuite]: '$(symbol-structure)',
+    [TestType.namespace]: '$(symbol-namespace)',
+    [TestType.class]: '$(symbol-class)',
+    [TestType.method]: '$(symbol-method)',
+    [TestType.describe]: '$(symbol-class)',
+};
+
+export function icon(type: TestType): string {
+    return TEST_ICONS[type] ?? '';
+}
+
 export class TestHierarchyBuilder {
-    private icons = {
-        [TestType.workspace]: '$(folder)',
-        [TestType.testsuite]: '$(package)',
-        [TestType.namespace]: '$(symbol-namespace)',
-        [TestType.class]: '$(symbol-class)',
-        [TestType.method]: '$(symbol-method)',
-        [TestType.describe]: '$(symbol-class)',
-    };
     private testData = new Map<TestItem, TestDefinition>();
     private multiSuite: boolean;
 
@@ -87,22 +92,12 @@ export class TestHierarchyBuilder {
     }
 
     private processChildIntoList(test: TestDefinition, siblings: TestItem[], parentItem: TestItem) {
-        if (test.type === TestType.method) {
-            const idx = siblings.length;
-            const testItem = this.createTestItem(test, `${idx}`);
-            this.inheritParentTags(testItem, parentItem);
-            siblings.push(testItem);
-            this.testData.set(testItem, test);
-            return;
-        }
-
-        // describe nested inside class/describe
         const testItem = this.createTestItem(test, `${siblings.length}`);
         this.inheritParentTags(testItem, parentItem);
         siblings.push(testItem);
         this.testData.set(testItem, test);
 
-        if (!test.children) {
+        if (test.type === TestType.method || !test.children) {
             return;
         }
 
@@ -275,8 +270,8 @@ export class TestHierarchyBuilder {
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {
-        const icon = this.icons[testDefinition.type];
+        const prefix = icon(testDefinition.type);
 
-        return icon ? `${icon} ${testDefinition.label}` : testDefinition.label;
+        return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
     }
 }

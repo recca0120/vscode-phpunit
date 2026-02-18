@@ -21,6 +21,7 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { activate } from './extension';
+import { TestType } from './PHPUnit';
 import {
     detectParatestStubs,
     detectPestStubs,
@@ -29,6 +30,7 @@ import {
 } from './PHPUnit/__tests__/utils';
 import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
 import { semverGte } from './PHPUnit/utils';
+import { icon } from './TestCollection/TestHierarchyBuilder';
 
 vi.mock('child_process', async () => {
     const actual = await vi.importActual<typeof import('child_process')>('child_process');
@@ -271,7 +273,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: itemId,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: '$(symbol-class) AssertionsTest',
+                    label: `${icon(TestType.class)} AssertionsTest`,
                 }),
             );
 
@@ -279,7 +281,7 @@ describe('Extension Test', () => {
                 expect.objectContaining({
                     id: `${itemId}::Passed`,
                     uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: '$(symbol-method) test_passed',
+                    label: `${icon(TestType.method)} test_passed`,
                     range: {
                         start: expect.objectContaining({ line: 15, character: 4 }),
                         end: expect.objectContaining({ line: 18, character: 5 }),
@@ -736,9 +738,9 @@ describe('Extension Test', () => {
                 `folder:${Uri.file(pestStubs[0].root).toString()}`,
             );
             expect(phpUnitFolder).toBeDefined();
-            expect(phpUnitFolder?.label).toBe('$(folder) phpunit-stub');
+            expect(phpUnitFolder?.label).toBe(`${icon(TestType.workspace)} phpunit-stub`);
             expect(pestFolder).toBeDefined();
-            expect(pestFolder?.label).toBe('$(folder) pest-stub');
+            expect(pestFolder?.label).toBe(`${icon(TestType.workspace)} pest-stub`);
 
             if (!phpUnitFolder || !pestFolder) return;
 

@@ -14,6 +14,7 @@ import {
 } from 'vscode';
 import { TestType } from './PHPUnit';
 import { TestCollection } from './TestCollection';
+import { icon } from './TestCollection/TestHierarchyBuilder';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import { TestRunHandler } from './TestExecution';
 import type { ChildContainerFactory, FolderTestContext } from './types';
@@ -21,16 +22,126 @@ import { TYPES } from './types';
 
 @injectable()
 export class WorkspaceFolderManager {
+    readonly onDidReload: Event<void>;
     private folders = new Map<string, Container>();
     private activeWatchers: Disposable[] = [];
     private pendingOperation = Promise.resolve();
     private readonly _onDidReload = new VscodeEventEmitter<void>();
-    readonly onDidReload: Event<void> = this._onDidReload.event;
 
     constructor(
         @inject(TYPES.ChildContainerFactory) private createChildContainer: ChildContainerFactory,
         @inject(TYPES.TestController) private ctrl: TestController,
-    ) {}
+    ) {
+        this.onDidReload = this._onDidReload.event;
+    }
+
+    getByKey(key: string): Container | undefined {
+        return this.folders.get(key);
+    }
+
+    getAll(): Container[] {
+        return [...this.folders.values()];
+    }
+
+    async initialize(context: ExtensionContext): Promise<void> {
+        for (const folder of workspace.workspaceFolders ?? []) {
+            this.add(folder);
+        }
+
+        await Promise.all(
+            this.getAll().map((child) => child.get(TestFileDiscovery).loadWorkspaceConfiguration()),
+        );
+
+        this.applyFolderRoots();
+        await this.addOpenDocuments();
+        this.registerDocumentListeners(context);
+        this.setupFileChangeListeners();
+        this.registerFolderChangeListener(context);
+    }
+
+    setupControllerHandlers(context: ExtensionContext): void {
+        this.ctrl.refreshHandler = () => this.reloadAll();
+
+        this.ctrl.resolveHandler = async (item) => {
+            if (!item) {
+                this.pendingOperation = this.pendingOperation.then(async () => {
+                    for (const watcher of this.activeWatchers) {
+                        watcher.dispose();
+                    }
+                    this.activeWatchers = [];
+
+                    await this.doReloadAll();
+
+                    const watchers = await Promise.all(
+                        this.getAll().map((c) => c.get(TestFileWatcher).startWatching()),
+                    );
+                    this.activeWatchers = watchers;
+                    context.subscriptions.push(...watchers);
+                });
+                await this.pendingOperation;
+                return;
+            }
+
+            if (item.uri) {
+                const container = this.getByUri(item.uri);
+                if (container) {
+                    await container.get(TestCollection).add(item.uri);
+                }
+            }
+        };
+    }
+
+    getContextForUri(uri: Uri): FolderTestContext | undefined {
+        const container = this.getByUri(uri);
+        return container ? this.toContext(container) : undefined;
+    }
+
+    async reloadAll(): Promise<void> {
+        this.pendingOperation = this.pendingOperation.then(() => this.doReloadAll());
+        await this.pendingOperation;
+    }
+
+    findAllGroups(): string[] {
+        return [
+            ...new Set(this.getAll().flatMap((c) => c.get(TestCollection).findGroups())),
+        ].sort();
+    }
+
+    findTestsByGroup(group: string): TestItem[] {
+        return this.getAll().flatMap((c) => c.get(TestCollection).findTestsByGroup(group));
+    }
+
+    findMostRecentRun(): FolderTestContext | undefined {
+        let mostRecent: FolderTestContext | undefined;
+        let mostRecentTime = -1;
+
+        for (const child of this.getAll()) {
+            const runHandler = child.get(TestRunHandler);
+            if (runHandler.getPreviousRequest() && runHandler.getLastRunAt() > mostRecentTime) {
+                mostRecentTime = runHandler.getLastRunAt();
+                mostRecent = this.toContext(child);
+            }
+        }
+
+        return mostRecent;
+    }
+
+    dispose(): void {
+        for (const container of this.folders.values()) {
+            this.cleanupContainer(container);
+        }
+        this.folders.clear();
+        this.ctrl.items.replace([]);
+        for (const watcher of this.activeWatchers) {
+            watcher.dispose();
+        }
+        this.activeWatchers = [];
+        this._onDidReload.dispose();
+    }
+
+    [Symbol.iterator]() {
+        return this.folders.values();
+    }
 
     private add(folder: WorkspaceFolder): Container {
         const key = folder.uri.toString();
@@ -42,6 +153,68 @@ export class WorkspaceFolderManager {
         const container = this.createChildContainer(folder);
         this.folders.set(key, container);
         return container;
+    }
+
+    private async addOpenDocuments(): Promise<void> {
+        await Promise.all(
+            workspace.textDocuments.flatMap((document) => {
+                const container = this.getByUri(document.uri);
+                return container ? [container.get(TestCollection).add(document.uri)] : [];
+            }),
+        );
+    }
+
+    private registerDocumentListeners(context: ExtensionContext): void {
+        context.subscriptions.push(
+            workspace.onDidOpenTextDocument((document) => {
+                const container = this.getByUri(document.uri);
+                if (container) {
+                    container.get(TestCollection).add(document.uri);
+                }
+            }),
+            workspace.onDidChangeTextDocument((e) => {
+                const container = this.getByUri(e.document.uri);
+                if (container) {
+                    container.get(TestCollection).change(e.document.uri);
+                }
+            }),
+        );
+    }
+
+    private setupFileChangeListeners(): void {
+        for (const child of this.getAll()) {
+            child.get(TestWatchManager).setupFileChangeListener();
+        }
+    }
+
+    private registerFolderChangeListener(context: ExtensionContext): void {
+        context.subscriptions.push(
+            workspace.onDidChangeWorkspaceFolders((event) => {
+                this.pendingOperation = this.pendingOperation
+                    .then(async () => {
+                        const { needsReload, addedContainers } = this.handleFolderChange(event);
+
+                        if (needsReload) {
+                            await this.doReloadAll();
+                            return;
+                        }
+
+                        for (const child of addedContainers) {
+                            await child.get(TestFileDiscovery).loadWorkspaceConfiguration();
+                            await child.get(TestFileDiscovery).reloadAll();
+                            const watcher = await child.get(TestFileWatcher).startWatching();
+                            context.subscriptions.push(watcher);
+                        }
+                        this._onDidReload.fire();
+                    })
+                    .catch((err) => {
+                        const message = err instanceof Error ? err.message : String(err);
+                        window.showErrorMessage(
+                            `PHPUnit: Failed to handle folder change: ${message}`,
+                        );
+                    });
+            }),
+        );
     }
 
     private remove(folder: WorkspaceFolder): void {
@@ -57,14 +230,6 @@ export class WorkspaceFolderManager {
     private getByUri(uri: Uri): Container | undefined {
         const folder = workspace.getWorkspaceFolder(uri);
         return folder ? this.folders.get(folder.uri.toString()) : undefined;
-    }
-
-    getByKey(key: string): Container | undefined {
-        return this.folders.get(key);
-    }
-
-    getAll(): Container[] {
-        return [...this.folders.values()];
     }
 
     private applyFolderRoots(): void {
@@ -121,166 +286,9 @@ export class WorkspaceFolderManager {
         return { needsReload: false, addedContainers };
     }
 
-    async initialize(context: ExtensionContext): Promise<void> {
-        // Add all workspace folders
-        for (const folder of workspace.workspaceFolders ?? []) {
-            this.add(folder);
-        }
-
-        // Load workspace configuration for each folder
-        await Promise.all(
-            this.getAll().map((child) => child.get(TestFileDiscovery).loadWorkspaceConfiguration()),
-        );
-
-        // Create folder root items for multi-workspace
-        this.applyFolderRoots();
-
-        // Add open documents to their respective collections
-        await Promise.all(
-            workspace.textDocuments.flatMap((document) => {
-                const container = this.getByUri(document.uri);
-                return container ? [container.get(TestCollection).add(document.uri)] : [];
-            }),
-        );
-
-        // Register document change listeners
-        context.subscriptions.push(
-            workspace.onDidOpenTextDocument((document) => {
-                const container = this.getByUri(document.uri);
-                if (container) {
-                    container.get(TestCollection).add(document.uri);
-                }
-            }),
-            workspace.onDidChangeTextDocument((e) => {
-                const container = this.getByUri(e.document.uri);
-                if (container) {
-                    container.get(TestCollection).change(e.document.uri);
-                }
-            }),
-        );
-
-        // Setup file change listeners for all folders
-        for (const child of this.getAll()) {
-            child.get(TestWatchManager).setupFileChangeListener();
-        }
-
-        // Watch for folder changes
-        context.subscriptions.push(
-            workspace.onDidChangeWorkspaceFolders((event) => {
-                this.pendingOperation = this.pendingOperation
-                    .then(async () => {
-                        const { needsReload, addedContainers } = this.handleFolderChange(event);
-
-                        if (needsReload) {
-                            await this.doReloadAll();
-                            return;
-                        }
-
-                        for (const child of addedContainers) {
-                            await child.get(TestFileDiscovery).loadWorkspaceConfiguration();
-                            await child.get(TestFileDiscovery).reloadAll();
-                            const watcher = await child.get(TestFileWatcher).startWatching();
-                            context.subscriptions.push(watcher);
-                        }
-                        this._onDidReload.fire();
-                    })
-                    .catch((err) => {
-                        const message = err instanceof Error ? err.message : String(err);
-                        window.showErrorMessage(
-                            `PHPUnit: Failed to handle folder change: ${message}`,
-                        );
-                    });
-            }),
-        );
-    }
-
-    setupControllerHandlers(context: ExtensionContext): void {
-        this.ctrl.refreshHandler = () => this.reloadAll();
-
-        this.ctrl.resolveHandler = async (item) => {
-            if (!item) {
-                this.pendingOperation = this.pendingOperation.then(async () => {
-                    for (const watcher of this.activeWatchers) {
-                        watcher.dispose();
-                    }
-                    this.activeWatchers = [];
-
-                    await this.doReloadAll();
-
-                    const watchers = await Promise.all(
-                        this.getAll().map((c) => c.get(TestFileWatcher).startWatching()),
-                    );
-                    this.activeWatchers = watchers;
-                    context.subscriptions.push(...watchers);
-                });
-                await this.pendingOperation;
-                return;
-            }
-
-            if (item.uri) {
-                const container = this.getByUri(item.uri);
-                if (container) {
-                    await container.get(TestCollection).add(item.uri);
-                }
-            }
-        };
-    }
-
-    getContextForUri(uri: Uri): FolderTestContext | undefined {
-        const container = this.getByUri(uri);
-        return container ? this.toContext(container) : undefined;
-    }
-
-    async reloadAll(): Promise<void> {
-        this.pendingOperation = this.pendingOperation.then(() => this.doReloadAll());
-        await this.pendingOperation;
-    }
-
     private async doReloadAll(): Promise<void> {
         await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
         this._onDidReload.fire();
-    }
-
-    findAllGroups(): string[] {
-        return [
-            ...new Set(this.getAll().flatMap((c) => c.get(TestCollection).findGroups())),
-        ].sort();
-    }
-
-    findTestsByGroup(group: string): TestItem[] {
-        return this.getAll().flatMap((c) => c.get(TestCollection).findTestsByGroup(group));
-    }
-
-    findMostRecentRun(): FolderTestContext | undefined {
-        let mostRecent: FolderTestContext | undefined;
-        let mostRecentTime = -1;
-
-        for (const child of this.getAll()) {
-            const runHandler = child.get(TestRunHandler);
-            if (runHandler.getPreviousRequest() && runHandler.getLastRunAt() > mostRecentTime) {
-                mostRecentTime = runHandler.getLastRunAt();
-                mostRecent = this.toContext(child);
-            }
-        }
-
-        return mostRecent;
-    }
-
-    dispose(): void {
-        for (const container of this.folders.values()) {
-            this.cleanupContainer(container);
-        }
-        this.folders.clear();
-        this.ctrl.items.replace([]);
-        for (const watcher of this.activeWatchers) {
-            watcher.dispose();
-        }
-        this.activeWatchers = [];
-        this._onDidReload.dispose();
-    }
-
-    [Symbol.iterator]() {
-        return this.folders.values();
     }
 
     private cleanupContainer(container: Container): void {
@@ -303,7 +311,7 @@ export class WorkspaceFolderManager {
         const folder = child.get<WorkspaceFolder>(TYPES.WorkspaceFolder);
         const folderItem = this.ctrl.createTestItem(
             `folder:${folder.uri.toString()}`,
-            `$(folder) ${folder.name}`,
+            `${icon(TestType.workspace)} ${folder.name}`,
             folder.uri,
         );
         folderItem.sortText = String(folder.index).padStart(5, '0');

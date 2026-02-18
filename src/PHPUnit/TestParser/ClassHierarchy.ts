@@ -75,24 +75,23 @@ export class ClassHierarchy {
     }
 
     enrichTests(tests: TestDefinition[]): TestDefinition[] {
-        const result: TestDefinition[] = [];
+        return tests
+            .map((test) =>
+                test.type === TestType.class ? this.enrichClass(test) : this.enrichNonClass(test),
+            )
+            .filter((t): t is TestDefinition => t !== undefined);
+    }
 
-        for (const test of tests) {
-            if (test.type !== TestType.class) {
-                const enriched = this.enrichNonClass(test);
-                if (enriched) {
-                    result.push(enriched);
-                }
-                continue;
-            }
+    getClassesByUri(uri: string): ClassInfo[] {
+        return this.filterValues((info) => info.uri === uri);
+    }
 
-            const enriched = this.enrichClass(test);
-            if (enriched) {
-                result.push(enriched);
-            }
-        }
+    getChildClasses(classFQN: string): ClassInfo[] {
+        return this.filterValues((info) => info.parentFQN === classFQN);
+    }
 
-        return result;
+    getTraitUsers(traitFQN: string): ClassInfo[] {
+        return this.filterValues((info) => info.traitFQNs.includes(traitFQN));
     }
 
     private enrichNonClass(test: TestDefinition): TestDefinition | undefined {
@@ -141,18 +140,6 @@ export class ClassHierarchy {
             ...test,
             children: [...(test.children ?? []), ...inheritedMethods],
         };
-    }
-
-    getClassesByUri(uri: string): ClassInfo[] {
-        return this.filterValues((info) => info.uri === uri);
-    }
-
-    getChildClasses(classFQN: string): ClassInfo[] {
-        return this.filterValues((info) => info.parentFQN === classFQN);
-    }
-
-    getTraitUsers(traitFQN: string): ClassInfo[] {
-        return this.filterValues((info) => info.traitFQNs.includes(traitFQN));
     }
 
     private resolveTraitMethods(info: ClassInfo, visited?: Set<string>): TestDefinition[] {
