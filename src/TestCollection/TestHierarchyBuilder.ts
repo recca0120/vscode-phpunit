@@ -75,7 +75,7 @@ export class TestHierarchyBuilder {
 
     private processClassOrDescribe(test: TestDefinition, parentChildren: TestItemCollection) {
         const sortText =
-            test.type === TestType.class ? test.id : String(parentChildren.size).padStart(5, '0');
+            test.type === TestType.class ? test.id : this.insertionSortText(parentChildren.size);
         const testItem = this.createTestItem(test, sortText);
         parentChildren.add(testItem);
         this.testData.set(testItem, test);
@@ -92,7 +92,7 @@ export class TestHierarchyBuilder {
     }
 
     private processChildIntoList(test: TestDefinition, siblings: TestItem[], parentItem: TestItem) {
-        const testItem = this.createTestItem(test, `${siblings.length}`);
+        const testItem = this.createTestItem(test, this.insertionSortText(siblings.length));
         this.inheritParentTags(testItem, parentItem);
         siblings.push(testItem);
         this.testData.set(testItem, test);
@@ -109,7 +109,7 @@ export class TestHierarchyBuilder {
     }
 
     private processMethod(test: TestDefinition, parentChildren: TestItemCollection) {
-        const testItem = this.createTestItem(test, String(parentChildren.size).padStart(5, '0'));
+        const testItem = this.createTestItem(test, this.insertionSortText(parentChildren.size));
         parentChildren.add(testItem);
         this.testData.set(testItem, test);
     }
@@ -149,7 +149,7 @@ export class TestHierarchyBuilder {
             this.parseLabelWithIcon(suiteDefinition),
         );
         testItem.canResolveChildren = true;
-        testItem.sortText = String(parentChildren.size).padStart(5, '0');
+        testItem.sortText = this.insertionSortText(parentChildren.size);
         parentChildren.add(testItem);
         this.testData.set(testItem, suiteDefinition);
 
@@ -273,5 +273,11 @@ export class TestHierarchyBuilder {
         const prefix = icon(testDefinition.type);
 
         return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
+    }
+
+    // Produces a zero-padded sort key so Test Explorer preserves insertion order
+    // under lexicographic sorting (supports up to 99999 items per level).
+    private insertionSortText(index: number): string {
+        return String(index).padStart(5, '0');
     }
 }
