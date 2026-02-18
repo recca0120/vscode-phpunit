@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process';
-import * as semver from 'semver';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
 import { Configuration } from './Configuration';
@@ -10,6 +9,7 @@ import { TeamcityEvent } from './TestOutput';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
 import { TestType } from './types';
+import { semverLt } from './utils';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
@@ -116,7 +116,7 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
         expect.objectContaining(expectedWithHint),
     );
 
-    if (semver.lt(PHPUNIT_VERSION, '10.0.0')) {
+    if (semverLt(PHPUNIT_VERSION, '10.0.0')) {
         expect(onTestResultEvents.get(TeamcityEvent.testVersion)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TeamcityEvent.testCount)).toHaveBeenCalled();
         expect(onTestResultEvents.get(TeamcityEvent.testDuration)).toHaveBeenCalled();

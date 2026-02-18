@@ -60,8 +60,8 @@ describe('ProcessBuilder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
-                '--order-by=random',
                 '--repeat=2',
+                '--order-by=random',
                 '--colors=never',
                 '--teamcity',
             ]);
@@ -77,8 +77,8 @@ describe('ProcessBuilder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
-                '--no-logging',
                 '--no-coverage',
+                '--no-logging',
                 '--colors=never',
                 '--teamcity',
             ]);

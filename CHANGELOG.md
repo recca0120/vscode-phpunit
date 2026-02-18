@@ -4,6 +4,13 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.2] - 2026-02-18
+
+### Changed
+- Remove `yargs-parser`, `string-argv`, `semver` dependencies — replaced with lightweight custom utilities
+- Remove esbuild `import.meta.url` banner workaround (no longer needed without yargs-parser)
+- Rename `Transformer` folder to `TestIdentifier`
+
 ## [3.9.1] - 2026-02-18
 
 ### Fixed

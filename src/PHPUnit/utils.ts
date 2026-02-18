@@ -1,60 +1,85 @@
-import { stat } from 'node:fs/promises';
-import yargsParser from 'yargs-parser';
+import { access } from 'node:fs/promises';
 
 export const EOL = '\r\n';
 
-export const parseValue = (key: string, value: string | boolean | string[]): string[] => {
-    if (Array.isArray(value)) {
-        return value.reduce(
-            (acc: string[], item: string | boolean | string[]) => acc.concat(parseValue(key, item)),
-            [],
-        );
+const aliases: Record<string, string> = { c: 'configuration' };
+
+export function stripQuotes(s: string): string {
+    if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+        return s.slice(1, -1);
     }
-    const dash = key.length === 1 ? '-' : '--';
-    const operator = key.length === 1 ? ' ' : '=';
+    return s;
+}
 
-    return [value === true ? `${dash}${key}` : `${dash}${key}${operator}${value}`];
-};
+const TOKEN_PATTERN = /(?:[^\s"']+|"[^"]*"|'[^']*')+/g;
 
-export const parseArguments = (parameters: string[], excludes: string[]) => {
-    const { _, ...argv } = yargsParser(parameters.join(' ').trim(), {
-        alias: { configuration: ['c'] },
-        configuration: {
-            'camel-case-expansion': false,
-            'boolean-negation': false,
-            'short-option-groups': true,
-            'dot-notation': false,
-        },
-    });
+function tokenize(input: string): string[] {
+    return [...input.matchAll(TOKEN_PATTERN)].map((m) => m[0]);
+}
 
-    const positionals = _.map((parameter) =>
-        typeof parameter === 'number' ? String(parameter) : decodeURIComponent(parameter),
-    );
+export function parseArgv(input: string): string[] {
+    return tokenize(input).map(stripQuotes);
+}
 
-    const entries = Object.entries(argv).filter(([key]) => !excludes.includes(key));
+export function parseArguments(parameters: string[], excludes: string[]): string[] {
+    const tokens = tokenize(parameters.join(' ').trim());
+
+    const hasValue = (i: number) =>
+        i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-');
+
     const options: string[] = [];
-    for (const [key, value] of entries.reverse()) {
-        options.push(...parseValue(key, value as string | boolean | string[]));
+    const positionals: string[] = [];
+    for (let i = 0; i < tokens.length; i++) {
+        const token = stripQuotes(tokens[i]);
+
+        // long option: --key=value or --key value or --flag
+        if (token.startsWith('--')) {
+            const eqIndex = token.indexOf('=');
+            const key = eqIndex !== -1 ? token.substring(2, eqIndex) : token.substring(2);
+            if (excludes.includes(key)) {
+                if (eqIndex === -1 && hasValue(i)) i++;
+                continue;
+            }
+            if (eqIndex !== -1) {
+                options.push(`--${key}=${stripQuotes(token.substring(eqIndex + 1))}`);
+            } else if (!hasValue(i)) {
+                options.push(token);
+            } else {
+                options.push(`--${key}=${stripQuotes(tokens[++i])}`);
+            }
+            continue;
+        }
+
+        // short option: -x value or -x
+        if (token.startsWith('-') && token.length === 2) {
+            const short = token[1];
+            const longKey = aliases[short];
+            const key = longKey ?? short;
+            if (excludes.includes(key)) {
+                if (hasValue(i)) i++;
+                continue;
+            }
+            if (!hasValue(i)) {
+                options.push(longKey ? `--${longKey}` : token);
+            } else {
+                const value = stripQuotes(tokens[++i]);
+                options.push(longKey ? `--${longKey}=${value}` : `-${short} ${value}`);
+            }
+            continue;
+        }
+
+        // positional
+        positionals.push(decodeURIComponent(token));
     }
 
     return [...options, ...positionals];
-};
+}
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
-    try {
-        await stat(filePath);
-
-        return true;
-    } catch (error: unknown) {
-        if (
-            error instanceof Error &&
-            'code' in error &&
-            (error as NodeJS.ErrnoException).code === 'ENOENT'
-        ) {
-            return false;
-        }
-        throw error;
-    }
+    return access(filePath).then(
+        () => true,
+        () => false,
+    );
 }
 
 export async function findAsyncSequential<T>(
@@ -95,8 +120,18 @@ export const splitFQN = (fqn: string): { namespace: string; className: string } 
     return { namespace: parts.join('\\'), className };
 };
 
-export const cloneInstance = <T extends object>(obj: T): T => {
-    const clone = Object.create(Object.getPrototypeOf(obj));
+export const cloneInstance = <T extends object>(obj: T): T =>
+    Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 
-    return Object.assign(clone, obj);
-};
+function semverCompare(a: string, b: string): number {
+    const pa = a.split('.').map(Number);
+    const pb = b.split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+        const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+        if (diff !== 0) return diff;
+    }
+    return 0;
+}
+
+export const semverGte = (a: string, b: string) => semverCompare(a, b) >= 0;
+export const semverLt = (a: string, b: string) => semverCompare(a, b) < 0;

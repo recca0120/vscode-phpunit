@@ -25,7 +25,7 @@ export abstract class BaseConfiguration implements IConfiguration {
     abstract update(key: string, value: unknown): Promise<void>;
 
     getArguments(input: string = ''): string[] {
-        const parameters = [input, ...(this.get('args', []) as string[])];
+        const parameters = [...(this.get('args', []) as string[]), input];
 
         return parseArguments(parameters, ['teamcity', 'colors', 'testdox', 'c']);
     }
