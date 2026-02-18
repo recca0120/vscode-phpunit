@@ -85,8 +85,18 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
     }
 }
 
+class WorkspaceFilterStrategy extends FilterStrategy {
+    getFilter() {
+        return '';
+    }
+}
+
 export const FilterStrategyFactory = {
     create(testDefinition: TestDefinition) {
+        if (testDefinition.type === TestType.workspace) {
+            return new WorkspaceFilterStrategy(testDefinition);
+        }
+
         if (testDefinition.type === TestType.testsuite) {
             return new TestSuiteFilterStrategy(testDefinition);
         }

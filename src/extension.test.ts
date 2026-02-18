@@ -838,6 +838,57 @@ describe('Extension Test', () => {
 
             expectSpawnCalled([pest.binary, '--testsuite=Unit', '--colors=never', '--teamcity']);
         });
+
+        it('should run all tests when clicking phpunit folder item', async () => {
+            if (skipIfMissing()) return;
+
+            const phpUnit = phpUnitStubs[0];
+
+            await activate(context);
+            const ctrl = getTestController();
+            const testRunProfile = getTestRunProfile(ctrl);
+            const phpUnitFolder = findTest(
+                ctrl.items,
+                `folder:${Uri.file(phpUnit.root).toString()}`,
+            );
+            expect(phpUnitFolder).toBeDefined();
+            if (!phpUnitFolder) return;
+
+            cwd = phpUnit.root;
+            const request = {
+                include: [phpUnitFolder],
+                exclude: [],
+                profile: testRunProfile,
+            };
+            await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+
+            expectSpawnCalled([phpUnit.binary, '--colors=never', '--teamcity']);
+            expect(spawn).toHaveBeenCalledTimes(1);
+        });
+
+        it('should run all tests when clicking pest folder item', async () => {
+            if (skipIfMissing()) return;
+
+            const pest = pestStubs[0];
+
+            await activate(context);
+            const ctrl = getTestController();
+            const testRunProfile = getTestRunProfile(ctrl);
+            const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
+            expect(pestFolder).toBeDefined();
+            if (!pestFolder) return;
+
+            cwd = pest.root;
+            const request = {
+                include: [pestFolder],
+                exclude: [],
+                profile: testRunProfile,
+            };
+            await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+
+            expectSpawnCalled([pest.binary, '--colors=never', '--teamcity']);
+            expect(spawn).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('WorkspaceFolderManager lifecycle', () => {

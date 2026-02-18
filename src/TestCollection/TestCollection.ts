@@ -51,6 +51,10 @@ export class TestCollection {
         return this.index.getDefinition(testItem.id);
     }
 
+    registerTestDefinition(testItem: TestItem, testDefinition: TestDefinition): void {
+        this.index.set(testItem.uri?.toString() ?? testItem.id, testItem, testDefinition);
+    }
+
     findTestsByFile(uri: URI): TestItem[] {
         const tests: TestItem[] = [];
         for (const [testItem, testDef] of this.index.getDefinitionsByUri(uri.toString())) {
