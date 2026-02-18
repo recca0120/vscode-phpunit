@@ -8,8 +8,8 @@ export type Position = {
 
 export enum TestType {
     workspace,
-    namespace,
     testsuite,
+    namespace,
     class,
     describe,
     method,
