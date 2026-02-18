@@ -23,9 +23,6 @@ importers:
       '@types/node':
         specifier: ^25
         version: 25.2.3
-      '@types/semver':
-        specifier: ^7.7.1
-        version: 7.7.1
       '@types/sinon':
         specifier: ^21.0.0
         version: 21.0.0
@@ -74,9 +71,6 @@ importers:
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
-      semver:
-        specifier: ^7.7.4
-        version: 7.7.4
       sinon:
         specifier: ^21.0.1
         version: 21.0.1
@@ -657,9 +651,6 @@ packages:
 
   '@types/sarif@2.1.7':
     resolution: {integrity: sha512-kRz0VEkJqWLf1LLVN4pT1cg1Z9wAuvI6L97V3m2f5B76Tg8d413ddvLBPTEHAZJlnn4XSvu0FkZtViCQGVyrXQ==}
-
-  '@types/semver@7.7.1':
-    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/sinon@21.0.0':
     resolution: {integrity: sha512-+oHKZ0lTI+WVLxx1IbJDNmReQaIsQJjN2e7UUrJHEeByG7bFeKJYsv1E75JxTQ9QKJDp21bAa/0W2Xo4srsDnw==}
@@ -2729,8 +2720,6 @@ snapshots:
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/sarif@2.1.7': {}
-
-  '@types/semver@7.7.1': {}
 
   '@types/sinon@21.0.0':
     dependencies:

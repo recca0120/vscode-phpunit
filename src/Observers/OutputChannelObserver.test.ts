@@ -1,9 +1,9 @@
-import * as semver from 'semver';
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
 import { Configuration, EOL, PHPUnitXML, ProcessBuilder, TestRunner } from '../PHPUnit';
 import { detectPhpUnitStubs, phpUnitProject } from '../PHPUnit/__tests__/utils';
+import { semverGte, semverLt } from '../PHPUnit/utils';
 import { OutputChannelObserver, OutputFormatter } from './index';
 import { PrettyPrinter } from './Printers';
 
@@ -159,7 +159,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
     });
 
     it('should trigger testRuntime', async () => {
-        if (semver.lt(phpUnitVersion, '10.0.0')) {
+        if (semverLt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -173,7 +173,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
     });
 
     it('should trigger testConfiguration', async () => {
-        if (semver.lt(phpUnitVersion, '10.0.0')) {
+        if (semverLt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -244,7 +244,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         let DOT = '';
         let ARRAY_OPEN = '(';
         let ARRAY_CLOSE = ')';
-        if (semver.gte(phpUnitVersion, '10.4.2')) {
+        if (semverGte(phpUnitVersion, '10.4.2')) {
             DOT = ',';
             ARRAY_OPEN = '[';
             ARRAY_CLOSE = ']';
@@ -291,7 +291,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
     });
 
     it('should trigger testResultSummary', async () => {
-        if (semver.lt(phpUnitVersion, '10.0.0')) {
+        if (semverLt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -305,7 +305,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
     });
 
     it('should trigger testDuration', async () => {
-        if (semver.lt(phpUnitVersion, '10.0.0')) {
+        if (semverLt(phpUnitVersion, '10.0.0')) {
             return;
         }
 
@@ -424,7 +424,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        if (semver.gte(phpUnitVersion, '12.0.0')) {
+        if (semverGte(phpUnitVersion, '12.0.0')) {
             expect(outputChannel.appendLine).toHaveBeenCalledWith(
                 expect.stringMatching(/🟨 printed output when die/),
             );

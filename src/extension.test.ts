@@ -2,7 +2,6 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type GlobOptions, glob } from 'glob';
-import * as semver from 'semver';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
     CancellationTokenSource,
@@ -29,6 +28,7 @@ import {
     phpUnitProject,
 } from './PHPUnit/__tests__/utils';
 import { initTreeSitter } from './PHPUnit/TestParser/tree-sitter/TreeSitterParser';
+import { semverGte } from './PHPUnit/utils';
 
 vi.mock('child_process', async () => {
     const actual = await vi.importActual<typeof import('child_process')>('child_process');
@@ -123,7 +123,7 @@ const countItems = (testItemCollection: TestItemCollection) => {
 
 const resolveExpected = <T>(version: string, map: [string, T][], fallback: T): T => {
     for (const [minVersion, expected] of map) {
-        if (semver.gte(version, minVersion)) return expected;
+        if (semverGte(version, minVersion)) return expected;
     }
     return fallback;
 };
