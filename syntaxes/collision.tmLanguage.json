@@ -1,123 +1,123 @@
 {
-  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "PHPUnit",
-  "patterns": [
-    {
-      "comment": "Passed test line → green",
-      "match": "^\\s+✅\\s+.+\\d+\\s*ms",
-      "name": "markup.inserted.phpunit"
-    },
-    {
-      "comment": "Failed test line → red (ends with ms)",
-      "match": "^\\s+❌\\s+.+\\d+\\s*ms",
-      "name": "invalid.phpunit"
-    },
-    {
-      "comment": "Ignored/skipped test line → yellow",
-      "match": "^\\s+➖\\s+.+",
-      "name": "markup.deleted.phpunit"
-    },
-    {
-      "comment": "FAILED error title → only icon+FAILED red, rest default",
-      "match": "^(\\s+❌\\s+FAILED)(\\s+.+)",
-      "captures": {
-        "1": { "name": "invalid.phpunit" }
-      }
-    },
-    {
-      "comment": "Error line without indent → red",
-      "match": "^❌\\s+.+",
-      "name": "invalid.phpunit"
-    },
-    {
-      "comment": "Printed output → yellow",
-      "match": "^🟨\\s+.+",
-      "name": "markup.deleted.phpunit"
-    },
-    {
-      "comment": "Arrow source line → arrow+number highlighted, ▕ gray, code PHP",
-      "match": "(➜\\s+\\d+\\s+)(▕)(\\s?.*$)",
-      "captures": {
-        "1": { "name": "keyword.phpunit" },
-        "2": { "name": "comment.phpunit" },
-        "3": {
-          "name": "meta.embedded.php.phpunit",
-          "patterns": [{ "include": "source.php" }]
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "PHPUnit",
+    "patterns": [
+        {
+            "comment": "Passed test line → green",
+            "match": "^\\s+✅\\s+.+\\d+\\s*ms",
+            "name": "markup.inserted.phpunit"
+        },
+        {
+            "comment": "Failed test line → red (ends with ms)",
+            "match": "^\\s+❌\\s+.+\\d+\\s*ms",
+            "name": "invalid.phpunit"
+        },
+        {
+            "comment": "Ignored/skipped test line → yellow",
+            "match": "^\\s+➖\\s+.+",
+            "name": "markup.deleted.phpunit"
+        },
+        {
+            "comment": "FAILED error title → only icon+FAILED red, rest default",
+            "match": "^(\\s+❌\\s+FAILED)(\\s+.+)",
+            "captures": {
+                "1": { "name": "invalid.phpunit" }
+            }
+        },
+        {
+            "comment": "Error line without indent → red",
+            "match": "^❌\\s+.+",
+            "name": "invalid.phpunit"
+        },
+        {
+            "comment": "Printed output → yellow",
+            "match": "^🟨\\s+.+",
+            "name": "markup.deleted.phpunit"
+        },
+        {
+            "comment": "Arrow source line → arrow+number red, ▕ gray, code PHP",
+            "match": "(➜\\s+\\d+\\s+)(▕)(\\s?.*$)",
+            "captures": {
+                "1": { "name": "invalid.phpunit" },
+                "2": { "name": "comment.phpunit" },
+                "3": {
+                    "name": "meta.embedded.php.phpunit",
+                    "patterns": [{ "include": "source.php" }]
+                }
+            }
+        },
+        {
+            "comment": "Source line → line number gray, ▕ gray, code PHP",
+            "match": "(\\s+\\d+\\s+)(▕)(\\s?.*$)",
+            "captures": {
+                "1": { "name": "comment.phpunit" },
+                "2": { "name": "comment.phpunit" },
+                "3": {
+                    "name": "meta.embedded.php.phpunit",
+                    "patterns": [{ "include": "source.php" }]
+                }
+            }
+        },
+        {
+            "comment": "at file reference → link",
+            "match": "^at\\s+\\S+\\.php:\\d+",
+            "name": "string.link.phpunit"
+        },
+        {
+            "comment": "File path links",
+            "match": "\\S+\\.php:\\d+",
+            "name": "string.link.phpunit"
+        },
+        {
+            "comment": "Diff removed line → red",
+            "match": "^-\\s+.+",
+            "name": "invalid.phpunit"
+        },
+        {
+            "comment": "Diff added line → green",
+            "match": "^\\+\\s+.+",
+            "name": "markup.inserted.phpunit"
+        },
+        {
+            "comment": "PrettyPrinter box lines → gray",
+            "match": "^\\s+[┐├│┴┊].*",
+            "name": "comment.phpunit"
+        },
+        {
+            "comment": "Pest summary: N failed → red",
+            "match": "\\d+\\s+failed",
+            "name": "invalid.phpunit"
+        },
+        {
+            "comment": "Pest summary: N passed → green",
+            "match": "\\d+\\s+passed",
+            "name": "markup.inserted.phpunit"
+        },
+        {
+            "comment": "Pest summary: N skipped → yellow",
+            "match": "\\d+\\s+skipped",
+            "name": "markup.deleted.phpunit"
+        },
+        {
+            "comment": "PHPUnit summary: Errors/Failures → red",
+            "match": "(Errors|Failures):\\s+\\d+",
+            "name": "invalid.phpunit"
+        },
+        {
+            "comment": "PHPUnit summary: Skipped/Incomplete/Risky/Warnings/Deprecations → yellow",
+            "match": "(Skipped|Incomplete|Risky|Warnings|PHPUnit Deprecations):\\s+\\d+",
+            "name": "markup.deleted.phpunit"
+        },
+        {
+            "comment": "Info lines → gray",
+            "match": "^(Time|Duration|Runtime|Configuration|Processes):.*",
+            "name": "comment.phpunit"
+        },
+        {
+            "comment": "Duration at end of line → gray",
+            "match": "\\d+\\s*ms$",
+            "name": "comment.phpunit"
         }
-      }
-    },
-    {
-      "comment": "Source line → line number gray, ▕ gray, code PHP",
-      "match": "(\\s+\\d+\\s+)(▕)(\\s?.*$)",
-      "captures": {
-        "1": { "name": "comment.phpunit" },
-        "2": { "name": "comment.phpunit" },
-        "3": {
-          "name": "meta.embedded.php.phpunit",
-          "patterns": [{ "include": "source.php" }]
-        }
-      }
-    },
-    {
-      "comment": "at file reference → link",
-      "match": "^at\\s+\\S+\\.php:\\d+",
-      "name": "string.link.phpunit"
-    },
-    {
-      "comment": "File path links",
-      "match": "\\S+\\.php:\\d+",
-      "name": "string.link.phpunit"
-    },
-    {
-      "comment": "Diff removed line → red",
-      "match": "^-\\s+.+",
-      "name": "invalid.phpunit"
-    },
-    {
-      "comment": "Diff added line → green",
-      "match": "^\\+\\s+.+",
-      "name": "markup.inserted.phpunit"
-    },
-    {
-      "comment": "PrettyPrinter box lines → gray",
-      "match": "^\\s+[┐├│┴┊].*",
-      "name": "comment.phpunit"
-    },
-    {
-      "comment": "Pest summary: N failed → red",
-      "match": "\\d+\\s+failed",
-      "name": "invalid.phpunit"
-    },
-    {
-      "comment": "Pest summary: N passed → green",
-      "match": "\\d+\\s+passed",
-      "name": "markup.inserted.phpunit"
-    },
-    {
-      "comment": "Pest summary: N skipped → yellow",
-      "match": "\\d+\\s+skipped",
-      "name": "markup.deleted.phpunit"
-    },
-    {
-      "comment": "PHPUnit summary: Errors/Failures → red",
-      "match": "(Errors|Failures):\\s+\\d+",
-      "name": "invalid.phpunit"
-    },
-    {
-      "comment": "PHPUnit summary: Skipped/Incomplete/Risky/Warnings/Deprecations → yellow",
-      "match": "(Skipped|Incomplete|Risky|Warnings|PHPUnit Deprecations):\\s+\\d+",
-      "name": "markup.deleted.phpunit"
-    },
-    {
-      "comment": "Info lines → gray",
-      "match": "^(Time|Duration|Runtime|Configuration|Processes):.*",
-      "name": "comment.phpunit"
-    },
-    {
-      "comment": "Duration at end of line → gray",
-      "match": "\\d+\\s*ms$",
-      "name": "comment.phpunit"
-    }
-  ],
-  "scopeName": "source.phpunit"
+    ],
+    "scopeName": "source.phpunit"
 }
