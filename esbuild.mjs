@@ -45,12 +45,6 @@ const ctx = await esbuild.context({
     outfile: 'dist/extension.js',
     external: ['vscode'],
     logLevel: 'silent',
-    banner: {
-        js: 'var __import_meta_url = require("url").pathToFileURL(__filename).href;',
-    },
-    define: {
-        'import.meta.url': '__import_meta_url',
-    },
     plugins: [esbuildProblemMatcherPlugin],
 });
 
