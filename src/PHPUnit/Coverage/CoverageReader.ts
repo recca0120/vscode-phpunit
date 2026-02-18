@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PathReplacer } from '../PathReplacer';
@@ -21,7 +21,7 @@ export class CoverageReader {
     }
 
     async prepare(): Promise<void> {
-        this.runId = randomUUID();
+        this.runId = randomBytes(4).toString('hex');
         await mkdir(this.cacheDir, { recursive: true });
     }
 
