@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class BinaryDetector {
-    constructor(private cwd: string = '') {}
+    constructor(private cwd: string = process.cwd()) {}
 
     detect(): string {
         try {
