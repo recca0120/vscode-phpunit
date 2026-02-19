@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventEmitter, RelativePattern, type Uri, type WorkspaceFolder, workspace } from 'vscode';
+
+type FakeFileSystemWatcher = {
+    fireCreate(uri: Uri): void;
+    fireChange(uri: Uri): void;
+    fireDelete(uri: Uri): void;
+    disposed: boolean;
+};
+
 import type { TestCollection } from '../TestCollection';
 import type { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
@@ -41,16 +49,17 @@ describe('TestFileWatcher', () => {
         fileWatcher = new TestFileWatcher(discovery, collection, emitter);
     });
 
-    const getTestWatcher = () => vi.mocked(workspace.createFileSystemWatcher).mock.results[0].value;
+    const getTestWatcher = () =>
+        vi.mocked(workspace.createFileSystemWatcher).mock.results[0].value as FakeFileSystemWatcher;
     const getConfigWatcher = () =>
-        vi.mocked(workspace.createFileSystemWatcher).mock.results[1].value;
+        vi.mocked(workspace.createFileSystemWatcher).mock.results[1].value as FakeFileSystemWatcher;
 
     describe('test file watching', () => {
         it('should add to collection and fire emitter on create', async () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/tests/FooTest.php' } as Uri;
 
-            await vi.mocked(getTestWatcher().onDidCreate).mock.calls[0][0](uri);
+            getTestWatcher().fireCreate(uri);
 
             expect(collection.add).toHaveBeenCalledWith(uri);
             expect(emitter.event).toBeDefined();
@@ -60,7 +69,7 @@ describe('TestFileWatcher', () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/tests/FooTest.php' } as Uri;
 
-            await vi.mocked(getTestWatcher().onDidChange).mock.calls[0][0](uri);
+            getTestWatcher().fireChange(uri);
 
             expect(collection.change).toHaveBeenCalledWith(uri);
         });
@@ -69,7 +78,7 @@ describe('TestFileWatcher', () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/tests/FooTest.php' } as Uri;
 
-            vi.mocked(getTestWatcher().onDidDelete).mock.calls[0][0](uri);
+            getTestWatcher().fireDelete(uri);
 
             expect(collection.delete).toHaveBeenCalledWith(uri);
         });
@@ -86,7 +95,7 @@ describe('TestFileWatcher', () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/phpunit.xml' } as Uri;
 
-            await vi.mocked(getConfigWatcher().onDidChange).mock.calls[0][0](uri);
+            getConfigWatcher().fireChange(uri);
 
             expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
         });
@@ -95,7 +104,7 @@ describe('TestFileWatcher', () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/composer.lock' } as Uri;
 
-            await vi.mocked(getConfigWatcher().onDidChange).mock.calls[0][0](uri);
+            getConfigWatcher().fireChange(uri);
 
             expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
         });
@@ -104,7 +113,7 @@ describe('TestFileWatcher', () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/phpunit.xml' } as Uri;
 
-            await vi.mocked(getConfigWatcher().onDidCreate).mock.calls[0][0](uri);
+            getConfigWatcher().fireCreate(uri);
 
             expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
         });
@@ -113,7 +122,7 @@ describe('TestFileWatcher', () => {
             await fileWatcher.startWatching();
             const uri = { toString: () => 'file:///workspace/phpunit.xml' } as Uri;
 
-            await vi.mocked(getConfigWatcher().onDidDelete).mock.calls[0][0](uri);
+            getConfigWatcher().fireDelete(uri);
 
             expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
         });

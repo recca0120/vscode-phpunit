@@ -332,15 +332,7 @@ const workspace = {
         }),
         { _concurrentCount: 0, _maxConcurrent: 0 },
     ),
-    createFileSystemWatcher: vi.fn().mockImplementation(() => {
-        return {
-            onDidCreate: vi.fn(),
-            onDidChange: vi.fn(),
-            onDidDelete: vi.fn(),
-            dispose: vi.fn(),
-            disposable: new Disposable(),
-        };
-    }),
+    createFileSystemWatcher: vi.fn().mockImplementation(() => new FakeFileSystemWatcher()),
     onDidChangeConfiguration: vi.fn().mockImplementation(() => {
         return new Disposable();
     }),
@@ -363,6 +355,39 @@ const languages = {
     },
     registerDocumentLinkProvider: (_selector: any, _provider: any) => new Disposable(),
 };
+
+class FakeFileSystemWatcher {
+    private createEmitter = new FakeEventEmitter<URI>();
+    private changeEmitter = new FakeEventEmitter<URI>();
+    private deleteEmitter = new FakeEventEmitter<URI>();
+
+    readonly ignoreCreateEvents = false;
+    readonly ignoreChangeEvents = false;
+    readonly ignoreDeleteEvents = false;
+
+    readonly onDidCreate = this.createEmitter.event;
+    readonly onDidChange = this.changeEmitter.event;
+    readonly onDidDelete = this.deleteEmitter.event;
+
+    disposed = false;
+
+    fireCreate(uri: URI) {
+        this.createEmitter.fire(uri);
+    }
+    fireChange(uri: URI) {
+        this.changeEmitter.fire(uri);
+    }
+    fireDelete(uri: URI) {
+        this.deleteEmitter.fire(uri);
+    }
+
+    dispose() {
+        this.disposed = true;
+        this.createEmitter.dispose();
+        this.changeEmitter.dispose();
+        this.deleteEmitter.dispose();
+    }
+}
 
 class FakeRelativePattern {
     uri: URI;
@@ -488,4 +513,5 @@ export {
     DocumentLink,
     debug,
     FakeTestTag as TestTag,
+    FakeFileSystemWatcher,
 };

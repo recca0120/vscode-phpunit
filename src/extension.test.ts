@@ -3,6 +3,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type GlobOptions, glob } from 'glob';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
+type FakeFileSystemWatcher = { disposed: boolean };
+
 import {
     CancellationTokenSource,
     commands,
@@ -980,13 +983,13 @@ describe('Extension Test', () => {
             await ctrl.resolveHandler();
 
             const firstWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-                (r) => (r as { value: import('vscode').FileSystemWatcher }).value,
+                (r) => r.value as FakeFileSystemWatcher,
             );
 
             await ctrl.resolveHandler();
 
             for (const watcher of firstWatchers) {
-                expect(watcher.dispose).toHaveBeenCalled();
+                expect(watcher.disposed).toBe(true);
             }
         });
 
@@ -1108,15 +1111,11 @@ describe('Extension Test', () => {
 
             // Get all watchers created by createFileSystemWatcher
             const allWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-                (r) => (r as { value: import('vscode').FileSystemWatcher }).value,
+                (r) => r.value as FakeFileSystemWatcher,
             );
 
             // Only the last batch should be undisposed (1 folder = 2 watchers per resolve: test files + config files)
-            const undisposed = allWatchers.filter(
-                (w) =>
-                    (w.dispose as unknown as { mock: { calls: unknown[] } }).mock.calls.length ===
-                    0,
-            );
+            const undisposed = allWatchers.filter((w) => !w.disposed);
             expect(undisposed.length).toBe(2);
         });
     });
