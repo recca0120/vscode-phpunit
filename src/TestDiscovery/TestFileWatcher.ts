@@ -1,8 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { type Disposable, type EventEmitter, type Uri, workspace } from 'vscode';
+import { type Disposable, type EventEmitter, RelativePattern, type Uri, workspace } from 'vscode';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
+
+const CONFIG_FILES_PATTERN = '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}';
 
 @injectable()
 export class TestFileWatcher {
@@ -13,23 +15,34 @@ export class TestFileWatcher {
     ) {}
 
     async startWatching(): Promise<Disposable> {
-        const { pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
-        const watcher = workspace.createFileSystemWatcher(pattern);
+        const { workspaceFolder, pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
 
-        watcher.onDidCreate((uri) => {
+        const testWatcher = workspace.createFileSystemWatcher(pattern);
+        testWatcher.onDidCreate((uri) => {
             this.testCollection.add(uri);
             this.fileChangedEmitter.fire(uri);
         });
-
-        watcher.onDidChange((uri) => {
+        testWatcher.onDidChange((uri) => {
             this.testCollection.change(uri);
             this.fileChangedEmitter.fire(uri);
         });
-
-        watcher.onDidDelete((uri) => {
+        testWatcher.onDidDelete((uri) => {
             this.testCollection.delete(uri);
         });
 
-        return watcher;
+        const configWatcher = workspace.createFileSystemWatcher(
+            new RelativePattern(workspaceFolder, CONFIG_FILES_PATTERN),
+        );
+        const reload = () => this.testFileDiscovery.reloadAll();
+        configWatcher.onDidCreate(reload);
+        configWatcher.onDidChange(reload);
+        configWatcher.onDidDelete(reload);
+
+        return {
+            dispose: () => {
+                testWatcher.dispose();
+                configWatcher.dispose();
+            },
+        };
     }
 }

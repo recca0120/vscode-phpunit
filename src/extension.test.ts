@@ -1111,13 +1111,13 @@ describe('Extension Test', () => {
                 (r) => (r as { value: import('vscode').FileSystemWatcher }).value,
             );
 
-            // Only the last batch should be undisposed (1 folder = 1 watcher per resolve)
+            // Only the last batch should be undisposed (1 folder = 2 watchers per resolve: test files + config files)
             const undisposed = allWatchers.filter(
                 (w) =>
                     (w.dispose as unknown as { mock: { calls: unknown[] } }).mock.calls.length ===
                     0,
             );
-            expect(undisposed.length).toBe(1);
+            expect(undisposed.length).toBe(2);
         });
     });
 
