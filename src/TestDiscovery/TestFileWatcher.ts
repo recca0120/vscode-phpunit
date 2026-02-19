@@ -28,7 +28,7 @@ export class TestFileWatcher {
             this.testCollection.delete(uri);
         });
 
-        const configPattern = await this.testFileDiscovery.getConfigFilePattern();
+        const configPattern = this.testFileDiscovery.getConfigFilePattern();
         const configWatcher = workspace.createFileSystemWatcher(
             new RelativePattern(workspaceFolder, configPattern),
         );

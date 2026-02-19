@@ -44,7 +44,7 @@ export class TestFileDiscovery {
         };
     }
 
-    async getConfigFilePattern(): Promise<string> {
+    getConfigFilePattern(): string {
         const configArg = this.configuration
             .getArguments()
             .find((p) => p.startsWith('--configuration='));

@@ -38,7 +38,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
         } as unknown as PHPUnitXML;
     });
 
-    it('uses --configuration=xxx.xml when specified', async () => {
+    it('uses --configuration=xxx.xml when specified', () => {
         const configuration = createMockConfiguration(['--configuration=custom.xml']);
         const discovery = new TestFileDiscovery(
             configuration,
@@ -47,10 +47,10 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
             workspaceFolder,
         );
 
-        expect(await discovery.getConfigFilePattern()).toBe('{custom.xml,composer.lock}');
+        expect(discovery.getConfigFilePattern()).toBe('{custom.xml,composer.lock}');
     });
 
-    it('uses -c xxx.xml (normalized to --configuration=) when specified', async () => {
+    it('uses -c xxx.xml (normalized to --configuration=) when specified', () => {
         const configuration = createMockConfiguration(['--configuration=my-phpunit.xml']);
         const discovery = new TestFileDiscovery(
             configuration,
@@ -59,10 +59,10 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
             workspaceFolder,
         );
 
-        expect(await discovery.getConfigFilePattern()).toBe('{my-phpunit.xml,composer.lock}');
+        expect(discovery.getConfigFilePattern()).toBe('{my-phpunit.xml,composer.lock}');
     });
 
-    it('uses default pattern when no --configuration specified', async () => {
+    it('uses default pattern when no --configuration specified', () => {
         const configuration = createMockConfiguration();
         const discovery = new TestFileDiscovery(
             configuration,
@@ -71,7 +71,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
             workspaceFolder,
         );
 
-        expect(await discovery.getConfigFilePattern()).toBe(
+        expect(discovery.getConfigFilePattern()).toBe(
             '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}',
         );
     });
