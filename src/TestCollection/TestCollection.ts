@@ -10,6 +10,7 @@ import type {
 import type { URI } from 'vscode-uri';
 import {
     TestCollection as BaseTestCollection,
+    type ChangeResult,
     type File,
     PHPUnitXML,
     type TestDefinition,
@@ -29,15 +30,11 @@ export class TestCollection {
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
-        @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
+        @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
         @inject(TestParser) testParser: TestParser,
         @inject(ClassHierarchy) classHierarchy: ClassHierarchy,
     ) {
-        this.base = new BaseTestCollection(phpUnitXML, testParser, classHierarchy, {
-            onTestsParsed: (uri, tests) => this.handleTestsParsed(uri, tests),
-            onFileDeleted: (file) => this.handleFileDeleted(file),
-            onReset: () => this.handleReset(),
-        });
+        this.base = new BaseTestCollection(phpUnitXML, testParser, classHierarchy);
     }
 
     get rootItems(): TestItemCollection {
@@ -112,18 +109,16 @@ export class TestCollection {
         return [...this.base.gatherFiles()];
     }
 
-    clearMatcherCache() {
-        this.base.clearMatcherCache();
-    }
-
     async add(uri: URI) {
-        await this.base.add(uri);
-        return this;
+        if (this.base.has(uri)) {
+            return;
+        }
+        await this.change(uri);
     }
 
     async change(uri: URI) {
-        await this.base.change(uri);
-        return this;
+        const result = await this.base.change(uri);
+        this.applyChangeResult(result);
     }
 
     has(uri: URI) {
@@ -131,12 +126,24 @@ export class TestCollection {
     }
 
     delete(uri: URI) {
-        return this.base.delete(uri);
+        const file = this.base.delete(uri);
+        if (file) {
+            this.handleFileDeleted(file);
+        }
     }
 
     reset() {
+        this.handleReset();
         this.base.reset();
-        return this;
+    }
+
+    private applyChangeResult(result: ChangeResult) {
+        for (const { uri, tests } of result.parsed) {
+            this.handleTestsParsed(uri, tests);
+        }
+        for (const file of result.deleted) {
+            this.handleFileDeleted(file);
+        }
     }
 
     private registerTestDefinition(testItem: TestItem, testDefinition: TestDefinition): void {
@@ -147,11 +154,7 @@ export class TestCollection {
         this.removeTestItems(uri);
         this.index.deleteByUri(uri.toString());
 
-        const builder = new TestHierarchyBuilder(
-            this.ctrl,
-            this.rootItems,
-            this.base.getPhpUnitXML(),
-        );
+        const builder = new TestHierarchyBuilder(this.ctrl, this.rootItems, this.phpUnitXML);
         builder.build(tests);
         for (const [testItem, testDef] of builder.get()) {
             this.index.set(uri.toString(), testItem, testDef);
@@ -166,11 +169,7 @@ export class TestCollection {
     private handleReset() {
         const workspaceDefs = this.index.getDefinitionsByType(TestType.workspace);
 
-        for (const [testItem, testDef] of this.allDefinitions()) {
-            if (testDef.type !== TestType.class) {
-                continue;
-            }
-
+        for (const [testItem] of this.index.getDefinitionsByType(TestType.class)) {
             if (!testItem.parent) {
                 this.rootItems.delete(testItem.id);
                 continue;
@@ -235,12 +234,6 @@ export class TestCollection {
                 this.rootItems.delete(current.id);
                 return;
             }
-        }
-    }
-
-    private *allDefinitions(): IterableIterator<[TestItem, TestDefinition]> {
-        for (const file of this.base.gatherFiles()) {
-            yield* this.index.getDefinitionsByUri(file.uri.toString());
         }
     }
 }

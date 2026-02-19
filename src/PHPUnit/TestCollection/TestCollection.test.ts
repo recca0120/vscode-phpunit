@@ -48,10 +48,9 @@ describe('TestCollection', () => {
                 }
             }
             const actual: TestDefinition[] = [];
-            const testsuiteTests = collection.items().get(testsuite);
-            if (testsuiteTests) {
-                for (const [, tests] of testsuiteTests) {
-                    actual.push(...tests);
+            for (const file of collection.gatherFiles()) {
+                if (file.testsuite === testsuite) {
+                    actual.push(...file.tests);
                 }
             }
             expect(actual).toEqual(expected);
@@ -66,7 +65,7 @@ describe('TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         // ClassHierarchy should have entries after parsing
         expect(classHierarchy.get('Tests\\AssertionsTest')).toBeDefined();
@@ -94,7 +93,7 @@ describe('TestCollection', () => {
             // URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: files });
@@ -110,7 +109,7 @@ describe('TestCollection', () => {
 
         const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: files });
@@ -130,7 +129,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: [files[0]] });
@@ -150,7 +149,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: [files[0]] });
@@ -178,7 +177,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, {
@@ -201,7 +200,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: [files[1], files[2]] });
@@ -217,7 +216,7 @@ describe('TestCollection', () => {
 
         const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, {
@@ -239,7 +238,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: [files[1], files[2]] });
@@ -258,7 +257,7 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         await shouldBe(collection, { default: [files[0]] });
@@ -274,12 +273,12 @@ describe('TestCollection', () => {
 
         const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
 
         expect(collection.has(files[0])).toBeTruthy();
-        expect(collection.delete(files[0])).toBeTruthy();
-        expect(collection.delete(files[0])).toBeFalsy();
+        expect(collection.delete(files[0])).toBeDefined();
+        expect(collection.delete(files[0])).toBeUndefined();
         await shouldBe(collection, { default: [] });
     });
 
@@ -315,9 +314,9 @@ describe('TestCollection', () => {
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.add(file);
+            await collection.change(file);
         }
-        expect(collection.items().size).toEqual(2);
+        expect(collection.size).toEqual(2);
 
         collection.reset();
         expect(collection.size).toEqual(0);

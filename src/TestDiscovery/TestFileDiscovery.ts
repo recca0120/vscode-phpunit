@@ -92,7 +92,6 @@ export class TestFileDiscovery {
             this.workspaceFolder.uri.fsPath,
         );
         if (configurationFile) {
-            this.testCollection.clearMatcherCache();
             await this.phpUnitXML.loadFile(configurationFile);
         } else {
             this.phpUnitXML.setRoot(this.workspaceFolder.uri.fsPath);

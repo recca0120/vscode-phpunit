@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventEmitter, RelativePattern, type Uri, type WorkspaceFolder, workspace } from 'vscode';
+import { EventEmitter, RelativePattern, Uri, type WorkspaceFolder, workspace } from 'vscode';
 import type { TestCollection } from '../TestCollection';
 import type { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
@@ -59,7 +59,7 @@ describe('TestFileWatcher', () => {
     describe('test file watching', () => {
         it('should add to collection and fire emitter on create', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/tests/FooTest.php' } as Uri;
+            const uri = Uri.file('/workspace/tests/FooTest.php');
 
             getTestWatcher().fireCreate(uri);
 
@@ -69,7 +69,7 @@ describe('TestFileWatcher', () => {
 
         it('should update collection and fire emitter on change', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/tests/FooTest.php' } as Uri;
+            const uri = Uri.file('/workspace/tests/FooTest.php');
 
             getTestWatcher().fireChange(uri);
 
@@ -78,7 +78,7 @@ describe('TestFileWatcher', () => {
 
         it('should delete from collection on delete', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/tests/FooTest.php' } as Uri;
+            const uri = Uri.file('/workspace/tests/FooTest.php');
 
             getTestWatcher().fireDelete(uri);
 
@@ -95,7 +95,7 @@ describe('TestFileWatcher', () => {
 
         it('should reload all tests when phpunit.xml changes', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/phpunit.xml' } as Uri;
+            const uri = Uri.file('/workspace/phpunit.xml');
 
             getConfigWatcher().fireChange(uri);
 
@@ -104,7 +104,7 @@ describe('TestFileWatcher', () => {
 
         it('should reload all tests when composer.lock changes', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/composer.lock' } as Uri;
+            const uri = Uri.file('/workspace/composer.lock');
 
             getConfigWatcher().fireChange(uri);
 
@@ -113,7 +113,7 @@ describe('TestFileWatcher', () => {
 
         it('should reload all tests when config file is created', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/phpunit.xml' } as Uri;
+            const uri = Uri.file('/workspace/phpunit.xml');
 
             getConfigWatcher().fireCreate(uri);
 
@@ -122,7 +122,7 @@ describe('TestFileWatcher', () => {
 
         it('should reload all tests when config file is deleted', async () => {
             await fileWatcher.startWatching();
-            const uri = { toString: () => 'file:///workspace/phpunit.xml' } as Uri;
+            const uri = Uri.file('/workspace/phpunit.xml');
 
             getConfigWatcher().fireDelete(uri);
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceFolder } from 'vscode';
 import type { Configuration } from '../Configuration';
-import type { PHPUnitXML } from '../PHPUnit';
+import { PHPUnitXML } from '../PHPUnit';
 import type { TestCollection } from '../TestCollection';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
@@ -20,7 +20,6 @@ function createMockCollection() {
         reset: vi.fn(),
         delete: vi.fn(),
         add: vi.fn().mockResolvedValue(undefined),
-        clearMatcherCache: vi.fn(),
         getTrackedFiles: vi.fn().mockReturnValue([]),
     } as unknown as TestCollection;
 }
@@ -31,11 +30,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
 
     beforeEach(() => {
         collection = createMockCollection();
-        phpUnitXML = {
-            loadFile: vi.fn(),
-            setRoot: vi.fn(),
-            getPatterns: vi.fn(),
-        } as unknown as PHPUnitXML;
+        phpUnitXML = new PHPUnitXML();
     });
 
     it('uses --configuration=xxx.xml when specified', () => {

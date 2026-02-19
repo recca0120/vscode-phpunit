@@ -10,10 +10,9 @@ export interface File<T> {
     tests: T[];
 }
 
-export interface TestCollectionCallbacks {
-    onTestsParsed?: (uri: URI, tests: TestDefinition[]) => void;
-    onFileDeleted?: (file: File<TestDefinition>) => void;
-    onReset?: () => void;
+export interface ChangeResult {
+    parsed: { uri: URI; tests: TestDefinition[] }[];
+    deleted: File<TestDefinition>[];
 }
 
 export class TestCollection {
@@ -21,34 +20,26 @@ export class TestCollection {
     private matcherCache = new Map<string, Map<string, Minimatch>>();
     private fileIndex = new Map<string, string>();
     private parseQueue: Promise<void> = Promise.resolve();
-    private callbacks: TestCollectionCallbacks = {};
 
     constructor(
         private phpUnitXML: PHPUnitXML,
         private testParser: TestParser,
         private classHierarchy: ClassHierarchy,
-        callbacks?: TestCollectionCallbacks,
-    ) {
-        this.callbacks = callbacks ?? {};
-    }
+    ) {}
 
     get size() {
         return this.suites.size;
     }
 
-    getPhpUnitXML() {
-        return this.phpUnitXML;
-    }
-
-    getRootUri() {
+    private getRootUri() {
         return URI.file(this.phpUnitXML.root());
     }
 
-    items() {
+    private items() {
         return this.suites;
     }
 
-    initSuites() {
+    private initSuites() {
         for (const suite of this.phpUnitXML.getTestSuites()) {
             if (!this.suites.has(suite.name)) {
                 this.suites.set(suite.name, new Map<string, TestDefinition[]>());
@@ -56,16 +47,8 @@ export class TestCollection {
         }
     }
 
-    clearMatcherCache() {
-        this.matcherCache.clear();
-    }
-
-    async add(uri: URI) {
-        return this.has(uri) ? this : this.change(uri);
-    }
-
     async change(uri: URI) {
-        return new Promise<this>((resolve, reject) => {
+        return new Promise<ChangeResult>((resolve, reject) => {
             this.parseQueue = this.parseQueue
                 .catch(() => {})
                 .then(() => this.doChange(uri).then(resolve, reject));
@@ -80,23 +63,21 @@ export class TestCollection {
         return !!this.findFile(uri);
     }
 
-    delete(uri: URI) {
+    delete(uri: URI): File<TestDefinition> | undefined {
         const file = this.findFile(uri);
+        if (!file) {
+            return undefined;
+        }
 
-        return file ? this.deleteFile(file) : false;
+        this.deleteFile(file);
+        return file;
     }
 
-    reset() {
-        this.callbacks.onReset?.();
-        for (const file of this.gatherFiles()) {
-            this.deleteFile(file);
-        }
+    reset(): void {
         this.suites.clear();
         this.matcherCache.clear();
         this.fileIndex.clear();
         this.classHierarchy.clear();
-
-        return this;
     }
 
     findFile(uri: URI): File<TestDefinition> | undefined {
@@ -122,31 +103,35 @@ export class TestCollection {
         }
     }
 
-    private async doChange(uri: URI) {
+    private async doChange(uri: URI): Promise<ChangeResult> {
+        const parsed: ChangeResult['parsed'] = [];
+        const deleted: ChangeResult['deleted'] = [];
+
         const testsuite = this.parseTestsuite(uri);
         if (!testsuite) {
-            return this;
+            return { parsed, deleted };
         }
 
         this.initSuites();
-        const testDefinitions = await this.parseTests(uri, testsuite);
-        if (testDefinitions.length === 0) {
-            this.delete(uri);
+        const tests = await this.parseTests(uri, testsuite);
+        if (tests.length === 0) {
+            const file = this.delete(uri);
+            if (file) {
+                deleted.push(file);
+            }
         } else {
-            this.updateTestsForFile(uri, testsuite, testDefinitions);
+            this.updateTestsForFile(uri, testsuite, tests);
+            parsed.push({ uri, tests });
         }
 
-        await this.reparseChildClasses(uri);
-
-        return this;
-    }
-
-    private async reparseChildClasses(uri: URI) {
-        const dependents = this.getDependentClasses(uri.fsPath);
-
-        for (const child of dependents) {
-            await this.reparseFile(URI.file(child.uri));
+        for (const child of this.getDependentClasses(uri.fsPath)) {
+            const entry = await this.reparseFile(URI.file(child.uri));
+            if (entry) {
+                parsed.push(entry);
+            }
         }
+
+        return { parsed, deleted };
     }
 
     private getDependentClasses(fsPath: string) {
@@ -159,38 +144,39 @@ export class TestCollection {
             .filter((child) => child.uri !== fsPath);
     }
 
-    private async reparseFile(uri: URI) {
+    private async reparseFile(
+        uri: URI,
+    ): Promise<{ uri: URI; tests: TestDefinition[] } | undefined> {
         const testsuite = this.parseTestsuite(uri);
         if (!testsuite) {
-            return;
+            return undefined;
         }
 
         const tests = await this.parseTests(uri, testsuite);
-        if (tests.length > 0) {
-            this.updateTestsForFile(uri, testsuite, tests);
+        if (tests.length === 0) {
+            return undefined;
         }
+
+        this.updateTestsForFile(uri, testsuite, tests);
+        return { uri, tests };
     }
 
     private async parseTests(uri: URI, testsuite: string) {
-        const result = await this.testParser.parseFile(uri.fsPath, testsuite);
-        if (!result) {
+        const parseResult = await this.testParser.parseFile(uri.fsPath, testsuite);
+        if (!parseResult) {
             return [];
         }
 
-        for (const cls of result.classes) {
+        for (const cls of parseResult.classes) {
             this.classHierarchy.register(cls);
         }
 
-        const enriched = this.classHierarchy.enrichTests(result.tests);
-        this.callbacks.onTestsParsed?.(uri, enriched);
-
-        return enriched;
+        return this.classHierarchy.enrichTests(parseResult.tests);
     }
 
     private deleteFile(file: File<TestDefinition>) {
-        this.callbacks.onFileDeleted?.(file);
         this.fileIndex.delete(file.uri.toString());
-        return this.items().get(file.testsuite)?.delete(file.uri.toString());
+        this.items().get(file.testsuite)?.delete(file.uri.toString());
     }
 
     private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {
