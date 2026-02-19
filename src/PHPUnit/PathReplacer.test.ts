@@ -227,9 +227,12 @@ describe('PathReplacer', () => {
             { [VAR_WORKSPACE_FOLDER]: `${VAR_USER_HOME}/app` },
         );
 
-        expect(pathReplacer.toRemote(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
-            `${os.homedir()}/app/tests/AssertionsTest.php`,
-        );
+        const expected =
+            process.platform === 'win32'
+                ? `${os.homedir()}\\app\\tests\\AssertionsTest.php`
+                : `${os.homedir()}/app/tests/AssertionsTest.php`;
+
+        expect(pathReplacer.toRemote(phpUnitProject('tests/AssertionsTest.php'))).toEqual(expected);
     });
 
     it(`replaces ${VAR_PATH_SEPARATOR} in paths value`, () => {
@@ -238,8 +241,9 @@ describe('PathReplacer', () => {
             { [VAR_WORKSPACE_FOLDER]: `/app${VAR_PATH_SEPARATOR}sub` },
         );
 
+        // posixPath normalises backslashes for non-drive-letter paths on all platforms
         expect(pathReplacer.toRemote(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
-            `/app${nodePath.sep}sub/tests/AssertionsTest.php`,
+            `/app/sub/tests/AssertionsTest.php`,
         );
     });
 
@@ -249,8 +253,9 @@ describe('PathReplacer', () => {
             { [VAR_WORKSPACE_FOLDER]: `/app${VAR_PATH_SEPARATOR_SHORT}sub` },
         );
 
+        // posixPath normalises backslashes for non-drive-letter paths on all platforms
         expect(pathReplacer.toRemote(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
-            `/app${nodePath.sep}sub/tests/AssertionsTest.php`,
+            `/app/sub/tests/AssertionsTest.php`,
         );
     });
 

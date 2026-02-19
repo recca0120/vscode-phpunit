@@ -22,9 +22,12 @@
 
 - **Test Explorer 整合** — 從側邊欄探索、執行、偵錯測試
 - **PHPUnit 7 – 12 & Pest 1 – 4** — 廣泛的版本支援
+- **自動偵測執行檔** — 讀取 `composer.json`，若有 `pestphp/pest` 依賴自動改用 `vendor/bin/pest`
+- **自動重新載入** — `phpunit.xml` 或 `composer.lock` 有異動時自動重載所有測試
 - **彩色輸出** — 語法高亮的測試結果，內嵌 PHP 原始碼片段
 - **可點擊的堆疊追蹤** — 從錯誤輸出直接跳轉到 file:line
 - **遠端環境** — 透過自訂命令支援 Docker、SSH、Laravel Sail、DDEV
+- **Multi-Workspace Docker** — 單一共用容器支援多個工作區資料夾
 - **平行執行** — 支援 ParaTest
 - **Xdebug 偵錯** — 一鍵逐步偵錯
 - **持續執行** — 檔案變更時自動執行測試
@@ -40,11 +43,17 @@
   // PHP 執行檔路徑（預設："php"）
   "phpunit.php": "php",
 
-  // PHPUnit 或 Pest 執行檔路徑（預設："vendor/bin/phpunit"）
+  // PHPUnit 或 Pest 執行檔路徑
+  // 自動從 composer.json 偵測：若有 pestphp/pest 依賴則使用 "vendor/bin/pest"，
+  // 否則預設為 "vendor/bin/phpunit"。只在自動偵測不足時才需設定。
   "phpunit.phpunit": "vendor/bin/phpunit",
 
   // 自訂命令範本
   // 可用變數：${php}, ${phpargs}, ${phpunit}, ${phpunitargs}, ${phpunitxml}, ${cwd}
+  //   ${workspaceFolder}         — 工作區資料夾絕對路徑
+  //   ${workspaceFolderBasename} — 資料夾名稱（如 "myproject"）
+  //   ${userHome}                — 使用者家目錄
+  //   ${pathSeparator}           — 路徑分隔符（"/" 或 "\"）
   "phpunit.command": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
 
   // 傳遞給 PHPUnit 的額外參數
@@ -136,6 +145,28 @@
   "phpunit.command": "docker compose -f /path/to/docker-compose.yml exec -t app /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\""
 }
 ```
+
+### Docker Multi-Workspace
+
+使用[多根工作區](https://code.visualstudio.com/docs/editor/multi-root-workspaces)搭配單一共用 Docker 容器時，可用 `${workspaceFolderBasename}` 切換各資料夾：
+
+```jsonc
+// .code-workspace 設定
+{
+  "folders": [
+    { "path": "./project-a" },
+    { "path": "./project-b" }
+  ],
+  "settings": {
+    "phpunit.command": "docker exec -t vscode-phpunit /bin/sh -c \"cd /${workspaceFolderBasename} && ${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+    "phpunit.paths": {
+      "${workspaceFolder}": "/${workspaceFolderBasename}"
+    }
+  }
+}
+```
+
+容器將每個專案資料夾掛載於對應的資料夾名稱路徑下（如 `/project-a`、`/project-b`），執行時會先 `cd` 到正確目錄再執行測試。
 
 ### Laravel Sail
 
@@ -275,13 +306,42 @@
 ```
 </details>
 
-## 貢獻
+## 貢獻與開發
 
 發現問題？有想法？歡迎貢獻！
 
 - [回報問題](https://github.com/recca0120/vscode-phpunit/issues/new?template=bug_report.yml)
 - [功能建議](https://github.com/recca0120/vscode-phpunit/issues/new?template=feature_request.yml)
 - [貢獻指南](CONTRIBUTING.md)
+
+### 偵錯擴充套件
+
+專案在 `.vscode/launch.json` 中提供多種啟動設定：
+
+| 設定 | 說明 |
+|---|---|
+| **Run Extension** | 以本地 `phpunit-stub` 專案開啟 |
+| **Run Extension (Multi-Workspace)** | 開啟多資料夾工作區（本地） |
+| **Run Extension (Docker Multi-Workspace)** | 開啟在 Docker 中執行的多資料夾工作區 |
+
+#### Docker Multi-Workspace 設定
+
+1. 啟動共用容器（同時掛載 `phpunit-stub` 與 `pest-stub`）：
+
+    ```bash
+    cd src/PHPUnit/__tests__/fixtures/workspaces
+    docker compose up -d --build
+    ```
+
+2. 在 VS Code 偵錯面板選擇 **Run Extension (Docker Multi-Workspace)** 並按 `F5`。
+
+    工作區會開啟兩個資料夾（`phpunit-stub` 和 `pest-stub`）。擴充套件會自動從各資料夾的 `composer.json` 偵測正確的執行檔（`vendor/bin/phpunit` 或 `vendor/bin/pest`）。
+
+3. 停止容器：
+
+    ```bash
+    docker compose down
+    ```
 
 ## 授權
 
