@@ -5,7 +5,7 @@ import type { TestRunHandler } from '../TestExecution';
 import { TestWatchManager } from './TestWatchManager';
 
 function createMockHandler() {
-    return { startTestRun: vi.fn().mockResolvedValue(undefined) } as unknown as TestRunHandler;
+    return { startTestRun: vi.fn().mockResolvedValue(undefined) };
 }
 
 function createMockCollection() {
@@ -17,7 +17,7 @@ function _createTestItem(uri: Uri): TestItem {
 }
 
 describe('TestWatchManager', () => {
-    let handler: TestRunHandler;
+    let handler: ReturnType<typeof createMockHandler>;
     let collection: TestCollection;
     let emitter: EventEmitter<Uri>;
     let manager: TestWatchManager;
@@ -26,13 +26,13 @@ describe('TestWatchManager', () => {
         handler = createMockHandler();
         collection = createMockCollection();
         emitter = new EventEmitter<Uri>();
-        manager = new TestWatchManager(handler, collection, emitter);
+        manager = new TestWatchManager(handler as unknown as TestRunHandler, collection, emitter);
         manager.setupFileChangeListener();
     });
 
     it('should catch errors from startTestRun and show error message', async () => {
         const error = new Error('PHPUnit crashed');
-        vi.mocked(handler.startTestRun).mockRejectedValueOnce(error);
+        handler.startTestRun.mockRejectedValueOnce(error);
 
         manager.handleContinuousRun(
             { include: undefined, continuous: true } as unknown as import('vscode').TestRunRequest,
@@ -55,9 +55,7 @@ describe('TestWatchManager', () => {
     it('should serialize concurrent startTestRun calls', async () => {
         let resolveFirst!: () => void;
         const firstRun = new Promise<void>((r) => (resolveFirst = r));
-        vi.mocked(handler.startTestRun)
-            .mockReturnValueOnce(firstRun)
-            .mockResolvedValueOnce(undefined);
+        handler.startTestRun.mockReturnValueOnce(firstRun).mockResolvedValueOnce(undefined);
 
         manager.handleContinuousRun(
             { include: undefined, continuous: true } as unknown as import('vscode').TestRunRequest,

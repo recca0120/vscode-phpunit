@@ -332,7 +332,12 @@ const workspace = {
         }),
         { _concurrentCount: 0, _maxConcurrent: 0 },
     ),
-    createFileSystemWatcher: vi.fn().mockImplementation(() => new FakeFileSystemWatcher()),
+    createFileSystemWatcher: vi.fn().mockImplementation((pattern) => {
+        const watcher = new FakeFileSystemWatcher();
+        watcher.pattern = pattern;
+        createdWatchers.push(watcher);
+        return watcher;
+    }),
     onDidChangeConfiguration: vi.fn().mockImplementation(() => {
         return new Disposable();
     }),
@@ -370,6 +375,7 @@ class FakeFileSystemWatcher {
     readonly onDidDelete = this.deleteEmitter.event;
 
     disposed = false;
+    pattern: unknown;
 
     fireCreate(uri: URI) {
         this.createEmitter.fire(uri);
@@ -388,6 +394,8 @@ class FakeFileSystemWatcher {
         this.deleteEmitter.dispose();
     }
 }
+
+export const createdWatchers: FakeFileSystemWatcher[] = [];
 
 class FakeRelativePattern {
     uri: URI;

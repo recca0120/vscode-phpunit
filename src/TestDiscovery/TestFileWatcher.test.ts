@@ -1,16 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventEmitter, RelativePattern, type Uri, type WorkspaceFolder, workspace } from 'vscode';
+import {
+    createdWatchers,
+    EventEmitter,
+    RelativePattern,
+    type Uri,
+    type WorkspaceFolder,
+} from 'vscode';
+import type { TestCollection } from '../TestCollection';
+import type { TestFileDiscovery } from './TestFileDiscovery';
+import { TestFileWatcher } from './TestFileWatcher';
 
 type FakeFileSystemWatcher = {
     fireCreate(uri: Uri): void;
     fireChange(uri: Uri): void;
     fireDelete(uri: Uri): void;
     disposed: boolean;
+    pattern: { pattern: string };
 };
-
-import type { TestCollection } from '../TestCollection';
-import type { TestFileDiscovery } from './TestFileDiscovery';
-import { TestFileWatcher } from './TestFileWatcher';
 
 const workspaceFolder = { uri: { fsPath: '/workspace' } } as WorkspaceFolder;
 
@@ -43,16 +49,15 @@ describe('TestFileWatcher', () => {
     let fileWatcher: TestFileWatcher;
 
     beforeEach(() => {
+        createdWatchers.length = 0;
         discovery = createMockDiscovery();
         collection = createMockCollection();
         emitter = new EventEmitter<Uri>();
         fileWatcher = new TestFileWatcher(discovery, collection, emitter);
     });
 
-    const getTestWatcher = () =>
-        vi.mocked(workspace.createFileSystemWatcher).mock.results[0].value as FakeFileSystemWatcher;
-    const getConfigWatcher = () =>
-        vi.mocked(workspace.createFileSystemWatcher).mock.results[1].value as FakeFileSystemWatcher;
+    const getTestWatcher = () => createdWatchers[0] as FakeFileSystemWatcher;
+    const getConfigWatcher = () => createdWatchers[1] as FakeFileSystemWatcher;
 
     describe('test file watching', () => {
         it('should add to collection and fire emitter on create', async () => {
@@ -88,7 +93,7 @@ describe('TestFileWatcher', () => {
         it('should create a second watcher for config files', async () => {
             await fileWatcher.startWatching();
 
-            expect(workspace.createFileSystemWatcher).toHaveBeenCalledTimes(2);
+            expect(createdWatchers).toHaveLength(2);
         });
 
         it('should reload all tests when phpunit.xml changes', async () => {
@@ -133,17 +138,13 @@ describe('TestFileWatcher', () => {
 
             await fileWatcher.startWatching();
 
-            const configWatcherArg = vi.mocked(workspace.createFileSystemWatcher).mock
-                .calls[1][0] as RelativePattern;
-            expect(configWatcherArg.pattern).toBe('{custom.xml,composer.lock}');
+            expect(getConfigWatcher().pattern.pattern).toBe('{custom.xml,composer.lock}');
         });
 
         it('uses fallback pattern when getConfigFilePattern returns default', async () => {
             await fileWatcher.startWatching();
 
-            const configWatcherArg = vi.mocked(workspace.createFileSystemWatcher).mock
-                .calls[1][0] as RelativePattern;
-            expect(configWatcherArg.pattern).toBe(
+            expect(getConfigWatcher().pattern.pattern).toBe(
                 '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}',
             );
         });
