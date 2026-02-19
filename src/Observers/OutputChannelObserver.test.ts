@@ -436,4 +436,16 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         }
         expect(outputChannel.show).toHaveBeenCalled();
     });
+
+    it('should print dump output', async () => {
+        const testFile = phpUnitProject('tests/Output/OutputTest.php');
+        const filter = 'test_dump';
+        await run(testFile, filter);
+
+        const outputChannel = getOutputChannel();
+        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+            expect.stringMatching(/🟨 array:\d+ \[/),
+        );
+        expect(outputChannel.show).toHaveBeenCalled();
+    });
 });

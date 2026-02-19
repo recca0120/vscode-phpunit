@@ -204,7 +204,6 @@
     },
     "devDependencies": {
         "@biomejs/biome": "2.3.15",
-        "@vscode/tree-sitter-wasm": "^0.3.0",
         "@types/chai": "^5.2.3",
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.10",
@@ -213,6 +212,7 @@
         "@vitest/coverage-v8": "^4.0.18",
         "@vscode/dts": "^0.4.1",
         "@vscode/test-electron": "^2.5.2",
+        "@vscode/tree-sitter-wasm": "^0.3.0",
         "@vscode/vsce": "^3.7.1",
         "chai": "^6.2.2",
         "esbuild": "^0.27.3",
@@ -229,5 +229,7 @@
         "vitest": "^4.0.18",
         "vscode-uri": "^3.1.0"
     },
-    "dependencies": {}
+    "dependencies": {
+        "strip-ansi": "^7.1.2"
+    }
 }

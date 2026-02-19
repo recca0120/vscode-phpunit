@@ -1,3 +1,4 @@
+import stripAnsi from 'strip-ansi';
 import {
     EOL,
     type PHPUnitXML,
@@ -111,7 +112,7 @@ export abstract class OutputFormatter {
     }
 
     append(line: string) {
-        this.outputBuffer.append(line);
+        this.outputBuffer.append(stripAnsi(line));
     }
 
     protected getMessage(event: TeamcityEvent): string[] {
