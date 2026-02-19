@@ -15,7 +15,12 @@ export class Configuration extends BaseConfiguration {
     }
 
     has(key: string): boolean {
-        return this.workspaceConfiguration.has(key);
+        const inspected = this.workspaceConfiguration.inspect(key);
+        return (
+            inspected?.workspaceFolderValue !== undefined ||
+            inspected?.workspaceValue !== undefined ||
+            inspected?.globalValue !== undefined
+        );
     }
 
     async update(key: string, value: unknown): Promise<void> {

@@ -50,6 +50,27 @@ export abstract class BaseConfiguration implements IConfiguration {
     }
 }
 
+export class ConfigurationProxy extends BaseConfiguration {
+    constructor(
+        private base: IConfiguration,
+        private overrides: Record<string, unknown> = {},
+    ) {
+        super();
+    }
+
+    get(key: string, defaultValue?: unknown): unknown | undefined {
+        return key in this.overrides ? this.overrides[key] : this.base.get(key, defaultValue);
+    }
+
+    has(key: string): boolean {
+        return key in this.overrides || this.base.has(key);
+    }
+
+    async update(key: string, value: unknown): Promise<void> {
+        return this.base.update(key, value);
+    }
+}
+
 export class Configuration extends BaseConfiguration {
     private items = new Map<string, unknown>();
 

@@ -29,7 +29,10 @@ export class PathReplacer {
         this.pathVariables = new Map<string, string>();
         this.pathVariables.set(VAR_PWD, this.cwd);
         this.pathVariables.set(VAR_WORKSPACE_FOLDER, this.cwd);
-        this.pathVariables.set(VAR_WORKSPACE_FOLDER_BASENAME, path.basename(this.cwd));
+        this.pathVariables.set(
+            VAR_WORKSPACE_FOLDER_BASENAME,
+            this.cwd ? path.basename(this.cwd) : '',
+        );
         this.pathVariables.set(VAR_USER_HOME, os.homedir());
         this.pathVariables.set(VAR_PATH_SEPARATOR, path.sep);
         this.pathVariables.set(VAR_PATH_SEPARATOR_SHORT, path.sep);
