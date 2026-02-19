@@ -39,6 +39,17 @@
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
+            "name": "Run Extension (Docker Multi-Workspace)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/workspaces/docker-multi-workspace.code-workspace"
+            ],
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
             "name": "Extension Tests",
             "type": "extensionHost",
             "request": "launch",
