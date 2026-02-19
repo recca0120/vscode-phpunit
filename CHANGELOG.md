@@ -4,6 +4,16 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.6] - 2026-02-19
+
+### Added
+- Feat: add VarDumper TextMate grammar for syntax highlighting of `dd()`/`dump()` output in Test Results panel
+- Feat: strip ANSI escape codes from `dd()`/`dump()` output in Output panel (fix garbled color codes)
+
+### Changed
+- Chore: update `symfony/var-dumper` constraint to `^5.4 || ^6.0 || ^7.0` to support PHP 7.4+
+- Refactor: move `.code-workspace` files into `fixtures/workspaces/` directory
+
 ## [3.9.5] - 2026-02-19
 
 ### Changed
