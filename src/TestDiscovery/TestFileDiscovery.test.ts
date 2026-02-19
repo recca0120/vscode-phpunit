@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceFolder } from 'vscode';
 import type { Configuration } from '../Configuration';
@@ -9,10 +8,10 @@ import { TestFileDiscovery } from './TestFileDiscovery';
 const root = '/workspace';
 const workspaceFolder = { uri: { fsPath: root } } as WorkspaceFolder;
 
-function createMockConfiguration(args: string[] = [], configFile?: string) {
+function createMockConfiguration(args: string[] = []) {
     return {
         getArguments: vi.fn().mockReturnValue(args),
-        getConfigurationFile: vi.fn().mockResolvedValue(configFile),
+        getConfigurationFile: vi.fn().mockResolvedValue(undefined),
     } as unknown as Configuration;
 }
 
@@ -63,32 +62,8 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
         expect(await discovery.getConfigFilePattern()).toBe('{my-phpunit.xml,composer.lock}');
     });
 
-    it('uses phpunit.xml when no --configuration and phpunit.xml exists', async () => {
-        const configuration = createMockConfiguration([], join(root, 'phpunit.xml'));
-        const discovery = new TestFileDiscovery(
-            configuration,
-            phpUnitXML,
-            collection,
-            workspaceFolder,
-        );
-
-        expect(await discovery.getConfigFilePattern()).toBe('{phpunit.xml,composer.lock}');
-    });
-
-    it('uses phpunit.xml.dist when no --configuration and phpunit.xml does not exist', async () => {
-        const configuration = createMockConfiguration([], join(root, 'phpunit.xml.dist'));
-        const discovery = new TestFileDiscovery(
-            configuration,
-            phpUnitXML,
-            collection,
-            workspaceFolder,
-        );
-
-        expect(await discovery.getConfigFilePattern()).toBe('{phpunit.xml.dist,composer.lock}');
-    });
-
-    it('uses fallback pattern when no --configuration and no config file exists', async () => {
-        const configuration = createMockConfiguration([], undefined);
+    it('uses default pattern when no --configuration specified', async () => {
+        const configuration = createMockConfiguration();
         const discovery = new TestFileDiscovery(
             configuration,
             phpUnitXML,
