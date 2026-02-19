@@ -8,7 +8,7 @@
         }
     ],
     "settings": {
-        "phpunit.command": "docker exec -t vscode-phpunit /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+        "phpunit.command": "docker exec -t vscode-phpunit /bin/sh -c \"cd /${workspaceFolderBasename} && ${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
         "phpunit.paths": {
             "${workspaceFolder}": "/${workspaceFolderBasename}"
         },
