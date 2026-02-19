@@ -302,6 +302,53 @@ describe('Extension TestCollection', () => {
         ]);
     });
 
+    it('change file in multi-testsuite should preserve other testsuite nodes', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="Unit">
+                    <directory>tests/Unit</directory>
+                </testsuite>
+                <testsuite name="Feature">
+                    <directory>tests/Feature</directory>
+                </testsuite>
+            </testsuites>`);
+
+        await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+        await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+
+        // Change Unit file — Feature testsuite should remain intact
+        await collection.change(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+
+        expect(toTree(ctrl.items)).toEqual([
+            {
+                id: 'testsuite:Unit',
+                label: `${icon(TestType.testsuite)} Unit`,
+                children: [
+                    expect.objectContaining({
+                        id: 'Example (Tests\\Unit\\Example)',
+                    }),
+                ],
+            },
+            {
+                id: 'testsuite:Feature',
+                label: `${icon(TestType.testsuite)} Feature`,
+                children: [
+                    expect.objectContaining({
+                        id: 'Example (Tests\\Feature\\Example)',
+                    }),
+                ],
+            },
+        ]);
+
+        // Both testsuite nodes should be in the index
+        const unitSuiteItem = ctrl.items.get('testsuite:Unit');
+        const featureSuiteItem = ctrl.items.get('testsuite:Feature');
+        expect(unitSuiteItem).toBeDefined();
+        expect(featureSuiteItem).toBeDefined();
+        expect(collection.getTestDefinition(unitSuiteItem!)).toBeDefined();
+        expect(collection.getTestDefinition(featureSuiteItem!)).toBeDefined();
+    });
+
     it('with folder root (multi-workspace)', async () => {
         const collection = givenTestCollection(`
             <testsuites>

@@ -151,7 +151,13 @@ export class TestCollection {
     }
 
     private handleTestsParsed(uri: URI, tests: TestDefinition[]) {
-        this.removeTestItems(uri);
+        for (const testItem of this.findTestsByFile(uri)) {
+            if (testItem.parent) {
+                testItem.parent.children.delete(testItem.id);
+            } else {
+                this.rootItems.delete(testItem.id);
+            }
+        }
         this.index.deleteByUri(uri.toString());
 
         const builder = new TestHierarchyBuilder(this.ctrl, this.rootItems, this.phpUnitXML);

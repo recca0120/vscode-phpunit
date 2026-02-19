@@ -125,7 +125,14 @@ export class TestHierarchyBuilder {
 
         const suiteId = `testsuite:${suiteName}`;
         let testItem = parentChildren.get(suiteId);
-        if (!testItem) {
+        if (testItem) {
+            this.testData.set(testItem, {
+                type: TestType.testsuite,
+                id: suiteId,
+                label: suiteName,
+                testsuite: suiteName,
+            });
+        } else {
             testItem = this.createSuiteItem(suiteId, suiteName, parentChildren);
         }
 

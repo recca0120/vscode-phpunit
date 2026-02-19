@@ -4,6 +4,18 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.8] - 2026-02-20
+
+### Fixed
+- Fix: running tests on a testsuite node in multi-testsuite projects could produce "no output" when another extension (e.g. Laravel) registers its own test controller (#366)
+- Fix: `change` on a file in a single-file testsuite caused the testsuite tree node to be deleted and re-created at the wrong position
+- Fix: testsuite node lost its TestDefinition index entry after file re-parse, breaking test execution from that node
+
+### Changed
+- Refactor: replace `TestCollectionCallbacks` with `ChangeResult` return values for clearer data flow
+- Refactor: tighten BaseTestCollection API — `items()`, `initSuites()`, `getRootUri()`, `getPhpUnitXML()` now private
+- Refactor: simplify `handleReset` to use index directly instead of `base.gatherFiles()`
+
 ## [3.9.7] - 2026-02-19
 
 ### Added
