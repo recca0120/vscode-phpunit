@@ -88,7 +88,7 @@ async function runMultiWorkspaceTest(): Promise<void> {
 
     const phpUnit = phpUnitStubs[0];
     const pest = pestStubs[0];
-    const workspacePath = join(fixturesPath, 'multi-workspace.code-workspace');
+    const workspacePath = join(fixturesPath, 'workspaces/multi-workspace.code-workspace');
 
     console.log(`\n=== Running e2e: multi-workspace (${phpUnit.name} + ${pest.name}) ===\n`);
     await runTests({
