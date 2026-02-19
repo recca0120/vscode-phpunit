@@ -1,16 +1,20 @@
 import type { WorkspaceConfiguration } from 'vscode';
-import { BaseConfiguration } from './PHPUnit';
+import { BaseConfiguration, BinaryDetector } from './PHPUnit';
 
 export class Configuration extends BaseConfiguration {
-    constructor(private workspaceConfiguration: WorkspaceConfiguration) {
+    constructor(
+        private workspaceConfiguration: WorkspaceConfiguration,
+        binaryDetector: BinaryDetector = new BinaryDetector(),
+    ) {
         super();
+        this.binaryDetector = binaryDetector;
     }
 
     updateWorkspaceConfiguration(workspaceConfiguration: WorkspaceConfiguration) {
         this.workspaceConfiguration = workspaceConfiguration;
     }
 
-    get(key: string, defaultValue?: unknown): unknown | undefined {
+    resolve(key: string, defaultValue?: unknown): unknown | undefined {
         return this.workspaceConfiguration.get(key, defaultValue);
     }
 

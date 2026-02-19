@@ -1,14 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { TestRunProfileKind } from 'vscode';
 import { Configuration } from '../Configuration';
-import {
-    ConfigurationProxy,
-    detectBinary,
-    Mode,
-    PHPUnitXML,
-    ProcessBuilder,
-    Xdebug,
-} from '../PHPUnit';
+import { Mode, PHPUnitXML, ProcessBuilder, Xdebug } from '../PHPUnit';
 
 @injectable()
 export class ProcessBuilderFactory {
@@ -18,12 +11,8 @@ export class ProcessBuilderFactory {
     ) {}
 
     async create(profileKind?: TestRunProfileKind): Promise<ProcessBuilder> {
-        const cwd = this.phpUnitXML.root();
-        const config = this.config.has('phpunit')
-            ? this.config
-            : new ConfigurationProxy(this.config, { phpunit: await detectBinary(cwd) });
-        const builder = new ProcessBuilder(config, { cwd });
-        const xdebug = new Xdebug(config);
+        const builder = new ProcessBuilder(this.config, { cwd: this.phpUnitXML.root() });
+        const xdebug = new Xdebug(this.config);
         builder.setXdebug(xdebug);
         await xdebug.setMode(this.toMode(profileKind));
         return builder;

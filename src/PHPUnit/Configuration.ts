@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { BinaryDetector } from './BinaryDetector';
 import { checkFileExists, findAsyncSequential, parseArguments } from './utils';
 
 interface ConfigurationItem {
@@ -18,7 +19,17 @@ export interface IConfiguration {
 }
 
 export abstract class BaseConfiguration implements IConfiguration {
-    abstract get(key: string, defaultValue?: unknown): unknown | undefined;
+    protected binaryDetector: BinaryDetector = new BinaryDetector();
+
+    get(key: string, defaultValue?: unknown): unknown | undefined {
+        if (key === 'phpunit' && !this.has('phpunit')) {
+            return this.binaryDetector.detect();
+        }
+
+        return this.resolve(key, defaultValue);
+    }
+
+    abstract resolve(key: string, defaultValue?: unknown): unknown | undefined;
 
     abstract has(key: string): boolean;
 
@@ -50,27 +61,6 @@ export abstract class BaseConfiguration implements IConfiguration {
     }
 }
 
-export class ConfigurationProxy extends BaseConfiguration {
-    constructor(
-        private base: IConfiguration,
-        private overrides: Record<string, unknown> = {},
-    ) {
-        super();
-    }
-
-    get(key: string, defaultValue?: unknown): unknown | undefined {
-        return key in this.overrides ? this.overrides[key] : this.base.get(key, defaultValue);
-    }
-
-    has(key: string): boolean {
-        return key in this.overrides || this.base.has(key);
-    }
-
-    async update(key: string, value: unknown): Promise<void> {
-        return this.base.update(key, value);
-    }
-}
-
 export class Configuration extends BaseConfiguration {
     private items = new Map<string, unknown>();
 
@@ -90,7 +80,7 @@ export class Configuration extends BaseConfiguration {
         }
     }
 
-    get(key: string, defaultValue?: unknown): unknown | undefined {
+    resolve(key: string, defaultValue?: unknown): unknown | undefined {
         return this.has(key) ? this.items.get(key) : defaultValue;
     }
 
