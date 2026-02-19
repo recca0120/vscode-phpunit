@@ -1,0 +1,11 @@
+services:
+  vscode-phpunit:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile
+    container_name: vscode-phpunit
+    tty: true
+    ports:
+      - ${SSH_PORT:-2222}:22
+    volumes:
+      - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
