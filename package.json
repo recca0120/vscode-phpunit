@@ -227,9 +227,7 @@
         "sinon": "^21.0.1",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18",
+        "strip-ansi": "^7.1.2",
         "vscode-uri": "^3.1.0"
-    },
-    "dependencies": {
-        "strip-ansi": "^7.1.2"
     }
 }

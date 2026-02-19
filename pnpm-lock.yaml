@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      strip-ansi:
-        specifier: ^7.1.2
-        version: 7.1.2
     devDependencies:
       '@biomejs/biome':
         specifier: 2.3.15
@@ -78,6 +74,9 @@ importers:
       sinon:
         specifier: ^21.0.1
         version: 21.0.1
+      strip-ansi:
+        specifier: ^7.1.2
+        version: 7.1.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
