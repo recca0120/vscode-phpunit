@@ -1,5 +1,14 @@
 import type { SpawnOptions } from 'node:child_process';
-import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './ProcessBuilder/placeholders';
+import os from 'node:os';
+import path from 'node:path';
+import {
+    VAR_PATH_SEPARATOR,
+    VAR_PATH_SEPARATOR_SHORT,
+    VAR_PWD,
+    VAR_USER_HOME,
+    VAR_WORKSPACE_FOLDER,
+    VAR_WORKSPACE_FOLDER_BASENAME,
+} from './constants';
 
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -20,15 +29,20 @@ export class PathReplacer {
         this.pathVariables = new Map<string, string>();
         this.pathVariables.set(VAR_PWD, this.cwd);
         this.pathVariables.set(VAR_WORKSPACE_FOLDER, this.cwd);
+        this.pathVariables.set(VAR_WORKSPACE_FOLDER_BASENAME, path.basename(this.cwd));
+        this.pathVariables.set(VAR_USER_HOME, os.homedir());
+        this.pathVariables.set(VAR_PATH_SEPARATOR, path.sep);
+        this.pathVariables.set(VAR_PATH_SEPARATOR_SHORT, path.sep);
         for (const [key, value] of Object.entries(paths ?? {})) {
+            const resolvedValue = this.replacePathVariables(value);
             if (!this.pathVariables.has(key)) {
-                this.pathLookup.set(key, value);
+                this.pathLookup.set(key, resolvedValue);
                 continue;
             }
 
             const pathValue = this.pathVariables.get(key);
             if (pathValue) {
-                this.pathLookup.set(pathValue, value);
+                this.pathLookup.set(pathValue, resolvedValue);
             }
         }
     }

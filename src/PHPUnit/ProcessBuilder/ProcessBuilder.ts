@@ -1,10 +1,10 @@
 import type { SpawnOptions } from 'node:child_process';
 import { Configuration, type IConfiguration } from '../Configuration';
+import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from '../constants';
 import { type Path, PathReplacer } from '../PathReplacer';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance, parseArgv } from '../utils';
 import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
-import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from './placeholders';
 import type { Xdebug } from './Xdebug';
 
 const isSSH = (command: string) => /^ssh/.test(command);

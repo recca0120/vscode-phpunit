@@ -2,8 +2,8 @@ import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { phpUnitProjectWin } from '../__tests__/utils';
+import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { PathReplacer } from '../PathReplacer';
-import { VAR_WORKSPACE_FOLDER } from '../ProcessBuilder/placeholders';
 import { CloverParser, type FileCoverageData } from './CloverParser';
 import { CoverageReader } from './CoverageReader';
 

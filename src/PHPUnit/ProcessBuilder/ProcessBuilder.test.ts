@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
+import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { ProcessBuilder } from './ProcessBuilder';
-import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
 
 describe('ProcessBuilder Test', () => {
     describe('LocalCommand', () => {

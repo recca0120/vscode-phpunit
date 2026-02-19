@@ -9,9 +9,9 @@
     ],
     "settings": {
         "phpunit.command": "docker exec -t vscode-phpunit /bin/sh -c \"${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
-        "phpunit.phpunit": "v11/vendor/bin/phpunit",
+        "phpunit.phpunit": "vendor/bin/phpunit",
         "phpunit.paths": {
-            "${workspaceFolder}": "/phpunit-stub"
+            "${workspaceFolder}": "/${workspaceFolderBasename}"
         },
         "phpunit.debuggerConfig": "PHPUnit"
     }
