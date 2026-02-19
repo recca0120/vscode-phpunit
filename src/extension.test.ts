@@ -559,7 +559,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(10);
+            expect(countItems(ctrl.items)).toEqual(12);
         });
 
         it('run phpunit.run-file', async () => {

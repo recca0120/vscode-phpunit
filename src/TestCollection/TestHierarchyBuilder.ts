@@ -31,16 +31,14 @@ export class TestHierarchyBuilder {
         private rootItems: TestItemCollection = ctrl.items,
         phpUnitXML?: PHPUnitXML,
     ) {
-        this.multiSuite = (phpUnitXML?.getTestSuiteNames().length ?? 0) > 1;
+        this.multiSuite = (phpUnitXML?.getTestSuiteNames() ?? []).length > 1;
     }
 
-    build(tests: TestDefinition[]) {
+    build(tests: TestDefinition[]): Map<TestItem, TestDefinition> {
         for (const test of tests) {
             this.processNode(test, this.rootItems);
         }
-    }
 
-    get() {
         return this.testData;
     }
 
@@ -51,18 +49,22 @@ export class TestHierarchyBuilder {
                 break;
             case TestType.class:
             case TestType.describe:
-                this.processClassOrDescribe(test, parentChildren);
-                break;
             case TestType.method:
-                this.processMethod(test, parentChildren);
+                this.processLeafOrBranch(test, parentChildren);
                 break;
         }
     }
 
     private processNamespace(test: TestDefinition, parentChildren: TestItemCollection) {
-        const targetChildren = this.multiSuite
-            ? this.addTestSuiteRoot(test, parentChildren)
-            : this.addNamespaceTestItems(test, parentChildren);
+        let targetParent = parentChildren;
+        let skipParts = 0;
+
+        if (this.multiSuite) {
+            targetParent = this.addTestSuiteRoot(test, parentChildren);
+            skipParts = this.suiteNamespacePrefixLength(test);
+        }
+
+        const targetChildren = this.addNamespaceTestItems(test, targetParent, skipParts);
 
         if (!test.children) {
             return;
@@ -73,7 +75,7 @@ export class TestHierarchyBuilder {
         }
     }
 
-    private processClassOrDescribe(test: TestDefinition, parentChildren: TestItemCollection) {
+    private processLeafOrBranch(test: TestDefinition, parentChildren: TestItemCollection) {
         const sortText =
             test.type === TestType.class ? test.id : this.insertionSortText(parentChildren.size);
         const testItem = this.createTestItem(test, sortText);
@@ -86,32 +88,26 @@ export class TestHierarchyBuilder {
 
         const children: TestItem[] = [];
         for (const child of test.children) {
-            this.processChildIntoList(child, children, testItem);
+            this.buildChild(child, children, testItem);
         }
         testItem.children.replace(children);
     }
 
-    private processChildIntoList(test: TestDefinition, siblings: TestItem[], parentItem: TestItem) {
+    private buildChild(test: TestDefinition, siblings: TestItem[], parentItem: TestItem) {
         const testItem = this.createTestItem(test, this.insertionSortText(siblings.length));
         this.inheritParentTags(testItem, parentItem);
         siblings.push(testItem);
         this.testData.set(testItem, test);
 
-        if (test.type === TestType.method || !test.children) {
+        if (!test.children) {
             return;
         }
 
         const children: TestItem[] = [];
         for (const child of test.children) {
-            this.processChildIntoList(child, children, testItem);
+            this.buildChild(child, children, testItem);
         }
         testItem.children.replace(children);
-    }
-
-    private processMethod(test: TestDefinition, parentChildren: TestItemCollection) {
-        const testItem = this.createTestItem(test, this.insertionSortText(parentChildren.size));
-        parentChildren.add(testItem);
-        this.testData.set(testItem, test);
     }
 
     private addTestSuiteRoot(
@@ -124,26 +120,6 @@ export class TestHierarchyBuilder {
         }
 
         const suiteId = `testsuite:${suiteName}`;
-        let testItem = parentChildren.get(suiteId);
-        if (testItem) {
-            this.testData.set(testItem, {
-                type: TestType.testsuite,
-                id: suiteId,
-                label: suiteName,
-                testsuite: suiteName,
-            });
-        } else {
-            testItem = this.createSuiteItem(suiteId, suiteName, parentChildren);
-        }
-
-        return testItem.children;
-    }
-
-    private createSuiteItem(
-        suiteId: string,
-        suiteName: string,
-        parentChildren: TestItemCollection,
-    ): TestItem {
         const suiteDefinition: TestDefinition = {
             type: TestType.testsuite,
             id: suiteId,
@@ -151,21 +127,22 @@ export class TestHierarchyBuilder {
             testsuite: suiteName,
         };
 
-        const testItem = this.ctrl.createTestItem(
-            suiteId,
-            this.parseLabelWithIcon(suiteDefinition),
-        );
-        testItem.canResolveChildren = true;
-        testItem.sortText = this.insertionSortText(parentChildren.size);
-        parentChildren.add(testItem);
+        let testItem = parentChildren.get(suiteId);
+        if (!testItem) {
+            testItem = this.ctrl.createTestItem(suiteId, this.parseLabelWithIcon(suiteDefinition));
+            testItem.canResolveChildren = true;
+            testItem.sortText = suiteId;
+            parentChildren.add(testItem);
+        }
         this.testData.set(testItem, suiteDefinition);
 
-        return testItem;
+        return testItem.children;
     }
 
     private addNamespaceTestItems(
         testDefinition: TestDefinition,
         parentChildren: TestItemCollection,
+        skipParts = 0,
     ): TestItemCollection {
         const classFQN = testDefinition.classFQN ?? '';
         const transformer = TestIdentifierFactory.create(classFQN);
@@ -173,6 +150,9 @@ export class TestHierarchyBuilder {
 
         let children = parentChildren;
         for (const [index, part] of parts.entries()) {
+            if (index < skipParts) {
+                continue;
+            }
             const testItem = this.getOrCreateNamespaceItem(
                 children,
                 transformer,
@@ -274,6 +254,18 @@ export class TestHierarchyBuilder {
             ),
             new Position((testDefinition.end?.line ?? 1) - 1, testDefinition.end?.character ?? 0),
         );
+    }
+
+    private suiteNamespacePrefixLength(test: TestDefinition): number {
+        const suiteName = test.testsuite;
+        if (!suiteName) {
+            return 0;
+        }
+
+        const parts = (test.label?.split('\\') ?? []).filter(Boolean);
+        const idx = parts.indexOf(suiteName);
+
+        return idx >= 0 ? idx + 1 : 0;
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {

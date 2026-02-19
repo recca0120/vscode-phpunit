@@ -55,7 +55,7 @@ export class TestCollection {
         folderItem.sortText = String(folder.index).padStart(5, '0');
         folderItem.canResolveChildren = true;
         this._rootItems = folderItem.children;
-        this.registerTestDefinition(folderItem, {
+        this.index.set(folderItem.uri?.toString() ?? folderItem.id, folderItem, {
             type: TestType.workspace,
             id,
             label: folder.name,
@@ -146,10 +146,6 @@ export class TestCollection {
         }
     }
 
-    private registerTestDefinition(testItem: TestItem, testDefinition: TestDefinition): void {
-        this.index.set(testItem.uri?.toString() ?? testItem.id, testItem, testDefinition);
-    }
-
     private handleTestsParsed(uri: URI, tests: TestDefinition[]) {
         for (const testItem of this.findTestsByFile(uri)) {
             if (testItem.parent) {
@@ -161,14 +157,20 @@ export class TestCollection {
         this.index.deleteByUri(uri.toString());
 
         const builder = new TestHierarchyBuilder(this.ctrl, this.rootItems, this.phpUnitXML);
-        builder.build(tests);
-        for (const [testItem, testDef] of builder.get()) {
+        const testData = builder.build(tests);
+        for (const [testItem, testDef] of testData) {
             this.index.set(uri.toString(), testItem, testDef);
         }
     }
 
     private handleFileDeleted(file: File<TestDefinition>) {
-        this.removeTestItems(file.uri);
+        for (const testItem of this.findTestsByFile(file.uri)) {
+            if (!testItem.parent) {
+                this.rootItems.delete(testItem.id);
+                continue;
+            }
+            this.pruneEmptyParents(testItem);
+        }
         this.index.deleteByUri(file.uri.toString());
     }
 
@@ -207,23 +209,9 @@ export class TestCollection {
 
             items.push(testItem);
         }
-        items.sort((a, b) => this.compareFn(b, position) - this.compareFn(a, position));
+        items.sort((a, b) => (b.range?.start.line ?? 0) - (a.range?.start.line ?? 0));
 
         return items;
-    }
-
-    private compareFn(testItem: TestItem, position: Position) {
-        return (testItem.range?.start.line ?? 0) - position.line;
-    }
-
-    private removeTestItems(uri: URI) {
-        for (const testItem of this.findTestsByFile(uri)) {
-            if (!testItem.parent) {
-                this.rootItems.delete(testItem.id);
-                continue;
-            }
-            this.pruneEmptyParents(testItem);
-        }
     }
 
     private pruneEmptyParents(testItem: TestItem) {

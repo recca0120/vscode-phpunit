@@ -4,6 +4,14 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.9] - 2026-02-20
+
+### Changed
+- Refactor: testsuite nodes now sort alphabetically by name instead of phpunit.xml order, consistent with filesystem sorting
+- Refactor: simplify TestHierarchyBuilder — `build()` returns Map directly, merge duplicated methods, store `multiSuite` boolean instead of full suite name array
+- Refactor: inline single-use helpers in TestCollection (`removeTestItems`, `registerTestDefinition`, `compareFn`)
+- Refactor: consolidate TestHierarchyBuilder tests into TestCollection.test.ts
+
 ## [3.9.8] - 2026-02-20
 
 ### Fixed
