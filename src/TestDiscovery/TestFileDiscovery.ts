@@ -1,3 +1,4 @@
+import { relative } from 'node:path';
 import { inject, injectable } from 'inversify';
 import { type GlobPattern, RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
@@ -42,6 +43,25 @@ export class TestFileDiscovery {
             pattern: toRelativePattern(includes),
             exclude: toRelativePattern(excludes),
         };
+    }
+
+    async getConfigFilePattern(): Promise<string> {
+        const root = this.workspaceFolder.uri.fsPath;
+
+        const configArg = this.configuration
+            .getArguments()
+            .find((p) => p.startsWith('--configuration='));
+        if (configArg) {
+            const configFile = configArg.replace('--configuration=', '');
+            return `{${configFile},composer.lock}`;
+        }
+
+        const configFile = await this.configuration.getConfigurationFile(root);
+        if (configFile) {
+            return `{${relative(root, configFile)},composer.lock}`;
+        }
+
+        return '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}';
     }
 
     async reloadAll(): Promise<void> {

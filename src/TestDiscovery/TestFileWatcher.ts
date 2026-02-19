@@ -4,8 +4,6 @@ import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
-const CONFIG_FILES_PATTERN = '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}';
-
 @injectable()
 export class TestFileWatcher {
     constructor(
@@ -30,8 +28,9 @@ export class TestFileWatcher {
             this.testCollection.delete(uri);
         });
 
+        const configPattern = await this.testFileDiscovery.getConfigFilePattern();
         const configWatcher = workspace.createFileSystemWatcher(
-            new RelativePattern(workspaceFolder, CONFIG_FILES_PATTERN),
+            new RelativePattern(workspaceFolder, configPattern),
         );
         const reload = () => this.testFileDiscovery.reloadAll();
         configWatcher.onDidCreate(reload);
