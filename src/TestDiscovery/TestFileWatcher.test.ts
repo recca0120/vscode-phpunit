@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventEmitter, RelativePattern, type Uri, workspace } from 'vscode';
+import {
+    EventEmitter,
+    type FileSystemWatcher,
+    RelativePattern,
+    type Uri,
+    type WorkspaceFolder,
+    workspace,
+} from 'vscode';
 import type { TestCollection } from '../TestCollection';
 import type { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
 
-const workspaceFolder = { uri: { fsPath: '/workspace' } } as import('vscode').WorkspaceFolder;
+const workspaceFolder = { uri: { fsPath: '/workspace' } } as WorkspaceFolder;
 
 function createMockDiscovery() {
     return {
@@ -49,7 +56,7 @@ describe('TestFileWatcher', () => {
                 dispose: vi.fn(),
             };
             createdWatchers.push(w);
-            return w as unknown as import('vscode').FileSystemWatcher;
+            return w as unknown as FileSystemWatcher;
         });
 
         discovery = createMockDiscovery();
