@@ -1,10 +1,10 @@
 {
     "folders": [
         {
-            "path": "phpunit-stub"
+            "path": "../phpunit-stub"
         },
         {
-            "path": "pest-stub"
+            "path": "../pest-stub"
         }
     ],
     "settings": {}

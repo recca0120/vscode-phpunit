@@ -1,7 +1,7 @@
 {
     "folders": [
         {
-            "path": "phpunit-stub"
+            "path": "../phpunit-stub"
         }
     ],
     "settings": {

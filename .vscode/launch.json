@@ -22,7 +22,7 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/multi-workspace.code-workspace"
+                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/workspaces/multi-workspace.code-workspace"
             ],
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
@@ -33,7 +33,7 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/docker-phpunit.code-workspace"
+                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/workspaces/docker-phpunit.code-workspace"
             ],
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
