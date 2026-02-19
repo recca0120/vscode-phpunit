@@ -6,8 +6,7 @@ export class Configuration extends BaseConfiguration {
         private workspaceConfiguration: WorkspaceConfiguration,
         binaryDetector: BinaryDetector = new BinaryDetector(),
     ) {
-        super();
-        this.binaryDetector = binaryDetector;
+        super(binaryDetector);
     }
 
     updateWorkspaceConfiguration(workspaceConfiguration: WorkspaceConfiguration) {

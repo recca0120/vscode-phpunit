@@ -19,7 +19,7 @@ export interface IConfiguration {
 }
 
 export abstract class BaseConfiguration implements IConfiguration {
-    protected binaryDetector: BinaryDetector = new BinaryDetector();
+    constructor(protected binaryDetector: BinaryDetector = new BinaryDetector()) {}
 
     get(key: string, defaultValue?: unknown): unknown | undefined {
         if (key === 'phpunit' && !this.has('phpunit')) {
