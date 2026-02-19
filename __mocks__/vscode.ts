@@ -291,6 +291,7 @@ export class Configuration {
 const configurations = new Map<string, Configuration>();
 
 const workspace = {
+    createdWatchers: [] as FakeFileSystemWatcher[],
     workspaceFolders: [],
     textDocuments: [],
     getConfiguration: vi.fn().mockImplementation((section: string, scope?: URI) => {
@@ -335,7 +336,7 @@ const workspace = {
     createFileSystemWatcher: vi.fn().mockImplementation((pattern) => {
         const watcher = new FakeFileSystemWatcher();
         watcher.pattern = pattern;
-        createdWatchers.push(watcher);
+        workspace.createdWatchers.push(watcher);
         return watcher;
     }),
     onDidChangeConfiguration: vi.fn().mockImplementation(() => {
@@ -394,8 +395,6 @@ class FakeFileSystemWatcher {
         this.deleteEmitter.dispose();
     }
 }
-
-export const createdWatchers: FakeFileSystemWatcher[] = [];
 
 class FakeRelativePattern {
     uri: URI;

@@ -1,11 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-    createdWatchers,
-    EventEmitter,
-    RelativePattern,
-    type Uri,
-    type WorkspaceFolder,
-} from 'vscode';
+import { EventEmitter, RelativePattern, type Uri, type WorkspaceFolder, workspace } from 'vscode';
 import type { TestCollection } from '../TestCollection';
 import type { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
@@ -17,6 +11,9 @@ type FakeFileSystemWatcher = {
     disposed: boolean;
     pattern: { pattern: string };
 };
+
+type MockWorkspace = { createdWatchers: FakeFileSystemWatcher[] };
+const mockWorkspace = workspace as unknown as MockWorkspace;
 
 const workspaceFolder = { uri: { fsPath: '/workspace' } } as WorkspaceFolder;
 
@@ -49,15 +46,15 @@ describe('TestFileWatcher', () => {
     let fileWatcher: TestFileWatcher;
 
     beforeEach(() => {
-        createdWatchers.length = 0;
+        mockWorkspace.createdWatchers.length = 0;
         discovery = createMockDiscovery();
         collection = createMockCollection();
         emitter = new EventEmitter<Uri>();
         fileWatcher = new TestFileWatcher(discovery, collection, emitter);
     });
 
-    const getTestWatcher = () => createdWatchers[0] as FakeFileSystemWatcher;
-    const getConfigWatcher = () => createdWatchers[1] as FakeFileSystemWatcher;
+    const getTestWatcher = () => mockWorkspace.createdWatchers[0];
+    const getConfigWatcher = () => mockWorkspace.createdWatchers[1];
 
     describe('test file watching', () => {
         it('should add to collection and fire emitter on create', async () => {
@@ -93,7 +90,7 @@ describe('TestFileWatcher', () => {
         it('should create a second watcher for config files', async () => {
             await fileWatcher.startWatching();
 
-            expect(createdWatchers).toHaveLength(2);
+            expect(mockWorkspace.createdWatchers).toHaveLength(2);
         });
 
         it('should reload all tests when phpunit.xml changes', async () => {
