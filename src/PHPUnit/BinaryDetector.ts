@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { injectable } from 'inversify';
 
-@injectable()
 export class BinaryDetector {
     constructor(private cwd: string = process.cwd()) {}
 
