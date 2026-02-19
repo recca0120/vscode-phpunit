@@ -4,6 +4,17 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.7] - 2026-02-19
+
+### Added
+- Feat: auto-detect PHPUnit/Pest binary from `composer.json` — if `pestphp/pest` is a dependency, `vendor/bin/pest` is used automatically; no need to set `phpunit.phpunit` for Pest projects
+- Feat: new path variables `${workspaceFolderBasename}`, `${userHome}`, `${pathSeparator}` available in `phpunit.command` and `phpunit.paths`
+- Feat: auto-reload all tests when `phpunit.xml`, `phpunit.xml.dist`, `phpunit.dist.xml`, or `composer.lock` changes
+- Feat: Docker Multi-Workspace support — single shared `vscode-phpunit` container serves multiple workspace folders via a unified docker-compose setup
+
+### Changed
+- Chore: testsuite icon changed to `$(symbol-namespace)` to match namespace icon style
+
 ## [3.9.6] - 2026-02-19
 
 ### Added

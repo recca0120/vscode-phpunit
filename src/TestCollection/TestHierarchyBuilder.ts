@@ -11,7 +11,7 @@ import { type PHPUnitXML, type TestDefinition, TestIdentifierFactory, TestType }
 
 const TEST_ICONS: Record<TestType, string> = {
     [TestType.workspace]: '$(folder)',
-    [TestType.testsuite]: '$(symbol-structure)',
+    [TestType.testsuite]: '$(symbol-namespace)',
     [TestType.namespace]: '$(symbol-namespace)',
     [TestType.class]: '$(symbol-class)',
     [TestType.method]: '$(symbol-method)',

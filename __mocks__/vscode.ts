@@ -271,6 +271,17 @@ export class Configuration {
         return this.items.has(key);
     }
 
+    inspect(key: string) {
+        const value = this.items.has(key) ? this.items.get(key) : undefined;
+        return {
+            key,
+            defaultValue: undefined,
+            globalValue: undefined,
+            workspaceValue: undefined,
+            workspaceFolderValue: value,
+        };
+    }
+
     async update(key: string, value: any) {
         this.items.set(key, value);
         workspace.onDidChangeConfiguration();

@@ -1,0 +1,17 @@
+{
+    "folders": [
+        {
+            "path": "../phpunit-stub"
+        },
+        {
+            "path": "../pest-stub"
+        }
+    ],
+    "settings": {
+        "phpunit.command": "docker exec -t vscode-phpunit /bin/sh -c \"cd /${workspaceFolderBasename} && ${php} ${phpargs} ${phpunit} ${phpunitargs}\"",
+        "phpunit.paths": {
+            "${workspaceFolder}": "/${workspaceFolderBasename}"
+        },
+        "phpunit.debuggerConfig": "PHPUnit"
+    }
+}

@@ -10,7 +10,7 @@ import {
 
 import { Configuration } from './Configuration';
 import { TestRunnerObserverFactory } from './Observers';
-import { ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
+import { BinaryDetector, ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
 import type { Path } from './PHPUnit/PathReplacer';
 import { PathReplacer } from './PHPUnit/PathReplacer';
 import { CloverParser, CoverageReader } from './PHPUnit/TestCoverage';
@@ -63,9 +63,17 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         .toDynamicValue(() => new PHPUnitXML())
         .inSingletonScope();
     child
+        .bind(BinaryDetector)
+        .toDynamicValue(() => new BinaryDetector(workspaceFolder.uri.fsPath))
+        .inSingletonScope();
+    child
         .bind(Configuration)
         .toDynamicValue(
-            () => new Configuration(workspace.getConfiguration('phpunit', workspaceFolder.uri)),
+            (ctx) =>
+                new Configuration(
+                    workspace.getConfiguration('phpunit', workspaceFolder.uri),
+                    ctx.get(BinaryDetector),
+                ),
         )
         .inSingletonScope();
 

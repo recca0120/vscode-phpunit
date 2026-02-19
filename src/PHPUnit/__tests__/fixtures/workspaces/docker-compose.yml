@@ -1,0 +1,8 @@
+services:
+  vscode-phpunit:
+    extends:
+      file: ./docker-compose.base.yml
+      service: vscode-phpunit
+    volumes:
+      - ../phpunit-stub:/phpunit-stub
+      - ../pest-stub:/pest-stub

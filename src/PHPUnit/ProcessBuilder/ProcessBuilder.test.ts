@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
+import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { ProcessBuilder } from './ProcessBuilder';
-import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from './placeholders';
 
 describe('ProcessBuilder Test', () => {
     describe('LocalCommand', () => {
@@ -346,7 +346,7 @@ describe('ProcessBuilder Test', () => {
         it('ssh', () => {
             const builder = givenBuilder({
                 command:
-                    'ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
+                    'ssh -i dockerfiles/vscode-phpunit/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -354,7 +354,7 @@ describe('ProcessBuilder Test', () => {
             expect(runtime).toEqual('ssh');
             expect(args).toEqual([
                 '-i',
-                'dockerfiles/pest/id_rsa',
+                'dockerfiles/vscode-phpunit/id_rsa',
                 '-p',
                 '2222',
                 'root@localhost',
@@ -442,7 +442,7 @@ describe('ProcessBuilder Test', () => {
 
         it(`command is ${CMD_TEMPLATE} with ssh`, () => {
             const builder = givenBuilder({
-                command: `ssh -i dockerfiles/pest/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${CMD_TEMPLATE}"`,
+                command: `ssh -i dockerfiles/vscode-phpunit/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${CMD_TEMPLATE}"`,
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
@@ -450,7 +450,7 @@ describe('ProcessBuilder Test', () => {
             expect(runtime).toEqual('ssh');
             expect(args).toEqual([
                 '-i',
-                'dockerfiles/pest/id_rsa',
+                'dockerfiles/vscode-phpunit/id_rsa',
                 '-p',
                 '2222',
                 'root@localhost',
