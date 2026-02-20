@@ -4,6 +4,12 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.10] - 2026-02-20
+
+### Fixed
+- Fix: namespace prefix stripping now uses directory-namespace case-insensitive comparison instead of string matching, correctly handling cases where directory path and namespace differ in casing or structure
+- Fix: deleting a folder now removes all tracked tests under that folder from the test explorer tree
+
 ## [3.9.9] - 2026-02-20
 
 ### Changed
