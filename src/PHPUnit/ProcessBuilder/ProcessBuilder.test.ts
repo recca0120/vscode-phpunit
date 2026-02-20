@@ -523,7 +523,7 @@ describe('ProcessBuilder Test', () => {
 
             builder.assignCloverFile(0);
 
-            expect(builder.getCloverFile()).toMatch(/\.phpunit\.cache\/coverage-.*-0\.xml$/);
+            expect(builder.getCloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
         });
 
         it('should return undefined when not in coverage mode', () => {
