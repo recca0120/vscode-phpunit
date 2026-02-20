@@ -492,6 +492,50 @@ class NoNamespaceTest extends TestCase
             });
         });
 
+        it('delete folder removes all tests under that folder', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="Unit">
+                        <directory>tests/Unit</directory>
+                    </testsuite>
+                    <testsuite name="Feature">
+                        <directory>tests/Feature</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await collection.add(URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')));
+            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+
+            expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
+
+            // Delete entire Unit folder
+            collection.delete(URI.file(phpUnitProject('tests/Unit')));
+
+            expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature']);
+        });
+
+        it('file outside all testsuite directories should not appear in tree', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="Unit">
+                        <directory>tests/Unit</directory>
+                    </testsuite>
+                    <testsuite name="Feature">
+                        <directory>tests/Feature</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+            // AssertionsTest.php is in tests/ root, not in tests/Unit or tests/Feature
+            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            // Should only have testsuite nodes, no root-level namespace:Tests
+            expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
+            expect(ctrl.items.get('namespace:Tests')).toBeUndefined();
+        });
+
         it('directory and namespace mismatch — full namespace preserved', () => {
             givenCodes(
                 [
@@ -911,6 +955,33 @@ test('Test3', function () {
             expect(
                 collection.getTestDefinition(ctrl.items.get('testsuite:Feature') as TestItem),
             ).toBeDefined();
+        });
+
+        it('multi-testsuite — all fixture files discovered', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="Feature">
+                        <directory>tests/Feature</directory>
+                    </testsuite>
+                    <testsuite name="Unit">
+                        <directory>tests/Unit</directory>
+                    </testsuite>
+                </testsuites>`);
+            const includes: string[] = ['**/*.php'];
+            const excludes: string[] = ['**/.git/**', '**/node_modules/**', '**/vendor/**'];
+
+            const includePattern = new RelativePattern(workspaceFolder, `{${includes.join(',')}}`);
+            const excludePattern = new RelativePattern(workspaceFolder, `{${excludes.join(',')}}`);
+            const files = await workspace.findFiles(includePattern, excludePattern);
+
+            for (const file of files) {
+                await collection.add(file);
+            }
+
+            // root should only contain testsuite nodes, no stray namespace nodes
+            for (const [, item] of ctrl.items) {
+                expect(item.id).toMatch(/^testsuite:/);
+            }
         });
 
         it('add test — all fixture files discovered', async () => {

@@ -129,6 +129,18 @@ export class TestCollection {
         const file = this.base.delete(uri);
         if (file) {
             this.handleFileDeleted(file);
+            return;
+        }
+
+        const folderPrefix = uri.toString();
+        const filesToDelete: URI[] = [];
+        for (const tracked of this.base.gatherFiles()) {
+            if (tracked.uri.toString().startsWith(folderPrefix)) {
+                filesToDelete.push(tracked.uri);
+            }
+        }
+        for (const fileUri of filesToDelete) {
+            this.delete(fileUri);
         }
     }
 
