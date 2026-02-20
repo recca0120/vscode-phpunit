@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.11] - 2026-02-20
+
+### Fixed
+- Fix: test file watcher now recreates with updated glob pattern when phpunit.xml testsuites change, so newly added testsuite directories are monitored without reloading VS Code
+
 ## [3.9.10] - 2026-02-20
 
 ### Fixed

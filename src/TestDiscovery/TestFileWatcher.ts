@@ -6,6 +6,8 @@ import { TestFileDiscovery } from './TestFileDiscovery';
 
 @injectable()
 export class TestFileWatcher {
+    private testWatcher?: Disposable;
+
     constructor(
         @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
         @inject(TestCollection) private testCollection: TestCollection,
@@ -13,35 +15,46 @@ export class TestFileWatcher {
     ) {}
 
     async startWatching(): Promise<Disposable> {
-        const { workspaceFolder, pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
+        this.createTestWatcher();
 
-        const testWatcher = workspace.createFileSystemWatcher(pattern);
-        testWatcher.onDidCreate((uri) => {
-            this.testCollection.add(uri);
-            this.fileChangedEmitter.fire(uri);
-        });
-        testWatcher.onDidChange((uri) => {
-            this.testCollection.change(uri);
-            this.fileChangedEmitter.fire(uri);
-        });
-        testWatcher.onDidDelete((uri) => {
-            this.testCollection.delete(uri);
-        });
-
+        const { workspaceFolder } = await this.testFileDiscovery.getWorkspaceTestPattern();
         const configPattern = this.testFileDiscovery.getConfigFilePattern();
         const configWatcher = workspace.createFileSystemWatcher(
             new RelativePattern(workspaceFolder, configPattern),
         );
-        const reload = () => this.testFileDiscovery.reloadAll();
+        const reload = async () => {
+            await this.testFileDiscovery.reloadAll();
+            this.createTestWatcher();
+        };
         configWatcher.onDidCreate(reload);
         configWatcher.onDidChange(reload);
         configWatcher.onDidDelete(reload);
 
         return {
             dispose: () => {
-                testWatcher.dispose();
+                this.testWatcher?.dispose();
                 configWatcher.dispose();
             },
         };
+    }
+
+    private async createTestWatcher() {
+        this.testWatcher?.dispose();
+
+        const { pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
+        const watcher = workspace.createFileSystemWatcher(pattern);
+        watcher.onDidCreate((uri) => {
+            this.testCollection.add(uri);
+            this.fileChangedEmitter.fire(uri);
+        });
+        watcher.onDidChange((uri) => {
+            this.testCollection.change(uri);
+            this.fileChangedEmitter.fire(uri);
+        });
+        watcher.onDidDelete((uri) => {
+            this.testCollection.delete(uri);
+        });
+
+        this.testWatcher = watcher;
     }
 }

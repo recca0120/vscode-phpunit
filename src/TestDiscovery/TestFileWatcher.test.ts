@@ -145,5 +145,38 @@ describe('TestFileWatcher', () => {
                 '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}',
             );
         });
+
+        it('should recreate test file watcher with new pattern after config change', async () => {
+            await fileWatcher.startWatching();
+
+            const oldTestWatcher = getTestWatcher();
+            expect(oldTestWatcher.pattern.pattern).toBe('**/*.php');
+
+            // Config changes → testsuites now include a different directory
+            const newPattern = new RelativePattern(
+                '/workspace/tests',
+                '{Unit/**/*.php,Feature/**/*.php}',
+            );
+            (discovery.getWorkspaceTestPattern as ReturnType<typeof vi.fn>).mockResolvedValue({
+                workspaceFolder,
+                pattern: newPattern,
+                exclude: new RelativePattern('/workspace', 'vendor/**'),
+            });
+
+            getConfigWatcher().fireChange(Uri.file('/workspace/phpunit.xml'));
+
+            // Wait for async reload + watcher recreation to complete
+            await vi.waitFor(() => {
+                expect(mockWorkspace.createdWatchers.length).toBeGreaterThan(2);
+            });
+
+            // Old test watcher should be disposed
+            expect(oldTestWatcher.disposed).toBe(true);
+
+            // New test watcher should be created with the new pattern
+            const newTestWatcher = mockWorkspace.createdWatchers[2];
+            expect(newTestWatcher).toBeDefined();
+            expect(newTestWatcher.pattern.pattern).toBe('{Unit/**/*.php,Feature/**/*.php}');
+        });
     });
 });
