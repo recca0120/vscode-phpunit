@@ -106,6 +106,21 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         await vscode.commands.executeCommand('phpunit.run-all');
     });
 
+    test('should run all tests with saveFilesBeforeRun enabled', async () => {
+        const config = vscode.workspace.getConfiguration('phpunit');
+        await config.update('saveFilesBeforeRun', true, vscode.ConfigurationTarget.Workspace);
+
+        try {
+            await vscode.commands.executeCommand('phpunit.run-all');
+        } finally {
+            await config.update(
+                'saveFilesBeforeRun',
+                undefined,
+                vscode.ConfigurationTarget.Workspace,
+            );
+        }
+    });
+
     test('should skip remaining processes when cancelled before run', async () => {
         // Pre-cancel the token so runProcesses loop breaks immediately
         const cts = new vscode.CancellationTokenSource();
