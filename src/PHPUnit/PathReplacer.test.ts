@@ -199,6 +199,16 @@ describe('PathReplacer', () => {
         expect(pathReplacer.toRemote(path)).toEqual('./phpunit.xml');
     });
 
+    it('to local should not corrupt paths containing ../ when remote is .', () => {
+        const pathReplacer = givenPathReplacer({
+            [VAR_WORKSPACE_FOLDER]: '.',
+        });
+
+        const path = '/abc/../def/Foo.php';
+
+        expect(pathReplacer.toLocal(path)).toEqual('/abc/../def/Foo.php');
+    });
+
     it(`to local replace ${VAR_WORKSPACE_FOLDER} is . for windows`, () => {
         const pathReplacer = givenPathReplacerForWindows({
             [VAR_WORKSPACE_FOLDER]: '.',

@@ -11,15 +11,20 @@ import {
 } from './constants';
 
 function escapeRegExp(str: string) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export type Path = { [p: string]: string };
 
+interface PathMapping {
+    local: string;
+    remote: string;
+}
+
 export class PathReplacer {
     private readonly cwd: string;
     private readonly pathVariables: Map<string, string>;
-    private pathLookup = new Map<string, string>();
+    private readonly pathMappings: PathMapping[] = [];
 
     constructor(
         private options: SpawnOptions = {},
@@ -37,15 +42,15 @@ export class PathReplacer {
         this.pathVariables.set(VAR_PATH_SEPARATOR, path.sep);
         this.pathVariables.set(VAR_PATH_SEPARATOR_SHORT, path.sep);
         for (const [key, value] of Object.entries(paths ?? {})) {
-            const resolvedValue = this.replacePathVariables(value);
+            const remote = this.replacePathVariables(value);
             if (!this.pathVariables.has(key)) {
-                this.pathLookup.set(key, resolvedValue);
+                this.pathMappings.push({ local: key, remote });
                 continue;
             }
 
-            const pathValue = this.pathVariables.get(key);
-            if (pathValue) {
-                this.pathLookup.set(pathValue, resolvedValue);
+            const local = this.pathVariables.get(key);
+            if (local) {
+                this.pathMappings.push({ local, remote });
             }
         }
     }
@@ -59,84 +64,85 @@ export class PathReplacer {
     }
 
     toLocal(path: string) {
-        return this.removePhpVfsComposer(path).replace(
-            /(php_qn:\/\/|)([^:]+)/,
-            (_, prefix, matched) => {
-                let result = this.replacePaths(matched, (currentPath, localPath, remotePath) => {
-                    if (!this.allowReplacement(localPath)) {
-                        return currentPath;
-                    }
+        path = this.removePhpVfsComposer(path);
 
-                    return currentPath.replace(
-                        new RegExp(
-                            remotePath === '.' ? '.[\\\\/]/' : escapeRegExp(remotePath),
-                            'g',
-                        ),
-                        localPath,
-                    );
-                });
+        const { prefix, pathPart, suffix } = this.splitQualifiedName(path);
 
-                result = this.replaceRelative(result);
-                result = this.windowsPath(result);
+        let result = pathPart;
+        for (const { local, remote } of this.pathMappings) {
+            if (!this.allowReplacement(local) || remote === '.') {
+                continue;
+            }
 
-                return `${prefix}${result}`;
-            },
-        );
+            result = result.replace(new RegExp(escapeRegExp(remote), 'g'), local);
+        }
+
+        result = this.expandRelative(result);
+        result = this.normalizeToWindows(result);
+
+        return `${prefix}${result}${suffix}`;
     }
 
     toRemote(path: string) {
         path = this.replacePathVariables(path);
 
-        path = this.replaceRelative(path);
+        path = this.expandRelative(path);
 
-        path = this.replacePaths(path, (currentPath, localPath, remotePath) => {
-            return this.allowReplacement(localPath)
-                ? currentPath.replace(new RegExp(escapeRegExp(localPath), 'g'), remotePath)
-                : currentPath;
-        });
+        for (const { local, remote } of this.pathMappings) {
+            if (!this.allowReplacement(local)) {
+                continue;
+            }
+            path = path.replace(new RegExp(escapeRegExp(local), 'g'), remote);
+        }
 
-        path = this.posixPath(path);
-        path = this.windowsPath(path);
+        path = this.normalizeToPosix(path);
+        path = this.normalizeToWindows(path);
 
         return path;
     }
 
-    private posixPath(path: string) {
+    private splitQualifiedName(path: string): {
+        prefix: string;
+        pathPart: string;
+        suffix: string;
+    } {
+        const match = path.match(/^(php_qn:\/\/)?(.*?)(?=::|$)(::.*)?$/);
+        if (!match) {
+            return { prefix: '', pathPart: path, suffix: '' };
+        }
+
+        return {
+            prefix: match[1] ?? '',
+            pathPart: match[2],
+            suffix: match[3] ?? '',
+        };
+    }
+
+    private normalizeToPosix(path: string) {
         return !/^[a-zA-Z]:/.test(path) && path.indexOf('\\') !== -1
             ? path.replace(/\\/g, '/')
             : path;
     }
 
-    private windowsPath(path: string) {
+    private normalizeToWindows(path: string) {
         return /[a-zA-Z]:/.test(path)
             ? path.replace(/[a-zA-Z]:[^:]+/g, (path) => path.replace(/\//g, '\\'))
             : path;
     }
 
-    private replaceRelative(path: string) {
+    private expandRelative(path: string) {
         if (!path.startsWith('./')) {
             return path;
         }
 
-        const workspaceFolder = this.pathVariables.get(VAR_WORKSPACE_FOLDER);
-        return workspaceFolder ? path.replace(/^\./, workspaceFolder) : path;
+        return this.cwd ? path.replace(/^\./, this.cwd) : path;
     }
 
     private removePhpVfsComposer(path: string) {
         return path.replace(/phpvfscomposer:\/\//gi, '');
     }
 
-    private replacePaths(
-        path: string,
-        fn: (currentPath: string, remotePath: string, localPath: string) => string,
-    ) {
-        return Array.from(this.pathLookup.entries()).reduce((result, [remotePath, localPath]) => {
-            return fn(result, remotePath, localPath);
-        }, path);
-    }
-
     private normalizePath(path: string) {
-        // fix windows path \Users\ -> c:\Users
         return /^\\/.test(path) ? `c:${path}` : path;
     }
 
