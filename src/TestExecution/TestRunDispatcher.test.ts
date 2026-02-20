@@ -42,9 +42,6 @@ describe('TestRunDispatcher', () => {
     let dispatcher: TestRunDispatcher;
 
     beforeEach(() => {
-        vi.mocked(workspace.saveAll).mockClear();
-        workspace.getConfiguration('phpunit').update('saveFilesBeforeRun', false);
-
         handlerA = { startTestRun: vi.fn() };
         handlerB = { startTestRun: vi.fn() };
 
@@ -151,49 +148,5 @@ describe('TestRunDispatcher', () => {
         deferredA.resolve();
         deferredB.resolve();
         await dispatchPromise;
-    });
-
-    describe('saveFilesBeforeRun', () => {
-        beforeEach(() => {
-            handlerA.startTestRun.mockResolvedValue(undefined);
-            handlerB.startTestRun.mockResolvedValue(undefined);
-        });
-
-        it('should call workspace.saveAll() before running when saveFilesBeforeRun is enabled', async () => {
-            await workspace.getConfiguration('phpunit').update('saveFilesBeforeRun', true);
-
-            const request = { continuous: false } as TestRunRequest;
-            const cancellation = {} as CancellationToken;
-
-            await dispatcher.dispatch(request, cancellation);
-
-            expect(workspace.saveAll).toHaveBeenCalledWith(false);
-            expect(handlerA.startTestRun).toHaveBeenCalled();
-        });
-
-        it('should NOT call workspace.saveAll() when saveFilesBeforeRun is disabled', async () => {
-            const request = { continuous: false } as TestRunRequest;
-            const cancellation = {} as CancellationToken;
-
-            await dispatcher.dispatch(request, cancellation);
-
-            expect(workspace.saveAll).not.toHaveBeenCalled();
-        });
-
-        it('should NOT call workspace.saveAll() on continuous run even when enabled', async () => {
-            await workspace.getConfiguration('phpunit').update('saveFilesBeforeRun', true);
-
-            const request = { continuous: true } as TestRunRequest;
-            const cancellation = {} as CancellationToken;
-
-            // continuous run uses TestWatchManager, not TestRunHandler — just verify saveAll not called
-            try {
-                await dispatcher.dispatch(request, cancellation);
-            } catch {
-                // TestWatchManager not mocked — ignore error
-            }
-
-            expect(workspace.saveAll).not.toHaveBeenCalled();
-        });
     });
 });

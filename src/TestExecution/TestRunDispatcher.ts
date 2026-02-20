@@ -26,10 +26,6 @@ export class TestRunDispatcher {
             return;
         }
 
-        if (workspace.getConfiguration('phpunit').get('saveFilesBeforeRun')) {
-            await workspace.saveAll(false);
-        }
-
         if (!request.include) {
             await Promise.all(
                 containers.map((child) =>
