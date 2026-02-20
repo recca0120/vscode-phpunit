@@ -16,6 +16,7 @@ const TEST_ICONS: Record<TestType, string> = {
     [TestType.class]: '$(symbol-class)',
     [TestType.method]: '$(symbol-method)',
     [TestType.describe]: '$(symbol-class)',
+    [TestType.dataset]: '$(symbol-enum-member)',
 };
 
 export function icon(type: TestType): string {
@@ -291,7 +292,10 @@ export class TestHierarchyBuilder {
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {
-        const prefix = icon(testDefinition.type);
+        const prefix =
+            testDefinition.type === TestType.method && testDefinition.annotations?.dataProvider
+                ? '$(symbol-enum)'
+                : icon(testDefinition.type);
 
         return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
     }

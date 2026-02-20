@@ -20,7 +20,7 @@ export class TestQueueBuilder {
             }
 
             const testDef = this.testCollection.getTestDefinition(testItem);
-            if (testDef?.type !== TestType.method) {
+            if (testDef?.type !== TestType.method && testDef?.type !== TestType.dataset) {
                 await this.build(this.toArray(testItem.children), request, queue, testRun);
                 continue;
             }

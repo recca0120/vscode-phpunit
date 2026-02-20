@@ -13,6 +13,7 @@ export enum TestType {
     class,
     describe,
     method,
+    dataset,
 }
 
 export type Annotations = {

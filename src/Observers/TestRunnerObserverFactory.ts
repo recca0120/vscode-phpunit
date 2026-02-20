@@ -7,7 +7,9 @@ import {
     type TestDefinition,
     type TestRunnerObserver,
 } from '../PHPUnit';
+import { TestCollection } from '../TestCollection/TestCollection';
 import { TYPES } from '../types';
+import { DatasetChildObserver } from './DatasetChildObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
 import { OutputChannelObserver } from './OutputChannelObserver';
 import { CollisionPrinter } from './Printers';
@@ -16,6 +18,7 @@ import { TestResultObserver } from './TestResultObserver';
 @injectable()
 export class TestRunnerObserverFactory {
     constructor(
+        @inject(TestCollection) private testCollection: TestCollection,
         @inject(TYPES.OutputChannel) private outputChannel: OutputChannel,
         @inject(Configuration) private configuration: IConfiguration,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
@@ -27,6 +30,7 @@ export class TestRunnerObserverFactory {
         request: TestRunRequest,
     ): TestRunnerObserver[] {
         return [
+            new DatasetChildObserver(this.testCollection, queue, testRun),
             new TestResultObserver(queue, testRun),
             new OutputChannelObserver(
                 this.outputChannel,

@@ -14,6 +14,7 @@ import {
     type File,
     PHPUnitXML,
     type TestDefinition,
+    TestIdentifierFactory,
     TestParser,
     TestType,
 } from '../PHPUnit';
@@ -66,6 +67,51 @@ export class TestCollection {
 
     getTestDefinition(testItem: TestItem): TestDefinition | undefined {
         return this.index.getDefinition(testItem.id);
+    }
+
+    addDatasetChild(parentItem: TestItem, datasetSuffix: string): TestItem {
+        const parentDef = this.index.getDefinition(parentItem.id);
+        if (!parentDef) {
+            throw new Error(`No TestDefinition found for parent ${parentItem.id}`);
+        }
+
+        const classFQN = parentDef.classFQN ?? '';
+        const methodName = `${parentDef.methodName} ${datasetSuffix}`;
+        const transformer = TestIdentifierFactory.create(classFQN);
+        const childId = transformer.uniqueId({
+            type: TestType.method,
+            classFQN,
+            methodName,
+        });
+
+        const existing = this.index.getItem(childId);
+        if (existing) {
+            return existing;
+        }
+
+        const childDef: TestDefinition = {
+            type: TestType.dataset,
+            id: childId,
+            label: datasetSuffix,
+            classFQN,
+            methodName,
+            file: parentDef.file,
+            start: parentDef.start,
+            end: parentDef.end,
+        };
+
+        const childItem = this.ctrl.createTestItem(
+            childId,
+            `${icon(TestType.dataset)} ${datasetSuffix}`,
+            parentItem.uri,
+        );
+        childItem.range = parentItem.range;
+        parentItem.children.add(childItem);
+
+        const uri = parentItem.uri?.toString() ?? parentItem.id;
+        this.index.set(uri, childItem, childDef);
+
+        return childItem;
     }
 
     findTestsByFile(uri: URI): TestItem[] {

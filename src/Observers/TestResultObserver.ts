@@ -127,6 +127,10 @@ export class TestResultObserver implements TestRunnerObserver {
             return undefined;
         }
 
+        if ('name' in result && /\swith\sdata\sset\s[#"].+$/.test(result.name as string)) {
+            return undefined;
+        }
+
         const exact = this.testItemById.get(result.id);
         if (exact) {
             return exact;

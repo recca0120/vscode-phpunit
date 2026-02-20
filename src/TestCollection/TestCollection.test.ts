@@ -817,6 +817,62 @@ test('Test3', function () {
         });
     });
 
+    describe('addDatasetChild', () => {
+        it('creates dataset child with correct TestDefinition in index', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
+            const methodItem = classItem.children.get(
+                'Assertions (Tests\\Assertions)::Addition provider',
+            ) as TestItem;
+            expect(methodItem).toBeDefined();
+
+            const childItem = collection.addDatasetChild(methodItem, 'with data set #0');
+
+            // child is in parent.children
+            expect(methodItem.children.get(childItem.id)).toBe(childItem);
+
+            // child has a TestDefinition
+            const childDef = collection.getTestDefinition(childItem);
+            expect(childDef).toBeDefined();
+            expect(childDef?.type).toBe(TestType.dataset);
+            expect(childDef?.methodName).toContain('with data set #0');
+
+            // child id matches uniqueId convention
+            expect(childItem.id).toContain('with data set #0');
+        });
+
+        it('returns existing child on repeated calls', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
+            const methodItem = classItem.children.get(
+                'Assertions (Tests\\Assertions)::Addition provider',
+            ) as TestItem;
+
+            const child1 = collection.addDatasetChild(methodItem, 'with data set #0');
+            const child2 = collection.addDatasetChild(methodItem, 'with data set #0');
+
+            expect(child1).toBe(child2);
+        });
+    });
+
     describe('index operations', () => {
         it('find groups and tests by group', async () => {
             const collection = givenTestCollection(`

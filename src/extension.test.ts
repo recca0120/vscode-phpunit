@@ -343,10 +343,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 35, started: 27, passed: 16, failed: 9, end: 1 }],
-                    ['10.0.0', { enqueued: 35, started: 35, passed: 23, failed: 10, end: 1 }],
+                    ['12.0.0', { enqueued: 40, started: 38, passed: 25, failed: 11, end: 1 }],
+                    ['10.0.0', { enqueued: 40, started: 50, passed: 38, failed: 10, end: 1 }],
                 ],
-                { enqueued: 35, started: 30, passed: 17, failed: 11, end: 1 },
+                { enqueued: 40, started: 39, passed: 23, failed: 14, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -358,10 +358,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 34, started: 26, passed: 16, failed: 8, end: 1 }],
-                    ['10.0.0', { enqueued: 34, started: 34, passed: 23, failed: 9, end: 1 }],
+                    ['12.0.0', { enqueued: 39, started: 37, passed: 25, failed: 10, end: 1 }],
+                    ['10.0.0', { enqueued: 39, started: 49, passed: 38, failed: 9, end: 1 }],
                 ],
-                { enqueued: 34, started: 29, passed: 17, failed: 10, end: 1 },
+                { enqueued: 39, started: 38, passed: 23, failed: 13, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -528,7 +528,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(55);
+            expect(countItems(ctrl.items)).toEqual(62);
         });
 
         it('should resolve tests without phpunit.xml', async () => {
@@ -545,7 +545,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(60);
+            expect(countItems(ctrl.items)).toEqual(67);
         });
 
         it('should resolve tests with phpunit.xml.dist', async () => {
@@ -1134,8 +1134,8 @@ describe('Extension Test', () => {
 
             const expected = resolveExpected(
                 pestVersion,
-                [['3.0.0', { enqueued: 68, started: 70, passed: 13, failed: 55, end: 1 }]],
-                { enqueued: 68, started: 63, passed: 10, failed: 51, end: 1 },
+                [['3.0.0', { enqueued: 70, started: 76, passed: 19, failed: 55, end: 1 }]],
+                { enqueued: 70, started: 67, passed: 14, failed: 51, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
