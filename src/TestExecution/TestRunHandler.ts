@@ -1,23 +1,20 @@
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { FileCoverageAdapter } from '../FileCoverageAdapter';
+import { TestRunnerObserverFactory } from '../Observers';
 import {
     FilterStrategyFactory,
     type ProcessBuilder,
     type TestDefinition,
-    type TestRunner,
+    TestRunner,
     TestRunnerEvent,
     type TestRunnerProcess,
 } from '../PHPUnit';
-import type { Xdebug } from '../PHPUnit/ProcessBuilder/Xdebug';
-import { Mode } from '../PHPUnit/ProcessBuilder/Xdebug';
-import { CoverageReader } from '../PHPUnit/TestCoverage';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
 import { ProcessBuilderFactory } from './ProcessBuilderFactory';
 import { TestQueueBuilder } from './TestQueueBuilder';
-import { TestRunnerBuilder } from './TestRunnerBuilder';
 
 @injectable()
 export class TestRunHandler {
@@ -28,8 +25,7 @@ export class TestRunHandler {
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
-        @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
-        @inject(CoverageReader) private coverageReader: CoverageReader,
+        @inject(TestRunnerObserverFactory) private observerFactory: TestRunnerObserverFactory,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
         @inject(DebugSessionManager) private debugSession: DebugSessionManager,
     ) {}
@@ -48,13 +44,9 @@ export class TestRunHandler {
         cancellation?: CancellationToken,
     ) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
-        const xdebug = builder.getXdebug();
+        await builder.ensureCacheDir();
 
-        if (xdebug?.mode === Mode.coverage) {
-            await this.coverageReader.prepare();
-        }
-
-        await this.debugSession.wrap(xdebug, async () => {
+        await this.debugSession.wrap(builder, async () => {
             const testRun = this.ctrl.createTestRun(request);
             await this.runTestQueue(builder, testRun, request, include, cancellation);
         });
@@ -75,7 +67,10 @@ export class TestRunHandler {
             ? await this.testQueueBuilder.build(items, request, undefined, testRun)
             : await this.testQueueBuilder.buildFromCollection(this.ctrl.items, request, testRun);
 
-        const runner = this.testRunnerBuilder.build(queue, testRun, request);
+        const runner = new TestRunner();
+        for (const observer of this.observerFactory.create(queue, testRun, request)) {
+            runner.observe(observer);
+        }
         runner.emit(TestRunnerEvent.start, undefined);
 
         try {
@@ -94,14 +89,11 @@ export class TestRunHandler {
     }
 
     private async collectCoverage(processes: TestRunnerProcess[], testRun: TestRun) {
-        const cloverFiles = processes
-            .map((process) => process.getCloverFile())
-            .filter((file): file is string => !!file);
-
-        const coverageData = await this.coverageReader.read(cloverFiles);
-
-        for (const data of coverageData) {
-            testRun.addCoverage(new FileCoverageAdapter(data));
+        for (const process of processes) {
+            const coverageData = await process.readCoverage();
+            for (const data of coverageData) {
+                testRun.addCoverage(new FileCoverageAdapter(data));
+            }
         }
     }
 
@@ -124,7 +116,7 @@ export class TestRunHandler {
         include: readonly TestItem[] | undefined,
     ) {
         if (!include) {
-            this.assignCloverFile(builder.getXdebug(), 0);
+            builder.assignCloverFile(0);
             return [runner.run(builder)];
         }
 
@@ -141,14 +133,8 @@ export class TestRunHandler {
         index: number,
     ): ProcessBuilder {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        const clonedXdebug = builder.getXdebug()?.clone();
-        this.assignCloverFile(clonedXdebug, index);
-        return builder.clone().setXdebug(clonedXdebug).setArguments(filter);
-    }
-
-    private assignCloverFile(xdebug: Xdebug | undefined, index: number) {
-        if (xdebug?.mode === Mode.coverage) {
-            xdebug.setCloverFile(this.coverageReader.generateCloverPath(index));
-        }
+        const cloned = builder.clone().setArguments(filter);
+        cloned.assignCloverFile(index);
+        return cloned;
     }
 }

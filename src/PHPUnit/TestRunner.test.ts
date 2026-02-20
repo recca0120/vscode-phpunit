@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from './__tests__/utils';
 import { Configuration } from './Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './constants';
+import type { Path } from './PathReplacer';
+import { PathReplacer } from './PathReplacer';
 import { ProcessBuilder } from './ProcessBuilder';
 import { TestIdentifierFactory } from './TestIdentifier';
 import { TeamcityEvent } from './TestOutput';
@@ -224,7 +226,12 @@ describe('TestRunner Test', () => {
             args: ['-c', `${VAR_PWD}/phpunit.xml`],
         });
 
-        const builder = new ProcessBuilder(configuration, { cwd });
+        const options = { cwd };
+        const builder = new ProcessBuilder(
+            configuration,
+            options,
+            new PathReplacer(options, configuration.get('paths') as Path),
+        );
         const expected = [
             'foo',
             'vendor/bin/phpunit',
@@ -272,7 +279,12 @@ describe('TestRunner Test', () => {
         });
 
         describe(name, () => {
-            const builder = new ProcessBuilder(configuration, { cwd: projectPath('') });
+            const spawnOptions = { cwd: projectPath('') };
+            const builder = new ProcessBuilder(
+                configuration,
+                spawnOptions,
+                new PathReplacer(spawnOptions, configuration.get('paths') as Path),
+            );
 
             const runTest = async (
                 expected: string[],

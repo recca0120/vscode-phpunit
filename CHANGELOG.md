@@ -4,6 +4,17 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.12] - 2026-02-20
+
+### Fixed
+- Fix: coverage file paths now correctly map container paths back to local workspace when using Docker/SSH/Laravel Sail path mappings (#368)
+
+### Changed
+- Refactor: share PathReplacer between command building and coverage reading so path mappings are always consistent
+- Refactor: move coverage lifecycle (parse, cleanup, path mapping) into TestRunnerProcess
+- Refactor: remove CoverageReader and TestRunnerBuilder classes (over-abstraction)
+- Refactor: encapsulate Xdebug mode, ProcessBuilder auto-clones Xdebug
+
 ## [3.9.11] - 2026-02-20
 
 ### Fixed

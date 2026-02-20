@@ -11,9 +11,6 @@ import {
 import { Configuration } from './Configuration';
 import { TestRunnerObserverFactory } from './Observers';
 import { BinaryDetector, ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
-import type { Path } from './PHPUnit/PathReplacer';
-import { PathReplacer } from './PHPUnit/PathReplacer';
-import { CloverParser, CoverageReader } from './PHPUnit/TestCoverage';
 import { ClassHierarchy } from './PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from './PHPUnit/TestParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from './PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
@@ -25,7 +22,6 @@ import {
     TestQueueBuilder,
     TestRunDispatcher,
     TestRunHandler,
-    TestRunnerBuilder,
 } from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
@@ -93,37 +89,9 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         })
         .inSingletonScope();
 
-    // Per-folder coverage (path mapping is workspace-specific)
-    child
-        .bind(PathReplacer)
-        .toDynamicValue((ctx) => {
-            const config = ctx.get(Configuration);
-            return new PathReplacer(
-                { cwd: workspaceFolder.uri.fsPath },
-                config.get('paths') as Path,
-            );
-        })
-        .inSingletonScope();
-    child
-        .bind(CloverParser)
-        .toDynamicValue(() => new CloverParser())
-        .inSingletonScope();
-    child
-        .bind(CoverageReader)
-        .toDynamicValue(
-            (ctx) =>
-                new CoverageReader(
-                    workspaceFolder.uri.fsPath,
-                    ctx.get(CloverParser),
-                    ctx.get(PathReplacer),
-                ),
-        )
-        .inSingletonScope();
-
     // Per-folder services
     child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
     child.bind(TestRunnerObserverFactory).toSelf().inSingletonScope();
-    child.bind(TestRunnerBuilder).toSelf().inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();
     child.bind(TestQueueBuilder).toSelf().inSingletonScope();
     child.bind(DebugSessionManager).toSelf().inSingletonScope();
