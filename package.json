@@ -4,7 +4,7 @@
     "displayName": "PHPUnit & Pest Test Explorer",
     "icon": "img/icon.png",
     "publisher": "recca0120",
-    "version": "3.9.12",
+    "version": "3.9.13",
     "private": true,
     "license": "MIT",
     "repository": {
@@ -133,6 +133,12 @@
                         "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
                         "Custom command to run. Ex: `docker exec -t [container_id] /bin/sh -c \"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
                     ]
+                },
+                "phpunit.saveFilesBeforeRun": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save all open files before running tests.",
+                    "scope": "resource"
                 },
                 "phpunit.args": {
                     "type": "array",

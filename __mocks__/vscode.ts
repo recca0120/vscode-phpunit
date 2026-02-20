@@ -343,6 +343,7 @@ const workspace = {
         return new Disposable();
     }),
     onDidChangeWorkspaceFolders: vi.fn().mockReturnValue(new Disposable()),
+    saveAll: vi.fn().mockResolvedValue(true),
     onDidOpenTextDocument: (_listener: any) => new Disposable(),
     onDidChangeTextDocument: (_listener: any) => new Disposable(),
     fs: {
