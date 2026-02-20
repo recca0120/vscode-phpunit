@@ -8,7 +8,7 @@ import { TYPES } from '../types';
 export class DebugSessionManager {
     constructor(@inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder) {}
 
-    async wrap(builder: ProcessBuilder, fn: () => Promise<void>): Promise<void> {
+    async wrap<T>(builder: ProcessBuilder, fn: () => Promise<T>): Promise<T> {
         const xdebug = builder.getXdebug();
 
         if (xdebug?.isDebugMode()) {
@@ -20,7 +20,7 @@ export class DebugSessionManager {
         }
 
         try {
-            await fn();
+            return await fn();
         } finally {
             if (xdebug?.isDebugMode() && debug.activeDebugSession?.type === 'php') {
                 debug.stopDebugging(debug.activeDebugSession);

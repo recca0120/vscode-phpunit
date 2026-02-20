@@ -55,23 +55,21 @@ describe('DebugSessionManager', () => {
         expect(debug.stopDebugging).toHaveBeenCalled();
     });
 
-    it('should not start debugging when not in debug mode', async () => {
+    it('should pass through when not in debug mode', async () => {
         const builder = await givenBuilder({ mode: Mode.coverage });
 
-        const fn = vi.fn();
-        await manager.wrap(builder, fn);
+        const result = await manager.wrap(builder, async () => 'passthru');
 
+        expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();
-        expect(fn).toHaveBeenCalled();
     });
 
-    it('should not start debugging when no xdebug', async () => {
+    it('should pass through when no xdebug', async () => {
         const builder = await givenBuilder();
 
-        const fn = vi.fn();
-        await manager.wrap(builder, fn);
+        const result = await manager.wrap(builder, async () => 'passthru');
 
+        expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();
-        expect(fn).toHaveBeenCalled();
     });
 });
