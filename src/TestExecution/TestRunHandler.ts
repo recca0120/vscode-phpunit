@@ -1,6 +1,3 @@
-import { randomBytes } from 'node:crypto';
-import { mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { FileCoverageAdapter } from '../FileCoverageAdapter';
@@ -47,12 +44,9 @@ export class TestRunHandler {
         cancellation?: CancellationToken,
     ) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
+        await builder.ensureCacheDir();
 
-        if (builder.isCoverageMode()) {
-            await mkdir(this.cacheDir(builder), { recursive: true });
-        }
-
-        await this.debugSession.wrap(builder.getXdebug(), async () => {
+        await this.debugSession.wrap(builder, async () => {
             const testRun = this.ctrl.createTestRun(request);
             await this.runTestQueue(builder, testRun, request, include, cancellation);
         });
@@ -122,7 +116,7 @@ export class TestRunHandler {
         include: readonly TestItem[] | undefined,
     ) {
         if (!include) {
-            this.assignCloverFile(builder, 0);
+            builder.assignCloverFile(0);
             return [runner.run(builder)];
         }
 
@@ -139,25 +133,8 @@ export class TestRunHandler {
         index: number,
     ): ProcessBuilder {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        const clonedXdebug = builder.getXdebug()?.clone();
-        const cloned = builder.clone().setXdebug(clonedXdebug).setArguments(filter);
-        this.assignCloverFile(cloned, index);
+        const cloned = builder.clone().setArguments(filter);
+        cloned.assignCloverFile(index);
         return cloned;
-    }
-
-    private assignCloverFile(builder: ProcessBuilder, index: number) {
-        if (!builder.isCoverageMode()) {
-            return;
-        }
-
-        const cloverFile = join(
-            this.cacheDir(builder),
-            `coverage-${randomBytes(4).toString('hex')}-${index}.xml`,
-        );
-        builder.getXdebug()?.setCloverFile(cloverFile);
-    }
-
-    private cacheDir(builder: ProcessBuilder) {
-        return join(builder.getCwd(), '.phpunit.cache');
     }
 }

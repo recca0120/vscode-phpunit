@@ -16,11 +16,8 @@ export class ProcessBuilderFactory {
     async create(profileKind?: TestRunProfileKind): Promise<ProcessBuilder> {
         const options = { cwd: this.phpUnitXML.root() };
         const pathReplacer = new PathReplacer(options, this.config.get('paths') as Path);
-        const builder = new ProcessBuilder(this.config, options, pathReplacer);
-        const xdebug = new Xdebug(this.config);
-        builder.setXdebug(xdebug);
-        await xdebug.setMode(this.toMode(profileKind));
-        return builder;
+        const xdebug = await new Xdebug(this.config).setMode(this.toMode(profileKind));
+        return new ProcessBuilder(this.config, options, pathReplacer, xdebug);
     }
 
     private toMode(profileKind?: TestRunProfileKind): Mode | undefined {

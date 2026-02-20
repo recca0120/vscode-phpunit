@@ -25,11 +25,19 @@ export enum Mode {
 }
 
 export class Xdebug {
-    mode?: Mode;
+    private mode?: Mode;
     private port?: number;
     private cloverFile?: string;
 
     constructor(private configuration: IConfiguration) {}
+
+    isDebugMode() {
+        return this.mode === Mode.debug;
+    }
+
+    isCoverageMode() {
+        return this.mode === Mode.coverage;
+    }
 
     get name() {
         return this.configuration.get('debuggerConfig') as string | undefined;

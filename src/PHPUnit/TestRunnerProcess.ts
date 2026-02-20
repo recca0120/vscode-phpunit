@@ -39,16 +39,18 @@ export class TestRunnerProcess {
     }
 
     async readCoverage(): Promise<FileCoverageData[]> {
-        const cloverFile = this.builder.getXdebug()?.getCloverFile();
+        const cloverFile = this.builder.getCloverFile();
         if (!cloverFile) {
             return [];
         }
 
         const data = await new CloverParser().parseClover(cloverFile);
         await rm(cloverFile, { force: true });
-        const pathReplacer = this.builder.getPathReplacer();
 
-        return data.map((d) => ({ ...d, filePath: pathReplacer.toLocal(d.filePath) }));
+        return data.map((d) => ({
+            ...d,
+            filePath: this.builder.getPathReplacer().toLocal(d.filePath),
+        }));
     }
 
     abort() {

@@ -16,11 +16,12 @@ const givenXdebug = () => new Xdebug(stubConfig);
 
 describe('Xdebug', () => {
     describe('coverage mode', () => {
-        it('setMode(coverage) does not create temp directory', async () => {
+        it('setMode(coverage) enables coverage mode', async () => {
             const xdebug = givenXdebug();
             await xdebug.setMode(Mode.coverage);
 
-            expect(xdebug.mode).toBe(Mode.coverage);
+            expect(xdebug.isCoverageMode()).toBe(true);
+            expect(xdebug.isDebugMode()).toBe(false);
             expect(xdebug.getCloverFile()).toBeUndefined();
         });
 
@@ -96,6 +97,14 @@ describe('Xdebug', () => {
     });
 
     describe('debug mode', () => {
+        it('setMode(debug) enables debug mode', async () => {
+            const xdebug = givenXdebug();
+            await xdebug.setMode(Mode.debug);
+
+            expect(xdebug.isDebugMode()).toBe(true);
+            expect(xdebug.isCoverageMode()).toBe(false);
+        });
+
         it('getPhpUnitArgs returns empty in debug mode', async () => {
             const xdebug = givenXdebug();
             await xdebug.setMode(Mode.debug);

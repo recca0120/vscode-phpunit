@@ -32,7 +32,7 @@ describe('TestRunnerProcess', () => {
 
     it('readCoverage returns empty array when no cloverFile', async () => {
         const builder = {
-            getXdebug: () => undefined,
+            getCloverFile: () => undefined,
             getPathReplacer: () => ({}) as PathReplacer,
         };
         const process = new TestRunnerProcess(
@@ -55,7 +55,7 @@ describe('TestRunnerProcess', () => {
         ]);
 
         const builder = {
-            getXdebug: () => ({ getCloverFile: () => '/tmp/coverage-0.xml' }),
+            getCloverFile: () => '/tmp/coverage-0.xml',
             getPathReplacer: () => pathReplacer,
         };
 
