@@ -70,7 +70,7 @@ export class PathReplacer {
 
         let result = pathPart;
         for (const { local, remote } of this.pathMappings) {
-            if (!this.allowReplacement(local) || remote === '.') {
+            if (!this.isSafePath(local) || remote === '.') {
                 continue;
             }
 
@@ -89,7 +89,7 @@ export class PathReplacer {
         path = this.expandRelative(path);
 
         for (const { local, remote } of this.pathMappings) {
-            if (!this.allowReplacement(local)) {
+            if (!this.isSafePath(local)) {
                 continue;
             }
             path = path.replace(new RegExp(escapeRegExp(local), 'g'), remote);
@@ -146,7 +146,7 @@ export class PathReplacer {
         return /^\\/.test(path) ? `c:${path}` : path;
     }
 
-    private allowReplacement(path: string) {
+    private isSafePath(path: string) {
         return !['/', '', ' '].includes(path);
     }
 }
