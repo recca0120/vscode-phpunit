@@ -50,8 +50,22 @@ export interface MethodNode {
     name: string;
     visibility: string;
     isAbstract: boolean;
+    body?: AstNode[];
     leadingComments?: AstNodeComment[];
     attrGroups?: AstNodeAttrGroup[];
+    loc?: AstNodeLoc;
+}
+
+export interface ReturnStatementNode {
+    kind: 'return_statement';
+    value?: AstNode;
+    loc?: AstNodeLoc;
+}
+
+export interface YieldExpressionNode {
+    kind: 'yield_expression';
+    key?: AstNode;
+    value?: AstNode;
     loc?: AstNodeLoc;
 }
 
@@ -143,6 +157,19 @@ export interface IncludeNode {
     loc?: AstNodeLoc;
 }
 
+export interface ArrayCreationNode {
+    kind: 'array_creation_expression';
+    entries: ArrayEntryNode[];
+    loc?: AstNodeLoc;
+}
+
+export interface ArrayEntryNode {
+    kind: 'array_element_initializer';
+    key?: AstNode;
+    value: AstNode;
+    loc?: AstNodeLoc;
+}
+
 export function getAstChildren(ast: AstNode): AstNode[] {
     if (
         ast.kind === 'program' ||
@@ -171,4 +198,8 @@ export type AstNode =
     | ClosureNode
     | ArrowFuncNode
     | BlockNode
-    | IncludeNode;
+    | IncludeNode
+    | ArrayCreationNode
+    | ArrayEntryNode
+    | ReturnStatementNode
+    | YieldExpressionNode;

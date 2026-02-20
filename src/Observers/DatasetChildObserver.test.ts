@@ -111,6 +111,8 @@ describe('DatasetChildObserver', () => {
     });
 
     it('should not create child for non-dataset results', () => {
+        const sizeBefore = parentItem.children.size;
+
         observer.testStarted({
             event: 'testStarted' as unknown as TeamcityEvent,
             id: parentItem.id,
@@ -118,7 +120,7 @@ describe('DatasetChildObserver', () => {
             flowId: 1,
         } as unknown as TestStarted);
 
-        expect(parentItem.children.size).toBe(0);
+        expect(parentItem.children.size).toBe(sizeBefore);
     });
 
     it('should reuse existing child on repeated runs', () => {

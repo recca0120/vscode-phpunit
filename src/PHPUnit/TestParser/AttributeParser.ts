@@ -28,6 +28,11 @@ export class AttributeParser {
             }
         }
 
+        const dataset = this.parseDataset(attributes);
+        if (dataset.length > 0) {
+            annotations.dataset = dataset;
+        }
+
         return annotations;
     }
 
@@ -39,6 +44,24 @@ export class AttributeParser {
         return this.parseAttributes(method).some(
             (attribute: ParsedAttribute) => attribute.name === 'Test',
         );
+    }
+
+    private parseDataset(attributes: ParsedAttribute[]): string[] {
+        const dataset: string[] = [];
+        let index = 0;
+
+        for (const attr of attributes) {
+            if (attr.name === 'TestWith') {
+                const name = attr.args[1];
+                dataset.push(typeof name === 'string' && name ? `"${name}"` : `#${index}`);
+                index++;
+            } else if (attr.name === 'TestWithJson') {
+                dataset.push(`#${index}`);
+                index++;
+            }
+        }
+
+        return dataset;
     }
 
     private parseAttributes(declaration: Annotatable): ParsedAttribute[] {

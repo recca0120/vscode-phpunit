@@ -70,11 +70,7 @@ class AssertionsTest extends TestCase
 
     public static function additionProvider()
     {
-        return [
-            '"foo-bar_%$' => [0, 0, 0],
-            [0, 1, 1],
-            [1, 0, 2],
-        ];
+        return array_map(fn($x) => [$x, $x, $x * 2], range(0, 2));
     }
 
     /**

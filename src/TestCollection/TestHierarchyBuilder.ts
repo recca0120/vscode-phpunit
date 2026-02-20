@@ -102,15 +102,38 @@ export class TestHierarchyBuilder {
         siblings.push(testItem);
         this.testData.set(testItem, test);
 
-        if (!test.children) {
+        const allChildren = [...(test.children ?? [])];
+        const dataset = test.annotations?.dataset;
+        if (dataset && dataset.length > 0) {
+            for (const label of dataset) {
+                allChildren.push(this.createDatasetDefinition(test, label));
+            }
+        }
+
+        if (allChildren.length === 0) {
             return;
         }
 
         const children: TestItem[] = [];
-        for (const child of test.children) {
+        for (const child of allChildren) {
             this.buildChild(child, children, testItem);
         }
         testItem.children.replace(children);
+    }
+
+    private createDatasetDefinition(parent: TestDefinition, label: string): TestDefinition {
+        return {
+            type: TestType.dataset,
+            id: `${parent.id} with data set ${label}`,
+            label: `with data set ${label}`,
+            classFQN: parent.classFQN,
+            namespace: parent.namespace,
+            className: parent.className,
+            methodName: parent.methodName,
+            file: parent.file,
+            start: parent.start,
+            end: parent.end,
+        };
     }
 
     private addTestSuiteRoot(

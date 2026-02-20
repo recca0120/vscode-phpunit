@@ -1,5 +1,6 @@
 import type { TestDefinition } from '../types';
 import type { ClassInfo } from './ClassHierarchy';
+import { dataProviderParser } from './DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
 import type { TestNode } from './TestNode';
 
@@ -34,7 +35,24 @@ export class PHPUnitTestExtractor implements TestExtractor {
             }
 
             const parent = this.getOrCreateParent(testDefinitions, classDef);
-            parent.children = methods.filter((m) => m.isTest()).map((m) => m.toTestDefinition());
+            parent.children = methods
+                .filter((m) => m.isTest())
+                .map((m) => {
+                    const def = m.toTestDefinition();
+                    const providers = [...((def.annotations?.dataProvider as string[]) ?? [])];
+                    if (providers.length === 0 || def.annotations?.dataset) {
+                        return def;
+                    }
+                    const providerMethod = methods.find((pm) => pm.name === providers[0]);
+                    if (!providerMethod) {
+                        return def;
+                    }
+                    const dataset = dataProviderParser.parse(providerMethod.node);
+                    if (dataset.length > 0) {
+                        def.annotations = { ...def.annotations, dataset };
+                    }
+                    return def;
+                });
         }
 
         if (testDefinitions.length === 0 && classes.length === 0) {

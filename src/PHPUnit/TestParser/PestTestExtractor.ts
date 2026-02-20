@@ -1,5 +1,6 @@
 import { TestType } from '../types';
 import type { CallNode, ExpressionStatementNode, NamespaceNode } from './AstNode';
+import { dataProviderParser } from './DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
 import { TestNode } from './TestNode';
 
@@ -26,6 +27,14 @@ export class PestTestExtractor implements TestExtractor {
 
                 if (child.type === TestType.describe) {
                     testDefinition.children = this.buildTestChildren(child);
+                } else {
+                    const dataset = extractPestDataset(child);
+                    if (dataset.length > 0) {
+                        testDefinition.annotations = {
+                            ...testDefinition.annotations,
+                            dataset,
+                        };
+                    }
                 }
 
                 return testDefinition;
@@ -54,6 +63,22 @@ export function getPestFunctions(node: TestNode): TestNode[] {
     }
 
     return collectPestFunctions(node);
+}
+
+function extractPestDataset(testNode: TestNode): string[] {
+    let parent = testNode.parent;
+    while (parent) {
+        if (parent.kind === 'function_call_expression' && parent.name === 'with') {
+            const callNode = parent.node as CallNode;
+            const firstArg = callNode.arguments[0];
+            if (firstArg?.kind === 'array_creation_expression') {
+                return dataProviderParser.parse(firstArg);
+            }
+            return [];
+        }
+        parent = parent.parent;
+    }
+    return [];
 }
 
 function collectPestFunctions(parentNode: TestNode): TestNode[] {
