@@ -122,19 +122,23 @@ describe('TestCollection', () => {
 
     describe('tree structure', () => {
         describe('single testsuite', () => {
-            let collection: TestCollection;
-
-            beforeEach(() => {
-                collection = givenTestCollection(`
-                    <testsuites>
-                        <testsuite name="default">
-                            <directory>tests</directory>
-                        </testsuite>
-                    </testsuites>`);
-            });
-
-            it('no namespace', async () => {
-                await collection.add(URI.file(phpUnitProject('tests/NoNamespaceTest.php')));
+            it('no namespace', () => {
+                givenCodes(
+                    [
+                        {
+                            testsuite: { name: 'default', path: 'tests' },
+                            file: phpUnitProject('tests/NoNamespaceTest.php'),
+                            code: `<?php
+class NoNamespaceTest extends TestCase
+{
+    public function test_no_namespace() {
+        $this->assertTrue(true);
+    }
+}`,
+                        },
+                    ],
+                    phpUnitProject('phpunit.xml'),
+                );
 
                 expect(toTree(ctrl.items)).toEqual([
                     {
@@ -151,8 +155,17 @@ describe('TestCollection', () => {
                 ]);
             });
 
-            it('with namespace', async () => {
-                await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            it('with namespace', () => {
+                givenCodes(
+                    [
+                        {
+                            testsuite: { name: 'default', path: 'tests' },
+                            file: phpUnitProject('tests/AssertionsTest.php'),
+                            code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
+                        },
+                    ],
+                    phpUnitProject('phpunit.xml'),
+                );
 
                 expect(toTree(ctrl.items)).toEqual([
                     {
@@ -168,9 +181,22 @@ describe('TestCollection', () => {
                 ]);
             });
 
-            it('sibling classes share namespace', async () => {
-                await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
-                await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+            it('sibling classes share namespace', () => {
+                givenCodes(
+                    [
+                        {
+                            testsuite: { name: 'default', path: 'tests' },
+                            file: phpUnitProject('tests/AssertionsTest.php'),
+                            code: givenPhp('namespace Tests', 'AssertionsTest', ['test_passed']),
+                        },
+                        {
+                            testsuite: { name: 'default', path: 'tests' },
+                            file: phpUnitProject('tests/AttributeTest.php'),
+                            code: givenPhp('namespace Tests', 'AttributeTest', ['test_hi']),
+                        },
+                    ],
+                    phpUnitProject('phpunit.xml'),
+                );
 
                 expect(toTree(ctrl.items)).toEqual([
                     {
@@ -191,8 +217,14 @@ describe('TestCollection', () => {
             });
 
             it('re-parse replaces children, not accumulates', async () => {
-                await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+                const collection = givenTestCollection(`
+                    <testsuites>
+                        <testsuite name="default">
+                            <directory>tests</directory>
+                        </testsuite>
+                    </testsuites>`);
 
+                await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
                 await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
                 const ns = ctrl.items.get('namespace:Tests') as TestItem;
@@ -204,6 +236,13 @@ describe('TestCollection', () => {
             });
 
             it('with folder root (multi-workspace)', async () => {
+                const collection = givenTestCollection(`
+                    <testsuites>
+                        <testsuite name="default">
+                            <directory>tests</directory>
+                        </testsuite>
+                    </testsuites>`);
+
                 const folderItem = collection.createFolderRoot(workspaceFolder);
                 ctrl.items.add(folderItem);
 
@@ -229,23 +268,24 @@ describe('TestCollection', () => {
         });
 
         describe('multi-testsuite', () => {
-            let collection: TestCollection;
-
-            beforeEach(() => {
-                collection = givenTestCollection(`
-                    <testsuites>
-                        <testsuite name="Unit">
-                            <directory>tests/Unit</directory>
-                        </testsuite>
-                        <testsuite name="Feature">
-                            <directory>tests/Feature</directory>
-                        </testsuite>
-                    </testsuites>`);
-            });
-
-            it('groups by testsuite with namespace prefix stripped', async () => {
-                await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
-                await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+            it('groups by testsuite with namespace prefix stripped', () => {
+                givenCodes(
+                    [
+                        {
+                            testsuite: { name: 'Unit', path: 'tests/Unit' },
+                            file: phpUnitProject('tests/Unit/ExampleTest.php'),
+                            code: givenPhp('namespace Tests\\Unit', 'ExampleTest', ['test_unit']),
+                        },
+                        {
+                            testsuite: { name: 'Feature', path: 'tests/Feature' },
+                            file: phpUnitProject('tests/Feature/ExampleTest.php'),
+                            code: givenPhp('namespace Tests\\Feature', 'ExampleTest', [
+                                'test_feature',
+                            ]),
+                        },
+                    ],
+                    phpUnitProject('phpunit.xml'),
+                );
 
                 expect(toTree(ctrl.items)).toEqual([
                     {
@@ -271,12 +311,25 @@ describe('TestCollection', () => {
                 ]);
             });
 
-            it('deep namespace — only remaining parts shown after prefix stripping', async () => {
-                await collection.add(
-                    URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')),
-                );
-                await collection.add(
-                    URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
+            it('deep namespace — only remaining parts shown after prefix stripping', () => {
+                givenCodes(
+                    [
+                        {
+                            testsuite: { name: 'Unit', path: 'tests/Unit' },
+                            file: phpUnitProject('tests/Unit/SubFolder/ExampleTest.php'),
+                            code: givenPhp('namespace Tests\\Unit\\SubFolder', 'ExampleTest', [
+                                'test_unit',
+                            ]),
+                        },
+                        {
+                            testsuite: { name: 'Feature', path: 'tests/Feature' },
+                            file: phpUnitProject('tests/Feature/SubFolder/ExampleTest.php'),
+                            code: givenPhp('namespace Tests\\Feature\\SubFolder', 'ExampleTest', [
+                                'test_feature',
+                            ]),
+                        },
+                    ],
+                    phpUnitProject('phpunit.xml'),
                 );
 
                 expect(toTree(ctrl.items)).toEqual([
@@ -314,6 +367,16 @@ describe('TestCollection', () => {
             });
 
             it('scrambled add order preserves testsuite order and namespace stripping', async () => {
+                const collection = givenTestCollection(`
+                    <testsuites>
+                        <testsuite name="Unit">
+                            <directory>tests/Unit</directory>
+                        </testsuite>
+                        <testsuite name="Feature">
+                            <directory>tests/Feature</directory>
+                        </testsuite>
+                    </testsuites>`);
+
                 await collection.add(
                     URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
                 );
@@ -333,6 +396,16 @@ describe('TestCollection', () => {
             });
 
             it('change updates tree without corrupting other testsuite', async () => {
+                const collection = givenTestCollection(`
+                    <testsuites>
+                        <testsuite name="Unit">
+                            <directory>tests/Unit</directory>
+                        </testsuite>
+                        <testsuite name="Feature">
+                            <directory>tests/Feature</directory>
+                        </testsuite>
+                    </testsuites>`);
+
                 await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
                 await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
@@ -347,6 +420,16 @@ describe('TestCollection', () => {
             });
 
             it('delete cleans up empty parents', async () => {
+                const collection = givenTestCollection(`
+                    <testsuites>
+                        <testsuite name="Unit">
+                            <directory>tests/Unit</directory>
+                        </testsuite>
+                        <testsuite name="Feature">
+                            <directory>tests/Feature</directory>
+                        </testsuite>
+                    </testsuites>`);
+
                 await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
                 await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
@@ -361,6 +444,16 @@ describe('TestCollection', () => {
             });
 
             it('full lifecycle: scrambled add → change → delete', async () => {
+                const collection = givenTestCollection(`
+                    <testsuites>
+                        <testsuite name="Unit">
+                            <directory>tests/Unit</directory>
+                        </testsuite>
+                        <testsuite name="Feature">
+                            <directory>tests/Feature</directory>
+                        </testsuite>
+                    </testsuites>`);
+
                 const unitExample = URI.file(phpUnitProject('tests/Unit/ExampleTest.php'));
                 const unitSubFolder = URI.file(
                     phpUnitProject('tests/Unit/SubFolder/ExampleTest.php'),
@@ -399,6 +492,86 @@ describe('TestCollection', () => {
             });
         });
 
+        it('directory and namespace mismatch — full namespace preserved', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'Unit', path: 'src/tests' },
+                        file: phpUnitProject('src/tests/FooTest.php'),
+                        code: givenPhp('namespace App\\Tests', 'FooTest', ['test_foo']),
+                    },
+                    {
+                        testsuite: { name: 'Feature', path: 'integration' },
+                        file: phpUnitProject('integration/BarTest.php'),
+                        code: givenPhp('namespace Tests\\Feature', 'BarTest', ['test_bar']),
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
+            expect(unitSuite.children.get('namespace:App')).toBeDefined();
+
+            const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
+            expect(featureSuite.children.get('namespace:Tests')).toBeDefined();
+        });
+
+        it('deep directory path matches namespace case-insensitively', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'Unit', path: 'tests/unit/models' },
+                        file: phpUnitProject('tests/unit/models/UserTest.php'),
+                        code: givenPhp('namespace Tests\\Unit\\Models', 'UserTest', [
+                            'test_create_user',
+                        ]),
+                    },
+                    {
+                        testsuite: { name: 'Feature', path: 'tests/feature' },
+                        file: phpUnitProject('tests/feature/LoginTest.php'),
+                        code: givenPhp('namespace Tests\\Feature', 'LoginTest', ['test_login']),
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            // tests/unit/models matches Tests\Unit\Models (3 segments) → all stripped
+            const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
+            expect(unitSuite.children.get('namespace:Tests')).toBeUndefined();
+            expect(unitSuite.children.get('User (Tests\\Unit\\Models\\User)')).toBeDefined();
+
+            // tests/feature matches Tests\Feature (2 segments) → all stripped
+            const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
+            expect(featureSuite.children.get('namespace:Tests')).toBeUndefined();
+            expect(featureSuite.children.get('Login (Tests\\Feature\\Login)')).toBeDefined();
+        });
+
+        it('directory segments not fully matched — no stripping', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'Unit', path: 'tests/abc/def' },
+                        file: phpUnitProject('tests/abc/def/FooTest.php'),
+                        code: givenPhp('namespace Tests\\Def', 'FooTest', ['test_foo']),
+                    },
+                    {
+                        testsuite: { name: 'Feature', path: 'integration/sub' },
+                        file: phpUnitProject('integration/sub/BarTest.php'),
+                        code: givenPhp('namespace App\\Feature', 'BarTest', ['test_bar']),
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            // tests/abc/def vs Tests\Def — only first segment matches, not all 3 → no stripping
+            const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
+            expect(unitSuite.children.get('namespace:Tests')).toBeDefined();
+
+            // integration/sub vs App\Feature — first segment doesn't match → no stripping
+            const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
+            expect(featureSuite.children.get('namespace:App')).toBeDefined();
+        });
+
         it('testsuite name not in namespace — full namespace preserved (synthetic)', () => {
             givenCodes(
                 [
@@ -421,50 +594,33 @@ describe('TestCollection', () => {
                 phpUnitProject('phpunit.xml'),
             );
 
-            // App: name not in namespace → full namespace preserved
-            // Integration: name matches → prefix stripped
+            // App: directory tests/Unit matches namespace Tests\Unit (2 segments) → stripped
+            // App: directory tests/Feature matches namespace Tests\Feature (2 segments) → stripped
+            // Integration: directory tests/Integration matches namespace Tests\Integration (2 segments) → stripped
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'testsuite:App',
                     label: `${icon(TestType.testsuite)} App`,
                     children: [
                         {
-                            id: 'namespace:Tests',
-                            label: `${icon(TestType.namespace)} Tests`,
+                            id: 'Example (Tests\\Unit\\Example)',
+                            label: `${icon(TestType.class)} ExampleTest`,
                             children: [
                                 {
-                                    id: 'namespace:Feature (Tests\\Feature)',
-                                    label: `${icon(TestType.namespace)} Feature`,
-                                    children: [
-                                        {
-                                            id: 'Login (Tests\\Feature\\Login)',
-                                            label: `${icon(TestType.class)} LoginTest`,
-                                            children: [
-                                                {
-                                                    id: 'Login (Tests\\Feature\\Login)::Login',
-                                                    label: `${icon(TestType.method)} test_login`,
-                                                    children: [],
-                                                },
-                                            ],
-                                        },
-                                    ],
+                                    id: 'Example (Tests\\Unit\\Example)::Unit',
+                                    label: `${icon(TestType.method)} test_unit`,
+                                    children: [],
                                 },
+                            ],
+                        },
+                        {
+                            id: 'Login (Tests\\Feature\\Login)',
+                            label: `${icon(TestType.class)} LoginTest`,
+                            children: [
                                 {
-                                    id: 'namespace:Unit (Tests\\Unit)',
-                                    label: `${icon(TestType.namespace)} Unit`,
-                                    children: [
-                                        {
-                                            id: 'Example (Tests\\Unit\\Example)',
-                                            label: `${icon(TestType.class)} ExampleTest`,
-                                            children: [
-                                                {
-                                                    id: 'Example (Tests\\Unit\\Example)::Unit',
-                                                    label: `${icon(TestType.method)} test_unit`,
-                                                    children: [],
-                                                },
-                                            ],
-                                        },
-                                    ],
+                                    id: 'Login (Tests\\Feature\\Login)::Login',
+                                    label: `${icon(TestType.method)} test_login`,
+                                    children: [],
                                 },
                             ],
                         },

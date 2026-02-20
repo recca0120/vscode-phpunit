@@ -65,6 +65,12 @@ export class PHPUnitXML {
         return names;
     }
 
+    getTestSuiteDirectories(suiteName: string): string[] {
+        return this.getTestSuites()
+            .filter((s) => s.name === suiteName && s.tag === 'directory')
+            .map((s) => s.value);
+    }
+
     getTestSuites(): TestSuite[] {
         const root = this.root();
 

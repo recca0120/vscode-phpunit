@@ -25,12 +25,14 @@ export function icon(type: TestType): string {
 export class TestHierarchyBuilder {
     private testData = new Map<TestItem, TestDefinition>();
     private multiSuite: boolean;
+    private phpUnitXML?: PHPUnitXML;
 
     constructor(
         private ctrl: TestController,
         private rootItems: TestItemCollection = ctrl.items,
         phpUnitXML?: PHPUnitXML,
     ) {
+        this.phpUnitXML = phpUnitXML;
         this.multiSuite = (phpUnitXML?.getTestSuiteNames() ?? []).length > 1;
     }
 
@@ -258,14 +260,34 @@ export class TestHierarchyBuilder {
 
     private suiteNamespacePrefixLength(test: TestDefinition): number {
         const suiteName = test.testsuite;
-        if (!suiteName) {
+        if (!suiteName || !this.phpUnitXML) {
             return 0;
         }
 
-        const parts = (test.label?.split('\\') ?? []).filter(Boolean);
-        const idx = parts.indexOf(suiteName);
+        const namespaceParts = (test.label?.split('\\') ?? []).filter(Boolean);
+        const directories = this.phpUnitXML.getTestSuiteDirectories(suiteName);
 
-        return idx >= 0 ? idx + 1 : 0;
+        let best = 0;
+        for (const dir of directories) {
+            const dirParts = dir.split(/[/\\]/).filter(Boolean);
+            if (dirParts.length > namespaceParts.length) {
+                continue;
+            }
+
+            let allMatch = true;
+            for (let i = 0; i < dirParts.length; i++) {
+                if (dirParts[i].toLowerCase() !== namespaceParts[i].toLowerCase()) {
+                    allMatch = false;
+                    break;
+                }
+            }
+
+            if (allMatch && dirParts.length > best) {
+                best = dirParts.length;
+            }
+        }
+
+        return best;
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {
