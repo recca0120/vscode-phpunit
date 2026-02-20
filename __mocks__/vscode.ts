@@ -8,6 +8,7 @@ import type {
     DocumentFilter,
     MarkdownString,
     TestController,
+    TestCoverageCount,
     TestItem,
     TestItemCollection,
     TestTag,
