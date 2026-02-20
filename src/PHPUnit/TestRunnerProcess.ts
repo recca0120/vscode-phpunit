@@ -1,7 +1,9 @@
 import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import { rm } from 'node:fs/promises';
 import type { ProcessBuilder } from './ProcessBuilder';
+import type { CloverParser, FileCoverageData } from './TestCoverage';
 
 export class TestRunnerProcess {
     private child?: ChildProcess;
@@ -11,7 +13,10 @@ export class TestRunnerProcess {
     private stderrBuffer = '';
     private abortController: AbortController;
 
-    constructor(private builder: ProcessBuilder) {
+    constructor(
+        private builder: ProcessBuilder,
+        private cloverParser?: CloverParser,
+    ) {
         this.abortController = new AbortController();
     }
 
@@ -38,6 +43,19 @@ export class TestRunnerProcess {
 
     getCloverFile() {
         return this.builder.getXdebug()?.getCloverFile();
+    }
+
+    async readCoverage(): Promise<FileCoverageData[]> {
+        const cloverFile = this.getCloverFile();
+        if (!this.cloverParser || !cloverFile) {
+            return [];
+        }
+
+        const data = await this.cloverParser.parseClover(cloverFile);
+        await rm(cloverFile, { force: true });
+        const pathReplacer = this.builder.getPathReplacer();
+
+        return data.map((d) => ({ ...d, filePath: pathReplacer.toLocal(d.filePath) }));
     }
 
     abort() {

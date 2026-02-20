@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
-import { Configuration, EOL, PHPUnitXML, ProcessBuilder, TestRunner } from '../PHPUnit';
+import {
+    Configuration,
+    EOL,
+    type Path,
+    PathReplacer,
+    PHPUnitXML,
+    ProcessBuilder,
+    TestRunner,
+} from '../PHPUnit';
 import { detectPhpUnitStubs, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { semverGte, semverLt } from '../PHPUnit/utils';
 import { OutputChannelObserver, OutputFormatter } from './index';
@@ -29,7 +37,13 @@ describe('OutputChannelObserver clear behavior', () => {
     };
 
     const createBuilder = (command: string) => {
-        return new ProcessBuilder(new Configuration({ php: command }), { cwd: '.' });
+        const config = new Configuration({ php: command });
+        const options = { cwd: '.' };
+        return new ProcessBuilder(
+            config,
+            options,
+            new PathReplacer(options, config.get('paths') as Path),
+        );
     };
 
     it('clears once for multiple processes in the same request', () => {
@@ -128,7 +142,12 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         }
 
         const cwd = root;
-        const builder = new ProcessBuilder(configuration, { cwd });
+        const options = { cwd };
+        const builder = new ProcessBuilder(
+            configuration,
+            options,
+            new PathReplacer(options, configuration.get('paths') as Path),
+        );
         builder.setArguments([file, filter].join(' '));
 
         await testRunner.run(builder).run();

@@ -1,7 +1,7 @@
 import type { SpawnOptions } from 'node:child_process';
-import { Configuration, type IConfiguration } from '../Configuration';
+import type { IConfiguration } from '../Configuration';
 import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from '../constants';
-import { type Path, PathReplacer } from '../PathReplacer';
+import type { PathReplacer } from '../PathReplacer';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance, parseArgv } from '../utils';
 import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
@@ -12,16 +12,14 @@ const isShellCommand = (command: string) => /sh\s+-c/.test(command);
 const keyVariable = (key: string) => `\${${key}}`;
 
 export class ProcessBuilder {
-    private readonly pathReplacer: PathReplacer;
     private arguments = '';
     private xdebug: Xdebug | undefined;
 
     constructor(
-        private configuration: IConfiguration = new Configuration(),
-        private options: SpawnOptions = {},
-    ) {
-        this.pathReplacer = this.resolvePathReplacer(options, configuration);
-    }
+        private configuration: IConfiguration,
+        private options: SpawnOptions,
+        private readonly pathReplacer: PathReplacer,
+    ) {}
 
     clone(): ProcessBuilder {
         return cloneInstance(this);
@@ -41,6 +39,14 @@ export class ProcessBuilder {
 
     getXdebug() {
         return this.xdebug;
+    }
+
+    getCwd() {
+        return String(this.options.cwd ?? '.');
+    }
+
+    getPathReplacer() {
+        return this.pathReplacer;
     }
 
     build() {
@@ -181,13 +187,6 @@ export class ProcessBuilder {
             /paratest/.test(this.getConfigString('command')) ||
             /paratest/.test(this.getConfigString('phpunit'))
         );
-    }
-
-    private resolvePathReplacer(
-        options: SpawnOptions,
-        configuration: IConfiguration,
-    ): PathReplacer {
-        return new PathReplacer(options, configuration.get('paths') as Path);
     }
 
     private hasVariable(variables: { [p: string]: string }, command: string) {

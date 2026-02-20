@@ -11,9 +11,7 @@ import {
 import { Configuration } from './Configuration';
 import { TestRunnerObserverFactory } from './Observers';
 import { BinaryDetector, ChainAstParser, PHPUnitXML, TestParser } from './PHPUnit';
-import type { Path } from './PHPUnit/PathReplacer';
-import { PathReplacer } from './PHPUnit/PathReplacer';
-import { CloverParser, CoverageReader } from './PHPUnit/TestCoverage';
+import { CloverParser } from './PHPUnit/TestCoverage';
 import { ClassHierarchy } from './PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from './PHPUnit/TestParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from './PHPUnit/TestParser/tree-sitter/TreeSitterAstParser';
@@ -93,31 +91,10 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         })
         .inSingletonScope();
 
-    // Per-folder coverage (path mapping is workspace-specific)
-    child
-        .bind(PathReplacer)
-        .toDynamicValue((ctx) => {
-            const config = ctx.get(Configuration);
-            return new PathReplacer(
-                { cwd: workspaceFolder.uri.fsPath },
-                config.get('paths') as Path,
-            );
-        })
-        .inSingletonScope();
+    // Per-folder coverage
     child
         .bind(CloverParser)
         .toDynamicValue(() => new CloverParser())
-        .inSingletonScope();
-    child
-        .bind(CoverageReader)
-        .toDynamicValue(
-            (ctx) =>
-                new CoverageReader(
-                    workspaceFolder.uri.fsPath,
-                    ctx.get(CloverParser),
-                    ctx.get(PathReplacer),
-                ),
-        )
         .inSingletonScope();
 
     // Per-folder services

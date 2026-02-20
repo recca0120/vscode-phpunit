@@ -3,15 +3,26 @@ import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../__tests__/utils';
 import { Configuration } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
+import { PathReplacer } from '../PathReplacer';
 import { ProcessBuilder } from './ProcessBuilder';
 
 describe('ProcessBuilder Test', () => {
     describe('LocalCommand', () => {
         const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
-            return new ProcessBuilder(new Configuration({ php: 'php', ...configuration }), {
-                cwd: cwd ?? phpUnitProject(''),
-            });
+            const config = new Configuration({ php: 'php', ...configuration });
+            const options = { cwd: cwd ?? phpUnitProject('') };
+            const pathReplacer = new PathReplacer(
+                options,
+                config.get('paths') as Record<string, string>,
+            );
+            return new ProcessBuilder(config, options, pathReplacer);
         };
+
+        it('getPathReplacer returns PathReplacer instance', () => {
+            const builder = givenBuilder({ phpunit: 'vendor/bin/phpunit' });
+
+            expect(builder.getPathReplacer()).toBeInstanceOf(PathReplacer);
+        });
 
         it('run paratest with --functional and --filter', () => {
             const builder = givenBuilder({
@@ -207,9 +218,13 @@ describe('ProcessBuilder Test', () => {
 
     describe('RemoteCommand', () => {
         const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
-            return new ProcessBuilder(new Configuration({ php: 'php', ...configuration }), {
-                cwd: cwd ?? phpUnitProject(''),
-            });
+            const config = new Configuration({ php: 'php', ...configuration });
+            const options = { cwd: cwd ?? phpUnitProject('') };
+            const pathReplacer = new PathReplacer(
+                options,
+                config.get('paths') as Record<string, string>,
+            );
+            return new ProcessBuilder(config, options, pathReplacer);
         };
 
         it('run paratest with --functional', () => {
@@ -376,14 +391,17 @@ describe('ProcessBuilder Test', () => {
 
     describe('phpunit.command has variable', () => {
         const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
-            return new ProcessBuilder(
-                new Configuration({
-                    command: CMD_TEMPLATE,
-                    php: 'php',
-                    ...configuration,
-                }),
-                { cwd: cwd ?? phpUnitProject('') },
+            const config = new Configuration({
+                command: CMD_TEMPLATE,
+                php: 'php',
+                ...configuration,
+            });
+            const options = { cwd: cwd ?? phpUnitProject('') };
+            const pathReplacer = new PathReplacer(
+                options,
+                config.get('paths') as Record<string, string>,
             );
+            return new ProcessBuilder(config, options, pathReplacer);
         };
 
         it(`command is ${CMD_TEMPLATE}`, () => {

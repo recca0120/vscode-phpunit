@@ -1,3 +1,6 @@
+import { randomBytes } from 'node:crypto';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { FileCoverageAdapter } from '../FileCoverageAdapter';
@@ -9,9 +12,7 @@ import {
     TestRunnerEvent,
     type TestRunnerProcess,
 } from '../PHPUnit';
-import type { Xdebug } from '../PHPUnit/ProcessBuilder/Xdebug';
 import { Mode } from '../PHPUnit/ProcessBuilder/Xdebug';
-import { CoverageReader } from '../PHPUnit/TestCoverage';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
@@ -29,7 +30,6 @@ export class TestRunHandler {
         @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TestRunnerBuilder) private testRunnerBuilder: TestRunnerBuilder,
-        @inject(CoverageReader) private coverageReader: CoverageReader,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
         @inject(DebugSessionManager) private debugSession: DebugSessionManager,
     ) {}
@@ -51,7 +51,8 @@ export class TestRunHandler {
         const xdebug = builder.getXdebug();
 
         if (xdebug?.mode === Mode.coverage) {
-            await this.coverageReader.prepare();
+            const cacheDir = join(builder.getCwd(), '.phpunit.cache');
+            await mkdir(cacheDir, { recursive: true });
         }
 
         await this.debugSession.wrap(xdebug, async () => {
@@ -94,14 +95,11 @@ export class TestRunHandler {
     }
 
     private async collectCoverage(processes: TestRunnerProcess[], testRun: TestRun) {
-        const cloverFiles = processes
-            .map((process) => process.getCloverFile())
-            .filter((file): file is string => !!file);
-
-        const coverageData = await this.coverageReader.read(cloverFiles);
-
-        for (const data of coverageData) {
-            testRun.addCoverage(new FileCoverageAdapter(data));
+        for (const process of processes) {
+            const coverageData = await process.readCoverage();
+            for (const data of coverageData) {
+                testRun.addCoverage(new FileCoverageAdapter(data));
+            }
         }
     }
 
@@ -124,7 +122,7 @@ export class TestRunHandler {
         include: readonly TestItem[] | undefined,
     ) {
         if (!include) {
-            this.assignCloverFile(builder.getXdebug(), 0);
+            this.assignCloverFile(builder, 0);
             return [runner.run(builder)];
         }
 
@@ -142,13 +140,22 @@ export class TestRunHandler {
     ): ProcessBuilder {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
         const clonedXdebug = builder.getXdebug()?.clone();
-        this.assignCloverFile(clonedXdebug, index);
-        return builder.clone().setXdebug(clonedXdebug).setArguments(filter);
+        const cloned = builder.clone().setXdebug(clonedXdebug).setArguments(filter);
+        this.assignCloverFile(cloned, index);
+        return cloned;
     }
 
-    private assignCloverFile(xdebug: Xdebug | undefined, index: number) {
-        if (xdebug?.mode === Mode.coverage) {
-            xdebug.setCloverFile(this.coverageReader.generateCloverPath(index));
+    private assignCloverFile(builder: ProcessBuilder, index: number) {
+        const xdebug = builder.getXdebug();
+        if (xdebug?.mode !== Mode.coverage) {
+            return;
         }
+
+        const cacheDir = join(builder.getCwd(), '.phpunit.cache');
+        const cloverFile = join(
+            cacheDir,
+            `coverage-${randomBytes(4).toString('hex')}-${index}.xml`,
+        );
+        xdebug.setCloverFile(cloverFile);
     }
 }

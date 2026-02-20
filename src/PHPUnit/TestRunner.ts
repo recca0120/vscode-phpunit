@@ -1,4 +1,5 @@
 import type { ProcessBuilder } from './ProcessBuilder';
+import type { CloverParser } from './TestCoverage';
 import { TestOutputParser, type TestResult } from './TestOutput';
 import {
     createTestRunnerEventProxy,
@@ -15,7 +16,7 @@ export class TestRunner {
     private readonly teamcityPattern = /##teamcity\[/i;
     private observers: TestRunnerObserver[] = [];
 
-    constructor() {
+    constructor(private cloverParser?: CloverParser) {
         this.defaultObserver = createTestRunnerEventProxy();
         this.observe(this.defaultObserver);
     }
@@ -34,7 +35,7 @@ export class TestRunner {
     }
 
     run(builder: ProcessBuilder) {
-        const process = new TestRunnerProcess(builder);
+        const process = new TestRunnerProcess(builder, this.cloverParser);
 
         process.on('start', (builder: ProcessBuilder) => this.emit(TestRunnerEvent.run, builder));
         process.on('line', (line: string) => this.processLine(line, builder));
