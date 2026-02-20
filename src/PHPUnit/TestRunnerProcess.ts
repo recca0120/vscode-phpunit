@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
 import type { ProcessBuilder } from './ProcessBuilder';
-import type { CloverParser, FileCoverageData } from './TestCoverage';
+import { CloverParser, type FileCoverageData } from './TestCoverage';
 
 export class TestRunnerProcess {
     private child?: ChildProcess;
@@ -13,10 +13,7 @@ export class TestRunnerProcess {
     private stderrBuffer = '';
     private abortController: AbortController;
 
-    constructor(
-        private builder: ProcessBuilder,
-        private cloverParser?: CloverParser,
-    ) {
+    constructor(private builder: ProcessBuilder) {
         this.abortController = new AbortController();
     }
 
@@ -41,17 +38,13 @@ export class TestRunnerProcess {
         });
     }
 
-    getCloverFile() {
-        return this.builder.getXdebug()?.getCloverFile();
-    }
-
     async readCoverage(): Promise<FileCoverageData[]> {
-        const cloverFile = this.getCloverFile();
-        if (!this.cloverParser || !cloverFile) {
+        const cloverFile = this.builder.getXdebug()?.getCloverFile();
+        if (!cloverFile) {
             return [];
         }
 
-        const data = await this.cloverParser.parseClover(cloverFile);
+        const data = await new CloverParser().parseClover(cloverFile);
         await rm(cloverFile, { force: true });
         const pathReplacer = this.builder.getPathReplacer();
 

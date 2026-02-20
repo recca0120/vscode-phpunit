@@ -1,7 +1,7 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
 import type { PathReplacer } from './PathReplacer';
-import type { CloverParser } from './TestCoverage';
+import { CloverParser } from './TestCoverage';
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 vi.mock('node:fs/promises', async () => {
@@ -30,7 +30,7 @@ describe('TestRunnerProcess', () => {
         await expect(promise).resolves.toBe(true);
     });
 
-    it('readCoverage returns empty array when no cloverParser', async () => {
+    it('readCoverage returns empty array when no cloverFile', async () => {
         const builder = {
             getXdebug: () => undefined,
             getPathReplacer: () => ({}) as PathReplacer,
@@ -45,36 +45,14 @@ describe('TestRunnerProcess', () => {
         expect(result).toEqual([]);
     });
 
-    it('readCoverage returns empty array when no cloverFile', async () => {
-        const cloverParser = { parseClover: vi.fn() } as unknown as CloverParser;
-        const builder = {
-            getXdebug: () => ({ getCloverFile: () => undefined }),
-            getPathReplacer: () => ({}) as PathReplacer,
-        };
-        const process = new TestRunnerProcess(
-            // biome-ignore lint/suspicious/noExplicitAny: test stub
-            builder as any,
-            cloverParser,
-        );
-
-        const result = await process.readCoverage();
-
-        expect(result).toEqual([]);
-        expect(cloverParser.parseClover).not.toHaveBeenCalled();
-    });
-
     it('readCoverage parses clover, applies toLocal, and removes file', async () => {
         const pathReplacer = {
             toLocal: vi.fn((p: string) => p.replace('/app', '/local')),
         } as unknown as PathReplacer;
 
-        const cloverParser = {
-            parseClover: vi
-                .fn()
-                .mockResolvedValue([
-                    { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
-                ]),
-        } as unknown as CloverParser;
+        vi.spyOn(CloverParser.prototype, 'parseClover').mockResolvedValue([
+            { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
+        ]);
 
         const builder = {
             getXdebug: () => ({ getCloverFile: () => '/tmp/coverage-0.xml' }),
@@ -84,12 +62,11 @@ describe('TestRunnerProcess', () => {
         const process = new TestRunnerProcess(
             // biome-ignore lint/suspicious/noExplicitAny: test stub
             builder as any,
-            cloverParser,
         );
 
         const result = await process.readCoverage();
 
-        expect(cloverParser.parseClover).toHaveBeenCalledWith('/tmp/coverage-0.xml');
+        expect(CloverParser.prototype.parseClover).toHaveBeenCalledWith('/tmp/coverage-0.xml');
         expect(rm).toHaveBeenCalledWith('/tmp/coverage-0.xml', { force: true });
         expect(result).toEqual([
             { filePath: '/local/src/Foo.php', covered: 1, total: 2, lines: [] },

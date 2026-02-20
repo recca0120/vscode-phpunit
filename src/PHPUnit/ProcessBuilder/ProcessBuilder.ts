@@ -5,7 +5,7 @@ import type { PathReplacer } from '../PathReplacer';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance, parseArgv } from '../utils';
 import { base64DecodeFilter, base64EncodeFilter } from './FilterEncoder';
-import type { Xdebug } from './Xdebug';
+import { Mode, type Xdebug } from './Xdebug';
 
 const isSSH = (command: string) => /^ssh/.test(command);
 const isShellCommand = (command: string) => /sh\s+-c/.test(command);
@@ -43,6 +43,10 @@ export class ProcessBuilder {
 
     getCwd() {
         return String(this.options.cwd ?? '.');
+    }
+
+    isCoverageMode() {
+        return this.xdebug?.mode === Mode.coverage;
     }
 
     getPathReplacer() {
