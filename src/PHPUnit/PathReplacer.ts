@@ -30,7 +30,9 @@ export class PathReplacer {
         private options: SpawnOptions = {},
         paths?: Path,
     ) {
-        this.cwd = this.normalizePath((this.options?.cwd as string) ?? (process.env.cwd as string));
+        this.cwd = this.fixWindowsDriveLetter(
+            (this.options?.cwd as string) ?? (process.env.cwd as string),
+        );
         this.pathVariables = new Map<string, string>();
         this.pathVariables.set(VAR_PWD, this.cwd);
         this.pathVariables.set(VAR_WORKSPACE_FOLDER, this.cwd);
@@ -142,7 +144,7 @@ export class PathReplacer {
         return path.replace(/phpvfscomposer:\/\//gi, '');
     }
 
-    private normalizePath(path: string) {
+    private fixWindowsDriveLetter(path: string) {
         return /^\\/.test(path) ? `c:${path}` : path;
     }
 
