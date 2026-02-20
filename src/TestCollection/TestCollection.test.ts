@@ -560,6 +560,40 @@ class NoNamespaceTest extends TestCase
             expect(featureSuite.children.get('namespace:Tests')).toBeDefined();
         });
 
+        it('testsuite with multiple directories strips prefix per directory', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'Unit', path: 'tests/Unit' },
+                        file: phpUnitProject('tests/Unit/UserTest.php'),
+                        code: givenPhp('namespace Tests\\Unit', 'UserTest', ['test_user']),
+                    },
+                    {
+                        testsuite: { name: 'Unit', path: 'tests/Unit2' },
+                        file: phpUnitProject('tests/Unit2/OrderTest.php'),
+                        code: givenPhp('namespace Tests\\Unit2', 'OrderTest', ['test_order']),
+                    },
+                    {
+                        testsuite: { name: 'Feature', path: 'tests/Feature' },
+                        file: phpUnitProject('tests/Feature/LoginTest.php'),
+                        code: givenPhp('namespace Tests\\Feature', 'LoginTest', ['test_login']),
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            // Unit suite: tests/Unit matches Tests\Unit, tests/Unit2 matches Tests\Unit2
+            const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
+            expect(unitSuite.children.get('namespace:Tests')).toBeUndefined();
+            expect(unitSuite.children.get('User (Tests\\Unit\\User)')).toBeDefined();
+            expect(unitSuite.children.get('Order (Tests\\Unit2\\Order)')).toBeDefined();
+
+            // Feature suite unchanged
+            const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
+            expect(featureSuite.children.get('namespace:Tests')).toBeUndefined();
+            expect(featureSuite.children.get('Login (Tests\\Feature\\Login)')).toBeDefined();
+        });
+
         it('deep directory path matches namespace case-insensitively', () => {
             givenCodes(
                 [
