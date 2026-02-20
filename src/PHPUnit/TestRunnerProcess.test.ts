@@ -1,7 +1,11 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
-import type { PathReplacer } from './PathReplacer';
-import { CloverParser } from './TestCoverage';
+import { fixturePath, phpUnitProject } from './__tests__/utils';
+import { Configuration } from './Configuration';
+import { VAR_WORKSPACE_FOLDER } from './constants';
+import { PathReplacer } from './PathReplacer';
+import { ProcessBuilder } from './ProcessBuilder/ProcessBuilder';
+import { Mode, Xdebug } from './ProcessBuilder/Xdebug';
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 vi.mock('node:fs/promises', async () => {
@@ -9,19 +13,21 @@ vi.mock('node:fs/promises', async () => {
     return { ...actual, rm: vi.fn().mockResolvedValue(undefined) };
 });
 
+const givenBuilder = (opts?: { cwd?: string; paths?: Record<string, string>; mode?: Mode }) => {
+    const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
+    const cwd = opts?.cwd ?? phpUnitProject('');
+    const options = { cwd };
+    const pathReplacer = new PathReplacer(options, opts?.paths ?? {});
+    const xdebug = opts?.mode ? new Xdebug(config) : undefined;
+    return { builder: new ProcessBuilder(config, options, pathReplacer, xdebug), xdebug };
+};
+
 describe('TestRunnerProcess', () => {
     it('run() resolves after abort()', async () => {
-        const builder = {
-            build: () => ({ runtime: 'echo', args: ['hello'], options: {} }),
-            getXdebug: () => undefined,
-        };
+        const { builder } = givenBuilder();
+        const process = new TestRunnerProcess(builder);
 
-        const process = new TestRunnerProcess(
-            // biome-ignore lint/suspicious/noExplicitAny: test stub
-            builder as any,
-        );
-
-        // biome-ignore lint/suspicious/noExplicitAny: test stub
+        // biome-ignore lint/suspicious/noExplicitAny: prevent real spawn
         vi.spyOn(process as any, 'execute').mockImplementation(() => {});
 
         const promise = process.run();
@@ -31,14 +37,8 @@ describe('TestRunnerProcess', () => {
     });
 
     it('readCoverage returns empty array when no cloverFile', async () => {
-        const builder = {
-            getCloverFile: () => undefined,
-            getPathReplacer: () => ({}) as PathReplacer,
-        };
-        const process = new TestRunnerProcess(
-            // biome-ignore lint/suspicious/noExplicitAny: test stub
-            builder as any,
-        );
+        const { builder } = givenBuilder();
+        const process = new TestRunnerProcess(builder);
 
         const result = await process.readCoverage();
 
@@ -46,30 +46,26 @@ describe('TestRunnerProcess', () => {
     });
 
     it('readCoverage parses clover, applies toLocal, and removes file', async () => {
-        const pathReplacer = {
-            toLocal: vi.fn((p: string) => p.replace('/app', '/local')),
-        } as unknown as PathReplacer;
+        const remoteCwd = 'C:\\local_disk\\zobo\\Projects\\vscode-php-debug\\vscode-phpunit';
+        const localCwd = phpUnitProject('');
+        const { builder, xdebug } = givenBuilder({
+            cwd: localCwd,
+            paths: { [VAR_WORKSPACE_FOLDER]: remoteCwd },
+            mode: Mode.coverage,
+        });
+        await xdebug!.setMode(Mode.coverage);
 
-        vi.spyOn(CloverParser.prototype, 'parseClover').mockResolvedValue([
-            { filePath: '/app/src/Foo.php', covered: 1, total: 2, lines: [] },
-        ]);
+        const cloverFile = fixturePath('test1.clover.xml');
+        xdebug!.setCloverFile(cloverFile);
 
-        const builder = {
-            getCloverFile: () => '/tmp/coverage-0.xml',
-            getPathReplacer: () => pathReplacer,
-        };
-
-        const process = new TestRunnerProcess(
-            // biome-ignore lint/suspicious/noExplicitAny: test stub
-            builder as any,
-        );
-
+        const process = new TestRunnerProcess(builder);
         const result = await process.readCoverage();
 
-        expect(CloverParser.prototype.parseClover).toHaveBeenCalledWith('/tmp/coverage-0.xml');
-        expect(rm).toHaveBeenCalledWith('/tmp/coverage-0.xml', { force: true });
-        expect(result).toEqual([
-            { filePath: '/local/src/Foo.php', covered: 1, total: 2, lines: [] },
-        ]);
+        expect(rm).toHaveBeenCalledWith(cloverFile, { force: true });
+        expect(result.length).toBe(3);
+        for (const entry of result) {
+            expect(entry.filePath).toContain(localCwd);
+            expect(entry.filePath).not.toContain(remoteCwd);
+        }
     });
 });
