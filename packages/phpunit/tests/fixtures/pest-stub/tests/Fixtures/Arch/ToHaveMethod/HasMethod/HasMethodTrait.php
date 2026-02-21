@@ -6,5 +6,7 @@ namespace Tests\Fixtures\Arch\ToHaveMethod\HasMethod;
 
 trait HasMethodTrait
 {
-    public function foo(): void {}
+    public function foo(): void
+    {
+    }
 }

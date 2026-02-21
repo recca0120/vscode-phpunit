@@ -1,0 +1,8 @@
+{
+    "rules": {
+        "php_unit_method_casing": false,
+        "single_line_empty_body": false,
+        "ordered_traits": false,
+        "new_with_parentheses": false
+    }
+}

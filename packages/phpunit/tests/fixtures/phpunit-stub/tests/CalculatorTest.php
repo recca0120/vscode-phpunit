@@ -2,11 +2,11 @@
 
 namespace Tests;
 
+use App\Calculator;
+use App\Item;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use App\Calculator;
-use App\Item;
 
 class CalculatorTest extends TestCase
 {

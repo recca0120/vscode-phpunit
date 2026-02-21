@@ -4,20 +4,28 @@ namespace Tests\SubFolder;
 
 use PHPUnit\Framework\TestCase;
 
-trait TestMethodTrait {
-    public function test_from_trait(): void {
+trait TestMethodTrait
+{
+    public function test_from_trait(): void
+    {
         $this->assertTrue(true);
     }
-    public function test_shared(): void {
+
+    public function test_shared(): void
+    {
         $this->assertTrue(true);
     }
 }
 
-trait AnotherTrait {
-    public function test_from_another(): void {
+trait AnotherTrait
+{
+    public function test_from_another(): void
+    {
         $this->assertTrue(true);
     }
-    public function test_shared(): void {
+
+    public function test_shared(): void
+    {
         $this->assertTrue(true);
     }
 }
@@ -36,4 +44,6 @@ class UseTraitTest extends TestCase
     }
 }
 
-trait UseTrait {}
+trait UseTrait
+{
+}

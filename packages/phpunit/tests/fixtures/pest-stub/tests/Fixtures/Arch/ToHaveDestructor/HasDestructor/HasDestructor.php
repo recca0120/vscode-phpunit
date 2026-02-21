@@ -6,5 +6,7 @@ namespace Tests\Fixtures\Arch\ToHaveDestructor\HasDestructor;
 
 class HasDestructor
 {
-    public function __destruct() {}
+    public function __destruct()
+    {
+    }
 }

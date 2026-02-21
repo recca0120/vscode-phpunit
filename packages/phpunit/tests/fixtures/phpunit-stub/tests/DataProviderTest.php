@@ -19,7 +19,7 @@ class DataProviderTest extends TestCase
     {
         return [
             'zero plus zero' => [0, 0, 0],
-            'one plus one'   => [1, 1, 2],
+            'one plus one' => [1, 1, 2],
         ];
     }
 

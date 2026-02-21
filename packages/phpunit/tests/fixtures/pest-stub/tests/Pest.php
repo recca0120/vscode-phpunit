@@ -44,9 +44,10 @@ function something()
     // ..
 }
 
-
 if (! function_exists('describe')) {
-    function describe() {}
+    function describe()
+    {
+    }
 }
 
 if (! function_exists('arch')) {

@@ -309,8 +309,8 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
                     namespace: 'Tests\\SubFolder',
                     className: 'UseTraitTest',
                     methodName: 'use_trait',
-                    start: { line: 33, character: 4 },
-                    end: { line: 36, character: 5 },
+                    start: { line: 41, character: 4 },
+                    end: { line: 44, character: 5 },
                 }),
             );
         });
