@@ -1,4 +1,5 @@
 import type { TestResultIdentify } from '../TestOutput';
+import { stripDataset } from '../TestParser';
 import { type TestDefinition, TestType } from '../types';
 
 export abstract class TestIdentifier {
@@ -64,6 +65,6 @@ export abstract class TestIdentifier {
     }
 
     protected removeDataset(id: string) {
-        return id.replace(/\swith\sdata\sset\s[#"].+$/, '');
+        return stripDataset(id);
     }
 }

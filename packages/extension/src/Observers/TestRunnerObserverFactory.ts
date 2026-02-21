@@ -29,9 +29,10 @@ export class TestRunnerObserverFactory {
         testRun: TestRun,
         request: TestRunRequest,
     ): TestRunnerObserver[] {
+        const testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
         return [
-            new DatasetChildObserver(this.testCollection, queue, testRun),
-            new TestResultObserver(queue, testRun),
+            new DatasetChildObserver(this.testCollection, testItemById),
+            new TestResultObserver(testItemById, queue, testRun),
             new OutputChannelObserver(
                 this.outputChannel,
                 this.configuration,

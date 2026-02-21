@@ -85,6 +85,19 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
     }
 }
 
+class DatasetFilterStrategy extends DescribeFilterStrategy {
+    protected parseFilter(filter: string) {
+        return `--filter='${filter}$'`;
+    }
+
+    protected getMethodNamePattern() {
+        const methodName = this.testDefinition.methodName ?? '';
+        const label = this.testDefinition.label ?? '';
+
+        return `${TestIdentifier.generateSearchText(methodName)} ${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`;
+    }
+}
+
 class WorkspaceFilterStrategy extends FilterStrategy {
     getFilter() {
         return '';
@@ -111,6 +124,10 @@ export const FilterStrategyFactory = {
 
         if (testDefinition.type === TestType.describe) {
             return new DescribeFilterStrategy(testDefinition);
+        }
+
+        if (testDefinition.type === TestType.dataset) {
+            return new DatasetFilterStrategy(testDefinition);
         }
 
         return new MethodFilterStrategy(testDefinition);
