@@ -9,6 +9,7 @@ on:
 jobs:
   e2e:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -19,8 +20,8 @@ jobs:
     env:
       extensions: dom, mbstring, xdebug, zip
       key: cache-v1
-      PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
-      PEST_PROJECT: src/PHPUnit/__tests__/fixtures/pest-stub
+      PHPUNIT_PROJECT: packages/phpunit/tests/fixtures/phpunit-stub
+      PEST_PROJECT: packages/phpunit/tests/fixtures/pest-stub
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,7 +64,7 @@ jobs:
           path: |
             ${{ env.PHPUNIT_PROJECT }}/v12/vendor
             ${{ env.PEST_PROJECT }}/v4/vendor
-          key: composer-e2e-${{ matrix.os }}-php8.4-${{ hashFiles('src/PHPUnit/__tests__/fixtures/**/composer.lock') }}
+          key: composer-e2e-${{ matrix.os }}-php8.4-${{ hashFiles('packages/phpunit/tests/fixtures/**/composer.lock') }}
           restore-keys: |
             composer-e2e-${{ matrix.os }}-php8.4-
 
@@ -83,7 +84,7 @@ jobs:
       - name: Cache VS Code binary
         uses: actions/cache@v4
         with:
-          path: .vscode-test
+          path: packages/extension/.vscode-test
           key: vscode-test-${{ matrix.os }}-stable
 
       - name: Compile extension and tests

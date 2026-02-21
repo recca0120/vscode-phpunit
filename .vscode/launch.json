@@ -10,10 +10,10 @@
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/phpunit-stub"
+                "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
+                "${workspaceFolder}/packages/phpunit/tests/fixtures/phpunit-stub"
             ],
-            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "outFiles": ["${workspaceFolder}/packages/extension/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
@@ -21,10 +21,10 @@
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/workspaces/multi-workspace.code-workspace"
+                "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
+                "${workspaceFolder}/packages/phpunit/tests/fixtures/workspaces/multi-workspace.code-workspace"
             ],
-            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "outFiles": ["${workspaceFolder}/packages/extension/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
@@ -32,10 +32,10 @@
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/src/PHPUnit/__tests__/fixtures/workspaces/docker-multi-workspace.code-workspace"
+                "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
+                "${workspaceFolder}/packages/phpunit/tests/fixtures/workspaces/docker-multi-workspace.code-workspace"
             ],
-            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "outFiles": ["${workspaceFolder}/packages/extension/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
@@ -43,10 +43,10 @@
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+                "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
+                "--extensionTestsPath=${workspaceFolder}/packages/extension/out/tests/suite/index"
             ],
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "${workspaceFolder}/dist/**/*.js"],
+            "outFiles": ["${workspaceFolder}/packages/extension/out/**/*.js", "${workspaceFolder}/packages/extension/dist/**/*.js"],
             "preLaunchTask": "tasks: watch-tests"
         }
     ]

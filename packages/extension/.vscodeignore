@@ -1,0 +1,37 @@
+# VS Code internals
+.vscode/**
+.vscode-test/**
+
+# Build output
+out/**
+
+# Source
+src/**
+tests/**
+**/*.map
+**/*.ts
+
+# Config files
+**/tsconfig.json
+tsconfig.test.json
+biome.json
+esbuild.mjs
+vitest.config.ts
+pnpm-lock.yaml
+vscode.d.ts
+
+# Dependencies
+node_modules/**
+__mocks__/**
+
+# Docs & meta
+.gitignore
+CLAUDE.md
+.claude/**
+
+# Assets (keep only icon)
+img/**
+!img/icon.png
+
+# Coverage
+coverage/**

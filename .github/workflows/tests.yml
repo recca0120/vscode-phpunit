@@ -24,8 +24,8 @@ jobs:
       extensions: curl, dom, libxml, mbstring, pcntl, pdo, pdo_sqlite, sqlite, xdebug, zip
       key: cache-v1
       GITHUB_ACTIONS: true
-      PHPUNIT_PROJECT: src/PHPUnit/__tests__/fixtures/phpunit-stub
-      PEST_PROJECT: src/PHPUnit/__tests__/fixtures/pest-stub
+      PHPUNIT_PROJECT: packages/phpunit/tests/fixtures/phpunit-stub
+      PEST_PROJECT: packages/phpunit/tests/fixtures/pest-stub
       # Minimum PHP version per stub (used to skip incompatible installs)
       PHPUNIT_MIN_PHP: v9=7.3 v10=8.1 v11=8.2 v12=8.3
       PEST_MIN_PHP: v2=8.2 v3=8.2 v4=8.3
@@ -72,7 +72,7 @@ jobs:
           path: |
             ${{ env.PHPUNIT_PROJECT }}/*/vendor
             ${{ env.PEST_PROJECT }}/*/vendor
-          key: composer-stubs-${{ matrix.os }}-php${{ matrix.php }}-${{ hashFiles('src/PHPUnit/__tests__/fixtures/**/composer.lock') }}
+          key: composer-stubs-${{ matrix.os }}-php${{ matrix.php }}-${{ hashFiles('packages/phpunit/tests/fixtures/**/composer.lock') }}
           restore-keys: |
             composer-stubs-${{ matrix.os }}-php${{ matrix.php }}-
 

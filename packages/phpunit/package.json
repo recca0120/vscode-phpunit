@@ -1,0 +1,63 @@
+{
+    "name": "@vscode-phpunit/phpunit",
+    "version": "0.1.0",
+    "description": "PHPUnit/Pest test parser and runner utilities",
+    "license": "MIT",
+    "author": "recca0120",
+    "keywords": [
+        "phpunit",
+        "pest",
+        "php",
+        "test",
+        "parser"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/recca0120/vscode-phpunit",
+        "directory": "packages/phpunit"
+    },
+    "bugs": {
+        "url": "https://github.com/recca0120/vscode-phpunit/issues"
+    },
+    "homepage": "https://github.com/recca0120/vscode-phpunit/tree/main/packages/phpunit",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "compile": "tsup",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "vitest": "vitest run",
+        "vitest:watch": "vitest",
+        "lint": "biome check src",
+        "lint:fix": "biome check --write src",
+        "prepublishOnly": "tsup"
+    },
+    "dependencies": {
+        "@vscode/tree-sitter-wasm": "^0.3.0",
+        "fast-xml-parser": "^5.3.5",
+        "minimatch": "^10.2.0",
+        "php-parser": "^3.2.5",
+        "strip-ansi": "^7.1.2",
+        "vscode-uri": "^3.1.0"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.3.15",
+        "@types/node": "^25",
+        "@vitest/coverage-v8": "^4.0.18",
+        "tsup": "^8.5.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18"
+    }
+}

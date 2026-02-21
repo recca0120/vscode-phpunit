@@ -1,0 +1,232 @@
+{
+    "name": "vscode-phpunit",
+    "description": "Run PHPUnit and Pest tests in VS Code with the native Test Explorer. Supports Docker, SSH, Laravel Sail, ParaTest, and Xdebug step-debugging.",
+    "displayName": "PHPUnit & Pest Test Explorer",
+    "icon": "img/icon.png",
+    "publisher": "recca0120",
+    "version": "3.9.14",
+    "private": true,
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/recca0120/vscode-phpunit"
+    },
+    "engines": {
+        "vscode": "^1.88.0"
+    },
+    "categories": [
+        "Testing",
+        "Other",
+        "Debuggers"
+    ],
+    "keywords": [
+        "php",
+        "phpunit",
+        "pest",
+        "test"
+    ],
+    "activationEvents": [
+        "workspaceContains:**/*.php"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "phpunit",
+                "aliases": [
+                    "PHPUnit",
+                    "phpunit"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "phpunit",
+                "scopeName": "source.phpunit",
+                "path": "./syntaxes/collision.tmLanguage.json",
+                "embeddedLanguages": {
+                    "meta.embedded.php.phpunit": "php",
+                    "meta.embedded.vardumper.phpunit": "phpunit"
+                }
+            },
+            {
+                "scopeName": "source.vardumper",
+                "path": "./syntaxes/vardumper.tmLanguage.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "phpunit.reload",
+                "title": "PHPUnit: Reload tests"
+            },
+            {
+                "command": "phpunit.run-all",
+                "title": "PHPUnit: Run all tests"
+            },
+            {
+                "command": "phpunit.run-file",
+                "title": "PHPUnit: Run tests in current file"
+            },
+            {
+                "command": "phpunit.run-test-at-cursor",
+                "title": "PHPUnit: Run the test at the current cursor position"
+            },
+            {
+                "command": "phpunit.run-by-group",
+                "title": "PHPUnit: Run tests by group"
+            },
+            {
+                "command": "phpunit.rerun",
+                "title": "PHPUnit: Repeat the last test run"
+            }
+        ],
+        "keybindings": [
+            {
+                "key": "cmd+t cmd+s",
+                "command": "phpunit.run-all"
+            },
+            {
+                "key": "cmd+t cmd+f",
+                "command": "phpunit.run-file",
+                "when": "editorTextFocus && editorLangId == php"
+            },
+            {
+                "key": "cmd+t cmd+t",
+                "command": "phpunit.run-test-at-cursor",
+                "when": "editorTextFocus && editorLangId == php"
+            },
+            {
+                "key": "cmd+t cmd+l",
+                "command": "phpunit.rerun",
+                "when": "editorTextFocus && editorLangId == php"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "PHPUnit Configuration",
+            "properties": {
+                "phpunit.php": {
+                    "type": "string",
+                    "description": "Absolute path to php. Fallback to global php if it exists on the command line.",
+                    "default": "php",
+                    "scope": "resource"
+                },
+                "phpunit.phpunit": {
+                    "type": "string",
+                    "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line",
+                    "default": "vendor/bin/phpunit",
+                    "scope": "resource"
+                },
+                "phpunit.command": {
+                    "markdownDescription": "Custom command to for running and debugging tests. Use variables `${phpunit}`, `${phpunitxml}`, `${phpunitargs}`, `${php}`, `${phpargs}`, `${cwd}`.\n\nExample:\n\n`ddev exec phpunit -c ${phpunitxml} ${phpunitargs}`",
+                    "type": "string",
+                    "default": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
+                    "scope": "resource",
+                    "examples": [
+                        "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
+                        "Custom command to run. Ex: `docker exec -t [container_id] /bin/sh -c \"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
+                    ]
+                },
+                "phpunit.saveFilesBeforeRun": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save all open files before running tests.",
+                    "scope": "resource"
+                },
+                "phpunit.args": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Any phpunit args (phpunit --help) E.g. --configuration ${workspaceFolder}/phpunit.xml.dist",
+                    "scope": "resource"
+                },
+                "phpunit.paths": {
+                    "type": "object",
+                    "description": "Path mappings for your virtual/remote environments. Ex: { \"local/workspace/folder\": \"docker/workspace/folder\" }",
+                    "scope": "resource"
+                },
+                "phpunit.environment": {
+                    "type": "object",
+                    "title": "Set environment variables before running the phpunit command",
+                    "scope": "resource"
+                },
+                "phpunit.clearOutputOnRun": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "True will clear the output when we run a new test. False will leave the output after every test.",
+                    "scope": "resource"
+                },
+                "phpunit.showAfterExecution": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "onFailure",
+                        "never"
+                    ],
+                    "default": "onFailure",
+                    "description": "Specify if the test report will automatically be shown after execution",
+                    "scope": "application"
+                },
+                "phpunit.debuggerConfig": {
+                    "type": "string",
+                    "default": null,
+                    "description": "The name of a launch configuration to use for debugging PHPUnit tests",
+                    "scope": "resource"
+                },
+                "phpunit.xdebugPort": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "The port that is used to communicate between Xdebug in phpunit and the debug extension. 0 (default) will use a random port.",
+                    "scope": "resource"
+                }
+            }
+        }
+    },
+    "main": "./dist/extension.js",
+    "scripts": {
+        "vscode:prepublish": "pnpm run package",
+        "typecheck": "tsc --noEmit",
+        "compile": "pnpm run typecheck && node esbuild.mjs",
+        "watch": "node esbuild.mjs --watch",
+        "package": "pnpm run typecheck && node esbuild.mjs --production",
+        "compile-tests": "tsc -p tsconfig.test.json",
+        "watch-tests": "tsc -p tsconfig.test.json -w",
+        "pretest:e2e": "pnpm run compile-tests && pnpm run compile",
+        "lint": "biome check src",
+        "lint:fix": "biome check --write src",
+        "format": "biome format --write src",
+        "test": "vitest run",
+        "test:e2e": "node ./out/tests/runTest.js",
+        "vitest": "vitest run",
+        "vitest:watch": "vitest",
+        "download-api": "npx vscode-dts main && npx vscode-dts dev",
+        "postinstall": "pnpm run download-api"
+    },
+    "devDependencies": {
+        "@vscode-phpunit/phpunit": "workspace:*",
+        "@biomejs/biome": "2.3.15",
+        "@types/chai": "^5.2.3",
+        "@types/glob": "^9.0.0",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^25",
+        "@types/sinon": "^21.0.0",
+        "@vitest/coverage-v8": "^4.0.18",
+        "@vscode/dts": "^0.4.1",
+        "@vscode/test-electron": "^2.5.2",
+        "@vscode/tree-sitter-wasm": "^0.3.0",
+        "@vscode/vsce": "^3.7.1",
+        "chai": "^6.2.2",
+        "esbuild": "^0.27.3",
+        "fast-xml-parser": "^5.3.5",
+        "glob": "^13.0.3",
+        "inversify": "^7.11.0",
+        "minimatch": "^10.2.0",
+        "mocha": "^11.7.5",
+        "php-parser": "^3.2.5",
+        "reflect-metadata": "^0.2.2",
+        "sinon": "^21.0.1",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18",
+        "strip-ansi": "^7.1.2",
+        "vscode-uri": "^3.1.0"
+    }
+}

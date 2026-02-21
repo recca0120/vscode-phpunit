@@ -24,17 +24,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Package Extension
+        working-directory: packages/extension
         run: pnpm vsce package --no-dependencies
 
       - name: Upload VSIX
         uses: actions/upload-artifact@v4
         with:
           name: vsix
-          path: '*.vsix'
+          path: 'packages/extension/*.vsix'
 
       - name: Upload VSIX to GitHub Release
         if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" *.vsix --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" packages/extension/*.vsix --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

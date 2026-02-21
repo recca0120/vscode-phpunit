@@ -1,0 +1,8 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "out"
+    },
+    "include": ["src/**/*.ts", "tests/**/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],
+    "exclude": ["**/__mocks__/*", "src/**/*.test.ts"]
+}
