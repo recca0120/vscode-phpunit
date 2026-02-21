@@ -17,17 +17,11 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     testFinished(result: TestFinished | TestFailed) {
-        const [icon] = this.getMessage(result.event);
-        if (!icon) {
-            return '';
-        }
-        const name = this.formatTestName(result);
-
         if (result.event === TeamcityEvent.testFailed) {
             this.errors.push(result as TestFailed);
         }
 
-        return `  ${icon} ${name} ${result.duration} ms`;
+        return this.formatTestResult(result);
     }
 
     testSuiteFinished(_result: TestSuiteFinished): string | undefined {
@@ -35,6 +29,10 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     end() {
+        if (this.errors.length === 0) {
+            return undefined;
+        }
+
         const error = this.errors.map((result) => this.formatError(result)).join(EOL);
         this.errors = [];
 
@@ -99,6 +97,10 @@ export class CollisionPrinter extends OutputFormatter {
     }
 
     private formatDetails(result: TestFailed) {
+        if (result.details.length === 0) {
+            return undefined;
+        }
+
         return (
             EOL +
             result.details

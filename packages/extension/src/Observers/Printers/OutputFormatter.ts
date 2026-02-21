@@ -24,7 +24,7 @@ const PRINTED_OUTPUT_PATTERN =
 
 export abstract class OutputFormatter {
     protected outputBuffer = new OutputBuffer();
-    protected messages = new Map<TeamcityEvent, string[]>([
+    protected messages = new Map<TeamcityEvent, [icon: string, label: string]>([
         [TeamcityEvent.testVersion, ['🚀', 'STARTED']],
         [TeamcityEvent.testFinished, ['✅', 'PASSED']],
         [TeamcityEvent.testFailed, ['❌', 'FAILED']],
@@ -70,7 +70,7 @@ export abstract class OutputFormatter {
     }
 
     testStarted(result: TestStarted): string | undefined {
-        this.setCurrent(result.name);
+        this.outputBuffer.setCurrent(result.name);
 
         return undefined;
     }
@@ -92,11 +92,11 @@ export abstract class OutputFormatter {
     }
 
     timeAndMemory(result: TestDuration) {
-        return this.clearAndReturn(result.text);
+        return this.resetCurrentAndTrim(result.text);
     }
 
     testResultSummary(result: TestResultSummary) {
-        return this.clearAndReturn(result.text);
+        return this.resetCurrentAndTrim(result.text);
     }
 
     end(): string | undefined {
@@ -105,42 +105,45 @@ export abstract class OutputFormatter {
 
     close() {}
 
-    printedOutput(result: TestResult | undefined = undefined) {
-        const icon = '🟨';
-        if (!result) {
-            const text = this.outputBuffer.all();
+    printedOutput(result?: TestResult) {
+        const text = result ? this.getTestPrintedOutput(result) : this.outputBuffer.flush();
 
-            return text ? `${icon} ${text}` : undefined;
-        }
+        return text ? `🟨 ${text}` : undefined;
+    }
 
+    private getTestPrintedOutput(result: TestResult): string | undefined {
         const name = 'name' in result ? result.name : '';
-        const message = 'message' in result ? result.message : '';
-
+        const message = 'message' in result ? (result as { message: string }).message : '';
         const matched = message.match(PRINTED_OUTPUT_PATTERN);
-        const text = matched ? matched.groups?.output.trim() : this.outputBuffer.get(name);
 
-        return text ? `${icon} ${text}` : undefined;
+        return matched ? matched.groups?.output.trim() : this.outputBuffer.get(name);
     }
 
     append(line: string) {
         this.outputBuffer.append(stripAnsi(line));
     }
 
-    protected getMessage(event: TeamcityEvent): string[] {
+    protected getMessage(event: TeamcityEvent): [string, string] | [] {
         return this.messages.get(event) ?? [];
     }
 
-    protected formatTestName(result: TestFinished | TestFailed): string {
+    protected formatTestResult(result: TestFinished | TestFailed) {
+        const [icon] = this.getMessage(result.event);
+        if (!icon) {
+            return '';
+        }
+        const name = this.formatTestName(result);
+
+        return `  ${icon} ${name} ${result.duration} ms`;
+    }
+
+    protected formatTestName(result: TestFinished | TestFailed | TestIgnored): string {
         return /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
     }
 
-    private clearAndReturn(text: string) {
-        this.setCurrent(undefined);
+    private resetCurrentAndTrim(text: string) {
+        this.outputBuffer.setCurrent(undefined);
 
         return text.trim();
-    }
-
-    private setCurrent(current?: string) {
-        this.outputBuffer.setCurrent(current);
     }
 }

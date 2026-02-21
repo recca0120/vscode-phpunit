@@ -9,7 +9,7 @@ export class OutputBuffer {
     }
 
     append(text: string) {
-        if (!this.current || text.match(/^##teamcity\[/)) {
+        if (!this.current || /^##teamcity\[/.test(text)) {
             return;
         }
 
@@ -25,8 +25,11 @@ export class OutputBuffer {
         return text?.trim();
     }
 
-    all() {
-        return Array.from(this.store.values()).join(EOL).trim();
+    flush() {
+        const text = Array.from(this.store.values()).join(EOL).trim();
+        this.store.clear();
+
+        return text;
     }
 
     clear() {

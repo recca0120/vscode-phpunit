@@ -253,7 +253,7 @@ describe('CollisionPrinter', () => {
             expected: 'true',
         });
 
-        const output = printer.end()!;
+        const output = printer.end();
 
         expect(output).toContain('- true');
         expect(output).toContain('+ false');
