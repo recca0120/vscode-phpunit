@@ -36,6 +36,15 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         await waitForTestItems(ctrl, 1, 30_000);
     });
 
+    suiteTeardown(async () => {
+        const folders = vscode.workspace.workspaceFolders;
+        if (folders && folders.length > 0) {
+            const config = vscode.workspace.getConfiguration('phpunit', folders[0].uri);
+            await config.update('phpunit', undefined, vscode.ConfigurationTarget.WorkspaceFolder);
+            await config.update('args', undefined, vscode.ConfigurationTarget.WorkspaceFolder);
+        }
+    });
+
     test('should activate extension', () => {
         const ext = vscode.extensions.getExtension('recca0120.vscode-phpunit');
         assert.ok(ext, 'Extension should exist');

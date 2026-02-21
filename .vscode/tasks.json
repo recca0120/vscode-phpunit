@@ -4,6 +4,16 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "phpunit: build",
+			"type": "shell",
+			"command": "pnpm --filter @vscode-phpunit/phpunit build",
+			"group": "build",
+			"presentation": {
+				"reveal": "silent",
+				"group": "watchers"
+			}
+		},
+		{
 			"type": "npm",
 			"script": "watch",
 			"path": "packages/extension",
@@ -16,7 +26,8 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"dependsOn": ["phpunit: build"]
 		},
 		{
 			"type": "npm",
