@@ -13,7 +13,10 @@ describe('TestRunnerObserverFactory', () => {
     let outputChannel: OutputChannel;
 
     beforeEach(() => {
-        const testCollection = { addDatasetChild: vi.fn() } as unknown as TestCollection;
+        const testCollection = {
+            getTestDefinition: vi.fn(),
+            addDatasetChild: vi.fn(),
+        } as unknown as TestCollection;
         outputChannel = {
             append: vi.fn(),
             appendLine: vi.fn(),

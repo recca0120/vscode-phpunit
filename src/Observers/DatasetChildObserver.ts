@@ -1,15 +1,14 @@
 import type { TestItem, TestRun } from 'vscode';
-import type {
-    TestDefinition,
-    TestFailed,
-    TestFinished,
-    TestIgnored,
-    TestRunnerObserver,
-    TestStarted,
+import {
+    resolveDatasetDefinition,
+    type TestDefinition,
+    type TestFailed,
+    type TestFinished,
+    type TestIgnored,
+    type TestRunnerObserver,
+    type TestStarted,
 } from '../PHPUnit';
 import type { TestCollection } from '../TestCollection/TestCollection';
-
-const DATASET_PATTERN = /\swith\sdata\sset\s[#"].+$/;
 
 export class DatasetChildObserver implements TestRunnerObserver {
     private testItemById: Map<string, TestItem>;
@@ -51,8 +50,7 @@ export class DatasetChildObserver implements TestRunnerObserver {
     }
 
     private findOrCreate(result: { id?: string; name: string }): TestItem | undefined {
-        const datasetMatch = result.name.match(DATASET_PATTERN);
-        if (!datasetMatch || !result.id) {
+        if (!result.id) {
             return undefined;
         }
 
@@ -61,8 +59,16 @@ export class DatasetChildObserver implements TestRunnerObserver {
             return undefined;
         }
 
-        const datasetSuffix = datasetMatch[0].trimStart();
+        const parentDef = this.testCollection.getTestDefinition(parent);
+        if (!parentDef) {
+            return undefined;
+        }
 
-        return this.testCollection.addDatasetChild(parent, datasetSuffix);
+        const childDef = resolveDatasetDefinition(result.name, parentDef);
+        if (!childDef) {
+            return undefined;
+        }
+
+        return this.testCollection.addDatasetChild(parent, childDef);
     }
 }

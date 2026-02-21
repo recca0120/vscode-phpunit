@@ -8,10 +8,11 @@ import {
     type TestRun,
 } from 'vscode';
 import { URI } from 'vscode-uri';
-import type { TestDefinition } from '../PHPUnit';
 import {
     EOL,
+    isDatasetResult,
     PestV2Fixer,
+    type TestDefinition,
     type TestFailed,
     type TestFinished,
     type TestIgnored,
@@ -127,7 +128,7 @@ export class TestResultObserver implements TestRunnerObserver {
             return undefined;
         }
 
-        if ('name' in result && /\swith\sdata\sset\s[#"].+$/.test(result.name as string)) {
+        if ('name' in result && isDatasetResult(result.name as string)) {
             return undefined;
         }
 

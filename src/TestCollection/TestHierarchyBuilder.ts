@@ -7,7 +7,13 @@ import {
     TestTag,
     Uri,
 } from 'vscode';
-import { type PHPUnitXML, type TestDefinition, TestIdentifierFactory, TestType } from '../PHPUnit';
+import {
+    createDatasetDefinition,
+    type PHPUnitXML,
+    type TestDefinition,
+    TestIdentifierFactory,
+    TestType,
+} from '../PHPUnit';
 
 const TEST_ICONS: Record<TestType, string> = {
     [TestType.workspace]: '$(folder)',
@@ -106,7 +112,7 @@ export class TestHierarchyBuilder {
         const dataset = test.annotations?.dataset;
         if (dataset && dataset.length > 0) {
             for (const label of dataset) {
-                allChildren.push(this.createDatasetDefinition(test, label));
+                allChildren.push(createDatasetDefinition(test, label));
             }
         }
 
@@ -119,21 +125,6 @@ export class TestHierarchyBuilder {
             this.buildChild(child, children, testItem);
         }
         testItem.children.replace(children);
-    }
-
-    private createDatasetDefinition(parent: TestDefinition, label: string): TestDefinition {
-        return {
-            type: TestType.dataset,
-            id: `${parent.id} with data set ${label}`,
-            label: `with data set ${label}`,
-            classFQN: parent.classFQN,
-            namespace: parent.namespace,
-            className: parent.className,
-            methodName: parent.methodName,
-            file: parent.file,
-            start: parent.start,
-            end: parent.end,
-        };
     }
 
     private addTestSuiteRoot(

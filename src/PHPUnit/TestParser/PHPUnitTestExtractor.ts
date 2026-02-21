@@ -37,22 +37,7 @@ export class PHPUnitTestExtractor implements TestExtractor {
             const parent = this.getOrCreateParent(testDefinitions, classDef);
             parent.children = methods
                 .filter((m) => m.isTest())
-                .map((m) => {
-                    const def = m.toTestDefinition();
-                    const providers = [...((def.annotations?.dataProvider as string[]) ?? [])];
-                    if (providers.length === 0 || def.annotations?.dataset) {
-                        return def;
-                    }
-                    const providerMethod = methods.find((pm) => pm.name === providers[0]);
-                    if (!providerMethod) {
-                        return def;
-                    }
-                    const dataset = dataProviderParser.parse(providerMethod.node);
-                    if (dataset.length > 0) {
-                        def.annotations = { ...def.annotations, dataset };
-                    }
-                    return def;
-                });
+                .map((m) => this.buildMethodDefinition(m, methods));
         }
 
         if (testDefinitions.length === 0 && classes.length === 0) {
@@ -60,6 +45,27 @@ export class PHPUnitTestExtractor implements TestExtractor {
         }
 
         return { tests: testDefinitions, classes };
+    }
+
+    private buildMethodDefinition(method: TestNode, allMethods: TestNode[]): TestDefinition {
+        const def = method.toTestDefinition();
+
+        const providers = (def.annotations?.dataProvider as string[]) ?? [];
+        if (providers.length === 0 || def.annotations?.dataset) {
+            return def;
+        }
+
+        const providerMethod = allMethods.find((m) => m.name === providers[0]);
+        if (!providerMethod) {
+            return def;
+        }
+
+        const dataset = dataProviderParser.parse(providerMethod.node);
+        if (dataset.length > 0) {
+            def.annotations = { ...def.annotations, dataset };
+        }
+
+        return def;
     }
 
     private getOrCreateParent(

@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { ChainAstParser, PHPUnitXML, TestParser, TestType } from '../PHPUnit';
+import {
+    ChainAstParser,
+    createDatasetDefinition,
+    PHPUnitXML,
+    type TestDefinition,
+    TestParser,
+    TestType,
+} from '../PHPUnit';
 import { generateXML, pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
@@ -1309,18 +1316,20 @@ class NoDatasetTest extends TestCase
             ) as TestItem;
             expect(methodItem).toBeDefined();
 
-            const childItem = collection.addDatasetChild(methodItem, 'with data set #0');
+            const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
+            const childDef = createDatasetDefinition(parentDef, 'with data set #0');
+            const childItem = collection.addDatasetChild(methodItem, childDef);
 
             // child is in parent.children
             expect(methodItem.children.get(childItem.id)).toBe(childItem);
 
             // child has a TestDefinition
-            const childDef = collection.getTestDefinition(childItem);
-            expect(childDef).toBeDefined();
-            expect(childDef?.type).toBe(TestType.dataset);
-            expect(childDef?.methodName).toContain('with data set #0');
+            const storedDef = collection.getTestDefinition(childItem);
+            expect(storedDef).toBeDefined();
+            expect(storedDef?.type).toBe(TestType.dataset);
+            expect(storedDef?.methodName).toBe(parentDef.methodName);
 
-            // child id matches uniqueId convention
+            // child id matches convention
             expect(childItem.id).toContain('with data set #0');
         });
 
@@ -1340,8 +1349,10 @@ class NoDatasetTest extends TestCase
                 'Assertions (Tests\\Assertions)::Addition provider',
             ) as TestItem;
 
-            const child1 = collection.addDatasetChild(methodItem, 'with data set #0');
-            const child2 = collection.addDatasetChild(methodItem, 'with data set #0');
+            const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
+            const childDef = createDatasetDefinition(parentDef, 'with data set #0');
+            const child1 = collection.addDatasetChild(methodItem, childDef);
+            const child2 = collection.addDatasetChild(methodItem, childDef);
 
             expect(child1).toBe(child2);
         });

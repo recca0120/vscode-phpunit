@@ -3,6 +3,45 @@ import { type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
 import type { TestNode } from './TestNode';
 
+const DATASET_PATTERN = /\swith\sdata\sset\s([#"].+)$/;
+
+export function isDatasetResult(name: string): boolean {
+    return DATASET_PATTERN.test(name);
+}
+
+function parseDatasetLabel(name: string): string | undefined {
+    const match = name.match(DATASET_PATTERN);
+
+    return match?.[1];
+}
+
+export function resolveDatasetDefinition(
+    name: string,
+    parent: TestDefinition,
+): TestDefinition | undefined {
+    const label = parseDatasetLabel(name);
+    if (!label) {
+        return undefined;
+    }
+
+    return createDatasetDefinition(parent, label);
+}
+
+export function createDatasetDefinition(parent: TestDefinition, label: string): TestDefinition {
+    return {
+        type: TestType.dataset,
+        id: `${parent.id} with data set ${label}`,
+        label: `with data set ${label}`,
+        classFQN: parent.classFQN,
+        namespace: parent.namespace,
+        className: parent.className,
+        methodName: parent.methodName,
+        file: parent.file,
+        start: parent.start,
+        end: parent.end,
+    };
+}
+
 function buildTestDefinition(
     definition: TestNode,
     overrides: Partial<TestDefinition>,
