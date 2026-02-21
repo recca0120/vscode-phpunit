@@ -17,3 +17,11 @@ pre-commit:
       root: "packages/phpunit/"
       glob: "*.{ts,tsx}"
       run: npx tsc --noEmit
+    - name: pint-phpunit-stub
+      root: "packages/phpunit/tests/fixtures/phpunit-stub/"
+      glob: "*.php"
+      run: bash -c 'command -v pint >/dev/null 2>&1 && pint --test {staged_files} || true'
+    - name: pint-pest-stub
+      root: "packages/phpunit/tests/fixtures/pest-stub/"
+      glob: "*.php"
+      run: bash -c 'command -v pint >/dev/null 2>&1 && pint --test {staged_files} || true'
