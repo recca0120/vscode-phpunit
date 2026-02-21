@@ -45,11 +45,12 @@ class DataProviderParser {
     }
 
     private extractLabels(entries: (ArrayEntryNode | YieldExpressionNode)[]): string[] {
-        return entries.map((entry, i) => {
+        let numericIndex = 0;
+        return entries.map((entry) => {
             if (entry.key?.kind === 'string' && entry.key.value) {
                 return `"${entry.key.value}"`;
             }
-            return `#${i}`;
+            return `#${numericIndex++}`;
         });
     }
 }

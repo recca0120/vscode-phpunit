@@ -102,7 +102,43 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parser.parse(method)).toEqual(['"first"', '#1', '"third"']);
+            expect(parser.parse(method)).toEqual(['"first"', '#0', '"third"']);
+        });
+
+        it('return array with mixed keys — named first then numeric', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        return ['two plus three' => [2, 3, 5], [4, 5, 9]];
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"two plus three"', '#0']);
+        });
+
+        it('return array with multiple numeric entries among named keys', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        return [[1, 1, 2], 'named' => [2, 3, 5], [4, 5, 9]];
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['#0', '"named"', '#1']);
+        });
+
+        it('return array with named keys wrapping numeric entries', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        return ['a' => [2, 3, 7], [4, 5, 9], [1, 2, 3], 'b' => [2, 3, 7]];
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"a"', '#0', '#1', '"b"']);
         });
 
         it('yield with named keys', () => {

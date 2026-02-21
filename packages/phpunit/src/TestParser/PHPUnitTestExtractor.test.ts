@@ -373,6 +373,44 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
             );
         });
 
+        it('parse DataProvider Attribute with mixed keys', () => {
+            const mixedFile = phpUnitProject('tests/DataProviderAttributeTest.php');
+            const mixedContent = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\DataProvider;
+use PHPUnit\\Framework\\TestCase;
+
+class DataProviderAttributeTest extends TestCase
+{
+    #[DataProvider('attributeProvider')]
+    public function testAttributeProvider(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function attributeProvider(): array
+    {
+        return [
+            'a' => [2, 3, 7],
+            [4, 5, 9],
+            [1, 2, 3],
+            'b' => [2, 3, 7],
+        ];
+    }
+}`;
+            expect(givenTest(mixedFile, mixedContent, 'testAttributeProvider')).toEqual(
+                expect.objectContaining({
+                    type: TestType.method,
+                    methodName: 'testAttributeProvider',
+                    annotations: {
+                        dataProvider: ['attributeProvider'],
+                        dataset: ['"a"', '#0', '#1', '"b"'],
+                    },
+                }),
+            );
+        });
+
         it('parse Depends Attribute', () => {
             expect(givenTest(file, content, 'testPush')).toEqual(
                 expect.objectContaining({
