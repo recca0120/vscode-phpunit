@@ -22,7 +22,6 @@ export class OutputBuffer {
         if (text) {
             this.store.delete(name);
         }
-        this.setCurrent(undefined);
         return text?.trim();
     }
 

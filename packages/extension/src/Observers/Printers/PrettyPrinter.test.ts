@@ -124,8 +124,8 @@ describe('PrettyPrinter', () => {
         );
     });
 
-    it('testIgnored', () => {
-        const output = printer.testFinished({
+    it('testIgnored should display message', () => {
+        const output = printer.testIgnored({
             event: TeamcityEvent.testIgnored,
             name: 'test_skipped',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped`,
@@ -136,6 +136,6 @@ describe('PrettyPrinter', () => {
             duration: 0,
         });
 
-        expect(output).toEqual([`  ➖ skipped 0 ms`].join(EOL));
+        expect(output).toEqual(`  ➖ skipped ➜ The MySQLi extension is not available. 0 ms`);
     });
 });

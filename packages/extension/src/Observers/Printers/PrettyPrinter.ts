@@ -3,6 +3,7 @@ import {
     TeamcityEvent,
     type TestFailed,
     type TestFinished,
+    type TestIgnored,
     type TestSuiteFinished,
 } from '@vscode-phpunit/phpunit';
 import { OutputFormatter } from './OutputFormatter';

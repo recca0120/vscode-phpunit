@@ -6,6 +6,7 @@ import {
     type TestDuration,
     type TestFailed,
     type TestFinished,
+    type TestIgnored,
     type TestProcesses,
     type TestResult,
     type TestResultSummary,
@@ -75,6 +76,16 @@ export abstract class OutputFormatter {
     }
 
     abstract testFinished(result: TestFinished | TestFailed): string | undefined;
+
+    testIgnored(result: TestIgnored): string | undefined {
+        const [icon] = this.getMessage(result.event);
+        if (!icon) {
+            return '';
+        }
+        const name = this.formatTestName(result);
+
+        return `  ${icon} ${name} ➜ ${result.message} ${result.duration} ms`;
+    }
 
     testSuiteFinished(_result: TestSuiteFinished): string | undefined {
         return undefined;

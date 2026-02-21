@@ -237,8 +237,31 @@ describe('CollisionPrinter', () => {
         expect(() => printer.end()).not.toThrow();
     });
 
+    it('testFailed with simple scalar expected/actual', () => {
+        printer.testFinished({
+            event: TeamcityEvent.testFailed,
+            name: 'test_simple_diff',
+            locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_simple_diff`,
+            flowId: 2369,
+            id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_simple_diff',
+            file: phpUnitProject('tests/AssertionsTest.php'),
+            message: 'Failed asserting that false is true.',
+            details: [],
+            duration: 0,
+            type: 'comparisonFailure',
+            actual: 'false',
+            expected: 'true',
+        });
+
+        const output = printer.end()!;
+
+        expect(output).toContain('- true');
+        expect(output).toContain('+ false');
+        expect(output).not.toContain('Array');
+    });
+
     it('testIgnored', () => {
-        const output = printer.testFinished({
+        const output = printer.testIgnored({
             event: TeamcityEvent.testIgnored,
             name: 'test_skipped',
             locationHint: `php_qn://${phpUnitProject('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped`,

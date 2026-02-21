@@ -307,7 +307,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+➖\sskipped\s\d+\sms/),
+            expect.stringMatching(/\s+➖\sskipped\s➜\s.+\s\d+\sms/),
         );
     });
 

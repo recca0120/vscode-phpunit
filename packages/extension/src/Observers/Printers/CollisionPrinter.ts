@@ -3,7 +3,6 @@ import {
     TeamcityEvent,
     type TestFailed,
     type TestFinished,
-    type TestIgnored,
     type TestSuiteFinished,
 } from '@vscode-phpunit/phpunit';
 import { OutputFormatter } from './OutputFormatter';
@@ -17,7 +16,7 @@ export class CollisionPrinter extends OutputFormatter {
         this.errors = [];
     }
 
-    testFinished(result: TestFinished | TestFailed | TestIgnored) {
+    testFinished(result: TestFinished | TestFailed) {
         const [icon] = this.getMessage(result.event);
         if (!icon) {
             return '';
@@ -26,10 +25,6 @@ export class CollisionPrinter extends OutputFormatter {
 
         if (result.event === TeamcityEvent.testFailed) {
             this.errors.push(result as TestFailed);
-        }
-
-        if (result.event === TeamcityEvent.testIgnored) {
-            return `  ${icon} ${name} ➜ ${(result as TestIgnored).message} ${result.duration} ms`;
         }
 
         return `  ${icon} ${name} ${result.duration} ms`;
@@ -79,10 +74,15 @@ export class CollisionPrinter extends OutputFormatter {
             return undefined;
         }
 
+        const isArray = /^Array\s+&0\s+[([]/m.test(result.expected);
+        if (!isArray) {
+            return [`- ${result.expected}`, `+ ${result.actual}`, ''].join(EOL);
+        }
+
         return [
             ' Array &0 [',
-            this.formatExpected(result.expected, '-'),
-            this.formatExpected(result.actual, '+'),
+            this.formatArrayEntries(result.expected, '-'),
+            this.formatArrayEntries(result.actual, '+'),
             ' ]',
             '',
         ].join(EOL);
@@ -108,8 +108,8 @@ export class CollisionPrinter extends OutputFormatter {
         );
     }
 
-    private formatExpected(expected: string, prefix: string) {
-        return expected
+    private formatArrayEntries(value: string, prefix: string) {
+        return value
             .replace(/^Array\s+&0\s+[([]/, '')
             .replace(/[)\]]$/, '')
             .trim()
