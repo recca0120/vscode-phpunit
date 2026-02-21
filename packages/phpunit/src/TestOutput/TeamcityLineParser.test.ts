@@ -432,8 +432,7 @@ describe('TeamcityLineParser', () => {
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testStarted,
-            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
             file: phpUnitProjectWin('tests/AssertionsTest.php'),
             name: 'addition_provider with data set #2',
             locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
@@ -446,8 +445,7 @@ describe('TeamcityLineParser', () => {
 
         expect(parse(text)).toEqual({
             event: TeamcityEvent.testStarted,
-            // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
-            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+            id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
             file: phpUnitProjectWin('tests/AssertionsTest.php'),
             name: 'addition_provider with data set ""foo-bar_%$"',
             locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set ""foo-bar_%$"`,

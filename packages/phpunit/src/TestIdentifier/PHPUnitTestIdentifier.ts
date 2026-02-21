@@ -32,7 +32,7 @@ export class PHPUnitTestIdentifier extends TestIdentifier {
         const [classFQN, methodName] = partsLocation;
 
         const type = !methodName ? TestType.class : TestType.method;
-        const id = this.removeDataset(this.uniqueId({ type: type, classFQN, methodName }));
+        const id = this.uniqueId({ type: type, classFQN, methodName });
 
         return { id, file };
     }

@@ -94,13 +94,20 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         staticTotalCount = initialTotalCount;
     });
 
-    suiteTeardown(() => {
+    suiteTeardown(async () => {
         for (const f of tempFiles) {
             if (existsSync(f)) unlinkSync(f);
         }
         const workspaceFile = vscode.workspace.workspaceFile;
         if (workspaceFile && workspaceFileBackup) {
             writeFileSync(workspaceFile.fsPath, workspaceFileBackup, 'utf-8');
+        }
+
+        const folders = vscode.workspace.workspaceFolders ?? [];
+        for (const folder of folders) {
+            const config = vscode.workspace.getConfiguration('phpunit', folder.uri);
+            await config.update('phpunit', undefined, vscode.ConfigurationTarget.WorkspaceFolder);
+            await config.update('args', undefined, vscode.ConfigurationTarget.WorkspaceFolder);
         }
     });
 

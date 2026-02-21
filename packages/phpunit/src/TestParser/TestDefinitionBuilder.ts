@@ -9,6 +9,10 @@ export function isDatasetResult(name: string): boolean {
     return DATASET_PATTERN.test(name);
 }
 
+export function stripDataset(id: string): string {
+    return id.replace(DATASET_PATTERN, '');
+}
+
 function parseDatasetLabel(name: string): string | undefined {
     const match = name.match(DATASET_PATTERN);
 

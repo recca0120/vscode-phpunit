@@ -1072,7 +1072,7 @@ class ReturnProviderTest extends TestCase
                 'Return Provider (Tests\\ReturnProvider)::Add with data set "one plus one"',
             );
             const child1 = method.children.get(
-                'Return Provider (Tests\\ReturnProvider)::Add with data set #1',
+                'Return Provider (Tests\\ReturnProvider)::Add with data set #0',
             );
             expect(child0).toBeDefined();
             expect(child1).toBeDefined();
@@ -1223,7 +1223,7 @@ class AttrProviderTest extends TestCase
                 'Attr Provider (Tests\\AttrProvider)::Add with data set "sum"',
             );
             const child1 = method.children.get(
-                'Attr Provider (Tests\\AttrProvider)::Add with data set #1',
+                'Attr Provider (Tests\\AttrProvider)::Add with data set #0',
             );
             expect(child0).toBeDefined();
             expect(child1).toBeDefined();

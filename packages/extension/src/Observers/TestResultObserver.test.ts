@@ -26,6 +26,10 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
     };
 }
 
+function buildTestItemById(items: TestItem[]): Map<string, TestItem> {
+    return new Map(items.map((item) => [item.id, item]));
+}
+
 describe('TestResultObserver', () => {
     let ctrl: TestController;
     let queue: Map<TestDefinition, TestItem>;
@@ -43,7 +47,8 @@ describe('TestResultObserver', () => {
         );
         queue = new Map();
         queue.set({} as TestDefinition, testItem);
-        observer = new TestResultObserver(queue, testRun);
+        const testItemById = buildTestItemById([testItem]);
+        observer = new TestResultObserver(testItemById, queue, testRun);
     });
 
     it('should use TestMessage.diff when expected and actual are present', () => {
@@ -65,15 +70,56 @@ describe('TestResultObserver', () => {
         diffSpy.mockRestore();
     });
 
-    it('should skip dataset results (handled by DatasetChildObserver)', () => {
+    it('should skip dataset results when no matching item exists', () => {
         observer.testStarted({
             event: 'testStarted' as unknown as TeamcityEvent,
-            id: 'Tests\\ExampleTest::test_example',
+            id: 'Tests\\ExampleTest::test_example with data set #0',
             name: 'test_example with data set #0',
             flowId: 1,
         } as never);
 
         expect(testRun.started).not.toHaveBeenCalled();
+    });
+
+    it('should match dataset result when dataset child item exists in shared map', () => {
+        const datasetItem = ctrl.createTestItem(
+            'Tests\\ExampleTest::test_example with data set #0',
+            'with data set #0',
+            Uri.file('/project/tests/ExampleTest.php'),
+        );
+        const testItemById = buildTestItemById([testItem, datasetItem]);
+        const datasetObserver = new TestResultObserver(testItemById, queue, testRun);
+
+        datasetObserver.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example with data set #0',
+            name: 'test_example with data set #0',
+            flowId: 1,
+        } as never);
+
+        expect(testRun.started).toHaveBeenCalledWith(datasetItem);
+    });
+
+    it('should match dataset child added dynamically by DatasetChildObserver', () => {
+        const testItemById = buildTestItemById([testItem]);
+        const dynamicObserver = new TestResultObserver(testItemById, queue, testRun);
+
+        // Simulate DatasetChildObserver adding a child to the shared map
+        const datasetItem = ctrl.createTestItem(
+            'Tests\\ExampleTest::test_example with data set #0',
+            'with data set #0',
+            Uri.file('/project/tests/ExampleTest.php'),
+        );
+        testItemById.set(datasetItem.id, datasetItem);
+
+        dynamicObserver.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example with data set #0',
+            name: 'test_example with data set #0',
+            flowId: 1,
+        } as never);
+
+        expect(testRun.started).toHaveBeenCalledWith(datasetItem);
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {

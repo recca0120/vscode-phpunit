@@ -6,6 +6,7 @@ export {
     createDatasetDefinition,
     isDatasetResult,
     resolveDatasetDefinition,
+    stripDataset,
 } from './TestDefinitionBuilder';
 export * from './TestParser';
 export * from './tree-sitter/TreeSitterAstParser';

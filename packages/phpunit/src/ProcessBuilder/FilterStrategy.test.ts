@@ -72,4 +72,38 @@ describe('FilterStrategyFactory', () => {
         expect(filter).toContain('--filter=');
         expect(filter).toContain('test_passed');
     });
+
+    it('dataset type with named key uses --filter with data set label', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: 'Tests\\DataProviderAttributeTest::testAttributeProvider with data set "two plus three"',
+            label: 'with data set "two plus three"',
+            classFQN: 'Tests\\DataProviderAttributeTest',
+            methodName: 'testAttributeProvider',
+            file: '/path/to/DataProviderAttributeTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='^.*::(testAttributeProvider with data set "two plus three")$' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
+        );
+    });
+
+    it('dataset type with numeric index uses --filter with data set index', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: 'Tests\\DataProviderAttributeTest::testAttributeProvider with data set #0',
+            label: 'with data set #0',
+            classFQN: 'Tests\\DataProviderAttributeTest',
+            methodName: 'testAttributeProvider',
+            file: '/path/to/DataProviderAttributeTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='^.*::(testAttributeProvider with data set #0)$' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
+        );
+    });
 });

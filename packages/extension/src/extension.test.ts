@@ -414,6 +414,19 @@ describe('Extension Test', () => {
             );
         });
 
+        it('should run test case with dataset', async () => {
+            const id = `Data Provider Attribute (Tests\\DataProviderAttribute)::Attribute provider with data set "two plus three"`;
+            await activateAndRun({ include: id });
+
+            expectSpawnCalled([
+                binary,
+                /testAttributeProvider.*two plus three/,
+                '--colors=never',
+                '--teamcity',
+                /DataProviderAttributeTest\.php/,
+            ]);
+        });
+
         it('should run all tests via run-all command', async () => {
             await activate(context);
 

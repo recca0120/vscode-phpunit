@@ -7,28 +7,26 @@ import {
     phpUnitProject,
     type TeamcityEvent,
     type TestDefinition,
-    type TestFinished,
     TestParser,
     type TestStarted,
     TestType,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { type TestController, type TestItem, type TestRun, TestRunRequest, tests } from 'vscode';
+import { type TestController, type TestItem, tests } from 'vscode';
 import { URI } from 'vscode-uri';
 import { TestCollection } from '../TestCollection/TestCollection';
 import { DatasetChildObserver } from './DatasetChildObserver';
 
 describe('DatasetChildObserver', () => {
     let ctrl: TestController;
-    let testRun: TestRun;
     let observer: DatasetChildObserver;
     let parentItem: TestItem;
     let testCollection: TestCollection;
+    let testItemById: Map<string, TestItem>;
 
     beforeEach(async () => {
         ctrl = tests.createTestController('phpunit', 'PHPUnit');
-        testRun = ctrl.createTestRun(new TestRunRequest());
 
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.load(
@@ -56,7 +54,8 @@ describe('DatasetChildObserver', () => {
 
         const queue = new Map<TestDefinition, TestItem>();
         queue.set(testCollection.getTestDefinition(parentItem) as TestDefinition, parentItem);
-        observer = new DatasetChildObserver(testCollection, queue, testRun);
+        testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
+        observer = new DatasetChildObserver(testCollection, testItemById);
     });
 
     it('should create child TestItem on testStarted with data set', () => {
@@ -71,12 +70,15 @@ describe('DatasetChildObserver', () => {
         const child = parentItem.children.get(childId);
         expect(child).toBeDefined();
         expect(child?.label).toContain('with data set #0');
-        expect(testRun.started).toHaveBeenCalled();
 
         // dataset child should have a TestDefinition
         const childDef = testCollection.getTestDefinition(child as TestItem);
         expect(childDef).toBeDefined();
         expect(childDef?.type).toBe(TestType.dataset);
+
+        // child should be added to shared testItemById map
+        expect(testItemById.has(childId)).toBe(true);
+        expect(testItemById.get(childId)).toBe(child);
     });
 
     it('should create child TestItem for named data set', () => {
@@ -90,25 +92,6 @@ describe('DatasetChildObserver', () => {
         const childId = `${parentItem.id} with data set "adding zeros"`;
         const child = parentItem.children.get(childId);
         expect(child).toBeDefined();
-    });
-
-    it('should report passed on testFinished for dataset child', () => {
-        observer.testStarted({
-            event: 'testStarted' as unknown as TeamcityEvent,
-            id: parentItem.id,
-            name: 'addition_provider with data set #0',
-            flowId: 1,
-        } as unknown as TestStarted);
-
-        observer.testFinished({
-            event: 'testFinished' as unknown as TeamcityEvent,
-            id: parentItem.id,
-            name: 'addition_provider with data set #0',
-            flowId: 1,
-            duration: 0,
-        } as unknown as TestFinished);
-
-        expect(testRun.passed).toHaveBeenCalled();
     });
 
     it('should not create child for non-dataset results', () => {
@@ -139,6 +122,24 @@ describe('DatasetChildObserver', () => {
         const child2 = parentItem.children.get(`${parentItem.id} with data set #0`);
 
         expect(child1).toBe(child2);
+    });
+
+    it('should skip when dataset child item already exists in testItemById', () => {
+        const childId = `${parentItem.id} with data set #0`;
+        const childItem = ctrl.createTestItem(childId, 'with data set #0');
+        parentItem.children.add(childItem);
+        testItemById.set(childId, childItem);
+
+        const sizeBefore = testItemById.size;
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: childId,
+            name: 'addition_provider with data set #0',
+            flowId: 1,
+        } as unknown as TestStarted);
+
+        // Should not create duplicate
+        expect(testItemById.size).toBe(sizeBefore);
     });
 
     it('should add child to parent children collection', () => {

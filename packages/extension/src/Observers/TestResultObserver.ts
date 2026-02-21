@@ -1,6 +1,5 @@
 import {
     EOL,
-    isDatasetResult,
     PestV2Fixer,
     type TestDefinition,
     type TestFailed,
@@ -24,14 +23,11 @@ import {
 import { URI } from 'vscode-uri';
 
 export class TestResultObserver implements TestRunnerObserver {
-    private testItemById: Map<string, TestItem>;
-
     constructor(
+        private testItemById: Map<string, TestItem>,
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
-    ) {
-        this.testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
-    }
+    ) {}
 
     line(line: string): void {
         this.testRun.appendOutput(`${line}${EOL}`);
@@ -125,10 +121,6 @@ export class TestResultObserver implements TestRunnerObserver {
 
     private find(result: TestResult) {
         if (!('id' in result) || typeof result.id !== 'string') {
-            return undefined;
-        }
-
-        if ('name' in result && isDatasetResult(result.name as string)) {
             return undefined;
         }
 

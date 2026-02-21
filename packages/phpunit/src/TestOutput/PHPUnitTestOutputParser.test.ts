@@ -148,8 +148,7 @@ describe('PHPUnit TestOutputParser Text', () => {
                 `##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`,
                 {
                     event: TeamcityEvent.testStarted,
-                    // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
-                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
                     locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                     flowId: 8024,
@@ -167,8 +166,7 @@ describe('PHPUnit TestOutputParser Text', () => {
                 `##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`,
                 {
                     event: TeamcityEvent.testFailed,
-                    // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
-                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #2',
                     file: phpUnitProjectWin('tests/AssertionsTest.php'),
                     locationHint: `php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2`,
                     message: 'Failed asserting that 1 matches expected 2.',
@@ -339,6 +337,43 @@ describe('PHPUnit TestOutputParser Text', () => {
                 file: '/var/www/html/tests/Feature/ChatControllerTest.php',
                 message: 'ChatControllerTest uses PlayerService',
                 duration: 57,
+            }),
+        );
+    });
+
+    it('testStarted dataset should include data set in id', () => {
+        const testOutputParser = new TestOutputParser();
+        const contents = [
+            `##teamcity[testSuiteStarted name='Tests\\DataProviderAttributeTest' locationHint='php_qn://${phpUnitProject('tests/DataProviderAttributeTest.php')}::\\Tests\\DataProviderAttributeTest' flowId='8024']`,
+            `##teamcity[testSuiteStarted name='testAttributeProvider' locationHint='php_qn://${phpUnitProject('tests/DataProviderAttributeTest.php')}::\\Tests\\DataProviderAttributeTest::testAttributeProvider' flowId='8024']`,
+            `##teamcity[testStarted name='testAttributeProvider with data set "two plus three"' locationHint='php_qn://${phpUnitProject('tests/DataProviderAttributeTest.php')}::\\Tests\\DataProviderAttributeTest::testAttributeProvider with data set "two plus three"' flowId='8024']`,
+            `##teamcity[testFinished name='testAttributeProvider with data set "two plus three"' duration='2' flowId='8024']`,
+            `##teamcity[testStarted name='testAttributeProvider with data set #0' locationHint='php_qn://${phpUnitProject('tests/DataProviderAttributeTest.php')}::\\Tests\\DataProviderAttributeTest::testAttributeProvider with data set #0' flowId='8024']`,
+            `##teamcity[testFinished name='testAttributeProvider with data set #0' duration='0' flowId='8024']`,
+            `##teamcity[testSuiteFinished name='testAttributeProvider' flowId='8024']`,
+            `##teamcity[testSuiteFinished name='Tests\\DataProviderAttributeTest' flowId='8024']`,
+        ];
+
+        const results: ReturnType<typeof testOutputParser.parse>[] = [];
+        for (const content of contents) {
+            results.push(testOutputParser.parse(content));
+        }
+
+        expect(results[2]).toEqual(
+            expect.objectContaining({
+                event: TeamcityEvent.testStarted,
+                id: 'Data Provider Attribute (Tests\\DataProviderAttribute)::Attribute provider with data set "two plus three"',
+                file: phpUnitProject('tests/DataProviderAttributeTest.php'),
+                flowId: 8024,
+            }),
+        );
+
+        expect(results[4]).toEqual(
+            expect.objectContaining({
+                event: TeamcityEvent.testStarted,
+                id: 'Data Provider Attribute (Tests\\DataProviderAttribute)::Attribute provider with data set #0',
+                file: phpUnitProject('tests/DataProviderAttributeTest.php'),
+                flowId: 8024,
             }),
         );
     });
