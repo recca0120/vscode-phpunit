@@ -48,6 +48,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
     let initialPhpunitCount: number;
     let initialPestCount: number;
     let initialTotalCount: number;
+    let staticTotalCount: number;
     let initialGroupCount: number;
 
     suiteSetup(async () => {
@@ -90,6 +91,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         initialPhpunitCount = countTestItems(phpunitRoot.children);
         initialPestCount = countTestItems(pestRoot.children);
         initialTotalCount = countTestItems(ctrl.items);
+        staticTotalCount = initialTotalCount;
     });
 
     suiteTeardown(() => {
@@ -173,15 +175,28 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         );
     });
 
-    test('should run all tests across both workspaces without error', async () => {
-        const countBefore = countTestItems(ctrl.items);
+    test('should run all tests and append dataset children to test controller', async () => {
         await vscode.commands.executeCommand('phpunit.run-all');
-        const countAfter = countTestItems(ctrl.items);
-        assert.strictEqual(
-            countAfter,
-            countBefore,
-            'Item count should remain stable after run-all',
+
+        // After run, DatasetChildObserver dynamically adds dataset children
+        // for data providers that cannot be resolved statically (e.g. array_map).
+        const countAfterFirstRun = countTestItems(ctrl.items);
+        assert.ok(
+            countAfterFirstRun >= staticTotalCount,
+            `Item count should not decrease after run-all (was ${staticTotalCount}, now ${countAfterFirstRun})`,
         );
+
+        // Second run should not create duplicate dataset children
+        await vscode.commands.executeCommand('phpunit.run-all');
+        const countAfterSecondRun = countTestItems(ctrl.items);
+        assert.strictEqual(
+            countAfterSecondRun,
+            countAfterFirstRun,
+            'Item count should remain stable after second run-all (no duplicate dataset children)',
+        );
+
+        // Update run baseline to include dynamically added dataset children
+        initialTotalCount = countAfterFirstRun;
     });
 
     // --- Run workspace folder item ---
@@ -363,8 +378,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         assert.strictEqual(
             countTestItems(ctrl.items),
-            initialTotalCount,
-            'Total item count should match after config change + reload',
+            staticTotalCount,
+            'Total item count should match static baseline after config change + reload',
         );
 
         // Verify group count preserved after config change
@@ -408,11 +423,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'file add: should have First method',
         );
 
-        // Verify item count increased
+        // Verify item count increased (compare against static baseline since reload drops runtime dataset children)
         const countAfterAdd = countTestItems(ctrl.items);
         assert.ok(
-            countAfterAdd > initialTotalCount,
-            `file add: total count should increase (was ${initialTotalCount}, now ${countAfterAdd})`,
+            countAfterAdd > staticTotalCount,
+            `file add: total count should increase (was ${staticTotalCount}, now ${countAfterAdd})`,
         );
 
         // Verify run-at-cursor works with new file
@@ -473,8 +488,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const countAfterRemove = countTestItems(ctrl.items);
         assert.strictEqual(
             countAfterRemove,
-            initialTotalCount,
-            'file remove: total count should return to initial',
+            staticTotalCount,
+            'file remove: total count should return to static baseline',
         );
 
         // Verify run-all still works after file removal
@@ -556,12 +571,12 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             );
         }
 
-        // Verify total count matches initial
+        // Verify total count matches static baseline (workspace restore triggers reload)
         const totalAfterRestore = countTestItems(ctrl.items);
         assert.strictEqual(
             totalAfterRestore,
-            initialTotalCount,
-            `Total item count should match initial (expected ${initialTotalCount}, got ${totalAfterRestore})`,
+            staticTotalCount,
+            `Total item count should match static baseline (expected ${staticTotalCount}, got ${totalAfterRestore})`,
         );
 
         // Verify group count restored
@@ -576,7 +591,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await waitForTestItems(ctrl, 2, 30_000);
         assert.strictEqual(
             countTestItems(ctrl.items),
-            initialTotalCount,
+            staticTotalCount,
             'Reload should preserve total item count after workspace restore',
         );
 
