@@ -7,7 +7,13 @@ import {
     TestTag,
     Uri,
 } from 'vscode';
-import { type PHPUnitXML, type TestDefinition, TestIdentifierFactory, TestType } from '../PHPUnit';
+import {
+    createDatasetDefinition,
+    type PHPUnitXML,
+    type TestDefinition,
+    TestIdentifierFactory,
+    TestType,
+} from '../PHPUnit';
 
 const TEST_ICONS: Record<TestType, string> = {
     [TestType.workspace]: '$(folder)',
@@ -16,6 +22,7 @@ const TEST_ICONS: Record<TestType, string> = {
     [TestType.class]: '$(symbol-class)',
     [TestType.method]: '$(symbol-method)',
     [TestType.describe]: '$(symbol-class)',
+    [TestType.dataset]: '$(symbol-enum-member)',
 };
 
 export function icon(type: TestType): string {
@@ -101,12 +108,20 @@ export class TestHierarchyBuilder {
         siblings.push(testItem);
         this.testData.set(testItem, test);
 
-        if (!test.children) {
+        const allChildren = [...(test.children ?? [])];
+        const dataset = test.annotations?.dataset;
+        if (dataset && dataset.length > 0) {
+            for (const label of dataset) {
+                allChildren.push(createDatasetDefinition(test, label));
+            }
+        }
+
+        if (allChildren.length === 0) {
             return;
         }
 
         const children: TestItem[] = [];
-        for (const child of test.children) {
+        for (const child of allChildren) {
             this.buildChild(child, children, testItem);
         }
         testItem.children.replace(children);
@@ -291,7 +306,10 @@ export class TestHierarchyBuilder {
     }
 
     private parseLabelWithIcon(testDefinition: TestDefinition) {
-        const prefix = icon(testDefinition.type);
+        const prefix =
+            testDefinition.type === TestType.method && testDefinition.annotations?.dataProvider
+                ? '$(symbol-enum)'
+                : icon(testDefinition.type);
 
         return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
     }

@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { PHPUnitXML } from '../PHPUnitXML';
+import type { AstParser } from '../TestParser/AstParser';
 import { ChainAstParser } from '../TestParser/ChainAstParser';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
 import { PhpParserAstParser } from '../TestParser/php-parser/PhpParserAstParser';
@@ -28,7 +29,7 @@ export const parseTestFile = (
     buffer: Buffer | string,
     file: string,
     root: string,
-    astParser?: import('../TestParser/AstParser').AstParser,
+    astParser?: AstParser,
 ) => {
     const phpUnitXML = new PHPUnitXML();
     phpUnitXML.setRoot(root);

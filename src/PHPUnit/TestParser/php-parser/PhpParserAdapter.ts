@@ -1,4 +1,4 @@
-import type { AstNode, AstNodeLoc, CallNode, UseItemNode } from '../AstNode';
+import type { ArrayEntryNode, AstNode, AstNodeLoc, CallNode, UseItemNode } from '../AstNode';
 
 // biome-ignore lint/suspicious/noExplicitAny: Raw php-parser AST nodes are untyped
 type RawNode = any;
@@ -88,6 +88,10 @@ function adaptNode(raw: RawNode): AstNode | undefined {
             };
         case 'include':
             return { kind: 'include_expression', loc: convertLoc(raw.loc) };
+        case 'array':
+            return adaptArrayCreation(raw);
+        case 'entry':
+            return adaptArrayEntry(raw);
         default:
             return undefined;
     }
@@ -121,10 +125,40 @@ function adaptMethod(raw: RawNode): AstNode {
         name: extractName(raw.name),
         visibility: raw.visibility ?? '',
         isAbstract: raw.isAbstract === true,
+        body: raw.body ? adaptMethodBody(raw.body) : undefined,
         leadingComments: convertComments(raw.leadingComments),
         attrGroups: raw.attrGroups,
         loc: convertLoc(raw.loc),
     };
+}
+
+function adaptMethodBody(body: RawNode): AstNode[] {
+    const statements: AstNode[] = [];
+
+    for (const child of body.children ?? []) {
+        if (!child) continue;
+        if (child.kind === 'return') {
+            const value = child.expr ? adaptNode(child.expr) : undefined;
+            statements.push({
+                kind: 'return_statement',
+                value,
+                loc: convertLoc(child.loc),
+            } as AstNode);
+        } else if (child.kind === 'expressionstatement' && child.expression?.kind === 'yield') {
+            statements.push(adaptYieldExpression(child.expression));
+        }
+    }
+
+    return statements;
+}
+
+function adaptYieldExpression(raw: RawNode): AstNode {
+    return {
+        kind: 'yield_expression',
+        key: raw.key ? adaptNode(raw.key) : undefined,
+        value: raw.value ? adaptNode(raw.value) : undefined,
+        loc: convertLoc(raw.loc),
+    } as AstNode;
 }
 
 function adaptTraitUse(raw: RawNode): AstNode {
@@ -293,6 +327,30 @@ function adaptArrowFunc(raw: RawNode): AstNode {
     return {
         kind: 'arrow_function',
         body: body ? (adaptNode(body) ?? fallback) : fallback,
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptArrayCreation(raw: RawNode): AstNode {
+    const entries = (raw.items ?? [])
+        .map((item: RawNode) => adaptNode(item))
+        .filter(Boolean) as ArrayEntryNode[];
+
+    return {
+        kind: 'array_creation_expression',
+        entries,
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptArrayEntry(raw: RawNode): AstNode {
+    const key = raw.key ? adaptNode(raw.key) : undefined;
+    const value = adaptNode(raw.value) ?? { kind: 'string', value: '', loc: convertLoc(raw.loc) };
+
+    return {
+        kind: 'array_element_initializer',
+        key,
+        value,
         loc: convertLoc(raw.loc),
     };
 }

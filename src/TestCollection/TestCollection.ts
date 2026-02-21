@@ -68,6 +68,26 @@ export class TestCollection {
         return this.index.getDefinition(testItem.id);
     }
 
+    addDatasetChild(parentItem: TestItem, childDef: TestDefinition): TestItem {
+        const existing = this.index.getItem(childDef.id);
+        if (existing) {
+            return existing;
+        }
+
+        const childItem = this.ctrl.createTestItem(
+            childDef.id,
+            `${icon(TestType.dataset)} ${childDef.label}`,
+            parentItem.uri,
+        );
+        childItem.range = parentItem.range;
+        parentItem.children.add(childItem);
+
+        const uri = parentItem.uri?.toString() ?? parentItem.id;
+        this.index.set(uri, childItem, childDef);
+
+        return childItem;
+    }
+
     findTestsByFile(uri: URI): TestItem[] {
         const tests: TestItem[] = [];
         for (const [testItem, testDef] of this.index.getDefinitionsByUri(uri.toString())) {

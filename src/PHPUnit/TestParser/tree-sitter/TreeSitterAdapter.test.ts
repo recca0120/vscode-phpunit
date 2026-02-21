@@ -85,7 +85,7 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     start: { line: 9, character: 0 },
-                    end: { line: 89, character: 1 },
+                    end: { line: 85, character: 1 },
                 }),
             );
         });
@@ -215,7 +215,10 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     namespace: 'Tests',
                     className: 'AssertionsTest',
                     methodName: 'addition_provider',
-                    annotations: { dataProvider: ['additionProvider'], depends: ['test_passed'] },
+                    annotations: {
+                        dataProvider: ['additionProvider'],
+                        depends: ['test_passed'],
+                    },
                     start: { line: 66, character: 4 },
                     end: { line: 69, character: 5 },
                 }),
@@ -233,8 +236,8 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     className: 'AssertionsTest',
                     methodName: 'balanceIsInitiallyZero',
                     annotations: { testdox: ['has an initial balance of zero'] },
-                    start: { line: 85, character: 4 },
-                    end: { line: 88, character: 5 },
+                    start: { line: 81, character: 4 },
+                    end: { line: 84, character: 5 },
                 }),
             );
         });
@@ -393,7 +396,10 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     namespace: 'Tests',
                     className: 'AttributeTest',
                     methodName: 'testAdd',
-                    annotations: { dataProvider: ['additionProvider'] },
+                    annotations: {
+                        dataProvider: ['additionProvider'],
+                        dataset: ['#0', '#1', '#2', '#3'],
+                    },
                     start: { line: 22, character: 4 },
                     end: { line: 25, character: 5 },
                 }),

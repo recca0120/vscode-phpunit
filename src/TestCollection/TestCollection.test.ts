@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { ChainAstParser, PHPUnitXML, TestParser, TestType } from '../PHPUnit';
+import {
+    ChainAstParser,
+    createDatasetDefinition,
+    PHPUnitXML,
+    type TestDefinition,
+    TestParser,
+    TestType,
+} from '../PHPUnit';
 import { generateXML, pestProject, phpUnitProject } from '../PHPUnit/__tests__/utils';
 import { ClassHierarchy } from '../PHPUnit/TestParser/ClassHierarchy';
 import { PhpParserAstParser } from '../PHPUnit/TestParser/php-parser/PhpParserAstParser';
@@ -814,6 +821,540 @@ test('Test3', function () {
                     },
                 ]);
             });
+        });
+    });
+
+    describe('static dataset children', () => {
+        it('#[TestWith] numeric', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/TestWithTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\TestWith;
+use PHPUnit\\Framework\\TestCase;
+
+class TestWithTest extends TestCase
+{
+    #[TestWith([1, 2, 3])]
+    #[TestWith([0, 0, 0])]
+    public function testAddition(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Test With (Tests\\TestWith)') as TestItem;
+            const method = cls.children.get('Test With (Tests\\TestWith)::Addition') as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Test With (Tests\\TestWith)::Addition with data set #0',
+            );
+            const child1 = method.children.get(
+                'Test With (Tests\\TestWith)::Addition with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('#[TestWith] with named datasets', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/TestWithNamedTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\TestWith;
+use PHPUnit\\Framework\\TestCase;
+
+class TestWithNamedTest extends TestCase
+{
+    #[TestWith([0, 0, 0], 'adding zeros')]
+    #[TestWith([0, 1, 1], 'zero plus one')]
+    public function testAddition(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Test With Named (Tests\\TestWithNamed)') as TestItem;
+            const method = cls.children.get(
+                'Test With Named (Tests\\TestWithNamed)::Addition',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Test With Named (Tests\\TestWithNamed)::Addition with data set "adding zeros"',
+            );
+            const child1 = method.children.get(
+                'Test With Named (Tests\\TestWithNamed)::Addition with data set "zero plus one"',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('#[TestWithJson] numeric', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/TestWithJsonTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\TestWithJson;
+use PHPUnit\\Framework\\TestCase;
+
+class TestWithJsonTest extends TestCase
+{
+    #[TestWithJson('[1, 1, 2]')]
+    #[TestWithJson('[3, 4, 7]')]
+    public function testAddition(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Test With Json (Tests\\TestWithJson)') as TestItem;
+            const method = cls.children.get(
+                'Test With Json (Tests\\TestWithJson)::Addition',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Test With Json (Tests\\TestWithJson)::Addition with data set #0',
+            );
+            const child1 = method.children.get(
+                'Test With Json (Tests\\TestWithJson)::Addition with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('Pest ->with() named keys', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/WithTest.php'),
+                        code: `<?php
+it('adds numbers', function (int $a, int $b, int $expected) {
+    expect($a + $b)->toBe($expected);
+})->with([
+    'one plus one'   => [1, 1, 2],
+    'two plus three' => [2, 3, 5],
+]);`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\WithTest') as TestItem;
+            const method = cls.children.get('tests/Unit/WithTest.php::it adds numbers') as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'tests/Unit/WithTest.php::it adds numbers with data set "one plus one"',
+            );
+            const child1 = method.children.get(
+                'tests/Unit/WithTest.php::it adds numbers with data set "two plus three"',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('Pest ->with() numeric', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/WithNumericTest.php'),
+                        code: `<?php
+it('validates emails', function (string $email) {
+    expect($email)->not->toBeEmpty();
+})->with(['alice@example.com', 'bob@example.com']);`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\WithNumericTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/WithNumericTest.php::it validates emails',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'tests/Unit/WithNumericTest.php::it validates emails with data set #0',
+            );
+            const child1 = method.children.get(
+                'tests/Unit/WithNumericTest.php::it validates emails with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('@dataProvider with return array (named + numeric keys)', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/ReturnProviderTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class ReturnProviderTest extends TestCase
+{
+    /**
+     * @dataProvider addProvider
+     */
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function addProvider(): array
+    {
+        return [
+            'one plus one' => [1, 1, 2],
+            [2, 3, 5],
+        ];
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Return Provider (Tests\\ReturnProvider)') as TestItem;
+            const method = cls.children.get(
+                'Return Provider (Tests\\ReturnProvider)::Add',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Return Provider (Tests\\ReturnProvider)::Add with data set "one plus one"',
+            );
+            const child1 = method.children.get(
+                'Return Provider (Tests\\ReturnProvider)::Add with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('@dataProvider with yield (named keys)', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/YieldProviderTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use Generator;
+use PHPUnit\\Framework\\TestCase;
+
+class YieldProviderTest extends TestCase
+{
+    /**
+     * @dataProvider yieldProvider
+     */
+    public function test_yield(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function yieldProvider(): Generator
+    {
+        yield 'first' => [1, 0, 1];
+        yield 'second' => [0, 1, 1];
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Yield Provider (Tests\\YieldProvider)') as TestItem;
+            const method = cls.children.get(
+                'Yield Provider (Tests\\YieldProvider)::Yield',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Yield Provider (Tests\\YieldProvider)::Yield with data set "first"',
+            );
+            const child1 = method.children.get(
+                'Yield Provider (Tests\\YieldProvider)::Yield with data set "second"',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('@dataProvider with yield (no keys)', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/YieldNumericTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use Generator;
+use PHPUnit\\Framework\\TestCase;
+
+class YieldNumericTest extends TestCase
+{
+    /**
+     * @dataProvider yieldProvider
+     */
+    public function test_yield(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function yieldProvider(): Generator
+    {
+        yield [0, 0, 0];
+        yield [0, 1, 1];
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Yield Numeric (Tests\\YieldNumeric)') as TestItem;
+            const method = cls.children.get(
+                'Yield Numeric (Tests\\YieldNumeric)::Yield',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Yield Numeric (Tests\\YieldNumeric)::Yield with data set #0',
+            );
+            const child1 = method.children.get(
+                'Yield Numeric (Tests\\YieldNumeric)::Yield with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('#[DataProvider] attribute resolves provider body', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/AttrProviderTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\DataProvider;
+use PHPUnit\\Framework\\TestCase;
+
+class AttrProviderTest extends TestCase
+{
+    #[DataProvider('addProvider')]
+    public function testAdd(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function addProvider(): array
+    {
+        return [
+            'sum' => [1, 2, 3],
+            [4, 5, 9],
+        ];
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Attr Provider (Tests\\AttrProvider)') as TestItem;
+            const method = cls.children.get('Attr Provider (Tests\\AttrProvider)::Add') as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'Attr Provider (Tests\\AttrProvider)::Add with data set "sum"',
+            );
+            const child1 = method.children.get(
+                'Attr Provider (Tests\\AttrProvider)::Add with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('unresolvable provider body returns no dataset', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/DynamicProviderTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class DynamicProviderTest extends TestCase
+{
+    /**
+     * @dataProvider dynamicProvider
+     */
+    public function test_dynamic(int $v): void
+    {
+        $this->assertTrue($v > 0);
+    }
+
+    public static function dynamicProvider(): array
+    {
+        return array_map(fn($i) => [$i], range(1, 5));
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Dynamic Provider (Tests\\DynamicProvider)') as TestItem;
+            const method = cls.children.get(
+                'Dynamic Provider (Tests\\DynamicProvider)::Dynamic',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(0);
+        });
+
+        it('no dataset when no TestWith/TestWithJson attributes', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/NoDatasetTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class NoDatasetTest extends TestCase
+{
+    public function test_plain(): void
+    {
+        $this->assertTrue(true);
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('No Dataset (Tests\\NoDataset)') as TestItem;
+            const method = cls.children.get('No Dataset (Tests\\NoDataset)::Plain') as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(0);
+        });
+    });
+
+    describe('addDatasetChild', () => {
+        it('creates dataset child with correct TestDefinition in index', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
+            const methodItem = classItem.children.get(
+                'Assertions (Tests\\Assertions)::Addition provider',
+            ) as TestItem;
+            expect(methodItem).toBeDefined();
+
+            const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
+            const childDef = createDatasetDefinition(parentDef, 'with data set #0');
+            const childItem = collection.addDatasetChild(methodItem, childDef);
+
+            // child is in parent.children
+            expect(methodItem.children.get(childItem.id)).toBe(childItem);
+
+            // child has a TestDefinition
+            const storedDef = collection.getTestDefinition(childItem);
+            expect(storedDef).toBeDefined();
+            expect(storedDef?.type).toBe(TestType.dataset);
+            expect(storedDef?.methodName).toBe(parentDef.methodName);
+
+            // child id matches convention
+            expect(childItem.id).toContain('with data set #0');
+        });
+
+        it('returns existing child on repeated calls', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
+            const methodItem = classItem.children.get(
+                'Assertions (Tests\\Assertions)::Addition provider',
+            ) as TestItem;
+
+            const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
+            const childDef = createDatasetDefinition(parentDef, 'with data set #0');
+            const child1 = collection.addDatasetChild(methodItem, childDef);
+            const child2 = collection.addDatasetChild(methodItem, childDef);
+
+            expect(child1).toBe(child2);
         });
     });
 

@@ -45,6 +45,10 @@ export class TestNode {
         return new TestNode(childAst, this.options);
     }
 
+    get node(): AstNode {
+        return this.ast;
+    }
+
     get astChildren(): AstNode[] {
         return getAstChildren(this.ast);
     }

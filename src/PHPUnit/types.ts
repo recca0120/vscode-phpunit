@@ -13,12 +13,14 @@ export enum TestType {
     class,
     describe,
     method,
+    dataset,
 }
 
 export type Annotations = {
     [p: string]: unknown;
     depends?: string[];
     dataProvider?: string[];
+    dataset?: string[];
     testdox?: string[];
     group?: string[];
 };

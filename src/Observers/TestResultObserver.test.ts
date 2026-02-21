@@ -1,37 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-    type Range,
+    type TestController,
     type TestItem,
-    type TestItemCollection,
     TestMessage,
     type TestRun,
-    type Uri,
+    TestRunRequest,
+    tests,
+    Uri,
 } from 'vscode';
 import type { TeamcityEvent, TestDefinition, TestFailed } from '../PHPUnit';
 import { TestResultObserver } from './TestResultObserver';
-
-function createTestItem(overrides: Partial<TestItem> = {}): TestItem {
-    return {
-        id: 'Tests\\ExampleTest::test_example',
-        label: 'test_example',
-        uri: { fsPath: '/project/tests/ExampleTest.php' } as unknown as Uri,
-        range: { start: { line: 5 }, end: { line: 10 } } as unknown as Range,
-        children: { size: 0 } as unknown as TestItemCollection,
-        ...overrides,
-    } as TestItem;
-}
-
-function createTestRun(): TestRun & { failed: ReturnType<typeof vi.fn> } {
-    return {
-        appendOutput: vi.fn(),
-        started: vi.fn(),
-        passed: vi.fn(),
-        failed: vi.fn(),
-        skipped: vi.fn(),
-        errored: vi.fn(),
-        end: vi.fn(),
-    } as unknown as TestRun & { failed: ReturnType<typeof vi.fn> };
-}
 
 function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
     return {
@@ -49,15 +27,21 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
 }
 
 describe('TestResultObserver', () => {
+    let ctrl: TestController;
     let queue: Map<TestDefinition, TestItem>;
-    let testRun: ReturnType<typeof createTestRun>;
+    let testRun: TestRun;
     let observer: TestResultObserver;
     let testItem: TestItem;
 
     beforeEach(() => {
+        ctrl = tests.createTestController('phpunit', 'PHPUnit');
+        testRun = ctrl.createTestRun(new TestRunRequest());
+        testItem = ctrl.createTestItem(
+            'Tests\\ExampleTest::test_example',
+            'test_example',
+            Uri.file('/project/tests/ExampleTest.php'),
+        );
         queue = new Map();
-        testRun = createTestRun();
-        testItem = createTestItem();
         queue.set({} as TestDefinition, testItem);
         observer = new TestResultObserver(queue, testRun);
     });
@@ -79,6 +63,17 @@ describe('TestResultObserver', () => {
             'false',
         );
         diffSpy.mockRestore();
+    });
+
+    it('should skip dataset results (handled by DatasetChildObserver)', () => {
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example',
+            name: 'test_example with data set #0',
+            flowId: 1,
+        } as never);
+
+        expect(testRun.started).not.toHaveBeenCalled();
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {

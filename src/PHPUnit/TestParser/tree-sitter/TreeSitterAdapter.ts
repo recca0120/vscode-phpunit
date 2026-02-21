@@ -1,5 +1,6 @@
 import type { Node as SyntaxNode } from '@vscode/tree-sitter-wasm';
 import type {
+    ArrayEntryNode,
     AstNode,
     AstNodeAttrGroup,
     AstNodeComment,
@@ -268,15 +269,64 @@ function adaptAsAlias(node: SyntaxNode): TraitAdaptationNode {
 
 function adaptMethod(node: SyntaxNode): AstNode {
     const nameNode = node.childForFieldName('name');
+    const bodyNode = node.childForFieldName('body');
 
     return {
         kind: 'method_declaration',
         name: nameNode ? nameNode.text : '',
         visibility: adaptVisibility(node),
         isAbstract: isAbstract(node),
+        body: bodyNode ? adaptMethodBody(bodyNode) : undefined,
         leadingComments: collectLeadingComments(node),
         attrGroups: collectAttrGroups(node),
         loc: getDeclarationLoc(node),
+    };
+}
+
+function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
+    const statements: AstNode[] = [];
+
+    for (const child of bodyNode.namedChildren) {
+        if (!child) continue;
+        if (child.type === 'return_statement') {
+            const valNode = child.namedChildren[0];
+            statements.push({
+                kind: 'return_statement',
+                value: valNode ? adaptExpression(valNode) : undefined,
+                loc: locOf(child),
+            });
+        } else if (child.type === 'expression_statement') {
+            const expr = child.namedChildren[0];
+            if (expr?.type === 'yield_expression') {
+                statements.push(adaptYield(expr));
+            }
+        }
+    }
+
+    return statements;
+}
+
+function adaptYield(node: SyntaxNode): AstNode {
+    const children = node.namedChildren.filter((c): c is NonNullable<typeof c> => !!c);
+
+    // yield 'key' => value — tree-sitter wraps as array_element_initializer
+    if (children.length === 1 && children[0].type === 'array_element_initializer') {
+        const entry = children[0];
+        const keyNode = entry.namedChildren[0];
+        const valueNode = entry.namedChildren[1];
+        return {
+            kind: 'yield_expression',
+            key: keyNode ? adaptExpression(keyNode) : undefined,
+            value: valueNode ? adaptExpression(valueNode) : undefined,
+            loc: locOf(node),
+        };
+    }
+
+    // yield value (no key)
+    return {
+        kind: 'yield_expression',
+        value: children.length > 0 ? adaptExpression(children[0]) : undefined,
+        loc: locOf(node),
     };
 }
 
@@ -483,7 +533,44 @@ function adaptExpression(node: SyntaxNode): AstNode {
         return adaptMemberCallAsCall(node);
     }
 
+    if (node.type === 'array_creation_expression') {
+        return adaptArray(node);
+    }
+
     return { kind: 'string', value: node.text, loc: locOf(node) };
+}
+
+function adaptArray(node: SyntaxNode): AstNode {
+    const entries: ArrayEntryNode[] = [];
+
+    for (const child of node.namedChildren) {
+        if (!child) continue;
+        if (child.type !== 'array_element_initializer') {
+            continue;
+        }
+
+        const namedChildren = child.namedChildren.filter((c): c is NonNullable<typeof c> => !!c);
+        if (namedChildren.length >= 2) {
+            entries.push({
+                kind: 'array_element_initializer',
+                key: adaptExpression(namedChildren[0]),
+                value: adaptExpression(namedChildren[1]),
+                loc: locOf(child),
+            });
+        } else if (namedChildren.length === 1) {
+            entries.push({
+                kind: 'array_element_initializer',
+                value: adaptExpression(namedChildren[0]),
+                loc: locOf(child),
+            });
+        }
+    }
+
+    return {
+        kind: 'array_creation_expression',
+        entries,
+        loc: locOf(node),
+    };
 }
 
 function adaptClosure(node: SyntaxNode): AstNode {
