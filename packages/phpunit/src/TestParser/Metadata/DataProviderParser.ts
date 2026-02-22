@@ -1,20 +1,11 @@
 import type {
-    ArrayCreationNode,
     ArrayEntryNode,
-    ArrowFuncNode,
     AstNode,
-    BlockNode,
-    ClassConstantAccessNode,
-    ClosureNode,
     ConstDeclarationNode,
     EncapsedStringNode,
     ForeachStatementNode,
     ForStatementNode,
-    MethodNode,
-    NumberNode,
     ReturnStatementNode,
-    StringNode,
-    VariableNode,
     YieldExpressionNode,
 } from '../AstParser/AstNode';
 
@@ -28,19 +19,19 @@ type Bindings = Record<string, unknown>;
 class DataProviderParser {
     parse(node: AstNode, classBody?: AstNode[]): string[] {
         if (node.kind === 'array_creation_expression') {
-            return this.extractLabels((node as ArrayCreationNode).entries);
+            return this.extractLabels(node.entries);
         }
 
         if (node.kind === 'method_declaration') {
-            return this.parseMethodBody((node as MethodNode).body, classBody);
+            return this.parseMethodBody(node.body, classBody);
         }
 
         if (node.kind === 'anonymous_function' || node.kind === 'arrow_function') {
-            const body = (node as ClosureNode | ArrowFuncNode).body;
+            const { body } = node;
             if (!body || body.kind !== 'compound_statement') {
                 return [];
             }
-            return this.parseMethodBody((body as BlockNode).children, classBody);
+            return this.parseMethodBody(body.children, classBody);
         }
 
         return [];
@@ -55,7 +46,7 @@ class DataProviderParser {
         const yields = body.filter((s): s is YieldExpressionNode => s.kind === 'yield_expression');
 
         if (returns.length === 1 && returns[0].value?.kind === 'array_creation_expression') {
-            return this.extractLabels((returns[0].value as ArrayCreationNode).entries);
+            return this.extractLabels(returns[0].value.entries);
         }
 
         if (yields.length > 0) {
@@ -65,9 +56,9 @@ class DataProviderParser {
         for (const stmt of body) {
             let result: string[] | undefined;
             if (stmt.kind === 'for_statement') {
-                result = this.evaluateForLoop(stmt as ForStatementNode);
+                result = this.evaluateForLoop(stmt);
             } else if (stmt.kind === 'foreach_statement') {
-                result = this.evaluateForeachLoop(stmt as ForeachStatementNode, classBody);
+                result = this.evaluateForeachLoop(stmt, classBody);
             }
             if (result && result.length > 0) {
                 return result;
@@ -149,20 +140,20 @@ class DataProviderParser {
 
     private resolveExpression(node: AstNode, bindings: Bindings): string | undefined {
         if (node.kind === 'string') {
-            return (node as StringNode).value;
+            return node.value;
         }
 
         if (node.kind === 'variable') {
-            const val = bindings[(node as VariableNode).name];
+            const val = bindings[node.name];
             return val !== undefined ? String(val) : undefined;
         }
 
         if (node.kind === 'encapsed_string') {
-            return this.interpolateString(node as EncapsedStringNode, bindings);
+            return this.interpolateString(node, bindings);
         }
 
         if (node.kind === 'number') {
-            return String((node as NumberNode).value);
+            return String(node.value);
         }
 
         return undefined;
@@ -172,11 +163,11 @@ class DataProviderParser {
         return node.parts
             .map((part) => {
                 if (part.kind === 'string') {
-                    return (part as StringNode).value;
+                    return part.value;
                 }
                 if (part.kind === 'variable') {
-                    const val = bindings[(part as VariableNode).name];
-                    return val !== undefined ? String(val) : `$${(part as VariableNode).name}`;
+                    const val = bindings[part.name];
+                    return val !== undefined ? String(val) : `$${part.name}`;
                 }
                 return '';
             })
@@ -185,23 +176,21 @@ class DataProviderParser {
 
     private resolveIterable(source: AstNode, classBody?: AstNode[]): unknown[] | undefined {
         if (source.kind === 'array_creation_expression') {
-            return (source as ArrayCreationNode).entries.map((entry) => {
+            return source.entries.map((entry) => {
                 if (entry.value?.kind === 'string') {
-                    return (entry.value as StringNode).value;
+                    return entry.value.value;
                 }
                 if (entry.value?.kind === 'number') {
-                    return (entry.value as NumberNode).value;
+                    return entry.value.value;
                 }
                 return undefined;
             });
         }
 
         if (source.kind === 'class_constant_access' && classBody) {
-            const constAccess = source as ClassConstantAccessNode;
             const constDecl = classBody.find(
                 (n): n is ConstDeclarationNode =>
-                    n.kind === 'const_declaration' &&
-                    (n as ConstDeclarationNode).name === constAccess.name,
+                    n.kind === 'const_declaration' && n.name === source.name,
             );
             if (constDecl?.value) {
                 return this.resolveIterable(constDecl.value);
@@ -213,10 +202,10 @@ class DataProviderParser {
 
     private resolveNumber(node: AstNode): number | undefined {
         if (node.kind === 'number') {
-            return (node as NumberNode).value;
+            return node.value;
         }
         if (node.kind === 'string') {
-            const num = Number((node as StringNode).value);
+            const num = Number(node.value);
             return Number.isNaN(num) ? undefined : num;
         }
         return undefined;

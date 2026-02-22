@@ -1,5 +1,5 @@
 import type { TestDefinition } from '../types';
-import type { AstNode, ClassNode } from './AstParser/AstNode';
+import type { AstNode } from './AstParser/AstNode';
 import type { ClassInfo } from './ClassHierarchy';
 import { dataProviderParser } from './Metadata/DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
@@ -37,9 +37,7 @@ export class PHPUnitTestExtractor implements TestExtractor {
 
             const parent = this.getOrCreateParent(testDefinitions, classDef);
             const classBody =
-                classDef.node.kind === 'class_declaration'
-                    ? (classDef.node as ClassNode).body
-                    : undefined;
+                classDef.node.kind === 'class_declaration' ? classDef.node.body : undefined;
 
             parent.children = methods
                 .filter((m) => m.isTest())
