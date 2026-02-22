@@ -2,6 +2,7 @@ import { TestType } from '../types';
 import type {
     ArrayCreationNode,
     ArrayEntryNode,
+    AstNode,
     CallNode,
     ExpressionStatementNode,
     NamespaceNode,
@@ -73,7 +74,7 @@ export function getPestFunctions(node: TestNode): TestNode[] {
 }
 
 function extractPestDataset(testNode: TestNode): string[] {
-    const withArrays: ArrayCreationNode[] = [];
+    const withSources: AstNode[] = [];
     let parent = testNode.parent;
     // Parent chain walks from innermost to outermost: it() → with(A) → with(B)
     while (parent) {
@@ -81,21 +82,31 @@ function extractPestDataset(testNode: TestNode): string[] {
             const callNode = parent.node as CallNode;
             const firstArg = callNode.arguments[0];
             if (firstArg?.kind === 'array_creation_expression') {
-                withArrays.push(firstArg as ArrayCreationNode);
+                withSources.push(firstArg);
+            } else if (
+                firstArg?.kind === 'anonymous_function' ||
+                firstArg?.kind === 'arrow_function'
+            ) {
+                withSources.push(firstArg);
             }
         }
         parent = parent.parent;
     }
 
-    if (withArrays.length === 0) {
+    if (withSources.length === 0) {
         return [];
     }
 
-    if (withArrays.length === 1) {
-        return dataProviderParser.parse(withArrays[0]);
+    if (withSources.length === 1) {
+        return dataProviderParser.parse(withSources[0]);
     }
 
-    return cartesianProduct(withArrays.map(extractArrayValues));
+    const allArrays = withSources.every((n) => n.kind === 'array_creation_expression');
+    if (allArrays) {
+        return cartesianProduct(withSources.map((n) => extractArrayValues(n as ArrayCreationNode)));
+    }
+
+    return withSources.flatMap((source) => dataProviderParser.parse(source));
 }
 
 function extractArrayValues(node: ArrayCreationNode): string[] {

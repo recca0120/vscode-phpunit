@@ -1057,6 +1057,83 @@ class MultiAttrProviderTest extends TestCase
     });
 });
 
+describe.each(parsers)('PHPUnit yield-based DataProvider (%s)', (_name, createParser) => {
+    const givenTest = (file: string, content: string, id: string) => {
+        return findTest(parse(content, file, createParser()), id);
+    };
+
+    it('parse DataProvider with yield (named keys)', () => {
+        const yieldFile = phpUnitProject('tests/DataProviderAnnotationTest.php');
+        const yieldContent = `<?php
+namespace Tests;
+
+use Generator;
+use PHPUnit\\Framework\\TestCase;
+
+class DataProviderAnnotationTest extends TestCase
+{
+    /**
+     * @dataProvider generatorProvider
+     */
+    public function test_generator_provider(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function generatorProvider(): Generator
+    {
+        yield 'yield one' => [1, 0, 1];
+        yield 'yield two' => [0, 1, 1];
+    }
+}`;
+        expect(givenTest(yieldFile, yieldContent, 'test_generator_provider')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'test_generator_provider',
+                annotations: {
+                    dataProvider: ['generatorProvider'],
+                    dataset: ['"yield one"', '"yield two"'],
+                },
+            }),
+        );
+    });
+
+    it('parse DataProvider with yield (no key)', () => {
+        const yieldFile = phpUnitProject('tests/DataProviderAnnotationTest.php');
+        const yieldContent = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class YieldNoKeyTest extends TestCase
+{
+    /**
+     * @dataProvider numericProvider
+     */
+    public function test_numeric_yield(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function numericProvider()
+    {
+        yield [0, 0, 0];
+        yield [0, 1, 1];
+    }
+}`;
+        expect(givenTest(yieldFile, yieldContent, 'test_numeric_yield')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'test_numeric_yield',
+                annotations: {
+                    dataProvider: ['numericProvider'],
+                    dataset: ['#0', '#1'],
+                },
+            }),
+        );
+    });
+});
+
 describe('PropertyHooksTest (PHP 8.4 — issue #336)', () => {
     const file = phpUnitProject('tests/PropertyHooksTest.php');
     const content = `<?php

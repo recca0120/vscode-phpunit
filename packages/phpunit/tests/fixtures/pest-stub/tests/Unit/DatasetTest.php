@@ -21,3 +21,10 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
 it('business closed', function (string $business, string $day) {
     expect(true)->toBeTrue();
 })->with(['Office', 'Bank'])->with(['Saturday', 'Sunday']);
+
+it('generates numbers', function (int $a, int $b, int $expected) {
+    expect($a + $b)->toBe($expected);
+})->with(function () {
+    yield 'gen one' => [1, 0, 1];
+    yield 'gen two' => [0, 1, 1];
+});

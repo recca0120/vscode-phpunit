@@ -471,6 +471,48 @@ it('business closed', function (string $business, string $day) {
         );
     });
 
+    it('generator closure dataset with named keys', () => {
+        const content = `<?php
+it('adds numbers', function (int $a, int $b, int $expected) {
+    expect($a + $b)->toBe($expected);
+})->with(function () {
+    yield 'one plus one' => [1, 1, 2];
+    yield 'two plus three' => [2, 3, 5];
+});
+    `;
+        const test = givenTest(file, content, 'it adds numbers');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it adds numbers',
+                annotations: expect.objectContaining({
+                    dataset: ['"one plus one"', '"two plus three"'],
+                }),
+            }),
+        );
+    });
+
+    it('generator closure dataset with numeric keys', () => {
+        const content = `<?php
+it('multiplies numbers', function (int $a, int $b, int $expected) {
+    expect($a * $b)->toBe($expected);
+})->with(function () {
+    yield [2, 3, 6];
+    yield [4, 5, 20];
+});
+    `;
+        const test = givenTest(file, content, 'it multiplies numbers');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it multiplies numbers',
+                annotations: expect.objectContaining({
+                    dataset: ['#0', '#1'],
+                }),
+            }),
+        );
+    });
+
     it('parse describe arch', () => {
         const content = `<?php 
 

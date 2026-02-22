@@ -601,6 +601,13 @@ function adaptBlock(node: SyntaxNode): AstNode {
 
     for (const child of node.namedChildren) {
         if (!child) continue;
+        if (child.type === 'expression_statement') {
+            const expr = child.namedChildren[0];
+            if (expr?.type === 'yield_expression') {
+                children.push(adaptYield(expr));
+                continue;
+            }
+        }
         const adapted = adaptTopLevelNode(child);
         if (adapted) {
             children.push(adapted);

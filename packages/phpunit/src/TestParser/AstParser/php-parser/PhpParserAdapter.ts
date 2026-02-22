@@ -86,6 +86,8 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 children: adaptChildren(raw.children ?? []),
                 loc: convertLoc(raw.loc),
             };
+        case 'yield':
+            return adaptYieldExpression(raw);
         case 'include':
             return { kind: 'include_expression', loc: convertLoc(raw.loc) };
         case 'array':
@@ -280,10 +282,14 @@ function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
 }
 
 function adaptExpressionStatement(raw: RawNode): AstNode {
-    const expr = adaptNode(raw.expression);
+    const expr = raw.expression;
+    if (expr?.kind === 'yield') {
+        return adaptYieldExpression(expr);
+    }
+    const adapted = adaptNode(expr);
     return {
         kind: 'expression_statement',
-        expression: expr ?? { kind: 'include_expression', loc: convertLoc(raw.loc) },
+        expression: adapted ?? { kind: 'include_expression', loc: convertLoc(raw.loc) },
         loc: convertLoc(raw.loc),
     };
 }

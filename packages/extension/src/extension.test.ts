@@ -1178,8 +1178,8 @@ describe('Extension Test', () => {
 
             const expected = resolveExpected(
                 pestVersion,
-                [['3.0.0', { enqueued: 72, started: 84, passed: 27, failed: 55, end: 1 }]],
-                { enqueued: 72, started: 73, passed: 20, failed: 51, end: 1 },
+                [['3.0.0', { enqueued: 73, started: 87, passed: 30, failed: 55, end: 1 }]],
+                { enqueued: 73, started: 75, passed: 22, failed: 51, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
