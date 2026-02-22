@@ -241,6 +241,18 @@ function adaptCall(raw: RawNode): CallNode {
     };
 }
 
+function toCallNode(raw: RawNode): CallNode {
+    if (raw.kind === 'call') {
+        return adaptCall(raw);
+    }
+    return {
+        kind: 'function_call_expression',
+        name: extractName(raw),
+        arguments: [],
+        loc: convertLoc(raw?.loc),
+    };
+}
+
 function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
     if (!what) {
         return { name: '' };
@@ -254,27 +266,9 @@ function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
     if (what.kind === 'propertylookup') {
         const methodName = what.offset ? extractName(what.offset) : '';
         const inner = what.what;
+        const chain = inner ? toCallNode(inner) : undefined;
 
-        if (inner && inner.kind === 'call') {
-            const innerCall = adaptCall(inner);
-            return { name: methodName, chain: innerCall };
-        }
-
-        const { name: innerName, chain: innerChain } = resolveCallChain(inner);
-        if (innerName) {
-            return {
-                name: methodName,
-                chain: {
-                    kind: 'function_call_expression',
-                    name: innerName,
-                    arguments: [],
-                    chain: innerChain,
-                    loc: convertLoc(inner?.loc),
-                },
-            };
-        }
-
-        return { name: methodName };
+        return { name: methodName, chain };
     }
 
     if (what.kind === 'call') {

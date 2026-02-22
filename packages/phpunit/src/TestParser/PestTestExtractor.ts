@@ -1,6 +1,13 @@
 import { TestType } from '../types';
-import type { CallNode, ExpressionStatementNode, NamespaceNode } from './AstNode';
-import { type DatasetEntry, dataProviderParser } from './DataProviderParser';
+import type {
+    ArrayCreationNode,
+    ArrayEntryNode,
+    CallNode,
+    ExpressionStatementNode,
+    NamespaceNode,
+    StringNode,
+} from './AstNode';
+import { dataProviderParser } from './DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
 import { TestNode } from './TestNode';
 
@@ -66,24 +73,41 @@ export function getPestFunctions(node: TestNode): TestNode[] {
 }
 
 function extractPestDataset(testNode: TestNode): string[] {
-    const datasets: DatasetEntry[][] = [];
+    const withArrays: ArrayCreationNode[] = [];
     let parent = testNode.parent;
+    // Parent chain walks from innermost to outermost: it() → with(A) → with(B)
     while (parent) {
         if (parent.kind === 'function_call_expression' && parent.name === 'with') {
             const callNode = parent.node as CallNode;
             const firstArg = callNode.arguments[0];
             if (firstArg?.kind === 'array_creation_expression') {
-                datasets.push(dataProviderParser.parseEntries(firstArg));
+                withArrays.push(firstArg as ArrayCreationNode);
             }
         }
         parent = parent.parent;
     }
 
-    if (datasets.length <= 1) {
-        return datasets[0]?.map((e) => e.label) ?? [];
+    if (withArrays.length === 0) {
+        return [];
     }
 
-    return cartesianProduct(datasets.map((d) => d.map((e) => e.value)));
+    if (withArrays.length === 1) {
+        return dataProviderParser.parse(withArrays[0]);
+    }
+
+    return cartesianProduct(withArrays.map(extractArrayValues));
+}
+
+function extractArrayValues(node: ArrayCreationNode): string[] {
+    return node.entries.map((entry: ArrayEntryNode) => {
+        if (entry.key?.kind === 'string' && entry.key.value) {
+            return entry.key.value;
+        }
+        if (entry.value?.kind === 'string') {
+            return (entry.value as StringNode).value;
+        }
+        return '';
+    });
 }
 
 function cartesianProduct(datasets: string[][]): string[] {

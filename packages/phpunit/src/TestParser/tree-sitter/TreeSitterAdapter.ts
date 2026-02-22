@@ -388,6 +388,16 @@ function adaptCall(node: SyntaxNode): CallNode {
     };
 }
 
+function toCallNode(node: SyntaxNode): CallNode {
+    if (node.type === 'function_call_expression') {
+        return adaptCall(node);
+    }
+    if (node.type === 'member_call_expression') {
+        return adaptMemberCallAsCall(node);
+    }
+    return { kind: 'function_call_expression', name: node.text, arguments: [], loc: locOf(node) };
+}
+
 function resolveCallInfo(node: SyntaxNode | null): {
     name: string;
     arguments?: AstNode[];
@@ -407,29 +417,9 @@ function resolveCallInfo(node: SyntaxNode | null): {
         const argsNode = node.childForFieldName('arguments');
         const methodName = nameNode ? nameNode.text : '';
         const args = argsNode ? adaptArguments(argsNode) : [];
+        const chain = objNode ? toCallNode(objNode) : undefined;
 
-        if (objNode?.type === 'function_call_expression') {
-            return { name: methodName, arguments: args, chain: adaptCall(objNode) };
-        }
-
-        if (objNode?.type === 'member_call_expression') {
-            const innerCall = adaptMemberCallAsCall(objNode);
-            return { name: methodName, arguments: args, chain: innerCall };
-        }
-
-        if (objNode) {
-            return {
-                name: methodName,
-                chain: {
-                    kind: 'function_call_expression',
-                    name: objNode.text,
-                    arguments: args,
-                    loc: locOf(objNode),
-                },
-            };
-        }
-
-        return { name: methodName };
+        return { name: methodName, arguments: args, chain };
     }
 
     if (node.type === 'function_call_expression') {
