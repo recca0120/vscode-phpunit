@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "target": "ES2020",
         "lib": ["ES2020", "DOM"],
         "sourceMap": true,
@@ -14,8 +15,11 @@
         "isolatedModules": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "declaration": true
+        "declaration": true,
+        "paths": {
+            "vscode": ["./vscode.d.ts"]
+        }
     },
     "include": ["src/**/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],
-    "exclude": [".vscode-test", "node_modules", "**/__mocks__/*", "**/*.test.ts", "tests/**/*"]
+    "exclude": [".vscode-test", "node_modules", "**/__mocks__/*", "tests/**/*"]
 }

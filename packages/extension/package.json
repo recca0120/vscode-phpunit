@@ -184,7 +184,7 @@
     "main": "./dist/extension.js",
     "scripts": {
         "vscode:prepublish": "pnpm run package",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc -p tsconfig.test.json --noEmit",
         "compile": "pnpm run typecheck && node esbuild.mjs",
         "watch": "node esbuild.mjs --watch",
         "package": "pnpm run typecheck && node esbuild.mjs --production",

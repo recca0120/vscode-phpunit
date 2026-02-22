@@ -134,6 +134,7 @@ describe('PrettyPrinter', () => {
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest::test_skipped',
             file: phpUnitProject('tests/AssertionsTest.php'),
             message: 'The MySQLi extension is not available.',
+            details: [],
             duration: 0,
         });
 
