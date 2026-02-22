@@ -1,12 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, pestProject, phpUnitProject } from '../../../../tests/utils';
-import { PHPUnitXML } from '../../../Configuration/PHPUnitXML';
 import { type TestDefinition, TestType } from '../../../types';
 import { ClassHierarchy } from '../../ClassHierarchy';
-import { PestTestExtractor } from '../../PestTestExtractor';
-import { PHPUnitTestExtractor } from '../../PHPUnitTestExtractor';
-import { TestNode } from '../../TestNode';
+import { interpret } from '../../Interpreter/interpret';
+import { extractTests } from '../../TestExtractor';
 import { adapt } from './TreeSitterAdapter';
 import { initTreeSitter, parsePhp } from './TreeSitterParser';
 
@@ -31,19 +29,10 @@ function parseWithTreeSitter(
     const ast = adapt(tree.rootNode);
     tree.delete();
 
-    const phpUnitXML = new PHPUnitXML();
-    phpUnitXML.setRoot(root);
+    const fileInfo = interpret(ast);
+    const result = extractTests(fileInfo, file, root);
 
-    const definition = new TestNode(ast, { phpUnitXML, file });
-    const extractors = [new PestTestExtractor(), new PHPUnitTestExtractor()];
-    for (const extractor of extractors) {
-        const result = extractor.extract(definition);
-        if (result) {
-            return flattenTests(result.tests);
-        }
-    }
-
-    return [];
+    return result ? flattenTests(result.tests) : [];
 }
 
 const parsePhpUnit = (buffer: Buffer | string, file: string) =>
@@ -523,17 +512,14 @@ class PropertyHooksTest extends TestCase
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const hierarchy = new ClassHierarchy();
             let allTests: TestDefinition[] = [];
-            const phpUnitXML = new PHPUnitXML();
-            phpUnitXML.setRoot(root);
 
             for (const { file, content } of files) {
                 const tree = parsePhp(content);
                 const ast = adapt(tree.rootNode);
                 tree.delete();
 
-                const definition = new TestNode(ast, { phpUnitXML, file });
-                const extractor = new PHPUnitTestExtractor();
-                const result = extractor.extract(definition);
+                const fileInfo = interpret(ast);
+                const result = extractTests(fileInfo, file, root);
                 if (result) {
                     for (const cls of result.classes) {
                         hierarchy.register(cls);

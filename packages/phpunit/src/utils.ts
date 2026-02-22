@@ -135,3 +135,13 @@ function semverCompare(a: string, b: string): number {
 
 export const semverGte = (a: string, b: string) => semverCompare(a, b) >= 0;
 export const semverLt = (a: string, b: string) => semverCompare(a, b) < 0;
+
+const DATASET_PATTERN = /\swith\sdata\sset\s([#"].+)$/;
+
+export function isDatasetResult(name: string): boolean {
+    return DATASET_PATTERN.test(name);
+}
+
+export function stripDataset(id: string): string {
+    return id.replace(DATASET_PATTERN, '');
+}

@@ -1,6 +1,6 @@
 import type { TestResultIdentify } from '../TestOutput';
-import { stripDataset } from '../TestParser';
 import { type TestDefinition, TestType } from '../types';
+import { stripDataset } from '../utils';
 
 export abstract class TestIdentifier {
     static generateSearchText(input: string) {

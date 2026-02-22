@@ -5,10 +5,6 @@ export * from './TestCoverage';
 export * from './TestIdentifier';
 export * from './TestOutput';
 export * from './TestParser';
-export {
-    initTreeSitter,
-    resolveWasmDir,
-} from './TestParser/AstParser/tree-sitter/TreeSitterParser';
 export * from './TestRunner';
 export * from './types';
 export * from './utils';
