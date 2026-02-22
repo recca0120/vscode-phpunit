@@ -8,7 +8,7 @@
 
 Run [PHPUnit](https://phpunit.de/) and [Pest](https://pestphp.com/) tests directly in VS Code using the native Test Explorer UI.
 
-![PHPUnit](img/phpunit.gif)
+![PHPUnit](https://raw.githubusercontent.com/recca0120/vscode-phpunit/main/packages/extension/img/phpunit.gif)
 
 ## Quick Start
 
@@ -32,7 +32,7 @@ Run [PHPUnit](https://phpunit.de/) and [Pest](https://pestphp.com/) tests direct
 - **Xdebug debugging** — step-through debugging with one click
 - **Continuous runs** — auto-run tests on file changes
 
-![Pest](img/pest.png)
+![Pest](https://raw.githubusercontent.com/recca0120/vscode-phpunit/main/packages/extension/img/pest.png)
 
 ## Settings
 
