@@ -64,12 +64,16 @@ export function evaluateMethodBody(body: AstNode[] | undefined, classBody?: AstN
     return [];
 }
 
-function evaluateForLoop(loop: ForStatementNode): string[] {
-    const iterations = buildForIterations(loop);
+function evaluateForLoop(
+    loop: ForStatementNode,
+    classBody?: AstNode[],
+    outerBindings?: Bindings,
+): string[] {
+    const iterations = buildForIterations(loop, outerBindings);
     if (!iterations) {
         return [];
     }
-    return evaluateLoopYields(iterations, loop.body);
+    return evaluateLoopYields(iterations, loop.body, classBody);
 }
 
 function buildForIterations(
@@ -215,12 +219,7 @@ function evaluateInnerLoop(
     if (loop.kind === 'foreach_statement') {
         return evaluateForeachLoop(loop, classBody, outerBindings);
     }
-
-    const innerIterations = buildForIterations(loop, outerBindings);
-    if (!innerIterations) {
-        return [];
-    }
-    return evaluateLoopYields(innerIterations, loop.body, classBody);
+    return evaluateForLoop(loop, classBody, outerBindings);
 }
 
 function resolveExpression(node: AstNode, bindings: Bindings): string | undefined {
