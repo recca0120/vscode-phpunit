@@ -212,6 +212,15 @@ function adaptMethodBody(body: RawNode): AstNode[] {
     return statements;
 }
 
+function adaptStatementBody(raw: RawNode): AstNode[] {
+    if (!raw.body) {
+        return [];
+    }
+    return raw.body.kind === 'block'
+        ? adaptMethodBody(raw.body)
+        : adaptMethodBody({ children: [raw.body] });
+}
+
 function adaptForStatement(raw: RawNode): AstNode {
     let init: { variable: string; value: AstNode } | undefined;
     let condition: { variable: string; operator: string; value: AstNode } | undefined;
@@ -245,39 +254,22 @@ function adaptForStatement(raw: RawNode): AstNode {
         };
     }
 
-    const body =
-        raw.body?.kind === 'block'
-            ? adaptMethodBody(raw.body)
-            : raw.body
-              ? adaptMethodBody({ children: [raw.body] })
-              : [];
-
     return {
         kind: 'for_statement',
         init,
         condition,
         update,
-        body,
+        body: adaptStatementBody(raw),
         loc: convertLoc(raw.loc),
     };
 }
 
 function adaptForeachStatement(raw: RawNode): AstNode {
-    const source = adaptNode(raw.source) ?? ({ kind: 'string', value: '' } as AstNode);
-    const valueVariable = extractName(raw.value?.name ?? raw.value);
-
-    const body =
-        raw.body?.kind === 'block'
-            ? adaptMethodBody(raw.body)
-            : raw.body
-              ? adaptMethodBody({ children: [raw.body] })
-              : [];
-
     return {
         kind: 'foreach_statement',
-        source,
-        valueVariable,
-        body,
+        source: adaptNode(raw.source) ?? ({ kind: 'string', value: '' } as AstNode),
+        valueVariable: extractName(raw.value?.name ?? raw.value),
+        body: adaptStatementBody(raw),
         loc: convertLoc(raw.loc),
     };
 }

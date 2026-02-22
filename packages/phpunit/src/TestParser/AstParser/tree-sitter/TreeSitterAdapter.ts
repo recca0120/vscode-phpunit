@@ -329,113 +329,99 @@ function adaptForStatement(node: SyntaxNode): AstNode {
     let init: { variable: string; value: AstNode } | undefined;
     let condition: { variable: string; operator: string; value: AstNode } | undefined;
     let update: { variable: string; operator: string } | undefined;
-    let body: AstNode[] = [];
 
-    // Parse init: $i = 0
-    const initNode = node.children.find((c) => c?.type === 'assignment_expression');
-    if (initNode) {
-        const left = initNode.childForFieldName('left');
-        const right = initNode.childForFieldName('right');
-        if (left && right) {
-            init = {
-                variable: left.text.replace(/^\$/, ''),
-                value: adaptExpression(right),
-            };
+    for (const child of node.children) {
+        if (!child) continue;
+        switch (child.type) {
+            case 'assignment_expression':
+                init = parseForInit(child);
+                break;
+            case 'binary_expression':
+                condition = parseForCondition(child);
+                break;
+            case 'update_expression':
+                update = parseForUpdate(child);
+                break;
         }
     }
 
-    // Parse condition: $i < 3
-    const condNode = node.children.find((c) => c?.type === 'binary_expression');
-    if (condNode) {
-        const left = condNode.childForFieldName('left');
-        const op = condNode.childForFieldName('operator');
-        const right = condNode.childForFieldName('right');
-        if (left && op && right) {
-            condition = {
-                variable: left.text.replace(/^\$/, ''),
-                operator: op.text,
-                value: adaptExpression(right),
-            };
-        }
-    }
-
-    // Parse update: $i++
-    const updateNode = node.children.find((c) => c?.type === 'update_expression');
-    if (updateNode) {
-        const varName = updateNode.namedChildren[0];
-        if (varName) {
-            update = {
-                variable: varName.text.replace(/^\$/, ''),
-                operator: updateNode.text.endsWith('++') ? '++' : '--',
-            };
-        }
-    }
-
-    // Parse body
-    const bodyNode = node.children.find((c) => c?.type === 'compound_statement');
-    if (bodyNode) {
-        body = adaptMethodBody(bodyNode);
-    }
+    const bodyNode = node.childForFieldName('body');
 
     return {
         kind: 'for_statement',
         init,
         condition,
         update,
-        body,
+        body: bodyNode ? adaptMethodBody(bodyNode) : [],
         loc: locOf(node),
+    };
+}
+
+function parseForInit(node: SyntaxNode): { variable: string; value: AstNode } | undefined {
+    const left = node.childForFieldName('left');
+    const right = node.childForFieldName('right');
+    if (!left || !right) return undefined;
+    return { variable: left.text.replace(/^\$/, ''), value: adaptExpression(right) };
+}
+
+function parseForCondition(
+    node: SyntaxNode,
+): { variable: string; operator: string; value: AstNode } | undefined {
+    const left = node.childForFieldName('left');
+    const op = node.childForFieldName('operator');
+    const right = node.childForFieldName('right');
+    if (!left || !op || !right) return undefined;
+    return {
+        variable: left.text.replace(/^\$/, ''),
+        operator: op.text,
+        value: adaptExpression(right),
+    };
+}
+
+function parseForUpdate(node: SyntaxNode): { variable: string; operator: string } | undefined {
+    const varName = node.namedChildren[0];
+    if (!varName) return undefined;
+    return {
+        variable: varName.text.replace(/^\$/, ''),
+        operator: node.text.endsWith('++') ? '++' : '--',
     };
 }
 
 function adaptForeachStatement(node: SyntaxNode): AstNode {
     let source: AstNode = { kind: 'string', value: '', loc: locOf(node) };
     let valueVariable = '';
-
-    // Find the source expression and value variable
-    // foreach (EXPR as $v)
-    const children = node.children.filter((c): c is NonNullable<typeof c> => !!c);
-
-    // Source is the first named expression child after '('
-    for (const child of node.namedChildren) {
-        if (!child) continue;
-        if (
-            child.type === 'array_creation_expression' ||
-            child.type === 'class_constant_access_expression' ||
-            child.type === 'variable_name' ||
-            child.type === 'function_call_expression'
-        ) {
-            source = adaptExpression(child);
-            break;
-        }
-    }
-
-    // Find "as" keyword position, then the variable after it
     let foundAs = false;
-    for (const child of children) {
-        if (child.type === 'as') {
+
+    // foreach (EXPR as $v) { ... }
+    for (const child of node.children) {
+        if (!child) continue;
+        if (!foundAs && isExpressionType(child.type)) {
+            source = adaptExpression(child);
+        } else if (child.type === 'as') {
             foundAs = true;
-            continue;
-        }
-        if (foundAs && child.type === 'variable_name') {
+        } else if (foundAs && child.type === 'variable_name') {
             valueVariable = child.text.replace(/^\$/, '');
-            break;
         }
     }
 
-    // Parse body
-    let body: AstNode[] = [];
-    const bodyNode = node.children.find((c) => c?.type === 'compound_statement');
-    if (bodyNode) {
-        body = adaptMethodBody(bodyNode);
-    }
+    const bodyNode = node.childForFieldName('body');
 
     return {
         kind: 'foreach_statement',
         source,
         valueVariable,
-        body,
+        body: bodyNode ? adaptMethodBody(bodyNode) : [],
         loc: locOf(node),
     };
+}
+
+function isExpressionType(type: string): boolean {
+    return (
+        type === 'array_creation_expression' ||
+        type === 'class_constant_access_expression' ||
+        type === 'variable_name' ||
+        type === 'function_call_expression'
+    );
 }
 
 function adaptYield(node: SyntaxNode): AstNode {

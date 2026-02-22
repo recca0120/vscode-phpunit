@@ -62,20 +62,14 @@ class DataProviderParser {
             return this.extractLabels(yields);
         }
 
-        const forLoops = body.filter((s): s is ForStatementNode => s.kind === 'for_statement');
-        for (const loop of forLoops) {
-            const result = this.evaluateForLoop(loop);
-            if (result.length > 0) {
-                return result;
+        for (const stmt of body) {
+            let result: string[] | undefined;
+            if (stmt.kind === 'for_statement') {
+                result = this.evaluateForLoop(stmt as ForStatementNode);
+            } else if (stmt.kind === 'foreach_statement') {
+                result = this.evaluateForeachLoop(stmt as ForeachStatementNode, classBody);
             }
-        }
-
-        const foreachLoops = body.filter(
-            (s): s is ForeachStatementNode => s.kind === 'foreach_statement',
-        );
-        for (const loop of foreachLoops) {
-            const result = this.evaluateForeachLoop(loop, classBody);
-            if (result.length > 0) {
+            if (result && result.length > 0) {
                 return result;
             }
         }
