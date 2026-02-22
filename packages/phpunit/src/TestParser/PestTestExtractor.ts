@@ -74,24 +74,7 @@ export function getPestFunctions(node: TestNode): TestNode[] {
 }
 
 function extractPestDataset(testNode: TestNode): string[] {
-    const withSources: AstNode[] = [];
-    let parent = testNode.parent;
-    // Parent chain walks from innermost to outermost: it() → with(A) → with(B)
-    while (parent) {
-        if (parent.kind === 'function_call_expression' && parent.name === 'with') {
-            const callNode = parent.node as CallNode;
-            const firstArg = callNode.arguments[0];
-            if (firstArg?.kind === 'array_creation_expression') {
-                withSources.push(firstArg);
-            } else if (
-                firstArg?.kind === 'anonymous_function' ||
-                firstArg?.kind === 'arrow_function'
-            ) {
-                withSources.push(firstArg);
-            }
-        }
-        parent = parent.parent;
-    }
+    const withSources = collectWithSources(testNode);
 
     if (withSources.length === 0) {
         return [];
@@ -107,6 +90,29 @@ function extractPestDataset(testNode: TestNode): string[] {
     }
 
     return withSources.flatMap((source) => dataProviderParser.parse(source));
+}
+
+const supportedWithKinds = new Set([
+    'array_creation_expression',
+    'anonymous_function',
+    'arrow_function',
+]);
+
+function collectWithSources(testNode: TestNode): AstNode[] {
+    const sources: AstNode[] = [];
+    let parent = testNode.parent;
+    // Parent chain walks from innermost to outermost: it() → with(A) → with(B)
+    while (parent) {
+        if (parent.kind === 'function_call_expression' && parent.name === 'with') {
+            const callNode = parent.node as CallNode;
+            const firstArg = callNode.arguments[0];
+            if (firstArg && supportedWithKinds.has(firstArg.kind)) {
+                sources.push(firstArg);
+            }
+        }
+        parent = parent.parent;
+    }
+    return sources;
 }
 
 function extractArrayValues(node: ArrayCreationNode): string[] {

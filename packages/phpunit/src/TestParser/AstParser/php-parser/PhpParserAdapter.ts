@@ -134,6 +134,16 @@ function adaptMethod(raw: RawNode): AstNode {
     };
 }
 
+function tryAdaptYieldFromExpressionStatement(raw: RawNode): AstNode | null {
+    if (raw.kind !== 'expressionstatement') {
+        return null;
+    }
+    if (raw.expression?.kind !== 'yield') {
+        return null;
+    }
+    return adaptYieldExpression(raw.expression);
+}
+
 function adaptMethodBody(body: RawNode): AstNode[] {
     const statements: AstNode[] = [];
 
@@ -146,8 +156,11 @@ function adaptMethodBody(body: RawNode): AstNode[] {
                 value,
                 loc: convertLoc(child.loc),
             } as AstNode);
-        } else if (child.kind === 'expressionstatement' && child.expression?.kind === 'yield') {
-            statements.push(adaptYieldExpression(child.expression));
+            continue;
+        }
+        const yieldNode = tryAdaptYieldFromExpressionStatement(child);
+        if (yieldNode) {
+            statements.push(yieldNode);
         }
     }
 
@@ -282,11 +295,13 @@ function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
 }
 
 function adaptExpressionStatement(raw: RawNode): AstNode {
-    const expr = raw.expression;
-    if (expr?.kind === 'yield') {
-        return adaptYieldExpression(expr);
+    // Yield inside closure body must be promoted to top-level yield_expression,
+    // not wrapped in expression_statement (same as adaptMethodBody).
+    const yieldNode = tryAdaptYieldFromExpressionStatement(raw);
+    if (yieldNode) {
+        return yieldNode;
     }
-    const adapted = adaptNode(expr);
+    const adapted = adaptNode(raw.expression);
     return {
         kind: 'expression_statement',
         expression: adapted ?? { kind: 'include_expression', loc: convertLoc(raw.loc) },

@@ -283,6 +283,17 @@ function adaptMethod(node: SyntaxNode): AstNode {
     };
 }
 
+function tryAdaptYieldFromStatement(node: SyntaxNode): AstNode | null {
+    if (node.type !== 'expression_statement') {
+        return null;
+    }
+    const expr = node.namedChildren[0];
+    if (expr?.type !== 'yield_expression') {
+        return null;
+    }
+    return adaptYield(expr);
+}
+
 function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
     const statements: AstNode[] = [];
 
@@ -295,11 +306,11 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
                 value: valNode ? adaptExpression(valNode) : undefined,
                 loc: locOf(child),
             });
-        } else if (child.type === 'expression_statement') {
-            const expr = child.namedChildren[0];
-            if (expr?.type === 'yield_expression') {
-                statements.push(adaptYield(expr));
-            }
+            continue;
+        }
+        const yieldNode = tryAdaptYieldFromStatement(child);
+        if (yieldNode) {
+            statements.push(yieldNode);
         }
     }
 
@@ -601,12 +612,10 @@ function adaptBlock(node: SyntaxNode): AstNode {
 
     for (const child of node.namedChildren) {
         if (!child) continue;
-        if (child.type === 'expression_statement') {
-            const expr = child.namedChildren[0];
-            if (expr?.type === 'yield_expression') {
-                children.push(adaptYield(expr));
-                continue;
-            }
+        const yieldNode = tryAdaptYieldFromStatement(child);
+        if (yieldNode) {
+            children.push(yieldNode);
+            continue;
         }
         const adapted = adaptTopLevelNode(child);
         if (adapted) {
