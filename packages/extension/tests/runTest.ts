@@ -106,6 +106,29 @@ async function runMultiWorkspaceTest(): Promise<void> {
     });
 }
 
+async function runIssue381Test(): Promise<void> {
+    const issue381Root = join(fixturesPath, 'issue-381/php-project');
+    const binary = 'vendor/bin/phpunit';
+    try {
+        execSync(`php ${binary} --version`, { cwd: issue381Root, timeout: 10000 });
+    } catch {
+        console.log('Skipping issue-381 test: phpunit not available in issue-381/php-project');
+        return;
+    }
+
+    const workspacePath = join(fixturesPath, 'workspaces/issue-381-workspace.code-workspace');
+
+    console.log('\n=== Running e2e: issue-381 (duplicate tests with shared config) ===\n');
+    await runTests({
+        extensionDevelopmentPath,
+        extensionTestsPath: resolve(__dirname, './suite-issue-381/index'),
+        launchArgs: [workspacePath, '--disable-extensions'],
+        extensionTestsEnv: {
+            ISSUE381_PHPUNIT_BINARY: binary,
+        },
+    });
+}
+
 async function main() {
     try {
         const suitePath = resolve(__dirname, './suite/index');
@@ -124,6 +147,9 @@ async function main() {
 
         // Run multi-workspace test
         await runMultiWorkspaceTest();
+
+        // Run issue #381 test (duplicate tests in multi-root with shared config)
+        await runIssue381Test();
     } catch (_err) {
         console.error('Failed to run tests');
         process.exit(1);
