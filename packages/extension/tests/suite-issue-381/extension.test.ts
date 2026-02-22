@@ -7,6 +7,8 @@ const phpunitBinary = process.env.ISSUE381_PHPUNIT_BINARY ?? '';
 
 suite('Issue #381 — duplicate tests in multi-root workspace with shared config', () => {
     let ctrl: vscode.TestController;
+    let phpFolder: vscode.WorkspaceFolder;
+    let tsFolder: vscode.WorkspaceFolder;
 
     suiteSetup(async () => {
         const api = await activateExtension();
@@ -15,8 +17,10 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
         const folders = vscode.workspace.workspaceFolders ?? [];
         assert.strictEqual(folders.length, 2, 'Should have 2 workspace folders');
 
-        const phpFolder = folders.find((f) => f.name === 'php-project');
+        phpFolder = folders.find((f) => f.name === 'php-project')!;
+        tsFolder = folders.find((f) => f.name === 'ts-project')!;
         assert.ok(phpFolder, 'php-project folder should exist');
+        assert.ok(tsFolder, 'ts-project folder should exist');
 
         // Configure phpunit binary for php-project
         const phpConfig = vscode.workspace.getConfiguration('phpunit', phpFolder.uri);
@@ -52,11 +56,6 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
     });
 
     test('should only discover tests under php-project, not ts-project', () => {
-        const folders = vscode.workspace.workspaceFolders ?? [];
-        const phpFolder = folders.find((f) => f.name === 'php-project');
-        const tsFolder = folders.find((f) => f.name === 'ts-project');
-        assert.ok(phpFolder && tsFolder);
-
         const phpRoot = findTestItem(ctrl.items, `folder:${phpFolder.uri.toString()}`);
         const tsRoot = findTestItem(ctrl.items, `folder:${tsFolder.uri.toString()}`);
 
@@ -65,9 +64,7 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
         const phpCount = countTestItems(phpRoot.children);
         assert.ok(phpCount > 0, `php-project should have test items (got ${phpCount})`);
 
-        // ts-project should NOT have tests — this is the bug
-        // Currently ts-project discovers the same tests because --configuration points to
-        // php-project's phpunit.xml with an absolute path
+        // ts-project should NOT have tests
         if (tsRoot) {
             const tsCount = countTestItems(tsRoot.children);
             assert.strictEqual(
@@ -79,10 +76,6 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
     });
 
     test('total test count should equal php-project test count only', () => {
-        const folders = vscode.workspace.workspaceFolders ?? [];
-        const phpFolder = folders.find((f) => f.name === 'php-project');
-        assert.ok(phpFolder);
-
         const phpRoot = findTestItem(ctrl.items, `folder:${phpFolder.uri.toString()}`);
         assert.ok(phpRoot);
 
@@ -90,8 +83,7 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
         const totalCount = countTestItems(ctrl.items);
 
         // Total should be: 2 folder roots + php-project's test items
-        // If there are duplicate tests, totalCount will be much higher
-        const expectedTotal = 2 + phpCount; // 2 folder root items + php tests
+        const expectedTotal = 2 + phpCount;
         assert.strictEqual(
             totalCount,
             expectedTotal,
