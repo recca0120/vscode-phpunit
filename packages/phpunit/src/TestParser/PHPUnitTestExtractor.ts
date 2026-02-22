@@ -55,12 +55,15 @@ export class PHPUnitTestExtractor implements TestExtractor {
             return def;
         }
 
-        const providerMethod = allMethods.find((m) => m.name === providers[0]);
-        if (!providerMethod) {
-            return def;
+        const dataset: string[] = [];
+        for (const providerName of providers) {
+            const providerMethod = allMethods.find((m) => m.name === providerName);
+            if (!providerMethod) {
+                continue;
+            }
+            dataset.push(...dataProviderParser.parse(providerMethod.node));
         }
 
-        const dataset = dataProviderParser.parse(providerMethod.node);
         if (dataset.length > 0) {
             def.annotations = { ...def.annotations, dataset };
         }

@@ -25,7 +25,8 @@
         ".": {
             "import": "./dist/index.js",
             "require": "./dist/index.cjs"
-        }
+        },
+        "./testing": "./tests/utils.ts"
     },
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
@@ -35,6 +36,7 @@
     ],
     "scripts": {
         "build": "tsup",
+        "watch": "tsup --watch",
         "compile": "tsup",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",

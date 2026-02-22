@@ -1,11 +1,11 @@
 import {
     EOL,
     PHPUnitXML,
-    phpUnitProject,
     TeamcityEvent,
     type TestFinished,
     type TestSuiteFinished,
 } from '@vscode-phpunit/phpunit';
+import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { OutputFormatter } from './OutputFormatter';
 

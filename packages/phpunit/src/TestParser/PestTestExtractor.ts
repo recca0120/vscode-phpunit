@@ -1,5 +1,12 @@
 import { TestType } from '../types';
-import type { CallNode, ExpressionStatementNode, NamespaceNode } from './AstNode';
+import type {
+    ArrayCreationNode,
+    ArrayEntryNode,
+    CallNode,
+    ExpressionStatementNode,
+    NamespaceNode,
+    StringNode,
+} from './AstNode';
 import { dataProviderParser } from './DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
 import { TestNode } from './TestNode';
@@ -66,19 +73,49 @@ export function getPestFunctions(node: TestNode): TestNode[] {
 }
 
 function extractPestDataset(testNode: TestNode): string[] {
+    const withArrays: ArrayCreationNode[] = [];
     let parent = testNode.parent;
+    // Parent chain walks from innermost to outermost: it() → with(A) → with(B)
     while (parent) {
         if (parent.kind === 'function_call_expression' && parent.name === 'with') {
             const callNode = parent.node as CallNode;
             const firstArg = callNode.arguments[0];
             if (firstArg?.kind === 'array_creation_expression') {
-                return dataProviderParser.parse(firstArg);
+                withArrays.push(firstArg as ArrayCreationNode);
             }
-            return [];
         }
         parent = parent.parent;
     }
-    return [];
+
+    if (withArrays.length === 0) {
+        return [];
+    }
+
+    if (withArrays.length === 1) {
+        return dataProviderParser.parse(withArrays[0]);
+    }
+
+    return cartesianProduct(withArrays.map(extractArrayValues));
+}
+
+function extractArrayValues(node: ArrayCreationNode): string[] {
+    return node.entries.map((entry: ArrayEntryNode) => {
+        if (entry.key?.kind === 'string' && entry.key.value) {
+            return entry.key.value;
+        }
+        if (entry.value?.kind === 'string') {
+            return (entry.value as StringNode).value;
+        }
+        return '';
+    });
+}
+
+function cartesianProduct(datasets: string[][]): string[] {
+    let combinations: string[][] = datasets[0].map((v) => [v]);
+    for (let i = 1; i < datasets.length; i++) {
+        combinations = combinations.flatMap((combo) => datasets[i].map((v) => [...combo, v]));
+    }
+    return combinations.map((combo) => `"(${combo.map((v) => `|'${v}|'`).join(', ')})"`);
 }
 
 function collectPestFunctions(parentNode: TestNode): TestNode[] {

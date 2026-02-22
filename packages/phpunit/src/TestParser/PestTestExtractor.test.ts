@@ -386,6 +386,91 @@ arch('Then should pass the PHP preset')->preset()->php();
         );
     });
 
+    it('named keys dataset', () => {
+        const content = `<?php
+
+it('adds numbers', function (int $a, int $b, int $expected) {
+    expect($a + $b)->toBe($expected);
+})->with(['one plus one' => [1, 1, 2], 'two plus three' => [2, 3, 5]]);
+        `;
+
+        const test = givenTest(file, content, 'it adds numbers');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it adds numbers',
+                annotations: expect.objectContaining({
+                    dataset: ['"one plus one"', '"two plus three"'],
+                }),
+            }),
+        );
+    });
+
+    it('numeric tuples dataset', () => {
+        const content = `<?php
+
+it('multiplies numbers', function (int $a, int $b, int $expected) {
+    expect($a * $b)->toBe($expected);
+})->with([[2, 3, 6], [4, 5, 20]]);
+        `;
+
+        const test = givenTest(file, content, 'it multiplies numbers');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it multiplies numbers',
+                annotations: expect.objectContaining({
+                    dataset: ['#0', '#1'],
+                }),
+            }),
+        );
+    });
+
+    it('string values dataset', () => {
+        const content = `<?php
+
+it('validates emails', function (string $email) {
+    expect($email)->not->toBeEmpty();
+})->with(['alice@example.com', 'bob@example.com']);
+        `;
+
+        const test = givenTest(file, content, 'it validates emails');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it validates emails',
+                annotations: expect.objectContaining({
+                    dataset: ['#0', '#1'],
+                }),
+            }),
+        );
+    });
+
+    it('chained ->with()->with() produces cartesian product (#21)', () => {
+        const content = `<?php
+
+it('business closed', function (string $business, string $day) {
+    expect(true)->toBeTrue();
+})->with(['Office', 'Bank'])->with(['Saturday', 'Sunday']);
+        `;
+
+        const test = givenTest(file, content, 'it business closed');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it business closed',
+                annotations: expect.objectContaining({
+                    dataset: [
+                        `"(|'Office|', |'Saturday|')"`,
+                        `"(|'Office|', |'Sunday|')"`,
+                        `"(|'Bank|', |'Saturday|')"`,
+                        `"(|'Bank|', |'Sunday|')"`,
+                    ],
+                }),
+            }),
+        );
+    });
+
     it('parse describe arch', () => {
         const content = `<?php 
 
