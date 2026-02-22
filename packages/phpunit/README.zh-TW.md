@@ -7,7 +7,7 @@
 ## 功能
 
 - **測試解析** — 透過 tree-sitter（WASM）和 php-parser 靜態分析 PHPUnit/Pest 測試檔案
-- **Data Provider 解析** — 從 `#[DataProvider]`、`#[TestWith]`、`->with()` 等語法萃取 dataset 名稱（[詳情](docs/data-provider-patterns.md)）
+- **Data Provider 解析** — 從 `#[DataProvider]`、`#[TestWith]`、`->with()` 等語法萃取 dataset 名稱（[詳情](docs/data-provider-guide.zh-TW.md)）
 - **PHPUnit XML** — 解析 `phpunit.xml` / `phpunit.xml.dist` 的 testsuite、coverage 與設定
 - **指令建構** — 建構 PHPUnit/Pest 命令列，支援 filter encoding、Xdebug、路徑映射
 - **測試輸出解析** — 將 Teamcity 格式輸出解析為結構化測試結果
@@ -56,8 +56,7 @@ pnpm test      # vitest
 
 ## 文件
 
-- [Data Provider 語法與 Teamcity 輸出對照](docs/data-provider-patterns.md)
-- [Data Provider 支援狀態追蹤](docs/data-provider-support-status.md)
+- [Data Provider 完整指南](docs/data-provider-guide.zh-TW.md)
 
 ## 授權
 

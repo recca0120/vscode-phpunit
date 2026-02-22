@@ -166,7 +166,19 @@ When using a [multi-root workspace](https://code.visualstudio.com/docs/editor/mu
 }
 ```
 
-The container mounts each project folder under its basename (e.g. `/project-a`, `/project-b`), and the command `cd` into the correct directory before running tests.
+Each project folder is mounted separately in the container under its basename:
+
+```yaml
+# docker-compose.yml
+services:
+  vscode-phpunit:
+    # ...
+    volumes:
+      - ./project-a:/project-a
+      - ./project-b:/project-b
+```
+
+The command `cd /${workspaceFolderBasename}` switches into the correct directory before running tests. Each folder should have its own `phpunit.xml` — the extension auto-detects it. **Do not** set `--configuration` with an absolute container path at workspace level (e.g. `--configuration=/project-a/phpunit.xml`), as this causes every folder to load the same config and discover duplicate tests.
 
 ### Laravel Sail
 
@@ -304,6 +316,14 @@ Ensure your `phpunit.command` template quotes the variables (this is the default
   "phpunit.command": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
 }
 ```
+</details>
+
+<details>
+<summary>Duplicate tests in multi-root workspace</summary>
+
+If the same tests appear under multiple workspace folders, check your `phpunit.args` setting. A `--configuration` flag pointing to an absolute container path (e.g. `--configuration=/var/www/project-a/phpunit.xml`) at workspace level causes every folder to load the same `phpunit.xml`.
+
+**Fix:** Remove `--configuration` from `phpunit.args` and let each folder auto-detect its own `phpunit.xml`. See the [Docker Multi-Workspace](#docker-multi-workspace) section for the correct setup.
 </details>
 
 ## Contributing

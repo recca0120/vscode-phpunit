@@ -64,8 +64,11 @@ export class TestFileDiscovery {
     }
 
     async discoverTestFiles(pattern: GlobPattern, exclude: GlobPattern): Promise<void> {
+        const folderUri = this.workspaceFolder.uri.toString();
         const newFiles = new Set(
-            (await workspace.findFiles(pattern, exclude)).map((f) => f.toString()),
+            (await workspace.findFiles(pattern, exclude))
+                .map((f) => f.toString())
+                .filter((uri) => uri.startsWith(folderUri)),
         );
 
         // Remove files that no longer exist

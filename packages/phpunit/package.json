@@ -40,8 +40,7 @@
         "compile": "tsup",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
-        "vitest": "vitest run",
-        "vitest:watch": "vitest",
+        "test:watch": "vitest",
         "lint": "biome check src",
         "lint:fix": "biome check --write src",
         "prepublishOnly": "tsup"

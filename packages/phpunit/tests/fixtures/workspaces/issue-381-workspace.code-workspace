@@ -1,0 +1,12 @@
+{
+    "folders": [
+        {
+            "path": "../issue-381/php-project"
+        },
+        {
+            "path": "../issue-381/ts-project"
+        }
+    ],
+    "settings": {
+    }
+}

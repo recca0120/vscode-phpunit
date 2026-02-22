@@ -175,6 +175,43 @@ export interface ForeachStatementNode {
     loc?: AstNodeLoc;
 }
 
+export interface WhileStatementNode {
+    kind: 'while_statement';
+    condition: { variable: string; operator: string; value: AstNode };
+    body: AstNode[];
+    loc?: AstNodeLoc;
+}
+
+export interface BinaryOpNode {
+    kind: 'binary_expression';
+    operator: string;
+    left: AstNode;
+    right: AstNode;
+    loc?: AstNodeLoc;
+}
+
+export interface ConditionalExpressionNode {
+    kind: 'conditional_expression';
+    condition: AstNode;
+    consequent: AstNode;
+    alternate: AstNode;
+    loc?: AstNodeLoc;
+}
+
+export interface AssignmentNode {
+    kind: 'assignment_expression';
+    variable: string;
+    value: AstNode;
+    loc?: AstNodeLoc;
+}
+
+export interface UpdateExpressionNode {
+    kind: 'update_expression';
+    variable: string;
+    operator: string;
+    loc?: AstNodeLoc;
+}
+
 export interface EncapsedStringNode {
     kind: 'encapsed_string';
     parts: AstNode[];
@@ -255,6 +292,11 @@ export type AstNode =
     | YieldExpressionNode
     | ForStatementNode
     | ForeachStatementNode
+    | WhileStatementNode
+    | BinaryOpNode
+    | ConditionalExpressionNode
+    | AssignmentNode
+    | UpdateExpressionNode
     | EncapsedStringNode
     | VariableNode
     | NumberNode

@@ -3,6 +3,9 @@ import type { ArrayEntryNode, AstNode, AstNodeLoc, CallNode, UseItemNode } from 
 // biome-ignore lint/suspicious/noExplicitAny: Raw php-parser AST nodes are untyped
 type RawNode = any;
 
+const ZERO_NODE = { kind: 'number', value: 0 } as AstNode;
+const EMPTY_STRING_NODE = { kind: 'string', value: '' } as AstNode;
+
 function convertLoc(loc: RawNode): AstNodeLoc | undefined {
     if (!loc) {
         return undefined;
@@ -115,6 +118,24 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 name: extractName(raw.offset?.name ?? raw.offset),
                 loc: convertLoc(raw.loc),
             };
+        case 'bin':
+            return {
+                kind: 'binary_expression',
+                operator: raw.type ?? '.',
+                left: adaptNode(raw.left) ?? EMPTY_STRING_NODE,
+                right: adaptNode(raw.right) ?? EMPTY_STRING_NODE,
+                loc: convertLoc(raw.loc),
+            };
+        case 'retif':
+            return {
+                kind: 'conditional_expression',
+                condition: adaptNode(raw.test) ?? EMPTY_STRING_NODE,
+                consequent: adaptNode(raw.trueExpr) ?? EMPTY_STRING_NODE,
+                alternate: adaptNode(raw.falseExpr) ?? EMPTY_STRING_NODE,
+                loc: convertLoc(raw.loc),
+            };
+        case 'parenthesis':
+            return raw.inner ? adaptNode(raw.inner) : undefined;
         default:
             return undefined;
     }
@@ -203,6 +224,21 @@ function adaptMethodBody(body: RawNode): AstNode[] {
             statements.push(adaptForeachStatement(child));
             continue;
         }
+        if (child.kind === 'while') {
+            statements.push(adaptWhileStatement(child));
+            continue;
+        }
+        if (child.kind === 'expressionstatement' && child.expression?.kind === 'assign') {
+            statements.push(adaptAssignment(child.expression));
+            continue;
+        }
+        if (
+            child.kind === 'expressionstatement' &&
+            (child.expression?.kind === 'post' || child.expression?.kind === 'pre')
+        ) {
+            statements.push(adaptUpdateExpression(child.expression));
+            continue;
+        }
         const yieldNode = tryAdaptYieldFromExpressionStatement(child);
         if (yieldNode) {
             statements.push(yieldNode);
@@ -231,7 +267,7 @@ function adaptForStatement(raw: RawNode): AstNode {
         const assign = raw.init[0];
         init = {
             variable: extractName(assign.left?.name ?? assign.left),
-            value: adaptNode(assign.right) ?? ({ kind: 'number', value: 0 } as AstNode),
+            value: adaptNode(assign.right) ?? ZERO_NODE,
         };
     }
 
@@ -241,7 +277,7 @@ function adaptForStatement(raw: RawNode): AstNode {
         condition = {
             variable: extractName(test.left?.name ?? test.left),
             operator: test.type ?? test.operator ?? '<',
-            value: adaptNode(test.right) ?? ({ kind: 'number', value: 0 } as AstNode),
+            value: adaptNode(test.right) ?? ZERO_NODE,
         };
     }
 
@@ -267,9 +303,49 @@ function adaptForStatement(raw: RawNode): AstNode {
 function adaptForeachStatement(raw: RawNode): AstNode {
     return {
         kind: 'foreach_statement',
-        source: adaptNode(raw.source) ?? ({ kind: 'string', value: '' } as AstNode),
+        source: adaptNode(raw.source) ?? EMPTY_STRING_NODE,
         valueVariable: extractName(raw.value?.name ?? raw.value),
         body: adaptStatementBody(raw),
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptWhileStatement(raw: RawNode): AstNode {
+    const test = raw.test;
+    let condition: { variable: string; operator: string; value: AstNode } = {
+        variable: '',
+        operator: '<',
+        value: ZERO_NODE,
+    };
+    if (test?.kind === 'bin') {
+        condition = {
+            variable: extractName(test.left?.name ?? test.left),
+            operator: test.type ?? test.operator ?? '<',
+            value: adaptNode(test.right) ?? ZERO_NODE,
+        };
+    }
+    return {
+        kind: 'while_statement',
+        condition,
+        body: adaptStatementBody(raw),
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptAssignment(raw: RawNode): AstNode {
+    return {
+        kind: 'assignment_expression',
+        variable: extractName(raw.left?.name ?? raw.left),
+        value: adaptNode(raw.right) ?? ZERO_NODE,
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptUpdateExpression(raw: RawNode): AstNode {
+    return {
+        kind: 'update_expression',
+        variable: extractName(raw.what?.name ?? raw.what),
+        operator: raw.type === '+' ? '++' : '--',
         loc: convertLoc(raw.loc),
     };
 }
