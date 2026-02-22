@@ -1,5 +1,6 @@
 import { relative } from 'node:path';
-import { PHPUnitXML, phpUnitProject } from '@vscode-phpunit/phpunit';
+import { PHPUnitXML } from '@vscode-phpunit/phpunit';
+import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
     type CancellationToken,

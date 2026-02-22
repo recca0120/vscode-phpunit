@@ -1,16 +1,15 @@
 import {
     Configuration,
-    detectPhpUnitStubs,
     EOL,
     type Path,
     PathReplacer,
     PHPUnitXML,
     ProcessBuilder,
-    phpUnitProject,
     semverGte,
     semverLt,
     TestRunner,
 } from '@vscode-phpunit/phpunit';
+import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';

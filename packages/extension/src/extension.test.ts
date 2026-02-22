@@ -8,15 +8,17 @@ type FakeFileSystemWatcher = { disposed: boolean };
 
 import {
     CloverParser,
-    detectParatestStubs,
-    detectPestStubs,
-    detectPhpUnitStubs,
     type FileCoverageData,
     initTreeSitter,
-    phpUnitProject,
     semverGte,
     TestType,
 } from '@vscode-phpunit/phpunit';
+import {
+    detectParatestStubs,
+    detectPestStubs,
+    detectPhpUnitStubs,
+    phpUnitProject,
+} from '@vscode-phpunit/phpunit/testing';
 import {
     CancellationTokenSource,
     commands,

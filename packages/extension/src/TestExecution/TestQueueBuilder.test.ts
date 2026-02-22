@@ -1,13 +1,12 @@
 import {
     ChainAstParser,
     ClassHierarchy,
-    generateXML,
     PHPUnitXML,
     PhpParserAstParser,
-    phpUnitProject,
     TestParser,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
+import { generateXML, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type TestController, type TestRun, tests } from 'vscode';
 import { URI } from 'vscode-uri';

@@ -1,4 +1,5 @@
-import { EOL, PHPUnitXML, phpUnitProject, TeamcityEvent } from '@vscode-phpunit/phpunit';
+import { EOL, PHPUnitXML, TeamcityEvent } from '@vscode-phpunit/phpunit';
+import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CollisionPrinter } from './CollisionPrinter';
 import { OutputFormatter } from './OutputFormatter';

@@ -1,10 +1,8 @@
 import {
     ChainAstParser,
     ClassHierarchy,
-    generateXML,
     PHPUnitXML,
     PhpParserAstParser,
-    phpUnitProject,
     type TeamcityEvent,
     type TestDefinition,
     TestParser,
@@ -12,6 +10,7 @@ import {
     TestType,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
+import { generateXML, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, type TestItem, tests } from 'vscode';
 import { URI } from 'vscode-uri';

@@ -5,7 +5,6 @@ export default defineConfig({
     resolve: {
         alias: {
             vscode: resolve(__dirname, '__mocks__/vscode.ts'),
-            '@vscode-phpunit/phpunit': resolve(__dirname, '../phpunit/src/_test-entry.ts'),
         },
     },
     test: {
