@@ -1,6 +1,5 @@
 import * as net from 'node:net';
-import type { IConfiguration } from '../Configuration';
-import type { PathReplacer } from '../PathReplacer';
+import type { IConfiguration, PathReplacer } from '../Configuration';
 import { cloneInstance } from '../utils';
 
 async function getFreePort(): Promise<number> {

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, pestProject, phpUnitProject } from '../../../tests/utils';
-import { PHPUnitXML } from '../../PHPUnitXML';
+import { PHPUnitXML } from '../../Configuration/PHPUnitXML';
 import { type TestDefinition, TestType } from '../../types';
 import { ClassHierarchy } from '../ClassHierarchy';
 import { PestTestExtractor } from '../PestTestExtractor';

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../tests/utils';
+import { phpUnitProject } from '../../tests/utils';
 import { Configuration } from './Configuration';
 
 describe('Configuration Test', () => {

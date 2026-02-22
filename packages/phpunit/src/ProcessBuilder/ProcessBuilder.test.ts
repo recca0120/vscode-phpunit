@@ -1,9 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
-import { Configuration } from '../Configuration';
+import { Configuration, PathReplacer } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
-import { PathReplacer } from '../PathReplacer';
 import { ProcessBuilder } from './ProcessBuilder';
 import { Mode, Xdebug } from './Xdebug';
 

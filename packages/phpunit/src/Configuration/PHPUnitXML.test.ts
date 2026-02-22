@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
-import { generateXML, phpUnitProject } from '../tests/utils';
+import { generateXML, phpUnitProject } from '../../tests/utils';
 import { PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { IConfiguration } from '../Configuration';
+import { PathReplacer } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
-import { PathReplacer } from '../PathReplacer';
 import { Mode, Xdebug } from './Xdebug';
 
 const stubConfig: IConfiguration = {

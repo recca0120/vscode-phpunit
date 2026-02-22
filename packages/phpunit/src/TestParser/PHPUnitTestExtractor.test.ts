@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../../tests/utils';
-import { PHPUnitXML } from '../PHPUnitXML';
+import { PHPUnitXML } from '../Configuration';
 import { type TestDefinition, TestType } from '../types';
 import type { AstParser } from './AstParser';
 import { ClassHierarchy } from './ClassHierarchy';

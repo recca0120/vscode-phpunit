@@ -2,8 +2,8 @@ import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
-import type { ProcessBuilder } from './ProcessBuilder';
-import { CloverParser, type FileCoverageData } from './TestCoverage';
+import type { ProcessBuilder } from '../ProcessBuilder';
+import { CloverParser, type FileCoverageData } from '../TestCoverage';
 
 export class TestRunnerProcess {
     private child?: ChildProcess;

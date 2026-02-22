@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
-import { PHPUnitXML } from '../src/PHPUnitXML';
+import { PHPUnitXML } from '../src/Configuration/PHPUnitXML';
 import type { AstParser } from '../src/TestParser/AstParser';
 import { ChainAstParser } from '../src/TestParser/ChainAstParser';
 import { ClassHierarchy } from '../src/TestParser/ClassHierarchy';
