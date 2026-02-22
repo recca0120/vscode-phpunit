@@ -13,6 +13,8 @@ import type {
 
 type Bindings = Record<string, unknown>;
 
+const MAX_ITERATIONS = 1000;
+
 export function evaluateMethodBody(body: AstNode[] | undefined, classBody?: AstNode[]): string[] {
     if (!body) {
         return [];
@@ -40,9 +42,8 @@ export function evaluateMethodBody(body: AstNode[] | undefined, classBody?: AstN
     const bindings: Bindings = {};
     for (const stmt of body) {
         if (stmt.kind === 'assignment_expression') {
-            const { kind, value } = stmt.value as { kind: string; value?: unknown };
-            if (kind === 'number' || kind === 'string') {
-                bindings[stmt.variable] = value;
+            if (stmt.value.kind === 'number' || stmt.value.kind === 'string') {
+                bindings[stmt.variable] = stmt.value.value;
             }
             continue;
         }
@@ -89,18 +90,23 @@ function buildForIterations(
     const iterations: Bindings[] = [];
     for (let i = startValue; checkCondition(i, op, endValue); i = isIncrement ? i + 1 : i - 1) {
         iterations.push({ ...outerBindings, [varName]: i });
-        if (iterations.length > 1000) break;
+        if (iterations.length > MAX_ITERATIONS) break;
     }
     return iterations;
 }
 
-function evaluateForeachLoop(loop: ForeachStatementNode, classBody?: AstNode[]): string[] {
+function evaluateForeachLoop(
+    loop: ForeachStatementNode,
+    classBody?: AstNode[],
+    outerBindings?: Bindings,
+): string[] {
     const items = resolveIterable(loop.source, classBody);
     if (!items) {
         return [];
     }
 
     const iterations: Bindings[] = items.map((item) => ({
+        ...outerBindings,
         [loop.valueVariable]: item,
     }));
 
@@ -126,7 +132,7 @@ function evaluateWhileLoop(loop: WhileStatementNode, initialBindings: Bindings):
             const current = Number(bindings[upd.variable] ?? 0);
             bindings[upd.variable] = upd.operator === '++' ? current + 1 : current - 1;
         }
-        if (iterations.length > 1000) break;
+        if (iterations.length > MAX_ITERATIONS) break;
     }
 
     return evaluateLoopYields(iterations, loop.body);
@@ -180,18 +186,15 @@ function evaluateLoopYields(
     let numericIndex = 0;
 
     for (const bindings of iterations) {
-        // Direct yields at this level
         for (const yieldNode of yields) {
-            if (!yieldNode.key) {
-                labels.push(`#${numericIndex++}`);
-                continue;
+            if (yieldNode.key) {
+                const resolved = resolveExpression(yieldNode.key, bindings);
+                if (resolved !== undefined) {
+                    labels.push(`"${resolved}"`);
+                    continue;
+                }
             }
-            const resolved = resolveExpression(yieldNode.key, bindings);
-            if (resolved !== undefined) {
-                labels.push(`"${resolved}"`);
-            } else {
-                labels.push(`#${numericIndex++}`);
-            }
+            labels.push(`#${numericIndex++}`);
         }
 
         // Nested loops
@@ -210,18 +213,9 @@ function evaluateInnerLoop(
     classBody?: AstNode[],
 ): string[] {
     if (loop.kind === 'foreach_statement') {
-        const items = resolveIterable(loop.source, classBody);
-        if (!items) {
-            return [];
-        }
-        const innerIterations: Bindings[] = items.map((item) => ({
-            ...outerBindings,
-            [loop.valueVariable]: item,
-        }));
-        return evaluateLoopYields(innerIterations, loop.body, classBody);
+        return evaluateForeachLoop(loop, classBody, outerBindings);
     }
 
-    // for_statement
     const innerIterations = buildForIterations(loop, outerBindings);
     if (!innerIterations) {
         return [];
@@ -367,7 +361,7 @@ function resolveRange(args: AstNode[]): unknown[] | undefined {
     const result: number[] = [];
     for (let i = start; stepVal > 0 ? i <= end : i >= end; i += stepVal) {
         result.push(i);
-        if (result.length > 1000) break;
+        if (result.length > MAX_ITERATIONS) break;
     }
     return result;
 }

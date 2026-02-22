@@ -397,7 +397,7 @@ function parseForUpdate(node: SyntaxNode): { variable: string; operator: string 
 }
 
 function adaptForeachStatement(node: SyntaxNode): AstNode {
-    let source: AstNode = { kind: 'string', value: '', loc: locOf(node) };
+    let source: AstNode = EMPTY_STRING_NODE;
     let valueVariable = '';
     let foundAs = false;
 
