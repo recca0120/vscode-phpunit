@@ -4,6 +4,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     resolve: {
         alias: {
+            '@vscode-phpunit/phpunit/testing': resolve(__dirname, '../phpunit/tests/utils.ts'),
+            '@vscode-phpunit/phpunit': resolve(__dirname, '../phpunit/src/index.ts'),
             vscode: resolve(__dirname, '__mocks__/vscode.ts'),
         },
     },
