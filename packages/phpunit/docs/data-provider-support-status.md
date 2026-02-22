@@ -46,11 +46,7 @@
 
 ## 待辦
 
-- [x] **#13 多個 DataProvider** — 已改為遍歷所有 provider 並串接 dataset
 - [ ] **#17 Pest shared dataset** — 需跨檔找到 `dataset('name', ...)` 定義並解析，改動較大
-- [x] **#21 Pest combined `->with()->with()`** — 已改為收集所有 `with()` 並計算笛卡爾積
-- [x] **重構 DataProviderParser 為 mini PHP interpreter** — 已完成：建立 Interpreter 層（`interpret.ts` + `evaluate.ts`），將 AST 遍歷與 TestParser 分離
-- [x] **#6 進階 loop pattern** — 已完成：`range()`、while loop、巢狀迴圈、yield key 運算式（concatenation/ternary）、`array_map`/`array_combine`
 
 ---
 
