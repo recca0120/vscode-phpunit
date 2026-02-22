@@ -49,7 +49,7 @@
 - [x] **#13 多個 DataProvider** — 已改為遍歷所有 provider 並串接 dataset
 - [ ] **#17 Pest shared dataset** — 需跨檔找到 `dataset('name', ...)` 定義並解析，改動較大
 - [x] **#21 Pest combined `->with()->with()`** — 已改為收集所有 `with()` 並計算笛卡爾積
-- [ ] **重構 DataProviderParser 為 mini PHP interpreter** — 用 `evaluate(node)` pattern 重構，讓 AST 求值語意更清晰，也方便未來擴充 `self::CONST`、`range()` 等支援
+- [x] **重構 DataProviderParser 為 mini PHP interpreter** — 已完成：建立 Interpreter 層（`interpret.ts` + `evaluate.ts`），將 AST 遍歷與 TestParser 分離
 
 ---
 
