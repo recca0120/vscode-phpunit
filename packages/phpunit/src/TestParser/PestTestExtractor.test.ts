@@ -513,6 +513,27 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
         );
     });
 
+    it('bound dataset with closure array', () => {
+        const content = `<?php
+it('generates name', function (object $user) {
+    expect($user)->toBeObject();
+})->with([
+    fn() => (object) ['first_name' => 'Nuno'],
+    fn() => (object) ['first_name' => 'Luke'],
+]);
+    `;
+        const test = givenTest(file, content, 'it generates name');
+        expect(test).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'it generates name',
+                annotations: expect.objectContaining({
+                    dataset: ['#0', '#1'],
+                }),
+            }),
+        );
+    });
+
     it('parse describe arch', () => {
         const content = `<?php 
 

@@ -437,7 +437,7 @@ testStarted name='it generates name with data set #0'
 testStarted name='it generates name with data set #1'
 ```
 
-**AST 可解析：X** — Closure 需要執行。Teamcity 輸出可補。
+**AST 可解析：O** — 不需要知道 Closure 回傳值，數 array entry 數量即可產出 `#0`, `#1`。
 
 ---
 
@@ -483,9 +483,9 @@ testStarted name='it business closed with data set "(|'Bank|', |'Saturday|')"'
 | 15 | Pest `->with([])` named keys | O | O | |
 | 16 | Pest `->with([[]])` tuples | O | O | |
 | 17 | Pest `->with('name')` shared | △ | O | 需找 dataset() |
-| 18 | Pest `->with(fn())` closure | X | O | |
-| 19 | Pest `->with(Generator)` | X | O | |
-| 20 | Pest bound dataset | X | O | |
+| 18 | Pest `->with(fn())` closure | △ | O | yield literal 可解析 |
+| 19 | Pest `->with(Generator)` | △ | O | yield literal 可解析 |
+| 20 | Pest bound dataset | O | O | 數 array entry 產出 `#N` |
 | 21 | Pest `->with()->with()` combined | △ | O | |
 
 **O = 可解析, △ = 部分可解析, X = 不可解析**

@@ -8,32 +8,32 @@
 
 | # | Pattern | 實作 | 測試 | Teamcity 補 | 備註 |
 |---|---------|:----:|:----:|:----------:|------|
-| 1 | `#[DataProvider]` + named array | ✅ | ✅ | — | DataProviderParser + DataProviderAttributeTest.php |
-| 2 | `#[DataProvider]` + numeric array | ✅ | ✅ | — | |
-| 3 | `#[DataProvider]` + mixed keys | ✅ | ✅ | — | |
-| 4 | `#[DataProvider]` + yield named | ✅ | ✅ | — | key 須為 string literal |
-| 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | — | DataProviderParser 有測試，Extractor 整合測試未單獨覆蓋 |
+| 1 | `#[DataProvider]` + named array | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 2 | `#[DataProvider]` + numeric array | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 3 | `#[DataProvider]` + mixed keys | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 4 | `#[DataProvider]` + yield named | ✅ | ✅ | ✅ | AST 已覆蓋（key 須為 string literal），不需靠 Teamcity 補 |
+| 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
 | 6 | `#[DataProvider]` + loop/動態 | N/A | N/A | ✅ | 設計上不解析，回傳 `[]`，靠 Teamcity 執行後補 |
 | 7 | `#[DataProvider]` + method call | N/A | N/A | ✅ | 同上 |
 | 8 | `#[DataProviderExternal]` | N/A | N/A | ✅ | 跨檔不解析，靠 Teamcity 執行後補 |
-| 9 | `#[TestWith]` numeric | ✅ | ✅ | — | AttributeParser.parseDataset |
-| 10 | `#[TestWith]` named (第二參數) | ✅ | ✅ | — | AttributeParser.parseDataset |
-| 11 | `#[TestWithJson]` | ✅ | ✅ | — | AttributeParser.parseDataset |
-| 12 | `@dataProvider` (legacy) | ✅ | ✅ | — | 同 #1-7，差別只在 docblock vs attribute |
-| 13 | 多個 DataProvider | ✅ | ✅ | ✅ | `buildMethodDefinition` 遍歷所有 provider 並串接 dataset |
+| 9 | `#[TestWith]` numeric | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 10 | `#[TestWith]` named (第二參數) | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 11 | `#[TestWithJson]` | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 12 | `@dataProvider` (legacy) | ✅ | ✅ | ✅ | AST 已覆蓋（同 #1-7），不需靠 Teamcity 補 |
+| 13 | 多個 DataProvider | ✅ | ✅ | ✅ | AST 已覆蓋，Teamcity 亦可補漏 |
 
 ## Pest — AST 靜態解析
 
 | # | Pattern | 實作 | 測試 | Teamcity 補 | 備註 |
 |---|---------|:----:|:----:|:----------:|------|
-| 14 | `->with([])` no keys | ✅ | ✅ | — | DataProviderParser + DatasetTest.php |
-| 15 | `->with([])` named keys | ✅ | ✅ | — | DataProviderParser + DatasetTest.php |
-| 16 | `->with([[]])` tuples | ✅ | ✅ | — | DataProviderParser + PestTestExtractor + TestCollection 整合測試 |
-| 17 | `->with('name')` shared dataset | ❌ | ❌ | ✅ | `extractPestDataset` 只檢查 array，string 參數直接回 `[]` |
-| 18 | `->with(fn())` closure | N/A | N/A | ✅ | 設計上不解析，非 array 回 `[]`，靠 Teamcity 執行後補 |
-| 19 | `->with(Generator)` | N/A | N/A | ✅ | 同上 |
-| 20 | bound dataset `[fn()=>...]` | N/A | N/A | ✅ | 同上 |
-| 21 | `->with()->with()` combined | ✅ | ✅ | ✅ | `extractPestDataset` 收集所有 `with()` 並計算笛卡爾積 |
+| 14 | `->with([])` no keys | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 15 | `->with([])` named keys | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 16 | `->with([[]])` tuples | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
+| 17 | `->with('name')` shared dataset | ❌ | ❌ | ✅ | AST 未實作，靠 Teamcity 執行後補 |
+| 18 | `->with(fn())` closure | ✅ | ✅ | ✅ | AST 已覆蓋（yield literal 可解析），不需靠 Teamcity 補 |
+| 19 | `->with(Generator)` | ✅ | ✅ | ✅ | AST 已覆蓋（同 #18），不需靠 Teamcity 補 |
+| 20 | bound dataset `[fn()=>...]` | ✅ | ✅ | ✅ | AST 已覆蓋（數 array entry 產出 `#N`），不需靠 Teamcity 補 |
+| 21 | `->with()->with()` combined | ✅ | ✅ | ✅ | AST 已覆蓋，Teamcity 亦可補漏 |
 
 ## Teamcity 執行後補漏
 
