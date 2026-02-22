@@ -7,7 +7,7 @@ Used by the [PHPUnit & Pest Test Explorer](https://marketplace.visualstudio.com/
 ## Features
 
 - **Test parsing** — static analysis of PHPUnit/Pest test files via tree-sitter (WASM) and php-parser
-- **Data provider resolution** — extract dataset names from `#[DataProvider]`, `#[TestWith]`, `->with()`, etc. ([details](docs/data-provider-patterns.md))
+- **Data provider resolution** — extract dataset names from `#[DataProvider]`, `#[TestWith]`, `->with()`, etc. ([details](docs/data-provider-guide.md))
 - **PHPUnit XML** — parse `phpunit.xml` / `phpunit.xml.dist` for testsuites, coverage, and configuration
 - **Process builder** — construct PHPUnit/Pest command lines with filter encoding, Xdebug support, and path mapping
 - **Test output parsing** — parse Teamcity-formatted output into structured test results
@@ -56,8 +56,7 @@ pnpm test      # vitest
 
 ## Docs
 
-- [Data Provider patterns and Teamcity output mapping](docs/data-provider-patterns.md)
-- [Data Provider support status](docs/data-provider-support-status.md)
+- [Data Provider Complete Guide](docs/data-provider-guide.md)
 
 ## License
 
