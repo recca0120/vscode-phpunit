@@ -308,6 +308,14 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
             });
             continue;
         }
+        if (child.type === 'for_statement') {
+            statements.push(adaptForStatement(child));
+            continue;
+        }
+        if (child.type === 'foreach_statement') {
+            statements.push(adaptForeachStatement(child));
+            continue;
+        }
         const yieldNode = tryAdaptYieldFromStatement(child);
         if (yieldNode) {
             statements.push(yieldNode);
@@ -315,6 +323,119 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
     }
 
     return statements;
+}
+
+function adaptForStatement(node: SyntaxNode): AstNode {
+    let init: { variable: string; value: AstNode } | undefined;
+    let condition: { variable: string; operator: string; value: AstNode } | undefined;
+    let update: { variable: string; operator: string } | undefined;
+    let body: AstNode[] = [];
+
+    // Parse init: $i = 0
+    const initNode = node.children.find((c) => c?.type === 'assignment_expression');
+    if (initNode) {
+        const left = initNode.childForFieldName('left');
+        const right = initNode.childForFieldName('right');
+        if (left && right) {
+            init = {
+                variable: left.text.replace(/^\$/, ''),
+                value: adaptExpression(right),
+            };
+        }
+    }
+
+    // Parse condition: $i < 3
+    const condNode = node.children.find((c) => c?.type === 'binary_expression');
+    if (condNode) {
+        const left = condNode.childForFieldName('left');
+        const op = condNode.childForFieldName('operator');
+        const right = condNode.childForFieldName('right');
+        if (left && op && right) {
+            condition = {
+                variable: left.text.replace(/^\$/, ''),
+                operator: op.text,
+                value: adaptExpression(right),
+            };
+        }
+    }
+
+    // Parse update: $i++
+    const updateNode = node.children.find((c) => c?.type === 'update_expression');
+    if (updateNode) {
+        const varName = updateNode.namedChildren[0];
+        if (varName) {
+            update = {
+                variable: varName.text.replace(/^\$/, ''),
+                operator: updateNode.text.endsWith('++') ? '++' : '--',
+            };
+        }
+    }
+
+    // Parse body
+    const bodyNode = node.children.find((c) => c?.type === 'compound_statement');
+    if (bodyNode) {
+        body = adaptMethodBody(bodyNode);
+    }
+
+    return {
+        kind: 'for_statement',
+        init,
+        condition,
+        update,
+        body,
+        loc: locOf(node),
+    };
+}
+
+function adaptForeachStatement(node: SyntaxNode): AstNode {
+    let source: AstNode = { kind: 'string', value: '', loc: locOf(node) };
+    let valueVariable = '';
+
+    // Find the source expression and value variable
+    // foreach (EXPR as $v)
+    const children = node.children.filter((c): c is NonNullable<typeof c> => !!c);
+
+    // Source is the first named expression child after '('
+    for (const child of node.namedChildren) {
+        if (!child) continue;
+        if (
+            child.type === 'array_creation_expression' ||
+            child.type === 'class_constant_access_expression' ||
+            child.type === 'variable_name' ||
+            child.type === 'function_call_expression'
+        ) {
+            source = adaptExpression(child);
+            break;
+        }
+    }
+
+    // Find "as" keyword position, then the variable after it
+    let foundAs = false;
+    for (const child of children) {
+        if (child.type === 'as') {
+            foundAs = true;
+            continue;
+        }
+        if (foundAs && child.type === 'variable_name') {
+            valueVariable = child.text.replace(/^\$/, '');
+            break;
+        }
+    }
+
+    // Parse body
+    let body: AstNode[] = [];
+    const bodyNode = node.children.find((c) => c?.type === 'compound_statement');
+    if (bodyNode) {
+        body = adaptMethodBody(bodyNode);
+    }
+
+    return {
+        kind: 'foreach_statement',
+        source,
+        valueVariable,
+        body,
+        loc: locOf(node),
+    };
 }
 
 function adaptYield(node: SyntaxNode): AstNode {
@@ -377,6 +498,21 @@ function adaptClassBody(bodyNode: SyntaxNode): AstNode[] {
             result.push(adaptMethod(child));
         } else if (child.type === 'use_declaration') {
             result.push(adaptTraitUse(child));
+        } else if (child.type === 'const_declaration') {
+            const nameNode = child.namedChildren.find((c) => c?.type === 'const_element');
+            if (nameNode) {
+                const constName =
+                    nameNode.childForFieldName('name')?.text ??
+                    nameNode.namedChildren[0]?.text ??
+                    '';
+                const valueNode = nameNode.childForFieldName('value') ?? nameNode.namedChildren[1];
+                result.push({
+                    kind: 'const_declaration',
+                    name: constName,
+                    value: valueNode ? adaptExpression(valueNode) : undefined,
+                    loc: locOf(child),
+                });
+            }
         }
     }
 
@@ -508,7 +644,7 @@ function adaptArguments(argsNode: SyntaxNode): AstNode[] {
 }
 
 function adaptExpression(node: SyntaxNode): AstNode {
-    if (node.type === 'string' || node.type === 'encapsed_string') {
+    if (node.type === 'string') {
         const text = node.text;
         let value = text;
         if (text.startsWith("'") && text.endsWith("'")) {
@@ -517,6 +653,41 @@ function adaptExpression(node: SyntaxNode): AstNode {
             value = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
         }
         return { kind: 'string', value, loc: locOf(node) };
+    }
+
+    if (node.type === 'encapsed_string') {
+        const parts: AstNode[] = [];
+        for (const child of node.namedChildren) {
+            if (!child) continue;
+            if (child.type === 'string_content') {
+                parts.push({
+                    kind: 'string',
+                    value: child.text,
+                    loc: locOf(child),
+                });
+            } else if (child.type === 'variable_name') {
+                parts.push({
+                    kind: 'variable',
+                    name: child.text.replace(/^\$/, ''),
+                    loc: locOf(child),
+                });
+            }
+        }
+        return { kind: 'encapsed_string', parts, loc: locOf(node) };
+    }
+
+    if (node.type === 'integer') {
+        return { kind: 'number', value: Number(node.text), loc: locOf(node) };
+    }
+
+    if (node.type === 'variable_name') {
+        return { kind: 'variable', name: node.text.replace(/^\$/, ''), loc: locOf(node) };
+    }
+
+    if (node.type === 'class_constant_access_expression') {
+        const scope = node.namedChildren[0]?.text ?? '';
+        const name = node.namedChildren[1]?.text ?? '';
+        return { kind: 'class_constant_access', scope, name, loc: locOf(node) };
     }
 
     if (

@@ -5,6 +5,7 @@ import {
     collectTestItemIds,
     countTestItems,
     type ExtensionApi,
+    findTestItem,
     waitForTestItems,
 } from '../helper';
 
@@ -89,6 +90,58 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
             const hasFile = ids.some((id) => id.includes('Test.php'));
             assert.ok(hasFile, 'Should have file-based test items');
         }
+    });
+
+    test('should resolve loop-based data provider datasets', async () => {
+        if (stubType !== 'phpunit') return;
+
+        const forLoop = findTestItem(
+            ctrl.items,
+            'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider',
+        );
+        assert.ok(forLoop, 'Should find for-loop data provider test');
+
+        const forLoopChildIds: string[] = [];
+        forLoop?.children.forEach((item) => {
+            forLoopChildIds.push(item.id);
+        });
+        assert.deepStrictEqual(forLoopChildIds, [
+            'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 0"',
+            'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 1"',
+            'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 2"',
+        ]);
+
+        const foreachArray = findTestItem(
+            ctrl.items,
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider',
+        );
+        assert.ok(foreachArray, 'Should find foreach-array data provider test');
+
+        const foreachArrayChildIds: string[] = [];
+        foreachArray?.children.forEach((item) => {
+            foreachArrayChildIds.push(item.id);
+        });
+        assert.deepStrictEqual(foreachArrayChildIds, [
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "alpha"',
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "beta"',
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "gamma"',
+        ]);
+
+        const foreachConst = findTestItem(
+            ctrl.items,
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider',
+        );
+        assert.ok(foreachConst, 'Should find foreach-const data provider test');
+
+        const foreachConstChildIds: string[] = [];
+        foreachConst?.children.forEach((item) => {
+            foreachConstChildIds.push(item.id);
+        });
+        assert.deepStrictEqual(foreachConstChildIds, [
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "alpha"',
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "beta"',
+            'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "gamma"',
+        ]);
     });
 
     test('should have correct properties on test items', async () => {

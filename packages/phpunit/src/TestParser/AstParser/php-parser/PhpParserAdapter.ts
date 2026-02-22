@@ -94,6 +94,27 @@ function adaptNode(raw: RawNode): AstNode | undefined {
             return adaptArrayCreation(raw);
         case 'entry':
             return adaptArrayEntry(raw);
+        case 'encapsed':
+            return adaptEncapsedString(raw);
+        case 'variable':
+            return {
+                kind: 'variable',
+                name: extractName(raw.name ?? raw),
+                loc: convertLoc(raw.loc),
+            };
+        case 'number':
+            return {
+                kind: 'number',
+                value: Number(raw.value ?? 0),
+                loc: convertLoc(raw.loc),
+            };
+        case 'staticlookup':
+            return {
+                kind: 'class_constant_access',
+                scope: extractName(raw.what?.name ?? raw.what),
+                name: extractName(raw.offset?.name ?? raw.offset),
+                loc: convertLoc(raw.loc),
+            };
         default:
             return undefined;
     }
@@ -109,12 +130,28 @@ function adaptNamespace(raw: RawNode): AstNode {
 }
 
 function adaptClass(raw: RawNode): AstNode {
+    const body = adaptChildren(raw.body ?? []);
+
+    // Include const declarations
+    for (const child of raw.body ?? []) {
+        if (child?.kind === 'classconstant') {
+            for (const constant of child.constants ?? []) {
+                body.push({
+                    kind: 'const_declaration',
+                    name: extractName(constant.name),
+                    value: constant.value ? adaptNode(constant.value) : undefined,
+                    loc: convertLoc(child.loc),
+                } as AstNode);
+            }
+        }
+    }
+
     return {
         kind: raw.kind === 'trait' ? 'trait_declaration' : 'class_declaration',
         name: extractName(raw.name),
         isAbstract: raw.isAbstract === true,
         extendsName: raw.extends ? extractName(raw.extends) : undefined,
-        body: adaptChildren(raw.body ?? []),
+        body,
         leadingComments: convertComments(raw.leadingComments),
         attrGroups: raw.attrGroups,
         loc: convertLoc(raw.loc),
@@ -158,6 +195,14 @@ function adaptMethodBody(body: RawNode): AstNode[] {
             } as AstNode);
             continue;
         }
+        if (child.kind === 'for') {
+            statements.push(adaptForStatement(child));
+            continue;
+        }
+        if (child.kind === 'foreach') {
+            statements.push(adaptForeachStatement(child));
+            continue;
+        }
         const yieldNode = tryAdaptYieldFromExpressionStatement(child);
         if (yieldNode) {
             statements.push(yieldNode);
@@ -165,6 +210,76 @@ function adaptMethodBody(body: RawNode): AstNode[] {
     }
 
     return statements;
+}
+
+function adaptForStatement(raw: RawNode): AstNode {
+    let init: { variable: string; value: AstNode } | undefined;
+    let condition: { variable: string; operator: string; value: AstNode } | undefined;
+    let update: { variable: string; operator: string } | undefined;
+
+    // init: [{ kind: 'assign', left: { kind: 'variable', name: 'i' }, right: { kind: 'number', value: 0 } }]
+    if (raw.init?.[0]?.kind === 'assign') {
+        const assign = raw.init[0];
+        init = {
+            variable: extractName(assign.left?.name ?? assign.left),
+            value: adaptNode(assign.right) ?? ({ kind: 'number', value: 0 } as AstNode),
+        };
+    }
+
+    // test: [{ kind: 'bin', type: '<', left: variable, right: number }]
+    if (raw.test?.[0]) {
+        const test = raw.test[0];
+        condition = {
+            variable: extractName(test.left?.name ?? test.left),
+            operator: test.type ?? test.operator ?? '<',
+            value: adaptNode(test.right) ?? ({ kind: 'number', value: 0 } as AstNode),
+        };
+    }
+
+    // increment: [{ kind: 'post', type: '+', what: variable }]
+    if (raw.increment?.[0]) {
+        const inc = raw.increment[0];
+        update = {
+            variable: extractName(inc.what?.name ?? inc.what),
+            operator: inc.type === '+' ? '++' : '--',
+        };
+    }
+
+    const body =
+        raw.body?.kind === 'block'
+            ? adaptMethodBody(raw.body)
+            : raw.body
+              ? adaptMethodBody({ children: [raw.body] })
+              : [];
+
+    return {
+        kind: 'for_statement',
+        init,
+        condition,
+        update,
+        body,
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptForeachStatement(raw: RawNode): AstNode {
+    const source = adaptNode(raw.source) ?? ({ kind: 'string', value: '' } as AstNode);
+    const valueVariable = extractName(raw.value?.name ?? raw.value);
+
+    const body =
+        raw.body?.kind === 'block'
+            ? adaptMethodBody(raw.body)
+            : raw.body
+              ? adaptMethodBody({ children: [raw.body] })
+              : [];
+
+    return {
+        kind: 'foreach_statement',
+        source,
+        valueVariable,
+        body,
+        loc: convertLoc(raw.loc),
+    };
 }
 
 function adaptYieldExpression(raw: RawNode): AstNode {
@@ -344,6 +459,27 @@ function adaptArrowFunc(raw: RawNode): AstNode {
         body: body ? (adaptNode(body) ?? fallback) : fallback,
         loc: convertLoc(raw.loc),
     };
+}
+
+function adaptEncapsedString(raw: RawNode): AstNode {
+    const parts: AstNode[] = [];
+    for (const part of raw.value ?? []) {
+        if (part.kind === 'encapsedpart') {
+            const expr = part.expression;
+            if (expr) {
+                const adapted = adaptNode(expr);
+                if (adapted) {
+                    parts.push(adapted);
+                }
+            }
+        } else {
+            const adapted = adaptNode(part);
+            if (adapted) {
+                parts.push(adapted);
+            }
+        }
+    }
+    return { kind: 'encapsed_string', parts, loc: convertLoc(raw.loc) };
 }
 
 function adaptArrayCreation(raw: RawNode): AstNode {

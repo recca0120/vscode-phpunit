@@ -1,4 +1,5 @@
 import type { TestDefinition } from '../types';
+import type { AstNode, ClassNode } from './AstParser/AstNode';
 import type { ClassInfo } from './ClassHierarchy';
 import { dataProviderParser } from './Metadata/DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
@@ -35,9 +36,14 @@ export class PHPUnitTestExtractor implements TestExtractor {
             }
 
             const parent = this.getOrCreateParent(testDefinitions, classDef);
+            const classBody =
+                classDef.node.kind === 'class_declaration'
+                    ? (classDef.node as ClassNode).body
+                    : undefined;
+
             parent.children = methods
                 .filter((m) => m.isTest())
-                .map((m) => this.buildMethodDefinition(m, methods));
+                .map((m) => this.buildMethodDefinition(m, methods, classBody));
         }
 
         if (testDefinitions.length === 0 && classes.length === 0) {
@@ -47,7 +53,11 @@ export class PHPUnitTestExtractor implements TestExtractor {
         return { tests: testDefinitions, classes };
     }
 
-    private buildMethodDefinition(method: TestNode, allMethods: TestNode[]): TestDefinition {
+    private buildMethodDefinition(
+        method: TestNode,
+        allMethods: TestNode[],
+        classBody?: AstNode[],
+    ): TestDefinition {
         const def = method.toTestDefinition();
 
         const providers = (def.annotations?.dataProvider as string[]) ?? [];
@@ -61,7 +71,7 @@ export class PHPUnitTestExtractor implements TestExtractor {
             if (!providerMethod) {
                 continue;
             }
-            dataset.push(...dataProviderParser.parse(providerMethod.node));
+            dataset.push(...dataProviderParser.parse(providerMethod.node, classBody));
         }
 
         if (dataset.length > 0) {

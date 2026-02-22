@@ -157,6 +157,56 @@ export interface IncludeNode {
     loc?: AstNodeLoc;
 }
 
+export interface ForStatementNode {
+    kind: 'for_statement';
+    init?: { variable: string; value: AstNode };
+    condition?: { variable: string; operator: string; value: AstNode };
+    update?: { variable: string; operator: string };
+    body: AstNode[];
+    loc?: AstNodeLoc;
+}
+
+export interface ForeachStatementNode {
+    kind: 'foreach_statement';
+    source: AstNode;
+    valueVariable: string;
+    keyVariable?: string;
+    body: AstNode[];
+    loc?: AstNodeLoc;
+}
+
+export interface EncapsedStringNode {
+    kind: 'encapsed_string';
+    parts: AstNode[];
+    loc?: AstNodeLoc;
+}
+
+export interface VariableNode {
+    kind: 'variable';
+    name: string;
+    loc?: AstNodeLoc;
+}
+
+export interface NumberNode {
+    kind: 'number';
+    value: number;
+    loc?: AstNodeLoc;
+}
+
+export interface ClassConstantAccessNode {
+    kind: 'class_constant_access';
+    scope: string;
+    name: string;
+    loc?: AstNodeLoc;
+}
+
+export interface ConstDeclarationNode {
+    kind: 'const_declaration';
+    name: string;
+    value?: AstNode;
+    loc?: AstNodeLoc;
+}
+
 export interface ArrayCreationNode {
     kind: 'array_creation_expression';
     entries: ArrayEntryNode[];
@@ -202,4 +252,11 @@ export type AstNode =
     | ArrayCreationNode
     | ArrayEntryNode
     | ReturnStatementNode
-    | YieldExpressionNode;
+    | YieldExpressionNode
+    | ForStatementNode
+    | ForeachStatementNode
+    | EncapsedStringNode
+    | VariableNode
+    | NumberNode
+    | ClassConstantAccessNode
+    | ConstDeclarationNode;

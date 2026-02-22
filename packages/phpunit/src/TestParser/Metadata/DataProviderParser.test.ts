@@ -6,6 +6,9 @@ import type {
     ExpressionStatementNode,
     MethodNode,
 } from '../AstParser/AstNode';
+
+type MethodWithClass = { method: MethodNode; classBody: AstNode[] };
+
 import type { AstParser } from '../AstParser/AstParser';
 import { PhpParserAstParser } from '../AstParser/php-parser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../AstParser/tree-sitter/TreeSitterAstParser';
@@ -22,14 +25,20 @@ beforeAll(async () => initTreeSitter());
 const parser = dataProviderParser;
 
 function findMethod(ast: AstNode, name: string): MethodNode {
+    const { method } = findMethodWithClass(ast, name);
+    return method;
+}
+
+function findMethodWithClass(ast: AstNode, name: string): MethodWithClass {
     const classes = ast.kind === 'program' ? (ast as { children: AstNode[] }).children : [ast];
     for (const node of classes) {
         if (node.kind === 'class_declaration') {
-            const method = (node as ClassNode).body.find(
+            const classNode = node as ClassNode;
+            const method = classNode.body.find(
                 (m): m is MethodNode => m.kind === 'method_declaration' && m.name === name,
             );
             if (method) {
-                return method;
+                return { method, classBody: classNode.body };
             }
         }
     }
@@ -67,6 +76,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
     const givenMethod = (code: string, methodName: string) => {
         const ast = createParser().parse(code, 'test.php');
         return findMethod(ast as AstNode, methodName);
+    };
+
+    const givenMethodWithClass = (code: string, methodName: string) => {
+        const ast = createParser().parse(code, 'test.php');
+        return findMethodWithClass(ast as AstNode, methodName);
     };
 
     const givenPestArray = (code: string) => {
@@ -193,6 +207,49 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 'provider',
             );
             expect(parser.parse(method)).toEqual([]);
+        });
+
+        it('yield inside for loop with interpolated keys', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        for ($i = 0; $i < 3; $i++) {
+                            yield "case $i" => [$i];
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"case 0"', '"case 1"', '"case 2"']);
+        });
+
+        it('yield inside foreach loop with array literal', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        foreach (['alpha', 'beta', 'gamma'] as $v) {
+                            yield $v => [$v];
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"alpha"', '"beta"', '"gamma"']);
+        });
+
+        it('yield inside foreach loop with class constant', () => {
+            const { method, classBody } = givenMethodWithClass(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    const CASES = ['alpha', 'beta', 'gamma'];
+                    public static function provider() {
+                        foreach (self::CASES as $v) {
+                            yield $v => [$v];
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method, classBody)).toEqual(['"alpha"', '"beta"', '"gamma"']);
         });
     });
 
