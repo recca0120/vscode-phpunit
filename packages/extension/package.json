@@ -196,12 +196,11 @@
         "format": "biome format --write src",
         "test": "vitest run",
         "test:watch": "vitest",
-        "test:e2e": "node ./out/tests/runTest.js",
+        "test:e2e": "vscode-test",
         "download-api": "npx vscode-dts main && npx vscode-dts dev",
         "postinstall": "pnpm run download-api"
     },
     "devDependencies": {
-        "@vscode-phpunit/phpunit": "workspace:*",
         "@biomejs/biome": "2.3.15",
         "@types/chai": "^5.2.3",
         "@types/glob": "^9.0.0",
@@ -209,7 +208,9 @@
         "@types/node": "^25",
         "@types/sinon": "^21.0.0",
         "@vitest/coverage-v8": "^4.0.18",
+        "@vscode-phpunit/phpunit": "workspace:*",
         "@vscode/dts": "^0.4.1",
+        "@vscode/test-cli": "^0.0.12",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/tree-sitter-wasm": "^0.3.0",
         "@vscode/vsce": "^3.7.1",
@@ -223,9 +224,9 @@
         "php-parser": "^3.2.5",
         "reflect-metadata": "^0.2.2",
         "sinon": "^21.0.1",
+        "strip-ansi": "^7.1.2",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18",
-        "strip-ansi": "^7.1.2",
         "vscode-uri": "^3.1.0"
     }
 }
