@@ -1,10 +1,16 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { AstNode, CallNode, ClassNode, ExpressionStatementNode, MethodNode } from './AstNode';
-import type { AstParser } from './AstParser';
+import type {
+    AstNode,
+    CallNode,
+    ClassNode,
+    ExpressionStatementNode,
+    MethodNode,
+} from '../AstParser/AstNode';
+import type { AstParser } from '../AstParser/AstParser';
+import { PhpParserAstParser } from '../AstParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../AstParser/tree-sitter/TreeSitterAstParser';
+import { initTreeSitter } from '../AstParser/tree-sitter/TreeSitterParser';
 import { dataProviderParser } from './DataProviderParser';
-import { PhpParserAstParser } from './php-parser/PhpParserAstParser';
-import { TreeSitterAstParser } from './tree-sitter/TreeSitterAstParser';
-import { initTreeSitter } from './tree-sitter/TreeSitterParser';
 
 const parsers: [string, () => AstParser][] = [
     ['tree-sitter', () => new TreeSitterAstParser()],

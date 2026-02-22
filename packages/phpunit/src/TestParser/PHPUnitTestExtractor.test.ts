@@ -3,12 +3,12 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../../tests/utils';
 import { PHPUnitXML } from '../Configuration';
 import { type TestDefinition, TestType } from '../types';
-import type { AstParser } from './AstParser';
+import type { AstParser } from './AstParser/AstParser';
+import { PhpParserAstParser } from './AstParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from './AstParser/tree-sitter/TreeSitterAstParser';
+import { initTreeSitter } from './AstParser/tree-sitter/TreeSitterParser';
 import { ClassHierarchy } from './ClassHierarchy';
-import { PhpParserAstParser } from './php-parser/PhpParserAstParser';
 import { TestParser } from './TestParser';
-import { TreeSitterAstParser } from './tree-sitter/TreeSitterAstParser';
-import { initTreeSitter } from './tree-sitter/TreeSitterParser';
 
 const parsers: [string, () => AstParser][] = [
     ['tree-sitter', () => new TreeSitterAstParser()],

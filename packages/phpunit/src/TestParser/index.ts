@@ -1,7 +1,6 @@
 export * from './AstParser';
-export * from './ChainAstParser';
 export * from './ClassHierarchy';
-export * from './php-parser/PhpParserAstParser';
+export * from './Metadata';
 export {
     createDatasetDefinition,
     isDatasetResult,
@@ -9,4 +8,3 @@ export {
     stripDataset,
 } from './TestDefinitionBuilder';
 export * from './TestParser';
-export * from './tree-sitter/TreeSitterAstParser';

@@ -1,12 +1,12 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { PHPUnitXML } from '../src/Configuration/PHPUnitXML';
-import type { AstParser } from '../src/TestParser/AstParser';
-import { ChainAstParser } from '../src/TestParser/ChainAstParser';
+import type { AstParser } from '../src/TestParser/AstParser/AstParser';
+import { ChainAstParser } from '../src/TestParser/AstParser/ChainAstParser';
+import { PhpParserAstParser } from '../src/TestParser/AstParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../src/TestParser/AstParser/tree-sitter/TreeSitterAstParser';
 import { ClassHierarchy } from '../src/TestParser/ClassHierarchy';
-import { PhpParserAstParser } from '../src/TestParser/php-parser/PhpParserAstParser';
 import { TestParser } from '../src/TestParser/TestParser';
-import { TreeSitterAstParser } from '../src/TestParser/tree-sitter/TreeSitterAstParser';
 import { type TestDefinition, TestType } from '../src/types';
 
 export const fixturePath = (uri: string) => join(__dirname, 'fixtures', uri);

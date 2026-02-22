@@ -1,4 +1,4 @@
-import { type AstNode, getAstChildren, type UseGroupNode } from './AstNode';
+import { type AstNode, getAstChildren, type UseGroupNode } from '../AstParser/AstNode';
 
 export class FQNResolver {
     private useMap?: Map<string, string>;

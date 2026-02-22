@@ -1,6 +1,6 @@
 import type { TestDefinition } from '../types';
 import type { ClassInfo } from './ClassHierarchy';
-import { dataProviderParser } from './DataProviderParser';
+import { dataProviderParser } from './Metadata/DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
 import type { TestNode } from './TestNode';
 

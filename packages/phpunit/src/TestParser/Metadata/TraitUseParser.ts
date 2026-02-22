@@ -1,5 +1,5 @@
-import type { AstNode, TraitUseNode } from './AstNode';
-import type { TraitAdaptation } from './ClassHierarchy';
+import type { AstNode, TraitUseNode } from '../AstParser/AstNode';
+import type { TraitAdaptation } from '../ClassHierarchy';
 
 export interface TraitUseResult {
     traitFQNs: string[];

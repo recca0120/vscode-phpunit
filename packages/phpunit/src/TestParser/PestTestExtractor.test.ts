@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, pestProject } from '../../tests/utils';
 import { TestType } from '../types';
-import type { AstParser } from './AstParser';
-import { PhpParserAstParser } from './php-parser/PhpParserAstParser';
-import { TreeSitterAstParser } from './tree-sitter/TreeSitterAstParser';
-import { initTreeSitter } from './tree-sitter/TreeSitterParser';
+import type { AstParser } from './AstParser/AstParser';
+import { PhpParserAstParser } from './AstParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from './AstParser/tree-sitter/TreeSitterAstParser';
+import { initTreeSitter } from './AstParser/tree-sitter/TreeSitterParser';
 
 const parsers: [string, () => AstParser][] = [
     ['tree-sitter', () => new TreeSitterAstParser()],

@@ -6,8 +6,8 @@ import type {
     ExpressionStatementNode,
     NamespaceNode,
     StringNode,
-} from './AstNode';
-import { dataProviderParser } from './DataProviderParser';
+} from './AstParser/AstNode';
+import { dataProviderParser } from './Metadata/DataProviderParser';
 import type { ParseResult, TestExtractor } from './TestExtractor';
 import { TestNode } from './TestNode';
 

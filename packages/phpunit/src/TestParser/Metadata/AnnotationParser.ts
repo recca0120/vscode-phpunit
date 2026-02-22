@@ -1,5 +1,5 @@
-import type { Annotations } from '../types';
-import type { ClassNode, MethodNode } from './AstNode';
+import type { Annotations } from '../../types';
+import type { ClassNode, MethodNode } from '../AstParser/AstNode';
 
 export const lookup = ['depends', 'dataProvider', 'testdox', 'group'];
 

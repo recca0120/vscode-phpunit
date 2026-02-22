@@ -1,6 +1,6 @@
-import type { Annotations } from '../types';
+import type { Annotations } from '../../types';
+import type { ClassNode, MethodNode } from '../AstParser/AstNode';
 import { lookup } from './AnnotationParser';
-import type { ClassNode, MethodNode } from './AstNode';
 
 interface ParsedAttribute {
     name: string;

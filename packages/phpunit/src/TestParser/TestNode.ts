@@ -1,6 +1,5 @@
 import type { PHPUnitXML } from '../Configuration';
 import { type TestDefinition, TestType } from '../types';
-import { AnnotationParser } from './AnnotationParser';
 import {
     type ArgumentNode,
     type ArrowFuncNode,
@@ -9,10 +8,12 @@ import {
     type ClosureNode,
     getAstChildren,
     type MethodNode,
-} from './AstNode';
-import { AttributeParser } from './AttributeParser';
+} from './AstParser/AstNode';
 import type { TraitAdaptation } from './ClassHierarchy';
-import { FQNResolver } from './FQNResolver';
+import { AnnotationParser } from './Metadata/AnnotationParser';
+import { AttributeParser } from './Metadata/AttributeParser';
+import { FQNResolver } from './Metadata/FQNResolver';
+import { parseTraitUses } from './Metadata/TraitUseParser';
 import { generatePestClassFQN } from './PestClassFQNGenerator';
 import {
     buildNamespaceDefinition,
@@ -20,7 +21,6 @@ import {
     buildTestCaseDefinition,
     buildTestSuiteDefinition,
 } from './TestDefinitionBuilder';
-import { parseTraitUses } from './TraitUseParser';
 
 const annotationParser = new AnnotationParser();
 const attributeParser = new AttributeParser();

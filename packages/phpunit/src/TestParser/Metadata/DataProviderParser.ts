@@ -5,7 +5,7 @@ import type {
     MethodNode,
     ReturnStatementNode,
     YieldExpressionNode,
-} from './AstNode';
+} from '../AstParser/AstNode';
 
 /**
  * Parses data provider sources to extract dataset labels.

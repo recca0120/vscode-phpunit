@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import type { PHPUnitXML } from '../Configuration';
-import type { AstParser } from './AstParser';
+import type { AstParser } from './AstParser/AstParser';
 import { PestTestExtractor } from './PestTestExtractor';
 import { PHPUnitTestExtractor } from './PHPUnitTestExtractor';
 import type { ParseResult, TestExtractor } from './TestExtractor';

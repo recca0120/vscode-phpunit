@@ -2,10 +2,10 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { generateXML, phpUnitProject } from '../../tests/utils';
 import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser } from '../index';
+import { PhpParserAstParser } from '../TestParser/AstParser/php-parser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../TestParser/AstParser/tree-sitter/TreeSitterAstParser';
+import { initTreeSitter } from '../TestParser/AstParser/tree-sitter/TreeSitterParser';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
-import { PhpParserAstParser } from '../TestParser/php-parser/PhpParserAstParser';
-import { TreeSitterAstParser } from '../TestParser/tree-sitter/TreeSitterAstParser';
-import { initTreeSitter } from '../TestParser/tree-sitter/TreeSitterParser';
 import { TestCollection } from './TestCollection';
 
 beforeAll(async () => initTreeSitter());
