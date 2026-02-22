@@ -346,10 +346,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 42, started: 42, passed: 28, failed: 12, end: 1 }],
-                    ['10.0.0', { enqueued: 42, started: 56, passed: 45, failed: 9, end: 1 }],
+                    ['12.0.0', { enqueued: 45, started: 54, passed: 40, failed: 12, end: 1 }],
+                    ['10.0.0', { enqueued: 45, started: 68, passed: 57, failed: 9, end: 1 }],
                 ],
-                { enqueued: 42, started: 43, passed: 27, failed: 14, end: 1 },
+                { enqueued: 45, started: 46, passed: 27, failed: 17, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -361,10 +361,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 41, started: 41, passed: 28, failed: 11, end: 1 }],
-                    ['10.0.0', { enqueued: 41, started: 55, passed: 45, failed: 8, end: 1 }],
+                    ['12.0.0', { enqueued: 44, started: 53, passed: 40, failed: 11, end: 1 }],
+                    ['10.0.0', { enqueued: 44, started: 67, passed: 57, failed: 8, end: 1 }],
                 ],
-                { enqueued: 41, started: 42, passed: 27, failed: 13, end: 1 },
+                { enqueued: 44, started: 45, passed: 27, failed: 16, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -544,7 +544,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(83);
+            expect(countItems(ctrl.items)).toEqual(96);
 
             const annotationMulti = findTest(
                 ctrl.items,
@@ -573,6 +573,51 @@ describe('Extension Test', () => {
                 'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider with data set "one plus one"',
                 'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider with data set #0',
             ]);
+
+            const forLoopProvider = findTest(
+                ctrl.items,
+                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider',
+            );
+            expect(forLoopProvider).toBeDefined();
+            const forLoopChildIds: string[] = [];
+            for (const [id] of forLoopProvider?.children ?? []) {
+                forLoopChildIds.push(id);
+            }
+            expect(forLoopChildIds).toEqual([
+                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 0"',
+                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 1"',
+                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 2"',
+            ]);
+
+            const foreachArrayProvider = findTest(
+                ctrl.items,
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider',
+            );
+            expect(foreachArrayProvider).toBeDefined();
+            const foreachArrayChildIds: string[] = [];
+            for (const [id] of foreachArrayProvider?.children ?? []) {
+                foreachArrayChildIds.push(id);
+            }
+            expect(foreachArrayChildIds).toEqual([
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "alpha"',
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "beta"',
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "gamma"',
+            ]);
+
+            const foreachConstProvider = findTest(
+                ctrl.items,
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider',
+            );
+            expect(foreachConstProvider).toBeDefined();
+            const foreachConstChildIds: string[] = [];
+            for (const [id] of foreachConstProvider?.children ?? []) {
+                foreachConstChildIds.push(id);
+            }
+            expect(foreachConstChildIds).toEqual([
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "alpha"',
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "beta"',
+                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "gamma"',
+            ]);
         });
 
         it('should resolve tests without phpunit.xml', async () => {
@@ -589,7 +634,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(88);
+            expect(countItems(ctrl.items)).toEqual(101);
         });
 
         it('should resolve tests with phpunit.xml.dist', async () => {
