@@ -14,6 +14,9 @@ function locOf(node: SyntaxNode): AstNodeLoc {
     return { start: node.startPosition, end: node.endPosition };
 }
 
+const ZERO_NODE = { kind: 'number', value: 0 } as AstNode;
+const EMPTY_STRING_NODE = { kind: 'string', value: '' } as AstNode;
+
 function collectLeadingComments(node: SyntaxNode): AstNodeComment[] {
     const comments: AstNodeComment[] = [];
 
@@ -439,7 +442,7 @@ function adaptWhileStatement(node: SyntaxNode): AstNode {
         condition: condition ?? {
             variable: '',
             operator: '<',
-            value: { kind: 'number', value: 0 } as AstNode,
+            value: ZERO_NODE,
         },
         body: bodyNode ? adaptMethodBody(bodyNode) : [],
         loc: locOf(node),
@@ -452,7 +455,7 @@ function adaptAssignment(node: SyntaxNode): AstNode {
     return {
         kind: 'assignment_expression',
         variable: left?.text.replace(/^\$/, '') ?? '',
-        value: right ? adaptExpression(right) : ({ kind: 'number', value: 0 } as AstNode),
+        value: right ? adaptExpression(right) : ZERO_NODE,
         loc: locOf(node),
     };
 }
@@ -750,8 +753,8 @@ function adaptBinaryExpression(node: SyntaxNode): AstNode {
     return {
         kind: 'binary_expression',
         operator,
-        left: left ? adaptExpression(left) : ({ kind: 'string', value: '' } as AstNode),
-        right: right ? adaptExpression(right) : ({ kind: 'string', value: '' } as AstNode),
+        left: left ? adaptExpression(left) : EMPTY_STRING_NODE,
+        right: right ? adaptExpression(right) : EMPTY_STRING_NODE,
         loc: locOf(node),
     };
 }
@@ -762,20 +765,16 @@ function adaptConditionalExpression(node: SyntaxNode): AstNode {
     const alternative = node.childForFieldName('alternative');
     return {
         kind: 'conditional_expression',
-        condition: condition
-            ? adaptExpression(condition)
-            : ({ kind: 'string', value: '' } as AstNode),
-        consequent: body ? adaptExpression(body) : ({ kind: 'string', value: '' } as AstNode),
-        alternate: alternative
-            ? adaptExpression(alternative)
-            : ({ kind: 'string', value: '' } as AstNode),
+        condition: condition ? adaptExpression(condition) : EMPTY_STRING_NODE,
+        consequent: body ? adaptExpression(body) : EMPTY_STRING_NODE,
+        alternate: alternative ? adaptExpression(alternative) : EMPTY_STRING_NODE,
         loc: locOf(node),
     };
 }
 
 function adaptParenthesizedExpression(node: SyntaxNode): AstNode {
     const inner = node.namedChildren[0];
-    return inner ? adaptExpression(inner) : ({ kind: 'string', value: '' } as AstNode);
+    return inner ? adaptExpression(inner) : EMPTY_STRING_NODE;
 }
 
 function adaptExpression(node: SyntaxNode): AstNode {

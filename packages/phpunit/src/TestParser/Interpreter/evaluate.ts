@@ -40,9 +40,9 @@ export function evaluateMethodBody(body: AstNode[] | undefined, classBody?: AstN
     const bindings: Bindings = {};
     for (const stmt of body) {
         if (stmt.kind === 'assignment_expression') {
-            const val = resolveStaticValue(stmt.value);
-            if (val !== undefined) {
-                bindings[stmt.variable] = val;
+            const { kind, value } = stmt.value as { kind: string; value?: unknown };
+            if (kind === 'number' || kind === 'string') {
+                bindings[stmt.variable] = value;
             }
             continue;
         }
@@ -64,27 +64,34 @@ export function evaluateMethodBody(body: AstNode[] | undefined, classBody?: AstN
 }
 
 function evaluateForLoop(loop: ForStatementNode): string[] {
-    if (!loop.init || !loop.condition || !loop.update) {
+    const iterations = buildForIterations(loop);
+    if (!iterations) {
         return [];
     }
+    return evaluateLoopYields(iterations, loop.body);
+}
 
+function buildForIterations(
+    loop: ForStatementNode,
+    outerBindings?: Bindings,
+): Bindings[] | undefined {
+    if (!loop.init || !loop.condition || !loop.update) {
+        return undefined;
+    }
     const startValue = resolveNumber(loop.init.value);
     const endValue = resolveNumber(loop.condition.value);
     if (startValue === undefined || endValue === undefined) {
-        return [];
+        return undefined;
     }
-
-    const iterations: Bindings[] = [];
     const varName = loop.init.variable;
     const op = loop.condition.operator;
     const isIncrement = loop.update.operator === '++';
-
+    const iterations: Bindings[] = [];
     for (let i = startValue; checkCondition(i, op, endValue); i = isIncrement ? i + 1 : i - 1) {
-        iterations.push({ [varName]: i });
+        iterations.push({ ...outerBindings, [varName]: i });
         if (iterations.length > 1000) break;
     }
-
-    return evaluateLoopYields(iterations, loop.body);
+    return iterations;
 }
 
 function evaluateForeachLoop(loop: ForeachStatementNode, classBody?: AstNode[]): string[] {
@@ -108,40 +115,21 @@ function evaluateWhileLoop(loop: WhileStatementNode, initialBindings: Bindings):
         return [];
     }
 
-    const yields = loop.body.filter((s): s is YieldExpressionNode => s.kind === 'yield_expression');
     const updates = loop.body.filter(
         (s): s is UpdateExpressionNode => s.kind === 'update_expression',
     );
-    if (yields.length === 0) {
-        return [];
-    }
 
-    const labels: string[] = [];
-    let numericIndex = 0;
-    let iterations = 0;
-
+    const iterations: Bindings[] = [];
     while (checkCondition(Number(bindings[variable] ?? 0), operator, limit)) {
-        for (const yieldNode of yields) {
-            if (!yieldNode.key) {
-                labels.push(`#${numericIndex++}`);
-            } else {
-                const resolved = resolveExpression(yieldNode.key, bindings);
-                if (resolved !== undefined) {
-                    labels.push(`"${resolved}"`);
-                } else {
-                    labels.push(`#${numericIndex++}`);
-                }
-            }
-        }
-        // Apply updates
+        iterations.push({ ...bindings });
         for (const upd of updates) {
             const current = Number(bindings[upd.variable] ?? 0);
             bindings[upd.variable] = upd.operator === '++' ? current + 1 : current - 1;
         }
-        if (++iterations > 1000) break;
+        if (iterations.length > 1000) break;
     }
 
-    return labels;
+    return evaluateLoopYields(iterations, loop.body);
 }
 
 function evaluateFunctionCallReturn(
@@ -170,16 +158,6 @@ function evaluateFunctionCallReturn(
         }
     }
 
-    return undefined;
-}
-
-function resolveStaticValue(node: AstNode): unknown {
-    if (node.kind === 'number') {
-        return node.value;
-    }
-    if (node.kind === 'string') {
-        return node.value;
-    }
     return undefined;
 }
 
@@ -244,23 +222,9 @@ function evaluateInnerLoop(
     }
 
     // for_statement
-    if (!loop.init || !loop.condition || !loop.update) {
+    const innerIterations = buildForIterations(loop, outerBindings);
+    if (!innerIterations) {
         return [];
-    }
-    const startValue = resolveNumber(loop.init.value);
-    const endValue = resolveNumber(loop.condition.value);
-    if (startValue === undefined || endValue === undefined) {
-        return [];
-    }
-    const isIncrement = loop.update.operator === '++';
-    const innerIterations: Bindings[] = [];
-    for (
-        let i = startValue;
-        checkCondition(i, loop.condition.operator, endValue);
-        i = isIncrement ? i + 1 : i - 1
-    ) {
-        innerIterations.push({ ...outerBindings, [loop.init.variable]: i });
-        if (innerIterations.length > 1000) break;
     }
     return evaluateLoopYields(innerIterations, loop.body, classBody);
 }
