@@ -14,7 +14,7 @@
 | 4 | `#[DataProvider]` + yield named | ✅ | ✅ | ✅ | AST 已覆蓋（key 須為 string literal），不需靠 Teamcity 補 |
 | 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
 | 6 | `#[DataProvider]` + loop/動態 | ✅ | ✅ | ✅ | 支援 for/foreach/while + yield（含 `range()`、巢狀迴圈、concatenation、ternary）及 `array_map`/`array_combine` return |
-| 7 | `#[DataProvider]` + method call | N/A | N/A | ✅ | 動態方法呼叫不解析，靠 Teamcity 執行後補 |
+| 7 | `#[DataProvider]` + method call | ⚠️ | ✅ | ✅ | 部分完成：支援 `array_map`/`array_combine`/`range()` 等內建函式，自定義方法呼叫仍靠 Teamcity 補 |
 | 8 | `#[DataProviderExternal]` | N/A | N/A | ✅ | 跨檔不解析，靠 Teamcity 執行後補 |
 | 9 | `#[TestWith]` numeric | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
 | 10 | `#[TestWith]` named (第二參數) | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
