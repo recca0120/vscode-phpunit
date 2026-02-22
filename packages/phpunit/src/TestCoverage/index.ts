@@ -1,1 +1,1 @@
-export * from './CloverParser';
+export { CloverParser, type FileCoverageData } from './CloverParser';

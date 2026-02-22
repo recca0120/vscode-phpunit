@@ -1,3 +1,3 @@
 export * from './TestRunner';
-export * from './TestRunnerObserver';
-export * from './TestRunnerProcess';
+export { TestRunnerEvent, type TestRunnerObserver } from './TestRunnerObserver';
+export type { TestRunnerProcess } from './TestRunnerProcess';

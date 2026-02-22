@@ -1,10 +1,11 @@
-export * from './AstParser';
-export * from './ClassHierarchy';
-export * from './Metadata';
 export {
-    createDatasetDefinition,
-    isDatasetResult,
-    resolveDatasetDefinition,
-    stripDataset,
-} from './TestDefinitionBuilder';
+    ChainAstParser,
+    initTreeSitter,
+    PhpParserAstParser,
+    resolveWasmDir,
+    TreeSitterAstParser,
+} from './AstParser';
+export * from './ClassHierarchy';
+export { createDatasetDefinition, resolveDatasetDefinition } from './TestDefinitionBuilder';
+export type { ParseResult } from './TestExtractor';
 export * from './TestParser';

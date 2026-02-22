@@ -1,22 +1,17 @@
 import { readFile } from 'node:fs/promises';
 import type { PHPUnitXML } from '../Configuration';
 import type { AstParser } from './AstParser/AstParser';
-import { PestTestExtractor } from './PestTestExtractor';
-import { PHPUnitTestExtractor } from './PHPUnitTestExtractor';
-import type { ParseResult, TestExtractor } from './TestExtractor';
-import { TestNode } from './TestNode';
+import { interpret } from './Interpreter/interpret';
+import type { ParseResult } from './TestExtractor';
+import { extractTests } from './TestExtractor';
 
 const textDecoder = new TextDecoder('utf-8');
 
 export class TestParser {
-    private extractors: TestExtractor[];
-
     constructor(
         private phpUnitXML: PHPUnitXML,
         private astParser: AstParser,
-    ) {
-        this.extractors = [new PestTestExtractor(), new PHPUnitTestExtractor()];
-    }
+    ) {}
 
     async parseFile(file: string, testsuite?: string): Promise<ParseResult | undefined> {
         return this.parse(textDecoder.decode(await readFile(file)), file, testsuite);
@@ -30,21 +25,17 @@ export class TestParser {
             return undefined;
         }
 
-        const definition = new TestNode(ast, {
-            phpUnitXML: this.phpUnitXML,
-            file,
-        });
+        const fileInfo = interpret(ast);
+        const result = extractTests(fileInfo, file, this.phpUnitXML.root());
 
-        for (const extractor of this.extractors) {
-            const result = extractor.extract(definition);
-            if (result) {
-                for (const testDefinition of result.tests) {
-                    testDefinition.testsuite = testsuite;
-                }
-                return result;
-            }
+        if (!result) {
+            return undefined;
         }
 
-        return undefined;
+        for (const testDefinition of result.tests) {
+            testDefinition.testsuite = testsuite;
+        }
+
+        return result;
     }
 }

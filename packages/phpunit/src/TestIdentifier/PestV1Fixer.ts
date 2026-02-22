@@ -9,6 +9,18 @@ function fixDataSet(locationHint: string) {
         : locationHint;
 }
 
+type TestResultExt = TestResult & { flowId?: number; name?: string; id?: string };
+
+function matchFlowIdCandidate(tr: TestResultExt, candidate: TestResult): boolean {
+    const r = candidate as TestResultExt;
+    if (tr.event !== TeamcityEvent.testStarted) {
+        return candidate.event === TeamcityEvent.testStarted && r.name === tr.name;
+    }
+
+    const matched = tr.id?.match(/\((?<id>.+)\)/);
+    return !!matched && r.id === `${matched.groups?.id.replace(/\\/g, '/')}Test`;
+}
+
 export const PestV1Fixer = {
     fixLocationHint(locationHint: string) {
         return fixDataSet(
@@ -28,27 +40,17 @@ export const PestV1Fixer = {
             return testResult;
         }
 
-        if (
-            'event' in testResult &&
-            testResult.event !== TeamcityEvent.testStarted &&
-            testResult.event !== TeamcityEvent.testFailed &&
-            testResult.event !== TeamcityEvent.testIgnored
-        ) {
+        const fixableEvents = new Set([
+            TeamcityEvent.testStarted,
+            TeamcityEvent.testFailed,
+            TeamcityEvent.testIgnored,
+        ]);
+        if ('event' in testResult && !fixableEvents.has(testResult.event)) {
             return testResult;
         }
 
-        const result = cache.findLast((result: TestResult) => {
-            const r = result as TestResult & { name?: string; id?: string };
-            if (testResult.event !== TeamcityEvent.testStarted) {
-                return result.event === TeamcityEvent.testStarted && r.name === tr.name;
-            }
-
-            const matched = tr.id?.match(/\((?<id>.+)\)/);
-
-            return !!matched && r.id === `${matched.groups?.id.replace(/\\/g, '/')}Test`;
-        });
-
-        tr.flowId = (result as (TestResult & { flowId?: number }) | undefined)?.flowId;
+        const match = cache.findLast((r) => matchFlowIdCandidate(tr, r));
+        tr.flowId = (match as (TestResult & { flowId?: number }) | undefined)?.flowId;
 
         return testResult;
     },
