@@ -253,6 +253,117 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
         });
     });
 
+    describe('advanced loop patterns', () => {
+        it('yield inside foreach with range() call', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        foreach (range(1, 3) as $i) {
+                            yield "case $i" => [$i];
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"case 1"', '"case 2"', '"case 3"']);
+        });
+
+        it('yield inside while loop', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        $i = 0;
+                        while ($i < 3) {
+                            yield "item $i" => [$i];
+                            $i++;
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"item 0"', '"item 1"', '"item 2"']);
+        });
+
+        it('yield inside nested foreach loops', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        foreach (['a', 'b'] as $letter) {
+                            foreach ([1, 2] as $num) {
+                                yield "$letter$num" => [$letter, $num];
+                            }
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"a1"', '"a2"', '"b1"', '"b2"']);
+        });
+
+        it('yield key with string concatenation', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        foreach (['x', 'y'] as $v) {
+                            yield $v . '_test' => [$v];
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"x_test"', '"y_test"']);
+        });
+
+        it('yield key with ternary expression', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        for ($i = 0; $i < 3; $i++) {
+                            yield ($i > 0 ? "positive $i" : "zero") => [$i];
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"zero"', '"positive 1"', '"positive 2"']);
+        });
+        it('return array_map with arrow function', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        return array_map(fn($x) => [$x, $x * 2], ['a', 'b', 'c']);
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['#0', '#1', '#2']);
+        });
+
+        it('return array_map with long function', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        return array_map(function($x) { return [$x]; }, ['a', 'b', 'c']);
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['#0', '#1', '#2']);
+        });
+
+        it('return array_combine with keys and values', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        return array_combine(['foo', 'bar', 'baz'], [[1], [2], [3]]);
+                    }
+                }`,
+                'provider',
+            );
+            expect(parser.parse(method)).toEqual(['"foo"', '"bar"', '"baz"']);
+        });
+    });
+
     describe('inline array (Pest ->with())', () => {
         it('array with named keys', () => {
             const arrayNode = givenPestArray(

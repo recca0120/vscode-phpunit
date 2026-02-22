@@ -115,6 +115,24 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 name: extractName(raw.offset?.name ?? raw.offset),
                 loc: convertLoc(raw.loc),
             };
+        case 'bin':
+            return {
+                kind: 'binary_expression',
+                operator: raw.type ?? '.',
+                left: adaptNode(raw.left) ?? { kind: 'string', value: '' },
+                right: adaptNode(raw.right) ?? { kind: 'string', value: '' },
+                loc: convertLoc(raw.loc),
+            };
+        case 'retif':
+            return {
+                kind: 'conditional_expression',
+                condition: adaptNode(raw.test) ?? { kind: 'string', value: '' },
+                consequent: adaptNode(raw.trueExpr) ?? { kind: 'string', value: '' },
+                alternate: adaptNode(raw.falseExpr) ?? { kind: 'string', value: '' },
+                loc: convertLoc(raw.loc),
+            };
+        case 'parenthesis':
+            return raw.inner ? adaptNode(raw.inner) : undefined;
         default:
             return undefined;
     }
@@ -203,6 +221,21 @@ function adaptMethodBody(body: RawNode): AstNode[] {
             statements.push(adaptForeachStatement(child));
             continue;
         }
+        if (child.kind === 'while') {
+            statements.push(adaptWhileStatement(child));
+            continue;
+        }
+        if (child.kind === 'expressionstatement' && child.expression?.kind === 'assign') {
+            statements.push(adaptAssignment(child.expression));
+            continue;
+        }
+        if (
+            child.kind === 'expressionstatement' &&
+            (child.expression?.kind === 'post' || child.expression?.kind === 'pre')
+        ) {
+            statements.push(adaptUpdateExpression(child.expression));
+            continue;
+        }
         const yieldNode = tryAdaptYieldFromExpressionStatement(child);
         if (yieldNode) {
             statements.push(yieldNode);
@@ -270,6 +303,46 @@ function adaptForeachStatement(raw: RawNode): AstNode {
         source: adaptNode(raw.source) ?? ({ kind: 'string', value: '' } as AstNode),
         valueVariable: extractName(raw.value?.name ?? raw.value),
         body: adaptStatementBody(raw),
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptWhileStatement(raw: RawNode): AstNode {
+    const test = raw.test;
+    let condition: { variable: string; operator: string; value: AstNode } = {
+        variable: '',
+        operator: '<',
+        value: { kind: 'number', value: 0 } as AstNode,
+    };
+    if (test?.kind === 'bin') {
+        condition = {
+            variable: extractName(test.left?.name ?? test.left),
+            operator: test.type ?? test.operator ?? '<',
+            value: adaptNode(test.right) ?? ({ kind: 'number', value: 0 } as AstNode),
+        };
+    }
+    return {
+        kind: 'while_statement',
+        condition,
+        body: adaptStatementBody(raw),
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptAssignment(raw: RawNode): AstNode {
+    return {
+        kind: 'assignment_expression',
+        variable: extractName(raw.left?.name ?? raw.left),
+        value: adaptNode(raw.right) ?? ({ kind: 'number', value: 0 } as AstNode),
+        loc: convertLoc(raw.loc),
+    };
+}
+
+function adaptUpdateExpression(raw: RawNode): AstNode {
+    return {
+        kind: 'update_expression',
+        variable: extractName(raw.what?.name ?? raw.what),
+        operator: raw.type === '+' ? '++' : '--',
         loc: convertLoc(raw.loc),
     };
 }

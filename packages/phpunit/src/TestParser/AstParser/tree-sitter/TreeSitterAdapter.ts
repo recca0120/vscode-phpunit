@@ -307,6 +307,21 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
             statements.push(adaptForeachStatement(child));
             continue;
         }
+        if (child.type === 'while_statement') {
+            statements.push(adaptWhileStatement(child));
+            continue;
+        }
+        if (child.type === 'expression_statement') {
+            const expr = child.namedChildren[0];
+            if (expr?.type === 'assignment_expression') {
+                statements.push(adaptAssignment(expr));
+                continue;
+            }
+            if (expr?.type === 'update_expression') {
+                statements.push(adaptUpdateExpression(expr));
+                continue;
+            }
+        }
         const yieldNode = tryAdaptYieldFromStatement(child);
         if (yieldNode) {
             statements.push(yieldNode);
@@ -402,6 +417,52 @@ function adaptForeachStatement(node: SyntaxNode): AstNode {
         source,
         valueVariable,
         body: bodyNode ? adaptMethodBody(bodyNode) : [],
+        loc: locOf(node),
+    };
+}
+
+function adaptWhileStatement(node: SyntaxNode): AstNode {
+    const condNode = node.namedChildren.find((c) => c?.type === 'parenthesized_expression');
+    let condition: { variable: string; operator: string; value: AstNode } | undefined;
+
+    if (condNode) {
+        const binExpr = condNode.namedChildren.find((c) => c?.type === 'binary_expression');
+        if (binExpr) {
+            condition = parseForCondition(binExpr);
+        }
+    }
+
+    const bodyNode = node.childForFieldName('body');
+
+    return {
+        kind: 'while_statement',
+        condition: condition ?? {
+            variable: '',
+            operator: '<',
+            value: { kind: 'number', value: 0 } as AstNode,
+        },
+        body: bodyNode ? adaptMethodBody(bodyNode) : [],
+        loc: locOf(node),
+    };
+}
+
+function adaptAssignment(node: SyntaxNode): AstNode {
+    const left = node.childForFieldName('left');
+    const right = node.childForFieldName('right');
+    return {
+        kind: 'assignment_expression',
+        variable: left?.text.replace(/^\$/, '') ?? '',
+        value: right ? adaptExpression(right) : ({ kind: 'number', value: 0 } as AstNode),
+        loc: locOf(node),
+    };
+}
+
+function adaptUpdateExpression(node: SyntaxNode): AstNode {
+    const varNode = node.namedChildren.find((c) => c?.type === 'variable_name');
+    return {
+        kind: 'update_expression',
+        variable: varNode?.text.replace(/^\$/, '') ?? '',
+        operator: node.text.includes('++') ? '++' : '--',
         loc: locOf(node),
     };
 }
@@ -677,7 +738,45 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
     function_call_expression: adaptCall,
     member_call_expression: adaptMemberCallAsCall,
     array_creation_expression: adaptArray,
+    binary_expression: adaptBinaryExpression,
+    conditional_expression: adaptConditionalExpression,
+    parenthesized_expression: adaptParenthesizedExpression,
 };
+
+function adaptBinaryExpression(node: SyntaxNode): AstNode {
+    const left = node.childForFieldName('left');
+    const right = node.childForFieldName('right');
+    const operator = node.children.find((c) => c && !c.isNamed)?.text ?? '.';
+    return {
+        kind: 'binary_expression',
+        operator,
+        left: left ? adaptExpression(left) : ({ kind: 'string', value: '' } as AstNode),
+        right: right ? adaptExpression(right) : ({ kind: 'string', value: '' } as AstNode),
+        loc: locOf(node),
+    };
+}
+
+function adaptConditionalExpression(node: SyntaxNode): AstNode {
+    const condition = node.childForFieldName('condition');
+    const body = node.childForFieldName('body');
+    const alternative = node.childForFieldName('alternative');
+    return {
+        kind: 'conditional_expression',
+        condition: condition
+            ? adaptExpression(condition)
+            : ({ kind: 'string', value: '' } as AstNode),
+        consequent: body ? adaptExpression(body) : ({ kind: 'string', value: '' } as AstNode),
+        alternate: alternative
+            ? adaptExpression(alternative)
+            : ({ kind: 'string', value: '' } as AstNode),
+        loc: locOf(node),
+    };
+}
+
+function adaptParenthesizedExpression(node: SyntaxNode): AstNode {
+    const inner = node.namedChildren[0];
+    return inner ? adaptExpression(inner) : ({ kind: 'string', value: '' } as AstNode);
+}
 
 function adaptExpression(node: SyntaxNode): AstNode {
     const adapter = expressionAdapters[node.type];
