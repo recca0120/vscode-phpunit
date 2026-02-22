@@ -13,7 +13,7 @@
 | 3 | `#[DataProvider]` + mixed keys | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
 | 4 | `#[DataProvider]` + yield named | ✅ | ✅ | ✅ | AST 已覆蓋（key 須為 string literal），不需靠 Teamcity 補 |
 | 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
-| 6 | `#[DataProvider]` + loop/動態 | N/A | N/A | ✅ | 設計上不解析，回傳 `[]`，靠 Teamcity 執行後補 |
+| 6 | `#[DataProvider]` + loop/動態 | ⚠️ | ✅ | ✅ | 部分完成：支援簡單 for/foreach + yield，複雜動態邏輯仍靠 Teamcity 補 |
 | 7 | `#[DataProvider]` + method call | N/A | N/A | ✅ | 同上 |
 | 8 | `#[DataProviderExternal]` | N/A | N/A | ✅ | 跨檔不解析，靠 Teamcity 執行後補 |
 | 9 | `#[TestWith]` numeric | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
