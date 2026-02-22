@@ -13,8 +13,8 @@
 | 3 | `#[DataProvider]` + mixed keys | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
 | 4 | `#[DataProvider]` + yield named | ✅ | ✅ | ✅ | AST 已覆蓋（key 須為 string literal），不需靠 Teamcity 補 |
 | 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
-| 6 | `#[DataProvider]` + loop/動態 | ⚠️ | ✅ | ✅ | 部分完成：支援簡單 for/foreach + yield，複雜動態邏輯仍靠 Teamcity 補 |
-| 7 | `#[DataProvider]` + method call | N/A | N/A | ✅ | 同上 |
+| 6 | `#[DataProvider]` + loop/動態 | ✅ | ✅ | ✅ | 支援 for/foreach/while + yield（含 `range()`、巢狀迴圈、concatenation、ternary）及 `array_map`/`array_combine` return |
+| 7 | `#[DataProvider]` + method call | N/A | N/A | ✅ | 動態方法呼叫不解析，靠 Teamcity 執行後補 |
 | 8 | `#[DataProviderExternal]` | N/A | N/A | ✅ | 跨檔不解析，靠 Teamcity 執行後補 |
 | 9 | `#[TestWith]` numeric | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
 | 10 | `#[TestWith]` named (第二參數) | ✅ | ✅ | ✅ | AST 已覆蓋，不需靠 Teamcity 補 |
@@ -50,6 +50,7 @@
 - [ ] **#17 Pest shared dataset** — 需跨檔找到 `dataset('name', ...)` 定義並解析，改動較大
 - [x] **#21 Pest combined `->with()->with()`** — 已改為收集所有 `with()` 並計算笛卡爾積
 - [x] **重構 DataProviderParser 為 mini PHP interpreter** — 已完成：建立 Interpreter 層（`interpret.ts` + `evaluate.ts`），將 AST 遍歷與 TestParser 分離
+- [x] **#6 進階 loop pattern** — 已完成：`range()`、while loop、巢狀迴圈、yield key 運算式（concatenation/ternary）、`array_map`/`array_combine`
 
 ---
 
