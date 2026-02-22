@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import { checkFileExists, findAsyncSequential, parseArguments } from '../utils';
 import { BinaryDetector } from './BinaryDetector';
-import { checkFileExists, findAsyncSequential, parseArguments } from './utils';
 
 interface ConfigurationItem {
     [p: string]: unknown;

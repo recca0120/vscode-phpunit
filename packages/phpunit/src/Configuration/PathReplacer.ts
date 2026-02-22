@@ -8,7 +8,7 @@ import {
     VAR_USER_HOME,
     VAR_WORKSPACE_FOLDER,
     VAR_WORKSPACE_FOLDER_BASENAME,
-} from './constants';
+} from '../constants';
 
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

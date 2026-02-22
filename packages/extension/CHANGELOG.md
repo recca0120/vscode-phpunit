@@ -4,6 +4,17 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.16] - 2026-02-22
+
+### Fixed
+- Fix: multiple DataProvider and Pest `->with()->with()` support (#13, #21) (#374)
+- Fix: separate testIgnored handling, fix scalar diff display, remove OutputBuffer side effect
+- Fix: upgrade fast-xml-parser to 5.3.7 to resolve DoS vulnerability
+
+### Changed
+- Refactor: reorganize phpunit package — group root-level files into `Configuration/` and `TestRunner/` subdirectories
+- Refactor: clean up output formatter architecture
+
 ## [3.9.14] - 2026-02-21
 
 ### Changed

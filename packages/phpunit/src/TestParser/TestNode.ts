@@ -1,4 +1,4 @@
-import type { PHPUnitXML } from '../PHPUnitXML';
+import type { PHPUnitXML } from '../Configuration';
 import { type TestDefinition, TestType } from '../types';
 import { AnnotationParser } from './AnnotationParser';
 import {

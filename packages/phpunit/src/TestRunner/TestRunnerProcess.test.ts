@@ -1,11 +1,10 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
-import { fixturePath, phpUnitProject } from '../tests/utils';
-import { Configuration } from './Configuration';
-import { VAR_WORKSPACE_FOLDER } from './constants';
-import { PathReplacer } from './PathReplacer';
-import { ProcessBuilder } from './ProcessBuilder/ProcessBuilder';
-import { Mode, Xdebug } from './ProcessBuilder/Xdebug';
+import { fixturePath, phpUnitProject } from '../../tests/utils';
+import { Configuration, PathReplacer } from '../Configuration';
+import { VAR_WORKSPACE_FOLDER } from '../constants';
+import { ProcessBuilder } from '../ProcessBuilder/ProcessBuilder';
+import { Mode, Xdebug } from '../ProcessBuilder/Xdebug';
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 vi.mock('node:fs/promises', async () => {
@@ -53,10 +52,10 @@ describe('TestRunnerProcess', () => {
             paths: { [VAR_WORKSPACE_FOLDER]: remoteCwd },
             mode: Mode.coverage,
         });
-        await xdebug!.setMode(Mode.coverage);
+        await xdebug?.setMode(Mode.coverage);
 
         const cloverFile = fixturePath('test1.clover.xml');
-        xdebug!.setCloverFile(cloverFile);
+        xdebug?.setCloverFile(cloverFile);
 
         const process = new TestRunnerProcess(builder);
         const result = await process.readCoverage();

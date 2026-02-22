@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import type { PHPUnitXML } from '../PHPUnitXML';
+import type { PHPUnitXML } from '../Configuration';
 import type { AstParser } from './AstParser';
 import { PestTestExtractor } from './PestTestExtractor';
 import { PHPUnitTestExtractor } from './PHPUnitTestExtractor';

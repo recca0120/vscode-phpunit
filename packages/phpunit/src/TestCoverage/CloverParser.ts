@@ -1,4 +1,4 @@
-import { XmlElement } from '../XmlElement';
+import { XmlElement } from '../Configuration';
 
 export interface LineCoverage {
     line: number;

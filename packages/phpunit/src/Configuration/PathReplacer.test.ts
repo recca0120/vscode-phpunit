@@ -1,6 +1,6 @@
 import os from 'node:os';
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject, phpUnitProjectWin } from '../tests/utils';
+import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
 import {
     VAR_PATH_SEPARATOR,
     VAR_PATH_SEPARATOR_SHORT,
@@ -8,7 +8,7 @@ import {
     VAR_USER_HOME,
     VAR_WORKSPACE_FOLDER,
     VAR_WORKSPACE_FOLDER_BASENAME,
-} from './constants';
+} from '../constants';
 import { PathReplacer } from './PathReplacer';
 
 describe('PathReplacer', () => {

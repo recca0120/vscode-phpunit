@@ -1,5 +1,5 @@
-import type { ProcessBuilder } from './ProcessBuilder';
-import { TestOutputParser, type TestResult } from './TestOutput';
+import type { ProcessBuilder } from '../ProcessBuilder';
+import { TestOutputParser, type TestResult } from '../TestOutput';
 import {
     createTestRunnerEventProxy,
     type EventResultMap,

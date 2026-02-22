@@ -1,17 +1,16 @@
 import { spawn } from 'node:child_process';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from '../tests/utils';
-import { Configuration } from './Configuration';
-import { VAR_PWD, VAR_WORKSPACE_FOLDER } from './constants';
-import type { Path } from './PathReplacer';
-import { PathReplacer } from './PathReplacer';
-import { ProcessBuilder } from './ProcessBuilder';
-import { TestIdentifierFactory } from './TestIdentifier';
-import { TeamcityEvent } from './TestOutput';
+import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
+import type { Path } from '../Configuration';
+import { Configuration, PathReplacer } from '../Configuration';
+import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
+import { ProcessBuilder } from '../ProcessBuilder';
+import { TestIdentifierFactory } from '../TestIdentifier';
+import { TeamcityEvent } from '../TestOutput';
+import { TestType } from '../types';
+import { semverLt } from '../utils';
 import { TestRunner } from './TestRunner';
 import { TestRunnerEvent } from './TestRunnerObserver';
-import { TestType } from './types';
-import { semverLt } from './utils';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
 
