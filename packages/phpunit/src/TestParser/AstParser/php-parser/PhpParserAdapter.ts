@@ -86,6 +86,8 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 children: adaptChildren(raw.children ?? []),
                 loc: convertLoc(raw.loc),
             };
+        case 'yield':
+            return adaptYieldExpression(raw);
         case 'include':
             return { kind: 'include_expression', loc: convertLoc(raw.loc) };
         case 'array':
@@ -132,6 +134,16 @@ function adaptMethod(raw: RawNode): AstNode {
     };
 }
 
+function tryAdaptYieldFromExpressionStatement(raw: RawNode): AstNode | null {
+    if (raw.kind !== 'expressionstatement') {
+        return null;
+    }
+    if (raw.expression?.kind !== 'yield') {
+        return null;
+    }
+    return adaptYieldExpression(raw.expression);
+}
+
 function adaptMethodBody(body: RawNode): AstNode[] {
     const statements: AstNode[] = [];
 
@@ -144,8 +156,11 @@ function adaptMethodBody(body: RawNode): AstNode[] {
                 value,
                 loc: convertLoc(child.loc),
             } as AstNode);
-        } else if (child.kind === 'expressionstatement' && child.expression?.kind === 'yield') {
-            statements.push(adaptYieldExpression(child.expression));
+            continue;
+        }
+        const yieldNode = tryAdaptYieldFromExpressionStatement(child);
+        if (yieldNode) {
+            statements.push(yieldNode);
         }
     }
 
@@ -280,10 +295,16 @@ function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
 }
 
 function adaptExpressionStatement(raw: RawNode): AstNode {
-    const expr = adaptNode(raw.expression);
+    // Yield inside closure body must be promoted to top-level yield_expression,
+    // not wrapped in expression_statement (same as adaptMethodBody).
+    const yieldNode = tryAdaptYieldFromExpressionStatement(raw);
+    if (yieldNode) {
+        return yieldNode;
+    }
+    const adapted = adaptNode(raw.expression);
     return {
         kind: 'expression_statement',
-        expression: expr ?? { kind: 'include_expression', loc: convertLoc(raw.loc) },
+        expression: adapted ?? { kind: 'include_expression', loc: convertLoc(raw.loc) },
         loc: convertLoc(raw.loc),
     };
 }

@@ -2,6 +2,7 @@ import { TestType } from '../types';
 import type {
     ArrayCreationNode,
     ArrayEntryNode,
+    AstNode,
     CallNode,
     ExpressionStatementNode,
     NamespaceNode,
@@ -73,29 +74,45 @@ export function getPestFunctions(node: TestNode): TestNode[] {
 }
 
 function extractPestDataset(testNode: TestNode): string[] {
-    const withArrays: ArrayCreationNode[] = [];
+    const withSources = collectWithSources(testNode);
+
+    if (withSources.length === 0) {
+        return [];
+    }
+
+    if (withSources.length === 1) {
+        return dataProviderParser.parse(withSources[0]);
+    }
+
+    const allArrays = withSources.every((n) => n.kind === 'array_creation_expression');
+    if (allArrays) {
+        return cartesianProduct(withSources.map((n) => extractArrayValues(n as ArrayCreationNode)));
+    }
+
+    return withSources.flatMap((source) => dataProviderParser.parse(source));
+}
+
+const supportedWithKinds = new Set([
+    'array_creation_expression',
+    'anonymous_function',
+    'arrow_function',
+]);
+
+function collectWithSources(testNode: TestNode): AstNode[] {
+    const sources: AstNode[] = [];
     let parent = testNode.parent;
     // Parent chain walks from innermost to outermost: it() → with(A) → with(B)
     while (parent) {
         if (parent.kind === 'function_call_expression' && parent.name === 'with') {
             const callNode = parent.node as CallNode;
             const firstArg = callNode.arguments[0];
-            if (firstArg?.kind === 'array_creation_expression') {
-                withArrays.push(firstArg as ArrayCreationNode);
+            if (firstArg && supportedWithKinds.has(firstArg.kind)) {
+                sources.push(firstArg);
             }
         }
         parent = parent.parent;
     }
-
-    if (withArrays.length === 0) {
-        return [];
-    }
-
-    if (withArrays.length === 1) {
-        return dataProviderParser.parse(withArrays[0]);
-    }
-
-    return cartesianProduct(withArrays.map(extractArrayValues));
+    return sources;
 }
 
 function extractArrayValues(node: ArrayCreationNode): string[] {

@@ -1,7 +1,10 @@
 import type {
     ArrayCreationNode,
     ArrayEntryNode,
+    ArrowFuncNode,
     AstNode,
+    BlockNode,
+    ClosureNode,
     MethodNode,
     ReturnStatementNode,
     YieldExpressionNode,
@@ -20,6 +23,14 @@ class DataProviderParser {
 
         if (node.kind === 'method_declaration') {
             return this.parseMethodBody((node as MethodNode).body);
+        }
+
+        if (node.kind === 'anonymous_function' || node.kind === 'arrow_function') {
+            const body = (node as ClosureNode | ArrowFuncNode).body;
+            if (!body || body.kind !== 'compound_statement') {
+                return [];
+            }
+            return this.parseMethodBody((body as BlockNode).children);
         }
 
         return [];
