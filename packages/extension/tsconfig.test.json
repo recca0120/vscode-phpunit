@@ -1,6 +1,8 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "module": "CommonJS",
+        "moduleResolution": "node",
         "outDir": "out"
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],
