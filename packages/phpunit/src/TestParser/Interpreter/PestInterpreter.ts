@@ -1,5 +1,6 @@
 import type {
     ArrayCreationNode,
+    ArrayEntryNode,
     AstNode,
     CallNode,
     ExpressionStatementNode,
@@ -106,28 +107,7 @@ const supportedWithKinds = new Set([
 ]);
 
 function collectPestDatasets(outerCall: CallNode, rootCall: CallNode): string[] {
-    const withCalls: CallNode[] = [];
-    let cur: CallNode | undefined = outerCall;
-    while (cur) {
-        if (cur.name === 'with' && cur !== rootCall) {
-            withCalls.push(cur);
-        }
-        cur = cur.chain;
-    }
-
-    if (withCalls.length === 0) {
-        return [];
-    }
-
-    withCalls.reverse();
-
-    const sources: AstNode[] = [];
-    for (const withCall of withCalls) {
-        const firstArg = withCall.arguments[0];
-        if (firstArg && supportedWithKinds.has(firstArg.kind)) {
-            sources.push(firstArg);
-        }
-    }
+    const sources = collectWithSources(outerCall, rootCall);
 
     if (sources.length === 0) {
         return [];
@@ -139,21 +119,44 @@ function collectPestDatasets(outerCall: CallNode, rootCall: CallNode): string[] 
 
     const allArrays = sources.every((n) => n.kind === 'array_creation_expression');
     if (allArrays) {
-        const datasets = sources.map((n) => {
-            return (n as ArrayCreationNode).entries.map((entry) => {
-                if (entry.key?.kind === 'string' && entry.key.value) {
-                    return entry.key.value;
-                }
-                if (entry.value?.kind === 'string') {
-                    return entry.value.value;
-                }
-                return '';
-            });
-        });
+        const datasets = sources.map((n) =>
+            (n as ArrayCreationNode).entries.map(extractArrayEntryLabel),
+        );
         return cartesianProduct(datasets);
     }
 
     return sources.flatMap((source) => dataProviderParser.parse(source));
+}
+
+function collectWithSources(outerCall: CallNode, rootCall: CallNode): AstNode[] {
+    const withCalls: CallNode[] = [];
+    let cur: CallNode | undefined = outerCall;
+    while (cur) {
+        if (cur.name === 'with' && cur !== rootCall) {
+            withCalls.push(cur);
+        }
+        cur = cur.chain;
+    }
+    withCalls.reverse();
+
+    const sources: AstNode[] = [];
+    for (const withCall of withCalls) {
+        const firstArg = withCall.arguments[0];
+        if (firstArg && supportedWithKinds.has(firstArg.kind)) {
+            sources.push(firstArg);
+        }
+    }
+    return sources;
+}
+
+function extractArrayEntryLabel(entry: ArrayEntryNode): string {
+    if (entry.key?.kind === 'string' && entry.key.value) {
+        return entry.key.value;
+    }
+    if (entry.value?.kind === 'string') {
+        return entry.value.value;
+    }
+    return '';
 }
 
 function cartesianProduct(datasets: string[][]): string[] {

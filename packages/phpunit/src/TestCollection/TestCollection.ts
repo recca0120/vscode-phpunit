@@ -35,10 +35,6 @@ export class TestCollection {
         return URI.file(this.phpUnitXML.root());
     }
 
-    private items() {
-        return this.suites;
-    }
-
     private initSuites() {
         for (const suite of this.phpUnitXML.getTestSuites()) {
             if (!this.suites.has(suite.name)) {
@@ -87,7 +83,7 @@ export class TestCollection {
             return undefined;
         }
 
-        const tests = this.items().get(testsuite)?.get(uriStr);
+        const tests = this.suites.get(testsuite)?.get(uriStr);
         if (!tests) {
             return undefined;
         }
@@ -96,7 +92,7 @@ export class TestCollection {
     }
 
     *gatherFiles() {
-        for (const [testsuite, files] of this.items()) {
+        for (const [testsuite, files] of this.suites) {
             for (const [uriStr, tests] of files) {
                 yield { testsuite, uri: URI.parse(uriStr), tests };
             }
@@ -176,11 +172,11 @@ export class TestCollection {
 
     private deleteFile(file: File<TestDefinition>) {
         this.fileIndex.delete(file.uri.toString());
-        this.items().get(file.testsuite)?.delete(file.uri.toString());
+        this.suites.get(file.testsuite)?.delete(file.uri.toString());
     }
 
     private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {
-        this.items().get(testsuite)?.set(uri.toString(), tests);
+        this.suites.get(testsuite)?.set(uri.toString(), tests);
         this.fileIndex.set(uri.toString(), testsuite);
     }
 

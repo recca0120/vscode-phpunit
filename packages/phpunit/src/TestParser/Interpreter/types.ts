@@ -16,14 +16,8 @@ export interface FileInfo {
     pestCalls: PestCallDescriptor[];
 }
 
-export interface TraitAdaptation {
-    kind: 'insteadof' | 'as';
-    trait?: string;
-    method: string;
-    instead?: string[];
-    alias?: string;
-    visibility?: string;
-}
+import type { TraitAdaptation } from '../ClassHierarchy';
+export type { TraitAdaptation };
 
 export interface TraitUseDescriptor {
     traitFQN: string;

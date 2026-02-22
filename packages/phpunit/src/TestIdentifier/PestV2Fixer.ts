@@ -1,5 +1,5 @@
 import type { TestResult } from '../TestOutput';
-import { capitalize } from '../utils';
+import { capitalize, splitDataset } from '../utils';
 
 const Str = {
     prefix: '__pest_evaluable_',
@@ -37,11 +37,11 @@ export const PestV2Fixer = {
 
     methodName(methodName: string) {
         methodName = methodName.replace(/\{@\*}/g, '*/');
-        const matched = methodName.match(/(?<method>.*)\swith\sdata\sset\s(?<dataset>.+)/);
+        const split = splitDataset(methodName);
         let dataset = '';
-        if (matched?.groups) {
-            methodName = matched.groups.method;
-            dataset = matched.groups.dataset.replace(/\|'/g, "'");
+        if (split.dataset) {
+            methodName = split.base;
+            dataset = split.label.replace(/\|'/g, "'");
         }
 
         return Str.evaluable(methodName) + dataset;

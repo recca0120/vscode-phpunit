@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
-import { TeamcityLineParser } from '.';
+import { TeamcityLineParser } from './TeamcityLineParser';
 import { TeamcityEvent } from './types';
 
 describe('TeamcityLineParser', () => {

@@ -21,65 +21,94 @@ export function parseArgv(input: string): string[] {
     return tokenize(input).map(stripQuotes);
 }
 
+interface ParsedOption {
+    index: number;
+    option?: string;
+}
+
 export function parseArguments(parameters: string[], excludes: string[]): string[] {
     const tokens = tokenize(parameters.join(' ').trim());
-
-    const hasValue = (i: number) =>
-        i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-');
+    const nextValue = (i: number) =>
+        i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-')
+            ? stripQuotes(tokens[i + 1])
+            : undefined;
 
     const options: string[] = [];
     const positionals: string[] = [];
     for (let i = 0; i < tokens.length; i++) {
         const token = stripQuotes(tokens[i]);
 
-        // long option: --key=value or --key value or --flag
+        let parsed: ParsedOption;
         if (token.startsWith('--')) {
-            const eqIndex = token.indexOf('=');
-            const key = eqIndex !== -1 ? token.substring(2, eqIndex) : token.substring(2);
-            if (excludes.includes(key)) {
-                if (eqIndex === -1 && hasValue(i)) i++;
-                continue;
-            }
-            if (eqIndex !== -1) {
-                options.push(`--${key}=${stripQuotes(token.substring(eqIndex + 1))}`);
-            } else if (!hasValue(i)) {
-                options.push(token);
-            } else {
-                options.push(`--${key}=${stripQuotes(tokens[++i])}`);
-            }
+            parsed = parseLongOption(token, i, excludes, nextValue(i));
+        } else if (token.startsWith('-') && token.length === 2) {
+            parsed = parseShortOption(token, i, excludes, nextValue(i));
+        } else {
+            positionals.push(decodeURIComponent(token));
             continue;
         }
 
-        // short option: -x value or -x
-        if (token.startsWith('-') && token.length === 2) {
-            const short = token[1];
-            const longKey = aliases[short];
-            const key = longKey ?? short;
-            if (excludes.includes(key)) {
-                if (hasValue(i)) i++;
-                continue;
-            }
-            if (!hasValue(i)) {
-                options.push(longKey ? `--${longKey}` : token);
-            } else {
-                const value = stripQuotes(tokens[++i]);
-                options.push(longKey ? `--${longKey}=${value}` : `-${short} ${value}`);
-            }
-            continue;
+        i = parsed.index;
+        if (parsed.option) {
+            options.push(parsed.option);
         }
-
-        // positional
-        positionals.push(decodeURIComponent(token));
     }
 
     return [...options, ...positionals];
 }
 
+function parseLongOption(
+    token: string,
+    i: number,
+    excludes: string[],
+    nextVal: string | undefined,
+): ParsedOption {
+    const eqIndex = token.indexOf('=');
+    const key = eqIndex !== -1 ? token.substring(2, eqIndex) : token.substring(2);
+
+    if (excludes.includes(key)) {
+        return { index: eqIndex === -1 && nextVal !== undefined ? i + 1 : i };
+    }
+
+    if (eqIndex !== -1) {
+        return { index: i, option: `--${key}=${stripQuotes(token.substring(eqIndex + 1))}` };
+    }
+    if (nextVal === undefined) {
+        return { index: i, option: token };
+    }
+    return { index: i + 1, option: `--${key}=${nextVal}` };
+}
+
+function parseShortOption(
+    token: string,
+    i: number,
+    excludes: string[],
+    nextVal: string | undefined,
+): ParsedOption {
+    const short = token[1];
+    const longKey = aliases[short];
+    const key = longKey ?? short;
+
+    if (excludes.includes(key)) {
+        return { index: nextVal !== undefined ? i + 1 : i };
+    }
+
+    if (nextVal === undefined) {
+        return { index: i, option: longKey ? `--${longKey}` : token };
+    }
+    return {
+        index: i + 1,
+        option: longKey ? `--${longKey}=${nextVal}` : `-${short} ${nextVal}`,
+    };
+}
+
 export async function checkFileExists(filePath: string): Promise<boolean> {
-    return access(filePath).then(
-        () => true,
-        () => false,
-    );
+    try {
+        await access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 export async function findAsyncSequential<T>(
@@ -136,12 +165,24 @@ function semverCompare(a: string, b: string): number {
 export const semverGte = (a: string, b: string) => semverCompare(a, b) >= 0;
 export const semverLt = (a: string, b: string) => semverCompare(a, b) < 0;
 
-const DATASET_PATTERN = /\swith\sdata\sset\s([#"].+)$/;
+const DATASET_PATTERN = /^(?<base>.*?)(?<dataset>\swith\sdata\sset\s(?<label>[#"].+))$/;
+
+export function splitDataset(id: string): { base: string; dataset: string; label: string } {
+    const match = id.match(DATASET_PATTERN);
+    if (!match?.groups) {
+        return { base: id, dataset: '', label: '' };
+    }
+    return {
+        base: match.groups.base,
+        dataset: match.groups.dataset,
+        label: match.groups.label,
+    };
+}
 
 export function isDatasetResult(name: string): boolean {
     return DATASET_PATTERN.test(name);
 }
 
 export function stripDataset(id: string): string {
-    return id.replace(DATASET_PATTERN, '');
+    return splitDataset(id).base;
 }

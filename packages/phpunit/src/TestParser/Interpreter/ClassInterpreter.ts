@@ -25,10 +25,10 @@ const attributeParser = new AttributeParser();
 export function collectClassDescriptors(
     ast: AstNode,
     namespaceNode: NamespaceNode | undefined,
-    namespace: string | undefined,
     resolver: FQNResolver,
 ): ClassDescriptor[] {
     const classNodes = collectClassNodes(ast, namespaceNode);
+    const namespace = namespaceNode?.name;
 
     return classNodes.map((node) => buildClassDescriptor(node, namespace, resolver));
 }
@@ -101,40 +101,34 @@ function collectConstants(body: AstNode[]): ConstantDescriptor[] {
 }
 
 function collectMethods(classNode: ClassNode): MethodDescriptor[] {
-    const result: MethodDescriptor[] = [];
-    const allMethodNodes: MethodNode[] = [];
+    const allMethodNodes = classNode.body.filter(
+        (node): node is MethodNode => node.kind === 'method_declaration',
+    );
 
-    for (const node of classNode.body) {
-        if (node.kind === 'method_declaration') {
-            allMethodNodes.push(node);
-        }
-    }
+    return allMethodNodes.map((method) =>
+        buildMethodDescriptor(method, allMethodNodes, classNode.body),
+    );
+}
 
-    for (const method of allMethodNodes) {
-        const annotations = {
-            ...annotationParser.parse(method),
-            ...attributeParser.parse(method),
-        };
+function buildMethodDescriptor(
+    method: MethodNode,
+    allMethodNodes: MethodNode[],
+    classBody: AstNode[],
+): MethodDescriptor {
+    const annotations = {
+        ...annotationParser.parse(method),
+        ...attributeParser.parse(method),
+    };
 
-        const isTestMethod = isTest(method);
-        const dataProviderLabels = resolveDataProviderLabels(
-            annotations,
-            allMethodNodes,
-            classNode.body,
-        );
-
-        result.push({
-            name: method.name,
-            visibility: method.visibility ?? '',
-            isAbstract: method.isAbstract,
-            range: toRange(method.loc),
-            annotations,
-            isTestMethod,
-            dataProviderLabels,
-        });
-    }
-
-    return result;
+    return {
+        name: method.name,
+        visibility: method.visibility ?? '',
+        isAbstract: method.isAbstract,
+        range: toRange(method.loc),
+        annotations,
+        isTestMethod: isTest(method),
+        dataProviderLabels: resolveDataProviderLabels(annotations, allMethodNodes, classBody),
+    };
 }
 
 function isTest(method: MethodNode): boolean {

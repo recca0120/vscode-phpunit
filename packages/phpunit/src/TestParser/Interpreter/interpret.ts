@@ -18,7 +18,7 @@ export function interpret(ast: AstNode): FileInfo {
     const resolverAst = namespaceNode ?? ast;
     const resolver = new FQNResolver(resolverAst, namespace);
 
-    const classes = collectClassDescriptors(ast, namespaceNode, namespace, resolver);
+    const classes = collectClassDescriptors(ast, namespaceNode, resolver);
     const pestCalls = collectPestCalls(ast, namespaceNode);
 
     return { namespace, namespaceRange, programRange, classes, pestCalls };

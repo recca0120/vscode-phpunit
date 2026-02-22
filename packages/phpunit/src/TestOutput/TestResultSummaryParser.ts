@@ -33,21 +33,18 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
         const pattern = /((?<name>[\w\s]+):\s(?<count>\d+)|(?<count2>\d+)\s(?<name2>\w+))[.s,]?/gi;
         const event = TeamcityEvent.testResultSummary;
 
-        return [...text.matchAll(pattern)].reduce(
-            (result: TestResultSummary & Record<string, unknown>, match) => {
-                const matched = match.groups;
-                if (!matched) {
-                    return result;
-                }
-                const [name, count] = matched.name
-                    ? [matched.name, matched.count]
-                    : [matched.name2, matched.count2];
-                result[this.normalize(name)] = parseInt(count, 10);
-
-                return result;
-            },
-            { event, text } as TestResultSummary,
-        );
+        const result: TestResultSummary & Record<string, unknown> = { event, text };
+        for (const match of text.matchAll(pattern)) {
+            const matched = match.groups;
+            if (!matched) {
+                continue;
+            }
+            const [name, count] = matched.name
+                ? [matched.name, matched.count]
+                : [matched.name2, matched.count2];
+            result[this.normalize(name)] = parseInt(count, 10);
+        }
+        return result;
     }
 
     private normalize(name: string) {

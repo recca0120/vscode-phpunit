@@ -1,6 +1,11 @@
 import type { TestResultIdentify } from '../TestOutput';
 import { type TestDefinition, TestType } from '../types';
-import { stripDataset } from '../utils';
+import { splitDataset } from '../utils';
+
+function lastTestdox(annotations?: Record<string, unknown>): string | undefined {
+    const testdox = annotations?.testdox as string[] | undefined;
+    return testdox && testdox.length > 0 ? testdox[testdox.length - 1] : undefined;
+}
 
 export abstract class TestIdentifier {
     static generateSearchText(input: string) {
@@ -17,8 +22,9 @@ export abstract class TestIdentifier {
     ): string {
         const { type, classFQN, className, methodName, annotations, label } = testDefinition;
 
-        if (annotations?.testdox && annotations.testdox.length > 0) {
-            return annotations.testdox[annotations.testdox.length - 1];
+        const testdox = lastTestdox(annotations);
+        if (testdox) {
+            return testdox;
         }
 
         if (label) {
@@ -46,25 +52,18 @@ export abstract class TestIdentifier {
 
     protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>) {
         let { methodName, annotations } = testDefinition;
-        let dataset = '';
-        const matched = methodName?.match(
-            /(?<methodName>.*)(?<dataset>\swith\sdata\sset\s[#"].+$)/,
-        );
-        if (matched?.groups) {
-            methodName = matched.groups.methodName;
-            dataset = matched.groups.dataset;
+        const { base, dataset } = splitDataset(methodName ?? '');
+        if (dataset) {
+            methodName = base;
         }
 
-        if (annotations?.testdox && annotations.testdox.length > 0) {
-            methodName = annotations.testdox[annotations.testdox.length - 1];
+        const testdox = lastTestdox(annotations);
+        if (testdox) {
+            methodName = testdox;
         } else {
             methodName = this.normalizeMethodName(methodName ?? '');
         }
 
         return methodName + dataset;
-    }
-
-    protected removeDataset(id: string) {
-        return stripDataset(id);
     }
 }

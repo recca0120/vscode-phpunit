@@ -20,23 +20,19 @@ export class TestResultCache {
         this.cache.set(this.buildKey(result), value);
     }
 
-    has(result: KeyableResult): boolean {
-        return this.cache.has(this.buildKey(result));
-    }
-
     delete(result: KeyableResult): boolean {
         return this.cache.delete(this.buildKey(result));
     }
 
     findLast(predicate: (result: TestResult) => boolean): TestResult | undefined {
-        return Array.from(this.cache.values()).reverse().find(predicate);
+        return this.valuesReversed().find(predicate);
     }
 
     findByPattern(
         pattern: RegExp,
         testResult: TestFailed | TestIgnored,
     ): (TestStarted | TestSuiteStarted) | undefined {
-        for (const prev of Array.from(this.cache.values()).reverse()) {
+        for (const prev of this.valuesReversed()) {
             if (this.isTestStarted(pattern, prev)) {
                 return prev as TestStarted | TestSuiteStarted;
             }
@@ -51,6 +47,10 @@ export class TestResultCache {
         }
 
         return undefined;
+    }
+
+    private valuesReversed(): TestResult[] {
+        return Array.from(this.cache.values()).reverse();
     }
 
     private buildKey(result: KeyableResult): string {

@@ -1,7 +1,6 @@
 import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../TestIdentifier';
 import {
     TeamcityEvent,
-    TeamcityLineParser,
     type TestFailed,
     type TestFinished,
     type TestIgnored,
@@ -10,6 +9,7 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '.';
+import { TeamcityLineParser } from './TeamcityLineParser';
 import { TestResultCache } from './TestResultCache';
 
 export class TestOutputParser {
@@ -21,14 +21,14 @@ export class TestOutputParser {
         let result = this.testResultParser.parse(input.toString());
         result = PestV1Fixer.fixFlowId(this.cache, result);
 
-        if (!result || !this.isDispatchable(result)) {
+        if (!this.isDispatchable(result)) {
             return result;
         }
 
         return this.dispatch(result);
     }
 
-    private isDispatchable(result?: TestResult): boolean {
+    private isDispatchable(result?: TestResult): result is TestResult {
         return !!result && 'event' in result && 'name' in result && 'flowId' in result;
     }
 

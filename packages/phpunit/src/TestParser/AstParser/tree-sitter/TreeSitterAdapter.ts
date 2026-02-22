@@ -58,48 +58,16 @@ function collectAttrGroups(node: SyntaxNode): AstNodeAttrGroup[] {
     const attrGroups: AstNodeAttrGroup[] = [];
 
     for (const child of node.children) {
-        if (!child) continue;
-        if (child.type !== 'attribute_list') {
-            continue;
-        }
+        if (!child || child.type !== 'attribute_list') continue;
 
         for (const group of child.children) {
-            if (!group) continue;
-            if (group.type !== 'attribute_group') {
-                continue;
-            }
+            if (!group || group.type !== 'attribute_group') continue;
 
-            const attrs: { name: string; args: { value?: unknown }[] }[] = [];
-            for (const attr of group.namedChildren) {
-                if (!attr) continue;
-                if (attr.type !== 'attribute') {
-                    continue;
-                }
-
-                const nameNode = attr.childForFieldName('name') ?? attr.namedChildren[0];
-                const name = nameNode ? nameNode.text : '';
-                const parts = name.split('\\');
-                const shortName = name.includes('\\') ? parts[parts.length - 1] : name;
-
-                const args: { value?: unknown }[] = [];
-                const argList =
-                    attr.childForFieldName('parameters') ??
-                    attr.children.find((c) => c?.type === 'arguments');
-                if (argList) {
-                    for (const arg of argList.namedChildren) {
-                        if (!arg) continue;
-                        if (arg.type === 'argument') {
-                            const valNode =
-                                arg.childForFieldName('value') ?? arg.namedChildren[0] ?? null;
-                            args.push({ value: extractStringValue(valNode) });
-                        } else {
-                            args.push({ value: extractStringValue(arg) });
-                        }
-                    }
-                }
-
-                attrs.push({ name: shortName, args });
-            }
+            const attrs = group.namedChildren
+                .filter(
+                    (attr): attr is NonNullable<typeof attr> => !!attr && attr.type === 'attribute',
+                )
+                .map(parseAttribute);
 
             if (attrs.length > 0) {
                 attrGroups.push({ attrs });
@@ -108,6 +76,29 @@ function collectAttrGroups(node: SyntaxNode): AstNodeAttrGroup[] {
     }
 
     return attrGroups;
+}
+
+function parseAttribute(attr: SyntaxNode): { name: string; args: { value?: unknown }[] } {
+    const nameNode = attr.childForFieldName('name') ?? attr.namedChildren[0];
+    const name = nameNode ? nameNode.text : '';
+    const shortName = name.includes('\\') ? (name.split('\\').pop() ?? name) : name;
+
+    const argList =
+        attr.childForFieldName('parameters') ?? attr.children.find((c) => c?.type === 'arguments');
+
+    const args = argList
+        ? argList.namedChildren
+              .filter((arg): arg is NonNullable<typeof arg> => !!arg)
+              .map((arg) => {
+                  const valNode =
+                      arg.type === 'argument'
+                          ? (arg.childForFieldName('value') ?? arg.namedChildren[0] ?? null)
+                          : arg;
+                  return { value: extractStringValue(valNode) };
+              })
+        : [];
+
+    return { name: shortName, args };
 }
 
 function extractStringValue(node: SyntaxNode | null): string | undefined {
@@ -629,76 +620,70 @@ function adaptArguments(argsNode: SyntaxNode): AstNode[] {
     return args;
 }
 
+function adaptString(node: SyntaxNode): AstNode {
+    const text = node.text;
+    let value = text;
+    if (text.startsWith("'") && text.endsWith("'")) {
+        value = text.slice(1, -1).replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+    } else if (text.startsWith('"') && text.endsWith('"')) {
+        value = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    return { kind: 'string', value, loc: locOf(node) };
+}
+
+function adaptEncapsedString(node: SyntaxNode): AstNode {
+    const parts: AstNode[] = [];
+    for (const child of node.namedChildren) {
+        if (!child) continue;
+        if (child.type === 'string_content') {
+            parts.push({
+                kind: 'string',
+                value: child.text,
+                loc: locOf(child),
+            });
+        } else if (child.type === 'variable_name') {
+            parts.push({
+                kind: 'variable',
+                name: child.text.replace(/^\$/, ''),
+                loc: locOf(child),
+            });
+        }
+    }
+    return { kind: 'encapsed_string', parts, loc: locOf(node) };
+}
+
+const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
+    string: adaptString,
+    encapsed_string: adaptEncapsedString,
+    integer: (node) => ({
+        kind: 'number',
+        value: Number(node.text),
+        loc: locOf(node),
+    }),
+    variable_name: (node) => ({
+        kind: 'variable',
+        name: node.text.replace(/^\$/, ''),
+        loc: locOf(node),
+    }),
+    class_constant_access_expression: (node) => ({
+        kind: 'class_constant_access',
+        scope: node.namedChildren[0]?.text ?? '',
+        name: node.namedChildren[1]?.text ?? '',
+        loc: locOf(node),
+    }),
+    anonymous_function_creation_expression: adaptClosure,
+    anonymous_function: adaptClosure,
+    arrow_function: adaptArrowFunction,
+    function_call_expression: adaptCall,
+    member_call_expression: adaptMemberCallAsCall,
+    array_creation_expression: adaptArray,
+};
+
 function adaptExpression(node: SyntaxNode): AstNode {
-    if (node.type === 'string') {
-        const text = node.text;
-        let value = text;
-        if (text.startsWith("'") && text.endsWith("'")) {
-            value = text.slice(1, -1).replace(/\\'/g, "'").replace(/\\\\/g, '\\');
-        } else if (text.startsWith('"') && text.endsWith('"')) {
-            value = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-        }
-        return { kind: 'string', value, loc: locOf(node) };
+    const adapter = expressionAdapters[node.type];
+    if (adapter) {
+        return adapter(node);
     }
-
-    if (node.type === 'encapsed_string') {
-        const parts: AstNode[] = [];
-        for (const child of node.namedChildren) {
-            if (!child) continue;
-            if (child.type === 'string_content') {
-                parts.push({
-                    kind: 'string',
-                    value: child.text,
-                    loc: locOf(child),
-                });
-            } else if (child.type === 'variable_name') {
-                parts.push({
-                    kind: 'variable',
-                    name: child.text.replace(/^\$/, ''),
-                    loc: locOf(child),
-                });
-            }
-        }
-        return { kind: 'encapsed_string', parts, loc: locOf(node) };
-    }
-
-    if (node.type === 'integer') {
-        return { kind: 'number', value: Number(node.text), loc: locOf(node) };
-    }
-
-    if (node.type === 'variable_name') {
-        return { kind: 'variable', name: node.text.replace(/^\$/, ''), loc: locOf(node) };
-    }
-
-    if (node.type === 'class_constant_access_expression') {
-        const scope = node.namedChildren[0]?.text ?? '';
-        const name = node.namedChildren[1]?.text ?? '';
-        return { kind: 'class_constant_access', scope, name, loc: locOf(node) };
-    }
-
-    if (
-        node.type === 'anonymous_function_creation_expression' ||
-        node.type === 'anonymous_function'
-    ) {
-        return adaptClosure(node);
-    }
-
-    if (node.type === 'arrow_function') {
-        return adaptArrowFunction(node);
-    }
-
-    if (node.type === 'function_call_expression') {
-        return adaptCall(node);
-    }
-
-    if (node.type === 'member_call_expression') {
-        return adaptMemberCallAsCall(node);
-    }
-
-    if (node.type === 'array_creation_expression') {
-        return adaptArray(node);
-    }
-
     return { kind: 'string', value: node.text, loc: locOf(node) };
 }
 

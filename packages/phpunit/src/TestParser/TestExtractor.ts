@@ -2,14 +2,14 @@ import { TestIdentifierFactory } from '../TestIdentifier';
 import { type Annotations, type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
 import type { ClassInfo } from './ClassHierarchy';
-import type {
-    ClassDescriptor,
-    FileInfo,
-    PestCallDescriptor,
-    Range,
-    TraitAdaptation,
-} from './Interpreter/types';
+import type { ClassDescriptor, FileInfo, PestCallDescriptor, Range } from './Interpreter/types';
 import { generatePestClassFQN } from './PestClassFQNGenerator';
+
+interface BuildContext {
+    file: string;
+    namespace: string | undefined;
+    transformer: ReturnType<typeof TestIdentifierFactory.create>;
+}
 
 export interface ParseResult {
     tests: TestDefinition[];
@@ -34,75 +34,32 @@ function extractPhpUnitTests(fileInfo: FileInfo, file: string): ParseResult | un
     const classes: ClassInfo[] = [];
 
     for (const cls of fileInfo.classes) {
-        const testMethods = cls.methods.filter((m) => m.isTestMethod);
+        const ctx: BuildContext = {
+            file,
+            namespace: splitFQN(cls.fqn).namespace,
+            transformer: TestIdentifierFactory.create(cls.fqn),
+        };
 
-        const { namespace } = splitFQN(cls.fqn);
-        const transformer = TestIdentifierFactory.create(cls.fqn);
-
-        const traitFQNs = cls.traitUses.map((t) => t.traitFQN);
-        const traitAdaptations: TraitAdaptation[] = cls.traitUses.flatMap((t) => t.adaptations);
-
-        classes.push({
-            uri: file,
-            classFQN: cls.fqn,
-            parentFQN: cls.parentFQN,
-            traitFQNs,
-            traitAdaptations,
-            kind: cls.isTrait ? 'trait' : 'class',
-            isAbstract: cls.isAbstract,
-            methods: testMethods.map((m) => buildMethodDef(cls, m, file, namespace, transformer)),
-        });
+        classes.push(buildClassInfo(cls, ctx));
 
         if (cls.isAbstract || cls.isTrait) {
             continue;
         }
 
-        const children = cls.methods
-            .filter((m) => !m.isAbstract && m.isTestMethod)
-            .map((m) => {
-                const def = buildMethodDef(cls, m, file, namespace, transformer);
-                if (m.dataProviderLabels.length > 0) {
-                    def.annotations = { ...def.annotations, dataset: m.dataProviderLabels };
-                }
-                return def;
-            });
-
-        const classDef = buildDef(transformer, {
+        const children = buildClassChildren(cls, ctx);
+        const classDef = buildDef(ctx.transformer, {
             type: TestType.class,
             classFQN: cls.fqn,
-            namespace,
+            namespace: ctx.namespace,
             className: cls.name,
             children,
             annotations: cls.annotations,
-            file,
+            file: ctx.file,
             start: cls.range.start,
             end: cls.range.end,
         });
 
-        if (namespace) {
-            let nsDef = testDefinitions.find(
-                (d) => d.type === TestType.namespace && d.namespace === namespace,
-            );
-            if (!nsDef) {
-                const nsTransformer = TestIdentifierFactory.create(namespace);
-                nsDef = buildDef(nsTransformer, {
-                    type: TestType.namespace,
-                    classFQN: namespace,
-                    namespace,
-                    children: [],
-                    annotations: {},
-                    file,
-                    ...(fileInfo.namespaceRange && {
-                        start: fileInfo.namespaceRange.start,
-                        end: fileInfo.namespaceRange.end,
-                    }),
-                });
-                testDefinitions.push(nsDef);
-            }
-            (nsDef.children as TestDefinition[]).push(classDef);
-        } else {
-            testDefinitions.push(classDef);
-        }
+        addToNamespace(testDefinitions, classDef, ctx, fileInfo);
     }
 
     if (testDefinitions.length === 0 && classes.length === 0) {
@@ -112,14 +69,68 @@ function extractPhpUnitTests(fileInfo: FileInfo, file: string): ParseResult | un
     return { tests: testDefinitions, classes };
 }
 
-function extractPestTests(fileInfo: FileInfo, file: string, root: string): ParseResult | undefined {
-    if (fileInfo.pestCalls.length === 0) {
-        return undefined;
+function buildClassInfo(cls: ClassDescriptor, ctx: BuildContext): ClassInfo {
+    const testMethods = cls.methods.filter((m) => m.isTestMethod);
+    return {
+        uri: ctx.file,
+        classFQN: cls.fqn,
+        parentFQN: cls.parentFQN,
+        traitFQNs: cls.traitUses.map((t) => t.traitFQN),
+        traitAdaptations: cls.traitUses.flatMap((t) => t.adaptations),
+        kind: cls.isTrait ? 'trait' : 'class',
+        isAbstract: cls.isAbstract,
+        methods: testMethods.map((m) => buildMethodDef(cls, m, ctx)),
+    };
+}
+
+function buildClassChildren(cls: ClassDescriptor, ctx: BuildContext): TestDefinition[] {
+    return cls.methods
+        .filter((m) => !m.isAbstract && m.isTestMethod)
+        .map((m) => {
+            const def = buildMethodDef(cls, m, ctx);
+            if (m.dataProviderLabels.length > 0) {
+                def.annotations = { ...def.annotations, dataset: m.dataProviderLabels };
+            }
+            return def;
+        });
+}
+
+function addToNamespace(
+    testDefinitions: TestDefinition[],
+    classDef: TestDefinition,
+    ctx: BuildContext,
+    fileInfo: FileInfo,
+) {
+    const { namespace } = ctx;
+    if (!namespace) {
+        testDefinitions.push(classDef);
+        return;
     }
 
-    const testCalls = fileInfo.pestCalls.filter((c) =>
-        ['test', 'it', 'describe', 'arch'].includes(c.fnName),
+    let nsDef = testDefinitions.find(
+        (d) => d.type === TestType.namespace && d.namespace === namespace,
     );
+    if (!nsDef) {
+        const nsTransformer = TestIdentifierFactory.create(namespace);
+        nsDef = buildDef(nsTransformer, {
+            type: TestType.namespace,
+            classFQN: namespace,
+            namespace,
+            children: [],
+            annotations: {},
+            file: ctx.file,
+            ...(fileInfo.namespaceRange && {
+                start: fileInfo.namespaceRange.start,
+                end: fileInfo.namespaceRange.end,
+            }),
+        });
+        testDefinitions.push(nsDef);
+    }
+    (nsDef.children as TestDefinition[]).push(classDef);
+}
+
+function extractPestTests(fileInfo: FileInfo, file: string, root: string): ParseResult | undefined {
+    const testCalls = fileInfo.pestCalls;
     if (testCalls.length === 0) {
         return undefined;
     }
@@ -210,26 +221,25 @@ function buildPestTestDef(
         annotations.dataset = call.datasets;
     }
 
-    const def = buildDef(ctx.transformer, {
+    const children = isDescribe
+        ? call.children.map((child) =>
+              buildPestTestDef(child, ctx, [...describeChain, `\`${call.description}\``]),
+          )
+        : [];
+
+    return buildDef(ctx.transformer, {
         type,
         classFQN: ctx.classFQN,
         namespace: ctx.namespace,
         className: ctx.className,
         methodName,
         label,
-        children: [],
+        children,
         annotations,
         file: ctx.file,
         start: call.range.start,
         end: call.range.end,
     });
-
-    if (isDescribe) {
-        const newChain = [...describeChain, `\`${call.description}\``];
-        def.children = call.children.map((child) => buildPestTestDef(child, ctx, newChain));
-    }
-
-    return def;
 }
 
 function buildDef(
@@ -251,19 +261,17 @@ function buildDef(
 function buildMethodDef(
     cls: ClassDescriptor,
     method: { name: string; annotations: Record<string, unknown>; range: Range },
-    file: string,
-    namespace: string | undefined,
-    transformer: ReturnType<typeof TestIdentifierFactory.create>,
+    ctx: BuildContext,
 ): TestDefinition {
-    return buildDef(transformer, {
+    return buildDef(ctx.transformer, {
         type: TestType.method,
         classFQN: cls.fqn,
-        namespace,
+        namespace: ctx.namespace,
         className: cls.name,
         methodName: method.name,
         children: [],
         annotations: method.annotations,
-        file,
+        file: ctx.file,
         start: method.range.start,
         end: method.range.end,
     });

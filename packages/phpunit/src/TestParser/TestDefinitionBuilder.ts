@@ -1,16 +1,11 @@
 import { type TestDefinition, TestType } from '../types';
-
-function parseDatasetLabel(name: string): string | undefined {
-    const match = name.match(/\swith\sdata\sset\s([#"].+)$/);
-
-    return match?.[1];
-}
+import { splitDataset } from '../utils';
 
 export function resolveDatasetDefinition(
     name: string,
     parent: TestDefinition,
 ): TestDefinition | undefined {
-    const label = parseDatasetLabel(name);
+    const { label } = splitDataset(name);
     if (!label) {
         return undefined;
     }
