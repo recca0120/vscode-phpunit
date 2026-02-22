@@ -20,4 +20,21 @@ class DataProviderAttributeTest extends TestCase
             [4, 5, 9],
         ];
     }
+
+    #[DataProvider('multiProviderA')]
+    #[DataProvider('multiProviderB')]
+    public function test_multi_provider(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function multiProviderA(): array
+    {
+        return ['one plus one' => [1, 1, 2]];
+    }
+
+    public static function multiProviderB(): array
+    {
+        return [[2, 3, 5]];
+    }
 }

@@ -20,7 +20,7 @@
 | 10 | `#[TestWith]` named (第二參數) | ✅ | ✅ | — | AttributeParser.parseDataset |
 | 11 | `#[TestWithJson]` | ✅ | ✅ | — | AttributeParser.parseDataset |
 | 12 | `@dataProvider` (legacy) | ✅ | ✅ | — | 同 #1-7，差別只在 docblock vs attribute |
-| 13 | 多個 DataProvider | ⚠️ | ❌ | ✅ | `buildMethodDefinition` 只取 `providers[0]`，忽略後續 provider |
+| 13 | 多個 DataProvider | ✅ | ✅ | ✅ | `buildMethodDefinition` 遍歷所有 provider 並串接 dataset |
 
 ## Pest — AST 靜態解析
 
@@ -28,12 +28,12 @@
 |---|---------|:----:|:----:|:----------:|------|
 | 14 | `->with([])` no keys | ✅ | ✅ | — | DataProviderParser + DatasetTest.php |
 | 15 | `->with([])` named keys | ✅ | ✅ | — | DataProviderParser + DatasetTest.php |
-| 16 | `->with([[]])` tuples | ✅ | ⚠️ | — | DataProviderParser 能解析，但 PestTestExtractor 缺整合測試 |
+| 16 | `->with([[]])` tuples | ✅ | ✅ | — | DataProviderParser + PestTestExtractor + TestCollection 整合測試 |
 | 17 | `->with('name')` shared dataset | ❌ | ❌ | ✅ | `extractPestDataset` 只檢查 array，string 參數直接回 `[]` |
 | 18 | `->with(fn())` closure | N/A | N/A | ✅ | 設計上不解析，非 array 回 `[]`，靠 Teamcity 執行後補 |
 | 19 | `->with(Generator)` | N/A | N/A | ✅ | 同上 |
 | 20 | bound dataset `[fn()=>...]` | N/A | N/A | ✅ | 同上 |
-| 21 | `->with()->with()` combined | ❌ | ❌ | ✅ | `extractPestDataset` 只找第一個 `with()` 就 return，不處理笛卡爾積 |
+| 21 | `->with()->with()` combined | ✅ | ✅ | ✅ | `extractPestDataset` 收集所有 `with()` 並計算笛卡爾積 |
 
 ## Teamcity 執行後補漏
 
@@ -46,10 +46,9 @@
 
 ## 待辦
 
-- [ ] **#13 多個 DataProvider** — `PHPUnitTestExtractor.buildMethodDefinition` 只取第一個 provider，需改為合併所有 provider 的 dataset
-- [ ] **#16 Pest tuples 整合測試** — DataProviderParser 已能解析，補 PestTestExtractor 整合測試即可
+- [x] **#13 多個 DataProvider** — 已改為遍歷所有 provider 並串接 dataset
 - [ ] **#17 Pest shared dataset** — 需跨檔找到 `dataset('name', ...)` 定義並解析，改動較大
-- [ ] **#21 Pest combined `->with()->with()`** — 需處理多個 `with()` 並計算笛卡爾積，改動較大
+- [x] **#21 Pest combined `->with()->with()`** — 已改為收集所有 `with()` 並計算笛卡爾積
 
 ---
 

@@ -377,7 +377,7 @@ function adaptCall(node: SyntaxNode): CallNode {
     const argsNode = node.childForFieldName('arguments');
     const args = argsNode ? adaptArguments(argsNode) : [];
 
-    const { name, chain } = resolveCallTarget(funcNode);
+    const { name, chain } = resolveCallInfo(funcNode);
 
     return {
         kind: 'function_call_expression',
@@ -388,7 +388,11 @@ function adaptCall(node: SyntaxNode): CallNode {
     };
 }
 
-function resolveCallTarget(node: SyntaxNode | null): { name: string; chain?: CallNode } {
+function resolveCallInfo(node: SyntaxNode | null): {
+    name: string;
+    arguments?: AstNode[];
+    chain?: CallNode;
+} {
     if (!node) {
         return { name: '' };
     }
@@ -405,12 +409,12 @@ function resolveCallTarget(node: SyntaxNode | null): { name: string; chain?: Cal
         const args = argsNode ? adaptArguments(argsNode) : [];
 
         if (objNode?.type === 'function_call_expression') {
-            return { name: methodName, chain: adaptCall(objNode) };
+            return { name: methodName, arguments: args, chain: adaptCall(objNode) };
         }
 
         if (objNode?.type === 'member_call_expression') {
             const innerCall = adaptMemberCallAsCall(objNode);
-            return { name: methodName, chain: innerCall };
+            return { name: methodName, arguments: args, chain: innerCall };
         }
 
         if (objNode) {
@@ -443,7 +447,7 @@ function adaptMemberCallAsCall(node: SyntaxNode): CallNode {
     const methodName = nameNode ? nameNode.text : '';
     const args = argsNode ? adaptArguments(argsNode) : [];
 
-    const { name: innerName, chain } = resolveCallTarget(objNode);
+    const { name: innerName, arguments: innerArgs, chain } = resolveCallInfo(objNode);
 
     if (innerName) {
         return {
@@ -453,7 +457,7 @@ function adaptMemberCallAsCall(node: SyntaxNode): CallNode {
             chain: {
                 kind: 'function_call_expression',
                 name: innerName,
-                arguments: [],
+                arguments: innerArgs ?? [],
                 chain,
                 loc: objNode ? locOf(objNode) : undefined,
             },

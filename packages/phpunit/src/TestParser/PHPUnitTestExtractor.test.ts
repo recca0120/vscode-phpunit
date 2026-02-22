@@ -972,6 +972,91 @@ class OverrideTest extends AbstractTest {
     });
 });
 
+describe.each(parsers)('PHPUnit multiple @dataProvider (#13) (%s)', (_name, createParser) => {
+    const givenTest = (file: string, content: string, id: string) => {
+        return findTest(parse(content, file, createParser()), id);
+    };
+
+    it('concatenates datasets from multiple providers', () => {
+        const file = phpUnitProject('tests/MultiProviderTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class MultiProviderTest extends TestCase
+{
+    /**
+     * @dataProvider providerA
+     * @dataProvider providerB
+     */
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function providerA(): array
+    {
+        return ['one plus one' => [1, 1, 2]];
+    }
+
+    public static function providerB(): array
+    {
+        return [[2, 3, 5]];
+    }
+}`;
+        expect(givenTest(file, content, 'test_add')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'test_add',
+                annotations: {
+                    dataProvider: ['providerA', 'providerB'],
+                    dataset: ['"one plus one"', '#0'],
+                },
+            }),
+        );
+    });
+
+    it('concatenates datasets from multiple #[DataProvider] attributes', () => {
+        const file = phpUnitProject('tests/MultiAttrProviderTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\DataProvider;
+use PHPUnit\\Framework\\TestCase;
+
+class MultiAttrProviderTest extends TestCase
+{
+    #[DataProvider('providerA')]
+    #[DataProvider('providerB')]
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function providerA(): array
+    {
+        return ['one plus one' => [1, 1, 2]];
+    }
+
+    public static function providerB(): array
+    {
+        return [[2, 3, 5]];
+    }
+}`;
+        expect(givenTest(file, content, 'test_add')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                methodName: 'test_add',
+                annotations: {
+                    dataProvider: ['providerA', 'providerB'],
+                    dataset: ['"one plus one"', '#0'],
+                },
+            }),
+        );
+    });
+});
+
 describe('PropertyHooksTest (PHP 8.4 — issue #336)', () => {
     const file = phpUnitProject('tests/PropertyHooksTest.php');
     const content = `<?php

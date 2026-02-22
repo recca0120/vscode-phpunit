@@ -4,6 +4,29 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "phpunit: watch",
+			"type": "shell",
+			"command": "pnpm --filter @vscode-phpunit/phpunit watch",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^(ERROR|WARNING)\\s+(.*)$",
+					"file": 2,
+					"message": 0
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^CLI Building",
+					"endsPattern": "^(ESM|CJS|DTS) ⚡️ Build success"
+				}
+			},
+			"presentation": {
+				"reveal": "silent",
+				"group": "watchers"
+			}
+		},
+		{
 			"label": "phpunit: build",
 			"type": "shell",
 			"command": "pnpm --filter @vscode-phpunit/phpunit build",
@@ -27,7 +50,7 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"dependsOn": ["phpunit: build"]
+			"dependsOn": ["phpunit: watch"]
 		},
 		{
 			"type": "npm",

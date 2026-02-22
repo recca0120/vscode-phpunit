@@ -1026,6 +1026,199 @@ it('validates emails', function (string $email) {
             expect(child1).toBeDefined();
         });
 
+        it('Pest ->with() tuples', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/WithTuplesTest.php'),
+                        code: `<?php
+it('multiplies numbers', function (int $a, int $b, int $expected) {
+    expect($a * $b)->toBe($expected);
+})->with([[2, 3, 6], [4, 5, 20]]);`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\WithTuplesTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/WithTuplesTest.php::it multiplies numbers',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            const child0 = method.children.get(
+                'tests/Unit/WithTuplesTest.php::it multiplies numbers with data set #0',
+            );
+            const child1 = method.children.get(
+                'tests/Unit/WithTuplesTest.php::it multiplies numbers with data set #1',
+            );
+            expect(child0).toBeDefined();
+            expect(child1).toBeDefined();
+        });
+
+        it('Pest ->with()->with() cartesian product (#21)', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/WithCombinedTest.php'),
+                        code: `<?php
+it('business closed', function (string $business, string $day) {
+    expect(true)->toBeTrue();
+})->with(['Office', 'Bank'])->with(['Saturday', 'Sunday']);`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\WithCombinedTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/WithCombinedTest.php::it business closed',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(4);
+
+            expect(
+                method.children.get(
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Office|', |'Saturday|')"`,
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Office|', |'Sunday|')"`,
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Bank|', |'Saturday|')"`,
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Bank|', |'Sunday|')"`,
+                ),
+            ).toBeDefined();
+        });
+
+        it('PHPUnit multiple @dataProvider (#13)', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/MultiProviderTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class MultiProviderTest extends TestCase
+{
+    /**
+     * @dataProvider providerA
+     * @dataProvider providerB
+     */
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function providerA(): array
+    {
+        return ['one plus one' => [1, 1, 2]];
+    }
+
+    public static function providerB(): array
+    {
+        return [[2, 3, 5]];
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get('Multi Provider (Tests\\MultiProvider)') as TestItem;
+            const method = cls.children.get(
+                'Multi Provider (Tests\\MultiProvider)::Add',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            expect(
+                method.children.get(
+                    'Multi Provider (Tests\\MultiProvider)::Add with data set "one plus one"',
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get('Multi Provider (Tests\\MultiProvider)::Add with data set #0'),
+            ).toBeDefined();
+        });
+
+        it('PHPUnit multiple #[DataProvider] attributes (#13)', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: phpUnitProject('tests/MultiAttrProviderTest.php'),
+                        code: `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\DataProvider;
+use PHPUnit\\Framework\\TestCase;
+
+class MultiAttrProviderTest extends TestCase
+{
+    #[DataProvider('providerA')]
+    #[DataProvider('providerB')]
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function providerA(): array
+    {
+        return ['one plus one' => [1, 1, 2]];
+    }
+
+    public static function providerB(): array
+    {
+        return [[2, 3, 5]];
+    }
+}`,
+                    },
+                ],
+                phpUnitProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const cls = ns.children.get(
+                'Multi Attr Provider (Tests\\MultiAttrProvider)',
+            ) as TestItem;
+            const method = cls.children.get(
+                'Multi Attr Provider (Tests\\MultiAttrProvider)::Add',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.children.size).toBe(2);
+
+            expect(
+                method.children.get(
+                    'Multi Attr Provider (Tests\\MultiAttrProvider)::Add with data set "one plus one"',
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    'Multi Attr Provider (Tests\\MultiAttrProvider)::Add with data set #0',
+                ),
+            ).toBeDefined();
+        });
+
         it('@dataProvider with return array (named + numeric keys)', () => {
             givenCodes(
                 [
