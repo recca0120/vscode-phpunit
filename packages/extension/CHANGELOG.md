@@ -4,6 +4,14 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.24] - 2026-02-24
+
+### Added
+- Add Traditional Chinese README (`README.zh-TW.md`)
+
+### Fixed
+- Fix README links to use absolute GitHub URLs for VS Code Marketplace compatibility
+
 ## [3.9.23] - 2026-02-24
 
 ### Changed
