@@ -4,7 +4,7 @@
     "displayName": "PHPUnit & Pest Test Explorer",
     "icon": "img/icon.png",
     "publisher": "recca0120",
-    "version": "3.9.21",
+    "version": "3.9.22",
     "private": true,
     "license": "MIT",
     "repository": {
@@ -113,7 +113,7 @@
                 },
                 "phpunit.phpunit": {
                     "type": "string",
-                    "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n  - phpunit (or phpunit.bat for windows) globally on the command line",
+                    "description": "Path to phpunit. Can be the phpunit file or phpunit.phar.\n\nAutomatically finds it in common places:\n  - Composer vendor directory\n  - phpunit.phar in your project\n\nNote: This path is passed to the PHP binary (e.g. `php vendor/bin/phpunit`). For a globally installed phpunit, use `phpunit.command` instead.",
                     "default": "vendor/bin/phpunit",
                     "scope": "resource"
                 },
