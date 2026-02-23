@@ -4,7 +4,7 @@
 [![Installs](https://img.shields.io/vscode-marketplace/i/recca0120.vscode-phpunit.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 [![License](https://img.shields.io/github/license/recca0120/vscode-phpunit.svg?style=flat-square)](LICENSE.md)
 
-[繁體中文](README.zh-TW.md)
+[繁體中文](https://github.com/recca0120/vscode-phpunit/blob/main/packages/extension/README.zh-TW.md)
 
 Run [PHPUnit](https://phpunit.de/) and [Pest](https://pestphp.com/) tests directly in VS Code using the native Test Explorer UI.
 
