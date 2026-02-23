@@ -65,6 +65,9 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   // Environment variables set before running
   "phpunit.environment": {},
 
+  // Save all open files before running tests (default: false)
+  "phpunit.saveBeforeTest": false,
+
   // Clear output channel before each run (default: true)
   "phpunit.clearOutputOnRun": true,
 

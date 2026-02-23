@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.23] - 2026-02-24
+
+### Changed
+- Rename `phpunit.saveFilesBeforeRun` setting to `phpunit.saveBeforeTest` for clarity
+
 ## [3.9.16] - 2026-02-22
 
 ### Fixed
