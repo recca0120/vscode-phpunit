@@ -145,10 +145,7 @@ function registerDocumentListeners(
 
 function createRunProfiles(ctrl: TestController, dispatcher: TestRunDispatcher) {
     const runHandler = async (request: TestRunRequest, cancellation: CancellationToken) => {
-        if (
-            !request.continuous &&
-            workspace.getConfiguration('phpunit').get('saveFilesBeforeRun')
-        ) {
+        if (!request.continuous && workspace.getConfiguration('phpunit').get('saveBeforeTest')) {
             await workspace.saveAll(false);
         }
         await dispatcher.dispatch(request, cancellation);

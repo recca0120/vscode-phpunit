@@ -168,9 +168,9 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         await vscode.commands.executeCommand('phpunit.run-all');
     });
 
-    test('should save dirty files before run when saveFilesBeforeRun is enabled', async () => {
+    test('should save dirty files before run when saveBeforeTest is enabled', async () => {
         const config = vscode.workspace.getConfiguration('phpunit');
-        await config.update('saveFilesBeforeRun', true, vscode.ConfigurationTarget.Workspace);
+        await config.update('saveBeforeTest', true, vscode.ConfigurationTarget.Workspace);
 
         // Open a PHP file and make it dirty by inserting a space
         const folders = vscode.workspace.workspaceFolders;
@@ -210,11 +210,7 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
             const restoreEditor = await vscode.window.showTextDocument(doc);
             await restoreEditor.edit((edit) => edit.replace(fullRange, originalText));
             await doc.save();
-            await config.update(
-                'saveFilesBeforeRun',
-                undefined,
-                vscode.ConfigurationTarget.Workspace,
-            );
+            await config.update('saveBeforeTest', undefined, vscode.ConfigurationTarget.Workspace);
         }
     });
 
