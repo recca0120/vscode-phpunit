@@ -4,7 +4,7 @@ export {
     PhpParserAstParser,
     resolveWasmDir,
     TreeSitterAstParser,
-} from './AstParser';
+} from '../Interpreter/AstParser';
 export * from './ClassHierarchy';
 export { createDatasetDefinition, resolveDatasetDefinition } from './TestDefinitionBuilder';
 export type { ParseResult } from './TestExtractor';

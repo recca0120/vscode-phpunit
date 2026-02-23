@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../../tests/utils';
 import { PHPUnitXML } from '../Configuration';
+import type { AstParser } from '../Interpreter/AstParser/AstParser';
+import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
+import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
 import { type TestDefinition, TestType } from '../types';
-import type { AstParser } from './AstParser/AstParser';
-import { PhpParserAstParser } from './AstParser/php-parser/PhpParserAstParser';
-import { TreeSitterAstParser } from './AstParser/tree-sitter/TreeSitterAstParser';
-import { initTreeSitter } from './AstParser/tree-sitter/TreeSitterParser';
 import { ClassHierarchy } from './ClassHierarchy';
 import { TestParser } from './TestParser';
 
@@ -185,6 +185,7 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
                     annotations: {
                         dataProvider: ['additionProvider'],
                         depends: ['test_passed'],
+                        dataset: ['#0', '#1', '#2'],
                     },
                     start: { line: 66, character: 4 },
                     end: { line: 69, character: 5 },

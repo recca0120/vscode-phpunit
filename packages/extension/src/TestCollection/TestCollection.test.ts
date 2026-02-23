@@ -1420,7 +1420,7 @@ class AttrProviderTest extends TestCase
             expect(child1).toBeDefined();
         });
 
-        it('unresolvable provider body returns no dataset', () => {
+        it('array_map with range provider resolves dataset children', () => {
             givenCodes(
                 [
                     {
@@ -1457,7 +1457,7 @@ class DynamicProviderTest extends TestCase
                 'Dynamic Provider (Tests\\DynamicProvider)::Dynamic',
             ) as TestItem;
             expect(method).toBeDefined();
-            expect(method.children.size).toBe(0);
+            expect(method.children.size).toBe(5);
         });
 
         it('no dataset when no TestWith/TestWithJson attributes', () => {
