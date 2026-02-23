@@ -1,10 +1,10 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { PHPUnitXML } from '../src/Configuration/PHPUnitXML';
-import type { AstParser } from '../src/TestParser/AstParser/AstParser';
-import { ChainAstParser } from '../src/TestParser/AstParser/ChainAstParser';
-import { PhpParserAstParser } from '../src/TestParser/AstParser/php-parser/PhpParserAstParser';
-import { TreeSitterAstParser } from '../src/TestParser/AstParser/tree-sitter/TreeSitterAstParser';
+import type { AstParser } from '../src/Interpreter/AstParser/AstParser';
+import { ChainAstParser } from '../src/Interpreter/AstParser/ChainAstParser';
+import { PhpParserAstParser } from '../src/Interpreter/AstParser/PhpParser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../src/Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { ClassHierarchy } from '../src/TestParser/ClassHierarchy';
 import { TestParser } from '../src/TestParser/TestParser';
 import { type TestDefinition, TestType } from '../src/types';

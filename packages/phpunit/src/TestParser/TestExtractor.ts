@@ -1,8 +1,8 @@
+import type { ClassDescriptor, FileInfo, PestCallDescriptor, Range } from '../Interpreter/types';
 import { TestIdentifierFactory } from '../TestIdentifier';
 import { type Annotations, type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
 import type { ClassInfo } from './ClassHierarchy';
-import type { ClassDescriptor, FileInfo, PestCallDescriptor, Range } from './Interpreter/types';
 import { generatePestClassFQN } from './PestClassFQNGenerator';
 
 interface BuildContext {

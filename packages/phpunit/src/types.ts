@@ -6,6 +6,11 @@ export type Position = {
     line: number;
 };
 
+export type Range = {
+    start: Position;
+    end: Position;
+};
+
 export enum TestType {
     workspace,
     testsuite,

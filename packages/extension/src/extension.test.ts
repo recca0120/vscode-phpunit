@@ -544,7 +544,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(96);
+            expect(countItems(ctrl.items)).toEqual(99);
 
             const annotationMulti = findTest(
                 ctrl.items,
@@ -634,7 +634,7 @@ describe('Extension Test', () => {
 
             await ctrl.resolveHandler();
 
-            expect(countItems(ctrl.items)).toEqual(101);
+            expect(countItems(ctrl.items)).toEqual(104);
         });
 
         it('should resolve tests with phpunit.xml.dist', async () => {

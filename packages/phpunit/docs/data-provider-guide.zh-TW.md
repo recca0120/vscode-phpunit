@@ -17,10 +17,10 @@ Issue: https://github.com/recca0120/vscode-phpunit/issues/297
 | 1 | `#[DataProvider]` + named array | ✅ | ✅ | ✅ | ✅ | 最常見 |
 | 2 | `#[DataProvider]` + numeric array | ✅ | ✅ | ✅ | ✅ | |
 | 3 | `#[DataProvider]` + mixed keys | ✅ | ✅ | ✅ | ✅ | |
-| 4 | `#[DataProvider]` + yield named | ⚠️ | ✅ | ✅ | ✅ | 頂層僅支援 string literal key |
+| 4 | `#[DataProvider]` + yield named | ✅ | ✅ | ✅ | ✅ | 支援 variable/interpolated/concat/ternary key |
 | 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | ✅ | ✅ | |
 | 6 | `#[DataProvider]` + loop/動態 | ⚠️ | ✅ | ✅ | ✅ | 支援 for/foreach/while/巢狀 |
-| 7 | `#[DataProvider]` + method call | ⚠️ | ✅ | ✅ | ✅ | 僅 array_map/array_combine/range |
+| 7 | `#[DataProvider]` + method call | ⚠️ | ✅ | ✅ | ✅ | array_map/array_combine 支援 range()/array/const |
 | 8 | `#[DataProviderExternal]` | N/A | N/A | N/A | ✅ | 跨檔不解析 |
 | 9 | `#[TestWith]` numeric | ✅ | ✅ | ✅ | ✅ | |
 | 10 | `#[TestWith]` named | ✅ | ✅ | ✅ | ✅ | |
@@ -32,7 +32,7 @@ Issue: https://github.com/recca0120/vscode-phpunit/issues/297
 | 16 | Pest `->with([[]])` tuples | ✅ | ✅ | ✅ | ✅ | |
 | 17 | Pest `->with('name')` shared | ❌ | ❌ | ❌ | ✅ | 需跨檔找 dataset() |
 | 18 | Pest `->with(function(){})` | ⚠️ | ✅ | ✅ | ✅ | 同 #4-7 限制 |
-| 19 | Pest `->with(fn() =>)` arrow | N/A | N/A | N/A | ✅ | arrow function 無法解析 |
+| 19 | Pest `->with(fn() =>)` arrow | ⚠️ | ✅ | ✅ | ✅ | 支援 range()/array literal body |
 | 20 | Pest bound dataset `[fn()=>...]` | ✅ | ✅ | ✅ | ✅ | |
 | 21 | Pest `->with()->with()` combined | ✅ | ✅ | ✅ | ✅ | 笛卡爾積 |
 
@@ -57,9 +57,10 @@ Issue: https://github.com/recca0120/vscode-phpunit/issues/297
 | `evaluateWhileLoop(loop, initialBindings)` | 展開 while 迴圈 |
 | `evaluateInnerLoop(loop, outerBindings, classBody?)` | 巢狀迴圈委派 |
 | `evaluateLoopYields(iterations, body, classBody?)` | 對每次迭代解析 yield key |
-| `evaluateFunctionCallReturn(node)` | 處理 `array_map` / `array_combine` |
-| `resolveExpression(node, bindings)` | 解析 yield key 表達式（string / variable / interpolated / concat / ternary） |
-| `resolveIterable(source, classBody?)` | 解析迴圈的迭代源（array literal / class constant / `range()`） |
+| `evaluateArrowBody(body, classBody?)` | 解析 arrow function body 表達式（array literal / `range()` / class constant） |
+| `evaluateFunctionCallReturn(node)` | 處理 `array_map` / `array_combine`（參數透過 `resolveIterable` 解析） |
+| `resolveExpression(node, bindings)` | 解析 yield key 表達式（string / variable / interpolated / concat / ternary / PHP 字串函式 / 算術） |
+| `resolveIterable(source, classBody?)` | 解析迭代源（array literal / class constant / `range()` / `array_map` / `array_combine`） |
 | `extractLabels(entries)` | 從 array entry 或頂層 yield 提取 label（僅 string literal key） |
 
 Teamcity 補漏元件：
@@ -154,7 +155,7 @@ testStarted name='addition_provider with data set #0'
 
 ---
 
-### 4. `#[DataProvider]` + Generator yield + named keys ⚠️
+### 4. `#[DataProvider]` + Generator yield + named keys ✅
 
 ```php
 public static function additionProvider(): Generator {
@@ -169,19 +170,24 @@ testStarted name='testAdd with data set "first"'
 testStarted name='testAdd with data set "second"'
 ```
 
-**AST 解析：⚠️** — 頂層 yield 僅支援 string literal key。
+**AST 解析：✅** — 頂層 yield 透過 `resolveExpression()` 搭配 body 層級 bindings 解析。
 
 | yield key 類型 | 頂層 yield | 迴圈內 yield | 範例 |
 |---------------|:----------:|:----------:|------|
 | string literal | ✅ | ✅ | `yield 'foo' => [1]` |
-| variable | ❌ | ✅ | `yield $v => [$v]` |
-| interpolated string | ❌ | ✅ | `yield "case $i" => [$i]` |
-| concatenation (`.`) | ❌ | ✅ | `yield $v . '_test' => [$v]` |
-| ternary | ❌ | ✅ | `yield ($i > 0 ? "pos" : "zero") => [$i]` |
+| variable | ✅ | ✅ | `yield $v => [$v]`（需 body 中有賦值） |
+| interpolated string | ✅ | ✅ | `yield "case $i" => [$i]` |
+| concatenation (`.`) | ✅ | ✅ | `yield $v . '_test' => [$v]` |
+| ternary | ✅ | ✅ | `yield ($i > 0 ? "pos" : "zero") => [$i]` |
+| `strtoupper` / `strtolower` / `ucfirst` / `lcfirst` | ✅ | ✅ | `yield strtoupper($v) => [...]` |
+| `sprintf` | ✅ | ✅ | `yield sprintf('case_%d', $i) => [...]` |
+| `implode` / `join` | ✅ | ✅ | `yield implode('-', [$a, $b]) => [...]` |
+| `str_repeat` / `substr` | ✅ | ✅ | `yield str_repeat('ab', 3) => [...]` |
+| `trim` / `ltrim` / `rtrim` | ✅ | ✅ | `yield trim(' hello ') => [...]` |
+| `str_replace` | ✅ | ✅ | `yield str_replace('_', '-', 'foo_bar') => [...]` |
 | method call | ❌ | ❌ | `yield $obj->getName() => [...]` |
-| function call | ❌ | ❌ | `yield strtoupper($v) => [...]` |
 
-> **技術原因**：頂層 yield 透過 `extractLabels()` 處理，僅檢查 `key.kind === 'string'`。迴圈內 yield 透過 `resolveExpression()` 處理，能解析 variable、interpolated string、concatenation、ternary 等表達式（需有 bindings 提供變數值）。
+> **技術說明**：頂層和迴圈內的 yield 都透過 `resolveExpression()` 處理。頂層 yield 從 method body 的賦值語句收集 bindings。PHP 字串函式（`strtoupper`、`strtolower`、`ucfirst`、`lcfirst`、`sprintf`、`implode`、`join`、`str_repeat`、`substr`、`trim`、`ltrim`、`rtrim`、`str_replace`）透過分派表作為純函式解析。
 
 ---
 
@@ -239,6 +245,12 @@ foreach (range(1, 3) as $i) { yield "case $i" => [$i]; }
 // ✅ while loop（僅 $i++ / $i-- 遞增遞減）
 $i = 0; while ($i < 3) { yield "item $i" => [$i]; $i++; }
 
+// ✅ while loop + break
+$i = 0; while ($i < 10) { if ($i >= 3) { break; } yield "item $i" => [$i]; $i++; }
+
+// ✅ while loop + continue
+$i = 0; while ($i < 5) { $i++; if ($i % 2 === 0) { continue; } yield "item $i" => [$i]; }
+
 // ✅ 巢狀迴圈
 foreach (['a', 'b'] as $x) {
     foreach ([1, 2] as $y) { yield "$x$y" => [$x, $y]; }
@@ -254,14 +266,9 @@ foreach ($this->getItems() as $v) { yield $v => [$v]; }
 // ❌ 複雜 while 條件
 while ($iterator->hasNext()) { yield $iterator->current(); }
 
-// ❌ break / continue 條件跳出
-for ($i = 0; $i < 100; $i++) {
-    if ($i % 2 === 0) continue;
-    yield "odd $i" => [$i];
-}
-
-// ❌ 複合遞增（while 只支援 ++ / --）
-$i = 0; while ($i < 10) { yield $i => [$i]; $i += 2; }
+// ✅ 複合遞增（$i += N、$i -= N，包含變數 step）
+$i = 0; while ($i < 10) { yield "item $i" => [$i]; $i += 2; }
+$step = 3; $i = 0; while ($i < 9) { yield "item $i" => [$i]; $i += $step; }
 ```
 
 **各迴圈類型限制：**
@@ -270,7 +277,7 @@ $i = 0; while ($i < 10) { yield $i => [$i]; $i += 2; }
 |------|------|
 | `for` | init 必須是 `$var = number`；condition 必須是 `$var op number`（op: `<`, `<=`, `>`, `>=`）；update 必須是 `$var++` 或 `$var--` |
 | `foreach` | source 必須是 array literal、class constant（`self::CONST`）、或 `range(start, end[, step])`；其餘動態來源不支援 |
-| `while` | condition 必須是 `$var op number`；body 內 update 必須是 `$var++` 或 `$var--`；不支援 `$i += N` 等複合運算 |
+| `while` | condition 必須是 `$var op number`；body 內 update 支援 `$var++`、`$var--`、`$var += N`、`$var -= N`（N 可為 literal 或 bindings 中的變數）；支援 `if` + `break`/`continue` |
 | 巢狀 | 支援 foreach/for 的任意組合巢狀；外層 bindings 自動傳入內層 |
 | 安全上限 | MAX_ITERATIONS = 1000，超過即停止展開 |
 
@@ -294,13 +301,13 @@ public static function provider(): array {
 
 | 函式呼叫 | 支援 | 解析方式 | 範例 |
 |---------|:----:|---------|------|
-| `array_map(fn, array_literal)` | ✅ | 計算第二參數 array 長度，產出 `#0`, `#1`, ... | `return array_map(fn($x) => [$x], ['a', 'b'])` |
-| `array_combine(keys, values)` | ✅ | 取第一參數 array 的 string entry 作為 label | `return array_combine(['foo', 'bar'], [[1], [2]])` |
+| `array_map(fn, source)` | ✅ | 計算第二參數長度，產出 `#0`, `#1`, ...；source 可為 array literal、`range()`、class constant | `return array_map(fn($x) => [$x], range(0, 2))` |
+| `array_combine(keys, values)` | ✅ | 取第一參數作為 label；keys 可為 array literal、`range()`、class constant | `return array_combine(['foo', 'bar'], [[1], [2]])` |
 | `range(start, end)` | ✅ | 作為 foreach 迭代源（見 #6） | `foreach (range(1, 3) as $i)` |
 | 自定義 method call | ❌ | — | `return self::baseData() + self::extraData()` |
 | 鏈式呼叫 | ❌ | — | `return collect([...])->map(...)->toArray()` |
 
-> **注意**：`array_map` 的第二參數必須是 array literal，若是 `range()` 等動態來源則無法解析（回傳 `[]`）。`array_combine` 的第一參數（keys）必須是 string literal array。
+> **注意**：`array_map` 和 `array_combine` 的參數可為 array literal、`range()` 呼叫、或 class constant（`self::CONST`）。動態來源如 method call 或鏈式呼叫無法解析。
 
 ---
 
@@ -549,12 +556,23 @@ testStarted name='it works with data set "two"'
 
 ---
 
-### 19. `->with(fn() => ...)` — arrow function N/A
+### 19. `->with(fn() => ...)` — arrow function ⚠️
 
 ```php
+// ✅ 支援：range() 呼叫
 it('works', function (int $i) {
     expect($i)->toBeInt();
 })->with(fn(): array => range(1, 99));
+
+// ✅ 支援：array literal
+it('works', function (string $v) {
+    expect($v)->not->toBeEmpty();
+})->with(fn() => ['a', 'b', 'c']);
+
+// ❌ 不支援：動態表達式
+it('works', function ($user) {
+    // ...
+})->with(fn() => User::all());
 ```
 
 **Teamcity:**
@@ -563,7 +581,7 @@ testStarted name='it works with data set #0'
 ... (共 99 個)
 ```
 
-**AST 解析：N/A** — arrow function 的 body 不是 `compound_statement`（它是一個 expression），`DataProviderParser` 直接 return `[]`。靠 Teamcity 補。
+**AST 解析：⚠️** — arrow function 的 body 是 expression（非 `compound_statement`）。`DataProviderParser` 透過 `evaluateArrowBody()` 嘗試解析，支援 array literal、`range()` 呼叫、class constant。動態表達式則靠 Teamcity 補。
 
 ---
 

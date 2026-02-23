@@ -17,10 +17,10 @@ Strategy: **AST first + Teamcity fallback** — Static analysis covers the most 
 | 1 | `#[DataProvider]` + named array | ✅ | ✅ | ✅ | ✅ | Most common |
 | 2 | `#[DataProvider]` + numeric array | ✅ | ✅ | ✅ | ✅ | |
 | 3 | `#[DataProvider]` + mixed keys | ✅ | ✅ | ✅ | ✅ | |
-| 4 | `#[DataProvider]` + yield named | ⚠️ | ✅ | ✅ | ✅ | Top-level: string literal key only |
+| 4 | `#[DataProvider]` + yield named | ✅ | ✅ | ✅ | ✅ | Supports variable/interpolated/concat/ternary keys |
 | 5 | `#[DataProvider]` + yield no key | ✅ | ✅ | ✅ | ✅ | |
 | 6 | `#[DataProvider]` + loop/dynamic | ⚠️ | ✅ | ✅ | ✅ | Supports for/foreach/while/nested |
-| 7 | `#[DataProvider]` + method call | ⚠️ | ✅ | ✅ | ✅ | Only array_map/array_combine/range |
+| 7 | `#[DataProvider]` + method call | ⚠️ | ✅ | ✅ | ✅ | array_map/array_combine support range()/array/const |
 | 8 | `#[DataProviderExternal]` | N/A | N/A | N/A | ✅ | Cross-file, not analyzed |
 | 9 | `#[TestWith]` numeric | ✅ | ✅ | ✅ | ✅ | |
 | 10 | `#[TestWith]` named | ✅ | ✅ | ✅ | ✅ | |
@@ -32,7 +32,7 @@ Strategy: **AST first + Teamcity fallback** — Static analysis covers the most 
 | 16 | Pest `->with([[]])` tuples | ✅ | ✅ | ✅ | ✅ | |
 | 17 | Pest `->with('name')` shared | ❌ | ❌ | ❌ | ✅ | Requires cross-file dataset() lookup |
 | 18 | Pest `->with(function(){})` | ⚠️ | ✅ | ✅ | ✅ | Same limitations as #4-7 |
-| 19 | Pest `->with(fn() =>)` arrow | N/A | N/A | N/A | ✅ | Arrow function not analyzable |
+| 19 | Pest `->with(fn() =>)` arrow | ⚠️ | ✅ | ✅ | ✅ | Supports range()/array literal body |
 | 20 | Pest bound dataset `[fn()=>...]` | ✅ | ✅ | ✅ | ✅ | |
 | 21 | Pest `->with()->with()` combined | ✅ | ✅ | ✅ | ✅ | Cartesian product |
 
@@ -57,9 +57,10 @@ Key functions in `evaluate.ts`:
 | `evaluateWhileLoop(loop, initialBindings)` | Unrolls while loops |
 | `evaluateInnerLoop(loop, outerBindings, classBody?)` | Delegates nested loops |
 | `evaluateLoopYields(iterations, body, classBody?)` | Resolves yield keys for each iteration |
-| `evaluateFunctionCallReturn(node)` | Handles `array_map` / `array_combine` |
-| `resolveExpression(node, bindings)` | Resolves yield key expressions (string / variable / interpolated / concat / ternary) |
-| `resolveIterable(source, classBody?)` | Resolves loop iterable sources (array literal / class constant / `range()`) |
+| `evaluateArrowBody(body, classBody?)` | Resolves arrow function body expression (array literal / `range()` / class constant) |
+| `evaluateFunctionCallReturn(node)` | Handles `array_map` / `array_combine` (arguments resolved via `resolveIterable`) |
+| `resolveExpression(node, bindings)` | Resolves yield key expressions (string / variable / interpolated / concat / ternary / PHP string functions / arithmetic) |
+| `resolveIterable(source, classBody?)` | Resolves iterable sources (array literal / class constant / `range()` / `array_map` / `array_combine`) |
 | `extractLabels(entries)` | Extracts labels from array entries or top-level yields (string literal keys only) |
 
 Teamcity fallback components:
@@ -169,19 +170,24 @@ testStarted name='testAdd with data set "first"'
 testStarted name='testAdd with data set "second"'
 ```
 
-**AST analysis: ⚠️** — top-level yields only support string literal keys.
+**AST analysis: ✅** — top-level yields use `resolveExpression()` with body-level bindings.
 
 | yield key type | Top-level yield | In-loop yield | Example |
 |---------------|:--------------:|:------------:|---------|
 | string literal | ✅ | ✅ | `yield 'foo' => [1]` |
-| variable | ❌ | ✅ | `yield $v => [$v]` |
-| interpolated string | ❌ | ✅ | `yield "case $i" => [$i]` |
-| concatenation (`.`) | ❌ | ✅ | `yield $v . '_test' => [$v]` |
-| ternary | ❌ | ✅ | `yield ($i > 0 ? "pos" : "zero") => [$i]` |
+| variable | ✅ | ✅ | `yield $v => [$v]` (requires assignment in body) |
+| interpolated string | ✅ | ✅ | `yield "case $i" => [$i]` |
+| concatenation (`.`) | ✅ | ✅ | `yield $v . '_test' => [$v]` |
+| ternary | ✅ | ✅ | `yield ($i > 0 ? "pos" : "zero") => [$i]` |
+| `strtoupper` / `strtolower` / `ucfirst` / `lcfirst` | ✅ | ✅ | `yield strtoupper($v) => [...]` |
+| `sprintf` | ✅ | ✅ | `yield sprintf('case_%d', $i) => [...]` |
+| `implode` / `join` | ✅ | ✅ | `yield implode('-', [$a, $b]) => [...]` |
+| `str_repeat` / `substr` | ✅ | ✅ | `yield str_repeat('ab', 3) => [...]` |
+| `trim` / `ltrim` / `rtrim` | ✅ | ✅ | `yield trim(' hello ') => [...]` |
+| `str_replace` | ✅ | ✅ | `yield str_replace('_', '-', 'foo_bar') => [...]` |
 | method call | ❌ | ❌ | `yield $obj->getName() => [...]` |
-| function call | ❌ | ❌ | `yield strtoupper($v) => [...]` |
 
-> **Technical reason**: Top-level yields are processed by `extractLabels()`, which only checks `key.kind === 'string'`. In-loop yields are processed by `resolveExpression()`, which can resolve variables, interpolated strings, concatenation, and ternary expressions (requires bindings to provide variable values).
+> **Technical note**: Both top-level and in-loop yields are processed by `resolveExpression()`. Top-level yields collect bindings from assignments in the method body. PHP string functions (`strtoupper`, `strtolower`, `ucfirst`, `lcfirst`, `sprintf`, `implode`, `join`, `str_repeat`, `substr`, `trim`, `ltrim`, `rtrim`, `str_replace`) are resolved as pure functions via a dispatch table.
 
 ---
 
@@ -239,6 +245,12 @@ foreach (range(1, 3) as $i) { yield "case $i" => [$i]; }
 // ✅ while loop ($i++ / $i-- only)
 $i = 0; while ($i < 3) { yield "item $i" => [$i]; $i++; }
 
+// ✅ while loop with break
+$i = 0; while ($i < 10) { if ($i >= 3) { break; } yield "item $i" => [$i]; $i++; }
+
+// ✅ while loop with continue
+$i = 0; while ($i < 5) { $i++; if ($i % 2 === 0) { continue; } yield "item $i" => [$i]; }
+
 // ✅ nested loops
 foreach (['a', 'b'] as $x) {
     foreach ([1, 2] as $y) { yield "$x$y" => [$x, $y]; }
@@ -254,14 +266,9 @@ foreach ($this->getItems() as $v) { yield $v => [$v]; }
 // ❌ complex while condition
 while ($iterator->hasNext()) { yield $iterator->current(); }
 
-// ❌ break / continue with conditions
-for ($i = 0; $i < 100; $i++) {
-    if ($i % 2 === 0) continue;
-    yield "odd $i" => [$i];
-}
-
-// ❌ compound increment (while only supports ++ / --)
-$i = 0; while ($i < 10) { yield $i => [$i]; $i += 2; }
+// ✅ compound increment ($i += N, $i -= N, including variable step)
+$i = 0; while ($i < 10) { yield "item $i" => [$i]; $i += 2; }
+$step = 3; $i = 0; while ($i < 9) { yield "item $i" => [$i]; $i += $step; }
 ```
 
 **Loop type constraints:**
@@ -270,7 +277,7 @@ $i = 0; while ($i < 10) { yield $i => [$i]; $i += 2; }
 |------|------------|
 | `for` | init must be `$var = number`; condition must be `$var op number` (op: `<`, `<=`, `>`, `>=`); update must be `$var++` or `$var--` |
 | `foreach` | source must be array literal, class constant (`self::CONST`), or `range(start, end[, step])`; other dynamic sources not supported |
-| `while` | condition must be `$var op number`; body update must be `$var++` or `$var--`; `$i += N` compound operations not supported |
+| `while` | condition must be `$var op number`; body update supports `$var++`, `$var--`, `$var += N`, `$var -= N` (N can be literal or variable from bindings); supports `if` with `break`/`continue` |
 | nested | supports any combination of foreach/for nesting; outer bindings automatically passed to inner loops |
 | safety limit | MAX_ITERATIONS = 1000, stops unrolling when exceeded |
 
@@ -294,13 +301,13 @@ public static function provider(): array {
 
 | Function call | Supported | Resolution method | Example |
 |--------------|:---------:|------------------|---------|
-| `array_map(fn, array_literal)` | ✅ | Counts second argument array length, produces `#0`, `#1`, ... | `return array_map(fn($x) => [$x], ['a', 'b'])` |
-| `array_combine(keys, values)` | ✅ | Uses first argument array's string entries as labels | `return array_combine(['foo', 'bar'], [[1], [2]])` |
+| `array_map(fn, source)` | ✅ | Counts second argument length, produces `#0`, `#1`, ...; source can be array literal, `range()`, or class constant | `return array_map(fn($x) => [$x], range(0, 2))` |
+| `array_combine(keys, values)` | ✅ | Uses first argument as labels; keys can be array literal, `range()`, or class constant | `return array_combine(['foo', 'bar'], [[1], [2]])` |
 | `range(start, end)` | ✅ | As foreach iterable source (see #6) | `foreach (range(1, 3) as $i)` |
 | Custom method call | ❌ | — | `return self::baseData() + self::extraData()` |
 | Chained calls | ❌ | — | `return collect([...])->map(...)->toArray()` |
 
-> **Note**: `array_map`'s second argument must be an array literal; dynamic sources like `range()` cannot be resolved (returns `[]`). `array_combine`'s first argument (keys) must be a string literal array.
+> **Note**: `array_map` and `array_combine` arguments can be array literals, `range()` calls, or class constants (`self::CONST`). Dynamic sources like method calls or chained expressions cannot be resolved.
 
 ---
 
@@ -549,12 +556,23 @@ testStarted name='it works with data set "two"'
 
 ---
 
-### 19. `->with(fn() => ...)` — arrow function N/A
+### 19. `->with(fn() => ...)` — arrow function ⚠️
 
 ```php
+// ✅ Supported: arrow function returning range()
 it('works', function (int $i) {
     expect($i)->toBeInt();
 })->with(fn(): array => range(1, 99));
+
+// ✅ Supported: arrow function returning array literal
+it('works', function (string $v) {
+    expect($v)->not->toBeEmpty();
+})->with(fn() => ['a', 'b', 'c']);
+
+// ❌ Not supported: dynamic expression
+it('works', function ($user) {
+    // ...
+})->with(fn() => User::all());
 ```
 
 **Teamcity:**
@@ -563,7 +581,7 @@ testStarted name='it works with data set #0'
 ... (99 total)
 ```
 
-**AST analysis: N/A** — arrow function body is not a `compound_statement` (it's an expression), `DataProviderParser` returns `[]` directly. Teamcity fallback.
+**AST analysis: ⚠️** — arrow function body is an expression (not a `compound_statement`). `DataProviderParser` attempts to resolve it via `evaluateArrowBody()`, which supports array literals, `range()` calls, and class constants. Dynamic expressions fall back to Teamcity.
 
 ---
 
