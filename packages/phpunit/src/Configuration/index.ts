@@ -3,4 +3,3 @@ export * from './Configuration';
 export * from './PathReplacer';
 export * from './PHPUnitXML';
 export * from './TestGlobPattern';
-export * from './XmlElement';
