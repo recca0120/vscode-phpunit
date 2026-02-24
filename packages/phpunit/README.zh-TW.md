@@ -44,13 +44,12 @@ pnpm add @vscode-phpunit/phpunit
                                │ FileInfo
                ┌───────────────┼───────────────┐
                │               │               │
-        ┌──────▼───────┐┌─────▼──────┐ ┌──────▼───────┐
-        │ TestExtractor ││  Class     │ │ TestCollection│
-        │ → TestDef[]   ││  Hierarchy │ │ (檔案變更追蹤)│
-        └──────┬───────┘│  (繼承解析) │ └──────────────┘
-               │        └─────┬──────┘
-               │              │
-        ┌──────▼──────────────▼──┐
+        ┌──────▼───────┐         ┌──────▼───────┐
+        │ TestExtractor │         │ TestCollection│
+        │ → TestDef[]   │         │ (檔案變更追蹤 │
+        └──────┬───────┘         │  + 繼承解析)  │
+               │                 └──────────────┘
+        ┌──────▼──────────────────┐
         │    TestDefinition[]    │
         │  (樹狀結構: namespace → │
         │   class → method →     │
@@ -79,9 +78,9 @@ pnpm add @vscode-phpunit/phpunit
 
 ## 使用方式
 
-### 1. 解析測試檔案
+### 1. 解析與追蹤測試檔案
 
-將 PHP 原始碼解析為 `TestDefinition` 樹。支援 PHPUnit 測試類別、Pest `test()`/`it()`/`describe()`、data provider、PHP 屬性。
+`TestCollection` 是主要進入點。它將 PHP 測試檔案解析為 `TestDefinition` 樹、內部處理類別繼承與 trait 解析，並維護依 testsuite 分組的持久化註冊表。
 
 ```typescript
 import {
@@ -91,8 +90,9 @@ import {
   PhpParserAstParser,
   PHPUnitXML,
   TestParser,
-  ClassHierarchy,
+  TestCollection,
 } from '@vscode-phpunit/phpunit';
+import { URI } from 'vscode-uri';
 
 // 1. 初始化 tree-sitter WASM（只需一次）
 await initTreeSitter();
@@ -108,25 +108,19 @@ const astParser = new ChainAstParser([
 ]);
 const testParser = new TestParser(phpUnitXML, astParser);
 
-// 4. ClassHierarchy 必須長期存活（singleton），
-//    才能跨檔案累積 class info 以解析繼承關係
-const classHierarchy = new ClassHierarchy();
+// 4. 建立集合（內部處理繼承解析）
+const testCollection = new TestCollection(phpUnitXML, testParser);
 
-// 5. 解析測試檔案 — 每個檔案重複此步驟
-const result = testParser.parse(sourceCode, '/path/to/tests/ExampleTest.php');
+// 5. 檔案變更時：
+const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
+// result.parsed — [{uri, tests: TestDefinition[]}]  (新增/更新)
+// result.deleted — [File]                             (已移除)
 
-if (result) {
-  // result.tests — TestDefinition[] 樹（namespace → class → method）
-  // result.classes — ClassInfo[] 供繼承解析使用
-
-  // 註冊 class info（跨檔案累積）
-  for (const cls of result.classes) {
-    classHierarchy.register(cls);
-  }
-
-  // 解析繼承的方法、trait、data provider
-  const enrichedTests = classHierarchy.enrichTests(result.tests);
-}
+// 查詢既有測試
+testCollection.has(uri);        // 檢查檔案是否被追蹤
+testCollection.get(uri);        // 取得檔案的測試
+testCollection.gatherFiles();   // 遍歷所有追蹤的檔案
+testCollection.reset();         // 清除全部
 ```
 
 **輸出結構：**
@@ -139,37 +133,7 @@ TestDefinition[]
 │  │  └─ { type: method, label: "test_subtract" }
 ```
 
-### 2. 追蹤檔案變更
-
-`TestCollection` 維護所有已解析測試的持久化註冊表，依 testsuite 分組。當檔案變更時，重新解析該檔案、解析繼承、偵測受影響的類別，並回傳差異。
-
-```typescript
-import {
-  TestCollection,
-  TestParser,
-  ClassHierarchy,
-  PHPUnitXML,
-} from '@vscode-phpunit/phpunit';
-import { URI } from 'vscode-uri';
-
-const phpUnitXML = new PHPUnitXML();
-phpUnitXML.loadFile('/path/to/phpunit.xml');
-
-const testCollection = new TestCollection(phpUnitXML, testParser, classHierarchy);
-
-// 檔案變更時：
-const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
-// result.parsed — [{uri, tests: TestDefinition[]}]  (新增/更新)
-// result.deleted — [File]                             (已移除)
-
-// 查詢既有測試
-testCollection.has(uri);        // 檢查檔案是否被追蹤
-testCollection.get(uri);        // 取得檔案的測試
-testCollection.gatherFiles();   // 遍歷所有追蹤的檔案
-testCollection.reset();         // 清除全部
-```
-
-### 3. 執行測試與解析輸出
+### 2. 執行測試與解析輸出
 
 從 `TestDefinition` 建構命令列，執行 PHPUnit/Pest，透過 observer 模式接收結構化結果。
 
@@ -254,7 +218,7 @@ await process.run();
 | `method` | `--filter="^ExampleTest::test_add"` |
 | `dataset` | `--filter="^...with data set \"one\""` |
 
-### 4. 建構 UI 樹（泛型）
+### 3. 建構 UI 樹（泛型）
 
 `TestHierarchyBuilder<T>` 將扁平的 `TestDefinition[]` 轉換為巢狀樹以供顯示。處理 namespace 拆分、dataset 展開、多 suite 分組 — 全部與編輯器無關。
 

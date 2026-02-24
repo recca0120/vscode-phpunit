@@ -13,9 +13,8 @@ beforeAll(async () => initTreeSitter());
 describe('TestCollection', () => {
     const phpUnitXML = new PHPUnitXML();
     const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
-    const classHierarchy = new ClassHierarchy();
     const testParser = new TestParser(phpUnitXML, astParser);
-    const testCollection = new TestCollection(phpUnitXML, testParser, classHierarchy);
+    const testCollection = new TestCollection(phpUnitXML, testParser);
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
@@ -57,7 +56,7 @@ describe('TestCollection', () => {
         }
     };
 
-    it('should own classHierarchy and clear on reset', async () => {
+    it('should clear state on reset', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -65,14 +64,12 @@ describe('TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+        expect(collection.has(uri)).toBe(true);
 
-        // ClassHierarchy should have entries after parsing
-        expect(classHierarchy.get('Tests\\AssertionsTest')).toBeDefined();
-
-        // reset should clear classHierarchy
         collection.reset();
-        expect(classHierarchy.get('Tests\\AssertionsTest')).toBeUndefined();
+        expect(collection.has(uri)).toBe(false);
     });
 
     it('classHierarchy should be owned by TestCollection, not TestParser', () => {

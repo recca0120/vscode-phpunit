@@ -1,6 +1,5 @@
 import {
     ChainAstParser,
-    ClassHierarchy,
     createDatasetDefinition,
     PHPUnitXML,
     PhpParserAstParser,
@@ -78,11 +77,10 @@ describe('TestCollection', () => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.load(generateXML(text), configurationFile);
 
-        const classHierarchy = new ClassHierarchy();
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
 
-        return new TestCollection(ctrl, phpUnitXML, testParser, classHierarchy);
+        return new TestCollection(ctrl, phpUnitXML, testParser);
     };
 
     const givenCodes = (codes: CODE[], configurationFile: string) => {
