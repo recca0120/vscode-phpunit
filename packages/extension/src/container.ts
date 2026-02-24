@@ -1,7 +1,6 @@
 import {
     BinaryDetector,
     ChainAstParser,
-    ClassHierarchy,
     PHPUnitXML,
     PhpParserAstParser,
     TestParser,
@@ -77,10 +76,6 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         )
         .inSingletonScope();
 
-    child
-        .bind(ClassHierarchy)
-        .toDynamicValue(() => new ClassHierarchy())
-        .inSingletonScope();
     child
         .bind(TestParser)
         .toDynamicValue((context) => {

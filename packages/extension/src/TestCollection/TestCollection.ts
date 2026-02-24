@@ -1,7 +1,6 @@
 import {
     TestCollection as BaseTestCollection,
     type ChangeResult,
-    ClassHierarchy,
     type File,
     PHPUnitXML,
     type TestDefinition,
@@ -32,9 +31,8 @@ export class TestCollection {
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
         @inject(TestParser) testParser: TestParser,
-        @inject(ClassHierarchy) classHierarchy: ClassHierarchy,
     ) {
-        this.base = new BaseTestCollection(phpUnitXML, testParser, classHierarchy);
+        this.base = new BaseTestCollection(phpUnitXML, testParser);
     }
 
     get rootItems(): TestItemCollection {

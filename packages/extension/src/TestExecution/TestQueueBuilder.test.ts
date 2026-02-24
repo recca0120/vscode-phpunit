@@ -1,6 +1,5 @@
 import {
     ChainAstParser,
-    ClassHierarchy,
     PHPUnitXML,
     PhpParserAstParser,
     TestParser,
@@ -30,10 +29,9 @@ describe('TestQueueBuilder', () => {
                 </testsuites>`),
             phpUnitProject('phpunit.xml'),
         );
-        const classHierarchy = new ClassHierarchy();
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        collection = new TestCollection(ctrl, phpUnitXML, testParser, classHierarchy);
+        collection = new TestCollection(ctrl, phpUnitXML, testParser);
         builder = new TestQueueBuilder(collection);
     });
 

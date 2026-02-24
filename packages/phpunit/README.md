@@ -44,13 +44,13 @@ pnpm add @vscode-phpunit/phpunit
                                │ FileInfo
                ┌───────────────┼───────────────┐
                │               │               │
-        ┌──────▼───────┐┌─────▼──────┐ ┌──────▼───────┐
-        │ TestExtractor ││  Class     │ │ TestCollection│
-        │ → TestDef[]   ││  Hierarchy │ │ (file change │
-        └──────┬───────┘│  (inherit) │ │  tracking)   │
-               │        └─────┬──────┘ └──────────────┘
-               │              │
-        ┌──────▼──────────────▼──┐
+        ┌──────▼───────┐         ┌──────▼───────┐
+        │ TestExtractor │         │ TestCollection│
+        │ → TestDef[]   │         │ (file change │
+        └──────┬───────┘         │  tracking +  │
+               │                 │  inheritance)│
+               │                 └──────────────┘
+        ┌──────▼──────────────────┐
         │    TestDefinition[]    │
         │  (tree: namespace →    │
         │   class → method →     │
@@ -79,9 +79,9 @@ pnpm add @vscode-phpunit/phpunit
 
 ## Usage
 
-### 1. Parse test files
+### 1. Parse & track test files
 
-Parse PHP source code into `TestDefinition` trees. Supports PHPUnit test classes, Pest `test()`/`it()`/`describe()`, data providers, and PHP attributes.
+`TestCollection` is the main entry point. It parses PHP test files into `TestDefinition` trees, resolves class inheritance and traits internally, and maintains a persistent registry grouped by testsuite.
 
 ```typescript
 import {
@@ -91,8 +91,9 @@ import {
   PhpParserAstParser,
   PHPUnitXML,
   TestParser,
-  ClassHierarchy,
+  TestCollection,
 } from '@vscode-phpunit/phpunit';
+import { URI } from 'vscode-uri';
 
 // 1. Initialize tree-sitter WASM (once)
 await initTreeSitter();
@@ -108,25 +109,19 @@ const astParser = new ChainAstParser([
 ]);
 const testParser = new TestParser(phpUnitXML, astParser);
 
-// 4. ClassHierarchy must be long-lived (singleton) to accumulate
-//    class info across files for cross-file inheritance resolution
-const classHierarchy = new ClassHierarchy();
+// 4. Create collection (handles inheritance resolution internally)
+const testCollection = new TestCollection(phpUnitXML, testParser);
 
-// 5. Parse test files — repeat for each file
-const result = testParser.parse(sourceCode, '/path/to/tests/ExampleTest.php');
+// 5. When a file changes:
+const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
+// result.parsed — [{uri, tests: TestDefinition[]}]  (new/updated)
+// result.deleted — [File]                             (removed)
 
-if (result) {
-  // result.tests — TestDefinition[] tree (namespace → class → method)
-  // result.classes — ClassInfo[] for inheritance resolution
-
-  // Register class info (accumulates across files)
-  for (const cls of result.classes) {
-    classHierarchy.register(cls);
-  }
-
-  // Resolve inherited methods, traits, data providers
-  const enrichedTests = classHierarchy.enrichTests(result.tests);
-}
+// Query existing tests
+testCollection.has(uri);        // check if file is tracked
+testCollection.get(uri);        // get tests for a file
+testCollection.gatherFiles();   // iterate all tracked files
+testCollection.reset();         // clear everything
 ```
 
 **Output structure:**
@@ -139,37 +134,7 @@ TestDefinition[]
 │  │  └─ { type: method, label: "test_subtract" }
 ```
 
-### 2. Track file changes
-
-`TestCollection` maintains a persistent registry of all parsed tests, grouped by testsuite. When a file changes, it re-parses the file, resolves inheritance, detects affected classes, and returns the diff.
-
-```typescript
-import {
-  TestCollection,
-  TestParser,
-  ClassHierarchy,
-  PHPUnitXML,
-} from '@vscode-phpunit/phpunit';
-import { URI } from 'vscode-uri';
-
-const phpUnitXML = new PHPUnitXML();
-phpUnitXML.loadFile('/path/to/phpunit.xml');
-
-const testCollection = new TestCollection(phpUnitXML, testParser, classHierarchy);
-
-// When a file changes:
-const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
-// result.parsed — [{uri, tests: TestDefinition[]}]  (new/updated)
-// result.deleted — [File]                             (removed)
-
-// Query existing tests
-testCollection.has(uri);        // check if file is tracked
-testCollection.get(uri);        // get tests for a file
-testCollection.gatherFiles();   // iterate all tracked files
-testCollection.reset();         // clear everything
-```
-
-### 3. Run tests & parse output
+### 2. Run tests & parse output
 
 Build a command line from a `TestDefinition`, execute PHPUnit/Pest, and receive structured results via the observer pattern.
 
@@ -254,7 +219,7 @@ spawn process
 | `method` | `--filter="^ExampleTest::test_add"` |
 | `dataset` | `--filter="^...with data set \"one\""` |
 
-### 4. Build UI trees (generic)
+### 3. Build UI trees (generic)
 
 `TestHierarchyBuilder<T>` transforms flat `TestDefinition[]` into a nested tree for display. It handles namespace splitting, dataset expansion, and multi-suite grouping — all editor-agnostic.
 

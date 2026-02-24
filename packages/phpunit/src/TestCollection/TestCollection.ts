@@ -2,7 +2,7 @@ import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
-import type { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { ClassHierarchy } from '../TestParser/ClassHierarchy';
 
 export interface File<T> {
     testsuite: string;
@@ -21,10 +21,11 @@ export class TestCollection {
     private fileIndex = new Map<string, string>();
     private parseQueue: Promise<void> = Promise.resolve();
 
+    private classHierarchy = new ClassHierarchy();
+
     constructor(
         private phpUnitXML: PHPUnitXML,
         private testParser: TestParser,
-        private classHierarchy: ClassHierarchy,
     ) {}
 
     get size() {

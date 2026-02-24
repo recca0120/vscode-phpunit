@@ -1,6 +1,5 @@
 import {
     ChainAstParser,
-    ClassHierarchy,
     PHPUnitXML,
     PhpParserAstParser,
     type TeamcityEvent,
@@ -38,10 +37,9 @@ describe('DatasetChildObserver', () => {
             phpUnitProject('phpunit.xml'),
         );
 
-        const classHierarchy = new ClassHierarchy();
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(ctrl, phpUnitXML, testParser, classHierarchy);
+        testCollection = new TestCollection(ctrl, phpUnitXML, testParser);
 
         await testCollection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
