@@ -4,6 +4,7 @@ import { type TestDefinition, TestType } from '../types';
 import {
     type ItemCollection,
     TestHierarchyBuilder,
+    type TestRange,
     type TestTreeItem,
 } from './TestHierarchyBuilder';
 
@@ -17,10 +18,7 @@ class SimpleItem implements TestTreeItem<SimpleItem> {
     sortText = '';
     tags: Array<{ id: string }> = [];
     uri?: string;
-    range?: {
-        start: { line: number; character: number };
-        end: { line: number; character: number };
-    };
+    range?: TestRange;
 
     constructor(id: string, label: string, uri?: string) {
         this.id = id;
@@ -331,6 +329,37 @@ describe('TestHierarchyBuilder', () => {
         expect(rootItems.get('testsuite:Unit')).toBeUndefined();
         // Namespace items directly at root
         expect(rootItems.size).toBeGreaterThan(0);
+    });
+
+    it('should set range on test items from createRange', () => {
+        const tests: TestDefinition[] = [
+            {
+                type: TestType.namespace,
+                id: 'namespace:App',
+                label: 'App',
+                classFQN: 'App\\RangeTest',
+                children: [
+                    {
+                        type: TestType.class,
+                        id: 'App\\RangeTest',
+                        label: 'RangeTest',
+                        className: 'RangeTest',
+                        classFQN: 'App\\RangeTest',
+                        file: '/tmp/RangeTest.php',
+                        start: { line: 5, character: 0 },
+                        end: { line: 25, character: 0 },
+                    },
+                ],
+            },
+        ];
+
+        const result = build(tests);
+
+        const classItem = [...result.entries()].find(([, def]) => def.id === 'App\\RangeTest')?.[0];
+        expect(classItem?.range).toEqual({
+            start: { line: 4, character: 0 },
+            end: { line: 24, character: 0 },
+        });
     });
 
     it('should return Map of item to TestDefinition', () => {

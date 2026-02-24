@@ -257,6 +257,7 @@ await process.run();
 import {
   TestHierarchyBuilder,
   type ItemCollection,
+  type TestRange,
   type TestTreeItem,
 } from '@vscode-phpunit/phpunit';
 
@@ -266,6 +267,7 @@ class MyItem implements TestTreeItem<MyItem> {
   children: ItemCollection<MyItem>;
   canResolveChildren = false;
   sortText?: string;
+  range?: TestRange;
   tags: Array<{ id: string }> = [];
   constructor(id: string, public label: string) {
     this.id = id;
@@ -308,7 +310,7 @@ namespace: App\Tests\Unit            App
 pnpm build     # tsup → dist/（ESM + CJS + .d.ts）
 ```
 
-建置時會複製 `tree-sitter.wasm` 和 `tree-sitter-php.wasm` 到 `dist/`，讓 `resolveWasmDir()` 在執行時能找到它們。
+建置時會複製 `tree-sitter.wasm` 和 `tree-sitter-php.wasm` 到 `dist/`，讓 tree-sitter 在執行時能找到它們。
 
 ## 測試
 

@@ -10,11 +10,17 @@ export interface ItemCollection<T> {
     readonly size: number;
 }
 
+export interface TestRange {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+}
+
 export interface TestTreeItem<T> {
     id: string;
     children: ItemCollection<T>;
     canResolveChildren: boolean;
     sortText?: string;
+    range?: TestRange;
     tags: readonly { id: string }[];
 }
 
@@ -38,11 +44,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
 
     protected abstract createItem(id: string, label: string, uri?: string): T;
     protected abstract createTag(id: string): { id: string };
-    protected abstract createRange(
-        def: TestDefinition,
-    ):
-        | { start: { line: number; character: number }; end: { line: number; character: number } }
-        | undefined;
+    protected abstract createRange(def: TestDefinition): TestRange | undefined;
 
     protected formatLabel(testDefinition: TestDefinition): string {
         return testDefinition.label;
@@ -237,10 +239,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         testItem.canResolveChildren = testDefinition.type === TestType.class;
         testItem.sortText = sortText;
 
-        const range = this.createRange(testDefinition);
-        if (range) {
-            (testItem as TestTreeItem<T> & { range?: unknown }).range = range;
-        }
+        testItem.range = this.createRange(testDefinition);
 
         const tags: Array<{ id: string }> = [];
 

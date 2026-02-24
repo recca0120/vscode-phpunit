@@ -257,6 +257,7 @@ spawn process
 import {
   TestHierarchyBuilder,
   type ItemCollection,
+  type TestRange,
   type TestTreeItem,
 } from '@vscode-phpunit/phpunit';
 
@@ -266,6 +267,7 @@ class MyItem implements TestTreeItem<MyItem> {
   children: ItemCollection<MyItem>;
   canResolveChildren = false;
   sortText?: string;
+  range?: TestRange;
   tags: Array<{ id: string }> = [];
   constructor(id: string, public label: string) {
     this.id = id;
@@ -308,7 +310,7 @@ namespace: App\Tests\Unit            App
 pnpm build     # tsup → dist/ (ESM + CJS + .d.ts)
 ```
 
-Build copies `tree-sitter.wasm` and `tree-sitter-php.wasm` into `dist/` so that `resolveWasmDir()` can locate them at runtime.
+Build copies `tree-sitter.wasm` and `tree-sitter-php.wasm` into `dist/` so that tree-sitter can locate them at runtime.
 
 ## Test
 
