@@ -99,14 +99,6 @@ export class PHP {
         php.useResolver(new PhpUnitResolver());
         php.useResolver(new PestResolver());
 
-        // Eagerly initialize so resolver is usable without interpret()
-        for (const v of php.visitors) {
-            v.initialize?.(php);
-        }
-        for (const r of php.resolvers) {
-            r.resolve(php);
-        }
-
         return php;
     }
 
