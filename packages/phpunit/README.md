@@ -23,21 +23,283 @@ npm install @vscode-phpunit/phpunit
 pnpm add @vscode-phpunit/phpunit
 ```
 
+## Architecture
+
+```
+                        ┌──────────────┐
+                        │  PHP Source   │
+                        └──────┬───────┘
+                               │
+                        ┌──────▼───────┐
+                        │  AstParser   │
+                        │ (TreeSitter  │
+                        │  / PhpParser)│
+                        └──────┬───────┘
+                               │ AstNode
+                        ┌──────▼───────┐
+                        │  Interpreter │
+                        │  (Visitors + │
+                        │   Resolvers) │
+                        └──────┬───────┘
+                               │ FileInfo
+               ┌───────────────┼───────────────┐
+               │               │               │
+        ┌──────▼───────┐┌─────▼──────┐ ┌──────▼───────┐
+        │ TestExtractor ││  Class     │ │ TestCollection│
+        │ → TestDef[]   ││  Hierarchy │ │ (file change │
+        └──────┬───────┘│  (inherit) │ │  tracking)   │
+               │        └─────┬──────┘ └──────────────┘
+               │              │
+        ┌──────▼──────────────▼──┐
+        │    TestDefinition[]    │
+        │  (tree: namespace →    │
+        │   class → method →     │
+        │   dataset)             │
+        └────────────┬───────────┘
+                     │
+          ┌──────────┼──────────┐
+          │                     │
+   ┌──────▼───────┐     ┌──────▼───────┐
+   │ ProcessBuilder│     │ TestHierarchy│
+   │ + FilterStrat.│     │ Builder<T>   │
+   │ → command line│     │ → UI tree    │
+   └──────┬───────┘     └──────────────┘
+          │
+   ┌──────▼───────┐
+   │  TestRunner   │──── events ────┐
+   │  (spawn proc) │                │
+   └──────┬───────┘         ┌──────▼───────┐
+          │ stdout          │  Observers   │
+   ┌──────▼───────┐         │ (UI updates) │
+   │ TestOutput   │         └──────────────┘
+   │ Parser       │
+   │ (Teamcity)   │
+   └──────────────┘
+```
+
 ## Usage
 
-```typescript
-import { initTreeSitter, TestParser, PHPUnitXML } from '@vscode-phpunit/phpunit';
+### 1. Parse test files
 
-// Initialize tree-sitter WASM (required once before parsing)
+Parse PHP source code into `TestDefinition` trees. Supports PHPUnit test classes, Pest `test()`/`it()`/`describe()`, data providers, and PHP attributes.
+
+```typescript
+import {
+  initTreeSitter,
+  ChainAstParser,
+  TreeSitterAstParser,
+  PhpParserAstParser,
+  PHPUnitXML,
+  TestParser,
+  ClassHierarchy,
+} from '@vscode-phpunit/phpunit';
+
+// 1. Initialize tree-sitter WASM (once)
 await initTreeSitter();
 
-// Parse a test file
-const parser = new TestParser();
-const definitions = parser.parse(sourceCode, filePath);
+// 2. Load configuration
+const phpUnitXML = new PHPUnitXML();
+phpUnitXML.loadFile('/path/to/phpunit.xml');
 
-// Parse phpunit.xml
-const xml = await PHPUnitXML.load(workspacePath);
-const testsuites = xml.getTestSuites();
+// 3. Create parser with AST chain (tree-sitter → php-parser fallback)
+const astParser = new ChainAstParser([
+  new TreeSitterAstParser(),
+  new PhpParserAstParser(),
+]);
+const testParser = new TestParser(phpUnitXML, astParser);
+
+// 4. Parse a test file
+const result = testParser.parse(sourceCode, '/path/to/tests/ExampleTest.php');
+
+if (result) {
+  // result.tests — TestDefinition[] tree (namespace → class → method)
+  // result.classes — ClassInfo[] for inheritance resolution
+
+  // 5. Resolve inheritance (parent classes, traits)
+  const classHierarchy = new ClassHierarchy();
+  for (const cls of result.classes) {
+    classHierarchy.register(cls);
+  }
+  const enrichedTests = classHierarchy.enrichTests(result.tests);
+}
+```
+
+**Output structure:**
+
+```
+TestDefinition[]
+├─ { type: namespace, label: "App\\Tests", children: [...] }
+│  ├─ { type: class, label: "ExampleTest", children: [...] }
+│  │  ├─ { type: method, label: "test_add", annotations: { dataset: [...] } }
+│  │  └─ { type: method, label: "test_subtract" }
+```
+
+### 2. Track file changes
+
+`TestCollection` maintains a persistent registry of all parsed tests, grouped by testsuite. When a file changes, it re-parses the file, resolves inheritance, detects affected classes, and returns the diff.
+
+```typescript
+import {
+  TestCollection,
+  TestParser,
+  ClassHierarchy,
+  PHPUnitXML,
+} from '@vscode-phpunit/phpunit';
+import { URI } from 'vscode-uri';
+
+const phpUnitXML = new PHPUnitXML();
+phpUnitXML.loadFile('/path/to/phpunit.xml');
+
+const testCollection = new TestCollection(phpUnitXML, testParser, classHierarchy);
+
+// When a file changes:
+const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
+// result.parsed — [{uri, tests: TestDefinition[]}]  (new/updated)
+// result.deleted — [File]                             (removed)
+
+// Query existing tests
+testCollection.has(uri);        // check if file is tracked
+testCollection.get(uri);        // get tests for a file
+testCollection.gatherFiles();   // iterate all tracked files
+testCollection.reset();         // clear everything
+```
+
+### 3. Run tests & parse output
+
+Build a command line from a `TestDefinition`, execute PHPUnit/Pest, and receive structured results via the observer pattern.
+
+```typescript
+import {
+  ProcessBuilder,
+  FilterStrategyFactory,
+  TestRunner,
+  TestRunnerEvent,
+  TeamcityEvent,
+} from '@vscode-phpunit/phpunit';
+
+// 1. Build command
+const builder = new ProcessBuilder(configuration, { cwd: projectRoot }, pathReplacer);
+const filter = FilterStrategyFactory.create(testDefinition);
+builder.setArguments(filter.getFilter());
+// → php vendor/bin/phpunit --filter="^ExampleTest::test_add" --teamcity --colors=never
+
+// 2. Create runner and listen to events
+const runner = new TestRunner();
+
+// Teamcity events — structured test results
+runner.on(TeamcityEvent.testStarted, (result) => {
+  console.log('Started:', result.name, result.id);
+});
+runner.on(TeamcityEvent.testFailed, (result) => {
+  console.log('Failed:', result.name, result.message);
+  // result.details — [{file, line}] stack trace
+  // result.actual / result.expected — for comparison failures
+});
+runner.on(TeamcityEvent.testFinished, (result) => {
+  console.log('Passed:', result.name, `${result.duration}ms`);
+});
+runner.on(TeamcityEvent.testResultSummary, (result) => {
+  console.log(`Tests: ${result.tests}, Failures: ${result.failures}`);
+});
+
+// Runner lifecycle events
+runner.on(TestRunnerEvent.run, (builder) => {
+  console.log('Command:', builder.getRuntime(), builder.getArguments());
+});
+runner.on(TestRunnerEvent.close, (code) => {
+  console.log('Exit code:', code);
+});
+
+// 3. Execute
+const process = runner.run(builder);
+await process.run();
+```
+
+**Event flow:**
+
+```
+spawn process
+  │
+  ├─ TestRunnerEvent.run          (command started)
+  │
+  ├─ TeamcityEvent.testVersion    (PHPUnit 11.5.0)
+  ├─ TeamcityEvent.testRuntime    (PHP 8.3.0)
+  ├─ TeamcityEvent.testCount      (total: 42)
+  │
+  ├─ TeamcityEvent.testSuiteStarted
+  │  ├─ TeamcityEvent.testStarted
+  │  ├─ TeamcityEvent.testFinished   (or testFailed / testIgnored)
+  │  └─ ...
+  ├─ TeamcityEvent.testSuiteFinished
+  │
+  ├─ TeamcityEvent.testDuration      (Time: 0.123s, Memory: 24MB)
+  ├─ TeamcityEvent.testResultSummary (Tests: 42, Failures: 1)
+  │
+  └─ TestRunnerEvent.close           (exit code)
+```
+
+**Filter strategies by test type:**
+
+| TestDefinition type | Generated filter |
+|---|---|
+| `workspace` | *(run all)* |
+| `testsuite` | `--testsuite=Unit` |
+| `namespace` | `--filter="^(App\\Tests\\Unit.*)"` |
+| `class` | `tests/ExampleTest.php` |
+| `method` | `--filter="^ExampleTest::test_add"` |
+| `dataset` | `--filter="^...with data set \"one\""` |
+
+### 4. Build UI trees (generic)
+
+`TestHierarchyBuilder<T>` transforms flat `TestDefinition[]` into a nested tree for display. It handles namespace splitting, dataset expansion, and multi-suite grouping — all editor-agnostic.
+
+```typescript
+import {
+  TestHierarchyBuilder,
+  type ItemCollection,
+  type TestTreeItem,
+} from '@vscode-phpunit/phpunit';
+
+// Implement the interfaces for your UI framework
+class MyItem implements TestTreeItem<MyItem> {
+  id: string;
+  children: ItemCollection<MyItem>;
+  canResolveChildren = false;
+  sortText?: string;
+  tags: Array<{ id: string }> = [];
+  constructor(id: string, public label: string) {
+    this.id = id;
+    this.children = new MyCollection();
+  }
+}
+
+// Extend the abstract builder
+class MyBuilder extends TestHierarchyBuilder<MyItem> {
+  protected createItem(id: string, label: string, uri?: string): MyItem {
+    return new MyItem(id, label);
+  }
+  protected createTag(id: string) { return { id }; }
+  protected createRange(def: TestDefinition) { /* ... */ }
+}
+
+// Build the tree
+const builder = new MyBuilder(rootCollection, phpUnitXML);
+const itemMap = builder.build(tests);
+// itemMap: Map<MyItem, TestDefinition>
+```
+
+**Tree transformation:**
+
+```
+Input (flat):                        Output (nested):
+─────────────────                    ─────────────────
+namespace: App\Tests\Unit            App
+  class: ExampleTest                   └─ Tests
+    method: test_add                       └─ Unit
+      dataset: ["one","two"]                   └─ ExampleTest
+                                                   └─ test_add
+                                                       ├─ with data set "one"
+                                                       └─ with data set "two"
 ```
 
 ## Build

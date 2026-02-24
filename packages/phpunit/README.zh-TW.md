@@ -23,21 +23,283 @@ npm install @vscode-phpunit/phpunit
 pnpm add @vscode-phpunit/phpunit
 ```
 
+## 架構
+
+```
+                        ┌──────────────┐
+                        │  PHP 原始碼   │
+                        └──────┬───────┘
+                               │
+                        ┌──────▼───────┐
+                        │  AstParser   │
+                        │ (TreeSitter  │
+                        │  / PhpParser)│
+                        └──────┬───────┘
+                               │ AstNode
+                        ┌──────▼───────┐
+                        │  Interpreter │
+                        │  (Visitors + │
+                        │   Resolvers) │
+                        └──────┬───────┘
+                               │ FileInfo
+               ┌───────────────┼───────────────┐
+               │               │               │
+        ┌──────▼───────┐┌─────▼──────┐ ┌──────▼───────┐
+        │ TestExtractor ││  Class     │ │ TestCollection│
+        │ → TestDef[]   ││  Hierarchy │ │ (檔案變更追蹤)│
+        └──────┬───────┘│  (繼承解析) │ └──────────────┘
+               │        └─────┬──────┘
+               │              │
+        ┌──────▼──────────────▼──┐
+        │    TestDefinition[]    │
+        │  (樹狀結構: namespace → │
+        │   class → method →     │
+        │   dataset)             │
+        └────────────┬───────────┘
+                     │
+          ┌──────────┼──────────┐
+          │                     │
+   ┌──────▼───────┐     ┌──────▼───────┐
+   │ ProcessBuilder│     │ TestHierarchy│
+   │ + FilterStrat.│     │ Builder<T>   │
+   │ → 命令列      │     │ → UI 樹      │
+   └──────┬───────┘     └──────────────┘
+          │
+   ┌──────▼───────┐
+   │  TestRunner   │──── 事件 ─────┐
+   │  (子程序執行)  │                │
+   └──────┬───────┘         ┌──────▼───────┐
+          │ stdout          │  Observers   │
+   ┌──────▼───────┐         │ (UI 更新)    │
+   │ TestOutput   │         └──────────────┘
+   │ Parser       │
+   │ (Teamcity)   │
+   └──────────────┘
+```
+
 ## 使用方式
 
-```typescript
-import { initTreeSitter, TestParser, PHPUnitXML } from '@vscode-phpunit/phpunit';
+### 1. 解析測試檔案
 
-// 初始化 tree-sitter WASM（解析前需執行一次）
+將 PHP 原始碼解析為 `TestDefinition` 樹。支援 PHPUnit 測試類別、Pest `test()`/`it()`/`describe()`、data provider、PHP 屬性。
+
+```typescript
+import {
+  initTreeSitter,
+  ChainAstParser,
+  TreeSitterAstParser,
+  PhpParserAstParser,
+  PHPUnitXML,
+  TestParser,
+  ClassHierarchy,
+} from '@vscode-phpunit/phpunit';
+
+// 1. 初始化 tree-sitter WASM（只需一次）
 await initTreeSitter();
 
-// 解析測試檔案
-const parser = new TestParser();
-const definitions = parser.parse(sourceCode, filePath);
+// 2. 載入設定
+const phpUnitXML = new PHPUnitXML();
+phpUnitXML.loadFile('/path/to/phpunit.xml');
 
-// 解析 phpunit.xml
-const xml = await PHPUnitXML.load(workspacePath);
-const testsuites = xml.getTestSuites();
+// 3. 建立解析器，使用 AST 鏈（tree-sitter → php-parser 備援）
+const astParser = new ChainAstParser([
+  new TreeSitterAstParser(),
+  new PhpParserAstParser(),
+]);
+const testParser = new TestParser(phpUnitXML, astParser);
+
+// 4. 解析測試檔案
+const result = testParser.parse(sourceCode, '/path/to/tests/ExampleTest.php');
+
+if (result) {
+  // result.tests — TestDefinition[] 樹（namespace → class → method）
+  // result.classes — ClassInfo[] 供繼承解析使用
+
+  // 5. 解析繼承關係（父類別、trait）
+  const classHierarchy = new ClassHierarchy();
+  for (const cls of result.classes) {
+    classHierarchy.register(cls);
+  }
+  const enrichedTests = classHierarchy.enrichTests(result.tests);
+}
+```
+
+**輸出結構：**
+
+```
+TestDefinition[]
+├─ { type: namespace, label: "App\\Tests", children: [...] }
+│  ├─ { type: class, label: "ExampleTest", children: [...] }
+│  │  ├─ { type: method, label: "test_add", annotations: { dataset: [...] } }
+│  │  └─ { type: method, label: "test_subtract" }
+```
+
+### 2. 追蹤檔案變更
+
+`TestCollection` 維護所有已解析測試的持久化註冊表，依 testsuite 分組。當檔案變更時，重新解析該檔案、解析繼承、偵測受影響的類別，並回傳差異。
+
+```typescript
+import {
+  TestCollection,
+  TestParser,
+  ClassHierarchy,
+  PHPUnitXML,
+} from '@vscode-phpunit/phpunit';
+import { URI } from 'vscode-uri';
+
+const phpUnitXML = new PHPUnitXML();
+phpUnitXML.loadFile('/path/to/phpunit.xml');
+
+const testCollection = new TestCollection(phpUnitXML, testParser, classHierarchy);
+
+// 檔案變更時：
+const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
+// result.parsed — [{uri, tests: TestDefinition[]}]  (新增/更新)
+// result.deleted — [File]                             (已移除)
+
+// 查詢既有測試
+testCollection.has(uri);        // 檢查檔案是否被追蹤
+testCollection.get(uri);        // 取得檔案的測試
+testCollection.gatherFiles();   // 遍歷所有追蹤的檔案
+testCollection.reset();         // 清除全部
+```
+
+### 3. 執行測試與解析輸出
+
+從 `TestDefinition` 建構命令列，執行 PHPUnit/Pest，透過 observer 模式接收結構化結果。
+
+```typescript
+import {
+  ProcessBuilder,
+  FilterStrategyFactory,
+  TestRunner,
+  TestRunnerEvent,
+  TeamcityEvent,
+} from '@vscode-phpunit/phpunit';
+
+// 1. 建構命令
+const builder = new ProcessBuilder(configuration, { cwd: projectRoot }, pathReplacer);
+const filter = FilterStrategyFactory.create(testDefinition);
+builder.setArguments(filter.getFilter());
+// → php vendor/bin/phpunit --filter="^ExampleTest::test_add" --teamcity --colors=never
+
+// 2. 建立 runner 並監聽事件
+const runner = new TestRunner();
+
+// Teamcity 事件 — 結構化測試結果
+runner.on(TeamcityEvent.testStarted, (result) => {
+  console.log('開始:', result.name, result.id);
+});
+runner.on(TeamcityEvent.testFailed, (result) => {
+  console.log('失敗:', result.name, result.message);
+  // result.details — [{file, line}] 堆疊追蹤
+  // result.actual / result.expected — 比較失敗時
+});
+runner.on(TeamcityEvent.testFinished, (result) => {
+  console.log('通過:', result.name, `${result.duration}ms`);
+});
+runner.on(TeamcityEvent.testResultSummary, (result) => {
+  console.log(`測試: ${result.tests}, 失敗: ${result.failures}`);
+});
+
+// Runner 生命週期事件
+runner.on(TestRunnerEvent.run, (builder) => {
+  console.log('命令:', builder.getRuntime(), builder.getArguments());
+});
+runner.on(TestRunnerEvent.close, (code) => {
+  console.log('結束代碼:', code);
+});
+
+// 3. 執行
+const process = runner.run(builder);
+await process.run();
+```
+
+**事件流程：**
+
+```
+啟動子程序
+  │
+  ├─ TestRunnerEvent.run          (命令已啟動)
+  │
+  ├─ TeamcityEvent.testVersion    (PHPUnit 11.5.0)
+  ├─ TeamcityEvent.testRuntime    (PHP 8.3.0)
+  ├─ TeamcityEvent.testCount      (總計: 42)
+  │
+  ├─ TeamcityEvent.testSuiteStarted
+  │  ├─ TeamcityEvent.testStarted
+  │  ├─ TeamcityEvent.testFinished   (或 testFailed / testIgnored)
+  │  └─ ...
+  ├─ TeamcityEvent.testSuiteFinished
+  │
+  ├─ TeamcityEvent.testDuration      (時間: 0.123s, 記憶體: 24MB)
+  ├─ TeamcityEvent.testResultSummary (測試: 42, 失敗: 1)
+  │
+  └─ TestRunnerEvent.close           (結束代碼)
+```
+
+**各測試類型的 filter 策略：**
+
+| TestDefinition type | 產生的 filter |
+|---|---|
+| `workspace` | *（執行全部）* |
+| `testsuite` | `--testsuite=Unit` |
+| `namespace` | `--filter="^(App\\Tests\\Unit.*)"` |
+| `class` | `tests/ExampleTest.php` |
+| `method` | `--filter="^ExampleTest::test_add"` |
+| `dataset` | `--filter="^...with data set \"one\""` |
+
+### 4. 建構 UI 樹（泛型）
+
+`TestHierarchyBuilder<T>` 將扁平的 `TestDefinition[]` 轉換為巢狀樹以供顯示。處理 namespace 拆分、dataset 展開、多 suite 分組 — 全部與編輯器無關。
+
+```typescript
+import {
+  TestHierarchyBuilder,
+  type ItemCollection,
+  type TestTreeItem,
+} from '@vscode-phpunit/phpunit';
+
+// 為你的 UI 框架實作介面
+class MyItem implements TestTreeItem<MyItem> {
+  id: string;
+  children: ItemCollection<MyItem>;
+  canResolveChildren = false;
+  sortText?: string;
+  tags: Array<{ id: string }> = [];
+  constructor(id: string, public label: string) {
+    this.id = id;
+    this.children = new MyCollection();
+  }
+}
+
+// 繼承抽象 builder
+class MyBuilder extends TestHierarchyBuilder<MyItem> {
+  protected createItem(id: string, label: string, uri?: string): MyItem {
+    return new MyItem(id, label);
+  }
+  protected createTag(id: string) { return { id }; }
+  protected createRange(def: TestDefinition) { /* ... */ }
+}
+
+// 建構樹
+const builder = new MyBuilder(rootCollection, phpUnitXML);
+const itemMap = builder.build(tests);
+// itemMap: Map<MyItem, TestDefinition>
+```
+
+**樹轉換：**
+
+```
+輸入（扁平）：                       輸出（巢狀）：
+─────────────────                    ─────────────────
+namespace: App\Tests\Unit            App
+  class: ExampleTest                   └─ Tests
+    method: test_add                       └─ Unit
+      dataset: ["one","two"]                   └─ ExampleTest
+                                                   └─ test_add
+                                                       ├─ with data set "one"
+                                                       └─ with data set "two"
 ```
 
 ## 建置
