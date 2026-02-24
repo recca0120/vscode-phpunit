@@ -20,7 +20,12 @@ export class TestQueueBuilder {
 
             const testDef = this.testCollection.getTestDefinition(testItem);
             if (testDef?.type !== TestType.method && testDef?.type !== TestType.dataset) {
-                await this.build(this.toArray(testItem.children), request, queue, testRun);
+                await this.build(
+                    [...testItem.children].map(([, item]) => item),
+                    request,
+                    queue,
+                    testRun,
+                );
                 continue;
             }
 
@@ -36,14 +41,11 @@ export class TestQueueBuilder {
         request: TestRunRequest,
         testRun?: TestRun,
     ): Promise<Map<TestDefinition, TestItem>> {
-        return this.build(this.toArray(collection), request, undefined, testRun);
-    }
-
-    private toArray(collection: TestItemCollection): TestItem[] {
-        const items: TestItem[] = [];
-        for (const [, item] of collection) {
-            items.push(item);
-        }
-        return items;
+        return this.build(
+            [...collection].map(([, item]) => item),
+            request,
+            undefined,
+            testRun,
+        );
     }
 }

@@ -1,4 +1,5 @@
-import { PestFixer, PestV1Fixer, PHPUnitFixer } from '../TestIdentifier';
+import { PestFixer, PestV1Fixer } from '../TestIdentifier/PestFixer';
+import { PHPUnitFixer } from '../TestIdentifier/PHPUnitFixer';
 import {
     TeamcityEvent,
     type TestFailed,

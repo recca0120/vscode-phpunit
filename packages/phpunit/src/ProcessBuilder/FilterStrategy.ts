@@ -1,4 +1,4 @@
-import { TestIdentifier } from '../TestIdentifier';
+import { TestIdentifier } from '../TestIdentifier/TestIdentifier';
 import { type TestDefinition, TestType } from '../types';
 
 abstract class FilterStrategy {

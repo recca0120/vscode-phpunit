@@ -1,4 +1,4 @@
-import { TestIdentifierFactory } from '../TestIdentifier';
+import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import type { Teamcity } from '../types';
 import { parseTeamcity } from './parseTeamcity';
 import { TestDurationParser } from './TestDurationParser';

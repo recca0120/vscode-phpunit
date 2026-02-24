@@ -1,5 +1,5 @@
 import type { ClassDescriptor, FileInfo, PestCallDescriptor, Range } from '../Interpreter/types';
-import { TestIdentifierFactory } from '../TestIdentifier';
+import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { type Annotations, type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
 import type { ClassInfo } from './ClassHierarchy';

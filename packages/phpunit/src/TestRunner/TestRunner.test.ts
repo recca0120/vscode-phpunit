@@ -5,7 +5,7 @@ import type { Path } from '../Configuration';
 import { Configuration, PathReplacer } from '../Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { ProcessBuilder } from '../ProcessBuilder';
-import { TestIdentifierFactory } from '../TestIdentifier';
+import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { TeamcityEvent } from '../TestOutput';
 import { TestType } from '../types';
 import { semverLt } from '../utils';
