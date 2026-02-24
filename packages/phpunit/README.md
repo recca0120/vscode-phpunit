@@ -108,18 +108,23 @@ const astParser = new ChainAstParser([
 ]);
 const testParser = new TestParser(phpUnitXML, astParser);
 
-// 4. Parse a test file
+// 4. ClassHierarchy must be long-lived (singleton) to accumulate
+//    class info across files for cross-file inheritance resolution
+const classHierarchy = new ClassHierarchy();
+
+// 5. Parse test files — repeat for each file
 const result = testParser.parse(sourceCode, '/path/to/tests/ExampleTest.php');
 
 if (result) {
   // result.tests — TestDefinition[] tree (namespace → class → method)
   // result.classes — ClassInfo[] for inheritance resolution
 
-  // 5. Resolve inheritance (parent classes, traits)
-  const classHierarchy = new ClassHierarchy();
+  // Register class info (accumulates across files)
   for (const cls of result.classes) {
     classHierarchy.register(cls);
   }
+
+  // Resolve inherited methods, traits, data providers
   const enrichedTests = classHierarchy.enrichTests(result.tests);
 }
 ```

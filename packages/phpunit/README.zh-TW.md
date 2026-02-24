@@ -108,18 +108,23 @@ const astParser = new ChainAstParser([
 ]);
 const testParser = new TestParser(phpUnitXML, astParser);
 
-// 4. 解析測試檔案
+// 4. ClassHierarchy 必須長期存活（singleton），
+//    才能跨檔案累積 class info 以解析繼承關係
+const classHierarchy = new ClassHierarchy();
+
+// 5. 解析測試檔案 — 每個檔案重複此步驟
 const result = testParser.parse(sourceCode, '/path/to/tests/ExampleTest.php');
 
 if (result) {
   // result.tests — TestDefinition[] 樹（namespace → class → method）
   // result.classes — ClassInfo[] 供繼承解析使用
 
-  // 5. 解析繼承關係（父類別、trait）
-  const classHierarchy = new ClassHierarchy();
+  // 註冊 class info（跨檔案累積）
   for (const cls of result.classes) {
     classHierarchy.register(cls);
   }
+
+  // 解析繼承的方法、trait、data provider
   const enrichedTests = classHierarchy.enrichTests(result.tests);
 }
 ```
