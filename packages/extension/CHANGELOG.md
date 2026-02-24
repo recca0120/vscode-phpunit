@@ -4,6 +4,14 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.25] - 2026-02-24
+
+### Changed
+- Refactor: move test tree building logic (`TestHierarchyBuilder`) to phpunit package for editor-agnostic reuse
+- Refactor: move VS Code icon (Codicon) logic from phpunit package to extension
+- Refactor: narrow phpunit package public API — remove internal exports (TestOutputParser, TestIdentifier internals, XmlElement, unused utilities)
+- Refactor: add `TestRange` type and `range` field to `TestTreeItem` interface, remove type assertion
+
 ## [3.9.24] - 2026-02-24
 
 ### Added
