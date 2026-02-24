@@ -18,20 +18,6 @@ export interface TestTreeItem<T> {
     tags: readonly { id: string }[];
 }
 
-const TEST_ICONS: Record<TestType, string> = {
-    [TestType.workspace]: '$(folder)',
-    [TestType.testsuite]: '$(symbol-namespace)',
-    [TestType.namespace]: '$(symbol-namespace)',
-    [TestType.class]: '$(symbol-class)',
-    [TestType.method]: '$(symbol-method)',
-    [TestType.describe]: '$(symbol-class)',
-    [TestType.dataset]: '$(symbol-enum-member)',
-};
-
-export function icon(type: TestType): string {
-    return TEST_ICONS[type] ?? '';
-}
-
 export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
     private testData = new Map<T, TestDefinition>();
     private multiSuite: boolean;
@@ -58,13 +44,8 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         | { start: { line: number; character: number }; end: { line: number; character: number } }
         | undefined;
 
-    protected parseLabelWithIcon(testDefinition: TestDefinition): string {
-        const prefix =
-            testDefinition.type === TestType.method && testDefinition.annotations?.dataProvider
-                ? '$(symbol-enum)'
-                : icon(testDefinition.type);
-
-        return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
+    protected formatLabel(testDefinition: TestDefinition): string {
+        return testDefinition.label;
     }
 
     private processNode(test: TestDefinition, parentChildren: ItemCollection<T>) {
@@ -162,7 +143,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
 
         let testItem = parentChildren.get(suiteId);
         if (!testItem) {
-            testItem = this.createItem(suiteId, this.parseLabelWithIcon(suiteDefinition));
+            testItem = this.createItem(suiteId, this.formatLabel(suiteDefinition));
             testItem.canResolveChildren = true;
             testItem.sortText = suiteId;
             parentChildren.add(testItem);
@@ -223,7 +204,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
 
         const testItem = this.createItem(
             namespaceDefinition.id,
-            this.parseLabelWithIcon(namespaceDefinition),
+            this.formatLabel(namespaceDefinition),
         );
         testItem.canResolveChildren = true;
         testItem.sortText = namespaceDefinition.id;
@@ -252,11 +233,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
             throw new Error(`Test definition ${testDefinition.id} has no file`);
         }
 
-        const testItem = this.createItem(
-            testDefinition.id,
-            this.parseLabelWithIcon(testDefinition),
-            file,
-        );
+        const testItem = this.createItem(testDefinition.id, this.formatLabel(testDefinition), file);
         testItem.canResolveChildren = testDefinition.type === TestType.class;
         testItem.sortText = sortText;
 
