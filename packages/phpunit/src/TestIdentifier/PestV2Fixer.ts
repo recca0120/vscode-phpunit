@@ -1,49 +1,34 @@
-import type { TestResult } from '../TestOutput';
-import { capitalize, splitDataset } from '../utils';
-
-const Str = {
-    prefix: '__pest_evaluable_',
-
-    evaluable(code: string) {
-        return (
-            Str.prefix +
-            code
-                .replace(/_/g, '__')
-                .replace(/\s/g, '_')
-                .replace(/[^a-zA-Z0-9_\u0080-\uFFFF]/g, '_')
-        );
-    },
-};
+const PREFIX = '__pest_evaluable_';
 
 function hasPrefix(id?: string) {
-    return id?.includes(Str.prefix) ?? false;
+    return id?.includes(PREFIX) ?? false;
+}
+
+function decodeEvaluable(encoded: string) {
+    const idx = encoded.indexOf(PREFIX);
+    if (idx === -1) {
+        return encoded;
+    }
+
+    const before = encoded.slice(0, idx);
+    let method = encoded.slice(idx + PREFIX.length);
+
+    // reverse: single _ → space, double __ → literal _
+    method = method.replace(/__|_/g, (m) => (m === '__' ? '_' : ' '));
+
+    return before + method;
 }
 
 export const PestV2Fixer = {
     fixId(location: string, name: string) {
-        return hasPrefix(name) ? name : location;
-    },
-
-    isEqualsPestV2DataSetId(result: TestResult, testItemId: string) {
-        if (!('id' in result) || !hasPrefix(result.id)) {
-            return false;
+        if (!hasPrefix(name)) {
+            return location;
         }
 
-        let [classFQN, method] = testItemId.split('::');
-        classFQN = capitalize(classFQN.replace(/\//g, '\\').replace(/\.php$/, ''));
+        const methodPart = name.includes('::') ? name.split('::').slice(1).join('::') : name;
+        const decoded = decodeEvaluable(methodPart);
+        const file = location.split('::')[0];
 
-        return [classFQN, PestV2Fixer.methodName(method)].join('::') === result.id;
-    },
-
-    methodName(methodName: string) {
-        methodName = methodName.replace(/\{@\*}/g, '*/');
-        const split = splitDataset(methodName);
-        let dataset = '';
-        if (split.dataset) {
-            methodName = split.base;
-            dataset = split.label.replace(/\|'/g, "'");
-        }
-
-        return Str.evaluable(methodName) + dataset;
+        return decoded ? `${file}::${decoded}` : file;
     },
 };

@@ -1,6 +1,5 @@
 import {
     EOL,
-    PestV2Fixer,
     type TestDefinition,
     type TestFailed,
     type TestFinished,
@@ -124,17 +123,6 @@ export class TestResultObserver implements TestRunnerObserver {
             return undefined;
         }
 
-        const exact = this.testItemById.get(result.id);
-        if (exact) {
-            return exact;
-        }
-
-        for (const testItem of this.testItemById.values()) {
-            if (PestV2Fixer.isEqualsPestV2DataSetId(result, testItem.id)) {
-                return testItem;
-            }
-        }
-
-        return undefined;
+        return this.testItemById.get(result.id);
     }
 }
