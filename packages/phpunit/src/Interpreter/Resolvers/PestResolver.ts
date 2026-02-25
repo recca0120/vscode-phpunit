@@ -1,3 +1,4 @@
+import { datasetNamed } from '../../utils';
 import type { AstNode, CallNode, ExpressionStatementNode } from '../AstParser/AstNode';
 import { evaluate } from '../Expressions/PhpExpression';
 import type { PHP } from '../PHP';
@@ -153,15 +154,15 @@ function resolvePestLabels(node: AstNode): string[] {
             if (!formatted) {
                 return [];
             }
-            labels.push(`data set "${formatted}"`);
+            labels.push(datasetNamed(formatted));
         } else {
-            labels.push(`data set "dataset "${key}""`);
+            labels.push(datasetNamed(`dataset "${key}"`));
         }
     }
     return labels;
 }
 
-function formatPestValue(value: unknown): string {
+function formatPestValue(value: unknown): string | undefined {
     if (value instanceof Map || Array.isArray(value)) {
         const items = value instanceof Map ? [...value.values()] : value;
         return `(${items.map((v) => (typeof v === 'string' ? `'${v}'` : String(v))).join(', ')})`;
@@ -169,7 +170,7 @@ function formatPestValue(value: unknown): string {
     if (typeof value === 'string') {
         return `('${value}')`;
     }
-    return String(value ?? '');
+    return undefined;
 }
 
 function cartesianProduct(datasets: string[][]): string[] {
@@ -177,7 +178,7 @@ function cartesianProduct(datasets: string[][]): string[] {
     for (let i = 1; i < datasets.length; i++) {
         combinations = combinations.flatMap((combo) => datasets[i].map((v) => [...combo, v]));
     }
-    return combinations.map((combo) => `data set "${combo.map((v) => `('${v}')`).join(' / ')}"`);
+    return combinations.map((combo) => datasetNamed(combo.map((v) => `('${v}')`).join(' / ')));
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {

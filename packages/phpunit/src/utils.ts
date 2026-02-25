@@ -165,6 +165,9 @@ function semverCompare(a: string, b: string): number {
 export const semverGte = (a: string, b: string) => semverCompare(a, b) >= 0;
 export const semverLt = (a: string, b: string) => semverCompare(a, b) < 0;
 
+export const datasetNamed = (key: string) => `data set "${key}"`;
+export const datasetIndexed = (index: number | string) => `data set #${index}`;
+
 const DATASET_PATTERN =
     /^(?<base>.*?)(?<dataset>\swith\s(?<label>data\sset\s[#"(].+|dataset\s".+|\(.+))$/;
 
