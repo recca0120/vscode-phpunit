@@ -1,5 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { OutputFormatter } from './OutputFormatter';
+
+export function fileFormat(file: string, line: number) {
+    return `${file}:${line}`;
+}
 
 export function readSourceSnippet(filePath: string, targetLine: number): string[] | undefined {
     try {
@@ -15,7 +18,7 @@ export function readSourceSnippet(filePath: string, targetLine: number): string[
                 return `${prefix}${String(currentPosition).padStart(2, ' ')} ▕ ${line}`;
             });
 
-        return ['', `at ${OutputFormatter.fileFormat(filePath, targetLine)}`, ...lines];
+        return ['', `at ${fileFormat(filePath, targetLine)}`, ...lines];
     } catch (_e) {
         return undefined;
     }

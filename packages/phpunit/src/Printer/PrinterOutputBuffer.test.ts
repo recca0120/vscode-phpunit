@@ -1,90 +1,16 @@
-import {
-    EOL,
-    PHPUnitXML,
-    TeamcityEvent,
-    type TestFinished,
-    type TestSuiteFinished,
-} from '@vscode-phpunit/phpunit';
-import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OutputFormatter } from './OutputFormatter';
+import { phpUnitProject } from '../../tests/utils';
+import { PHPUnitXML } from '../Configuration/PHPUnitXML';
+import { TeamcityEvent, type TestSuiteFinished } from '../TestOutput/types';
+import { Printer } from './Printer';
+import { PRESET_PROGRESS } from './PrinterConfig';
 
-class MyOutputFormatter extends OutputFormatter {
-    testFinished(_result: TestFinished): string | undefined {
-        return undefined;
-    }
-}
-
-describe('OutputFormatter', () => {
+describe('Printer output buffer', () => {
     const phpUnitXML = new PHPUnitXML();
-    const printer = new MyOutputFormatter(phpUnitXML);
+    const printer = new Printer(phpUnitXML, PRESET_PROGRESS);
 
     beforeEach(() => printer.start());
     afterEach(() => printer.close());
-
-    it('testVersion', () => {
-        const output = printer.testVersion({
-            event: TeamcityEvent.testVersion,
-            phpunit: '11.5.0',
-            paratest: undefined,
-            text: 'PHPUnit 11.5.0 by Sebastian Bergmann and contributors.',
-        });
-
-        expect(output).toEqual(
-            `${EOL}🚀 PHPUnit 11.5.0 by Sebastian Bergmann and contributors.${EOL}`,
-        );
-    });
-
-    it('testRuntime', () => {
-        const output = printer.testRuntime({
-            event: TeamcityEvent.testRuntime,
-            runtime: 'PHP 8.3.14',
-            text: 'Runtime:       PHP 8.3.14',
-        });
-
-        expect(output).toEqual('Runtime:       PHP 8.3.14');
-    });
-
-    it('testConfiguration', () => {
-        const output = printer.testConfiguration({
-            event: TeamcityEvent.testConfiguration,
-            configuration: phpUnitProject('phpunit.xml'),
-            text: `Configuration: ${phpUnitProject('phpunit.xml')}`,
-        });
-
-        expect(output).toEqual(`Configuration: ${phpUnitProject('phpunit.xml')}${EOL}`);
-    });
-
-    it('testResultSummary', () => {
-        const output = printer.testResultSummary({
-            event: TeamcityEvent.testResultSummary,
-            text: 'Tests: 33, Assertions: 30, Errors: 2, Failures: 6, Warnings: 1, PHPUnit Deprecations: 8, Skipped: 1, Incomplete: 1, Risky: 2.',
-            tests: 33,
-            assertions: 30,
-            errors: 2,
-            failures: 6,
-            warnings: 1,
-            phpunitDeprecations: 8,
-            skipped: 1,
-            incomplete: 1,
-            risky: 2,
-        });
-
-        expect(output).toEqual(
-            'Tests: 33, Assertions: 30, Errors: 2, Failures: 6, Warnings: 1, PHPUnit Deprecations: 8, Skipped: 1, Incomplete: 1, Risky: 2.',
-        );
-    });
-
-    it('timeAndMemory', () => {
-        const output = printer.timeAndMemory({
-            time: '00:00.055',
-            memory: '10.00 MB',
-            event: TeamcityEvent.testDuration,
-            text: 'Time: 00:00.055, Memory: 10.00 MB',
-        });
-
-        expect(output).toEqual('Time: 00:00.055, Memory: 10.00 MB');
-    });
 
     it('should print printed output', async () => {
         printer.testStarted({

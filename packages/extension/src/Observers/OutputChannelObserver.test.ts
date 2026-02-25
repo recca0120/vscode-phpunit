@@ -1,9 +1,10 @@
 import {
     Configuration,
-    EOL,
     type Path,
     PathReplacer,
     PHPUnitXML,
+    PRESET_PROGRESS,
+    Printer,
     ProcessBuilder,
     semverGte,
     semverLt,
@@ -13,8 +14,7 @@ import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/test
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel, TestRunRequest } from 'vscode';
 import * as vscode from 'vscode';
-import { OutputChannelObserver, OutputFormatter } from './index';
-import { PrettyPrinter } from './Printers';
+import { OutputChannelObserver } from './index';
 
 describe('OutputChannelObserver clear behavior', () => {
     const createObserver = (
@@ -30,7 +30,7 @@ describe('OutputChannelObserver clear behavior', () => {
         const observer = new OutputChannelObserver(
             outputChannel,
             configuration,
-            new PrettyPrinter(new PHPUnitXML()),
+            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
             request,
         );
 
@@ -87,13 +87,13 @@ describe('OutputChannelObserver clear behavior', () => {
         const observer1 = new OutputChannelObserver(
             outputChannel,
             configuration,
-            new PrettyPrinter(new PHPUnitXML()),
+            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
             { continuous: false } as TestRunRequest,
         );
         const observer2 = new OutputChannelObserver(
             outputChannel,
             configuration,
-            new PrettyPrinter(new PHPUnitXML()),
+            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
             { continuous: false } as TestRunRequest,
         );
 
@@ -127,7 +127,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         const observer = new OutputChannelObserver(
             outputChannel,
             configuration,
-            new PrettyPrinter(new PHPUnitXML()),
+            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
             { continuous: false } as TestRunRequest,
         );
         testRunner.observe(observer);
@@ -159,7 +159,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile);
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+        expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(
                 new RegExp(
                     `php .+phpunit .+${testFile.replace(/[/\\]/g, '.')} --colors=never --teamcity`,
@@ -173,9 +173,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/PHPUnit\s[\d.]+/),
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/PHPUnit\s[\d.]+/));
     });
 
     it('should trigger testRuntime', async () => {
@@ -187,7 +185,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+        expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/),
         );
     });
@@ -201,7 +199,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+        expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(/Configuration:.+/),
         );
     });
@@ -212,7 +210,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).not.toHaveBeenCalledWith(
+        expect(outputChannel.append).not.toHaveBeenCalledWith(
             'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::test_passed',
         );
     });
@@ -223,7 +221,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).not.toHaveBeenCalledWith(
+        expect(outputChannel.append).not.toHaveBeenCalledWith(
             'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::addition_provider',
         );
     });
@@ -234,9 +232,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+✅\spassed\s\d+\sms/),
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith('.');
     });
 
     it('should trigger testFailed', async () => {
@@ -245,58 +241,23 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+❌\sfailed\s\d+\sms/),
-        );
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringContaining(
-                [
-                    `     ┐ `,
-                    `     ├ Failed asserting that false is true.`,
-                    `     │ `,
-                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 27)}`,
-                ].join(EOL),
-            ),
+        expect(outputChannel.append).toHaveBeenCalledWith('F');
+        expect(outputChannel.append).toHaveBeenCalledWith(
+            expect.stringContaining('Failed asserting that false is true.'),
         );
     });
 
     it('should trigger testFailed with actual and expect', async () => {
-        let DOT = '';
-        let ARRAY_OPEN = '(';
-        let ARRAY_CLOSE = ')';
-        if (semverGte(phpUnitVersion, '10.4.2')) {
-            DOT = ',';
-            ARRAY_OPEN = '[';
-            ARRAY_CLOSE = ']';
-        }
-
         const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_is_not_same';
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+❌\sis_not_same\s\d+\sms/),
+        expect(outputChannel.append).toHaveBeenCalledWith('F');
+        expect(outputChannel.append).toHaveBeenCalledWith(
+            expect.stringContaining('Failed asserting that two arrays are identical.'),
         );
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringContaining(
-                [
-                    `     ┐ `,
-                    `     ├ Failed asserting that two arrays are identical.`,
-                    `     ┊ ---·Expected Array &0 ${ARRAY_OPEN}`,
-                    `     ┊     'a' => 'b'${DOT}`,
-                    `     ┊     'c' => 'd'${DOT}`,
-                    `     ┊ ${ARRAY_CLOSE}`,
-                    `     ┊ +++·Actual Array &0 ${ARRAY_OPEN}`,
-                    `     ┊     'e' => 'f'${DOT}`,
-                    `     ┊     0 => 'g'${DOT}`,
-                    `     ┊     1 => 'h'${DOT}`,
-                    `     ┊ ${ARRAY_CLOSE}`,
-                    `     │ `,
-                    `     │ ${OutputFormatter.fileFormat(phpUnitProject('tests/AssertionsTest.php'), 32)}`,
-                ].join(EOL),
-            ),
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringContaining('--- Expected'));
     });
 
     it('should trigger testIgnored', async () => {
@@ -305,9 +266,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/\s+➖\sskipped\s➜\s.+\s\d+\sms/),
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith('S');
     });
 
     it('should trigger testResultSummary', async () => {
@@ -344,10 +303,8 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.clear).toHaveBeenCalled();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringMatching('❌'));
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/NotFound\.php/),
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching('❌'));
+        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
     });
 
     it('always show output channel', async () => {
@@ -434,7 +391,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output');
+        expect(outputChannel.append).toHaveBeenCalledWith('🟨 printed output');
         expect(outputChannel.show).toHaveBeenCalled();
     });
 
@@ -445,14 +402,14 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
 
         const outputChannel = getOutputChannel();
         if (semverGte(phpUnitVersion, '12.0.0')) {
-            expect(outputChannel.appendLine).toHaveBeenCalledWith(
+            expect(outputChannel.append).toHaveBeenCalledWith(
                 expect.stringMatching(/🟨 printed output when die/),
             );
-            expect(outputChannel.appendLine).toHaveBeenCalledWith(
+            expect(outputChannel.append).toHaveBeenCalledWith(
                 expect.stringMatching(/Fatal error: Premature end of PHP process/),
             );
         } else {
-            expect(outputChannel.appendLine).toHaveBeenCalledWith('🟨 printed output when die');
+            expect(outputChannel.append).toHaveBeenCalledWith('🟨 printed output when die');
         }
         expect(outputChannel.show).toHaveBeenCalled();
     });
@@ -463,9 +420,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.appendLine).toHaveBeenCalledWith(
-            expect.stringMatching(/🟨 array:\d+ \[/),
-        );
+        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/🟨 array:\d+ \[/));
         expect(outputChannel.show).toHaveBeenCalled();
     });
 });

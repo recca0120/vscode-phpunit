@@ -1,6 +1,9 @@
 import {
     type IConfiguration,
     PHPUnitXML,
+    Printer,
+    type PrinterFormat,
+    resolveFormat,
     type TestDefinition,
     type TestRunnerObserver,
 } from '@vscode-phpunit/phpunit';
@@ -12,7 +15,6 @@ import { TYPES } from '../types';
 import { DatasetChildObserver } from './DatasetChildObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
 import { OutputChannelObserver } from './OutputChannelObserver';
-import { CollisionPrinter } from './Printers';
 import { TestResultObserver } from './TestResultObserver';
 
 @injectable()
@@ -36,7 +38,18 @@ export class TestRunnerObserverFactory {
             new OutputChannelObserver(
                 this.outputChannel,
                 this.configuration,
-                new CollisionPrinter(this.phpUnitXML),
+                new Printer(
+                    this.phpUnitXML,
+                    resolveFormat(
+                        (this.configuration.get('output.preset') ?? 'collision') as
+                            | 'progress'
+                            | 'collision'
+                            | 'pretty',
+                        this.configuration.get('output.format') as
+                            | Partial<PrinterFormat>
+                            | undefined,
+                    ),
+                ),
                 request,
             ),
             new ErrorDialogObserver(this.configuration),

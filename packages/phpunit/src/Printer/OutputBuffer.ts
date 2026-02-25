@@ -1,4 +1,4 @@
-import { EOL } from '@vscode-phpunit/phpunit';
+import { EOL } from '../utils';
 
 export class OutputBuffer {
     private current?: string;

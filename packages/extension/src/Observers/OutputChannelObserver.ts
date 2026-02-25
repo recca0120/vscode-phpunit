@@ -1,5 +1,6 @@
 import type {
     IConfiguration,
+    Printer,
     ProcessBuilder,
     TestConfiguration,
     TestDuration,
@@ -17,7 +18,6 @@ import type {
     TestVersion,
 } from '@vscode-phpunit/phpunit';
 import type { OutputChannel, TestRunRequest } from 'vscode';
-import type { OutputFormatter } from './Printers';
 
 enum ShowOutputState {
     always = 'always',
@@ -26,13 +26,12 @@ enum ShowOutputState {
 }
 
 export class OutputChannelObserver implements TestRunnerObserver {
-    private lastCommand = '';
     private hasClearedCurrentRequest = false;
 
     constructor(
         private outputChannel: OutputChannel,
         private configuration: IConfiguration,
-        private outputFormatter: OutputFormatter,
+        private printer: Printer,
         private request: TestRunRequest,
     ) {}
 
@@ -40,52 +39,45 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.clearOutputOnRun();
         this.showOutputChannel(ShowOutputState.always);
 
-        this.outputFormatter.start();
-        this.lastCommand = builder.toString();
-        this.appendLine(this.lastCommand);
+        this.append(this.printer.start(builder.toString()));
     }
 
     error(error: string): void {
         this.outputChannel.clear();
-        this.appendLine(this.lastCommand);
-        this.appendLine(this.outputFormatter.error(error));
+        this.append(this.printer.error(error));
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     line(line: string): void {
-        this.outputFormatter.append(line);
+        this.printer.append(line);
     }
 
     testVersion(result: TestVersion) {
-        this.appendLine(this.outputFormatter.testVersion(result));
+        this.append(this.printer.testVersion(result));
     }
 
     testProcesses(result: TestProcesses) {
-        this.appendLine(this.outputFormatter.testProcesses(result));
+        this.append(this.printer.testProcesses(result));
     }
 
     testRuntime(result: TestRuntime) {
-        this.appendLine(this.outputFormatter.testRuntime(result));
+        this.append(this.printer.testRuntime(result));
     }
 
     testConfiguration(result: TestConfiguration) {
-        this.appendLine(this.outputFormatter.testConfiguration(result));
+        this.append(this.printer.testConfiguration(result));
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        if (this.shouldSkipSuite(result.id)) {
-            return;
-        }
-
-        this.appendLine(this.outputFormatter.testSuiteStarted(result));
+        this.append(this.printer.testSuiteStarted(result));
     }
 
     testStarted(result: TestStarted): void {
-        this.appendLine(this.outputFormatter.testStarted(result));
+        this.append(this.printer.testStarted(result));
     }
 
     testFinished(result: TestFinished): void {
-        this.appendLine(this.outputFormatter.testFinished(result));
+        this.append(this.printer.testFinished(result));
         this.printedOutput(result);
     }
 
@@ -95,43 +87,32 @@ export class OutputChannelObserver implements TestRunnerObserver {
     }
 
     testIgnored(result: TestIgnored): void {
-        this.appendLine(this.outputFormatter.testIgnored(result));
+        this.append(this.printer.testIgnored(result));
         this.printedOutput(result);
         this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        if (this.shouldSkipSuite(result.id)) {
-            return;
-        }
-
-        this.appendLine(this.outputFormatter.testSuiteFinished(result));
+        this.append(this.printer.testSuiteFinished(result));
     }
 
     testResultSummary(result: TestResultSummary) {
-        this.appendLine(this.outputFormatter.end());
-        this.append(this.outputFormatter.testResultSummary(result));
+        this.append(this.printer.testResultSummary(result));
     }
 
     testDuration(result: TestDuration) {
-        this.appendLine(this.outputFormatter.end());
-        this.append(this.outputFormatter.timeAndMemory(result));
+        this.append(this.printer.timeAndMemory(result));
     }
 
     close() {
-        this.appendLine(this.outputFormatter.end());
+        this.append(this.printer.close());
         this.printedOutput();
-        this.outputFormatter.close();
-    }
-
-    private shouldSkipSuite(id?: string): boolean {
-        return !id || id.includes('::');
     }
 
     private printedOutput(result?: TestResult): void {
-        const output = this.outputFormatter.printedOutput(result);
+        const output = this.printer.printedOutput(result);
         if (output) {
-            this.appendLine(output);
+            this.append(output);
             this.outputChannel.show(false);
         }
     }
@@ -139,12 +120,6 @@ export class OutputChannelObserver implements TestRunnerObserver {
     private append(text: string | undefined) {
         if (text !== undefined) {
             this.outputChannel.append(text);
-        }
-    }
-
-    private appendLine(text: string | undefined) {
-        if (text !== undefined) {
-            this.outputChannel.appendLine(text);
         }
     }
 

@@ -117,7 +117,7 @@ const expectTestResultCalled = (ctrl: TestController, expected: Record<string, n
         end: end.mock.calls.length,
     }).toEqual(expected);
 
-    expect(getOutputChannel().appendLine).toHaveBeenCalled();
+    expect(getOutputChannel().append).toHaveBeenCalled();
 };
 
 const countItems = (testItemCollection: TestItemCollection) => {
