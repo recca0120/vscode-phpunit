@@ -21,27 +21,20 @@ export class DatasetChildObserver implements TestRunnerObserver {
     }
 
     testStarted(result: TestStarted): void {
-        const sizeBefore = this.definitions.size;
-        this.resolver.testStarted(result);
-
-        if (this.definitions.size === sizeBefore) {
+        const childDef = this.resolver.testStarted(result);
+        if (!childDef) {
             return;
         }
 
-        // Find the newly added definition
         const parentId = stripDataset(result.id);
         const parent = this.testItemById.get(parentId);
         if (!parent) {
             return;
         }
 
-        for (const [id, def] of this.definitions) {
-            if (!this.testItemById.has(id)) {
-                const child = this.testCollection.addDatasetChild(parent, def);
-                if (child) {
-                    this.testItemById.set(child.id, child);
-                }
-            }
+        const child = this.testCollection.addDatasetChild(parent, childDef);
+        if (child) {
+            this.testItemById.set(child.id, child);
         }
     }
 

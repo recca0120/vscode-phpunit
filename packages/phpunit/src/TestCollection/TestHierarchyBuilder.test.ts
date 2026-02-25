@@ -222,7 +222,7 @@ describe('TestHierarchyBuilder', () => {
                                 start: { line: 10, character: 0 },
                                 end: { line: 20, character: 0 },
                                 annotations: {
-                                    dataset: ['"one"', '"two"'],
+                                    dataset: ['data set "one"', 'data set "two"'],
                                 },
                             },
                         ],

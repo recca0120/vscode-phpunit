@@ -18,7 +18,7 @@ class ArrayCombineExpression implements Expression<string[]> {
             return undefined;
         }
         return [...resolved.values()].map((item, i) =>
-            typeof item === 'string' ? `"${item}"` : `#${i}`,
+            typeof item === 'string' ? `data set "${item}"` : `data set #${i}`,
         );
     }
 }

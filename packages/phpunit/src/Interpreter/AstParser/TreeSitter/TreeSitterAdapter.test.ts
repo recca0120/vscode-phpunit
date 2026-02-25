@@ -207,7 +207,7 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     annotations: {
                         dataProvider: ['additionProvider'],
                         depends: ['test_passed'],
-                        dataset: ['#0', '#1', '#2'],
+                        dataset: ['data set #0', 'data set #1', 'data set #2'],
                     },
                     start: { line: 66, character: 4 },
                     end: { line: 69, character: 5 },
@@ -388,7 +388,7 @@ describe('TreeSitterAdapter — PHPUnit', () => {
                     methodName: 'testAdd',
                     annotations: {
                         dataProvider: ['additionProvider'],
-                        dataset: ['#0', '#1', '#2', '#3'],
+                        dataset: ['data set #0', 'data set #1', 'data set #2', 'data set #3'],
                     },
                     start: { line: 22, character: 4 },
                     end: { line: 25, character: 5 },

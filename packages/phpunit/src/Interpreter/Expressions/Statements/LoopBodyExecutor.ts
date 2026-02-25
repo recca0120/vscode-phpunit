@@ -46,9 +46,9 @@ const bodyStatementHandlers: Record<string, (stmt: AstNode, ctx: LoopContext) =>
     yield_expression: (stmt, ctx) => {
         const resolvedKey = ctx.context.resolve(stmt);
         if (resolvedKey !== undefined) {
-            ctx.labels.push(`"${resolvedKey}"`);
+            ctx.labels.push(`data set "${resolvedKey}"`);
         } else {
-            ctx.labels.push(`#${ctx.numericIndex++}`);
+            ctx.labels.push(`data set #${ctx.numericIndex++}`);
         }
         return undefined;
     },

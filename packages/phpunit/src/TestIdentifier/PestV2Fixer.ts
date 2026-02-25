@@ -25,7 +25,8 @@ export const PestV2Fixer = {
             return location;
         }
 
-        const methodPart = name.includes('::') ? name.split('::').slice(1).join('::') : name;
+        const idx = name.indexOf('::');
+        const methodPart = idx >= 0 ? name.substring(idx + 2) : name;
         const decoded = decodeEvaluable(methodPart);
         const file = location.split('::')[0];
 

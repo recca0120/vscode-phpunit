@@ -7,22 +7,23 @@ import type { TestRunnerObserver } from './TestRunnerObserver';
 export class DatasetChildResolver implements TestRunnerObserver {
     constructor(private definitions: Map<string, TestDefinition>) {}
 
-    testStarted(result: TestStarted): void {
+    testStarted(result: TestStarted): TestDefinition | undefined {
         if (!result.id) {
-            return;
+            return undefined;
         }
 
         const parentId = stripDataset(result.id);
         const parentDef = this.definitions.get(parentId);
         if (!parentDef) {
-            return;
+            return undefined;
         }
 
         const childDef = resolveDatasetDefinition(result.name, parentDef);
         if (!childDef || this.definitions.has(childDef.id)) {
-            return;
+            return undefined;
         }
 
         this.definitions.set(childDef.id, childDef);
+        return childDef;
     }
 }

@@ -178,6 +178,7 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
                     type: TestType.method,
                     file,
                     id: 'Assertions (Tests\\Assertions)::Addition provider',
+                    label: 'addition_provider',
                     classFQN: 'Tests\\AssertionsTest',
                     namespace: 'Tests',
                     className: 'AssertionsTest',
@@ -185,7 +186,7 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
                     annotations: {
                         dataProvider: ['additionProvider'],
                         depends: ['test_passed'],
-                        dataset: ['#0', '#1', '#2'],
+                        dataset: ['data set #0', 'data set #1', 'data set #2'],
                     },
                     start: { line: 66, character: 4 },
                     end: { line: 69, character: 5 },
@@ -360,13 +361,14 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
                     type: TestType.method,
                     file,
                     id: 'Attribute (Tests\\Attribute)::Add',
+                    label: 'testAdd',
                     classFQN: 'Tests\\AttributeTest',
                     namespace: 'Tests',
                     className: 'AttributeTest',
                     methodName: 'testAdd',
                     annotations: {
                         dataProvider: ['additionProvider'],
-                        dataset: ['#0', '#1', '#2', '#3'],
+                        dataset: ['data set #0', 'data set #1', 'data set #2', 'data set #3'],
                     },
                     start: { line: 22, character: 4 },
                     end: { line: 25, character: 5 },
@@ -403,10 +405,12 @@ class DataProviderAttributeTest extends TestCase
             expect(givenTest(mixedFile, mixedContent, 'testAttributeProvider')).toEqual(
                 expect.objectContaining({
                     type: TestType.method,
+                    id: 'Data Provider Attribute (Tests\\DataProviderAttribute)::Attribute provider',
+                    label: 'testAttributeProvider',
                     methodName: 'testAttributeProvider',
                     annotations: {
                         dataProvider: ['attributeProvider'],
-                        dataset: ['"a"', '#0', '#1', '"b"'],
+                        dataset: ['data set "a"', 'data set #0', 'data set #1', 'data set "b"'],
                     },
                 }),
             );
@@ -1009,10 +1013,12 @@ class MultiProviderTest extends TestCase
         expect(givenTest(file, content, 'test_add')).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'Multi Provider (Tests\\MultiProvider)::Add',
+                label: 'test_add',
                 methodName: 'test_add',
                 annotations: {
                     dataProvider: ['providerA', 'providerB'],
-                    dataset: ['"one plus one"', '#0'],
+                    dataset: ['data set "one plus one"', 'data set #0'],
                 },
             }),
         );
@@ -1048,10 +1054,12 @@ class MultiAttrProviderTest extends TestCase
         expect(givenTest(file, content, 'test_add')).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'Multi Attr Provider (Tests\\MultiAttrProvider)::Add',
+                label: 'test_add',
                 methodName: 'test_add',
                 annotations: {
                     dataProvider: ['providerA', 'providerB'],
-                    dataset: ['"one plus one"', '#0'],
+                    dataset: ['data set "one plus one"', 'data set #0'],
                 },
             }),
         );
@@ -1090,10 +1098,12 @@ class DataProviderAnnotationTest extends TestCase
         expect(givenTest(yieldFile, yieldContent, 'test_generator_provider')).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'Data Provider Annotation (Tests\\DataProviderAnnotation)::Generator provider',
+                label: 'test_generator_provider',
                 methodName: 'test_generator_provider',
                 annotations: {
                     dataProvider: ['generatorProvider'],
-                    dataset: ['"yield one"', '"yield two"'],
+                    dataset: ['data set "yield one"', 'data set "yield two"'],
                 },
             }),
         );
@@ -1125,10 +1135,12 @@ class YieldNoKeyTest extends TestCase
         expect(givenTest(yieldFile, yieldContent, 'test_numeric_yield')).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'Yield No Key (Tests\\YieldNoKey)::Numeric yield',
+                label: 'test_numeric_yield',
                 methodName: 'test_numeric_yield',
                 annotations: {
                     dataProvider: ['numericProvider'],
-                    dataset: ['#0', '#1'],
+                    dataset: ['data set #0', 'data set #1'],
                 },
             }),
         );
