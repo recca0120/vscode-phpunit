@@ -95,10 +95,14 @@ export class TestTagResolver implements Resolver {
 
             if (attr.name === 'TestWith') {
                 const name = attr.args[1];
-                dataset.push(typeof name === 'string' && name ? `"${name}"` : `#${datasetIndex}`);
+                dataset.push(
+                    typeof name === 'string' && name
+                        ? `data set "${name}"`
+                        : `data set #${datasetIndex}`,
+                );
                 datasetIndex++;
             } else if (attr.name === 'TestWithJson') {
-                dataset.push(`#${datasetIndex}`);
+                dataset.push(`data set #${datasetIndex}`);
                 datasetIndex++;
             }
         }

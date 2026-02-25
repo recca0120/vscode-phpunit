@@ -977,15 +977,16 @@ it('adds numbers', function (int $a, int $b, int $expected) {
             const method = cls.children.get('tests/Unit/WithTest.php::it adds numbers') as TestItem;
             expect(method).toBeDefined();
             expect(method.children.size).toBe(2);
-
-            const child0 = method.children.get(
-                'tests/Unit/WithTest.php::it adds numbers with data set "one plus one"',
-            );
-            const child1 = method.children.get(
-                'tests/Unit/WithTest.php::it adds numbers with data set "two plus three"',
-            );
-            expect(child0).toBeDefined();
-            expect(child1).toBeDefined();
+            expect(
+                method.children.get(
+                    'tests/Unit/WithTest.php::it adds numbers with data set "dataset "one plus one""',
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    'tests/Unit/WithTest.php::it adds numbers with data set "dataset "two plus three""',
+                ),
+            ).toBeDefined();
         });
 
         it('Pest ->with() numeric', () => {
@@ -1011,15 +1012,16 @@ it('validates emails', function (string $email) {
             ) as TestItem;
             expect(method).toBeDefined();
             expect(method.children.size).toBe(2);
-
-            const child0 = method.children.get(
-                'tests/Unit/WithNumericTest.php::it validates emails with data set #0',
-            );
-            const child1 = method.children.get(
-                'tests/Unit/WithNumericTest.php::it validates emails with data set #1',
-            );
-            expect(child0).toBeDefined();
-            expect(child1).toBeDefined();
+            expect(
+                method.children.get(
+                    `tests/Unit/WithNumericTest.php::it validates emails with data set "('alice@example.com')"`,
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    `tests/Unit/WithNumericTest.php::it validates emails with data set "('bob@example.com')"`,
+                ),
+            ).toBeDefined();
         });
 
         it('Pest ->with() tuples', () => {
@@ -1045,15 +1047,16 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
             ) as TestItem;
             expect(method).toBeDefined();
             expect(method.children.size).toBe(2);
-
-            const child0 = method.children.get(
-                'tests/Unit/WithTuplesTest.php::it multiplies numbers with data set #0',
-            );
-            const child1 = method.children.get(
-                'tests/Unit/WithTuplesTest.php::it multiplies numbers with data set #1',
-            );
-            expect(child0).toBeDefined();
-            expect(child1).toBeDefined();
+            expect(
+                method.children.get(
+                    'tests/Unit/WithTuplesTest.php::it multiplies numbers with data set "(2, 3, 6)"',
+                ),
+            ).toBeDefined();
+            expect(
+                method.children.get(
+                    'tests/Unit/WithTuplesTest.php::it multiplies numbers with data set "(4, 5, 20)"',
+                ),
+            ).toBeDefined();
         });
 
         it('Pest ->with()->with() cartesian product (#21)', () => {
@@ -1079,25 +1082,24 @@ it('business closed', function (string $business, string $day) {
             ) as TestItem;
             expect(method).toBeDefined();
             expect(method.children.size).toBe(4);
-
             expect(
                 method.children.get(
-                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Office|', |'Saturday|')"`,
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "('Office') / ('Saturday')"`,
                 ),
             ).toBeDefined();
             expect(
                 method.children.get(
-                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Office|', |'Sunday|')"`,
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "('Office') / ('Sunday')"`,
                 ),
             ).toBeDefined();
             expect(
                 method.children.get(
-                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Bank|', |'Saturday|')"`,
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "('Bank') / ('Saturday')"`,
                 ),
             ).toBeDefined();
             expect(
                 method.children.get(
-                    `tests/Unit/WithCombinedTest.php::it business closed with data set "(|'Bank|', |'Sunday|')"`,
+                    `tests/Unit/WithCombinedTest.php::it business closed with data set "('Bank') / ('Sunday')"`,
                 ),
             ).toBeDefined();
         });

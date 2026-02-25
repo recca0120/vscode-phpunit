@@ -102,7 +102,9 @@ export function extractLabels(resolved: unknown): string[] | undefined {
     if (!(resolved instanceof Map)) {
         return undefined;
     }
-    return [...resolved.keys()].map((key: string) => (/^\d+$/.test(key) ? `#${key}` : `"${key}"`));
+    return [...resolved.keys()].map((key: string) =>
+        /^\d+$/.test(key) ? `data set #${key}` : `data set "${key}"`,
+    );
 }
 
 export function resolveLabels(node: AstNode, classBody?: AstNode[]): string[] {

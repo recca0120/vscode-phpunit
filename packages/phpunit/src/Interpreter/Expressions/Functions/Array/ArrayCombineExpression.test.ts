@@ -45,7 +45,11 @@ describe('ArrayCombineExpression', () => {
                 { kind: 'array_creation_expression', entries: [] } as AstNode,
                 { kind: 'array_creation_expression', entries: [] } as AstNode,
             ]);
-            expect(expression.resolve(node, mockContext)).toEqual(['"a"', '"b"', '"c"']);
+            expect(expression.resolve(node, mockContext)).toEqual([
+                'data set "a"',
+                'data set "b"',
+                'data set "c"',
+            ]);
         });
 
         it('should return indexed labels for non-string keys', () => {
@@ -61,7 +65,11 @@ describe('ArrayCombineExpression', () => {
                 { kind: 'array_creation_expression', entries: [] } as AstNode,
                 { kind: 'array_creation_expression', entries: [] } as AstNode,
             ]);
-            expect(expression.resolve(node, numericContext)).toEqual(['#0', '#1', '#2']);
+            expect(expression.resolve(node, numericContext)).toEqual([
+                'data set #0',
+                'data set #1',
+                'data set #2',
+            ]);
         });
 
         it('should return undefined with less than 2 args', () => {

@@ -469,8 +469,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testStarted name='Addition provider with data set ""foo-bar_%$"' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"' flowId='53556']`,
             {
                 event: TeamcityEvent.testStarted,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
                 name: 'Addition provider with data set ""foo-bar_%$"',
                 flowId: 53556,
             },
@@ -480,8 +479,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testFinished name='Addition provider with data set ""foo-bar_%$"' duration='0' flowId='53556']`,
             {
                 event: TeamcityEvent.testFinished,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set ""foo-bar_%$"',
                 name: 'Addition provider with data set ""foo-bar_%$"',
                 flowId: 53556,
             },
@@ -491,8 +489,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testStarted name='Addition provider with data set #0' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0' flowId='53556']`,
             {
                 event: TeamcityEvent.testStarted,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
                 name: 'Addition provider with data set #0',
                 flowId: 53556,
             },
@@ -502,8 +499,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testFinished name='Addition provider with data set #0' duration='0' flowId='53556']`,
             {
                 event: TeamcityEvent.testFinished,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #0',
                 name: 'Addition provider with data set #0',
                 flowId: 53556,
             },
@@ -513,8 +509,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testStarted name='Addition provider with data set #1' locationHint='pest_qn://Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1' flowId='53556']`,
             {
                 event: TeamcityEvent.testStarted,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
                 name: 'Addition provider with data set #1',
                 flowId: 53556,
             },
@@ -529,8 +524,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testFinished name='Addition provider with data set #1' duration='0' flowId='53556']`,
             {
                 event: TeamcityEvent.testFailed,
-                // id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
-                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider',
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Addition provider with data set #1',
                 name: 'Addition provider with data set #1',
                 flowId: 53556,
             },
@@ -559,8 +553,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testStarted name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'enunomaduro@gmail.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'enunomaduro@gmail.com|')"' flowId='11847']`,
             {
                 event: TeamcityEvent.testStarted,
-                // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
-                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 flowId: 11847,
             },
@@ -570,8 +563,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testFinished name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'enunomaduro@gmail.com|')"' duration='9' flowId='11847']`,
             {
                 event: TeamcityEvent.testFinished,
-                // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
-                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'enunomaduro@gmail.com\')"',
                 flowId: 11847,
             },
@@ -581,8 +573,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testStarted name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'other@example.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'other@example.com|')"' flowId='11847']`,
             {
                 event: TeamcityEvent.testStarted,
-                // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
-                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
                 name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
                 flowId: 11847,
             },
@@ -592,8 +583,7 @@ describe('Pest TestOutputParser Text', () => {
             `##teamcity[testFinished name='\`abc\` → \`def\` → \`ijk\` → \`lmn\` → it has emails with data set "(|'other@example.com|')"' duration='0' flowId='11847']`,
             {
                 event: TeamcityEvent.testFinished,
-                // id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
-                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails',
+                id: 'tests/Unit/ExampleTest.php::`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
                 name: '`abc` → `def` → `ijk` → `lmn` → it has emails with data set "(\'other@example.com\')"',
                 flowId: 11847,
             },
@@ -706,7 +696,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' locationHint='file://tests/Unit/ExampleTest.php' flowId='57317']`,
                 {
                     event: TeamcityEvent.testSuiteStarted,
-                    id: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails',
                     name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 57317,
@@ -717,8 +707,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testStarted name='it has emails with data set "(|'enunomaduro@gmail.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'enunomaduro@gmail.com|')"' flowId='57317']`,
                 {
                     event: TeamcityEvent.testStarted,
-                    // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
-                    id: 'tests/Unit/ExampleTest.php::it has emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                     name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 57317,
@@ -729,8 +718,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testFinished name='it has emails with data set "(|'enunomaduro@gmail.com|')"' duration='1' flowId='57317']`,
                 {
                     event: TeamcityEvent.testFinished,
-                    // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
-                    id: 'tests/Unit/ExampleTest.php::it has emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                     name: 'it has emails with data set "(\'enunomaduro@gmail.com\')"',
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 57317,
@@ -741,8 +729,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testStarted name='it has emails with data set "(|'other@example.com|')"' locationHint='pest_qn://tests/Unit/ExampleTest.php::it has emails with data set "(|'other@example.com|')"' flowId='57317']`,
                 {
                     event: TeamcityEvent.testStarted,
-                    // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
-                    id: 'tests/Unit/ExampleTest.php::it has emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
                     name: 'it has emails with data set "(\'other@example.com\')"',
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 57317,
@@ -753,8 +740,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testFinished name='it has emails with data set "(|'other@example.com|')"' duration='0' flowId='57317']`,
                 {
                     event: TeamcityEvent.testFinished,
-                    // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
-                    id: 'tests/Unit/ExampleTest.php::it has emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'other@example.com\')"',
                     name: 'it has emails with data set "(\'other@example.com\')"',
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 57317,
@@ -765,7 +751,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testSuiteFinished name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' flowId='57317']`,
                 {
                     event: TeamcityEvent.testSuiteFinished,
-                    id: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails',
                     name: 'Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails',
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 57317,
@@ -897,8 +883,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']`,
                 {
                     event: TeamcityEvent.testStarted,
-                    // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
-                    id: 'tests/Unit/ExampleTest.php::it has emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                     name: "it has emails with ('enunomaduro@gmail.com')",
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 12667,
@@ -909,8 +894,7 @@ describe('Pest TestOutputParser Text', () => {
                 `##teamcity[testFinished name='it has emails with (|'enunomaduro@gmail.com|')' duration='1' flowId='12667']`,
                 {
                     event: TeamcityEvent.testFinished,
-                    // id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
-                    id: 'tests/Unit/ExampleTest.php::it has emails',
+                    id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
                     name: "it has emails with ('enunomaduro@gmail.com')",
                     file: 'tests/Unit/ExampleTest.php',
                     flowId: 12667,

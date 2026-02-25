@@ -1,5 +1,6 @@
 import { TestIdentifier } from '../TestIdentifier/TestIdentifier';
 import { type TestDefinition, TestType } from '../types';
+import { splitDataset } from '../utils';
 
 abstract class FilterStrategy {
     constructor(protected testDefinition: TestDefinition) {}
@@ -12,7 +13,7 @@ abstract class FilterStrategy {
     }
 
     protected parseFilter(filter: string) {
-        return `--filter="${filter}(( with (data set )?.*)?)?$"`;
+        return `--filter="/${filter}(( with (data set )?.*)?)?$/"`;
     }
 
     protected joinFilters(...filters: (string | undefined)[]): string {
@@ -87,14 +88,14 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
 
 class DatasetFilterStrategy extends DescribeFilterStrategy {
     protected parseFilter(filter: string) {
-        return `--filter='${filter}$'`;
+        return `--filter='/${filter}$/'`;
     }
 
     protected getMethodNamePattern() {
         const methodName = this.testDefinition.methodName ?? '';
-        const label = this.testDefinition.label ?? '';
+        const { dataset } = splitDataset(this.testDefinition.id ?? '');
 
-        return `${TestIdentifier.generateSearchText(methodName)} ${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`;
+        return `${TestIdentifier.generateSearchText(methodName)}${dataset.replace(/[.*+?^${}()|[\]\\/']/g, '\\$&')}`;
     }
 }
 

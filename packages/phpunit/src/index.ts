@@ -2,7 +2,6 @@ export * from './Configuration';
 export * from './ProcessBuilder';
 export * from './TestCollection';
 export * from './TestCoverage';
-export { PestV2Fixer } from './TestIdentifier/PestFixer';
 export * from './TestOutput/types';
 export * from './TestParser';
 export * from './TestRunner';

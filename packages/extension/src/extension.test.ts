@@ -142,10 +142,7 @@ describe('Extension Test', () => {
 
     const phpBinary = 'php';
 
-    const filterPattern = (method: string) =>
-        new RegExp(
-            `--filter=["']?\\^\\.\\*::\\(${method}\\)\\(\\( with \\(data set \\)\\?\\.\\*\\)\\?\\)\\?\\$["']?`,
-        );
+    const filterPattern = (method: string) => new RegExp(`--filter=.*${method}.*\\$\\/`);
 
     const context = {
         subscriptions: { push: vi.fn() },
@@ -1223,8 +1220,8 @@ describe('Extension Test', () => {
 
             const expected = resolveExpected(
                 pestVersion,
-                [['3.0.0', { enqueued: 73, started: 87, passed: 30, failed: 55, end: 1 }]],
-                { enqueued: 73, started: 75, passed: 22, failed: 51, end: 1 },
+                [['3.0.0', { enqueued: 73, started: 87, passed: 81, failed: 4, end: 1 }]],
+                { enqueued: 73, started: 80, passed: 78, failed: 0, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -1237,8 +1234,8 @@ describe('Extension Test', () => {
             expectTestResultCalled(ctrl, {
                 enqueued: 1,
                 started: 1,
-                passed: 0,
-                failed: 1,
+                passed: 1,
+                failed: 0,
                 end: 1,
             });
         });

@@ -1,23 +1,27 @@
 import { type TestDefinition, TestType } from '../types';
-import { splitDataset } from '../utils';
+import { normalizePestLabel, splitDataset } from '../utils';
 
 export function resolveDatasetDefinition(
     name: string,
     parent: TestDefinition,
 ): TestDefinition | undefined {
-    const { label } = splitDataset(name);
+    const { dataset, label } = splitDataset(name);
     if (!label) {
         return undefined;
     }
 
-    return createDatasetDefinition(parent, label);
+    return createDatasetDefinition(parent, label, dataset);
 }
 
-export function createDatasetDefinition(parent: TestDefinition, label: string): TestDefinition {
+export function createDatasetDefinition(
+    parent: TestDefinition,
+    label: string,
+    dataset?: string,
+): TestDefinition {
     return {
         type: TestType.dataset,
-        id: `${parent.id} with data set ${label}`,
-        label: `with data set ${label}`,
+        id: `${parent.id}${dataset ?? ` with ${label}`}`,
+        label: `with ${normalizePestLabel(label)}`,
         classFQN: parent.classFQN,
         namespace: parent.namespace,
         className: parent.className,
