@@ -1,6 +1,6 @@
 import {
     DatasetChildResolver,
-    stripDataset,
+    parseDataset,
     type TestDefinition,
     type TestRunnerObserver,
     type TestStarted,
@@ -26,7 +26,7 @@ export class DatasetChildObserver implements TestRunnerObserver {
             return;
         }
 
-        const parentId = stripDataset(result.id);
+        const { parentId } = parseDataset(result.id);
         const parent = this.testItemById.get(parentId);
         if (!parent) {
             return;

@@ -1,7 +1,7 @@
 import type { TestStarted } from '../TestOutput';
 import { resolveDatasetDefinition } from '../TestParser';
 import type { TestDefinition } from '../types';
-import { stripDataset } from '../utils';
+import { parseDataset } from '../utils';
 import type { TestRunnerObserver } from './TestRunnerObserver';
 
 export class DatasetChildResolver implements TestRunnerObserver {
@@ -12,7 +12,7 @@ export class DatasetChildResolver implements TestRunnerObserver {
             return undefined;
         }
 
-        const parentId = stripDataset(result.id);
+        const { parentId } = parseDataset(result.id);
         const parentDef = this.definitions.get(parentId);
         if (!parentDef) {
             return undefined;

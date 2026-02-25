@@ -6,4 +6,4 @@ export * from './TestOutput/types';
 export * from './TestParser';
 export * from './TestRunner';
 export * from './types';
-export { EOL, semverGte, semverLt, stripDataset } from './utils';
+export { EOL, parseDataset, semverGte, semverLt } from './utils';

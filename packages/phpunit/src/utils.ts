@@ -183,19 +183,15 @@ export function normalizePestLabel(label: string): string {
     return label;
 }
 
-export function splitDataset(id: string): { base: string; dataset: string; label: string } {
+export function parseDataset(id: string): { parentId: string; dataset: string; label: string } {
     const match = id.match(DATASET_PATTERN);
     if (!match?.groups) {
-        return { base: id, dataset: '', label: '' };
+        return { parentId: id, dataset: '', label: '' };
     }
     const label = normalizePestLabel(match.groups.label);
     return {
-        base: match.groups.base,
+        parentId: match.groups.base,
         dataset: match.groups.dataset,
         label,
     };
-}
-
-export function stripDataset(id: string): string {
-    return splitDataset(id).base;
 }

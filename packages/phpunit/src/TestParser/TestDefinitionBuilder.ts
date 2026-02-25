@@ -1,11 +1,11 @@
 import { type TestDefinition, TestType } from '../types';
-import { normalizePestLabel, splitDataset } from '../utils';
+import { normalizePestLabel, parseDataset } from '../utils';
 
 export function resolveDatasetDefinition(
     name: string,
     parent: TestDefinition,
 ): TestDefinition | undefined {
-    const { dataset, label } = splitDataset(name);
+    const { dataset, label } = parseDataset(name);
     if (!label) {
         return undefined;
     }
