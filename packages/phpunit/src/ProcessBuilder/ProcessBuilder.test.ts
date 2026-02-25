@@ -279,6 +279,30 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
+        it('docker sh -c with pest dataset filter containing apostrophe', () => {
+            const filter =
+                `--filter='/^.*::(it has user\\'s email` +
+                ` with data set "\\(\\'other@example\\.com\\'\\)")$/'`;
+            const testFile = '%2Fpest-stub%2Ftests%2FUnit%2FExampleTest.php';
+            const builder = givenBuilder({
+                command: 'docker exec -t vscode-phpunit /bin/sh -c',
+                phpunit: 'vendor/bin/pest',
+            }).setArguments(`${filter} ${testFile}`);
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
+
+            const shCmd = args[args.length - 1];
+            // filter with ' in value should use " wrapper with escaped inner "
+            expect(shCmd).toContain(
+                `"--filter=/^.*::(it has user\\'s email` +
+                    ` with data set \\"\\(\\'other@example\\.com\\'\\)\\")$/"`,
+            );
+            expect(shCmd).toContain('/pest-stub/tests/Unit/ExampleTest.php');
+            expect(shCmd).toContain('--colors=never');
+            expect(shCmd).toContain('--teamcity');
+        });
+
         it(`should replace ${VAR_WORKSPACE_FOLDER}`, () => {
             const testFile = phpUnitProject('tests/AssertionsTest.php');
             const builder = givenBuilder({
