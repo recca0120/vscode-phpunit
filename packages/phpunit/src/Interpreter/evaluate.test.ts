@@ -98,7 +98,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"foo"', '"bar"']);
+            expect(parseDataProvider(method)).toEqual(['data set "foo"', 'data set "bar"']);
         });
 
         it('return array with numeric keys', () => {
@@ -110,7 +110,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0', '#1']);
+            expect(parseDataProvider(method)).toEqual(['data set #0', 'data set #1']);
         });
 
         it('return array with mixed keys', () => {
@@ -122,7 +122,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"first"', '#0', '"third"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "first"',
+                'data set #0',
+                'data set "third"',
+            ]);
         });
 
         it('return array with mixed keys — named first then numeric', () => {
@@ -134,7 +138,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"two plus three"', '#0']);
+            expect(parseDataProvider(method)).toEqual(['data set "two plus three"', 'data set #0']);
         });
 
         it('return array with multiple numeric entries among named keys', () => {
@@ -146,7 +150,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0', '"named"', '#1']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set #0',
+                'data set "named"',
+                'data set #1',
+            ]);
         });
 
         it('return array with named keys wrapping numeric entries', () => {
@@ -158,7 +166,12 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"a"', '#0', '#1', '"b"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "a"',
+                'data set #0',
+                'data set #1',
+                'data set "b"',
+            ]);
         });
 
         it('yield with named keys', () => {
@@ -171,7 +184,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"first"', '"second"']);
+            expect(parseDataProvider(method)).toEqual(['data set "first"', 'data set "second"']);
         });
 
         it('yield with variable key', () => {
@@ -184,7 +197,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"xxx"']);
+            expect(parseDataProvider(method)).toEqual(['data set "xxx"']);
         });
 
         it('yield with interpolated key using body variable', () => {
@@ -197,7 +210,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"case 1"']);
+            expect(parseDataProvider(method)).toEqual(['data set "case 1"']);
         });
 
         it('yield with concatenation key', () => {
@@ -210,7 +223,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello_suffix"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello_suffix"']);
         });
 
         it('yield without keys', () => {
@@ -223,7 +236,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0', '#1']);
+            expect(parseDataProvider(method)).toEqual(['data set #0', 'data set #1']);
         });
 
         it('return array_map with range as second argument', () => {
@@ -235,7 +248,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0', '#1', '#2']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set #0',
+                'data set #1',
+                'data set #2',
+            ]);
         });
 
         it('empty method body returns empty', () => {
@@ -259,7 +276,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"case 0"', '"case 1"', '"case 2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "case 0"',
+                'data set "case 1"',
+                'data set "case 2"',
+            ]);
         });
 
         it('yield inside foreach loop with array literal', () => {
@@ -273,7 +294,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"alpha"', '"beta"', '"gamma"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "alpha"',
+                'data set "beta"',
+                'data set "gamma"',
+            ]);
         });
 
         it('yield inside foreach loop with class constant', () => {
@@ -288,7 +313,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method, classBody)).toEqual(['"alpha"', '"beta"', '"gamma"']);
+            expect(parseDataProvider(method, classBody)).toEqual([
+                'data set "alpha"',
+                'data set "beta"',
+                'data set "gamma"',
+            ]);
         });
     });
 
@@ -304,7 +333,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"case 1"', '"case 2"', '"case 3"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "case 1"',
+                'data set "case 2"',
+                'data set "case 3"',
+            ]);
         });
 
         it('yield inside while loop', () => {
@@ -320,7 +353,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"item 0"', '"item 1"', '"item 2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "item 0"',
+                'data set "item 1"',
+                'data set "item 2"',
+            ]);
         });
 
         it('yield inside while loop with $i += 2', () => {
@@ -336,7 +373,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"item 0"', '"item 2"', '"item 4"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "item 0"',
+                'data set "item 2"',
+                'data set "item 4"',
+            ]);
         });
 
         it('yield inside while loop with $i -= 1', () => {
@@ -352,7 +393,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"item 3"', '"item 2"', '"item 1"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "item 3"',
+                'data set "item 2"',
+                'data set "item 1"',
+            ]);
         });
 
         it('yield inside while loop with $i += $step variable', () => {
@@ -369,7 +414,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"item 0"', '"item 3"', '"item 6"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "item 0"',
+                'data set "item 3"',
+                'data set "item 6"',
+            ]);
         });
 
         it('yield inside nested foreach loops', () => {
@@ -385,7 +434,12 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"a1"', '"a2"', '"b1"', '"b2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "a1"',
+                'data set "a2"',
+                'data set "b1"',
+                'data set "b2"',
+            ]);
         });
 
         it('yield key with string concatenation', () => {
@@ -399,7 +453,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"x_test"', '"y_test"']);
+            expect(parseDataProvider(method)).toEqual(['data set "x_test"', 'data set "y_test"']);
         });
 
         it('yield key with ternary expression', () => {
@@ -413,7 +467,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"zero"', '"positive 1"', '"positive 2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "zero"',
+                'data set "positive 1"',
+                'data set "positive 2"',
+            ]);
         });
         it('while loop with break', () => {
             const method = givenMethod(
@@ -429,7 +487,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"item 0"', '"item 1"', '"item 2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "item 0"',
+                'data set "item 1"',
+                'data set "item 2"',
+            ]);
         });
 
         it('while loop with continue', () => {
@@ -446,7 +508,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"item 1"', '"item 3"', '"item 5"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "item 1"',
+                'data set "item 3"',
+                'data set "item 5"',
+            ]);
         });
 
         it('yield key with strtoupper', () => {
@@ -460,7 +526,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"HELLO"']);
+            expect(parseDataProvider(method)).toEqual(['data set "HELLO"']);
         });
 
         it('yield key with strtolower', () => {
@@ -474,7 +540,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"world"']);
+            expect(parseDataProvider(method)).toEqual(['data set "world"']);
         });
 
         it('yield key with ucfirst', () => {
@@ -488,7 +554,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"Foo"']);
+            expect(parseDataProvider(method)).toEqual(['data set "Foo"']);
         });
 
         it('yield key with sprintf', () => {
@@ -502,7 +568,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"case_0"', '"case_1"', '"case_2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "case_0"',
+                'data set "case_1"',
+                'data set "case_2"',
+            ]);
         });
 
         it('yield key with sprintf zero-padded', () => {
@@ -516,7 +586,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"case_00"', '"case_01"', '"case_02"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "case_00"',
+                'data set "case_01"',
+                'data set "case_02"',
+            ]);
         });
 
         it('yield key with sprintf multiple args', () => {
@@ -532,7 +606,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"x-1"', '"x-2"']);
+            expect(parseDataProvider(method)).toEqual(['data set "x-1"', 'data set "x-2"']);
         });
 
         it('yield key with implode', () => {
@@ -548,7 +622,12 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"a-1"', '"a-2"', '"b-1"', '"b-2"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "a-1"',
+                'data set "a-2"',
+                'data set "b-1"',
+                'data set "b-2"',
+            ]);
         });
 
         it('yield key with join (alias of implode)', () => {
@@ -562,7 +641,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"x_test"', '"y_test"']);
+            expect(parseDataProvider(method)).toEqual(['data set "x_test"', 'data set "y_test"']);
         });
 
         it('yield key with str_repeat', () => {
@@ -574,7 +653,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"ababab"']);
+            expect(parseDataProvider(method)).toEqual(['data set "ababab"']);
         });
 
         it('yield key with substr', () => {
@@ -586,7 +665,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello"']);
         });
 
         it('yield key with trim', () => {
@@ -598,7 +677,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello"']);
         });
 
         it('yield key with rtrim', () => {
@@ -610,7 +689,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello"']);
         });
 
         it('yield key with ltrim', () => {
@@ -622,7 +701,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello"']);
         });
 
         it('yield key with lcfirst', () => {
@@ -634,7 +713,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello"']);
         });
 
         it('yield key with str_replace', () => {
@@ -646,7 +725,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"foo-bar"']);
+            expect(parseDataProvider(method)).toEqual(['data set "foo-bar"']);
         });
 
         it('yield key with sprintf %s only', () => {
@@ -658,7 +737,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"hello world"']);
+            expect(parseDataProvider(method)).toEqual(['data set "hello world"']);
         });
 
         it('yield key with implode all literals', () => {
@@ -670,7 +749,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"a,b,c"']);
+            expect(parseDataProvider(method)).toEqual(['data set "a,b,c"']);
         });
 
         it('yield key with implode empty separator', () => {
@@ -682,7 +761,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"xy"']);
+            expect(parseDataProvider(method)).toEqual(['data set "xy"']);
         });
 
         it('yield key with str_repeat zero count', () => {
@@ -694,7 +773,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['""']);
+            expect(parseDataProvider(method)).toEqual(['data set ""']);
         });
 
         it('yield key with substr without length', () => {
@@ -706,7 +785,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"world"']);
+            expect(parseDataProvider(method)).toEqual(['data set "world"']);
         });
 
         it('yield key with str_replace multiple occurrences', () => {
@@ -718,7 +797,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"a-b-c"']);
+            expect(parseDataProvider(method)).toEqual(['data set "a-b-c"']);
         });
 
         it('yield key with unknown function falls back to numeric', () => {
@@ -730,7 +809,7 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0']);
+            expect(parseDataProvider(method)).toEqual(['data set #0']);
         });
 
         it('return array_map with arrow function', () => {
@@ -742,7 +821,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0', '#1', '#2']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set #0',
+                'data set #1',
+                'data set #2',
+            ]);
         });
 
         it('return array_map with long function', () => {
@@ -754,7 +837,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['#0', '#1', '#2']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set #0',
+                'data set #1',
+                'data set #2',
+            ]);
         });
 
         it('return array_combine with keys and values', () => {
@@ -766,7 +853,11 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
                 }`,
                 'provider',
             );
-            expect(parseDataProvider(method)).toEqual(['"foo"', '"bar"', '"baz"']);
+            expect(parseDataProvider(method)).toEqual([
+                'data set "foo"',
+                'data set "bar"',
+                'data set "baz"',
+            ]);
         });
     });
 
@@ -775,24 +866,24 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
             const arrayNode = givenPestArray(
                 `<?php it('test')->with(['alice' => [1], 'bob' => [2]]);`,
             );
-            expect(parseDataProvider(arrayNode)).toEqual(['"alice"', '"bob"']);
+            expect(parseDataProvider(arrayNode)).toEqual(['data set "alice"', 'data set "bob"']);
         });
 
         it('array with numeric keys', () => {
             const arrayNode = givenPestArray(`<?php it('test')->with([[1, 2], [3, 4]]);`);
-            expect(parseDataProvider(arrayNode)).toEqual(['#0', '#1']);
+            expect(parseDataProvider(arrayNode)).toEqual(['data set #0', 'data set #1']);
         });
     });
 
     describe('Pest ->with(fn() => ...) arrow function', () => {
         it('arrow function returning range()', () => {
             const node = givenPestArray(`<?php it('test')->with(fn() => range(1, 3));`);
-            expect(parseDataProvider(node)).toEqual(['#0', '#1', '#2']);
+            expect(parseDataProvider(node)).toEqual(['data set #0', 'data set #1', 'data set #2']);
         });
 
         it('arrow function returning array literal', () => {
             const node = givenPestArray(`<?php it('test')->with(fn() => ['a', 'b']);`);
-            expect(parseDataProvider(node)).toEqual(['#0', '#1']);
+            expect(parseDataProvider(node)).toEqual(['data set #0', 'data set #1']);
         });
 
         it('arrow function returning unresolvable expression', () => {

@@ -41,7 +41,11 @@ describe('ArrayMapExpression', () => {
                 { kind: 'string', value: 'intval' } as AstNode,
                 { kind: 'array_creation_expression', entries: [] } as AstNode,
             ]);
-            expect(expression.resolve(node, mockContext)).toEqual(['#0', '#1', '#2']);
+            expect(expression.resolve(node, mockContext)).toEqual([
+                'data set #0',
+                'data set #1',
+                'data set #2',
+            ]);
         });
 
         it('should return undefined with less than 2 args', () => {

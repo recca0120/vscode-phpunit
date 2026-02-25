@@ -1,3 +1,4 @@
+import { datasetIndexed, datasetNamed } from '../../../utils';
 import type { AstNode, IfStatementNode } from '../../AstParser/AstNode';
 import type { Context } from '../Expression';
 export const MAX_ITERATIONS = 1000;
@@ -46,9 +47,9 @@ const bodyStatementHandlers: Record<string, (stmt: AstNode, ctx: LoopContext) =>
     yield_expression: (stmt, ctx) => {
         const resolvedKey = ctx.context.resolve(stmt);
         if (resolvedKey !== undefined) {
-            ctx.labels.push(`"${resolvedKey}"`);
+            ctx.labels.push(datasetNamed(String(resolvedKey)));
         } else {
-            ctx.labels.push(`#${ctx.numericIndex++}`);
+            ctx.labels.push(datasetIndexed(ctx.numericIndex++));
         }
         return undefined;
     },

@@ -1,6 +1,6 @@
 import type { TestResultIdentify } from '../TestOutput';
 import { type TestDefinition, TestType } from '../types';
-import { splitDataset } from '../utils';
+import { parseDataset } from '../utils';
 
 function lastTestdox(annotations?: Record<string, unknown>): string | undefined {
     const testdox = annotations?.testdox as string[] | undefined;
@@ -52,9 +52,9 @@ export abstract class TestIdentifier {
 
     protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>) {
         let { methodName, annotations } = testDefinition;
-        const { base, dataset } = splitDataset(methodName ?? '');
+        const { parentId, dataset } = parseDataset(methodName ?? '');
         if (dataset) {
-            methodName = base;
+            methodName = parentId;
         }
 
         const testdox = lastTestdox(annotations);

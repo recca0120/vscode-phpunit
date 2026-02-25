@@ -1,5 +1,5 @@
 import { type TestDefinition, TestType } from '../types';
-import { stripDataset, uncapitalize } from '../utils';
+import { uncapitalize } from '../utils';
 import { PestV1Fixer, PestV2Fixer } from './PestFixer';
 import { PHPUnitTestIdentifier } from './PHPUnitTestIdentifier';
 import { TestIdentifierFactory } from './TestIdentifierFactory';
@@ -38,7 +38,7 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
             const location = PestV1Fixer.fixLocationHint(
                 locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'),
             );
-            const id = stripDataset(this.normalizeMethodName(PestV2Fixer.fixId(location, name)));
+            const id = this.normalizeMethodName(PestV2Fixer.fixId(location, name));
             const file = location.split('::')[0];
 
             return { id, file };
@@ -46,11 +46,11 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
 
         const methodName = this.normalizeMethodName(matched.groups?.method ?? '');
         if (!methodName) {
-            return { id: stripDataset(name), file: '' };
+            return { id: name, file: '' };
         }
 
         const classFQN = matched.groups?.classFQN;
-        const id = stripDataset(this.uniqueId({ type: TestType.method, classFQN, methodName }));
+        const id = this.uniqueId({ type: TestType.method, classFQN, methodName });
 
         return { id, file: '' };
     }

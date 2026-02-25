@@ -4,7 +4,7 @@ import { extractLabels } from '../PhpExpression';
 
 const loopKinds = new Set(['for_statement', 'foreach_statement', 'while_statement']);
 
-export function resolveCompoundBody(body: AstNode[], context: Context): string[] | undefined {
+export function resolveCompoundBody(body: AstNode[], context: Context): unknown {
     return (
         evaluateReturnStmt(body, context) ??
         evaluateYields(body, context) ??
@@ -12,12 +12,12 @@ export function resolveCompoundBody(body: AstNode[], context: Context): string[]
     );
 }
 
-class CompoundStatementExpression implements Expression<string[]> {
+class CompoundStatementExpression implements Expression<unknown> {
     supports(node: AstNode): boolean {
         return node.kind === 'compound_statement';
     }
 
-    resolve(node: AstNode, context: Context): string[] | undefined {
+    resolve(node: AstNode, context: Context): unknown {
         const body = (node as BlockNode).children;
         if (!body) {
             return undefined;
@@ -46,25 +46,25 @@ function evaluateReturnStmt(body: AstNode[], context: Context): string[] | undef
     return extractLabels(context.resolve(value));
 }
 
-function evaluateYields(body: AstNode[], context: Context): string[] | undefined {
+function evaluateYields(body: AstNode[], context: Context): Map<string, unknown> | undefined {
     if (!body.some((s) => s.kind === 'yield_expression')) {
         return undefined;
     }
 
     const ctx = context.fork({});
-    const labels: string[] = [];
+    const map = new Map<string, unknown>();
     let numericIndex = 0;
     for (const stmt of body) {
         const result = ctx.resolve(stmt);
         if (stmt.kind === 'yield_expression') {
             if (result !== undefined) {
-                labels.push(`"${result}"`);
+                map.set(String(result), undefined);
             } else {
-                labels.push(`#${numericIndex++}`);
+                map.set(String(numericIndex++), undefined);
             }
         }
     }
-    return labels;
+    return map;
 }
 
 function evaluateLoopStmt(body: AstNode[], context: Context): string[] | undefined {

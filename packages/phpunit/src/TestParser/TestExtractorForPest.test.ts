@@ -398,10 +398,15 @@ it('adds numbers', function (int $a, int $b, int $expected) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it adds numbers',
+                label: 'it adds numbers',
                 methodName: 'it adds numbers',
-                annotations: expect.objectContaining({
-                    dataset: ['"one plus one"', '"two plus three"'],
-                }),
+                annotations: {
+                    dataset: [
+                        'data set "dataset "one plus one""',
+                        'data set "dataset "two plus three""',
+                    ],
+                },
             }),
         );
     });
@@ -418,10 +423,10 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it multiplies numbers',
+                label: 'it multiplies numbers',
                 methodName: 'it multiplies numbers',
-                annotations: expect.objectContaining({
-                    dataset: ['#0', '#1'],
-                }),
+                annotations: { dataset: ['data set "(2, 3, 6)"', 'data set "(4, 5, 20)"'] },
             }),
         );
     });
@@ -438,10 +443,12 @@ it('validates emails', function (string $email) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it validates emails',
+                label: 'it validates emails',
                 methodName: 'it validates emails',
-                annotations: expect.objectContaining({
-                    dataset: ['#0', '#1'],
-                }),
+                annotations: {
+                    dataset: [`data set "('alice@example.com')"`, `data set "('bob@example.com')"`],
+                },
             }),
         );
     });
@@ -458,15 +465,17 @@ it('business closed', function (string $business, string $day) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it business closed',
+                label: 'it business closed',
                 methodName: 'it business closed',
-                annotations: expect.objectContaining({
+                annotations: {
                     dataset: [
-                        `"(|'Office|', |'Saturday|')"`,
-                        `"(|'Office|', |'Sunday|')"`,
-                        `"(|'Bank|', |'Saturday|')"`,
-                        `"(|'Bank|', |'Sunday|')"`,
+                        `data set "('Office') / ('Saturday')"`,
+                        `data set "('Office') / ('Sunday')"`,
+                        `data set "('Bank') / ('Saturday')"`,
+                        `data set "('Bank') / ('Sunday')"`,
                     ],
-                }),
+                },
             }),
         );
     });
@@ -484,10 +493,15 @@ it('adds numbers', function (int $a, int $b, int $expected) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it adds numbers',
+                label: 'it adds numbers',
                 methodName: 'it adds numbers',
-                annotations: expect.objectContaining({
-                    dataset: ['"one plus one"', '"two plus three"'],
-                }),
+                annotations: {
+                    dataset: [
+                        'data set "dataset "one plus one""',
+                        'data set "dataset "two plus three""',
+                    ],
+                },
             }),
         );
     });
@@ -505,10 +519,10 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it multiplies numbers',
+                label: 'it multiplies numbers',
                 methodName: 'it multiplies numbers',
-                annotations: expect.objectContaining({
-                    dataset: ['#0', '#1'],
-                }),
+                annotations: {},
             }),
         );
     });
@@ -526,10 +540,10 @@ it('generates name', function (object $user) {
         expect(test).toEqual(
             expect.objectContaining({
                 type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::it generates name',
+                label: 'it generates name',
                 methodName: 'it generates name',
-                annotations: expect.objectContaining({
-                    dataset: ['#0', '#1'],
-                }),
+                annotations: {},
             }),
         );
     });

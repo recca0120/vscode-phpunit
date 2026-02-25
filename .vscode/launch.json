@@ -6,12 +6,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Extension",
+            "name": "Run Extension (PHPUnit)",
             "type": "extensionHost",
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
                 "${workspaceFolder}/packages/phpunit/tests/fixtures/phpunit-stub"
+            ],
+            "outFiles": ["${workspaceFolder}/packages/extension/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
+            "name": "Run Extension (Pest)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
+                "${workspaceFolder}/packages/phpunit/tests/fixtures/pest-stub"
             ],
             "outFiles": ["${workspaceFolder}/packages/extension/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"

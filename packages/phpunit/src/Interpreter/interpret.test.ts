@@ -136,7 +136,10 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                     }
                 }
             `);
-            expect(info.classes[0].methods[0].dataProviderLabels).toEqual(['"a"', '"b"']);
+            expect(info.classes[0].methods[0].dataProviderLabels).toEqual([
+                'data set "a"',
+                'data set "b"',
+            ]);
         });
 
         it('resolves #[DataProvider] attribute', () => {
@@ -152,7 +155,10 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                     }
                 }
             `);
-            expect(info.classes[0].methods[0].dataProviderLabels).toEqual(['"x"', '"y"']);
+            expect(info.classes[0].methods[0].dataProviderLabels).toEqual([
+                'data set "x"',
+                'data set "y"',
+            ]);
         });
 
         it('handles #[TestWith] dataset', () => {
@@ -165,7 +171,10 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                     public function testAdd() {}
                 }
             `);
-            expect(info.classes[0].methods[0].dataProviderLabels).toEqual(['"first"', '#1']);
+            expect(info.classes[0].methods[0].dataProviderLabels).toEqual([
+                'data set "first"',
+                'data set #1',
+            ]);
         });
     });
 
@@ -236,7 +245,10 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
             const info = given(`<?php
                 it('test', function ($a) {})->with(['alice' => [1], 'bob' => [2]]);
             `);
-            expect(info.pestCalls[0].datasets).toEqual(['"alice"', '"bob"']);
+            expect(info.pestCalls[0].datasets).toEqual([
+                'data set "dataset "alice""',
+                'data set "dataset "bob""',
+            ]);
         });
 
         it('collects datasets from generator ->with()', () => {
@@ -246,7 +258,10 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                     yield 'two' => [2];
                 });
             `);
-            expect(info.pestCalls[0].datasets).toEqual(['"one"', '"two"']);
+            expect(info.pestCalls[0].datasets).toEqual([
+                'data set "dataset "one""',
+                'data set "dataset "two""',
+            ]);
         });
 
         it('handles Cartesian product from multiple ->with()', () => {
@@ -256,10 +271,10 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                     ->with(['Saturday', 'Sunday']);
             `);
             expect(info.pestCalls[0].datasets).toEqual([
-                "\"(|'Office|', |'Saturday|')\"",
-                "\"(|'Office|', |'Sunday|')\"",
-                "\"(|'Bank|', |'Saturday|')\"",
-                "\"(|'Bank|', |'Sunday|')\"",
+                `data set "('Office') / ('Saturday')"`,
+                `data set "('Office') / ('Sunday')"`,
+                `data set "('Bank') / ('Saturday')"`,
+                `data set "('Bank') / ('Sunday')"`,
             ]);
         });
 

@@ -1,4 +1,5 @@
 import type { Annotations } from '../../types';
+import { datasetIndexed, datasetNamed } from '../../utils';
 import type { AstNode, MethodNode } from '../AstParser/AstNode';
 import type { PHP } from '../PHP';
 import type { Annotatable, Resolver } from '../types';
@@ -95,10 +96,14 @@ export class TestTagResolver implements Resolver {
 
             if (attr.name === 'TestWith') {
                 const name = attr.args[1];
-                dataset.push(typeof name === 'string' && name ? `"${name}"` : `#${datasetIndex}`);
+                dataset.push(
+                    typeof name === 'string' && name
+                        ? datasetNamed(name)
+                        : datasetIndexed(datasetIndex),
+                );
                 datasetIndex++;
             } else if (attr.name === 'TestWithJson') {
-                dataset.push(`#${datasetIndex}`);
+                dataset.push(datasetIndexed(datasetIndex));
                 datasetIndex++;
             }
         }

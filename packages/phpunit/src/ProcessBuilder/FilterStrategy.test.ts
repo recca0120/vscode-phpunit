@@ -86,7 +86,7 @@ describe('FilterStrategyFactory', () => {
         const filter = FilterStrategyFactory.create(testDef).getFilter();
 
         expect(filter).toBe(
-            `--filter='^.*::(testAttributeProvider with data set "two plus three")$' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
+            `--filter='/^.*::(testAttributeProvider with data set "two plus three")$/' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
         );
     });
 
@@ -103,7 +103,75 @@ describe('FilterStrategyFactory', () => {
         const filter = FilterStrategyFactory.create(testDef).getFilter();
 
         expect(filter).toBe(
-            `--filter='^.*::(testAttributeProvider with data set #0)$' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
+            `--filter='/^.*::(testAttributeProvider with data set #0)$/' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
+        );
+    });
+
+    it('pest dataset with named key uses teamcity id format', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: 'tests/Unit/DatasetTest.php::it adds numbers with data set "dataset "one plus one""',
+            label: 'with dataset "one plus one"',
+            classFQN: 'P\\Tests\\Unit\\DatasetTest',
+            methodName: 'it adds numbers',
+            file: '/path/to/tests/Unit/DatasetTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='/^.*::(it adds numbers with data set "dataset "one plus one"")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
+        );
+    });
+
+    it('pest dataset with scalar value escapes parentheses and quotes', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: `tests/Unit/DatasetTest.php::it business closed with data set "('Office') / ('Saturday')"`,
+            label: `with ('Office') / ('Saturday')`,
+            classFQN: 'P\\Tests\\Unit\\DatasetTest',
+            methodName: 'it business closed',
+            file: '/path/to/tests/Unit/DatasetTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='/^.*::(it business closed with data set "\\(\\'Office\\'\\) \\/ \\(\\'Saturday\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
+        );
+    });
+
+    it('pest dataset with @ in value escapes dot in email', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: `tests/Unit/DatasetTest.php::it validates emails with data set "('alice@example.com')"`,
+            label: `with ('alice@example.com')`,
+            classFQN: 'P\\Tests\\Unit\\DatasetTest',
+            methodName: 'it validates emails',
+            file: '/path/to/tests/Unit/DatasetTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='/^.*::(it validates emails with data set "\\(\\'alice@example\\.com\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
+        );
+    });
+
+    it('pest dataset with apostrophe in method name', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: `tests/Unit/ExampleTest.php::it has user's email with data set "('enunomaduro@gmail.com')"`,
+            label: `with ('enunomaduro@gmail.com')`,
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
+            methodName: `it has user's email`,
+            file: '/path/to/tests/Unit/ExampleTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FExampleTest.php`,
         );
     });
 });

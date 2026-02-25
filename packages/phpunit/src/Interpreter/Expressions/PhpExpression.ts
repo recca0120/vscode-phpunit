@@ -1,3 +1,4 @@
+import { datasetIndexed, datasetNamed } from '../../utils';
 import type { AstNode } from '../AstParser/AstNode';
 import type { Bindings, Context, Expression } from './Expression';
 import { arrayCombineExpression } from './Functions/Array/ArrayCombineExpression';
@@ -102,7 +103,9 @@ export function extractLabels(resolved: unknown): string[] | undefined {
     if (!(resolved instanceof Map)) {
         return undefined;
     }
-    return [...resolved.keys()].map((key: string) => (/^\d+$/.test(key) ? `#${key}` : `"${key}"`));
+    return [...resolved.keys()].map((key: string) =>
+        /^\d+$/.test(key) ? datasetIndexed(key) : datasetNamed(key),
+    );
 }
 
 export function resolveLabels(node: AstNode, classBody?: AstNode[]): string[] {
