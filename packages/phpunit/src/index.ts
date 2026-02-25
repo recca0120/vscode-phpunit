@@ -1,4 +1,5 @@
 export * from './Configuration';
+export * from './Printer';
 export * from './ProcessBuilder';
 export * from './TestCollection';
 export * from './TestCoverage';
