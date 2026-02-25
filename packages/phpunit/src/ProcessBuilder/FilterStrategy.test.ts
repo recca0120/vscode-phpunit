@@ -141,7 +141,7 @@ describe('FilterStrategyFactory', () => {
         );
     });
 
-    it('pest dataset with @ in value uses regex format to avoid prepareFilter parsing', () => {
+    it('pest dataset with @ in value escapes dot in email', () => {
         const testDef: TestDefinition = {
             type: TestType.dataset,
             id: `tests/Unit/DatasetTest.php::it validates emails with data set "('alice@example.com')"`,
@@ -155,6 +155,23 @@ describe('FilterStrategyFactory', () => {
 
         expect(filter).toBe(
             `--filter='/^.*::(it validates emails with data set "\\(\\'alice@example\\.com\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
+        );
+    });
+
+    it('pest dataset with apostrophe in method name', () => {
+        const testDef: TestDefinition = {
+            type: TestType.dataset,
+            id: `tests/Unit/ExampleTest.php::it has user's email with data set "('enunomaduro@gmail.com')"`,
+            label: `with ('enunomaduro@gmail.com')`,
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
+            methodName: `it has user's email`,
+            file: '/path/to/tests/Unit/ExampleTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter='/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FExampleTest.php`,
         );
     });
 });

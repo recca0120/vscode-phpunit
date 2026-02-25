@@ -142,7 +142,10 @@ describe('Extension Test', () => {
 
     const phpBinary = 'php';
 
-    const filterPattern = (method: string) => new RegExp(`--filter=.*${method}.*\\$\\/`);
+    const filterPattern = (method: string) =>
+        new RegExp(
+            `--filter=["']?/\\^\\.\\*::\\(${method}\\)\\(\\( with \\(data set \\)\\?\\.\\*\\)\\?\\)\\?\\$/["']?`,
+        );
 
     const context = {
         subscriptions: { push: vi.fn() },
@@ -419,7 +422,7 @@ describe('Extension Test', () => {
 
             expectSpawnCalled([
                 binary,
-                /testAttributeProvider.*two plus three/,
+                /--filter=.*testAttributeProvider with data set "two plus three"/,
                 '--colors=never',
                 '--teamcity',
                 /DataProviderAttributeTest\.php/,
@@ -1244,6 +1247,13 @@ describe('Extension Test', () => {
             const id = `tests/Unit/ExampleTest.php::it has user's email`;
             const ctrl = await activateAndRun({ include: id });
 
+            expectSpawnCalled([
+                binary,
+                filterPattern(`it has user\\'s email`),
+                '--colors=never',
+                '--teamcity',
+            ]);
+
             const expected = resolveExpected(
                 pestVersion,
                 [['3.0.0', { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }]],
@@ -1251,6 +1261,19 @@ describe('Extension Test', () => {
             );
 
             expectTestResultCalled(ctrl, expected);
+        });
+
+        it('should run dataset child with correct filter', async () => {
+            const id = `tests/Unit/ExampleTest.php::it has user's email with data set "('enunomaduro@gmail.com')"`;
+            await activateAndRun({ include: id });
+
+            expectSpawnCalled([
+                binary,
+                `--filter=/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/`,
+                '--colors=never',
+                '--teamcity',
+                /ExampleTest\.php/,
+            ]);
         });
 
         it('should run all tests with group arg', async () => {

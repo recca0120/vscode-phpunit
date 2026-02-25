@@ -11,7 +11,7 @@ export function stripQuotes(s: string): string {
     return s;
 }
 
-const TOKEN_PATTERN = /(?:[^\s"']+|"[^"]*"|'[^']*')+/g;
+const TOKEN_PATTERN = /(?:[^\s"']+|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')+/g;
 
 function tokenize(input: string): string[] {
     return [...input.matchAll(TOKEN_PATTERN)].map((m) => m[0]);

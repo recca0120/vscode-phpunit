@@ -95,7 +95,8 @@ class DatasetFilterStrategy extends DescribeFilterStrategy {
         const methodName = this.testDefinition.methodName ?? '';
         const { dataset } = splitDataset(this.testDefinition.id ?? '');
 
-        return `${TestIdentifier.generateSearchText(methodName)}${dataset.replace(/[.*+?^${}()|[\]\\/']/g, '\\$&')}`;
+        const escapedMethod = TestIdentifier.generateSearchText(methodName).replace(/'/g, "\\'");
+        return `${escapedMethod}${dataset.replace(/[.*+?^${}()|[\]\\/']/g, '\\$&')}`;
     }
 }
 
