@@ -423,7 +423,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 /--filter=.*testAttributeProvider with data set "two plus three"/,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
                 /DataProviderAttributeTest\.php/,
             ]);
@@ -434,7 +434,7 @@ describe('Extension Test', () => {
 
             await commands.executeCommand('phpunit.run-all');
 
-            expectSpawnCalled([binary, '--colors=never', '--teamcity']);
+            expectSpawnCalled([binary, '--colors=always', '--teamcity']);
         });
 
         it('should rerun previous test via rerun command', async () => {
@@ -454,7 +454,7 @@ describe('Extension Test', () => {
                 binary,
                 filterPattern('test_passed'),
                 Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -465,7 +465,7 @@ describe('Extension Test', () => {
 
             await activateAndRun();
 
-            expectSpawnCalled([binary, '--group=integration', '--colors=never', '--teamcity']);
+            expectSpawnCalled([binary, '--group=integration', '--colors=always', '--teamcity']);
 
             await configuration.update('args', []);
         });
@@ -484,7 +484,7 @@ describe('Extension Test', () => {
             );
 
             // Group tests are run by selecting specific test items, not --group flag
-            expectSpawnCalled([binary, '--colors=never', '--teamcity']);
+            expectSpawnCalled([binary, '--colors=always', '--teamcity']);
         });
 
         it('should run class with group', async () => {
@@ -494,7 +494,7 @@ describe('Extension Test', () => {
                 binary,
                 '--group=integration',
                 Uri.file(phpUnitProject('tests/AttributeTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -506,7 +506,7 @@ describe('Extension Test', () => {
                 binary,
                 filterPattern('test_passed'),
                 Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -524,7 +524,7 @@ describe('Extension Test', () => {
                 binary,
                 filterPattern('test_passed'),
                 Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -660,7 +660,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -678,7 +678,7 @@ describe('Extension Test', () => {
                 binary,
                 filterPattern('test_passed'),
                 Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -693,7 +693,7 @@ describe('Extension Test', () => {
                         '-dxdebug.start_with_request=1',
                         /-dxdebug\.client_port=\d+/,
                         binary,
-                        '--colors=never',
+                        '--colors=always',
                         '--teamcity',
                     ],
                     { XDEBUG_MODE: 'debug' },
@@ -731,7 +731,7 @@ describe('Extension Test', () => {
                             '-dxdebug.mode=coverage',
                             binary,
                             new RegExp(file),
-                            '--colors=never',
+                            '--colors=always',
                             '--teamcity',
                             '--coverage-clover',
                             new RegExp(`\\.phpunit\\.cache[/\\\\]coverage-.+-${i}\\.xml`),
@@ -787,7 +787,7 @@ describe('Extension Test', () => {
                 binary,
                 filterPattern(method),
                 Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
                 '--functional',
             ]);
@@ -910,7 +910,7 @@ describe('Extension Test', () => {
             };
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
-            expectSpawnCalled([phpUnit.binary, '--colors=never', '--teamcity']);
+            expectSpawnCalled([phpUnit.binary, '--colors=always', '--teamcity']);
         });
 
         it('should run pest test with pest-stub cwd', async () => {
@@ -939,7 +939,7 @@ describe('Extension Test', () => {
             };
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
-            expectSpawnCalled([pest.binary, '--colors=never', '--teamcity']);
+            expectSpawnCalled([pest.binary, '--colors=always', '--teamcity']);
         });
 
         it('should run pest testsuite with --testsuite flag', async () => {
@@ -963,7 +963,7 @@ describe('Extension Test', () => {
             };
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
-            expectSpawnCalled([pest.binary, '--testsuite=Unit', '--colors=never', '--teamcity']);
+            expectSpawnCalled([pest.binary, '--testsuite=Unit', '--colors=always', '--teamcity']);
         });
 
         it('should run all tests when clicking phpunit folder item', async () => {
@@ -989,7 +989,7 @@ describe('Extension Test', () => {
             };
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
-            expectSpawnCalled([phpUnit.binary, '--colors=never', '--teamcity']);
+            expectSpawnCalled([phpUnit.binary, '--colors=always', '--teamcity']);
             expect(spawn).toHaveBeenCalledTimes(1);
         });
 
@@ -1013,7 +1013,7 @@ describe('Extension Test', () => {
             };
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
-            expectSpawnCalled([pest.binary, '--colors=never', '--teamcity']);
+            expectSpawnCalled([pest.binary, '--colors=always', '--teamcity']);
             expect(spawn).toHaveBeenCalledTimes(1);
         });
     });
@@ -1250,7 +1250,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 filterPattern(`it has user\\'s email`),
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
 
@@ -1270,7 +1270,7 @@ describe('Extension Test', () => {
             expectSpawnCalled([
                 binary,
                 `--filter=/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/`,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
                 /ExampleTest\.php/,
             ]);
@@ -1282,7 +1282,7 @@ describe('Extension Test', () => {
 
             await activateAndRun();
 
-            expectSpawnCalled([binary, '--group=integration', '--colors=never', '--teamcity']);
+            expectSpawnCalled([binary, '--group=integration', '--colors=always', '--teamcity']);
 
             await configuration.update('args', []);
         });

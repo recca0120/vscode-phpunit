@@ -14,8 +14,10 @@ import { TestCollection } from '../TestCollection/TestCollection';
 import { TYPES } from '../types';
 import { DatasetObserver } from './DatasetObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
-import { OutputChannelObserver } from './OutputChannelObserver';
+import { OutputChannelWriter } from './OutputChannelWriter';
+import { PrinterObserver } from './PrinterObserver';
 import { TestResultObserver } from './TestResultObserver';
+import { TestRunWriter } from './TestRunWriter';
 
 @injectable()
 export class TestRunnerObserverFactory {
@@ -32,24 +34,27 @@ export class TestRunnerObserverFactory {
         request: TestRunRequest,
     ): TestRunnerObserver[] {
         const testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
+        const format = resolveFormat(
+            (this.configuration.get('output.preset') ?? 'collision') as
+                | 'progress'
+                | 'collision'
+                | 'pretty',
+            this.configuration.get('output.format') as Partial<PrinterFormat> | undefined,
+        );
+
         return [
             new DatasetObserver(this.testCollection, testItemById),
             new TestResultObserver(testItemById, queue, testRun),
-            new OutputChannelObserver(
-                this.outputChannel,
+            new PrinterObserver(
+                new OutputChannelWriter(this.outputChannel),
                 this.configuration,
-                new Printer(
-                    this.phpUnitXML,
-                    resolveFormat(
-                        (this.configuration.get('output.preset') ?? 'collision') as
-                            | 'progress'
-                            | 'collision'
-                            | 'pretty',
-                        this.configuration.get('output.format') as
-                            | Partial<PrinterFormat>
-                            | undefined,
-                    ),
-                ),
+                new Printer(this.phpUnitXML, format),
+                request,
+            ),
+            new PrinterObserver(
+                new TestRunWriter(testRun),
+                this.configuration,
+                new Printer(this.phpUnitXML, format),
                 request,
             ),
             new ErrorDialogObserver(this.configuration),

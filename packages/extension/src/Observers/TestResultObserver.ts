@@ -1,14 +1,13 @@
-import {
-    EOL,
-    type TestDefinition,
-    type TestFailed,
-    type TestFinished,
-    type TestIgnored,
-    type TestResult,
-    type TestRunnerObserver,
-    type TestStarted,
-    type TestSuiteFinished,
-    type TestSuiteStarted,
+import type {
+    TestDefinition,
+    TestFailed,
+    TestFinished,
+    TestIgnored,
+    TestResult,
+    TestRunnerObserver,
+    TestStarted,
+    TestSuiteFinished,
+    TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
 import {
     Location,
@@ -27,14 +26,6 @@ export class TestResultObserver implements TestRunnerObserver {
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
     ) {}
-
-    line(line: string): void {
-        this.testRun.appendOutput(`${line}${EOL}`);
-    }
-
-    error(error: string): void {
-        this.testRun.appendOutput(error);
-    }
 
     abort(): void {
         for (const testItem of this.queue.values()) {

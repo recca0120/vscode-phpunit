@@ -60,7 +60,7 @@ describe('Printer output buffer', () => {
         expect(output).toEqual('🟨 array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
     });
 
-    it('should strip ANSI codes from dump output', () => {
+    it('should preserve ANSI codes in dump output', () => {
         printer.testStarted({
             event: TeamcityEvent.testStarted,
             name: 'test_dump',
@@ -70,15 +70,15 @@ describe('Printer output buffer', () => {
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
         // Real ANSI output from dd(['test' => 'foo']) in issue #322
-        printer.append(
+        const ansiInput =
             '\u001B[0;38;5;208m\u001B[38;5;38marray:1\u001B[0;38;5;208m [\u001B[m\n' +
-                '  \u001B[0;38;5;208m"\u001B[38;5;113mtest\u001B[0;38;5;208m" => "\u001B[1;38;5;113mfoo\u001B[0;38;5;208m"\u001B[m\n' +
-                '\u001B[0;38;5;208m]\u001B[m',
-        );
+            '  \u001B[0;38;5;208m"\u001B[38;5;113mtest\u001B[0;38;5;208m" => "\u001B[1;38;5;113mfoo\u001B[0;38;5;208m"\u001B[m\n' +
+            '\u001B[0;38;5;208m]\u001B[m';
+        printer.append(ansiInput);
 
         const output = printer.printedOutput();
 
-        expect(output).toEqual('🟨 array:1 [\n  "test" => "foo"\n]');
+        expect(output).toEqual(`🟨 ${ansiInput}`);
     });
 
     it('testSuiteFinished', () => {

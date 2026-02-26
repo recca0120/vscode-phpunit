@@ -1,4 +1,3 @@
-import stripAnsi from 'strip-ansi';
 import type { PHPUnitXML } from '../Configuration/PHPUnitXML';
 import {
     TeamcityEvent,
@@ -231,7 +230,7 @@ export class Printer {
     }
 
     append(line: string) {
-        this.outputBuffer.append(stripAnsi(line));
+        this.outputBuffer.append(line);
     }
 
     private shouldSkipSuite(id?: string): boolean {

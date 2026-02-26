@@ -4,7 +4,7 @@ import type { OutputChannel, TestItem, TestRun, TestRunRequest } from 'vscode';
 import type { Configuration } from '../Configuration';
 import type { TestCollection } from '../TestCollection/TestCollection';
 import { DatasetObserver } from './DatasetObserver';
-import { OutputChannelObserver } from './OutputChannelObserver';
+import { PrinterObserver } from './PrinterObserver';
 import { TestResultObserver } from './TestResultObserver';
 import { TestRunnerObserverFactory } from './TestRunnerObserverFactory';
 
@@ -33,17 +33,17 @@ describe('TestRunnerObserverFactory', () => {
         );
     });
 
-    it('should create observers including DatasetObserver, TestResultObserver, and OutputChannelObserver', () => {
+    it('should create observers including DatasetObserver, TestResultObserver, and PrinterObserver', () => {
         const queue = new Map<TestDefinition, TestItem>();
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const request = { continuous: false } as TestRunRequest;
 
         const observers = factory.create(queue, testRun, request);
 
-        expect(observers.length).toBe(4);
+        expect(observers.length).toBe(5);
         expect(observers.some((o) => o instanceof DatasetObserver)).toBe(true);
         expect(observers.some((o) => o instanceof TestResultObserver)).toBe(true);
-        expect(observers.some((o) => o instanceof OutputChannelObserver)).toBe(true);
+        expect(observers.some((o) => o instanceof PrinterObserver)).toBe(true);
     });
 
     it('should create new instances for each call', () => {
@@ -54,8 +54,8 @@ describe('TestRunnerObserverFactory', () => {
         const observers1 = factory.create(queue, testRun, request);
         const observers2 = factory.create(queue, testRun, request);
 
-        const output1 = observers1.find((o) => o instanceof OutputChannelObserver);
-        const output2 = observers2.find((o) => o instanceof OutputChannelObserver);
+        const output1 = observers1.find((o) => o instanceof PrinterObserver);
+        const output2 = observers2.find((o) => o instanceof PrinterObserver);
 
         expect(output1).not.toBe(output2);
     });
