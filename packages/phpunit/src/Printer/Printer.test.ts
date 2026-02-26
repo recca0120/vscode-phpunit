@@ -753,6 +753,42 @@ describe('Printer suite filtering', () => {
 
         expect(output).toBeUndefined();
     });
+
+    it('testSuiteStarted returns undefined when no file (config path)', () => {
+        const output = printer.testSuiteStarted({
+            event: TeamcityEvent.testSuiteStarted,
+            name: '/path/to/phpunit.xml',
+            flowId: 1,
+            id: '/path/to/phpunit.xml',
+            file: '',
+        } as TestSuiteStarted);
+
+        expect(output).toBeUndefined();
+    });
+
+    it('testSuiteStarted returns undefined when no file (testsuite name)', () => {
+        const output = printer.testSuiteStarted({
+            event: TeamcityEvent.testSuiteStarted,
+            name: 'Unit',
+            flowId: 1,
+            id: 'Unit',
+            file: '',
+        } as TestSuiteStarted);
+
+        expect(output).toBeUndefined();
+    });
+
+    it('testSuiteFinished returns undefined when no file (testsuite name)', () => {
+        const output = printer.testSuiteFinished({
+            event: TeamcityEvent.testSuiteFinished,
+            name: 'Unit',
+            flowId: 1,
+            id: 'Unit',
+            file: '',
+        } as TestSuiteFinished);
+
+        expect(output).toBeUndefined();
+    });
 });
 
 describe('Printer inline error display', () => {

@@ -111,7 +111,7 @@ export class Printer {
     }
 
     testSuiteStarted(result: TestSuiteStarted): string | undefined {
-        if (this.shouldSkipSuite(result.id) || this.format.suiteStarted === false) {
+        if (this.shouldSkipSuite(result.id, result.file) || this.format.suiteStarted === false) {
             return undefined;
         }
 
@@ -168,7 +168,7 @@ export class Printer {
     }
 
     testSuiteFinished(result: TestSuiteFinished): string | undefined {
-        if (this.shouldSkipSuite(result.id) || this.format.suiteFinished === false) {
+        if (this.shouldSkipSuite(result.id, result.file) || this.format.suiteFinished === false) {
             return undefined;
         }
 
@@ -271,8 +271,8 @@ export class Printer {
         this.outputBuffer.append(line);
     }
 
-    private shouldSkipSuite(id?: string): boolean {
-        return !id || id.includes('::');
+    private shouldSkipSuite(id?: string, file?: string): boolean {
+        return !id || id.includes('::') || (!file && !id.includes('\\'));
     }
 
     private formatTestName(result: TestFinished | TestFailed | TestIgnored): string {
