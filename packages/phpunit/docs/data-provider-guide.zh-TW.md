@@ -69,7 +69,7 @@ Teamcity 補漏元件：
 |------|------|
 | `resolveDatasetDefinition` | 解析 Teamcity 輸出中的 `#N` 和 `"name"` 格式 |
 | `isDatasetResult` | TestResultObserver 用來分流 dataset vs 非 dataset 結果 |
-| `DatasetChildObserver` | 執行後從 Teamcity 輸出動態建立 dataset 子 TestItem |
+| `DatasetObserver` | 執行後從 Teamcity 輸出動態建立 dataset 子 TestItem |
 | `createDatasetDefinition` | 統一建構 dataset TestDefinition |
 
 ---
@@ -637,14 +637,14 @@ testStarted name='it business closed with data set "(|'School|', |'Sunday|')"'
 |------|:----:|------|
 | `resolveDatasetDefinition` | ✅ | 解析 Teamcity 輸出中的 `with data set #N` 和 `with data set "name"` 格式 |
 | `isDatasetResult` | ✅ | TestResultObserver 用來分流 dataset vs 非 dataset 結果 |
-| `DatasetChildObserver` | ✅ | 執行後從 Teamcity 輸出動態建立 dataset 子 TestItem 節點 |
+| `DatasetObserver` | ✅ | 執行後從 Teamcity 輸出動態建立 dataset 子 TestItem 節點 |
 | `createDatasetDefinition` | ✅ | 統一建構 dataset TestDefinition，確保格式一致 |
 
 ### 補漏流程
 
 1. 使用者開啟檔案 → AST 靜態解析產出已知的 dataset 子節點
 2. 使用者執行測試 → Teamcity 輸出中出現 `with data set` 的 test name
-3. `isDatasetResult` 判斷為 dataset 結果 → `DatasetChildObserver` 動態建立缺少的子節點
+3. `isDatasetResult` 判斷為 dataset 結果 → `DatasetObserver` 動態建立缺少的子節點
 4. 下次開啟檔案時仍走 AST 靜態解析（Teamcity 補漏不持久化，每次執行後重建）
 
 ---

@@ -72,7 +72,7 @@ export class TestFileDiscovery {
         );
 
         // Remove files that no longer exist
-        for (const file of this.testCollection.getTrackedFiles()) {
+        for (const file of this.testCollection.gatherFiles()) {
             if (!newFiles.has(file.uri.toString())) {
                 this.testCollection.delete(file.uri);
             }

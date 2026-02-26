@@ -69,7 +69,7 @@ Teamcity fallback components:
 |-----------|------------|
 | `resolveDatasetDefinition` | Parses `#N` and `"name"` formats from Teamcity output |
 | `isDatasetResult` | Used by TestResultObserver to distinguish dataset vs non-dataset results |
-| `DatasetChildObserver` | Dynamically creates dataset child TestItem nodes from Teamcity output after execution |
+| `DatasetObserver` | Dynamically creates dataset child TestItem nodes from Teamcity output after execution |
 | `createDatasetDefinition` | Unified constructor for dataset TestDefinition |
 
 ---
@@ -637,14 +637,14 @@ All patterns that AST cannot statically resolve are dynamically populated with d
 |-----------|:------:|------------|
 | `resolveDatasetDefinition` | ✅ | Parses `with data set #N` and `with data set "name"` formats from Teamcity output |
 | `isDatasetResult` | ✅ | Used by TestResultObserver to distinguish dataset vs non-dataset results |
-| `DatasetChildObserver` | ✅ | Dynamically creates dataset child TestItem nodes from Teamcity output after execution |
+| `DatasetObserver` | ✅ | Dynamically creates dataset child TestItem nodes from Teamcity output after execution |
 | `createDatasetDefinition` | ✅ | Unified constructor for dataset TestDefinition, ensures consistent format |
 
 ### Fallback Flow
 
 1. User opens file → AST static analysis produces known dataset child nodes
 2. User runs tests → Teamcity output contains test names with `with data set`
-3. `isDatasetResult` identifies dataset results → `DatasetChildObserver` dynamically creates missing child nodes
+3. `isDatasetResult` identifies dataset results → `DatasetObserver` dynamically creates missing child nodes
 4. Next time the file is opened, AST static analysis runs again (Teamcity fallback is not persisted, rebuilt after each execution)
 
 ---

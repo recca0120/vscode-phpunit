@@ -1,6 +1,6 @@
-import { defineConfig } from '@vscode/test-cli';
 import { execSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
+import { defineConfig } from '@vscode/test-cli';
 
 const fixturesPath = resolve(import.meta.dirname, '../phpunit/tests/fixtures');
 const mochaOpts = { ui: 'tdd', timeout: 30_000 };
@@ -13,13 +13,15 @@ function detectPhpUnitStubs() {
         const binary = `v${v}/vendor/bin/phpunit`;
         try {
             execSync(`php ${binary} --version`, { cwd: root, timeout: 10000 });
-            return [{
-                name: `v${v}`,
-                type: 'phpunit',
-                binary,
-                args: ['-c', join(root, `v${v}/phpunit.xml`)],
-                launchArgs: [root],
-            }];
+            return [
+                {
+                    name: `v${v}`,
+                    type: 'phpunit',
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`)],
+                    launchArgs: [root],
+                },
+            ];
         } catch {
             return [];
         }
@@ -37,13 +39,15 @@ function detectPestStubs() {
                 cwd: root,
                 timeout: 10000,
             });
-            return [{
-                name: `v${v}`,
-                type: 'pest',
-                binary,
-                args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
-                launchArgs: [root],
-            }];
+            return [
+                {
+                    name: `v${v}`,
+                    type: 'pest',
+                    binary,
+                    args: ['-c', join(root, `v${v}/phpunit.xml`), '--test-directory=../tests'],
+                    launchArgs: [root],
+                },
+            ];
         } catch {
             return [];
         }

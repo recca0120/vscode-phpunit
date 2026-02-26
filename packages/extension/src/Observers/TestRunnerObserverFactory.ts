@@ -9,7 +9,7 @@ import type { OutputChannel, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { Configuration } from '../Configuration';
 import { TestCollection } from '../TestCollection/TestCollection';
 import { TYPES } from '../types';
-import { DatasetChildObserver } from './DatasetChildObserver';
+import { DatasetObserver } from './DatasetObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
 import { OutputChannelObserver } from './OutputChannelObserver';
 import { CollisionPrinter } from './Printers';
@@ -31,7 +31,7 @@ export class TestRunnerObserverFactory {
     ): TestRunnerObserver[] {
         const testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
         return [
-            new DatasetChildObserver(this.testCollection, testItemById),
+            new DatasetObserver(this.testCollection, testItemById),
             new TestResultObserver(testItemById, queue, testRun),
             new OutputChannelObserver(
                 this.outputChannel,

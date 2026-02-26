@@ -2,7 +2,10 @@ import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import type { TestStarted } from '../TestOutput';
+import { resolveDatasetDefinition } from '../TestParser';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { parseDataset } from '../utils';
 
 export interface File<T> {
     testsuite: string;
@@ -25,7 +28,7 @@ export class TestCollection {
     private classHierarchy = new ClassHierarchy();
 
     constructor(
-        private phpUnitXML: PHPUnitXML,
+        protected phpUnitXML: PHPUnitXML,
         private testParser: TestParser,
     ) {}
 
@@ -61,15 +64,7 @@ export class TestCollection {
         return !!this.findFile(uri);
     }
 
-    getDefinition(id: string): TestDefinition | undefined {
-        return this.definitionIndex.get(id);
-    }
-
-    hasDefinition(id: string): boolean {
-        return this.getDefinition(id) !== undefined;
-    }
-
-    setDefinition(id: string, def: TestDefinition): void {
+    private setDefinition(id: string, def: TestDefinition): void {
         if (!def.file) {
             return;
         }
@@ -84,14 +79,54 @@ export class TestCollection {
         this.definitionIndex.set(id, def);
     }
 
-    delete(uri: URI): File<TestDefinition> | undefined {
-        const file = this.findFile(uri);
-        if (!file) {
+    resolveDataset(
+        result: TestStarted,
+    ): { parentId: string; childDef: TestDefinition } | undefined {
+        if (!result.id) {
             return undefined;
         }
 
-        this.removeTests(file.testsuite, file.uri);
-        return file;
+        const { parentId } = parseDataset(result.id);
+        const parentDef = this.definitionIndex.get(parentId);
+        if (!parentDef) {
+            return undefined;
+        }
+
+        const childDef = resolveDatasetDefinition(result.name, parentDef);
+        if (!childDef || this.definitionIndex.has(childDef.id)) {
+            return undefined;
+        }
+
+        this.setDefinition(childDef.id, childDef);
+        return { parentId, childDef };
+    }
+
+    async add(uri: URI) {
+        if (this.has(uri)) {
+            return;
+        }
+        await this.change(uri);
+    }
+
+    delete(uri: URI): File<TestDefinition> | undefined {
+        const file = this.findFile(uri);
+        if (file) {
+            this.removeTests(file.testsuite, file.uri);
+            return file;
+        }
+
+        const folderPrefix = uri.toString();
+        const filesToDelete: URI[] = [];
+        for (const tracked of this.gatherFiles()) {
+            if (tracked.uri.toString().startsWith(folderPrefix)) {
+                filesToDelete.push(tracked.uri);
+            }
+        }
+        for (const fileUri of filesToDelete) {
+            this.delete(fileUri);
+        }
+
+        return undefined;
     }
 
     reset(): void {

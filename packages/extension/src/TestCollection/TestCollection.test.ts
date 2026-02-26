@@ -1,10 +1,10 @@
 import {
     ChainAstParser,
-    createDatasetDefinition,
     PHPUnitXML,
     PhpParserAstParser,
-    type TestDefinition,
+    TeamcityEvent,
     TestParser,
+    type TestStarted,
     TestType,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
@@ -1491,7 +1491,15 @@ class NoDatasetTest extends TestCase
         });
     });
 
-    describe('addDatasetChild', () => {
+    describe('resolveDatasetChild', () => {
+        const makeTestStarted = (id: string, name: string): TestStarted =>
+            ({
+                event: TeamcityEvent.testStarted,
+                name,
+                id,
+                flowId: 1,
+            }) as unknown as TestStarted;
+
         it('creates dataset child with correct TestDefinition in index', async () => {
             const collection = givenTestCollection(`
                 <testsuites>
@@ -1509,9 +1517,9 @@ class NoDatasetTest extends TestCase
             ) as TestItem;
             expect(methodItem).toBeDefined();
 
-            const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
-            const childDef = createDatasetDefinition(parentDef, 'with data set #0');
-            const childItem = collection.addDatasetChild(methodItem.id, childDef);
+            const childItem = collection.resolveDatasetChild(
+                makeTestStarted(methodItem.id, 'addition_provider with data set #0'),
+            );
             expect(childItem).toBeDefined();
 
             // child is in parent.children
@@ -1521,13 +1529,12 @@ class NoDatasetTest extends TestCase
             const storedDef = collection.getTestDefinition(childItem as TestItem);
             expect(storedDef).toBeDefined();
             expect(storedDef?.type).toBe(TestType.dataset);
-            expect(storedDef?.methodName).toBe(parentDef.methodName);
 
             // child id matches convention
             expect(childItem?.id).toContain('with data set #0');
         });
 
-        it('returns existing child on repeated calls', async () => {
+        it('skips on repeated calls when child already exists', async () => {
             const collection = givenTestCollection(`
                 <testsuites>
                     <testsuite name="default">
@@ -1543,12 +1550,15 @@ class NoDatasetTest extends TestCase
                 'Assertions (Tests\\Assertions)::Addition provider',
             ) as TestItem;
 
-            const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
-            const childDef = createDatasetDefinition(parentDef, 'with data set #0');
-            const child1 = collection.addDatasetChild(methodItem.id, childDef);
-            const child2 = collection.addDatasetChild(methodItem.id, childDef);
+            const result = makeTestStarted(methodItem.id, 'addition_provider with data set #0');
+            const child1 = collection.resolveDatasetChild(result);
+            expect(child1).toBeDefined();
 
-            expect(child1).toBe(child2);
+            const child2 = collection.resolveDatasetChild(result);
+            expect(child2).toBeUndefined();
+
+            // child still exists in parent
+            expect(methodItem.children.get(child1?.id ?? '')).toBe(child1);
         });
     });
 

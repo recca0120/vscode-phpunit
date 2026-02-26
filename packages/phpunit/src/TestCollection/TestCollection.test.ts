@@ -5,6 +5,7 @@ import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParser
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
 import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser, TestType } from '../index';
+import { TeamcityEvent, type TestStarted } from '../TestOutput';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
 import { TestCollection } from './TestCollection';
 
@@ -295,7 +296,7 @@ describe('TestCollection', () => {
         expect(collection.has(abstractFile)).toBeFalsy();
     });
 
-    it('getDefinition returns matching definition by id', async () => {
+    it('delete should clear definitionIndex so resolveDataset works again', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -306,75 +307,26 @@ describe('TestCollection', () => {
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
         await collection.change(uri);
 
-        const allTests = collection.get(uri) ?? [];
-        const target = allTests[0];
+        const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
+        const started = makeTestStarted(
+            `${parentId} with data set #0`,
+            'addition_provider with data set #0',
+        );
 
-        expect(collection.getDefinition(target.id)).toEqual(target);
-        expect(collection.getDefinition('non-existent-id')).toBeUndefined();
-    });
+        // resolve once to populate index
+        expect(collection.resolveDataset(started)).toBeDefined();
+        // second call returns undefined (already exists)
+        expect(collection.resolveDataset(started)).toBeUndefined();
 
-    it('hasDefinition returns true when definition exists', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite>
-            </testsuites>`);
-
-        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
-
-        const allTests = collection.get(uri) ?? [];
-        const target = allTests[0];
-
-        expect(collection.hasDefinition(target.id)).toBe(true);
-        expect(collection.hasDefinition('non-existent-id')).toBe(false);
-    });
-
-    it('setDefinition appends definition to the correct file', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite>
-            </testsuites>`);
-
-        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
-
-        const newDef: TestDefinition = {
-            type: TestType.method,
-            id: 'dataset-def-001',
-            label: 'dataset case',
-            file: uri.fsPath,
-        };
-
-        collection.setDefinition(newDef.id, newDef);
-
-        expect(collection.getDefinition('dataset-def-001')).toEqual(newDef);
-        expect(collection.get(uri)).toContainEqual(newDef);
-    });
-
-    it('delete should clear definitionIndex for deleted file', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite>
-            </testsuites>`);
-
-        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
-
-        const allTests = collection.get(uri) ?? [];
-        const targetId = allTests[0].id;
-        expect(collection.hasDefinition(targetId)).toBe(true);
-
+        // delete clears index, re-parse restores parent definitions
         collection.delete(uri);
-        expect(collection.hasDefinition(targetId)).toBe(false);
+        await collection.change(uri);
+
+        // now resolveDataset should work again
+        expect(collection.resolveDataset(started)).toBeDefined();
     });
 
-    it('re-change should update definitionIndex with new definitions', async () => {
+    it('reset should clear definitionIndex so resolveDataset works again', async () => {
         const collection = givenTestCollection(`
             <testsuites>
                 <testsuite name="default">
@@ -385,39 +337,19 @@ describe('TestCollection', () => {
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
         await collection.change(uri);
 
-        const firstTests = collection.get(uri) ?? [];
-        const firstIds = firstTests.map((t) => t.id);
-        for (const id of firstIds) {
-            expect(collection.hasDefinition(id)).toBe(true);
-        }
+        const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
+        const started = makeTestStarted(
+            `${parentId} with data set #0`,
+            'addition_provider with data set #0',
+        );
 
-        // re-change same file — definitions should be refreshed
-        await collection.change(uri);
-
-        const secondTests = collection.get(uri) ?? [];
-        const secondIds = secondTests.map((t) => t.id);
-        for (const id of secondIds) {
-            expect(collection.hasDefinition(id)).toBe(true);
-        }
-    });
-
-    it('reset should clear definitionIndex', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite>
-            </testsuites>`);
-
-        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
-
-        const allTests = collection.get(uri) ?? [];
-        const targetId = allTests[0].id;
-        expect(collection.hasDefinition(targetId)).toBe(true);
+        expect(collection.resolveDataset(started)).toBeDefined();
+        expect(collection.resolveDataset(started)).toBeUndefined();
 
         collection.reset();
-        expect(collection.hasDefinition(targetId)).toBe(false);
+        await collection.change(uri);
+
+        expect(collection.resolveDataset(started)).toBeDefined();
     });
 
     it('reset', async () => {
@@ -442,5 +374,98 @@ describe('TestCollection', () => {
 
         collection.reset();
         expect(collection.size).toEqual(0);
+    });
+
+    const makeTestStarted = (id: string, name: string): TestStarted => ({
+        event: TeamcityEvent.testStarted,
+        name,
+        id,
+        file: '',
+        locationHint: '',
+        flowId: 1,
+    });
+
+    describe('resolveDataset', () => {
+        it('should resolve missing dataset child', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
+            const result = collection.resolveDataset(
+                makeTestStarted(
+                    `${parentId} with data set #0`,
+                    'addition_provider with data set #0',
+                ),
+            );
+
+            expect(result).toBeDefined();
+            expect(result?.parentId).toBe(parentId);
+            expect(result?.childDef.type).toBe(TestType.dataset);
+            expect(result?.childDef.id).toBe(`${parentId} with data set #0`);
+        });
+
+        it('should return undefined when already exists', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
+            collection.resolveDataset(
+                makeTestStarted(
+                    `${parentId} with data set #0`,
+                    'addition_provider with data set #0',
+                ),
+            );
+            const result = collection.resolveDataset(
+                makeTestStarted(
+                    `${parentId} with data set #0`,
+                    'addition_provider with data set #0',
+                ),
+            );
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined when parent not found', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const result = collection.resolveDataset(
+                makeTestStarted('NonExistent::method with data set #0', 'method with data set #0'),
+            );
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined for non-dataset test', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
+            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+
+            const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
+            const result = collection.resolveDataset(
+                makeTestStarted(parentId, 'addition_provider'),
+            );
+
+            expect(result).toBeUndefined();
+        });
     });
 });

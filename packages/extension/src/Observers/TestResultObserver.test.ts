@@ -100,11 +100,11 @@ describe('TestResultObserver', () => {
         expect(testRun.started).toHaveBeenCalledWith(datasetItem);
     });
 
-    it('should match dataset child added dynamically by DatasetChildObserver', () => {
+    it('should match dataset child added dynamically by DatasetObserver', () => {
         const testItemById = buildTestItemById([testItem]);
         const dynamicObserver = new TestResultObserver(testItemById, queue, testRun);
 
-        // Simulate DatasetChildObserver adding a child to the shared map
+        // Simulate DatasetObserver adding a child to the shared map
         const datasetItem = ctrl.createTestItem(
             'Tests\\ExampleTest::test_example with data set #0',
             'with data set #0',

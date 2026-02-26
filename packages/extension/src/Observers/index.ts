@@ -1,4 +1,4 @@
-export * from './DatasetChildObserver';
+export * from './DatasetObserver';
 export * from './ErrorDialogObserver';
 export * from './OutputChannelObserver';
 export * from './Printers';
