@@ -5,7 +5,7 @@ export interface IconSet {
     ignored: [icon: string, label: string];
 }
 
-export type ErrorCategory = 'error' | 'failure' | 'risky' | 'skipped' | 'incomplete';
+export type ErrorCategory = 'error' | 'failure' | 'risky';
 
 export interface ErrorGroupCategory {
     type: ErrorCategory;

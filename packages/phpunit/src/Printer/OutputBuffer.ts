@@ -17,11 +17,10 @@ export class OutputBuffer {
         this.store.set(this.current, `${existing}${text}${EOL}`);
     }
 
-    get(name: string) {
+    take(name: string) {
         const text = this.store.get(name);
-        if (text) {
-            this.store.delete(name);
-        }
+        this.store.delete(name);
+
         return text?.trim();
     }
 

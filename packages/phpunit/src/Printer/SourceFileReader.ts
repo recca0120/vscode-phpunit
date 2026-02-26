@@ -10,7 +10,7 @@ export function readSourceSnippet(filePath: string, targetLine: number): string[
         const position = Math.max(0, targetLine - 5);
         const lines = data
             .split(/\r\n|\n/)
-            .splice(position, 10)
+            .slice(position, position + 10)
             .map((line, index) => {
                 const currentPosition = position + index + 1;
                 const prefix = targetLine === currentPosition ? '➜ ' : '  ';

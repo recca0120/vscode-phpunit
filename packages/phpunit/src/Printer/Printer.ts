@@ -151,19 +151,8 @@ export class Printer {
     }
 
     testIgnored(result: TestIgnored): string | undefined {
-        const statusDot = 'S';
-        const [icon, label] = this.getIcon(result.event);
-        const name = this.formatTestName(result);
-
-        const text = this.interpolate(this.format.ignored, {
-            status_dot: statusDot,
-            icon,
-            label,
-            name,
-            id: result.id,
-            message: result.message,
-            duration: String(result.duration),
-        });
+        const vars = { ...this.resultVars(result, 'S'), message: result.message };
+        const text = this.interpolate(this.format.ignored, vars);
 
         return this.isDotMode ? text : this.line(text);
     }
@@ -177,47 +166,44 @@ export class Printer {
     }
 
     timeAndMemory(result: TestDuration) {
-        const errors = this.end();
-        this.outputBuffer.setCurrent(undefined);
-        const text = result.text.trim();
-
-        if (this.format.duration === false) {
-            return errors;
-        }
-
-        const formatted = this.line(
-            this.interpolate(this.format.duration, {
-                text,
-                time: result.time,
-                memory: result.memory,
-            }),
-        );
-
-        return errors ? errors + formatted : formatted;
+        return this.formatWithErrors(this.format.duration, {
+            text: result.text.trim(),
+            time: result.time,
+            memory: result.memory,
+        });
     }
 
     testResultSummary(result: TestResultSummary) {
+        const numericKeys = [
+            'tests',
+            'assertions',
+            'errors',
+            'failures',
+            'warnings',
+            'skipped',
+            'incomplete',
+            'risky',
+        ] as const;
+        const vars: Record<string, string | undefined> = { text: result.text.trim() };
+        for (const key of numericKeys) {
+            vars[key] = result[key] != null ? String(result[key]) : undefined;
+        }
+
+        return this.formatWithErrors(this.format.resultSummary, vars);
+    }
+
+    private formatWithErrors(
+        template: string | false,
+        vars: Record<string, string | undefined>,
+    ): string | undefined {
         const errors = this.end();
         this.outputBuffer.setCurrent(undefined);
-        const text = result.text.trim();
 
-        if (this.format.resultSummary === false) {
+        if (template === false) {
             return errors;
         }
 
-        const formatted = this.line(
-            this.interpolate(this.format.resultSummary, {
-                text,
-                tests: result.tests != null ? String(result.tests) : undefined,
-                assertions: result.assertions != null ? String(result.assertions) : undefined,
-                errors: result.errors != null ? String(result.errors) : undefined,
-                failures: result.failures != null ? String(result.failures) : undefined,
-                warnings: result.warnings != null ? String(result.warnings) : undefined,
-                skipped: result.skipped != null ? String(result.skipped) : undefined,
-                incomplete: result.incomplete != null ? String(result.incomplete) : undefined,
-                risky: result.risky != null ? String(result.risky) : undefined,
-            }),
-        );
+        const formatted = this.line(this.interpolate(template, vars));
 
         return errors ? errors + formatted : formatted;
     }
@@ -261,7 +247,7 @@ export class Printer {
         const message = 'message' in result ? (result as { message: string }).message : '';
         const matched = message.match(PRINTED_OUTPUT_PATTERN);
 
-        return matched ? matched.groups?.output.trim() : this.outputBuffer.get(name);
+        return matched ? matched.groups?.output.trim() : this.outputBuffer.take(name);
     }
 
     private formatFlat(): string {
