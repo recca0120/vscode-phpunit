@@ -10,217 +10,180 @@ import {
     TestRunner,
 } from '@vscode-phpunit/phpunit';
 import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
-import { beforeEach, describe, expect, it, type Mock } from 'vitest';
-import type { OutputChannel } from 'vscode';
-import * as vscode from 'vscode';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TestRun } from 'vscode';
 import { PrinterObserver } from './PrinterObserver';
-import { OutputChannelWriter } from './Writers';
+import { OutputChannelWriter, TestRunWriter } from './Writers';
 
-describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitVersion)', ({
-    root,
-    phpUnitVersion,
-    binary,
-    args: stubArgs,
-}) => {
-    let testRunner: TestRunner;
-    let outputChannel: OutputChannel;
-    let configuration: Configuration;
+const writers = [
+    {
+        writerName: 'OutputChannelWriter',
+        createWriter: () => {
+            const spy = vi.fn();
+            const outputChannel = { append: spy, appendLine: vi.fn() };
+            return { writer: new OutputChannelWriter(outputChannel), spy };
+        },
+    },
+    {
+        writerName: 'TestRunWriter',
+        createWriter: () => {
+            const spy = vi.fn();
+            const testRun = { appendOutput: spy } as unknown as TestRun;
+            return { writer: new TestRunWriter(testRun), spy };
+        },
+    },
+];
 
-    beforeEach(() => {
-        configuration = new Configuration({
-            php: 'php',
-            phpunit: binary,
-            args: ['-c', 'phpunit.xml', ...stubArgs],
+describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) => {
+    describe.each(detectPhpUnitStubs())('on $name (PHPUnit $phpUnitVersion)', ({
+        root,
+        phpUnitVersion,
+        binary,
+        args: stubArgs,
+    }) => {
+        let testRunner: TestRunner;
+        let spy: ReturnType<typeof vi.fn>;
+        let configuration: Configuration;
+
+        beforeEach(() => {
+            configuration = new Configuration({
+                php: 'php',
+                phpunit: binary,
+                args: ['-c', 'phpunit.xml', ...stubArgs],
+            });
+            testRunner = new TestRunner();
+            const { writer, spy: s } = createWriter();
+            spy = s;
+            const observer = new PrinterObserver(
+                writer,
+                new Printer(new PHPUnitXML(), PRESET_PROGRESS),
+            );
+            testRunner.observe(observer);
         });
-        testRunner = new TestRunner();
-        outputChannel = vscode.window.createOutputChannel('phpunit');
-        const observer = new PrinterObserver(
-            new OutputChannelWriter(outputChannel),
-            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
-        );
-        testRunner.observe(observer);
-    });
 
-    function getOutputChannel(): OutputChannel {
-        return (vscode.window.createOutputChannel as Mock).mock.results[0].value;
-    }
+        async function run(file?: string, filter?: string) {
+            if (filter) {
+                filter = `--filter='^.*::(${filter})( with data set .*)?$'`;
+            }
 
-    async function run(file?: string, filter?: string) {
-        if (filter) {
-            filter = `--filter='^.*::(${filter})( with data set .*)?$'`;
+            const cwd = root;
+            const options = { cwd };
+            const builder = new ProcessBuilder(
+                configuration,
+                options,
+                new PathReplacer(options, configuration.get('paths') as Path),
+            );
+            builder.setArguments([file, filter].join(' '));
+
+            await testRunner.run(builder).run();
         }
 
-        const cwd = root;
-        const options = { cwd };
-        const builder = new ProcessBuilder(
-            configuration,
-            options,
-            new PathReplacer(options, configuration.get('paths') as Path),
-        );
-        builder.setArguments([file, filter].join(' '));
+        it('should trigger testVersion', async () => {
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            await run(testFile);
 
-        await testRunner.run(builder).run();
-    }
+            expect(spy).toHaveBeenCalledWith(expect.stringMatching(/PHPUnit\s[\d.]+/));
+        });
 
-    it('should trigger input', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        await run(testFile);
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(
-                new RegExp(
-                    `php .+phpunit .+${testFile.replace(/[/\\]/g, '.')} --colors=always --teamcity`,
-                ),
-            ),
-        );
-    });
+        it('should trigger testRuntime', async () => {
+            if (semverLt(phpUnitVersion, '10.0.0')) {
+                return;
+            }
 
-    it('should trigger testVersion', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        await run(testFile);
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            await run(testFile);
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/PHPUnit\s[\d.]+/));
-    });
+            expect(spy).toHaveBeenCalledWith(expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/));
+        });
 
-    it('should trigger testRuntime', async () => {
-        if (semverLt(phpUnitVersion, '10.0.0')) {
-            return;
-        }
+        it('should trigger testConfiguration', async () => {
+            if (semverLt(phpUnitVersion, '10.0.0')) {
+                return;
+            }
 
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        await run(testFile);
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            await run(testFile);
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/),
-        );
-    });
+            expect(spy).toHaveBeenCalledWith(expect.stringMatching(/Configuration:.+/));
+        });
 
-    it('should trigger testConfiguration', async () => {
-        if (semverLt(phpUnitVersion, '10.0.0')) {
-            return;
-        }
+        it('should trigger testFinished', async () => {
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            const filter = 'test_passed';
+            await run(testFile, filter);
 
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        await run(testFile);
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('.'));
+        });
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(/Configuration:.+/),
-        );
-    });
+        it('should trigger testFailed', async () => {
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            const filter = 'test_failed|test_passed';
+            await run(testFile, filter);
 
-    it('should trigger testSuiteStarted', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_passed';
-        await run(testFile, filter);
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('F'));
+            expect(spy).toHaveBeenCalledWith(
+                expect.stringContaining('Failed asserting that false is true.'),
+            );
+        });
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).not.toHaveBeenCalledWith(
-            'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::test_passed',
-        );
-    });
+        it('should trigger testFailed with actual and expect', async () => {
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            const filter = 'test_is_not_same';
+            await run(testFile, filter);
 
-    it('should trigger testSuiteStarted without method', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'addition_provider|test_passed';
-        await run(testFile, filter);
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('F'));
+            expect(spy).toHaveBeenCalledWith(
+                expect.stringContaining('Failed asserting that two arrays are identical.'),
+            );
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('--- Expected'));
+        });
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).not.toHaveBeenCalledWith(
-            'Recca0120\\\\VSCode\\\\Tests\\\\AssertionsTest::addition_provider',
-        );
-    });
+        it('should trigger testIgnored', async () => {
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            const filter = 'test_skipped';
+            await run(testFile, filter);
 
-    it('should trigger testFinished', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_passed';
-        await run(testFile, filter);
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('S'));
+        });
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith('.');
-    });
+        it('should trigger testResultSummary', async () => {
+            if (semverLt(phpUnitVersion, '10.0.0')) {
+                return;
+            }
 
-    it('should trigger testFailed', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_failed|test_passed';
-        await run(testFile, filter);
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            await run(testFile);
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith('F');
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringContaining('Failed asserting that false is true.'),
-        );
-    });
+            expect(spy).toHaveBeenCalledWith(expect.stringMatching(/Tests: \d+, Assertions: \d+/));
+        });
 
-    it('should trigger testFailed with actual and expect', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_is_not_same';
-        await run(testFile, filter);
+        it('should trigger testDuration', async () => {
+            if (semverLt(phpUnitVersion, '10.0.0')) {
+                return;
+            }
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith('F');
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringContaining('Failed asserting that two arrays are identical.'),
-        );
-        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringContaining('--- Expected'));
-    });
+            const testFile = phpUnitProject('tests/AssertionsTest.php');
+            await run(testFile);
 
-    it('should trigger testIgnored', async () => {
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_skipped';
-        await run(testFile, filter);
+            expect(spy).toHaveBeenCalledWith(
+                expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/),
+            );
+        });
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith('S');
-    });
+        it('should trigger error', async () => {
+            const testFile = phpUnitProject('tests/NotFound.php');
+            await run(testFile);
 
-    it('should trigger testResultSummary', async () => {
-        if (semverLt(phpUnitVersion, '10.0.0')) {
-            return;
-        }
+            expect(spy).toHaveBeenCalledWith(expect.stringMatching('❌'));
+            expect(spy).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
+        });
 
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        await run(testFile);
+        it('should print printed output', async () => {
+            const testFile = phpUnitProject('tests/Output/OutputTest.php');
+            const filter = 'test_echo';
+            await run(testFile, filter);
 
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(/Tests: \d+, Assertions: \d+/),
-        );
-    });
-
-    it('should trigger testDuration', async () => {
-        if (semverLt(phpUnitVersion, '10.0.0')) {
-            return;
-        }
-
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        await run(testFile);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/),
-        );
-    });
-
-    it('should trigger error', async () => {
-        const testFile = phpUnitProject('tests/NotFound.php');
-        await run(testFile);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching('❌'));
-        expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
-    });
-
-    it('should print printed output', async () => {
-        const testFile = phpUnitProject('tests/Output/OutputTest.php');
-        const filter = 'test_echo';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringContaining('printed output'),
-        );
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('printed output'));
+        });
     });
 });
