@@ -6,6 +6,7 @@ import type { TestStarted } from '../TestOutput';
 import { resolveDatasetDefinition } from '../TestParser';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
 import { parseDataset } from '../utils';
+import { TestStore } from './TestStore';
 
 export interface File<T> {
     testsuite: string;
@@ -19,10 +20,8 @@ export interface ChangeResult {
 }
 
 export class TestCollection {
-    private suites = new Map<string, Map<string, TestDefinition[]>>();
+    private store = new TestStore();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
-    private fileIndex = new Map<string, string>();
-    private definitionIndex = new Map<string, TestDefinition>();
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
@@ -33,19 +32,11 @@ export class TestCollection {
     ) {}
 
     get size() {
-        return this.suites.size;
+        return this.store.size;
     }
 
     private getRootUri() {
         return URI.file(this.phpUnitXML.root());
-    }
-
-    private initSuites() {
-        for (const suite of this.phpUnitXML.getTestSuites()) {
-            if (!this.suites.has(suite.name)) {
-                this.suites.set(suite.name, new Map<string, TestDefinition[]>());
-            }
-        }
     }
 
     async change(uri: URI) {
@@ -57,26 +48,11 @@ export class TestCollection {
     }
 
     get(uri: URI) {
-        return this.findFile(uri)?.tests;
+        return this.store.findFile(uri)?.tests;
     }
 
     has(uri: URI) {
-        return !!this.findFile(uri);
-    }
-
-    private setDefinition(id: string, def: TestDefinition): void {
-        if (!def.file) {
-            return;
-        }
-
-        const uri = URI.file(def.file);
-        const file = this.findFile(uri);
-        if (!file) {
-            return;
-        }
-
-        file.tests.push(def);
-        this.definitionIndex.set(id, def);
+        return !!this.store.findFile(uri);
     }
 
     resolveDataset(
@@ -87,17 +63,17 @@ export class TestCollection {
         }
 
         const { parentId } = parseDataset(result.id);
-        const parentDef = this.definitionIndex.get(parentId);
+        const parentDef = this.store.getDefinition(parentId);
         if (!parentDef) {
             return undefined;
         }
 
         const childDef = resolveDatasetDefinition(result.name, parentDef);
-        if (!childDef || this.definitionIndex.has(childDef.id)) {
+        if (!childDef || this.store.hasDefinition(childDef.id)) {
             return undefined;
         }
 
-        this.setDefinition(childDef.id, childDef);
+        this.store.addDefinition(childDef.id, childDef);
         return { parentId, childDef };
     }
 
@@ -109,9 +85,9 @@ export class TestCollection {
     }
 
     delete(uri: URI): File<TestDefinition> | undefined {
-        const file = this.findFile(uri);
+        const file = this.store.findFile(uri);
         if (file) {
-            this.removeTests(file.testsuite, file.uri);
+            this.store.remove(file.testsuite, file.uri);
             return file;
         }
 
@@ -130,34 +106,17 @@ export class TestCollection {
     }
 
     reset(): void {
-        this.suites.clear();
+        this.store.clear();
         this.matcherCache.clear();
-        this.fileIndex.clear();
-        this.definitionIndex.clear();
         this.classHierarchy.clear();
     }
 
     findFile(uri: URI): File<TestDefinition> | undefined {
-        const uriStr = uri.toString();
-        const testsuite = this.fileIndex.get(uriStr);
-        if (!testsuite) {
-            return undefined;
-        }
-
-        const tests = this.suites.get(testsuite)?.get(uriStr);
-        if (!tests) {
-            return undefined;
-        }
-
-        return { testsuite, uri, tests };
+        return this.store.findFile(uri);
     }
 
     *gatherFiles() {
-        for (const [testsuite, files] of this.suites) {
-            for (const [uriStr, tests] of files) {
-                yield { testsuite, uri: URI.parse(uriStr), tests };
-            }
-        }
+        yield* this.store.gatherFiles();
     }
 
     private async doChange(uri: URI): Promise<ChangeResult> {
@@ -169,7 +128,7 @@ export class TestCollection {
             return { parsed, deleted };
         }
 
-        this.initSuites();
+        this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
         if (tests.length === 0) {
             const file = this.delete(uri);
@@ -177,7 +136,7 @@ export class TestCollection {
                 deleted.push(file);
             }
         } else {
-            this.setTests(testsuite, uri, tests);
+            this.store.set(testsuite, uri, tests);
             parsed.push({ uri, tests });
         }
 
@@ -214,7 +173,7 @@ export class TestCollection {
             return undefined;
         }
 
-        this.setTests(testsuite, uri, tests);
+        this.store.set(testsuite, uri, tests);
         return { uri, tests };
     }
 
@@ -229,42 +188,6 @@ export class TestCollection {
         }
 
         return this.classHierarchy.enrichTests(parseResult.tests);
-    }
-
-    private removeTests(testsuite: string, uri: URI) {
-        const uriStr = uri.toString();
-        const oldTests = this.suites.get(testsuite)?.get(uriStr);
-        if (oldTests) {
-            this.removeFromIndex(oldTests);
-        }
-        this.fileIndex.delete(uriStr);
-        this.suites.get(testsuite)?.delete(uriStr);
-    }
-
-    private setTests(testsuite: string, uri: URI, tests: TestDefinition[]) {
-        this.removeTests(testsuite, uri);
-        const uriStr = uri.toString();
-        this.addToIndex(tests);
-        this.suites.get(testsuite)?.set(uriStr, tests);
-        this.fileIndex.set(uriStr, testsuite);
-    }
-
-    private addToIndex(tests: TestDefinition[]) {
-        for (const test of tests) {
-            this.definitionIndex.set(test.id, test);
-            if (test.children) {
-                this.addToIndex(test.children);
-            }
-        }
-    }
-
-    private removeFromIndex(tests: TestDefinition[]) {
-        for (const test of tests) {
-            this.definitionIndex.delete(test.id);
-            if (test.children) {
-                this.removeFromIndex(test.children);
-            }
-        }
     }
 
     private parseTestsuite(uri: URI) {
