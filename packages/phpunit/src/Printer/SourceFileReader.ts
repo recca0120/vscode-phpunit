@@ -88,10 +88,10 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // Doc comment continuation: lines starting with *
+        // Doc comment continuation: lines starting with * (but not *=, */, etc.)
         if (pos === 0 || line.slice(0, pos).trim() === '') {
-            const docContMatch = line.slice(pos).match(/^\s*\*.*/);
-            if (docContMatch && line.trim().startsWith('*')) {
+            const docContMatch = line.slice(pos).match(/^\s*\*(?!\s*\$)(?!\s*\d).*/);
+            if (docContMatch) {
                 result += style.comment(docContMatch[0]);
                 pos += docContMatch[0].length;
                 continue;
