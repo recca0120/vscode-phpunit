@@ -9,6 +9,6 @@ export class TestRunWriter implements OutputWriter {
     }
 
     appendLine(text: string): void {
-        this.testRun.appendOutput(text);
+        this.testRun.appendOutput(text + '\n');
     }
 }
