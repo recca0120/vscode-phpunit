@@ -791,6 +791,69 @@ describe('Printer suite filtering', () => {
     });
 });
 
+describe('Printer PRESET_PROGRESS dot colors', () => {
+    const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
+    const file = phpUnitProject('tests/AssertionsTest.php');
+    const printer = new Printer(phpUnitXML, PRESET_PROGRESS);
+
+    beforeEach(() => printer.start());
+    afterEach(() => printer.close());
+
+    it('failed dot F uses bgRed + white', () => {
+        const output = printer.testFinished({
+            event: TeamcityEvent.testFailed,
+            name: 'test_failed',
+            locationHint: '',
+            flowId: 1,
+            id: 'Foo::test_failed',
+            file,
+            message: 'Failed asserting that false is true.',
+            details: [{ file, line: 27 }],
+            duration: 0,
+        });
+
+        expect(output).toContain('\x1b[41m'); // bgRed
+        expect(output).toContain('\x1b[37m'); // white (fg)
+        expect(output).toContain('F');
+    });
+
+    it('ignored dot S uses cyan + bold', () => {
+        const output = printer.testIgnored({
+            event: TeamcityEvent.testIgnored,
+            name: 'test_skipped',
+            locationHint: '',
+            flowId: 1,
+            id: 'Foo::test_skipped',
+            file,
+            message: 'Skipped.',
+            details: [],
+            duration: 0,
+        });
+
+        expect(output).toContain('\x1b[36m'); // cyan
+        expect(output).toContain('\x1b[1m'); // bold
+        expect(output).toContain('S');
+    });
+
+    it('error dot E uses red + bold (not bgRed)', () => {
+        const output = printer.testFinished({
+            event: TeamcityEvent.testFailed,
+            name: 'test_error',
+            locationHint: '',
+            flowId: 1,
+            id: 'Foo::test_error',
+            file,
+            message: 'RuntimeException: something broke',
+            details: [{ file, line: 10 }],
+            duration: 0,
+        });
+
+        expect(output).toContain('\x1b[31m'); // red
+        expect(output).toContain('\x1b[1m'); // bold
+        expect(output).toContain('E');
+    });
+});
+
 describe('Printer inline error display', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
     const file = phpUnitProject('tests/AssertionsTest.php');

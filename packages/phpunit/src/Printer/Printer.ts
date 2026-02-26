@@ -152,9 +152,10 @@ export class Printer {
             this.errors.push(result as TestFailed);
         }
 
-        const statusDot = isFailed ? 'F' : '.';
+        const isError = isFailed && this.classify(result as TestFailed) === 'error';
+        const statusDot = isFailed ? (isError ? 'E' : 'F') : '.';
         const template = isFailed ? this.format.failed : this.format.finished;
-        const vars = this.resultVars(result, statusDot);
+        const vars = this.resultVars(result, statusDot, isError);
         const text = this.interpolate(template, vars);
 
         return this.isDotMode ? text : this.line(text);
@@ -370,6 +371,7 @@ export class Printer {
     private resultVars(
         result: TestFinished | TestFailed | TestIgnored,
         statusDot: string,
+        isError = false,
     ): Record<string, string | undefined> {
         const [icon, label] = this.getIcon(result.event);
         const name = this.formatTestName(result);
@@ -377,7 +379,7 @@ export class Printer {
         const isFailed = result.event === TeamcityEvent.testFailed;
 
         return {
-            status_dot: colorize(statusDot),
+            status_dot: this.colorizeStatusDot(statusDot, result.event, isError),
             icon: colorize(icon),
             label: colorize(label),
             name: isFailed ? name : this.style.info(name),
@@ -398,6 +400,21 @@ export class Printer {
         }
 
         return this.style.passed.bind(this.style);
+    }
+
+    private colorizeStatusDot(dot: string, event: TeamcityEvent, isError: boolean): string {
+        if (!this.isDotMode) {
+            return this.getColorizer(event)(dot);
+        }
+
+        if (event === TeamcityEvent.testFailed) {
+            return isError ? this.style.errorDot(dot) : this.style.failedDot(dot);
+        }
+        if (event === TeamcityEvent.testIgnored) {
+            return this.style.skippedDot(dot);
+        }
+
+        return this.style.info(dot);
     }
 
     private infoVars(

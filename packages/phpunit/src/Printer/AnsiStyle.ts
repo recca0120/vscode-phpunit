@@ -7,6 +7,9 @@ export interface ColorTheme {
     info: string;
     diffExpected: string;
     diffActual: string;
+    failedDot: string;
+    errorDot: string;
+    skippedDot: string;
 }
 
 export const DEFAULT_THEME: ColorTheme = {
@@ -16,6 +19,9 @@ export const DEFAULT_THEME: ColorTheme = {
     info: 'dim',
     diffExpected: 'red',
     diffActual: 'green',
+    failedDot: 'bgRed.white',
+    errorDot: 'red.bold',
+    skippedDot: 'cyan.bold',
 };
 
 type StyleEntry = { open: string; close: string };
@@ -124,6 +130,18 @@ export class AnsiStyle {
     /** Snippet: line number = gray */
     lineNumber(text: string): string {
         return this.apply('gray', text);
+    }
+
+    failedDot(text: string): string {
+        return this.apply(this.theme.failedDot, text);
+    }
+
+    errorDot(text: string): string {
+        return this.apply(this.theme.errorDot, text);
+    }
+
+    skippedDot(text: string): string {
+        return this.apply(this.theme.skippedDot, text);
     }
 
     diffExpected(text: string): string {
