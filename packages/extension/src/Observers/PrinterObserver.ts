@@ -1,4 +1,5 @@
 import type {
+    OutputWriter,
     Printer,
     ProcessBuilder,
     TestConfiguration,
@@ -16,7 +17,6 @@ import type {
     TestSuiteStarted,
     TestVersion,
 } from '@vscode-phpunit/phpunit';
-import type { OutputWriter } from './OutputWriter';
 
 export class PrinterObserver implements TestRunnerObserver {
     constructor(

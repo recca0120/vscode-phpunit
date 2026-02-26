@@ -2,7 +2,7 @@ import type { IConfiguration, ProcessBuilder, TestRunnerObserver } from '@vscode
 import stripAnsi from 'strip-ansi';
 import type { OutputChannel } from 'vscode';
 
-export class OutputChannelObserver implements TestRunnerObserver {
+export class RawOutputObserver implements TestRunnerObserver {
     private hasClearedCurrentRequest = false;
 
     constructor(
@@ -15,8 +15,8 @@ export class OutputChannelObserver implements TestRunnerObserver {
         this.outputChannel.appendLine(builder.toString());
     }
 
-    error(_error: string): void {
-        this.outputChannel.clear();
+    error(error: string): void {
+        this.outputChannel.appendLine(stripAnsi(error));
     }
 
     line(line: string): void {

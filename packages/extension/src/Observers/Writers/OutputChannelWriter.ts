@@ -1,5 +1,5 @@
+import type { OutputWriter } from '@vscode-phpunit/phpunit';
 import stripAnsi from 'strip-ansi';
-import type { OutputWriter } from './OutputWriter';
 
 export class OutputChannelWriter implements OutputWriter {
     constructor(private outputChannel: { append(value: string): void }) {}

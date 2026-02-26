@@ -9,16 +9,16 @@ import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/test
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel } from 'vscode';
 import * as vscode from 'vscode';
-import { OutputChannelObserver } from './OutputChannelObserver';
+import { RawOutputObserver } from './RawOutputObserver';
 
-describe('OutputChannelObserver clear behavior', () => {
+describe('RawOutputObserver clear behavior', () => {
     const createObserver = (config: Record<string, unknown> = {}) => {
         const outputChannel = vscode.window.createOutputChannel('phpunit');
         const configuration = new Configuration({
             clearOutputOnRun: true,
             ...config,
         });
-        const observer = new OutputChannelObserver(outputChannel, configuration);
+        const observer = new RawOutputObserver(outputChannel, configuration);
 
         return { observer, outputChannel };
     };
@@ -45,8 +45,8 @@ describe('OutputChannelObserver clear behavior', () => {
     it('each observer instance clears independently', () => {
         const outputChannel = vscode.window.createOutputChannel('phpunit');
         const configuration = new Configuration({ clearOutputOnRun: true });
-        const observer1 = new OutputChannelObserver(outputChannel, configuration);
-        const observer2 = new OutputChannelObserver(outputChannel, configuration);
+        const observer1 = new RawOutputObserver(outputChannel, configuration);
+        const observer2 = new RawOutputObserver(outputChannel, configuration);
 
         observer1.run(createBuilder('command-1'));
         observer2.run(createBuilder('command-2'));
@@ -55,7 +55,7 @@ describe('OutputChannelObserver clear behavior', () => {
     });
 });
 
-describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $phpUnitVersion)', ({
+describe.each(detectPhpUnitStubs())('RawOutputObserver on $name (PHPUnit $phpUnitVersion)', ({
     root,
     binary,
     args: stubArgs,
@@ -72,7 +72,7 @@ describe.each(detectPhpUnitStubs())('OutputChannelObserver on $name (PHPUnit $ph
         });
         testRunner = new TestRunner();
         const outputChannel = vscode.window.createOutputChannel('phpunit');
-        const observer = new OutputChannelObserver(outputChannel, configuration);
+        const observer = new RawOutputObserver(outputChannel, configuration);
         testRunner.observe(observer);
     });
 

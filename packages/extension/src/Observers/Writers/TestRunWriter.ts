@@ -1,5 +1,5 @@
+import type { OutputWriter } from '@vscode-phpunit/phpunit';
 import type { TestRun } from 'vscode';
-import type { OutputWriter } from './OutputWriter';
 
 export class TestRunWriter implements OutputWriter {
     constructor(private testRun: TestRun) {}

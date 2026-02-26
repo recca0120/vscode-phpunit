@@ -13,8 +13,8 @@ import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/test
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
 import type { OutputChannel } from 'vscode';
 import * as vscode from 'vscode';
-import { OutputChannelWriter } from './OutputChannelWriter';
 import { PrinterObserver } from './PrinterObserver';
+import { OutputChannelWriter } from './Writers';
 
 describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitVersion)', ({
     root,

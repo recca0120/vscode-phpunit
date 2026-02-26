@@ -14,10 +14,10 @@ import { TestCollection } from '../TestCollection/TestCollection';
 import { TYPES } from '../types';
 import { DatasetObserver } from './DatasetObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
-import { OutputChannelObserver } from './OutputChannelObserver';
 import { PrinterObserver } from './PrinterObserver';
+import { RawOutputObserver } from './RawOutputObserver';
 import { TestResultObserver } from './TestResultObserver';
-import { TestRunWriter } from './TestRunWriter';
+import { TestRunWriter } from './Writers';
 
 @injectable()
 export class TestRunnerObserverFactory {
@@ -41,7 +41,7 @@ export class TestRunnerObserverFactory {
         return [
             new DatasetObserver(this.testCollection, testItemById),
             new TestResultObserver(testItemById, queue, testRun),
-            new OutputChannelObserver(this.outputChannel, this.configuration),
+            new RawOutputObserver(this.outputChannel, this.configuration),
             new PrinterObserver(new TestRunWriter(testRun), new Printer(this.phpUnitXML, format)),
             new ErrorDialogObserver(this.configuration),
         ];
