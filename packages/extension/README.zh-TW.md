@@ -68,6 +68,12 @@
   // 執行測試前儲存所有開啟的檔案（預設：false）
   "phpunit.saveBeforeTest": false,
 
+  // 輸出格式預設："collision"（逐條詳細顯示）或 "phpunit"（點進度模式）
+  "phpunit.output.preset": "collision",
+
+  // 覆寫預設的個別格式欄位（詳見 phpunit 套件文件）
+  "phpunit.output.format": {},
+
   // 每次執行前清除輸出頻道（預設：true）
   "phpunit.clearOutputOnRun": true,
 
