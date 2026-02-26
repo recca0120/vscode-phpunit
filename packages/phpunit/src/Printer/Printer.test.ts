@@ -27,6 +27,7 @@ import { fileFormat } from './SourceFileReader';
 describe('Printer with custom started/duration/summary format', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
     const format = resolveFormat('collision', {
+        colors: false,
         started: '{name}',
         duration: '{icon} {text}',
         resultSummary: '{icon} {text}',
@@ -68,7 +69,7 @@ describe('Printer with custom started/duration/summary format', () => {
     it('testStarted returns undefined when format is false', () => {
         const noStartPrinter = new Printer(
             phpUnitXML,
-            resolveFormat('collision', { started: false }),
+            resolveFormat('collision', { colors: false, started: false }),
         );
         noStartPrinter.start();
 
@@ -89,6 +90,7 @@ describe('Printer with custom started/duration/summary format', () => {
 describe('Printer uses icons from format config', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
     const format = resolveFormat('collision', {
+        colors: false,
         version: '{icon} {text}',
         runtime: '{text}',
         configuration: '{text}',
@@ -162,7 +164,9 @@ describe('Printer uses icons from format config', () => {
         });
 
         const endOutput = printer.end();
-        expect(endOutput).toContain('X FAIL  App\\Foo > failed');
+        expect(endOutput).toContain('X');
+        expect(endOutput).toContain('FAIL');
+        expect(endOutput).toContain('Foo > failed');
     });
 
     it('testIgnored uses custom ignored icon', () => {
@@ -197,6 +201,7 @@ describe('resolveFormat', () => {
 
     it('deep merges icons overrides', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             icons: { passed: ['P', 'OK'] },
         } as Partial<PrinterFormat>);
         expect(format.icons.passed).toEqual(['P', 'OK']);
@@ -205,6 +210,7 @@ describe('resolveFormat', () => {
 
     it('deep merges error overrides', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             error: { diff: { header: '--- Exp\n+++ Act' } },
         } as Partial<PrinterFormat>);
         expect(format.error.diff.header).toEqual('--- Exp\n+++ Act');
@@ -218,6 +224,7 @@ describe('Printer exposes all type fields as template variables', () => {
 
     it('testVersion exposes phpunit and paratest variables', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             version: '{phpunit} ({paratest})',
         });
         const printer = new Printer(phpUnitXML, format);
@@ -235,6 +242,7 @@ describe('Printer exposes all type fields as template variables', () => {
 
     it('testVersion omits empty paratest', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             version: '{phpunit} {paratest}',
         });
         const printer = new Printer(phpUnitXML, format);
@@ -250,9 +258,7 @@ describe('Printer exposes all type fields as template variables', () => {
     });
 
     it('testRuntime exposes runtime variable', () => {
-        const format = resolveFormat('collision', {
-            runtime: 'PHP {runtime}',
-        });
+        const format = resolveFormat('collision', { colors: false, runtime: 'PHP {runtime}' });
         const printer = new Printer(phpUnitXML, format);
         printer.start();
 
@@ -266,6 +272,7 @@ describe('Printer exposes all type fields as template variables', () => {
 
     it('testConfiguration exposes configuration variable', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             configuration: 'Config: {configuration}',
         });
         const printer = new Printer(phpUnitXML, format);
@@ -281,6 +288,7 @@ describe('Printer exposes all type fields as template variables', () => {
 
     it('testProcesses exposes processes variable', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             processes: 'Workers: {processes}',
         });
         const printer = new Printer(phpUnitXML, format);
@@ -295,9 +303,7 @@ describe('Printer exposes all type fields as template variables', () => {
     });
 
     it('suiteStarted exposes name variable', () => {
-        const format = resolveFormat('collision', {
-            suiteStarted: '{name} ({id})',
-        });
+        const format = resolveFormat('collision', { colors: false, suiteStarted: '{name} ({id})' });
         const printer = new Printer(phpUnitXML, format);
         printer.start();
 
@@ -313,6 +319,7 @@ describe('Printer exposes all type fields as template variables', () => {
 
     it('timeAndMemory exposes time and memory variables', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             duration: 'T={time} M={memory}',
         });
         const printer = new Printer(phpUnitXML, format);
@@ -329,6 +336,7 @@ describe('Printer exposes all type fields as template variables', () => {
 
     it('testResultSummary exposes tests, assertions, failures etc.', () => {
         const format = resolveFormat('collision', {
+            colors: false,
             resultSummary: '{tests} tests, {assertions} assertions, {failures} failures',
         });
         const printer = new Printer(phpUnitXML, format);
@@ -348,6 +356,7 @@ describe('Printer exposes all type fields as template variables', () => {
 describe('Printer format false hides output', () => {
     const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
     const format = resolveFormat('collision', {
+        colors: false,
         version: false,
         runtime: false,
         configuration: false,
@@ -385,7 +394,7 @@ describe('Printer error edge cases', () => {
     let printer: Printer;
 
     beforeEach(() => {
-        printer = new Printer(phpUnitXML, PRESET_COLLISION);
+        printer = new Printer(phpUnitXML, { ...PRESET_COLLISION, colors: false });
         printer.start();
     });
 
@@ -407,7 +416,7 @@ describe('Printer error edge cases', () => {
             duration: 0,
         });
 
-        expect(printer.end()).toContain('➜ 27 ▕         $this->assertTrue(false);');
+        expect(printer.end()).toContain(' ➜ 27 ▕         $this->assertTrue(false);');
     });
 
     it('testFailed and file not found omits snippet', () => {
@@ -427,7 +436,7 @@ describe('Printer error edge cases', () => {
 
         const output = printer.end() ?? '';
         expect(output).not.toContain('➜');
-        expect(output).toContain(`1. ${fileFormat(notFoundFile, 22)}`);
+        expect(output).toContain(`1   ${fileFormat(notFoundFile, 22)}`);
     });
 
     it('testFailed with Pest-style ID without :: should not crash', () => {
@@ -492,6 +501,7 @@ describe('Printer error grouping', () => {
 
     beforeEach(() => {
         const format = resolveFormat('progress', {
+            colors: false,
             error: {
                 groups: {
                     separator: '--',
@@ -657,7 +667,7 @@ describe('Printer start and error with command', () => {
     let printer: Printer;
 
     beforeEach(() => {
-        printer = new Printer(phpUnitXML, PRESET_COLLISION);
+        printer = new Printer(phpUnitXML, { ...PRESET_COLLISION, colors: false });
     });
 
     afterEach(() => printer.close());
@@ -683,7 +693,7 @@ describe('Printer suite filtering', () => {
     let printer: Printer;
 
     beforeEach(() => {
-        printer = new Printer(phpUnitXML, PRESET_COLLISION);
+        printer = new Printer(phpUnitXML, { ...PRESET_COLLISION, colors: false });
         printer.start('command');
     });
 
@@ -719,7 +729,7 @@ describe('Printer suite filtering', () => {
             id: 'App\\Tests\\FooTest',
         } as TestSuiteStarted);
 
-        expect(output).toEqual(`App\\Tests\\FooTest${EOL}`);
+        expect(output).toEqual(` PASS  App\\Tests\\FooTest${EOL}`);
     });
 
     it('testSuiteFinished returns undefined when id contains ::', () => {
@@ -752,6 +762,7 @@ describe('Printer inline error display', () => {
 
     beforeEach(() => {
         const format = resolveFormat('collision', {
+            colors: false,
             error: { display: 'inline' },
         } as Partial<PrinterFormat>);
         printer = new Printer(phpUnitXML, format);

@@ -16,6 +16,7 @@ import {
     type TestVersion,
 } from '../TestOutput/types';
 import { EOL } from '../utils';
+import { AnsiStyle, DEFAULT_THEME } from './AnsiStyle';
 import { OutputBuffer } from './OutputBuffer';
 import type { ErrorCategory, IconSet, PrinterFormat } from './PrinterConfig';
 import { fileFormat, readSourceSnippet } from './SourceFileReader';
@@ -29,6 +30,7 @@ export class Printer {
     private errors: TestFailed[] = [];
     private isDotMode: boolean;
     private isInlineError: boolean;
+    private style: AnsiStyle;
 
     constructor(
         private phpUnitXML: PHPUnitXML,
@@ -36,6 +38,9 @@ export class Printer {
     ) {
         this.isDotMode = format.finished.includes('{status_dot}');
         this.isInlineError = format.error.display === 'inline';
+        this.style = new AnsiStyle(
+            format.colors === false ? false : { ...DEFAULT_THEME, ...format.colors },
+        );
     }
 
     start(command?: string): string | undefined {
@@ -110,8 +115,14 @@ export class Printer {
             return undefined;
         }
 
+        const [, label] = this.getIcon(TeamcityEvent.testFinished);
+
         return this.line(
-            this.interpolate(this.format.suiteStarted, { id: result.id, name: result.name }),
+            this.interpolate(this.format.suiteStarted, {
+                label: this.style.passedBadge(label),
+                id: this.style.bold(result.id),
+                name: this.style.bold(result.name),
+            }),
         );
     }
 
@@ -173,6 +184,30 @@ export class Printer {
     }
 
     testResultSummary(result: TestResultSummary) {
+        const hasFailures = (result.errors ?? 0) > 0 || (result.failures ?? 0) > 0;
+        const countColor = hasFailures
+            ? this.style.failed.bind(this.style)
+            : this.style.passed.bind(this.style);
+
+        const parts: string[] = [];
+        const failedCount = (result.errors ?? 0) + (result.failures ?? 0) + (result.warnings ?? 0);
+        if (failedCount > 0) {
+            parts.push(this.style.failed(`${failedCount} failed`));
+        }
+        if ((result.skipped ?? 0) > 0) {
+            parts.push(this.style.ignored(`${result.skipped} skipped`));
+        }
+        const passedCount =
+            (result.tests ?? 0) - failedCount - (result.skipped ?? 0) - (result.incomplete ?? 0);
+        if (passedCount > 0) {
+            parts.push(this.style.passed(`${passedCount} passed`));
+        }
+
+        const summary =
+            parts.length > 0
+                ? `Tests:  ${parts.join(', ')} (${result.assertions ?? 0} assertions)`
+                : result.text.trim();
+
         const numericKeys = [
             'tests',
             'assertions',
@@ -183,9 +218,12 @@ export class Printer {
             'incomplete',
             'risky',
         ] as const;
-        const vars: Record<string, string | undefined> = { text: result.text.trim() };
+        const vars: Record<string, string | undefined> = {
+            text: result.text.trim(),
+            summary,
+        };
         for (const key of numericKeys) {
-            vars[key] = result[key] != null ? String(result[key]) : undefined;
+            vars[key] = result[key] != null ? countColor(String(result[key])) : undefined;
         }
 
         return this.formatWithErrors(this.format.resultSummary, vars);
@@ -313,15 +351,16 @@ export class Printer {
         const fqcn = parts.length >= 2 ? parts[0] : result.id;
 
         return {
+            separator: this.style.horizontalRule(),
             index: String(index),
-            icon,
-            label,
+            icon: this.style.failed(icon),
+            label: this.style.failedBadge(label),
             name,
             class: className,
             fqcn,
             id: result.id,
-            duration: String(result.duration),
-            message: result.message,
+            duration: this.style.info(String(result.duration)),
+            message: this.style.bold(result.message),
             diff: this.formatDiff(result),
             snippet: this.getSourceSnippet(result),
             details: this.formatDetails(result),
@@ -329,20 +368,36 @@ export class Printer {
     }
 
     private resultVars(
-        result: TestFinished | TestFailed,
+        result: TestFinished | TestFailed | TestIgnored,
         statusDot: string,
     ): Record<string, string | undefined> {
         const [icon, label] = this.getIcon(result.event);
         const name = this.formatTestName(result);
+        const colorize = this.getColorizer(result.event);
+        const isFailed = result.event === TeamcityEvent.testFailed;
 
         return {
-            status_dot: statusDot,
-            icon,
-            label,
-            name,
+            status_dot: colorize(statusDot),
+            icon: colorize(icon),
+            label: colorize(label),
+            name: isFailed ? name : this.style.info(name),
             id: result.id,
-            duration: String(result.duration),
+            duration: this.style.info(String(result.duration)),
         };
+    }
+
+    private getColorizer(event: TeamcityEvent): (text: string) => string {
+        if (event === TeamcityEvent.testFailed) {
+            return this.style.failed.bind(this.style);
+        }
+        if (event === TeamcityEvent.testIgnored) {
+            return this.style.ignored.bind(this.style);
+        }
+        if (this.isDotMode) {
+            return this.style.info.bind(this.style);
+        }
+
+        return this.style.passed.bind(this.style);
     }
 
     private infoVars(
@@ -354,7 +409,7 @@ export class Printer {
         return {
             icon,
             label,
-            text: result.text,
+            text: this.style.info(result.text),
         };
     }
 
@@ -389,14 +444,19 @@ export class Printer {
 
         const isArray = /^Array\s+&0\s+[([]/m.test(result.expected);
         if (!isArray) {
-            return [...header, `- ${result.expected}`, `+ ${result.actual}`, ''].join(EOL);
+            return [
+                ...header,
+                this.style.diffExpected(`- ${result.expected}`),
+                this.style.diffActual(`+ ${result.actual}`),
+                '',
+            ].join(EOL);
         }
 
         return [
             ...header,
             ' Array &0 [',
-            this.formatArrayEntries(result.expected, '-'),
-            this.formatArrayEntries(result.actual, '+'),
+            this.style.diffExpected(this.formatArrayEntries(result.expected, '-')),
+            this.style.diffActual(this.formatArrayEntries(result.actual, '+')),
             ' ]',
             '',
         ].join(EOL);
@@ -419,7 +479,14 @@ export class Printer {
             return undefined;
         }
 
-        return readSourceSnippet(this.phpUnitXML.path(detail.file), detail.line)?.join(EOL);
+        const style = this.style.isEnabled ? this.style : undefined;
+
+        return readSourceSnippet(
+            this.phpUnitXML.path(detail.file),
+            detail.line,
+            style,
+            detail.file,
+        )?.join(EOL);
     }
 
     private formatDetails(result: TestFailed): string | undefined {

@@ -1,3 +1,5 @@
+import type { ColorTheme } from './AnsiStyle';
+
 export interface IconSet {
     version: [icon: string, label: string];
     passed: [icon: string, label: string];
@@ -28,6 +30,7 @@ export interface ErrorFormat {
 
 export interface PrinterFormat {
     icons: IconSet;
+    colors?: Partial<ColorTheme> | false;
     version: string | false;
     runtime: string | false;
     configuration: string | false;
@@ -50,6 +53,7 @@ export const PRESET_PROGRESS: PrinterFormat = {
         failed: ['', 'FAILED'],
         ignored: ['', 'IGNORED'],
     },
+    colors: {},
     version: '{icon} {text}',
     runtime: '{text}',
     configuration: '{text}',
@@ -93,27 +97,29 @@ export const PRESET_PROGRESS: PrinterFormat = {
 export const PRESET_COLLISION: PrinterFormat = {
     icons: {
         version: ['🚀', 'STARTED'],
-        passed: ['✅', 'PASSED'],
-        failed: ['❌', 'FAILED'],
-        ignored: ['➖', 'IGNORED'],
+        passed: ['✓', 'PASS'],
+        failed: ['⨯', 'FAILED'],
+        ignored: ['-', 'WARN'],
     },
+    colors: {},
     version: '{icon} {text}',
     runtime: '{text}',
     configuration: '{text}',
     processes: '{text}',
-    suiteStarted: '{id}',
+    suiteStarted: '{label} {id}',
     suiteFinished: '',
     started: false,
     finished: '  {icon} {name} {duration} ms',
     failed: '  {icon} {name} {duration} ms',
     ignored: '  {icon} {name} ➜ {message} {duration} ms',
-    duration: '{text}',
-    resultSummary: '{text}',
+    duration: 'Duration: {time}',
+    resultSummary: '{summary}',
     error: {
         display: 'deferred',
-        template: '\n  {icon} {label}  {fqcn} > {name}\n{message}\n{diff}\n{snippet}\n{details}\n',
+        template:
+            '{separator}\n{icon} {label}  {class} > {name}\n{message}\n{diff}\n{snippet}\n{details}\n',
         diff: { header: false },
-        detail: { line: '{index}. {file}' },
+        detail: { line: '{index}   {file}' },
     },
 };
 
@@ -124,6 +130,7 @@ export const PRESET_PRETTY: PrinterFormat = {
         failed: ['', 'FAILED'],
         ignored: ['', 'IGNORED'],
     },
+    colors: {},
     version: '{text}',
     runtime: '{text}',
     configuration: '{text}',
@@ -134,13 +141,14 @@ export const PRESET_PRETTY: PrinterFormat = {
     finished: '  {name} {duration} ms',
     failed: '  {name} {duration} ms',
     ignored: '  {name} ➜ {message} {duration} ms',
-    duration: '{text}',
-    resultSummary: '{text}',
+    duration: 'Duration: {time}',
+    resultSummary: '{summary}',
     error: {
         display: 'deferred',
-        template: '\n  {label}  {fqcn} > {name}\n{message}\n{diff}\n{snippet}\n{details}\n',
+        template:
+            '{separator}\n{label}  {class} > {name}\n{message}\n{diff}\n{snippet}\n{details}\n',
         diff: { header: false },
-        detail: { line: '{index}. {file}' },
+        detail: { line: '{index}   {file}' },
     },
 };
 
@@ -159,12 +167,19 @@ export function resolveFormat(
         return base;
     }
 
-    const { icons, error, ...rest } = overrides;
+    const { icons, error, colors, ...rest } = overrides;
 
     return {
         ...base,
         ...rest,
         icons: icons ? { ...base.icons, ...icons } : base.icons,
+        colors:
+            colors === false
+                ? false
+                : ({
+                      ...((base.colors || {}) as object),
+                      ...((colors || {}) as object),
+                  } as Partial<ColorTheme>),
         error: error
             ? {
                   display: error.display ?? base.error.display,

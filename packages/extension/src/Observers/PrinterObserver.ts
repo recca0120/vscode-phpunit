@@ -1,7 +1,6 @@
 import type {
     OutputWriter,
     Printer,
-    ProcessBuilder,
     TestConfiguration,
     TestDuration,
     TestFailed,
@@ -23,10 +22,6 @@ export class PrinterObserver implements TestRunnerObserver {
         private writer: OutputWriter,
         private printer: Printer,
     ) {}
-
-    run(builder: ProcessBuilder): void {
-        this.append(this.printer.start(builder.toString()));
-    }
 
     error(error: string): void {
         this.append(this.printer.error(error));

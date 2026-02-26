@@ -47,6 +47,7 @@
     },
     "dependencies": {
         "@vscode/tree-sitter-wasm": "^0.3.0",
+        "ansi-styles": "^6.2.3",
         "fast-xml-parser": "^5.3.7",
         "minimatch": "^10.2.0",
         "php-parser": "^3.2.5",
