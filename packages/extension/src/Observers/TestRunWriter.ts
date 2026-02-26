@@ -7,12 +7,4 @@ export class TestRunWriter implements OutputWriter {
     append(text: string): void {
         this.testRun.appendOutput(text);
     }
-
-    clear(): void {
-        // no-op: TestRun doesn't support clearing
-    }
-
-    show(_preserveFocus: boolean): void {
-        // no-op: TestRun doesn't support show
-    }
 }

@@ -15,7 +15,6 @@ import { TYPES } from '../types';
 import { DatasetObserver } from './DatasetObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
 import { OutputChannelObserver } from './OutputChannelObserver';
-import { OutputChannelWriter } from './OutputChannelWriter';
 import { PrinterObserver } from './PrinterObserver';
 import { TestResultObserver } from './TestResultObserver';
 import { TestRunWriter } from './TestRunWriter';
@@ -43,10 +42,6 @@ export class TestRunnerObserverFactory {
             new DatasetObserver(this.testCollection, testItemById),
             new TestResultObserver(testItemById, queue, testRun),
             new OutputChannelObserver(this.outputChannel, this.configuration),
-            new PrinterObserver(
-                new OutputChannelWriter(this.outputChannel),
-                new Printer(this.phpUnitXML, format),
-            ),
             new PrinterObserver(new TestRunWriter(testRun), new Printer(this.phpUnitXML, format)),
             new ErrorDialogObserver(this.configuration),
         ];

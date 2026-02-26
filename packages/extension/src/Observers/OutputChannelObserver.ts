@@ -1,8 +1,5 @@
-import {
-    type IConfiguration,
-    type ProcessBuilder,
-    type TestRunnerObserver,
-} from '@vscode-phpunit/phpunit';
+import type { IConfiguration, ProcessBuilder, TestRunnerObserver } from '@vscode-phpunit/phpunit';
+import stripAnsi from 'strip-ansi';
 import type { OutputChannel } from 'vscode';
 
 export class OutputChannelObserver implements TestRunnerObserver {
@@ -13,12 +10,17 @@ export class OutputChannelObserver implements TestRunnerObserver {
         private configuration: IConfiguration,
     ) {}
 
-    run(_builder: ProcessBuilder): void {
+    run(builder: ProcessBuilder): void {
         this.clearOutputOnRun();
+        this.outputChannel.appendLine(builder.toString());
     }
 
     error(_error: string): void {
         this.outputChannel.clear();
+    }
+
+    line(line: string): void {
+        this.outputChannel.appendLine(stripAnsi(line));
     }
 
     private clearOutputOnRun() {

@@ -38,7 +38,7 @@ describe('TestRunnerObserverFactory', () => {
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const observers = factory.create(queue, testRun);
 
-        expect(observers.length).toBe(6);
+        expect(observers.length).toBe(5);
         expect(observers.some((o) => o instanceof DatasetObserver)).toBe(true);
         expect(observers.some((o) => o instanceof TestResultObserver)).toBe(true);
         expect(observers.some((o) => o instanceof PrinterObserver)).toBe(true);
