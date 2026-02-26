@@ -264,10 +264,10 @@ export class Printer {
     printedOutput(result?: TestResult) {
         const text = result ? this.getTestPrintedOutput(result) : this.outputBuffer.flush();
 
-        return text ? `🟨 ${text}` : undefined;
+        return text || undefined;
     }
 
-    append(line: string) {
+    appendBuffer(line: string) {
         this.outputBuffer.append(line);
     }
 

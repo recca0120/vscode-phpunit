@@ -1,26 +1,25 @@
 import type { IConfiguration, ProcessBuilder, TestRunnerObserver } from '@vscode-phpunit/phpunit';
-import stripAnsi from 'strip-ansi';
 import type { OutputChannel } from 'vscode';
 
 export class RawOutputObserver implements TestRunnerObserver {
     private hasClearedCurrentRequest = false;
 
     constructor(
-        private outputChannel: OutputChannel,
+        private writer: OutputChannel,
         private configuration: IConfiguration,
     ) {}
 
     run(builder: ProcessBuilder): void {
         this.clearOutputOnRun();
-        this.outputChannel.appendLine(builder.toString());
+        this.writer.appendLine(builder.toString());
     }
 
     error(error: string): void {
-        this.outputChannel.appendLine(stripAnsi(error));
+        this.writer.appendLine(error);
     }
 
     line(line: string): void {
-        this.outputChannel.appendLine(stripAnsi(line));
+        this.writer.appendLine(line);
     }
 
     private clearOutputOnRun() {
@@ -29,7 +28,7 @@ export class RawOutputObserver implements TestRunnerObserver {
         }
 
         if (this.configuration.get('clearOutputOnRun') === true) {
-            this.outputChannel.clear();
+            this.writer.clear();
         }
 
         this.hasClearedCurrentRequest = true;

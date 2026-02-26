@@ -7,4 +7,8 @@ export class TestRunWriter implements OutputWriter {
     append(text: string): void {
         this.testRun.appendOutput(text);
     }
+
+    appendLine(text: string): void {
+        this.testRun.appendOutput(text);
+    }
 }

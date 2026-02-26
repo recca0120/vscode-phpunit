@@ -27,6 +27,10 @@ export class PrinterObserver implements TestRunnerObserver {
         this.append(this.printer.error(error));
     }
 
+    line(line: string): void {
+        this.printer.appendBuffer(line);
+    }
+
     testVersion(result: TestVersion) {
         this.append(this.printer.testVersion(result));
     }

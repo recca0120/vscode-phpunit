@@ -21,11 +21,11 @@ describe('Printer output buffer', () => {
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        printer.append('printed output');
+        printer.appendBuffer('printed output');
 
         const output = printer.printedOutput();
 
-        expect(output).toEqual('🟨 printed output');
+        expect(output).toEqual('printed output');
     });
 
     it('should print printed output when die', () => {
@@ -37,11 +37,11 @@ describe('Printer output buffer', () => {
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        printer.append('printed output when die');
+        printer.appendBuffer('printed output when die');
 
         const output = printer.printedOutput();
 
-        expect(output).toEqual('🟨 printed output when die');
+        expect(output).toEqual('printed output when die');
     });
 
     it('should print dump output', () => {
@@ -53,11 +53,11 @@ describe('Printer output buffer', () => {
             id: 'Tests\\Output\\OutputTest::test_dump',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        printer.append('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
+        printer.appendBuffer('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
 
         const output = printer.printedOutput();
 
-        expect(output).toEqual('🟨 array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
+        expect(output).toEqual('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
     });
 
     it('should preserve ANSI codes in dump output', () => {
@@ -74,11 +74,11 @@ describe('Printer output buffer', () => {
             '\u001B[0;38;5;208m\u001B[38;5;38marray:1\u001B[0;38;5;208m [\u001B[m\n' +
             '  \u001B[0;38;5;208m"\u001B[38;5;113mtest\u001B[0;38;5;208m" => "\u001B[1;38;5;113mfoo\u001B[0;38;5;208m"\u001B[m\n' +
             '\u001B[0;38;5;208m]\u001B[m';
-        printer.append(ansiInput);
+        printer.appendBuffer(ansiInput);
 
         const output = printer.printedOutput();
 
-        expect(output).toEqual(`🟨 ${ansiInput}`);
+        expect(output).toEqual(ansiInput);
     });
 
     it('testSuiteFinished', () => {
