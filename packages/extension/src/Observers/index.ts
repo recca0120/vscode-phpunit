@@ -1,5 +1,6 @@
 export * from './DatasetObserver';
 export * from './ErrorDialogObserver';
+export * from './OutputChannelObserver';
 export * from './OutputChannelWriter';
 export * from './OutputWriter';
 export * from './PrinterObserver';

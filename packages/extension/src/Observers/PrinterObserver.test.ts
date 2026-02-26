@@ -6,104 +6,15 @@ import {
     PRESET_PROGRESS,
     Printer,
     ProcessBuilder,
-    semverGte,
     semverLt,
     TestRunner,
 } from '@vscode-phpunit/phpunit';
 import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, type Mock } from 'vitest';
-import type { OutputChannel, TestRunRequest } from 'vscode';
+import type { OutputChannel } from 'vscode';
 import * as vscode from 'vscode';
-import { PrinterObserver } from './index';
 import { OutputChannelWriter } from './OutputChannelWriter';
-
-describe('PrinterObserver clear behavior', () => {
-    const createObserver = (
-        config: Record<string, unknown> = {},
-        request: TestRunRequest = { continuous: false } as TestRunRequest,
-    ) => {
-        const outputChannel = vscode.window.createOutputChannel('phpunit');
-        const configuration = new Configuration({
-            clearOutputOnRun: true,
-            showAfterExecution: 'onFailure',
-            ...config,
-        });
-        const observer = new PrinterObserver(
-            new OutputChannelWriter(outputChannel),
-            configuration,
-            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
-            request,
-        );
-
-        return { observer, outputChannel };
-    };
-
-    const createBuilder = (command: string) => {
-        const config = new Configuration({ php: command });
-        const options = { cwd: '.' };
-        return new ProcessBuilder(
-            config,
-            options,
-            new PathReplacer(options, config.get('paths') as Path),
-        );
-    };
-
-    it('clears once for multiple processes in the same request', () => {
-        const { observer, outputChannel } = createObserver();
-
-        observer.run(createBuilder('command-1'));
-        observer.run(createBuilder('command-2'));
-
-        expect(outputChannel.clear).toHaveBeenCalledTimes(1);
-    });
-
-    it('should show output channel when continuous is undefined (standard run)', () => {
-        const { observer, outputChannel } = createObserver(
-            { showAfterExecution: 'always' },
-            {} as TestRunRequest,
-        );
-
-        observer.run(createBuilder('command-1'));
-
-        expect(outputChannel.show).toHaveBeenCalled();
-    });
-
-    it('should not show output channel when continuous is true', () => {
-        const { observer, outputChannel } = createObserver({ showAfterExecution: 'always' }, {
-            continuous: true,
-        } as TestRunRequest);
-
-        observer.run(createBuilder('command-1'));
-
-        expect(outputChannel.show).not.toHaveBeenCalled();
-    });
-
-    it('each observer instance clears independently', () => {
-        const { outputChannel } = createObserver();
-        const config = {
-            clearOutputOnRun: true,
-            showAfterExecution: 'onFailure',
-        };
-        const configuration = new Configuration(config);
-        const observer1 = new PrinterObserver(
-            outputChannel,
-            configuration,
-            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
-            { continuous: false } as TestRunRequest,
-        );
-        const observer2 = new PrinterObserver(
-            outputChannel,
-            configuration,
-            new Printer(new PHPUnitXML(), PRESET_PROGRESS),
-            { continuous: false } as TestRunRequest,
-        );
-
-        observer1.run(createBuilder('command-1'));
-        observer2.run(createBuilder('command-2'));
-
-        expect(outputChannel.clear).toHaveBeenCalledTimes(2);
-    });
-});
+import { PrinterObserver } from './PrinterObserver';
 
 describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitVersion)', ({
     root,
@@ -120,16 +31,12 @@ describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitV
             php: 'php',
             phpunit: binary,
             args: ['-c', 'phpunit.xml', ...stubArgs],
-            clearOutputOnRun: true,
-            showAfterExecution: 'onFailure',
         });
         testRunner = new TestRunner();
         outputChannel = vscode.window.createOutputChannel('phpunit');
         const observer = new PrinterObserver(
             new OutputChannelWriter(outputChannel),
-            configuration,
             new Printer(new PHPUnitXML(), PRESET_PROGRESS),
-            { continuous: false } as TestRunRequest,
         );
         testRunner.observe(observer);
     });
@@ -159,7 +66,6 @@ describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitV
         const testFile = phpUnitProject('tests/AssertionsTest.php');
         await run(testFile);
         const outputChannel = getOutputChannel();
-        expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.append).toHaveBeenCalledWith(
             expect.stringMatching(
                 new RegExp(
@@ -303,87 +209,8 @@ describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitV
         await run(testFile);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.clear).toHaveBeenCalled();
         expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching('❌'));
         expect(outputChannel.append).toHaveBeenCalledWith(expect.stringMatching(/NotFound\.php/));
-    });
-
-    it('always show output channel', async () => {
-        await configuration.update('showAfterExecution', 'always');
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_passed';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).toHaveBeenCalledWith(true);
-    });
-
-    it('should not show output channel when successful', async () => {
-        await configuration.update('showAfterExecution', 'onFailure');
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_passed';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).not.toHaveBeenCalled();
-    });
-
-    it('should show output channel when failure', async () => {
-        await configuration.update('showAfterExecution', 'onFailure');
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_failed|test_passed';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).toHaveBeenCalled();
-    });
-
-    it('should show output channel when file not found', async () => {
-        await configuration.update('showAfterExecution', 'onFailure');
-        const testFile = phpUnitProject('tests/NotFound.php');
-        await run(testFile, undefined);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).toHaveBeenCalled();
-    });
-
-    it('never show output channel when successful', async () => {
-        await configuration.update('showAfterExecution', 'never');
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_passed';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).not.toHaveBeenCalled();
-    });
-
-    it('never show output channel when failure', async () => {
-        await configuration.update('showAfterExecution', 'never');
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_failed|test_passed';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).not.toHaveBeenCalled();
-    });
-
-    it('never show output channel when not found', async () => {
-        await configuration.update('showAfterExecution', 'never');
-        const testFile = phpUnitProject('tests/NotFound.php');
-        await run(testFile, undefined);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.show).not.toHaveBeenCalled();
-    });
-
-    it('should not clear output channel', async () => {
-        await configuration.update('clearOutputOnRun', false);
-        const testFile = phpUnitProject('tests/AssertionsTest.php');
-        const filter = 'test_passed';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.clear).not.toHaveBeenCalled();
     });
 
     it('should print printed output', async () => {
@@ -393,37 +220,5 @@ describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitV
 
         const outputChannel = getOutputChannel();
         expect(outputChannel.append).toHaveBeenCalledWith('🟨 printed output');
-        expect(outputChannel.show).toHaveBeenCalled();
-    });
-
-    it('should print printed output when die', async () => {
-        const testFile = phpUnitProject('tests/Output/OutputTest.php');
-        const filter = 'test_die';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        if (semverGte(phpUnitVersion, '12.0.0')) {
-            expect(outputChannel.append).toHaveBeenCalledWith(
-                expect.stringMatching(/🟨 printed output when die/),
-            );
-            expect(outputChannel.append).toHaveBeenCalledWith(
-                expect.stringMatching(/Fatal error: Premature end of PHP process/),
-            );
-        } else {
-            expect(outputChannel.append).toHaveBeenCalledWith('🟨 printed output when die');
-        }
-        expect(outputChannel.show).toHaveBeenCalled();
-    });
-
-    it('should print dump output', async () => {
-        const testFile = phpUnitProject('tests/Output/OutputTest.php');
-        const filter = 'test_dump';
-        await run(testFile, filter);
-
-        const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith(
-            expect.stringMatching(/🟨 .*array:\d+ \[/),
-        );
-        expect(outputChannel.show).toHaveBeenCalled();
     });
 });

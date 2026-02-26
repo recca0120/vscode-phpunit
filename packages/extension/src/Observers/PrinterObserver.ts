@@ -1,5 +1,4 @@
 import type {
-    IConfiguration,
     Printer,
     ProcessBuilder,
     TestConfiguration,
@@ -17,40 +16,20 @@ import type {
     TestSuiteStarted,
     TestVersion,
 } from '@vscode-phpunit/phpunit';
-import type { TestRunRequest } from 'vscode';
 import type { OutputWriter } from './OutputWriter';
 
-enum ShowOutputState {
-    always = 'always',
-    onFailure = 'onFailure',
-    never = 'never',
-}
-
 export class PrinterObserver implements TestRunnerObserver {
-    private hasClearedCurrentRequest = false;
-
     constructor(
         private writer: OutputWriter,
-        private configuration: IConfiguration,
         private printer: Printer,
-        private request: TestRunRequest,
     ) {}
 
     run(builder: ProcessBuilder): void {
-        this.clearOutputOnRun();
-        this.showOutputChannel(ShowOutputState.always);
-
         this.append(this.printer.start(builder.toString()));
     }
 
     error(error: string): void {
-        this.writer.clear();
         this.append(this.printer.error(error));
-        this.showOutputChannel(ShowOutputState.onFailure);
-    }
-
-    line(line: string): void {
-        this.printer.append(line);
     }
 
     testVersion(result: TestVersion) {
@@ -84,13 +63,11 @@ export class PrinterObserver implements TestRunnerObserver {
 
     testFailed(result: TestFailed): void {
         this.testFinished(result);
-        this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testIgnored(result: TestIgnored): void {
         this.append(this.printer.testIgnored(result));
         this.printedOutput(result);
-        this.showOutputChannel(ShowOutputState.onFailure);
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
@@ -114,7 +91,6 @@ export class PrinterObserver implements TestRunnerObserver {
         const output = this.printer.printedOutput(result);
         if (output) {
             this.append(output);
-            this.writer.show(false);
         }
     }
 
@@ -122,27 +98,5 @@ export class PrinterObserver implements TestRunnerObserver {
         if (text !== undefined) {
             this.writer.append(text);
         }
-    }
-
-    private showOutputChannel(state: ShowOutputState) {
-        const showAfterExecution =
-            (this.configuration.get('showAfterExecution') as ShowOutputState) ??
-            ShowOutputState.onFailure;
-
-        if (!this.request.continuous && state === showAfterExecution) {
-            this.writer.show(true);
-        }
-    }
-
-    private clearOutputOnRun() {
-        if (this.hasClearedCurrentRequest) {
-            return;
-        }
-
-        if (this.configuration.get('clearOutputOnRun') === true) {
-            this.writer.clear();
-        }
-
-        this.hasClearedCurrentRequest = true;
     }
 }
