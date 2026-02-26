@@ -17,7 +17,7 @@ import {
 } from '../TestOutput/types';
 import { EOL } from '../utils';
 import { AnsiStyle, DEFAULT_THEME } from './AnsiStyle';
-import { OutputBuffer } from './OutputBuffer';
+import { PrintedOutputStore } from './PrintedOutputStore';
 import type { ErrorCategory, IconSet, PrinterFormat } from './PrinterConfig';
 import { fileFormat, readSourceSnippet } from './SourceFileReader';
 
@@ -25,7 +25,7 @@ const PRINTED_OUTPUT_PATTERN =
     /(This test printed output|Test code or tested code printed unexpected output):(?<output>.*)/i;
 
 export class Printer {
-    private outputBuffer = new OutputBuffer();
+    private printedOutputStore = new PrintedOutputStore();
     private command = '';
     private errors: TestFailed[] = [];
     private isDotMode: boolean;
@@ -44,7 +44,7 @@ export class Printer {
     }
 
     start(command?: string): string | undefined {
-        this.outputBuffer.clear();
+        this.printedOutputStore.clear();
         this.command = command ?? '';
         this.errors = [];
 
@@ -127,7 +127,7 @@ export class Printer {
     }
 
     testStarted(result: TestStarted): string | undefined {
-        this.outputBuffer.setCurrent(result.name);
+        this.printedOutputStore.setCurrent(result.name);
 
         if (this.format.started === false) {
             return undefined;
@@ -234,7 +234,7 @@ export class Printer {
         vars: Record<string, string | undefined>,
     ): string | undefined {
         const errors = this.end();
-        this.outputBuffer.setCurrent(undefined);
+        this.printedOutputStore.setCurrent(undefined);
 
         if (template === false) {
             return errors;
@@ -262,13 +262,13 @@ export class Printer {
     }
 
     flushOutput(result?: TestResult) {
-        const text = result ? this.getTestPrintedOutput(result) : this.outputBuffer.flush();
+        const text = result ? this.takePrintedOutput(result) : this.printedOutputStore.flush();
 
         return text ? `${EOL}${text}${EOL}` : undefined;
     }
 
-    appendBuffer(line: string) {
-        this.outputBuffer.append(line);
+    appendOutput(line: string) {
+        this.printedOutputStore.append(line);
     }
 
     private shouldSkipSuite(id?: string, file?: string): boolean {
@@ -279,12 +279,12 @@ export class Printer {
         return /::/.test(result.id) ? result.name.replace(/^test_/, '') : result.id;
     }
 
-    private getTestPrintedOutput(result: TestResult): string | undefined {
+    private takePrintedOutput(result: TestResult): string | undefined {
         const name = 'name' in result ? result.name : '';
         const message = 'message' in result ? (result as { message: string }).message : '';
         const matched = message.match(PRINTED_OUTPUT_PATTERN);
 
-        return matched ? matched.groups?.output.trim() : this.outputBuffer.take(name);
+        return matched ? matched.groups?.output.trim() : this.printedOutputStore.take(name);
     }
 
     private formatFlat(): string {

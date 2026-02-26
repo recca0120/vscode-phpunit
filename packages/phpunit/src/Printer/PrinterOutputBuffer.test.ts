@@ -22,7 +22,7 @@ describe('Printer output buffer', () => {
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_echo',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        printer.appendBuffer('printed output');
+        printer.appendOutput('printed output');
 
         const output = printer.flushOutput();
 
@@ -38,7 +38,7 @@ describe('Printer output buffer', () => {
             id: 'Recca0120\\VSCode\\Tests\\Output\\OutputTest::test_die',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        printer.appendBuffer('printed output when die');
+        printer.appendOutput('printed output when die');
 
         const output = printer.flushOutput();
 
@@ -54,7 +54,7 @@ describe('Printer output buffer', () => {
             id: 'Tests\\Output\\OutputTest::test_dump',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        printer.appendBuffer('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
+        printer.appendOutput('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
 
         const output = printer.flushOutput();
 
@@ -77,7 +77,7 @@ describe('Printer output buffer', () => {
             '\u001B[0;38;5;208m\u001B[38;5;38marray:1\u001B[0;38;5;208m [\u001B[m\n' +
             '  \u001B[0;38;5;208m"\u001B[38;5;113mtest\u001B[0;38;5;208m" => "\u001B[1;38;5;113mfoo\u001B[0;38;5;208m"\u001B[m\n' +
             '\u001B[0;38;5;208m]\u001B[m';
-        printer.appendBuffer(ansiInput);
+        printer.appendOutput(ansiInput);
 
         const output = printer.flushOutput();
 

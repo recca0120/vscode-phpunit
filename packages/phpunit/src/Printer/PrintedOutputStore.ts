@@ -1,6 +1,6 @@
 import { EOL } from '../utils';
 
-export class OutputBuffer {
+export class PrintedOutputStore {
     private current?: string;
     private store: Map<string, string> = new Map();
 
