@@ -1,3 +1,4 @@
+import stripAnsi from 'strip-ansi';
 import { PestFixer, PestV1Fixer } from '../TestIdentifier/PestFixer';
 import { PHPUnitFixer } from '../TestIdentifier/PHPUnitFixer';
 import {
@@ -19,7 +20,7 @@ export class TestOutputParser {
     constructor(private testResultParser: TeamcityLineParser = new TeamcityLineParser()) {}
 
     parse(input: string | Buffer): TestResult | undefined {
-        let result = this.testResultParser.parse(input.toString());
+        let result = this.testResultParser.parse(stripAnsi(input.toString()));
         result = PestV1Fixer.fixFlowId(this.cache, result);
 
         if (!this.isDispatchable(result)) {

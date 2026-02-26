@@ -760,6 +760,45 @@ describe('Pest TestOutputParser Text', () => {
         });
     });
 
+    describe('Pest locationHint without parentheses (file path only)', () => {
+        it('testSuiteStarted phpunit.xml with file-path locationHint', () => {
+            resultShouldBe(
+                `##teamcity[testSuiteStarted name='${pestProject('phpunit.xml')}' locationHint='pest_qn://tests/Unit/ArchTest.php' flowId='86988']`,
+                {
+                    event: TeamcityEvent.testSuiteStarted,
+                    id: pestProject('phpunit.xml'),
+                    name: pestProject('phpunit.xml'),
+                    flowId: 86988,
+                },
+            );
+        });
+
+        it('testSuiteStarted Unit with file-path locationHint', () => {
+            resultShouldBe(
+                `##teamcity[testSuiteStarted name='Unit' locationHint='pest_qn://tests/Unit/ArchTest.php' flowId='86988']`,
+                {
+                    event: TeamcityEvent.testSuiteStarted,
+                    id: 'Unit',
+                    name: 'Unit',
+                    flowId: 86988,
+                },
+            );
+        });
+
+        it('testSuiteStarted Tests\\Unit\\ArchTest with file-path locationHint', () => {
+            resultShouldBe(
+                `##teamcity[testSuiteStarted name='Tests\\Unit\\ArchTest' locationHint='pest_qn://tests/Unit/ArchTest.php' flowId='86988']`,
+                {
+                    event: TeamcityEvent.testSuiteStarted,
+                    id: 'tests/Unit/ArchTest.php',
+                    name: 'Tests\\Unit\\ArchTest',
+                    file: 'tests/Unit/ArchTest.php',
+                    flowId: 86988,
+                },
+            );
+        });
+    });
+
     describe('Pest v1', () => {
         it('Pest v1 TestDuration', () => {
             resultShouldBe('Time:  0.013558585s', {
@@ -835,7 +874,7 @@ describe('Pest TestOutputParser Text', () => {
             );
 
             resultShouldBe(
-                `##teamcity[testIgnored name='error' message='' details=' /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Fixtures/CollisionTest.php:5|n ' duration='6']`,
+                `##teamcity[testIgnored name='error' message='' details=' ${pestProject('tests/Fixtures/CollisionTest.php')}:5|n ' duration='6']`,
                 undefined,
             );
 
@@ -880,7 +919,7 @@ describe('Pest TestOutputParser Text', () => {
 
         it('pest v1 data set', () => {
             resultShouldBe(
-                `##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']`,
+                `##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn://${pestProject('tests/Unit/ExampleTest.php')}::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']`,
                 {
                     event: TeamcityEvent.testStarted,
                     id: 'tests/Unit/ExampleTest.php::it has emails with data set "(\'enunomaduro@gmail.com\')"',
@@ -957,7 +996,7 @@ describe('Pest TestOutputParser Text', () => {
         it('full lifecycle: testSuiteStarted → testStarted → testFailed → testFinished', () => {
             // testSuiteStarted for testsuite name
             const suiteStarted = parse(
-                `##teamcity[testSuiteStarted name='Unit' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ArchTest.php' flowId='36903']`,
+                `##teamcity[testSuiteStarted name='Unit' locationHint='pest_qn://${pestProject('tests/Unit/ArchTest.php')}' flowId='36903']`,
             );
             expect(suiteStarted).toEqual(
                 expect.objectContaining({
@@ -969,12 +1008,12 @@ describe('Pest TestOutputParser Text', () => {
 
             // testSuiteStarted for class
             parse(
-                `##teamcity[testSuiteStarted name='Users\\recca0120\\Desktop\\vscodephpunit\\src\\PHPUnit\\tests\\fixtures\\peststub\\tests\\Unit\\ExampleTest' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php' flowId='36903']`,
+                `##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest' locationHint='pest_qn://${pestProject('tests/Unit/ExampleTest.php')}' flowId='36903']`,
             );
 
             // testStarted
             const started = parse(
-                `##teamcity[testStarted name='test description' locationHint='pest_qn:///Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php::test description' flowId='36903']`,
+                `##teamcity[testStarted name='test description' locationHint='pest_qn://${pestProject('tests/Unit/ExampleTest.php')}::test description' flowId='36903']`,
             );
             expect(started).toEqual(
                 expect.objectContaining({
@@ -988,7 +1027,7 @@ describe('Pest TestOutputParser Text', () => {
 
             // testFailed (merges with cached testStarted)
             const failed = parse(
-                `##teamcity[testFailed name='test description' message='Failed asserting that true is identical to false.' details='at /Users/recca0120/Desktop/vscode-phpunit/src/PHPUnit/__tests__/fixtures/pest-stub/tests/Unit/ExampleTest.php:4' flowId='36903']`,
+                `##teamcity[testFailed name='test description' message='Failed asserting that true is identical to false.' details='at ${pestProject('tests/Unit/ExampleTest.php')}:4' flowId='36903']`,
             );
             expect(failed).toBeUndefined();
 

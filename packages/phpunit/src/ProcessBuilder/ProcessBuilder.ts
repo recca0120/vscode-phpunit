@@ -243,7 +243,7 @@ export class ProcessBuilder {
                 }
                 return this.quoteIfNeeded(this.pathReplacer.toRemote(arg));
             })
-            .concat('--colors=never', '--teamcity');
+            .concat('--colors=always', '--teamcity');
 
         const allArgs = this.addParaTestFunctional(args, !!filterArg)
             .concat(...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? []))

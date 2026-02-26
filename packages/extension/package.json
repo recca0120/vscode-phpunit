@@ -39,21 +39,6 @@
                 "configuration": "./language-configuration.json"
             }
         ],
-        "grammars": [
-            {
-                "language": "phpunit",
-                "scopeName": "source.phpunit",
-                "path": "./syntaxes/collision.tmLanguage.json",
-                "embeddedLanguages": {
-                    "meta.embedded.php.phpunit": "php",
-                    "meta.embedded.vardumper.phpunit": "phpunit"
-                }
-            },
-            {
-                "scopeName": "source.vardumper",
-                "path": "./syntaxes/vardumper.tmLanguage.json"
-            }
-        ],
         "commands": [
             {
                 "command": "phpunit.reload",
@@ -147,6 +132,22 @@
                 "phpunit.environment": {
                     "type": "object",
                     "title": "Set environment variables before running the phpunit command",
+                    "scope": "resource"
+                },
+                "phpunit.output.preset": {
+                    "type": "string",
+                    "enum": [
+                        "phpunit",
+                        "collision"
+                    ],
+                    "default": "collision",
+                    "description": "Output format preset. 'collision' shows detailed per-test results; 'phpunit' shows dot-progress.",
+                    "scope": "resource"
+                },
+                "phpunit.output.format": {
+                    "type": "object",
+                    "default": {},
+                    "description": "Override individual format fields from the preset. See documentation for available fields.",
                     "scope": "resource"
                 },
                 "phpunit.clearOutputOnRun": {

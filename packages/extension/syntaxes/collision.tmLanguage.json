@@ -2,6 +2,30 @@
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name": "PHPUnit",
     "patterns": [
+        { "comment": "--- Dot-progress line ---" },
+        {
+            "comment": "Dot-progress line: only match lines composed of [.FEISR] with optional counter",
+            "begin": "^(?=[.FEISR]{2,})",
+            "end": "$",
+            "patterns": [
+                {
+                    "comment": "F and E → red",
+                    "match": "[FE]",
+                    "name": "invalid.phpunit"
+                },
+                {
+                    "comment": "R, I, S → yellow",
+                    "match": "[RIS]",
+                    "name": "markup.deleted.phpunit"
+                },
+                {
+                    "comment": "Counter (62 / 62 (100%)) → gray",
+                    "match": "\\d+\\s*/\\s*\\d+\\s*\\(\\d+%\\)",
+                    "name": "comment.phpunit"
+                }
+            ]
+        },
+
         { "comment": "--- Test result lines ---" },
         {
             "comment": "Passed test line → green",
@@ -27,6 +51,11 @@
         },
 
         { "comment": "--- Error details ---" },
+        {
+            "comment": "Numbered error title → red (e.g. '1) Tests\\Foo::method')",
+            "match": "^\\d+\\)\\s+\\S+",
+            "name": "invalid.phpunit"
+        },
         {
             "comment": "FAILED error title → icon+FAILED red, rest default",
             "match": "^(\\s+❌\\s+FAILED)(\\s+.+)",
@@ -75,21 +104,19 @@
 
         { "comment": "--- Diff ---" },
         {
+            "comment": "Diff header lines → gray",
+            "match": "^(---|\\+\\+\\+|@@)\\s.*",
+            "name": "comment.phpunit"
+        },
+        {
             "comment": "Diff removed line → red",
-            "match": "^-\\s+.+",
+            "match": "^-.+",
             "name": "invalid.phpunit"
         },
         {
             "comment": "Diff added line → green",
-            "match": "^\\+\\s+.+",
+            "match": "^\\+.+",
             "name": "markup.inserted.phpunit"
-        },
-
-        { "comment": "--- Structure ---" },
-        {
-            "comment": "PrettyPrinter box lines → gray",
-            "match": "^\\s+[┐├│┴┊].*",
-            "name": "comment.phpunit"
         },
 
         { "comment": "--- Summary statistics ---" },

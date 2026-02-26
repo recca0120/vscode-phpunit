@@ -34,7 +34,7 @@ describe('ProcessBuilder Test', () => {
             expect(args).toEqual([
                 'vendor/bin/paratest',
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
                 '--functional',
             ]);
@@ -56,7 +56,7 @@ describe('ProcessBuilder Test', () => {
                 phpUnitProjectWin('vendor/bin/phpunit'),
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
                 phpUnitProjectWin('tests/AssertionsTest.php'),
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -73,7 +73,7 @@ describe('ProcessBuilder Test', () => {
                 'vendor/bin/phpunit',
                 '--repeat=2',
                 '--order-by=random',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -90,7 +90,7 @@ describe('ProcessBuilder Test', () => {
                 'vendor/bin/phpunit',
                 '--no-coverage',
                 '--no-logging',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -105,7 +105,7 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args, options } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
+            expect(args).toEqual(['vendor/bin/phpunit', '--colors=always', '--teamcity']);
             expect(options.cwd).toEqual(phpUnitProject(''));
 
             for (const [key, value] of Object.entries(environment)) {
@@ -120,7 +120,7 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual(['artisan', 'test', '--colors=never', '--teamcity']);
+            expect(args).toEqual(['artisan', 'test', '--colors=always', '--teamcity']);
         });
 
         it('has single quote', () => {
@@ -141,7 +141,7 @@ describe('ProcessBuilder Test', () => {
                 'vendor/bin/pest',
                 `--filter=^.*::(it has user's email)(( with (data set )?.*)?)?$`,
                 phpUnitProject('tests/AssertionsTest.php'),
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -153,7 +153,7 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('C:\\Program Files\\PHP\\php');
-            expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
+            expect(args).toEqual(['vendor/bin/phpunit', '--colors=always', '--teamcity']);
         });
 
         it('should handle phpunit binary path with spaces', () => {
@@ -169,7 +169,7 @@ describe('ProcessBuilder Test', () => {
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'd:\\All Project\\adminservice-collaboration\\vendor\\bin\\phpunit',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -189,7 +189,7 @@ describe('ProcessBuilder Test', () => {
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -210,7 +210,7 @@ describe('ProcessBuilder Test', () => {
                 'vendor/bin/phpunit',
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
                 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -248,7 +248,7 @@ describe('ProcessBuilder Test', () => {
                 'php',
                 'vendor/bin/paratest',
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
                 '--functional',
             ]);
@@ -272,7 +272,7 @@ describe('ProcessBuilder Test', () => {
                     'php',
                     'vendor/bin/paratest',
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
-                    `--colors=never`,
+                    `--colors=always`,
                     `--teamcity`,
                     `--functional`,
                 ].join(' '),
@@ -299,7 +299,7 @@ describe('ProcessBuilder Test', () => {
                     ` with data set \\"\\(\\'other@example\\.com\\'\\)\\")$/"`,
             );
             expect(shCmd).toContain('/pest-stub/tests/Unit/ExampleTest.php');
-            expect(shCmd).toContain('--colors=never');
+            expect(shCmd).toContain('--colors=always');
             expect(shCmd).toContain('--teamcity');
         });
 
@@ -323,7 +323,7 @@ describe('ProcessBuilder Test', () => {
                 'vendor/bin/phpunit',
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '/var/www/tests/AssertionsTest.php',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -352,7 +352,7 @@ describe('ProcessBuilder Test', () => {
                 'vendor/bin/phpunit',
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
                 '/var/www/tests/AssertionsTest.php',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -376,7 +376,7 @@ describe('ProcessBuilder Test', () => {
                     'artisan',
                     'test',
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
-                    `--colors=never`,
+                    `--colors=always`,
                     `--teamcity`,
                 ].join(' '),
             ]);
@@ -406,7 +406,7 @@ describe('ProcessBuilder Test', () => {
                     'artisan',
                     'test',
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
-                    '--colors=never',
+                    '--colors=always',
                     '--teamcity',
                 ].join(' '),
             ]);
@@ -435,7 +435,7 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual(['vendor/bin/phpunit', '--colors=never', '--teamcity']);
+            expect(args).toEqual(['vendor/bin/phpunit', '--colors=always', '--teamcity']);
         });
 
         it(`command is ${CMD_TEMPLATE} --functional`, () => {
@@ -448,7 +448,7 @@ describe('ProcessBuilder Test', () => {
             expect(args).toEqual([
                 'vendor/bin/paratest',
                 `--filter=^.*::(test_passed)( with data set .*)?$`,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
                 '--functional',
             ]);
@@ -462,7 +462,7 @@ describe('ProcessBuilder Test', () => {
 
             const { runtime, args } = builder.build();
             expect(runtime).toEqual('php');
-            expect(args).toEqual(['artisan', 'test', '--colors=never', '--teamcity']);
+            expect(args).toEqual(['artisan', 'test', '--colors=always', '--teamcity']);
         });
 
         it(`command is ${CMD_TEMPLATE} and environment`, () => {
@@ -477,7 +477,7 @@ describe('ProcessBuilder Test', () => {
                 'MEMORY_LIMIT=-1',
                 'php',
                 'vendor/bin/phpunit',
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ]);
         });
@@ -505,7 +505,7 @@ describe('ProcessBuilder Test', () => {
                     'artisan',
                     'test',
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
-                    `--colors=never`,
+                    `--colors=always`,
                     `--teamcity`,
                 ].join(' '),
             ]);
@@ -529,7 +529,7 @@ describe('ProcessBuilder Test', () => {
                     'php',
                     'vendor/bin/phpunit',
                     `'--filter=^.*::(test_passed)( with data set .*)?$'`,
-                    '--colors=never',
+                    '--colors=always',
                     '--teamcity',
                 ].join(' '),
             ]);

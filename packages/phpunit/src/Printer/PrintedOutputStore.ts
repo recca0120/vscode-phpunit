@@ -1,6 +1,6 @@
-import { EOL } from '@vscode-phpunit/phpunit';
+import { EOL } from '../utils';
 
-export class OutputBuffer {
+export class PrintedOutputStore {
     private current?: string;
     private store: Map<string, string> = new Map();
 
@@ -17,11 +17,10 @@ export class OutputBuffer {
         this.store.set(this.current, `${existing}${text}${EOL}`);
     }
 
-    get(name: string) {
+    take(name: string) {
         const text = this.store.get(name);
-        if (text) {
-            this.store.delete(name);
-        }
+        this.store.delete(name);
+
         return text?.trim();
     }
 

@@ -81,7 +81,7 @@ describe('utils', () => {
         it('should exclude specified options', () => {
             expect(
                 parseArguments(
-                    ['--teamcity', '--colors=never', '--verbose'],
+                    ['--teamcity', '--colors=always', '--verbose'],
                     ['teamcity', 'colors'],
                 ),
             ).toEqual(['--verbose']);

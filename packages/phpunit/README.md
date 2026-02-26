@@ -7,10 +7,11 @@ Used by the [PHPUnit & Pest Test Explorer](https://marketplace.visualstudio.com/
 ## Features
 
 - **Test parsing** — static analysis of PHPUnit/Pest test files via tree-sitter (WASM) and php-parser
-- **Data provider resolution** — extract dataset names from `#[DataProvider]`, `#[TestWith]`, `->with()`, etc. ([details](docs/data-provider-guide.md))
+- **Data provider resolution** — extract dataset names from `#[DataProvider]`, `#[TestWith]`, `->with()`, etc. ([details](docs/data-provider-guide.md)); datasets that cannot be resolved statically are discovered at runtime from `testStarted` events
 - **PHPUnit XML** — parse `phpunit.xml` / `phpunit.xml.dist` for testsuites, coverage, and configuration
 - **Process builder** — construct PHPUnit/Pest command lines with filter encoding, Xdebug support, and path mapping
 - **Test output parsing** — parse Teamcity-formatted output into structured test results
+- **Formatted output** — configurable Printer with format-string presets (`progress`, `collision`, `pretty`) and ANSI color support
 - **Test collection** — manage test hierarchies (suite / file / class / method / dataset)
 - **Coverage** — parse Clover XML coverage reports
 - **Binary detection** — auto-detect `vendor/bin/phpunit` or `vendor/bin/pest` from `composer.json`
@@ -70,11 +71,17 @@ pnpm add @vscode-phpunit/phpunit
    │  (spawn proc) │                │
    └──────┬───────┘         ┌──────▼───────┐
           │ stdout          │  Observers   │
-   ┌──────▼───────┐         │ (UI updates) │
-   │ TestOutput   │         └──────────────┘
-   │ Parser       │
-   │ (Teamcity)   │
-   └──────────────┘
+   ┌──────▼───────┐         └──────┬───────┘
+   │ TestOutput   │                │
+   │ Parser       │         ┌──────▼───────┐
+   │ (Teamcity)   │         │   Printer    │
+   └──────────────┘         │ (format +    │
+                            │  ANSI color) │
+                            └──────┬───────┘
+                            ┌──────▼───────┐
+                            │ OutputWriter │
+                            │ (destination)│
+                            └──────────────┘
 ```
 
 ## Usage
@@ -273,6 +280,66 @@ namespace: App\Tests\Unit            App
                                                        ├─ with data set "one"
                                                        └─ with data set "two"
 ```
+
+### 4. Format test output (Printer)
+
+`Printer` transforms structured test events into human-readable output with configurable templates and ANSI colors. Output is written through the `OutputWriter` interface, keeping the printer decoupled from any specific output target.
+
+```typescript
+import {
+  Printer,
+  PHPUnitXML,
+  PRESET_PROGRESS,
+  PRESET_COLLISION,
+  PRESET_PRETTY,
+  resolveFormat,
+  type OutputWriter,
+} from '@vscode-phpunit/phpunit';
+
+// 1. Choose a preset
+const phpUnitXML = new PHPUnitXML();
+const printer = new Printer(phpUnitXML, PRESET_COLLISION);
+
+// 2. Implement OutputWriter for your output target
+class ConsoleWriter implements OutputWriter {
+  append(text: string) { process.stdout.write(text); }
+  appendLine(text: string) { process.stdout.write(text + '\n'); }
+}
+const writer = new ConsoleWriter();
+
+// 3. Wire into TestRunner observer events
+printer.start(command);               // → "php vendor/bin/phpunit ..."
+printer.testVersion(result);          // → "🚀 PHPUnit 11.5.0"
+printer.testSuiteStarted(result);     // → "PASS  App\Tests\ExampleTest"
+printer.testFinished(result);         // → "  ✓ test_add  3 ms"
+printer.testFailed(result);           // → "  ⨯ test_sub  5 ms"
+printer.testResultSummary(result);    // → "Tests:  1 failed, 3 passed (12 assertions)"
+printer.timeAndMemory(result);        // → "Duration: 0.05s"
+printer.close();                      // flush deferred error details
+```
+
+**Built-in presets:**
+
+| Preset | Style | Example output |
+|---|---|---|
+| `PRESET_PROGRESS` | PHPUnit default dot mode | `...F..S.` |
+| `PRESET_COLLISION` | [Collision](https://github.com/nunomaduro/collision) style | `✓ test_name  3 ms` |
+| `PRESET_PRETTY` | Collision without icons | `test_name  3 ms` |
+
+**Customize with `resolveFormat`:**
+
+```typescript
+const format = resolveFormat('collision', {
+  colors: false,                    // disable ANSI colors
+  icons: { passed: ['✔', 'OK'] },  // override specific icons
+  duration: false,                  // hide duration line
+});
+const printer = new Printer(phpUnitXML, format);
+```
+
+**Format template variables:**
+
+Templates use `{variable}` placeholders. For example, `finished: '  {icon} {name} {duration} ms'` produces `  ✓ test_add 3 ms`. Available variables depend on the event type — see `PrinterFormat` for the full list.
 
 ## Build
 

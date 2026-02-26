@@ -7,10 +7,11 @@
 ## 功能
 
 - **測試解析** — 透過 tree-sitter（WASM）和 php-parser 靜態分析 PHPUnit/Pest 測試檔案
-- **Data Provider 解析** — 從 `#[DataProvider]`、`#[TestWith]`、`->with()` 等語法萃取 dataset 名稱（[詳情](docs/data-provider-guide.zh-TW.md)）
+- **Data Provider 解析** — 從 `#[DataProvider]`、`#[TestWith]`、`->with()` 等語法萃取 dataset 名稱（[詳情](docs/data-provider-guide.zh-TW.md)）；靜態分析無法解析的 dataset 會在執行時從 `testStarted` 事件動態補齊
 - **PHPUnit XML** — 解析 `phpunit.xml` / `phpunit.xml.dist` 的 testsuite、coverage 與設定
 - **指令建構** — 建構 PHPUnit/Pest 命令列，支援 filter encoding、Xdebug、路徑映射
 - **測試輸出解析** — 將 Teamcity 格式輸出解析為結構化測試結果
+- **格式化輸出** — 可設定的 Printer，提供格式字串 preset（`progress`、`collision`、`pretty`）與 ANSI 色彩支援
 - **測試集合** — 管理測試階層（suite / file / class / method / dataset）
 - **Coverage** — 解析 Clover XML 覆蓋率報告
 - **執行檔偵測** — 從 `composer.json` 自動偵測 `vendor/bin/phpunit` 或 `vendor/bin/pest`
@@ -69,11 +70,17 @@ pnpm add @vscode-phpunit/phpunit
    │  (子程序執行)  │                │
    └──────┬───────┘         ┌──────▼───────┐
           │ stdout          │  Observers   │
-   ┌──────▼───────┐         │ (UI 更新)    │
-   │ TestOutput   │         └──────────────┘
-   │ Parser       │
-   │ (Teamcity)   │
-   └──────────────┘
+   ┌──────▼───────┐         └──────┬───────┘
+   │ TestOutput   │                │
+   │ Parser       │         ┌──────▼───────┐
+   │ (Teamcity)   │         │   Printer    │
+   └──────────────┘         │ (格式化 +    │
+                            │  ANSI 色彩)  │
+                            └──────┬───────┘
+                            ┌──────▼───────┐
+                            │ OutputWriter │
+                            │ (輸出目標)    │
+                            └──────────────┘
 ```
 
 ## 使用方式
@@ -272,6 +279,66 @@ namespace: App\Tests\Unit            App
                                                        ├─ with data set "one"
                                                        └─ with data set "two"
 ```
+
+### 4. 格式化測試輸出（Printer）
+
+`Printer` 將結構化測試事件轉換為可讀的輸出，支援可設定的模板與 ANSI 色彩。輸出透過 `OutputWriter` 介面寫入，讓 Printer 與具體輸出目標解耦。
+
+```typescript
+import {
+  Printer,
+  PHPUnitXML,
+  PRESET_PROGRESS,
+  PRESET_COLLISION,
+  PRESET_PRETTY,
+  resolveFormat,
+  type OutputWriter,
+} from '@vscode-phpunit/phpunit';
+
+// 1. 選擇 preset
+const phpUnitXML = new PHPUnitXML();
+const printer = new Printer(phpUnitXML, PRESET_COLLISION);
+
+// 2. 為輸出目標實作 OutputWriter
+class ConsoleWriter implements OutputWriter {
+  append(text: string) { process.stdout.write(text); }
+  appendLine(text: string) { process.stdout.write(text + '\n'); }
+}
+const writer = new ConsoleWriter();
+
+// 3. 接入 TestRunner observer 事件
+printer.start(command);               // → "php vendor/bin/phpunit ..."
+printer.testVersion(result);          // → "🚀 PHPUnit 11.5.0"
+printer.testSuiteStarted(result);     // → "PASS  App\Tests\ExampleTest"
+printer.testFinished(result);         // → "  ✓ test_add  3 ms"
+printer.testFailed(result);           // → "  ⨯ test_sub  5 ms"
+printer.testResultSummary(result);    // → "Tests:  1 failed, 3 passed (12 assertions)"
+printer.timeAndMemory(result);        // → "Duration: 0.05s"
+printer.close();                      // 清空延遲的錯誤詳情
+```
+
+**內建 preset：**
+
+| Preset | 風格 | 輸出範例 |
+|---|---|---|
+| `PRESET_PROGRESS` | PHPUnit 預設 dot 模式 | `...F..S.` |
+| `PRESET_COLLISION` | [Collision](https://github.com/nunomaduro/collision) 風格 | `✓ test_name  3 ms` |
+| `PRESET_PRETTY` | Collision 不含 icon | `test_name  3 ms` |
+
+**透過 `resolveFormat` 自訂：**
+
+```typescript
+const format = resolveFormat('collision', {
+  colors: false,                    // 停用 ANSI 色彩
+  icons: { passed: ['✔', 'OK'] },  // 覆寫特定 icon
+  duration: false,                  // 隱藏時間行
+});
+const printer = new Printer(phpUnitXML, format);
+```
+
+**格式模板變數：**
+
+模板使用 `{variable}` 佔位符。例如 `finished: '  {icon} {name} {duration} ms'` 產生 `  ✓ test_add 3 ms`。可用變數依事件類型而異，完整列表請參考 `PrinterFormat`。
 
 ## 建置
 

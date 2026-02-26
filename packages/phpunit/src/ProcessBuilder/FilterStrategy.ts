@@ -66,7 +66,7 @@ class DescribeFilterStrategy extends FilterStrategy {
     }
 
     protected getMethodNamePattern() {
-        const methodName = this.testDefinition.methodName ?? '';
+        const methodName = (this.testDefinition.methodName ?? '').trim();
         return `${TestIdentifier.generateSearchText(methodName)}.*`;
     }
 }
@@ -81,7 +81,7 @@ class MethodFilterStrategy extends DescribeFilterStrategy {
     }
 
     protected getMethodNamePattern() {
-        const methodName = this.testDefinition.methodName ?? '';
+        const methodName = (this.testDefinition.methodName ?? '').trim();
         return TestIdentifier.generateSearchText(methodName);
     }
 }
@@ -92,7 +92,7 @@ class DatasetFilterStrategy extends DescribeFilterStrategy {
     }
 
     protected getMethodNamePattern() {
-        const methodName = this.testDefinition.methodName ?? '';
+        const methodName = (this.testDefinition.methodName ?? '').trim();
         const { dataset } = parseDataset(this.testDefinition.id ?? '');
 
         const escapedMethod = TestIdentifier.generateSearchText(methodName).replace(/'/g, "\\'");

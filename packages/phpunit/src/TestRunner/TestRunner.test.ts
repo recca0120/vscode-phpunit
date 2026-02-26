@@ -235,7 +235,7 @@ describe('TestRunner Test', () => {
             'foo',
             'vendor/bin/phpunit',
             `--configuration=${phpUnitProject('phpunit.xml')}`,
-            '--colors=never',
+            '--colors=always',
             '--teamcity',
         ];
         await expectedCommand(builder, expected);
@@ -378,7 +378,7 @@ describe('TestRunner Test', () => {
             phpUnitProject('vendor/bin/phpunit'),
             `--configuration=${phpUnitProject('phpunit.xml')}`,
             ...middle,
-            '--colors=never',
+            '--colors=always',
             '--teamcity',
         ],
         { skipPhpVfsComposer: true },
@@ -415,7 +415,7 @@ describe('TestRunner Test', () => {
                 'vendor/bin/phpunit',
                 `--configuration=${remoteAppPath('phpunit.xml')}`,
                 ...middle.map((a) => (a.startsWith('--filter') ? `'${a}'` : a)),
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ].join(' '),
         ],
@@ -454,7 +454,7 @@ describe('TestRunner Test', () => {
                 'vendor/bin/phpunit',
                 `--configuration=${appPath('phpunit.xml')}`,
                 ...middle,
-                '--colors=never',
+                '--colors=always',
                 '--teamcity',
             ],
         );

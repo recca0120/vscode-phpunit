@@ -68,7 +68,7 @@ export class TestRunHandler {
             : await this.testQueueBuilder.buildFromCollection(this.ctrl.items, request, testRun);
 
         const runner = new TestRunner();
-        for (const observer of this.observerFactory.create(queue, testRun, request)) {
+        for (const observer of this.observerFactory.create(queue, testRun)) {
             runner.observe(observer);
         }
         runner.emit(TestRunnerEvent.start, undefined);
