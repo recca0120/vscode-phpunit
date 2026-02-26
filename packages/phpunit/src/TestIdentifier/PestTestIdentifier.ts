@@ -41,6 +41,10 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
             const id = this.normalizeMethodName(PestV2Fixer.fixId(location, name));
             const file = location.split('::')[0];
 
+            if (id === file && !name.includes('\\')) {
+                return { id: name, file: '' };
+            }
+
             return { id, file };
         }
 
