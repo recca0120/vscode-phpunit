@@ -1511,19 +1511,20 @@ class NoDatasetTest extends TestCase
 
             const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
             const childDef = createDatasetDefinition(parentDef, 'with data set #0');
-            const childItem = collection.addDatasetChild(methodItem, childDef);
+            const childItem = collection.addDatasetChild(methodItem.id, childDef);
+            expect(childItem).toBeDefined();
 
             // child is in parent.children
-            expect(methodItem.children.get(childItem.id)).toBe(childItem);
+            expect(methodItem.children.get(childItem?.id ?? '')).toBe(childItem);
 
             // child has a TestDefinition
-            const storedDef = collection.getTestDefinition(childItem);
+            const storedDef = collection.getTestDefinition(childItem as TestItem);
             expect(storedDef).toBeDefined();
             expect(storedDef?.type).toBe(TestType.dataset);
             expect(storedDef?.methodName).toBe(parentDef.methodName);
 
             // child id matches convention
-            expect(childItem.id).toContain('with data set #0');
+            expect(childItem?.id).toContain('with data set #0');
         });
 
         it('returns existing child on repeated calls', async () => {
@@ -1544,8 +1545,8 @@ class NoDatasetTest extends TestCase
 
             const parentDef = collection.getTestDefinition(methodItem) as TestDefinition;
             const childDef = createDatasetDefinition(parentDef, 'with data set #0');
-            const child1 = collection.addDatasetChild(methodItem, childDef);
-            const child2 = collection.addDatasetChild(methodItem, childDef);
+            const child1 = collection.addDatasetChild(methodItem.id, childDef);
+            const child2 = collection.addDatasetChild(methodItem.id, childDef);
 
             expect(child1).toBe(child2);
         });

@@ -35,6 +35,10 @@ export class TestCollection {
         this.base = new BaseTestCollection(phpUnitXML, testParser);
     }
 
+    get definitionStore(): BaseTestCollection {
+        return this.base;
+    }
+
     get rootItems(): TestItemCollection {
         return this._rootItems ?? this.ctrl.items;
     }
@@ -66,10 +70,15 @@ export class TestCollection {
         return this.index.getDefinition(testItem.id);
     }
 
-    addDatasetChild(parentItem: TestItem, childDef: TestDefinition): TestItem {
+    addDatasetChild(parentId: string, childDef: TestDefinition): TestItem | undefined {
         const existing = this.index.getItem(childDef.id);
         if (existing) {
             return existing;
+        }
+
+        const parentItem = this.index.getItem(parentId);
+        if (!parentItem) {
+            return undefined;
         }
 
         const childItem = this.ctrl.createTestItem(

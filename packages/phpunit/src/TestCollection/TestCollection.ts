@@ -200,9 +200,7 @@ export class TestCollection {
         const uriStr = uri.toString();
         const oldTests = this.suites.get(testsuite)?.get(uriStr);
         if (oldTests) {
-            for (const test of oldTests) {
-                this.definitionIndex.delete(test.id);
-            }
+            this.removeFromIndex(oldTests);
         }
         this.fileIndex.delete(uriStr);
         this.suites.get(testsuite)?.delete(uriStr);
@@ -211,11 +209,27 @@ export class TestCollection {
     private setTests(testsuite: string, uri: URI, tests: TestDefinition[]) {
         this.removeTests(testsuite, uri);
         const uriStr = uri.toString();
-        for (const test of tests) {
-            this.definitionIndex.set(test.id, test);
-        }
+        this.addToIndex(tests);
         this.suites.get(testsuite)?.set(uriStr, tests);
         this.fileIndex.set(uriStr, testsuite);
+    }
+
+    private addToIndex(tests: TestDefinition[]) {
+        for (const test of tests) {
+            this.definitionIndex.set(test.id, test);
+            if (test.children) {
+                this.addToIndex(test.children);
+            }
+        }
+    }
+
+    private removeFromIndex(tests: TestDefinition[]) {
+        for (const test of tests) {
+            this.definitionIndex.delete(test.id);
+            if (test.children) {
+                this.removeFromIndex(test.children);
+            }
+        }
     }
 
     private parseTestsuite(uri: URI) {

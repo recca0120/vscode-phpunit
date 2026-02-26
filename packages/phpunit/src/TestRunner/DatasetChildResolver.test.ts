@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TeamcityEvent, type TestStarted } from '../TestOutput';
 import type { TestDefinition } from '../types';
 import { TestType } from '../types';
-import { DatasetChildResolver } from './DatasetChildResolver';
+import { DatasetResolver, type DefinitionStore } from './DatasetChildResolver';
 
 function makeTestStarted(id: string, name: string): TestStarted {
     return {
@@ -15,7 +15,24 @@ function makeTestStarted(id: string, name: string): TestStarted {
     };
 }
 
-describe('DatasetChildResolver', () => {
+function makeStore(entries: TestDefinition[] = []): DefinitionStore & { size: number } {
+    const map = new Map<string, TestDefinition>();
+    for (const def of entries) {
+        map.set(def.id, def);
+    }
+    return {
+        getDefinition: (id: string) => map.get(id),
+        hasDefinition: (id: string) => map.has(id),
+        setDefinition: (id: string, def: TestDefinition) => {
+            map.set(id, def);
+        },
+        get size() {
+            return map.size;
+        },
+    };
+}
+
+describe('DatasetResolver', () => {
     const parentDef: TestDefinition = {
         type: TestType.method,
         id: 'tests/Unit/ExampleTest.php::it adds numbers',
@@ -28,11 +45,10 @@ describe('DatasetChildResolver', () => {
     };
 
     it('should add missing dataset child (PHPUnit)', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(
                 'tests/Unit/ExampleTest.php::it adds numbers with data set #0',
                 'it adds numbers with data set #0',
@@ -46,11 +62,10 @@ describe('DatasetChildResolver', () => {
     });
 
     it('should add missing dataset child (Pest named)', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(
                 'tests/Unit/ExampleTest.php::it adds numbers with data set "dataset "one plus one""',
                 'it adds numbers with data set "dataset "one plus one""',
@@ -66,11 +81,10 @@ describe('DatasetChildResolver', () => {
     });
 
     it('should add missing dataset child (Pest scalar)', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(
                 `tests/Unit/ExampleTest.php::it adds numbers with data set "('alice@example.com')"`,
                 `it adds numbers with data set "('alice@example.com')"`,
@@ -86,11 +100,10 @@ describe('DatasetChildResolver', () => {
     });
 
     it('should add missing dataset child (Pest tuple)', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(
                 'tests/Unit/ExampleTest.php::it adds numbers with data set "(2, 3, 6)"',
                 'it adds numbers with data set "(2, 3, 6)"',
@@ -106,11 +119,10 @@ describe('DatasetChildResolver', () => {
     });
 
     it('should add missing dataset child (Pest cartesian)', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(
                 `tests/Unit/ExampleTest.php::it adds numbers with data set "('Office') / ('Saturday')"`,
                 `it adds numbers with data set "('Office') / ('Saturday')"`,
@@ -134,24 +146,22 @@ describe('DatasetChildResolver', () => {
             label: 'with dataset "one plus one"',
         };
 
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
-        definitions.set(teamcityId, existingChild);
+        const store = makeStore([parentDef, existingChild]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(teamcityId, 'it adds numbers with data set "dataset "one plus one""'),
         );
 
         expect(child).toBeUndefined();
-        expect(definitions.size).toBe(2);
+        expect(store.size).toBe(2);
     });
 
     it('should not add when parent not found', () => {
-        const definitions = new Map<string, TestDefinition>();
+        const store = makeStore();
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(
                 'tests/Unit/ExampleTest.php::it adds numbers with data set "dataset "one plus one""',
                 'it adds numbers with data set "dataset "one plus one""',
@@ -159,15 +169,14 @@ describe('DatasetChildResolver', () => {
         );
 
         expect(child).toBeUndefined();
-        expect(definitions.size).toBe(0);
+        expect(store.size).toBe(0);
     });
 
     it('should add child when id is parent but name contains dataset', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(
             makeTestStarted(parentDef.id, 'it adds numbers with data set "dataset "one plus one""'),
         );
 
@@ -179,23 +188,22 @@ describe('DatasetChildResolver', () => {
     });
 
     it('should not add for non-dataset test', () => {
-        const definitions = new Map<string, TestDefinition>();
-        definitions.set(parentDef.id, parentDef);
+        const store = makeStore([parentDef]);
 
-        const resolver = new DatasetChildResolver(definitions);
-        const child = resolver.testStarted(makeTestStarted(parentDef.id, 'it adds numbers'));
+        const resolver = new DatasetResolver(store);
+        const child = resolver.resolve(makeTestStarted(parentDef.id, 'it adds numbers'));
 
         expect(child).toBeUndefined();
-        expect(definitions.size).toBe(1);
+        expect(store.size).toBe(1);
     });
 
     it('should skip when id is empty', () => {
-        const definitions = new Map<string, TestDefinition>();
-        const resolver = new DatasetChildResolver(definitions);
+        const store = makeStore();
+        const resolver = new DatasetResolver(store);
 
-        const child = resolver.testStarted(makeTestStarted('', 'something'));
+        const child = resolver.resolve(makeTestStarted('', 'something'));
 
         expect(child).toBeUndefined();
-        expect(definitions.size).toBe(0);
+        expect(store.size).toBe(0);
     });
 });
