@@ -300,7 +300,7 @@ describe('Extension Test', () => {
             );
 
             expect(workspace.getConfiguration).toHaveBeenCalledWith('phpunit', expect.anything());
-            expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit', 'phpunit');
+            expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit Debug', 'phpunit');
             expect(tests.createTestController).toHaveBeenCalledWith('phpunit', 'PHPUnit');
             for (const cmd of [
                 'phpunit.reload',

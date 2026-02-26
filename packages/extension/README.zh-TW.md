@@ -74,8 +74,8 @@
   // 覆寫預設的個別格式欄位（詳見 phpunit 套件文件）
   "phpunit.output.format": {},
 
-  // 每次執行前清除輸出頻道（預設：true）
-  "phpunit.clearOutputOnRun": true,
+  // 每次執行前清除除錯輸出頻道（預設：true）
+  "phpunit.clearDebugOutputOnRun": true,
 
   // 何時顯示輸出："always" | "onFailure" | "never"（預設："onFailure"）
   "phpunit.showAfterExecution": "onFailure",

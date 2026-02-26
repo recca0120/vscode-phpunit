@@ -74,8 +74,8 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   // Override individual format fields from the preset (see phpunit package docs)
   "phpunit.output.format": {},
 
-  // Clear output channel before each run (default: true)
-  "phpunit.clearOutputOnRun": true,
+  // Clear debug output channel before each run (default: true)
+  "phpunit.clearDebugOutputOnRun": true,
 
   // When to show output: "always" | "onFailure" | "never" (default: "onFailure")
   "phpunit.showAfterExecution": "onFailure",

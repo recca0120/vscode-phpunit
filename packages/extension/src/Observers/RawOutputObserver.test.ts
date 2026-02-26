@@ -15,7 +15,7 @@ describe('RawOutputObserver clear behavior', () => {
     const createObserver = (config: Record<string, unknown> = {}) => {
         const outputChannel = vscode.window.createOutputChannel('phpunit');
         const configuration = new Configuration({
-            clearOutputOnRun: true,
+            clearDebugOutputOnRun: true,
             ...config,
         });
         const observer = new RawOutputObserver(outputChannel, configuration);
@@ -44,7 +44,7 @@ describe('RawOutputObserver clear behavior', () => {
 
     it('each observer instance clears independently', () => {
         const outputChannel = vscode.window.createOutputChannel('phpunit');
-        const configuration = new Configuration({ clearOutputOnRun: true });
+        const configuration = new Configuration({ clearDebugOutputOnRun: true });
         const observer1 = new RawOutputObserver(outputChannel, configuration);
         const observer2 = new RawOutputObserver(outputChannel, configuration);
 
@@ -68,7 +68,7 @@ describe.each(detectPhpUnitStubs())('RawOutputObserver on $name (PHPUnit $phpUni
             php: 'php',
             phpunit: binary,
             args: ['-c', 'phpunit.xml', ...stubArgs],
-            clearOutputOnRun: true,
+            clearDebugOutputOnRun: true,
         });
         testRunner = new TestRunner();
         const outputChannel = vscode.window.createOutputChannel('phpunit');
@@ -98,7 +98,7 @@ describe.each(detectPhpUnitStubs())('RawOutputObserver on $name (PHPUnit $phpUni
     }
 
     it('should not clear output channel', async () => {
-        await configuration.update('clearOutputOnRun', false);
+        await configuration.update('clearDebugOutputOnRun', false);
         const testFile = phpUnitProject('tests/AssertionsTest.php');
         const filter = 'test_passed';
         await run(testFile, filter);

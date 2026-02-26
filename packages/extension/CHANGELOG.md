@@ -24,6 +24,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Refactor: replace base64 filter encoding with placeholder approach
 - Refactor: rename OutputChannelObserver to RawOutputObserver, organize Writers
 - Refactor: strip ANSI codes in RawOutputObserver and ErrorDialogObserver
+- Rename: OutputChannel display name from "PHPUnit" to "PHPUnit Debug"
+- Rename: `clearOutputOnRun` setting to `clearDebugOutputOnRun`
 
 ## [3.9.25] - 2026-02-24
 
