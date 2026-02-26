@@ -261,10 +261,10 @@ export class Printer {
         return this.end();
     }
 
-    printedOutput(result?: TestResult) {
+    flushOutput(result?: TestResult) {
         const text = result ? this.getTestPrintedOutput(result) : this.outputBuffer.flush();
 
-        return text || undefined;
+        return text ? `${EOL}${text}${EOL}` : undefined;
     }
 
     appendBuffer(line: string) {

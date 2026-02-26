@@ -57,7 +57,7 @@ export class PrinterObserver implements TestRunnerObserver {
 
     testFinished(result: TestFinished): void {
         this.append(this.printer.testFinished(result));
-        this.printedOutput(result);
+        this.flushOutput(result);
     }
 
     testFailed(result: TestFailed): void {
@@ -66,7 +66,7 @@ export class PrinterObserver implements TestRunnerObserver {
 
     testIgnored(result: TestIgnored): void {
         this.append(this.printer.testIgnored(result));
-        this.printedOutput(result);
+        this.flushOutput(result);
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
@@ -83,11 +83,11 @@ export class PrinterObserver implements TestRunnerObserver {
 
     close() {
         this.append(this.printer.close());
-        this.printedOutput();
+        this.flushOutput();
     }
 
-    private printedOutput(result?: TestResult): void {
-        const output = this.printer.printedOutput(result);
+    private flushOutput(result?: TestResult): void {
+        const output = this.printer.flushOutput(result);
         if (output) {
             this.append(output);
         }

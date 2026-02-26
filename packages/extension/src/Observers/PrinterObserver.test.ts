@@ -219,6 +219,8 @@ describe.each(detectPhpUnitStubs())('PrinterObserver on $name (PHPUnit $phpUnitV
         await run(testFile, filter);
 
         const outputChannel = getOutputChannel();
-        expect(outputChannel.append).toHaveBeenCalledWith('printed output');
+        expect(outputChannel.append).toHaveBeenCalledWith(
+            expect.stringContaining('printed output'),
+        );
     });
 });

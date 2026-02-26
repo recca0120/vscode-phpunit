@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/utils';
 import { PHPUnitXML } from '../Configuration/PHPUnitXML';
 import { TeamcityEvent, type TestSuiteFinished } from '../TestOutput/types';
+import { EOL } from '../utils';
 import { Printer } from './Printer';
 import { PRESET_PROGRESS } from './PrinterConfig';
 
@@ -23,9 +24,9 @@ describe('Printer output buffer', () => {
         });
         printer.appendBuffer('printed output');
 
-        const output = printer.printedOutput();
+        const output = printer.flushOutput();
 
-        expect(output).toEqual('printed output');
+        expect(output).toEqual(`${EOL}printed output${EOL}`);
     });
 
     it('should print printed output when die', () => {
@@ -39,9 +40,9 @@ describe('Printer output buffer', () => {
         });
         printer.appendBuffer('printed output when die');
 
-        const output = printer.printedOutput();
+        const output = printer.flushOutput();
 
-        expect(output).toEqual('printed output when die');
+        expect(output).toEqual(`${EOL}printed output when die${EOL}`);
     });
 
     it('should print dump output', () => {
@@ -55,9 +56,11 @@ describe('Printer output buffer', () => {
         });
         printer.appendBuffer('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
 
-        const output = printer.printedOutput();
+        const output = printer.flushOutput();
 
-        expect(output).toEqual('array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]');
+        expect(output).toEqual(
+            `${EOL}array:7 [\n  "name" => "PHPUnit"\n  "version" => 12\n]${EOL}`,
+        );
     });
 
     it('should preserve ANSI codes in dump output', () => {
@@ -76,9 +79,9 @@ describe('Printer output buffer', () => {
             '\u001B[0;38;5;208m]\u001B[m';
         printer.appendBuffer(ansiInput);
 
-        const output = printer.printedOutput();
+        const output = printer.flushOutput();
 
-        expect(output).toEqual(ansiInput);
+        expect(output).toEqual(`${EOL}${ansiInput}${EOL}`);
     });
 
     it('testSuiteFinished', () => {
