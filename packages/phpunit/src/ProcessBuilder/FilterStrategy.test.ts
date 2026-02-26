@@ -158,6 +158,23 @@ describe('FilterStrategyFactory', () => {
         );
     });
 
+    it('method type trims trailing whitespace from methodName', () => {
+        const testDef: TestDefinition = {
+            type: TestType.method,
+            id: 'tests/Unit/ExampleTest.php::it has trailing space ',
+            label: 'it has trailing space ',
+            classFQN: 'P\\Tests\\Unit\\ExampleTest',
+            methodName: 'it has trailing space ',
+            file: '/path/to/tests/Unit/ExampleTest.php',
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe(
+            `--filter="/^.*::(it has trailing space)(( with (data set )?.*)?)?$/" %2Fpath%2Fto%2Ftests%2FUnit%2FExampleTest.php`,
+        );
+    });
+
     it('pest dataset with apostrophe in method name', () => {
         const testDef: TestDefinition = {
             type: TestType.dataset,
