@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OutputChannel, TestItem, TestRun, TestRunRequest } from 'vscode';
 import type { Configuration } from '../Configuration';
 import type { TestCollection } from '../TestCollection/TestCollection';
-import { DatasetChildObserver } from './DatasetChildObserver';
+import { DatasetObserver } from './DatasetObserver';
 import { OutputChannelObserver } from './OutputChannelObserver';
 import { TestResultObserver } from './TestResultObserver';
 import { TestRunnerObserverFactory } from './TestRunnerObserverFactory';
@@ -15,7 +15,7 @@ describe('TestRunnerObserverFactory', () => {
     beforeEach(() => {
         const testCollection = {
             getTestDefinition: vi.fn(),
-            addDatasetChild: vi.fn(),
+            resolveDatasetChild: vi.fn(),
         } as unknown as TestCollection;
         outputChannel = {
             append: vi.fn(),
@@ -33,7 +33,7 @@ describe('TestRunnerObserverFactory', () => {
         );
     });
 
-    it('should create observers including DatasetChildObserver, TestResultObserver, and OutputChannelObserver', () => {
+    it('should create observers including DatasetObserver, TestResultObserver, and OutputChannelObserver', () => {
         const queue = new Map<TestDefinition, TestItem>();
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const request = { continuous: false } as TestRunRequest;
@@ -41,7 +41,7 @@ describe('TestRunnerObserverFactory', () => {
         const observers = factory.create(queue, testRun, request);
 
         expect(observers.length).toBe(4);
-        expect(observers.some((o) => o instanceof DatasetChildObserver)).toBe(true);
+        expect(observers.some((o) => o instanceof DatasetObserver)).toBe(true);
         expect(observers.some((o) => o instanceof TestResultObserver)).toBe(true);
         expect(observers.some((o) => o instanceof OutputChannelObserver)).toBe(true);
     });

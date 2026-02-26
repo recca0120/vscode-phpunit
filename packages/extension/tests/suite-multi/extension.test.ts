@@ -185,7 +185,7 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
     test('should run all tests and append dataset children to test controller', async () => {
         await vscode.commands.executeCommand('phpunit.run-all');
 
-        // After run, DatasetChildObserver dynamically adds dataset children
+        // After run, DatasetObserver dynamically adds dataset children
         // for data providers that cannot be resolved statically (e.g. array_map).
         const countAfterFirstRun = countTestItems(ctrl.items);
         assert.ok(

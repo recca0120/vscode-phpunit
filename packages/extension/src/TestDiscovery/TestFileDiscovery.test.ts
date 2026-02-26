@@ -20,7 +20,7 @@ function createMockCollection() {
         reset: vi.fn(),
         delete: vi.fn(),
         add: vi.fn().mockResolvedValue(undefined),
-        getTrackedFiles: vi.fn().mockReturnValue([]),
+        gatherFiles: vi.fn().mockReturnValue([]),
     } as unknown as TestCollection;
 }
 

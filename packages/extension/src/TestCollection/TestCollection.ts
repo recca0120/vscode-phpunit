@@ -5,6 +5,7 @@ import {
     PHPUnitXML,
     type TestDefinition,
     TestParser,
+    type TestStarted,
     TestType,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
@@ -22,17 +23,16 @@ import { TestDefinitionIndex } from './TestDefinitionIndex';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
-export class TestCollection {
+export class TestCollection extends BaseTestCollection {
     private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
-    private readonly base: BaseTestCollection;
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
-        @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
+        @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
         @inject(TestParser) testParser: TestParser,
     ) {
-        this.base = new BaseTestCollection(phpUnitXML, testParser);
+        super(phpUnitXML, testParser);
     }
 
     get rootItems(): TestItemCollection {
@@ -66,10 +66,23 @@ export class TestCollection {
         return this.index.getDefinition(testItem.id);
     }
 
-    addDatasetChild(parentItem: TestItem, childDef: TestDefinition): TestItem {
+    resolveDatasetChild(result: TestStarted): TestItem | undefined {
+        const resolved = super.resolveDataset(result);
+        if (!resolved) {
+            return undefined;
+        }
+        return this.addDatasetChild(resolved.parentId, resolved.childDef);
+    }
+
+    private addDatasetChild(parentId: string, childDef: TestDefinition): TestItem | undefined {
         const existing = this.index.getItem(childDef.id);
         if (existing) {
             return existing;
+        }
+
+        const parentItem = this.index.getItem(parentId);
+        if (!parentItem) {
+            return undefined;
         }
 
         const childItem = this.ctrl.createTestItem(
@@ -123,48 +136,23 @@ export class TestCollection {
         return this.index.getItemsByGroup(group);
     }
 
-    getTrackedFiles() {
-        return [...this.base.gatherFiles()];
-    }
-
-    async add(uri: URI) {
-        if (this.base.has(uri)) {
-            return;
-        }
-        await this.change(uri);
-    }
-
-    async change(uri: URI) {
-        const result = await this.base.change(uri);
+    override async change(uri: URI) {
+        const result = await super.change(uri);
         this.applyChangeResult(result);
+        return result;
     }
 
-    has(uri: URI) {
-        return this.base.has(uri);
-    }
-
-    delete(uri: URI) {
-        const file = this.base.delete(uri);
+    override delete(uri: URI) {
+        const file = super.delete(uri);
         if (file) {
             this.handleFileDeleted(file);
-            return;
         }
-
-        const folderPrefix = uri.toString();
-        const filesToDelete: URI[] = [];
-        for (const tracked of this.base.gatherFiles()) {
-            if (tracked.uri.toString().startsWith(folderPrefix)) {
-                filesToDelete.push(tracked.uri);
-            }
-        }
-        for (const fileUri of filesToDelete) {
-            this.delete(fileUri);
-        }
+        return file;
     }
 
-    reset() {
+    override reset() {
         this.handleReset();
-        this.base.reset();
+        super.reset();
     }
 
     private applyChangeResult(result: ChangeResult) {

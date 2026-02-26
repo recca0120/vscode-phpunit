@@ -2,7 +2,11 @@ import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import type { TestStarted } from '../TestOutput';
+import { resolveDatasetDefinition } from '../TestParser';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { parseDataset } from '../utils';
+import { TestStore } from './TestStore';
 
 export interface File<T> {
     testsuite: string;
@@ -16,32 +20,23 @@ export interface ChangeResult {
 }
 
 export class TestCollection {
-    private suites = new Map<string, Map<string, TestDefinition[]>>();
+    private store = new TestStore();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
-    private fileIndex = new Map<string, string>();
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
 
     constructor(
-        private phpUnitXML: PHPUnitXML,
+        protected phpUnitXML: PHPUnitXML,
         private testParser: TestParser,
     ) {}
 
     get size() {
-        return this.suites.size;
+        return this.store.size;
     }
 
     private getRootUri() {
         return URI.file(this.phpUnitXML.root());
-    }
-
-    private initSuites() {
-        for (const suite of this.phpUnitXML.getTestSuites()) {
-            if (!this.suites.has(suite.name)) {
-                this.suites.set(suite.name, new Map<string, TestDefinition[]>());
-            }
-        }
     }
 
     async change(uri: URI) {
@@ -53,51 +48,75 @@ export class TestCollection {
     }
 
     get(uri: URI) {
-        return this.findFile(uri)?.tests;
+        return this.store.findFile(uri)?.tests;
     }
 
     has(uri: URI) {
-        return !!this.findFile(uri);
+        return !!this.store.findFile(uri);
     }
 
-    delete(uri: URI): File<TestDefinition> | undefined {
-        const file = this.findFile(uri);
-        if (!file) {
+    resolveDataset(
+        result: TestStarted,
+    ): { parentId: string; childDef: TestDefinition } | undefined {
+        if (!result.id) {
             return undefined;
         }
 
-        this.deleteFile(file);
-        return file;
+        const { parentId } = parseDataset(result.id);
+        const parentDef = this.store.getDefinition(parentId);
+        if (!parentDef) {
+            return undefined;
+        }
+
+        const childDef = resolveDatasetDefinition(result.name, parentDef);
+        if (!childDef || this.store.hasDefinition(childDef.id)) {
+            return undefined;
+        }
+
+        this.store.addDefinition(childDef.id, childDef);
+        return { parentId, childDef };
+    }
+
+    async add(uri: URI) {
+        if (this.has(uri)) {
+            return;
+        }
+        await this.change(uri);
+    }
+
+    delete(uri: URI): File<TestDefinition> | undefined {
+        const file = this.store.findFile(uri);
+        if (file) {
+            this.store.remove(file.testsuite, file.uri);
+            return file;
+        }
+
+        const folderPrefix = uri.toString();
+        const filesToDelete: URI[] = [];
+        for (const tracked of this.gatherFiles()) {
+            if (tracked.uri.toString().startsWith(folderPrefix)) {
+                filesToDelete.push(tracked.uri);
+            }
+        }
+        for (const fileUri of filesToDelete) {
+            this.delete(fileUri);
+        }
+
+        return undefined;
     }
 
     reset(): void {
-        this.suites.clear();
+        this.store.clear();
         this.matcherCache.clear();
-        this.fileIndex.clear();
         this.classHierarchy.clear();
     }
 
     findFile(uri: URI): File<TestDefinition> | undefined {
-        const uriStr = uri.toString();
-        const testsuite = this.fileIndex.get(uriStr);
-        if (!testsuite) {
-            return undefined;
-        }
-
-        const tests = this.suites.get(testsuite)?.get(uriStr);
-        if (!tests) {
-            return undefined;
-        }
-
-        return { testsuite, uri, tests };
+        return this.store.findFile(uri);
     }
 
     *gatherFiles() {
-        for (const [testsuite, files] of this.suites) {
-            for (const [uriStr, tests] of files) {
-                yield { testsuite, uri: URI.parse(uriStr), tests };
-            }
-        }
+        yield* this.store.gatherFiles();
     }
 
     private async doChange(uri: URI): Promise<ChangeResult> {
@@ -109,7 +128,7 @@ export class TestCollection {
             return { parsed, deleted };
         }
 
-        this.initSuites();
+        this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
         if (tests.length === 0) {
             const file = this.delete(uri);
@@ -117,7 +136,7 @@ export class TestCollection {
                 deleted.push(file);
             }
         } else {
-            this.updateTestsForFile(uri, testsuite, tests);
+            this.store.set(testsuite, uri, tests);
             parsed.push({ uri, tests });
         }
 
@@ -154,7 +173,7 @@ export class TestCollection {
             return undefined;
         }
 
-        this.updateTestsForFile(uri, testsuite, tests);
+        this.store.set(testsuite, uri, tests);
         return { uri, tests };
     }
 
@@ -169,16 +188,6 @@ export class TestCollection {
         }
 
         return this.classHierarchy.enrichTests(parseResult.tests);
-    }
-
-    private deleteFile(file: File<TestDefinition>) {
-        this.fileIndex.delete(file.uri.toString());
-        this.suites.get(file.testsuite)?.delete(file.uri.toString());
-    }
-
-    private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {
-        this.suites.get(testsuite)?.set(uri.toString(), tests);
-        this.fileIndex.set(uri.toString(), testsuite);
     }
 
     private parseTestsuite(uri: URI) {

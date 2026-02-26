@@ -14,11 +14,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, type TestItem, tests } from 'vscode';
 import { URI } from 'vscode-uri';
 import { TestCollection } from '../TestCollection/TestCollection';
-import { DatasetChildObserver } from './DatasetChildObserver';
+import { DatasetObserver } from './DatasetObserver';
 
-describe('DatasetChildObserver', () => {
+describe('DatasetObserver', () => {
     let ctrl: TestController;
-    let observer: DatasetChildObserver;
+    let observer: DatasetObserver;
     let parentItem: TestItem;
     let testCollection: TestCollection;
     let testItemById: Map<string, TestItem>;
@@ -52,7 +52,7 @@ describe('DatasetChildObserver', () => {
         const queue = new Map<TestDefinition, TestItem>();
         queue.set(testCollection.getTestDefinition(parentItem) as TestDefinition, parentItem);
         testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
-        observer = new DatasetChildObserver(testCollection, testItemById);
+        observer = new DatasetObserver(testCollection, testItemById);
     });
 
     it('should create child TestItem on testStarted with data set', () => {
@@ -153,9 +153,9 @@ describe('DatasetChildObserver', () => {
     });
 });
 
-describe('DatasetChildObserver (Pest)', () => {
+describe('DatasetObserver (Pest)', () => {
     let ctrl: TestController;
-    let observer: DatasetChildObserver;
+    let observer: DatasetObserver;
     let parentItem: TestItem;
     let testCollection: TestCollection;
     let testItemById: Map<string, TestItem>;
@@ -190,7 +190,7 @@ describe('DatasetChildObserver (Pest)', () => {
         const queue = new Map<TestDefinition, TestItem>();
         queue.set(testCollection.getTestDefinition(parentItem) as TestDefinition, parentItem);
         testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
-        observer = new DatasetChildObserver(testCollection, testItemById);
+        observer = new DatasetObserver(testCollection, testItemById);
     });
 
     it('should create dataset child with correct id and label', () => {
