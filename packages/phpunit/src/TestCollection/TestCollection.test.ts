@@ -4,7 +4,7 @@ import { generateXML, phpUnitProject } from '../../tests/utils';
 import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
-import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser } from '../index';
+import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser, TestType } from '../index';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
 import { TestCollection } from './TestCollection';
 
@@ -293,6 +293,131 @@ describe('TestCollection', () => {
         // change() should not leave an empty entry in the collection
         await collection.change(abstractFile);
         expect(collection.has(abstractFile)).toBeFalsy();
+    });
+
+    it('getDefinition returns matching definition by id', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+
+        const allTests = collection.get(uri) ?? [];
+        const target = allTests[0];
+
+        expect(collection.getDefinition(target.id)).toEqual(target);
+        expect(collection.getDefinition('non-existent-id')).toBeUndefined();
+    });
+
+    it('hasDefinition returns true when definition exists', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+
+        const allTests = collection.get(uri) ?? [];
+        const target = allTests[0];
+
+        expect(collection.hasDefinition(target.id)).toBe(true);
+        expect(collection.hasDefinition('non-existent-id')).toBe(false);
+    });
+
+    it('setDefinition appends definition to the correct file', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+
+        const newDef: TestDefinition = {
+            type: TestType.method,
+            id: 'dataset-def-001',
+            label: 'dataset case',
+            file: uri.fsPath,
+        };
+
+        collection.setDefinition(newDef.id, newDef);
+
+        expect(collection.getDefinition('dataset-def-001')).toEqual(newDef);
+        expect(collection.get(uri)).toContainEqual(newDef);
+    });
+
+    it('delete should clear definitionIndex for deleted file', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+
+        const allTests = collection.get(uri) ?? [];
+        const targetId = allTests[0].id;
+        expect(collection.hasDefinition(targetId)).toBe(true);
+
+        collection.delete(uri);
+        expect(collection.hasDefinition(targetId)).toBe(false);
+    });
+
+    it('re-change should update definitionIndex with new definitions', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+
+        const firstTests = collection.get(uri) ?? [];
+        const firstIds = firstTests.map((t) => t.id);
+        for (const id of firstIds) {
+            expect(collection.hasDefinition(id)).toBe(true);
+        }
+
+        // re-change same file — definitions should be refreshed
+        await collection.change(uri);
+
+        const secondTests = collection.get(uri) ?? [];
+        const secondIds = secondTests.map((t) => t.id);
+        for (const id of secondIds) {
+            expect(collection.hasDefinition(id)).toBe(true);
+        }
+    });
+
+    it('reset should clear definitionIndex', async () => {
+        const collection = givenTestCollection(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await collection.change(uri);
+
+        const allTests = collection.get(uri) ?? [];
+        const targetId = allTests[0].id;
+        expect(collection.hasDefinition(targetId)).toBe(true);
+
+        collection.reset();
+        expect(collection.hasDefinition(targetId)).toBe(false);
     });
 
     it('reset', async () => {

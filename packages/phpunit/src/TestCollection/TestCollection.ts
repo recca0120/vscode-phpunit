@@ -19,6 +19,7 @@ export class TestCollection {
     private suites = new Map<string, Map<string, TestDefinition[]>>();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
     private fileIndex = new Map<string, string>();
+    private definitionIndex = new Map<string, TestDefinition>();
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
@@ -60,13 +61,36 @@ export class TestCollection {
         return !!this.findFile(uri);
     }
 
+    getDefinition(id: string): TestDefinition | undefined {
+        return this.definitionIndex.get(id);
+    }
+
+    hasDefinition(id: string): boolean {
+        return this.getDefinition(id) !== undefined;
+    }
+
+    setDefinition(id: string, def: TestDefinition): void {
+        if (!def.file) {
+            return;
+        }
+
+        const uri = URI.file(def.file);
+        const file = this.findFile(uri);
+        if (!file) {
+            return;
+        }
+
+        file.tests.push(def);
+        this.definitionIndex.set(id, def);
+    }
+
     delete(uri: URI): File<TestDefinition> | undefined {
         const file = this.findFile(uri);
         if (!file) {
             return undefined;
         }
 
-        this.deleteFile(file);
+        this.removeTests(file.testsuite, file.uri);
         return file;
     }
 
@@ -74,6 +98,7 @@ export class TestCollection {
         this.suites.clear();
         this.matcherCache.clear();
         this.fileIndex.clear();
+        this.definitionIndex.clear();
         this.classHierarchy.clear();
     }
 
@@ -117,7 +142,7 @@ export class TestCollection {
                 deleted.push(file);
             }
         } else {
-            this.updateTestsForFile(uri, testsuite, tests);
+            this.setTests(testsuite, uri, tests);
             parsed.push({ uri, tests });
         }
 
@@ -154,7 +179,7 @@ export class TestCollection {
             return undefined;
         }
 
-        this.updateTestsForFile(uri, testsuite, tests);
+        this.setTests(testsuite, uri, tests);
         return { uri, tests };
     }
 
@@ -171,14 +196,26 @@ export class TestCollection {
         return this.classHierarchy.enrichTests(parseResult.tests);
     }
 
-    private deleteFile(file: File<TestDefinition>) {
-        this.fileIndex.delete(file.uri.toString());
-        this.suites.get(file.testsuite)?.delete(file.uri.toString());
+    private removeTests(testsuite: string, uri: URI) {
+        const uriStr = uri.toString();
+        const oldTests = this.suites.get(testsuite)?.get(uriStr);
+        if (oldTests) {
+            for (const test of oldTests) {
+                this.definitionIndex.delete(test.id);
+            }
+        }
+        this.fileIndex.delete(uriStr);
+        this.suites.get(testsuite)?.delete(uriStr);
     }
 
-    private updateTestsForFile(uri: URI, testsuite: string, tests: TestDefinition[]) {
-        this.suites.get(testsuite)?.set(uri.toString(), tests);
-        this.fileIndex.set(uri.toString(), testsuite);
+    private setTests(testsuite: string, uri: URI, tests: TestDefinition[]) {
+        this.removeTests(testsuite, uri);
+        const uriStr = uri.toString();
+        for (const test of tests) {
+            this.definitionIndex.set(test.id, test);
+        }
+        this.suites.get(testsuite)?.set(uriStr, tests);
+        this.fileIndex.set(uriStr, testsuite);
     }
 
     private parseTestsuite(uri: URI) {
