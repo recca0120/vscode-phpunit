@@ -9,7 +9,7 @@ import {
 import { inject, injectable } from 'inversify';
 import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
 import { FileCoverageAdapter } from '../FileCoverageAdapter';
-import { TestRunnerObserverFactory } from '../Observers';
+import { ObserverFactory } from '../Observers';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
@@ -25,7 +25,7 @@ export class TestRunHandler {
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
         @inject(TestCollection) private testCollection: TestCollection,
-        @inject(TestRunnerObserverFactory) private observerFactory: TestRunnerObserverFactory,
+        @inject(ObserverFactory) private observerFactory: ObserverFactory,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
         @inject(DebugSessionManager) private debugSession: DebugSessionManager,
     ) {}

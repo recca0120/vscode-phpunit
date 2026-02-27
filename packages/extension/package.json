@@ -137,11 +137,12 @@
                 "phpunit.output.preset": {
                     "type": "string",
                     "enum": [
-                        "phpunit",
-                        "collision"
+                        "progress",
+                        "collision",
+                        "pretty"
                     ],
                     "default": "collision",
-                    "description": "Output format preset. 'collision' shows detailed per-test results; 'phpunit' shows dot-progress.",
+                    "description": "Output format preset. 'collision' shows detailed per-test results; 'progress' shows dot-progress; 'pretty' shows per-test without icons.",
                     "scope": "resource"
                 },
                 "phpunit.output.format": {

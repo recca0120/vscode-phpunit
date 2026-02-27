@@ -4,12 +4,12 @@ import type { OutputChannel, TestItem, TestRun } from 'vscode';
 import type { Configuration } from '../Configuration';
 import type { TestCollection } from '../TestCollection/TestCollection';
 import { DatasetObserver } from './DatasetObserver';
+import { ObserverFactory } from './ObserverFactory';
 import { PrinterObserver } from './PrinterObserver';
 import { TestResultObserver } from './TestResultObserver';
-import { TestRunnerObserverFactory } from './TestRunnerObserverFactory';
 
-describe('TestRunnerObserverFactory', () => {
-    let factory: TestRunnerObserverFactory;
+describe('ObserverFactory', () => {
+    let factory: ObserverFactory;
     let outputChannel: OutputChannel;
 
     beforeEach(() => {
@@ -25,12 +25,7 @@ describe('TestRunnerObserverFactory', () => {
         } as unknown as OutputChannel;
         const configuration = { get: vi.fn() } as unknown as Configuration;
         const phpUnitXML = new PHPUnitXML();
-        factory = new TestRunnerObserverFactory(
-            testCollection,
-            outputChannel,
-            configuration,
-            phpUnitXML,
-        );
+        factory = new ObserverFactory(testCollection, outputChannel, configuration, phpUnitXML);
     });
 
     it('should create observers including DatasetObserver, TestResultObserver, and PrinterObserver', () => {

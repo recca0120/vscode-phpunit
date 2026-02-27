@@ -152,8 +152,10 @@ export const PRESET_PRETTY: PrinterFormat = {
     },
 };
 
+export type PresetName = 'progress' | 'collision' | 'pretty';
+
 export function resolveFormat(
-    preset: 'progress' | 'collision' | 'pretty',
+    preset: PresetName,
     overrides?: Partial<PrinterFormat>,
 ): PrinterFormat {
     const presets: Record<string, PrinterFormat> = {

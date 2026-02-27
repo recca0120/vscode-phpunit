@@ -16,7 +16,7 @@ import {
     workspace,
 } from 'vscode';
 import { Configuration } from './Configuration';
-import { TestRunnerObserverFactory } from './Observers';
+import { ObserverFactory } from './Observers';
 import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import {
@@ -90,7 +90,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
 
     // Per-folder services
     child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
-    child.bind(TestRunnerObserverFactory).toSelf().inSingletonScope();
+    child.bind(ObserverFactory).toSelf().inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();
     child.bind(TestQueueBuilder).toSelf().inSingletonScope();
     child.bind(DebugSessionManager).toSelf().inSingletonScope();

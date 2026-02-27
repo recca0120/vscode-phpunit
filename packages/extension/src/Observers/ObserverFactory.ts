@@ -1,6 +1,7 @@
 import {
     type IConfiguration,
     PHPUnitXML,
+    type PresetName,
     Printer,
     type PrinterFormat,
     resolveFormat,
@@ -20,7 +21,7 @@ import { TestResultObserver } from './TestResultObserver';
 import { TestRunWriter } from './Writers';
 
 @injectable()
-export class TestRunnerObserverFactory {
+export class ObserverFactory {
     constructor(
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TYPES.OutputChannel) private outputChannel: OutputChannel,
@@ -31,10 +32,7 @@ export class TestRunnerObserverFactory {
     create(queue: Map<TestDefinition, TestItem>, testRun: TestRun): TestRunnerObserver[] {
         const testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
         const format = resolveFormat(
-            (this.configuration.get('output.preset') ?? 'collision') as
-                | 'progress'
-                | 'collision'
-                | 'pretty',
+            (this.configuration.get('output.preset') ?? 'collision') as PresetName,
             this.configuration.get('output.format') as Partial<PrinterFormat> | undefined,
         );
 

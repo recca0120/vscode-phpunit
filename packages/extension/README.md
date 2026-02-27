@@ -68,7 +68,7 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   // Save all open files before running tests (default: false)
   "phpunit.saveBeforeTest": false,
 
-  // Output format preset: "collision" (detailed per-test) or "phpunit" (dot-progress)
+  // Output format preset: "collision" (detailed per-test), "progress" (dot-progress), or "pretty" (per-test without icons)
   "phpunit.output.preset": "collision",
 
   // Override individual format fields from the preset (see phpunit package docs)
