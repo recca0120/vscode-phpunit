@@ -27,9 +27,15 @@ const writers = [
     {
         writerName: 'TestRunWriter',
         createWriter: () => {
+            const testRun = { appendOutput: vi.fn() } as unknown as TestRun;
+            const writer = new TestRunWriter(testRun, new Map());
             const spy = vi.fn();
-            const testRun = { appendOutput: spy } as unknown as TestRun;
-            return { writer: new TestRunWriter(testRun), spy };
+            const originalAppend = writer.append.bind(writer);
+            writer.append = (text: string, ...args: unknown[]) => {
+                spy(text);
+                originalAppend(text, ...(args as []));
+            };
+            return { writer, spy };
         },
     },
 ];
