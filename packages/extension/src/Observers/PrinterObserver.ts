@@ -94,14 +94,18 @@ export class PrinterObserver implements TestRunnerObserver {
             return;
         }
 
-        const testId = result && 'id' in result ? result.id : undefined;
-        const location =
-            result && 'file' in result
-                ? this.toLocation(
-                      result as TestResultIdentify & { details?: TestFailed['details'] },
-                  )
-                : undefined;
-        this.append(output, location, testId);
+        if (!result || !this.isIdentifiable(result)) {
+            this.append(output);
+            return;
+        }
+
+        this.append(output, this.toLocation(result), result.id);
+    }
+
+    private isIdentifiable(
+        result: TestResult,
+    ): result is TestResult & TestResultIdentify & { details?: TestFailed['details'] } {
+        return 'id' in result && 'file' in result;
     }
 
     private toLocation(
