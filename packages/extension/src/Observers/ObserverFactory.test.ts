@@ -1,5 +1,5 @@
 import { PHPUnitXML, type TestDefinition } from '@vscode-phpunit/phpunit';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { OutputChannel, TestItem, TestRun } from 'vscode';
 import type { Configuration } from '../Configuration';
 import type { TestCollection } from '../TestCollection/TestCollection';
@@ -14,23 +14,23 @@ describe('ObserverFactory', () => {
 
     beforeEach(() => {
         const testCollection = {
-            getTestDefinition: vi.fn(),
-            resolveDatasetChild: vi.fn(),
+            getTestDefinition: () => undefined,
+            resolveDatasetChild: () => undefined,
         } as unknown as TestCollection;
         outputChannel = {
-            append: vi.fn(),
-            appendLine: vi.fn(),
-            clear: vi.fn(),
-            show: vi.fn(),
+            append: () => {},
+            appendLine: () => {},
+            clear: () => {},
+            show: () => {},
         } as unknown as OutputChannel;
-        const configuration = { get: vi.fn() } as unknown as Configuration;
+        const configuration = { get: () => undefined } as unknown as Configuration;
         const phpUnitXML = new PHPUnitXML();
         factory = new ObserverFactory(testCollection, outputChannel, configuration, phpUnitXML);
     });
 
     it('should create observers including DatasetObserver, TestResultObserver, and PrinterObserver', () => {
         const queue = new Map<TestDefinition, TestItem>();
-        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const testRun = { enqueued: () => {} } as unknown as TestRun;
         const observers = factory.create(queue, testRun);
 
         expect(observers.length).toBe(5);
@@ -41,7 +41,7 @@ describe('ObserverFactory', () => {
 
     it('should create new instances for each call', () => {
         const queue = new Map<TestDefinition, TestItem>();
-        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const testRun = { enqueued: () => {} } as unknown as TestRun;
         const observers1 = factory.create(queue, testRun);
         const observers2 = factory.create(queue, testRun);
 

@@ -22,7 +22,7 @@ const writers = [
         writerName: 'OutputChannelWriter',
         createWriter: () => {
             const spy = vi.fn();
-            const outputChannel = { append: spy, appendLine: vi.fn() };
+            const outputChannel = { append: spy, appendLine: () => {} };
             return { writer: new OutputChannelWriter(outputChannel), spy };
         },
     },
@@ -199,7 +199,7 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
 describe('PrinterObserver passes location and testId to writer', () => {
     it('testFinished passes file line 1 as location', () => {
         const appendSpy = vi.fn();
-        const writer: OutputWriter = { append: appendSpy, appendLine: vi.fn() };
+        const writer: OutputWriter = { append: appendSpy, appendLine: () => {} };
         const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
         const observer = new PrinterObserver(writer, printer);
 
@@ -233,7 +233,7 @@ describe('PrinterObserver passes location and testId to writer', () => {
 
     it('testFailed passes detail location when available', () => {
         const appendSpy = vi.fn();
-        const writer: OutputWriter = { append: appendSpy, appendLine: vi.fn() };
+        const writer: OutputWriter = { append: appendSpy, appendLine: () => {} };
         const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
         const observer = new PrinterObserver(writer, printer);
 
@@ -272,7 +272,7 @@ describe('PrinterObserver passes location and testId to writer', () => {
 
     it('testIgnored passes file line 1 as location', () => {
         const appendSpy = vi.fn();
-        const writer: OutputWriter = { append: appendSpy, appendLine: vi.fn() };
+        const writer: OutputWriter = { append: appendSpy, appendLine: () => {} };
         const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
         const observer = new PrinterObserver(writer, printer);
 
