@@ -3,6 +3,8 @@ import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { createDatasetDefinition } from '../TestParser/TestDefinitionBuilder';
 import { type TestDefinition, TestType } from '../types';
 
+const GROUP_TAG_PREFIX = 'group';
+
 export interface ItemCollection<T> {
     get(id: string): T | undefined;
     add(item: T): void;
@@ -217,7 +219,9 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
     }
 
     private inheritParentTags(testItem: T, parentItem: T) {
-        const parentTags = (parentItem.tags ?? []).filter((t) => t.id.startsWith('group:'));
+        const parentTags = (parentItem.tags ?? []).filter((t) =>
+            t.id.startsWith(`${GROUP_TAG_PREFIX}:`),
+        );
         if (parentTags.length === 0) {
             return;
         }
@@ -245,7 +249,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
 
         const groups = (testDefinition.annotations?.group as string[]) ?? [];
         for (const g of groups) {
-            tags.push(this.createTag(`group:${g}`));
+            tags.push(this.createTag(`${GROUP_TAG_PREFIX}:${g}`));
         }
 
         if (testDefinition.testsuite) {
