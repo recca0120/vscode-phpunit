@@ -197,6 +197,21 @@ describe('TestStore', () => {
         expect(store.size).toBe(2);
     });
 
+    it('set removes file from old suite when moving to new suite', () => {
+        const store = new TestStore();
+        const uri = URI.file('/project/tests/FooTest.php');
+
+        store.set('suiteA', uri, makeTests(['t1'], uri.fsPath));
+        store.set('suiteB', uri, makeTests(['t2'], uri.fsPath));
+
+        const files = [...store.gatherFiles()];
+        const matchingFiles = files.filter((f) => f.uri.toString() === uri.toString());
+        expect(matchingFiles).toHaveLength(1);
+        expect(matchingFiles[0].testsuite).toBe('suiteB');
+        expect(store.getDefinition('t1')).toBeUndefined();
+        expect(store.getDefinition('t2')).toBeDefined();
+    });
+
     it('initSuites does not overwrite existing suites', () => {
         const store = new TestStore();
         const uri = URI.file('/project/tests/FooTest.php');

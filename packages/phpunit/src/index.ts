@@ -6,5 +6,5 @@ export * from './TestCoverage';
 export * from './TestOutput/types';
 export * from './TestParser';
 export * from './TestRunner';
-export * from './types';
+export { type TestDefinition, TestType } from './types';
 export { EOL, parseDataset, semverGte, semverLt } from './utils';

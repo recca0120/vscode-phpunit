@@ -14,6 +14,7 @@ export class TestRunner {
     private readonly testOutputParser = new TestOutputParser();
     private readonly teamcityPattern = /##teamcity\[/i;
     private observers: TestRunnerObserver[] = [];
+    private closed = false;
 
     constructor() {
         this.defaultObserver = createTestRunnerEventProxy();
@@ -34,6 +35,7 @@ export class TestRunner {
     }
 
     run(builder: ProcessBuilder) {
+        this.closed = false;
         const process = new TestRunnerProcess(builder);
 
         process.on('start', (builder: ProcessBuilder) => this.emit(TestRunnerEvent.run, builder));
@@ -56,12 +58,16 @@ export class TestRunner {
     }
 
     private handleProcessError(err: Error) {
+        this.closed = true;
         const error = err.stack ?? err.message;
         this.emit(TestRunnerEvent.error, error);
         this.emit(TestRunnerEvent.close, 2);
     }
 
     private handleProcessClose(code: number | null, output: string) {
+        if (this.closed) {
+            return;
+        }
         const eventName = this.teamcityPattern.test(output)
             ? TestRunnerEvent.output
             : TestRunnerEvent.error;

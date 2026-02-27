@@ -18,12 +18,12 @@ export class XmlElement {
         return (this.node[`@_${key}`] as string) ?? undefined;
     }
 
-    getText(): string {
+    getText(): string | undefined {
         if (typeof this.node === 'string') {
             return this.node;
         }
 
-        return this.node['#text'] as string;
+        return this.node['#text'] as string | undefined;
     }
 
     querySelector(selector: string) {

@@ -20,8 +20,9 @@ export class TestStore {
     }
 
     set(testsuite: string, uri: URI, tests: TestDefinition[]): void {
-        this.remove(testsuite, uri);
         const uriStr = uri.toString();
+        const oldSuite = this.fileIndex.get(uriStr);
+        this.remove(oldSuite ?? testsuite, uri);
 
         let suiteFiles = this.suites.get(testsuite);
         if (!suiteFiles) {

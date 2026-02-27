@@ -78,8 +78,9 @@ export class PHPUnitXML {
             const name = parent.getAttribute('name') as string;
             const prefix = node.getAttribute('prefix');
             const suffix = node.getAttribute('suffix');
+            const text = node.getText() ?? '';
 
-            return { tag, name, value: this.resolveToRoot(root, node.getText()), prefix, suffix };
+            return { tag, name, value: this.resolveToRoot(root, text), prefix, suffix };
         };
 
         const excludeCallback = (_tag: string, node: XmlElement, parent: XmlElement) => {
@@ -95,7 +96,7 @@ export class PHPUnitXML {
                 node.querySelectorAll(type).map((child) => ({
                     tag: 'exclude',
                     name,
-                    value: this.resolveToRoot(root, child.getText()),
+                    value: this.resolveToRoot(root, child.getText() ?? ''),
                 })),
             );
         };
@@ -166,7 +167,7 @@ export class PHPUnitXML {
         for (const parent of this.element.querySelectorAll('phpunit testsuites testsuite')) {
             for (const node of parent.querySelectorAll('directory')) {
                 const dir = node.getText();
-                if (dir.startsWith('..')) {
+                if (dir?.startsWith('..')) {
                     const resolvedAbs = resolve(configRoot, dir);
                     const configRootAbs = resolve(configRoot);
 
@@ -195,9 +196,9 @@ export class PHPUnitXML {
                 const prefix = node.getAttribute('prefix');
                 const suffix = node.getAttribute('suffix');
 
-                return { tag, value: node.getText(), prefix, suffix };
+                return { tag, value: node.getText() ?? '', prefix, suffix };
             },
-            file: (tag: string, node: XmlElement) => ({ tag, value: node.getText() }),
+            file: (tag: string, node: XmlElement) => ({ tag, value: node.getText() ?? '' }),
         });
     }
 
