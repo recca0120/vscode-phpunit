@@ -510,11 +510,13 @@ export class Printer {
             return undefined;
         }
 
+        const maxIndexWidth = String(result.details.length).length;
+
         return [
             '',
             ...result.details.map(({ file, line }, index) =>
                 this.interpolate(this.format.error.detail.line, {
-                    index: String(index + 1),
+                    index: String(index + 1).padStart(maxIndexWidth),
                     file: fileFormat(file, line),
                 }),
             ),
