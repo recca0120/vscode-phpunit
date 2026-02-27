@@ -75,7 +75,7 @@ export class TestResultObserver implements TestRunnerObserver {
             return message;
         }
 
-        const matchingDetail = details.find(({ file }) => file.endsWith(resultFile));
+        const matchingDetail = details.find(({ file }) => file === resultFile);
         const line = matchingDetail ? matchingDetail.line - 1 : (test.range?.start.line ?? 0);
 
         message.location = new Location(
@@ -86,7 +86,7 @@ export class TestResultObserver implements TestRunnerObserver {
         message.stackTrace = details
             .filter(
                 ({ file, line }) =>
-                    file.endsWith(resultFile) && (!matchingDetail || line !== matchingDetail.line),
+                    file === resultFile && (!matchingDetail || line !== matchingDetail.line),
             )
             .map(
                 ({ file, line }) =>
