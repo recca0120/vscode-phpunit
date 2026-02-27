@@ -955,7 +955,6 @@ function adaptTopLevelNode(node: SyntaxNode): AstNode | null {
         case 'method_declaration':
             return adaptMethod(node);
         case 'namespace_use_declaration':
-            return adaptNamespaceUse(node);
         case 'use_declaration':
             return adaptNamespaceUse(node);
         case 'expression_statement':
