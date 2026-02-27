@@ -103,6 +103,8 @@ export type TestResultSummary = InfoResult & {
     skipped?: number;
     incomplete?: number;
     risky?: number;
+    passed?: number;
+    failed?: number;
     phpunitDeprecations?: number;
 };
 

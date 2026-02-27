@@ -393,6 +393,7 @@ describe('TeamcityLineParser', () => {
             event: TeamcityEvent.testResultSummary,
             tests: 1,
             assertions: 1,
+            passed: 1,
             text,
         });
     });
@@ -410,6 +411,8 @@ describe('TeamcityLineParser', () => {
             skipped: 1,
             incomplete: 1,
             risky: 2,
+            failed: 6,
+            passed: 11,
             text,
         });
     });
@@ -423,6 +426,7 @@ describe('TeamcityLineParser', () => {
             assertions: 1,
             phpunitDeprecations: 1,
             risky: 1,
+            passed: 1,
             text,
         });
     });

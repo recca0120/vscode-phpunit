@@ -1,3 +1,4 @@
+import styles from 'ansi-styles';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/utils';
 import { PHPUnitXML } from '../Configuration/PHPUnitXML';
@@ -916,5 +917,41 @@ describe('Printer inline error display', () => {
         });
 
         expect(printer.end()).toBeUndefined();
+    });
+});
+
+describe('Printer testResultSummary colorizes each status segment', () => {
+    const phpUnitXML = new PHPUnitXML().setRoot(phpUnitProject(''));
+
+    it('colors passed count green when all tests pass', () => {
+        const printer = new Printer(phpUnitXML, resolveFormat('collision'));
+        printer.start();
+
+        const output = printer.testResultSummary({
+            text: '  Tests:    78 passed (85 assertions)',
+            passed: 78,
+            assertions: 85,
+        } as unknown as TestResultSummary);
+
+        expect(output).toContain(`${styles.green.open}78 passed${styles.green.close}`);
+        expect(output).toContain('(85 assertions)');
+    });
+
+    it('colors failed red, skipped yellow, passed green separately', () => {
+        const printer = new Printer(phpUnitXML, resolveFormat('collision'));
+        printer.start();
+
+        const output = printer.testResultSummary({
+            text: '  Tests:    1 failed, 2 skipped, 78 passed (85 assertions)',
+            failed: 1,
+            skipped: 2,
+            passed: 78,
+            assertions: 85,
+        } as unknown as TestResultSummary);
+
+        expect(output).toContain(`${styles.red.open}1 failed${styles.red.close}`);
+        expect(output).toContain(`${styles.yellow.open}2 skipped${styles.yellow.close}`);
+        expect(output).toContain(`${styles.green.open}78 passed${styles.green.close}`);
+        expect(output).toContain('(85 assertions)');
     });
 });
