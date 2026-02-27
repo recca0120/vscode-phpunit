@@ -13,6 +13,26 @@ describe('TestRunWriter', () => {
         expect(spy).toHaveBeenCalledWith('hello', undefined, undefined);
     });
 
+    it('append converts LF to CRLF', () => {
+        const spy = vi.fn();
+        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const writer = new TestRunWriter(testRun, new Map());
+
+        writer.append('line1\nline2\nline3');
+
+        expect(spy).toHaveBeenCalledWith('line1\r\nline2\r\nline3', undefined, undefined);
+    });
+
+    it('append does not double-convert existing CRLF', () => {
+        const spy = vi.fn();
+        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const writer = new TestRunWriter(testRun, new Map());
+
+        writer.append('line1\r\nline2\nline3');
+
+        expect(spy).toHaveBeenCalledWith('line1\r\nline2\r\nline3', undefined, undefined);
+    });
+
     it('append with location and testId', () => {
         const spy = vi.fn();
         const testRun = { appendOutput: spy } as unknown as TestRun;
@@ -30,14 +50,14 @@ describe('TestRunWriter', () => {
         expect(item).toBe(testItem);
     });
 
-    it('appendLine delegates to testRun.appendOutput with trailing newline', () => {
+    it('appendLine converts LF to CRLF', () => {
         const spy = vi.fn();
         const testRun = { appendOutput: spy } as unknown as TestRun;
         const writer = new TestRunWriter(testRun, new Map());
 
         writer.appendLine('hello');
 
-        expect(spy).toHaveBeenCalledWith('hello\n', undefined, undefined);
+        expect(spy).toHaveBeenCalledWith('hello\r\n', undefined, undefined);
     });
 
     it('appendLine with location and testId', () => {
@@ -51,7 +71,7 @@ describe('TestRunWriter', () => {
 
         expect(spy).toHaveBeenCalledOnce();
         const [text, location, item] = spy.mock.calls[0];
-        expect(text).toBe('hello\n');
+        expect(text).toBe('hello\r\n');
         expect(location.uri.path).toBe('/app/tests/MyTest.php');
         expect(location.range.line).toBe(4);
         expect(item).toBe(testItem);

@@ -10,12 +10,16 @@ export class TestRunWriter implements OutputWriter {
 
     append(text: string, location?: OutputLocation, testId?: string): void {
         const [loc, item] = this.resolve(location, testId);
-        this.testRun.appendOutput(text, loc, item);
+        this.testRun.appendOutput(this.toCRLF(text), loc, item);
     }
 
     appendLine(text: string, location?: OutputLocation, testId?: string): void {
         const [loc, item] = this.resolve(location, testId);
-        this.testRun.appendOutput(`${text}\n`, loc, item);
+        this.testRun.appendOutput(this.toCRLF(`${text}\n`), loc, item);
+    }
+
+    private toCRLF(text: string): string {
+        return text.replace(/\r?\n/g, '\r\n');
     }
 
     private resolve(
