@@ -1,5 +1,6 @@
 import {
     Configuration,
+    type OutputWriter,
     type Path,
     PathReplacer,
     PHPUnitXML,
@@ -7,6 +8,7 @@ import {
     Printer,
     ProcessBuilder,
     semverLt,
+    TeamcityEvent,
     TestRunner,
 } from '@vscode-phpunit/phpunit';
 import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
@@ -20,16 +22,22 @@ const writers = [
         writerName: 'OutputChannelWriter',
         createWriter: () => {
             const spy = vi.fn();
-            const outputChannel = { append: spy, appendLine: vi.fn() };
+            const outputChannel = { append: spy, appendLine: () => {} };
             return { writer: new OutputChannelWriter(outputChannel), spy };
         },
     },
     {
         writerName: 'TestRunWriter',
         createWriter: () => {
+            const testRun = { appendOutput: vi.fn() } as unknown as TestRun;
+            const writer = new TestRunWriter(testRun, new Map());
             const spy = vi.fn();
-            const testRun = { appendOutput: spy } as unknown as TestRun;
-            return { writer: new TestRunWriter(testRun), spy };
+            const originalAppend = writer.append.bind(writer);
+            writer.append = (text: string, ...args: unknown[]) => {
+                spy(text);
+                originalAppend(text, ...(args as []));
+            };
+            return { writer, spy };
         },
     },
 ];
@@ -185,5 +193,98 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
 
             expect(spy).toHaveBeenCalledWith(expect.stringContaining('printed output'));
         });
+    });
+});
+
+describe('PrinterObserver passes location and testId to writer', () => {
+    let appendSpy: ReturnType<typeof vi.fn>;
+    let observer: PrinterObserver;
+
+    beforeEach(() => {
+        appendSpy = vi.fn();
+        const writer: OutputWriter = {
+            append: appendSpy as OutputWriter['append'],
+            appendLine: () => {},
+        };
+        observer = new PrinterObserver(writer, new Printer(new PHPUnitXML(), PRESET_PROGRESS));
+    });
+
+    function startTest(name: string, id: string) {
+        observer.testStarted({
+            event: TeamcityEvent.testStarted,
+            name,
+            locationHint: '',
+            flowId: 1,
+            id,
+            file: '/app/tests/MyTest.php',
+        });
+        appendSpy.mockClear();
+    }
+
+    it('testFinished passes file line 1 as location', () => {
+        startTest('test_passed', 'App\\Tests\\MyTest::test_passed');
+
+        observer.testFinished({
+            event: TeamcityEvent.testFinished,
+            name: 'test_passed',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_passed',
+            file: '/app/tests/MyTest.php',
+            duration: 5,
+        });
+
+        expect(appendSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            { file: '/app/tests/MyTest.php', line: 1 },
+            'App\\Tests\\MyTest::test_passed',
+        );
+    });
+
+    it('testFailed passes detail location when available', () => {
+        startTest('test_fail', 'App\\Tests\\MyTest::test_fail');
+
+        observer.testFailed({
+            event: TeamcityEvent.testFailed,
+            name: 'test_fail',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_fail',
+            file: '/app/tests/MyTest.php',
+            message: 'Failed asserting that false is true.',
+            details: [
+                { file: 'vendor/phpunit/phpunit/src/Framework/Assert.php', line: 198 },
+                { file: '/app/tests/MyTest.php', line: 27 },
+            ],
+            duration: 0,
+        });
+
+        expect(appendSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            { file: '/app/tests/MyTest.php', line: 27 },
+            'App\\Tests\\MyTest::test_fail',
+        );
+    });
+
+    it('testIgnored passes file line 1 as location', () => {
+        startTest('test_skipped', 'App\\Tests\\MyTest::test_skipped');
+
+        observer.testIgnored({
+            event: TeamcityEvent.testIgnored,
+            name: 'test_skipped',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_skipped',
+            file: '/app/tests/MyTest.php',
+            message: 'The MySQLi extension is not available.',
+            details: [],
+            duration: 0,
+        });
+
+        expect(appendSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            { file: '/app/tests/MyTest.php', line: 1 },
+            'App\\Tests\\MyTest::test_skipped',
+        );
     });
 });

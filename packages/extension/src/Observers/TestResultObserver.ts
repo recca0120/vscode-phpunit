@@ -46,7 +46,7 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (test) => this.testRun.passed(test, result.duration));
     }
 
     testFailed(result: TestFailed): void {
@@ -70,11 +70,12 @@ export class TestResultObserver implements TestRunnerObserver {
                 : new TestMessage(result.message);
 
         const details = result.details;
-        if (details.length === 0 || !test.uri) {
+        const resultFile = result.file;
+        if (details.length === 0 || !test.uri || !resultFile) {
             return message;
         }
 
-        const matchingDetail = details.find(({ file }) => file.endsWith(result.file ?? ''));
+        const matchingDetail = details.find(({ file }) => file === resultFile);
         const line = matchingDetail ? matchingDetail.line - 1 : (test.range?.start.line ?? 0);
 
         message.location = new Location(
@@ -85,15 +86,14 @@ export class TestResultObserver implements TestRunnerObserver {
         message.stackTrace = details
             .filter(
                 ({ file, line }) =>
-                    file.endsWith(result.file ?? '') &&
-                    (!matchingDetail || line !== matchingDetail.line),
+                    file === resultFile && (!matchingDetail || line !== matchingDetail.line),
             )
             .map(
                 ({ file, line }) =>
                     new TestMessageStackFrame(
                         `${file}:${line}`,
                         URI.file(file),
-                        new Position(line, 0),
+                        new Position(line - 1, 0),
                     ),
             );
 

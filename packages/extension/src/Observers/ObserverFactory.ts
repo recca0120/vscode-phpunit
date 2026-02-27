@@ -40,7 +40,10 @@ export class ObserverFactory {
             new DatasetObserver(this.testCollection, testItemById),
             new TestResultObserver(testItemById, queue, testRun),
             new RawOutputObserver(this.outputChannel, this.configuration),
-            new PrinterObserver(new TestRunWriter(testRun), new Printer(this.phpUnitXML, format)),
+            new PrinterObserver(
+                new TestRunWriter(testRun, testItemById),
+                new Printer(this.phpUnitXML, format),
+            ),
             new ErrorDialogObserver(this.configuration),
         ];
     }
