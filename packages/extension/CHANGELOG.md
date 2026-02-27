@@ -4,6 +4,26 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.28] - 2026-02-28
+
+### Fixed
+- Fix: pass duration to `testRun.passed` and fix stackTrace 0-based line conversion
+- Fix: guard against undefined `result.file` in TestResultObserver
+- Fix: prevent double `close` event when process spawn fails
+- Fix: `XmlElement.getText()` return type now correctly reflects possible `undefined`
+- Fix: `TestStore.set()` removes file from old suite when moving to new suite
+
+### Changed
+- Refactor: pass `location` and `testId` through PrinterObserver to `writer.append`
+- Refactor: convert LF to CRLF in TestRunWriter for VS Code TestRun
+- Refactor: replace tuple return with named methods in TestRunWriter
+- Refactor: replace type assertion with type guard in PrinterObserver
+- Refactor: use exact path match instead of `endsWith` in TestResultObserver
+- Refactor: `ProcessBuilder.replacePath` returns new object instead of mutating input
+- Refactor: clean public API — remove dead re-exports (AnsiStyle, Position, Range, resolveWasmDir, etc.)
+- Refactor: extract `GROUP_TAG_PREFIX` constant in TestHierarchyBuilder
+- Refactor: merge duplicate switch cases in TreeSitterAdapter
+
 ## [3.9.26] - 2026-02-27
 
 ### Added
