@@ -1,4 +1,5 @@
 import type {
+    OutputLocation,
     OutputWriter,
     Printer,
     TestConfiguration,
@@ -52,11 +53,11 @@ export class PrinterObserver implements TestRunnerObserver {
     }
 
     testStarted(result: TestStarted): void {
-        this.append(this.printer.testStarted(result));
+        this.append(this.printer.testStarted(result), undefined, result.id);
     }
 
     testFinished(result: TestFinished): void {
-        this.append(this.printer.testFinished(result));
+        this.append(this.printer.testFinished(result), undefined, result.id);
         this.flushOutput(result);
     }
 
@@ -65,7 +66,7 @@ export class PrinterObserver implements TestRunnerObserver {
     }
 
     testIgnored(result: TestIgnored): void {
-        this.append(this.printer.testIgnored(result));
+        this.append(this.printer.testIgnored(result), undefined, result.id);
         this.flushOutput(result);
     }
 
@@ -89,13 +90,14 @@ export class PrinterObserver implements TestRunnerObserver {
     private flushOutput(result?: TestResult): void {
         const output = this.printer.flushOutput(result);
         if (output) {
-            this.append(output);
+            const testId = result && 'id' in result ? result.id : undefined;
+            this.append(output, undefined, testId);
         }
     }
 
-    private append(text: string | undefined) {
+    private append(text: string | undefined, location?: OutputLocation, testId?: string) {
         if (text !== undefined) {
-            this.writer.append(text);
+            this.writer.append(text, location, testId);
         }
     }
 }

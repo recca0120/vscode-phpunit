@@ -1,5 +1,6 @@
 import {
     Configuration,
+    type OutputWriter,
     type Path,
     PathReplacer,
     PHPUnitXML,
@@ -7,6 +8,7 @@ import {
     Printer,
     ProcessBuilder,
     semverLt,
+    TeamcityEvent,
     TestRunner,
 } from '@vscode-phpunit/phpunit';
 import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
@@ -191,5 +193,73 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
 
             expect(spy).toHaveBeenCalledWith(expect.stringContaining('printed output'));
         });
+    });
+});
+
+describe('PrinterObserver passes testId to writer', () => {
+    it('testFinished passes testId to writer.append', () => {
+        const appendSpy = vi.fn();
+        const writer: OutputWriter = { append: appendSpy, appendLine: vi.fn() };
+        const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
+        const observer = new PrinterObserver(writer, printer);
+
+        observer.testStarted({
+            event: TeamcityEvent.testStarted,
+            name: 'test_passed',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_passed',
+            file: '/app/tests/MyTest.php',
+        });
+
+        observer.testFinished({
+            event: TeamcityEvent.testFinished,
+            name: 'test_passed',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_passed',
+            file: '/app/tests/MyTest.php',
+            duration: 5,
+        });
+
+        expect(appendSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            undefined,
+            'App\\Tests\\MyTest::test_passed',
+        );
+    });
+
+    it('testFailed passes testId to writer.append', () => {
+        const appendSpy = vi.fn();
+        const writer: OutputWriter = { append: appendSpy, appendLine: vi.fn() };
+        const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
+        const observer = new PrinterObserver(writer, printer);
+
+        observer.testStarted({
+            event: TeamcityEvent.testStarted,
+            name: 'test_fail',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_fail',
+            file: '/app/tests/MyTest.php',
+        });
+
+        observer.testFailed({
+            event: TeamcityEvent.testFailed,
+            name: 'test_fail',
+            locationHint: '',
+            flowId: 1,
+            id: 'App\\Tests\\MyTest::test_fail',
+            file: '/app/tests/MyTest.php',
+            message: 'Failed',
+            details: [],
+            duration: 0,
+        });
+
+        expect(appendSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            undefined,
+            'App\\Tests\\MyTest::test_fail',
+        );
     });
 });
