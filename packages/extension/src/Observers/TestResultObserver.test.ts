@@ -161,6 +161,21 @@ describe('TestResultObserver', () => {
         expect(testRun.failed).toHaveBeenCalled();
     });
 
+    it('should not set location when result.file is undefined', () => {
+        observer.testFailed(
+            createTestFailed({
+                file: undefined as unknown as string,
+                details: [{ file: '/project/tests/ExampleTest.php', line: 10 }],
+            }),
+        );
+
+        const failedCall = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0];
+        const message = failedCall[1];
+
+        expect(message.location).toBeUndefined();
+        expect(message.stackTrace).toBeUndefined();
+    });
+
     it('should not use TestMessage.diff when expected/actual are missing', () => {
         const diffSpy = vi.spyOn(TestMessage, 'diff');
 
