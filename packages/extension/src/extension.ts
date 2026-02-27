@@ -33,7 +33,7 @@ export async function activate(context: ExtensionContext) {
     });
 
     const ctrl = tests.createTestController('phpunit', 'PHPUnit');
-    const outputChannel = window.createOutputChannel('PHPUnit', 'phpunit');
+    const outputChannel = window.createOutputChannel('PHPUnit Debug', 'phpunit');
     const parentContainer = createParentContainer(ctrl, outputChannel);
     const folderManager = parentContainer.get(WorkspaceFolderManager);
 

@@ -68,8 +68,14 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   // Save all open files before running tests (default: false)
   "phpunit.saveBeforeTest": false,
 
-  // Clear output channel before each run (default: true)
-  "phpunit.clearOutputOnRun": true,
+  // Output format preset: "collision" (detailed per-test) or "phpunit" (dot-progress)
+  "phpunit.output.preset": "collision",
+
+  // Override individual format fields from the preset (see phpunit package docs)
+  "phpunit.output.format": {},
+
+  // Clear debug output channel before each run (default: true)
+  "phpunit.clearDebugOutputOnRun": true,
 
   // When to show output: "always" | "onFailure" | "never" (default: "onFailure")
   "phpunit.showAfterExecution": "onFailure",

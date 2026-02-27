@@ -4,7 +4,7 @@
     "displayName": "PHPUnit & Pest Test Explorer",
     "icon": "img/icon.png",
     "publisher": "recca0120",
-    "version": "3.9.25",
+    "version": "3.9.26",
     "private": true,
     "license": "MIT",
     "repository": {
@@ -150,10 +150,10 @@
                     "description": "Override individual format fields from the preset. See documentation for available fields.",
                     "scope": "resource"
                 },
-                "phpunit.clearOutputOnRun": {
+                "phpunit.clearDebugOutputOnRun": {
                     "type": "boolean",
                     "default": true,
-                    "description": "True will clear the output when we run a new test. False will leave the output after every test.",
+                    "description": "Clear the debug output channel before each test run.",
                     "scope": "resource"
                 },
                 "phpunit.showAfterExecution": {

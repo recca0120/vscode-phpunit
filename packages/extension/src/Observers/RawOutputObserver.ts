@@ -28,7 +28,7 @@ export class RawOutputObserver implements TestRunnerObserver {
             return;
         }
 
-        if (this.configuration.get('clearOutputOnRun') === true) {
+        if (this.configuration.get('clearDebugOutputOnRun') === true) {
             this.writer.clear();
         }
 

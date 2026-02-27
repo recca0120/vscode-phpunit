@@ -4,6 +4,29 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.26] - 2026-02-27
+
+### Added
+- Printer: PHPUnit-style dot colors in progress mode — distinguish F (failure, bgRed), E (error, red+bold), S (skipped, cyan+bold)
+- Printer: ANSI color output with Collision-style syntax highlighting in Test Result Panel
+- Printer: configurable format-string presets (progress, collision, pretty)
+
+### Fixed
+- Fix: PHP syntax highlighter misidentifies multiplication line (`* $b`) as doc-comment
+- Fix: TestRunWriter.appendLine now correctly appends trailing newline
+- Fix: trim methodName in FilterStrategy to match Pest's NameFilterIterator behavior
+- Fix: skip Printer output for non-class testSuite events
+- Fix: Pest testSuiteStarted with file-path locationHint parsing
+
+### Changed
+- Refactor: rewrite Printer with format-string-driven presets and ANSI color support
+- Refactor: extract TestStore from TestCollection for cleaner separation
+- Refactor: replace base64 filter encoding with placeholder approach
+- Refactor: rename OutputChannelObserver to RawOutputObserver, organize Writers
+- Refactor: strip ANSI codes in RawOutputObserver and ErrorDialogObserver
+- Rename: OutputChannel display name from "PHPUnit" to "PHPUnit Debug"
+- Rename: `clearOutputOnRun` setting to `clearDebugOutputOnRun`
+
 ## [3.9.25] - 2026-02-24
 
 ### Changed
