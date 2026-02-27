@@ -462,7 +462,16 @@ class FakeEventEmitter<T = void> {
 }
 const EventEmitter = FakeEventEmitter;
 
-class FakeTestMessageStackFrame {}
+class FakeTestMessageStackFrame {
+    label: string;
+    uri?: any;
+    position?: any;
+    constructor(label: string, uri?: any, position?: any) {
+        this.label = label;
+        this.uri = uri;
+        this.position = position;
+    }
+}
 const TestMessageStackFrame = FakeTestMessageStackFrame;
 
 const extensions = {

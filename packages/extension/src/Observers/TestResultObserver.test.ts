@@ -141,6 +141,22 @@ describe('TestResultObserver', () => {
         expect(testRun.passed).toHaveBeenCalledWith(testItem, 42);
     });
 
+    it('should use 0-based line in message location', () => {
+        observer.testFailed(
+            createTestFailed({
+                details: [
+                    { file: '/project/tests/ExampleTest.php', line: 10 },
+                    { file: '/project/tests/ExampleTest.php', line: 20 },
+                ],
+            }),
+        );
+
+        const failedCall = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0];
+        const message = failedCall[1];
+
+        expect(message.location.range.start.line).toBe(9);
+    });
+
     it('should use 0-based line in stackTrace position', () => {
         observer.testFailed(
             createTestFailed({
@@ -154,11 +170,8 @@ describe('TestResultObserver', () => {
         const failedCall = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0];
         const message = failedCall[1];
 
-        // message.location line should be 0-based (10 - 1 = 9)
-        expect(message.location.range.start.line).toBe(9);
-
-        // stackTrace line should also be 0-based (20 - 1 = 19)
-        expect(testRun.failed).toHaveBeenCalled();
+        expect(message.stackTrace).toHaveLength(1);
+        expect(message.stackTrace[0].position.line).toBe(19);
     });
 
     it('should not set location when result.file is undefined', () => {
