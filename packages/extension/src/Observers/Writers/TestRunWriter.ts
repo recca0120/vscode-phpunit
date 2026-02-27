@@ -9,28 +9,32 @@ export class TestRunWriter implements OutputWriter {
     ) {}
 
     append(text: string, location?: OutputLocation, testId?: string): void {
-        const [loc, item] = this.resolve(location, testId);
-        this.testRun.appendOutput(this.toCRLF(text), loc, item);
+        this.testRun.appendOutput(
+            this.toCRLF(text),
+            this.toLocation(location),
+            this.toTestItem(testId),
+        );
     }
 
     appendLine(text: string, location?: OutputLocation, testId?: string): void {
-        const [loc, item] = this.resolve(location, testId);
-        this.testRun.appendOutput(this.toCRLF(`${text}\n`), loc, item);
+        this.testRun.appendOutput(
+            this.toCRLF(`${text}\n`),
+            this.toLocation(location),
+            this.toTestItem(testId),
+        );
     }
 
     private toCRLF(text: string): string {
         return text.replace(/\r?\n/g, '\r\n');
     }
 
-    private resolve(
-        location?: OutputLocation,
-        testId?: string,
-    ): [Location | undefined, TestItem | undefined] {
-        const loc = location
+    private toLocation(location?: OutputLocation): Location | undefined {
+        return location
             ? new Location(Uri.file(location.file), new Position(location.line - 1, 0))
             : undefined;
-        const item = testId ? this.testItemById.get(testId) : undefined;
+    }
 
-        return [loc, item];
+    private toTestItem(testId?: string): TestItem | undefined {
+        return testId ? this.testItemById.get(testId) : undefined;
     }
 }
