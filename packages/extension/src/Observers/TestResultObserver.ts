@@ -46,7 +46,7 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (test) => this.testRun.passed(test, result.duration));
     }
 
     testFailed(result: TestFailed): void {
@@ -93,7 +93,7 @@ export class TestResultObserver implements TestRunnerObserver {
                     new TestMessageStackFrame(
                         `${file}:${line}`,
                         URI.file(file),
-                        new Position(line, 0),
+                        new Position(line - 1, 0),
                     ),
             );
 

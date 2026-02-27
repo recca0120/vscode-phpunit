@@ -1,4 +1,9 @@
-import type { TeamcityEvent, TestDefinition, TestFailed } from '@vscode-phpunit/phpunit';
+import type {
+    TeamcityEvent,
+    TestDefinition,
+    TestFailed,
+    TestFinished,
+} from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -120,6 +125,40 @@ describe('TestResultObserver', () => {
         } as never);
 
         expect(testRun.started).toHaveBeenCalledWith(datasetItem);
+    });
+
+    it('should pass duration to testRun.passed', () => {
+        observer.testFinished({
+            event: 'testFinished' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example',
+            flowId: 1,
+            name: 'test_example',
+            file: '/project/tests/ExampleTest.php',
+            locationHint: '',
+            duration: 42,
+        } as TestFinished);
+
+        expect(testRun.passed).toHaveBeenCalledWith(testItem, 42);
+    });
+
+    it('should use 0-based line in stackTrace position', () => {
+        observer.testFailed(
+            createTestFailed({
+                details: [
+                    { file: '/project/tests/ExampleTest.php', line: 10 },
+                    { file: '/project/tests/ExampleTest.php', line: 20 },
+                ],
+            }),
+        );
+
+        const failedCall = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0];
+        const message = failedCall[1];
+
+        // message.location line should be 0-based (10 - 1 = 9)
+        expect(message.location.range.start.line).toBe(9);
+
+        // stackTrace line should also be 0-based (20 - 1 = 19)
+        expect(testRun.failed).toHaveBeenCalled();
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {
