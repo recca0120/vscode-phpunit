@@ -21,6 +21,7 @@ import { classConstantAccessExpression } from './Iterables/ClassConstantAccessEx
 import { encapsedStringExpression } from './Literals/EncapsedStringExpression';
 import { numberLiteralExpression } from './Literals/NumberLiteralExpression';
 import { stringLiteralExpression } from './Literals/StringLiteralExpression';
+import { subscriptAccessExpression } from './Literals/SubscriptAccessExpression';
 import { variableExpression } from './Literals/VariableExpression';
 import { binaryExpr } from './Operators/BinaryExpression';
 import { conditionalExpression } from './Operators/ConditionalExpression';
@@ -41,6 +42,7 @@ const allExpressions: Expression<unknown>[] = [
     variableExpression,
     stringLiteralExpression,
     numberLiteralExpression,
+    subscriptAccessExpression,
     encapsedStringExpression,
     binaryExpr,
     conditionalExpression,

@@ -515,6 +515,22 @@ describe.each(parsers)('DataProviderParser (%s)', (_name, createParser) => {
             ]);
         });
 
+        it('foreach loop with conditional yield using subscript access', () => {
+            const method = givenMethod(
+                `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {
+                    public static function provider() {
+                        foreach (['apple', 'banana', 'avocado', 'cherry'] as $v) {
+                            if ($v[0] === 'a') {
+                                yield $v => [$v];
+                            }
+                        }
+                    }
+                }`,
+                'provider',
+            );
+            expect(parseDataProvider(method)).toEqual(['data set "apple"', 'data set "avocado"']);
+        });
+
         it('yield key with strtoupper', () => {
             const method = givenMethod(
                 `<?php class FooTest extends \\PHPUnit\\Framework\\TestCase {

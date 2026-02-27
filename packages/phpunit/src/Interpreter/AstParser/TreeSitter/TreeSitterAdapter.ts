@@ -789,6 +789,16 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
         name: node.namedChildren[1]?.text ?? '',
         loc: locOf(node),
     }),
+    subscript_expression: (node) => {
+        const object = node.namedChildren[0];
+        const index = node.namedChildren[1];
+        return {
+            kind: 'subscript_access_expression',
+            object: object ? adaptExpression(object) : EMPTY_STRING_NODE,
+            index: index ? adaptExpression(index) : EMPTY_STRING_NODE,
+            loc: locOf(node),
+        };
+    },
     anonymous_function_creation_expression: adaptClosure,
     anonymous_function: adaptClosure,
     arrow_function: adaptArrowFunction,

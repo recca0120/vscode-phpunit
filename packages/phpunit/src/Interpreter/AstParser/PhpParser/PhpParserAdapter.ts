@@ -135,6 +135,13 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 alternate: adaptNode(raw.falseExpr) ?? EMPTY_STRING_NODE,
                 loc: convertLoc(raw.loc),
             };
+        case 'offsetlookup':
+            return {
+                kind: 'subscript_access_expression',
+                object: adaptNode(raw.what) ?? EMPTY_STRING_NODE,
+                index: adaptNode(raw.offset) ?? EMPTY_STRING_NODE,
+                loc: convertLoc(raw.loc),
+            };
         case 'parenthesis':
             return raw.inner ? adaptNode(raw.inner) : undefined;
         default:

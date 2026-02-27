@@ -257,6 +257,13 @@ export interface ConstDeclarationNode {
     loc?: AstNodeLoc;
 }
 
+export interface SubscriptAccessNode {
+    kind: 'subscript_access_expression';
+    object: AstNode;
+    index: AstNode;
+    loc?: AstNodeLoc;
+}
+
 export interface ArrayCreationNode {
     kind: 'array_creation_expression';
     entries: ArrayEntryNode[];
@@ -317,4 +324,5 @@ export type AstNode =
     | VariableNode
     | NumberNode
     | ClassConstantAccessNode
-    | ConstDeclarationNode;
+    | ConstDeclarationNode
+    | SubscriptAccessNode;
