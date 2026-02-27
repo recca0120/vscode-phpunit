@@ -44,6 +44,24 @@ export class TestResultSummaryParser implements IParser<TestResultSummary> {
                 : [matched.name2, matched.count2];
             result[this.normalize(name)] = parseInt(count, 10);
         }
+
+        if (result.failed == null && result.tests != null) {
+            const failed = (result.errors ?? 0) + (result.failures ?? 0) + (result.warnings ?? 0);
+            if (failed > 0) {
+                result.failed = failed;
+            }
+        }
+        if (result.passed == null && result.tests != null) {
+            const passed =
+                (result.tests ?? 0) -
+                (result.failed ?? 0) -
+                (result.skipped ?? 0) -
+                (result.incomplete ?? 0);
+            if (passed > 0) {
+                result.passed = passed;
+            }
+        }
+
         return result;
     }
 

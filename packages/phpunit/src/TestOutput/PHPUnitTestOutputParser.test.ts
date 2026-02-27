@@ -225,6 +225,8 @@ describe('PHPUnit TestOutputParser Text', () => {
                     skipped: 1,
                     incomplete: 1,
                     risky: 2,
+                    failed: 6,
+                    passed: 11,
                 },
             );
         });

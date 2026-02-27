@@ -139,6 +139,8 @@ function runLifecycle(printer: Printer) {
             tests: 4,
             assertions: 4,
             failures: 2,
+            failed: 2,
+            passed: 2,
         } as unknown as TestResultSummary),
     ]);
 }

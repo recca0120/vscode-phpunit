@@ -185,23 +185,20 @@ export class Printer {
     }
 
     testResultSummary(result: TestResultSummary) {
-        const hasFailures = (result.errors ?? 0) > 0 || (result.failures ?? 0) > 0;
+        const hasFailures = (result.failed ?? result.failures ?? result.errors ?? 0) > 0;
         const countColor = hasFailures
             ? this.style.failed.bind(this.style)
             : this.style.passed.bind(this.style);
 
         const parts: string[] = [];
-        const failedCount = (result.errors ?? 0) + (result.failures ?? 0) + (result.warnings ?? 0);
-        if (failedCount > 0) {
-            parts.push(this.style.failed(`${failedCount} failed`));
+        if ((result.failed ?? 0) > 0) {
+            parts.push(this.style.failed(`${result.failed} failed`));
         }
         if ((result.skipped ?? 0) > 0) {
             parts.push(this.style.ignored(`${result.skipped} skipped`));
         }
-        const passedCount =
-            (result.tests ?? 0) - failedCount - (result.skipped ?? 0) - (result.incomplete ?? 0);
-        if (passedCount > 0) {
-            parts.push(this.style.passed(`${passedCount} passed`));
+        if ((result.passed ?? 0) > 0) {
+            parts.push(this.style.passed(`${result.passed} passed`));
         }
 
         const summary =
@@ -218,6 +215,8 @@ export class Printer {
             'skipped',
             'incomplete',
             'risky',
+            'passed',
+            'failed',
         ] as const;
         const vars: Record<string, string | undefined> = {
             text: result.text.trim(),
@@ -511,11 +510,13 @@ export class Printer {
             return undefined;
         }
 
+        const maxIndexWidth = String(result.details.length).length;
+
         return [
             '',
             ...result.details.map(({ file, line }, index) =>
                 this.interpolate(this.format.error.detail.line, {
-                    index: String(index + 1),
+                    index: String(index + 1).padStart(maxIndexWidth),
                     file: fileFormat(file, line),
                 }),
             ),
