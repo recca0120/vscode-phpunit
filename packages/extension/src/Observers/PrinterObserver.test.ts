@@ -197,22 +197,32 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
 });
 
 describe('PrinterObserver passes location and testId to writer', () => {
-    it('testFinished passes file line 1 as location', () => {
-        const appendSpy = vi.fn();
-        const writer: OutputWriter = { append: appendSpy, appendLine: () => {} };
-        const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
-        const observer = new PrinterObserver(writer, printer);
+    let appendSpy: ReturnType<typeof vi.fn>;
+    let observer: PrinterObserver;
 
+    beforeEach(() => {
+        appendSpy = vi.fn();
+        const writer: OutputWriter = {
+            append: appendSpy as OutputWriter['append'],
+            appendLine: () => {},
+        };
+        observer = new PrinterObserver(writer, new Printer(new PHPUnitXML(), PRESET_PROGRESS));
+    });
+
+    function startTest(name: string, id: string) {
         observer.testStarted({
             event: TeamcityEvent.testStarted,
-            name: 'test_passed',
+            name,
             locationHint: '',
             flowId: 1,
-            id: 'App\\Tests\\MyTest::test_passed',
+            id,
             file: '/app/tests/MyTest.php',
         });
-
         appendSpy.mockClear();
+    }
+
+    it('testFinished passes file line 1 as location', () => {
+        startTest('test_passed', 'App\\Tests\\MyTest::test_passed');
 
         observer.testFinished({
             event: TeamcityEvent.testFinished,
@@ -232,21 +242,7 @@ describe('PrinterObserver passes location and testId to writer', () => {
     });
 
     it('testFailed passes detail location when available', () => {
-        const appendSpy = vi.fn();
-        const writer: OutputWriter = { append: appendSpy, appendLine: () => {} };
-        const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
-        const observer = new PrinterObserver(writer, printer);
-
-        observer.testStarted({
-            event: TeamcityEvent.testStarted,
-            name: 'test_fail',
-            locationHint: '',
-            flowId: 1,
-            id: 'App\\Tests\\MyTest::test_fail',
-            file: '/app/tests/MyTest.php',
-        });
-
-        appendSpy.mockClear();
+        startTest('test_fail', 'App\\Tests\\MyTest::test_fail');
 
         observer.testFailed({
             event: TeamcityEvent.testFailed,
@@ -271,21 +267,7 @@ describe('PrinterObserver passes location and testId to writer', () => {
     });
 
     it('testIgnored passes file line 1 as location', () => {
-        const appendSpy = vi.fn();
-        const writer: OutputWriter = { append: appendSpy, appendLine: () => {} };
-        const printer = new Printer(new PHPUnitXML(), PRESET_PROGRESS);
-        const observer = new PrinterObserver(writer, printer);
-
-        observer.testStarted({
-            event: TeamcityEvent.testStarted,
-            name: 'test_skipped',
-            locationHint: '',
-            flowId: 1,
-            id: 'App\\Tests\\MyTest::test_skipped',
-            file: '/app/tests/MyTest.php',
-        });
-
-        appendSpy.mockClear();
+        startTest('test_skipped', 'App\\Tests\\MyTest::test_skipped');
 
         observer.testIgnored({
             event: TeamcityEvent.testIgnored,
