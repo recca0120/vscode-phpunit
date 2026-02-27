@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.29] - 2026-02-28
+
+### Added
+- Add subscript access expression (`$v[0]`) support for dataset static analysis, enabling conditional yield patterns in data provider loops
+
 ## [3.9.28] - 2026-02-28
 
 ### Fixed
