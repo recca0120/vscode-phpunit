@@ -157,18 +157,6 @@
                     "description": "Clear the debug output channel before each test run.",
                     "scope": "resource"
                 },
-                "phpunit.showAfterExecution": {
-                    "type": "string",
-                    "enum": [
-                        "always",
-                        "onFailure",
-                        "never"
-                    ],
-                    "default": "onFailure",
-                    "markdownDeprecationMessage": "**Deprecated**: Test output now displays in VS Code's native Test Results Panel. This setting no longer has any effect.",
-                    "description": "(Deprecated) Specify if the test report will automatically be shown after execution.",
-                    "scope": "application"
-                },
                 "phpunit.debuggerConfig": {
                     "type": "string",
                     "default": null,
