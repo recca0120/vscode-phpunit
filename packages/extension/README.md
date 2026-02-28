@@ -77,8 +77,8 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   // Clear debug output channel before each run (default: true)
   "phpunit.clearDebugOutputOnRun": true,
 
-  // When to show output: "always" | "onFailure" | "never" (default: "onFailure")
-  "phpunit.showAfterExecution": "onFailure",
+  // (Deprecated) Test output now displays in VS Code's native Test Results Panel.
+  // "phpunit.showAfterExecution": "onFailure",
 
   // launch.json configuration name for debugging
   "phpunit.debuggerConfig": "",

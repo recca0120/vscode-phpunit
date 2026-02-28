@@ -36,6 +36,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Printer: ANSI color output with Collision-style syntax highlighting in Test Result Panel
 - Printer: configurable format-string presets (progress, collision, pretty)
 
+### Deprecated
+- `phpunit.showAfterExecution` setting — test output now displays in VS Code's native **Test Results Panel** instead of the Output channel. The Output channel (`PHPUnit Debug`) is retained for raw debug output only.
+
 ### Fixed
 - Fix: PHP syntax highlighter misidentifies multiplication line (`* $b`) as doc-comment
 - Fix: TestRunWriter.appendLine now correctly appends trailing newline

@@ -77,8 +77,8 @@
   // 每次執行前清除除錯輸出頻道（預設：true）
   "phpunit.clearDebugOutputOnRun": true,
 
-  // 何時顯示輸出："always" | "onFailure" | "never"（預設："onFailure"）
-  "phpunit.showAfterExecution": "onFailure",
+  // （已棄用）測試輸出現在顯示在 VS Code 原生的 Test Results Panel。
+  // "phpunit.showAfterExecution": "onFailure",
 
   // 除錯用的 launch.json 設定名稱
   "phpunit.debuggerConfig": "",
