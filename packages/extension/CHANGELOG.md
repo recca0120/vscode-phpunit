@@ -4,6 +4,11 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.30] - 2026-02-28
+
+### Removed
+- Remove `phpunit.showAfterExecution` setting — test output now displays in VS Code's native **Test Results Panel**. Use VS Code's built-in `testing.openTesting` setting to control when the panel opens.
+
 ## [3.9.29] - 2026-02-28
 
 ### Added
@@ -35,9 +40,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Printer: PHPUnit-style dot colors in progress mode — distinguish F (failure, bgRed), E (error, red+bold), S (skipped, cyan+bold)
 - Printer: ANSI color output with Collision-style syntax highlighting in Test Result Panel
 - Printer: configurable format-string presets (progress, collision, pretty)
-
-### Removed
-- `phpunit.showAfterExecution` setting — test output now displays in VS Code's native **Test Results Panel** instead of the Output channel. Use VS Code's built-in `testing.openTesting` setting to control when the panel opens. The Output channel (`PHPUnit Debug`) is retained for raw debug output only.
 
 ### Fixed
 - Fix: PHP syntax highlighter misidentifies multiplication line (`* $b`) as doc-comment
