@@ -134,6 +134,7 @@ function resolveDatasets(sources: AstNode[]): string[] {
         return cartesianProduct(datasets);
     }
 
+    // Cartesian failed (e.g. closure/generator can't be statically resolved); fall back to independent resolution
     return sources.flatMap((source) => resolvePestLabels(source));
 }
 
@@ -168,20 +169,13 @@ function deduplicateLabels(labels: string[]): string[] {
         counts.set(label, (counts.get(label) ?? 0) + 1);
     }
 
-    const duplicates = new Set<string>();
-    for (const [label, count] of counts) {
-        if (count > 1) {
-            duplicates.add(label);
-        }
-    }
-
-    if (duplicates.size === 0) {
+    if ([...counts.values()].every((c) => c === 1)) {
         return labels;
     }
 
     const indices = new Map<string, number>();
     return labels.map((label) => {
-        if (!duplicates.has(label)) {
+        if ((counts.get(label) ?? 0) <= 1) {
             return label;
         }
         const idx = (indices.get(label) ?? 0) + 1;
