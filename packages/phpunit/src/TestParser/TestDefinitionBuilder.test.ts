@@ -85,6 +85,48 @@ describe('resolveDatasetDefinition', () => {
         expect(result?.id).toBe(`${parent.id} with data set "('Office') / ('Saturday')"`);
         expect(result?.label).toBe(`with ('Office') / ('Saturday')`);
     });
+
+    it('should handle truncated tuple with ellipsis from teamcity', () => {
+        const result = resolveDatasetDefinition(
+            'it has many args with data set "(1, 2, 3, …)"',
+            parent,
+        );
+
+        expect(result).toBeDefined();
+        expect(result?.id).toBe(`${parent.id} with data set "(1, 2, 3, …)"`);
+        expect(result?.label).toBe('with (1, 2, 3, …)');
+    });
+
+    it('should handle deduplicated truncated tuple from teamcity', () => {
+        const result1 = resolveDatasetDefinition(
+            'it same prefix with data set "(1, 2, 3, …) #1"',
+            parent,
+        );
+        const result2 = resolveDatasetDefinition(
+            'it same prefix with data set "(1, 2, 3, …) #2"',
+            parent,
+        );
+
+        expect(result1).toBeDefined();
+        expect(result2).toBeDefined();
+        expect(result1?.id).not.toBe(result2?.id);
+        expect(result1?.id).toBe(`${parent.id} with data set "(1, 2, 3, …) #1"`);
+        expect(result2?.id).toBe(`${parent.id} with data set "(1, 2, 3, …) #2"`);
+    });
+
+    it('teamcity truncated id matches statically analyzed id', () => {
+        // Static analysis creates: parent.id + " with " + label
+        const staticLabel = 'data set "(1, 2, 3, …)"';
+        const staticDef = createDatasetDefinition(parent, staticLabel);
+
+        // Teamcity returns: "methodName with data set "(1, 2, 3, …)""
+        const teamcityDef = resolveDatasetDefinition(
+            `addition_provider with data set "(1, 2, 3, …)"`,
+            parent,
+        );
+
+        expect(staticDef.id).toBe(teamcityDef?.id);
+    });
 });
 
 describe('createDatasetDefinition', () => {
