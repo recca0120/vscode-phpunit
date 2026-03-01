@@ -31,6 +31,15 @@ export class TestQueueBuilder {
 
             queue.set(testDef, testItem);
             testRun?.enqueued(testItem);
+
+            if (testDef.type === TestType.method && testItem.children.size > 0) {
+                await this.build(
+                    [...testItem.children].map(([, item]) => item),
+                    request,
+                    queue,
+                    testRun,
+                );
+            }
         }
 
         return queue;
