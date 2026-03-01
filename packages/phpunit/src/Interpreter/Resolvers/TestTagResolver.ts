@@ -1,5 +1,5 @@
+import { datasetExpander } from '../../TestParser/DatasetExpander';
 import type { Annotations } from '../../types';
-import { datasetIndexed, datasetNamed } from '../../utils';
 import type { AstNode, MethodNode } from '../AstParser/AstNode';
 import type { PHP } from '../PHP';
 import type { Annotatable, Resolver } from '../types';
@@ -98,12 +98,12 @@ export class TestTagResolver implements Resolver {
                 const name = attr.args[1];
                 dataset.push(
                     typeof name === 'string' && name
-                        ? datasetNamed(name)
-                        : datasetIndexed(datasetIndex),
+                        ? datasetExpander.named(name)
+                        : datasetExpander.indexed(datasetIndex),
                 );
                 datasetIndex++;
             } else if (attr.name === 'TestWithJson') {
-                dataset.push(datasetIndexed(datasetIndex));
+                dataset.push(datasetExpander.indexed(datasetIndex));
                 datasetIndex++;
             }
         }

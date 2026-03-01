@@ -1,6 +1,6 @@
 import { TestIdentifier } from '../TestIdentifier/TestIdentifier';
+import { datasetExpander } from '../TestParser/DatasetExpander';
 import { type TestDefinition, TestType } from '../types';
-import { parseDataset } from '../utils';
 
 abstract class FilterStrategy {
     constructor(protected testDefinition: TestDefinition) {}
@@ -93,7 +93,7 @@ class DatasetFilterStrategy extends DescribeFilterStrategy {
 
     protected getMethodNamePattern() {
         const methodName = (this.testDefinition.methodName ?? '').trim();
-        const { dataset } = parseDataset(this.testDefinition.id ?? '');
+        const { dataset } = datasetExpander.parse(this.testDefinition.id ?? '');
 
         const escapedMethod = TestIdentifier.generateSearchText(methodName).replace(/'/g, "\\'");
         return `${escapedMethod}${dataset.replace(/[.*+?^${}()|[\]\\/']/g, '\\$&')}`;

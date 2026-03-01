@@ -67,10 +67,10 @@ Teamcity fallback components:
 
 | Component | Description |
 |-----------|------------|
-| `resolveDatasetDefinition` | Parses `#N` and `"name"` formats from Teamcity output |
+| `DatasetExpander.fromTestOutput` | Parses `#N` and `"name"` formats from Teamcity output |
+| `DatasetExpander.fromAnnotations` | Creates dataset children from static analysis labels |
 | `isDatasetResult` | Used by TestResultObserver to distinguish dataset vs non-dataset results |
 | `DatasetObserver` | Dynamically creates dataset child TestItem nodes from Teamcity output after execution |
-| `createDatasetDefinition` | Unified constructor for dataset TestDefinition |
 
 ---
 
@@ -635,10 +635,10 @@ All patterns that AST cannot statically resolve are dynamically populated with d
 
 | Component | Status | Description |
 |-----------|:------:|------------|
-| `resolveDatasetDefinition` | ✅ | Parses `with data set #N` and `with data set "name"` formats from Teamcity output |
+| `DatasetExpander.fromTestOutput` | ✅ | Parses `with data set #N` and `with data set "name"` formats from Teamcity output |
+| `DatasetExpander.fromAnnotations` | ✅ | Creates dataset children from static analysis labels, ensures consistent format |
 | `isDatasetResult` | ✅ | Used by TestResultObserver to distinguish dataset vs non-dataset results |
 | `DatasetObserver` | ✅ | Dynamically creates dataset child TestItem nodes from Teamcity output after execution |
-| `createDatasetDefinition` | ✅ | Unified constructor for dataset TestDefinition, ensures consistent format |
 
 ### Fallback Flow
 

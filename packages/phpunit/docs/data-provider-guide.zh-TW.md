@@ -67,10 +67,10 @@ Teamcity 補漏元件：
 
 | 元件 | 說明 |
 |------|------|
-| `resolveDatasetDefinition` | 解析 Teamcity 輸出中的 `#N` 和 `"name"` 格式 |
+| `DatasetExpander.fromTestOutput` | 解析 Teamcity 輸出中的 `#N` 和 `"name"` 格式 |
+| `DatasetExpander.fromAnnotations` | 從靜態分析 labels 建立 dataset children |
 | `isDatasetResult` | TestResultObserver 用來分流 dataset vs 非 dataset 結果 |
 | `DatasetObserver` | 執行後從 Teamcity 輸出動態建立 dataset 子 TestItem |
-| `createDatasetDefinition` | 統一建構 dataset TestDefinition |
 
 ---
 
@@ -635,10 +635,10 @@ testStarted name='it business closed with data set "(|'School|', |'Sunday|')"'
 
 | 元件 | 狀態 | 說明 |
 |------|:----:|------|
-| `resolveDatasetDefinition` | ✅ | 解析 Teamcity 輸出中的 `with data set #N` 和 `with data set "name"` 格式 |
+| `DatasetExpander.fromTestOutput` | ✅ | 解析 Teamcity 輸出中的 `with data set #N` 和 `with data set "name"` 格式 |
+| `DatasetExpander.fromAnnotations` | ✅ | 從靜態分析 labels 建立 dataset children，確保格式一致 |
 | `isDatasetResult` | ✅ | TestResultObserver 用來分流 dataset vs 非 dataset 結果 |
 | `DatasetObserver` | ✅ | 執行後從 Teamcity 輸出動態建立 dataset 子 TestItem 節點 |
-| `createDatasetDefinition` | ✅ | 統一建構 dataset TestDefinition，確保格式一致 |
 
 ### 補漏流程
 

@@ -164,34 +164,3 @@ function semverCompare(a: string, b: string): number {
 
 export const semverGte = (a: string, b: string) => semverCompare(a, b) >= 0;
 export const semverLt = (a: string, b: string) => semverCompare(a, b) < 0;
-
-export const datasetNamed = (key: string) => `data set "${key}"`;
-export const datasetIndexed = (index: number | string) => `data set #${index}`;
-
-const DATASET_PATTERN =
-    /^(?<base>.*?)(?<dataset>\swith\s(?<label>data\sset\s[#"(].+|dataset\s".+|\(.+))$/;
-
-export function normalizePestLabel(label: string): string {
-    const match = label.match(/^data set "(.+)"$/);
-    if (!match) {
-        return label;
-    }
-    const inner = match[1];
-    if (inner.startsWith('dataset ') || inner.startsWith('(')) {
-        return inner;
-    }
-    return label;
-}
-
-export function parseDataset(id: string): { parentId: string; dataset: string; label: string } {
-    const match = id.match(DATASET_PATTERN);
-    if (!match?.groups) {
-        return { parentId: id, dataset: '', label: '' };
-    }
-    const label = normalizePestLabel(match.groups.label);
-    return {
-        parentId: match.groups.base,
-        dataset: match.groups.dataset,
-        label,
-    };
-}

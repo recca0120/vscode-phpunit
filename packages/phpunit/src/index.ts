@@ -7,4 +7,4 @@ export * from './TestOutput/types';
 export * from './TestParser';
 export * from './TestRunner';
 export { type TestDefinition, TestType } from './types';
-export { EOL, parseDataset, semverGte, semverLt } from './utils';
+export { EOL, semverGte, semverLt } from './utils';

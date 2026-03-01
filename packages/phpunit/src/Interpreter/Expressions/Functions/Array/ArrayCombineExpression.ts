@@ -1,4 +1,4 @@
-import { datasetIndexed, datasetNamed } from '../../../../utils';
+import { datasetExpander } from '../../../../TestParser/DatasetExpander';
 import type { AstNode, CallNode } from '../../../AstParser/AstNode';
 import type { Context, Expression } from '../../Expression';
 
@@ -19,7 +19,7 @@ class ArrayCombineExpression implements Expression<string[]> {
             return undefined;
         }
         return [...resolved.values()].map((item, i) =>
-            typeof item === 'string' ? datasetNamed(item) : datasetIndexed(i),
+            typeof item === 'string' ? datasetExpander.named(item) : datasetExpander.indexed(i),
         );
     }
 }

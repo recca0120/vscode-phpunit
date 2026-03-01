@@ -195,13 +195,11 @@ export class TestCollection extends BaseTestCollection {
     private handleReset() {
         const workspaceDefs = this.index.getDefinitionsByType(TestType.workspace);
 
-        for (const [testItem] of this.index.getDefinitionsByType(TestType.class)) {
-            if (!testItem.parent) {
-                this.rootItems.delete(testItem.id);
-                continue;
+        const keepIds = new Set(workspaceDefs.map(([item]) => item.id));
+        for (const [id] of this.rootItems) {
+            if (!keepIds.has(id)) {
+                this.rootItems.delete(id);
             }
-
-            testItem.parent.children.delete(testItem.id);
         }
         this.index.clear();
 

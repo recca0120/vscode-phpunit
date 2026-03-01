@@ -1,4 +1,4 @@
-import { datasetNamed } from '../../utils';
+import { datasetExpander } from '../../TestParser/DatasetExpander';
 import type { AstNode, CallNode, ExpressionStatementNode } from '../AstParser/AstNode';
 import { evaluate } from '../Expressions/PhpExpression';
 import type { PHP } from '../PHP';
@@ -134,6 +134,7 @@ function resolveDatasets(sources: AstNode[]): string[] {
         return cartesianProduct(datasets);
     }
 
+    // Cartesian failed (e.g. closure/generator can't be statically resolved); fall back to independent resolution
     return sources.flatMap((source) => resolvePestLabels(source));
 }
 
@@ -154,18 +155,43 @@ function resolvePestLabels(node: AstNode): string[] {
             if (!formatted) {
                 return [];
             }
-            labels.push(datasetNamed(formatted));
+            labels.push(datasetExpander.named(formatted));
         } else {
-            labels.push(datasetNamed(`dataset "${key}"`));
+            labels.push(datasetExpander.named(`dataset "${key}"`));
         }
     }
-    return labels;
+    return deduplicateLabels(labels);
 }
+
+function deduplicateLabels(labels: string[]): string[] {
+    const counts = new Map<string, number>();
+    for (const label of labels) {
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+
+    const indices = new Map<string, number>();
+    return labels.map((label) => {
+        if ((counts.get(label) ?? 0) <= 1) {
+            return label;
+        }
+        const idx = (indices.get(label) ?? 0) + 1;
+        indices.set(label, idx);
+        return `${label} #${idx}`;
+    });
+}
+
+const MAX_DATASET_ITEMS = 3;
 
 function formatPestValue(value: unknown): string | undefined {
     if (value instanceof Map || Array.isArray(value)) {
         const items = value instanceof Map ? [...value.values()] : value;
-        return `(${items.map((v) => (typeof v === 'string' ? `'${v}'` : String(v))).join(', ')})`;
+        const truncated = items.length > MAX_DATASET_ITEMS;
+        const visible = items.slice(0, MAX_DATASET_ITEMS);
+        const parts = visible.map((v) => (typeof v === 'string' ? `'${v}'` : String(v)));
+        if (truncated) {
+            parts.push('…');
+        }
+        return `(${parts.join(', ')})`;
     }
     if (typeof value === 'string') {
         return `('${value}')`;
@@ -178,7 +204,9 @@ function cartesianProduct(datasets: string[][]): string[] {
     for (let i = 1; i < datasets.length; i++) {
         combinations = combinations.flatMap((combo) => datasets[i].map((v) => [...combo, v]));
     }
-    return combinations.map((combo) => datasetNamed(combo.map((v) => `('${v}')`).join(' / ')));
+    return combinations.map((combo) =>
+        datasetExpander.named(combo.map((v) => `('${v}')`).join(' / ')),
+    );
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {

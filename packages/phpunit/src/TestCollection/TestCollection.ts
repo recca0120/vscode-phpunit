@@ -3,9 +3,8 @@ import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
 import type { TestStarted } from '../TestOutput';
-import { resolveDatasetDefinition } from '../TestParser';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
-import { parseDataset } from '../utils';
+import { datasetExpander } from '../TestParser/DatasetExpander';
 import { TestStore } from './TestStore';
 
 export interface File<T> {
@@ -62,13 +61,13 @@ export class TestCollection {
             return undefined;
         }
 
-        const { parentId } = parseDataset(result.id);
+        const { parentId } = datasetExpander.parse(result.id);
         const parentDef = this.store.getDefinition(parentId);
         if (!parentDef) {
             return undefined;
         }
 
-        const childDef = resolveDatasetDefinition(result.name, parentDef);
+        const childDef = datasetExpander.fromTestOutput(parentDef, result.name);
         if (!childDef || this.store.hasDefinition(childDef.id)) {
             return undefined;
         }

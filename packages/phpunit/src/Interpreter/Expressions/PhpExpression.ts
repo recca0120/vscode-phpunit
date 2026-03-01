@@ -1,4 +1,4 @@
-import { datasetIndexed, datasetNamed } from '../../utils';
+import { datasetExpander } from '../../TestParser/DatasetExpander';
 import type { AstNode } from '../AstParser/AstNode';
 import type { Bindings, Context, Expression } from './Expression';
 import { arrayCombineExpression } from './Functions/Array/ArrayCombineExpression';
@@ -106,7 +106,7 @@ export function extractLabels(resolved: unknown): string[] | undefined {
         return undefined;
     }
     return [...resolved.keys()].map((key: string) =>
-        /^\d+$/.test(key) ? datasetIndexed(key) : datasetNamed(key),
+        /^\d+$/.test(key) ? datasetExpander.indexed(key) : datasetExpander.named(key),
     );
 }
 

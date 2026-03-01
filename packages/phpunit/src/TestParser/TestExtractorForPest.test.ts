@@ -431,6 +431,39 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
         );
     });
 
+    it('truncates tuple values beyond 3 items with ellipsis', () => {
+        const content = `<?php
+
+it('has many args', function (int $a, int $b, int $c, int $d, int $e) {
+    expect(true)->toBeTrue();
+})->with([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]]);
+        `;
+
+        const test = givenTest(file, content, 'it has many args');
+        expect(test).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataset: ['data set "(1, 2, 3, …)"', 'data set "(6, 7, 8, …)"'],
+                },
+            }),
+        );
+    });
+
+    it('truncated tuples with same prefix get unique labels', () => {
+        const content = `<?php
+
+it('same prefix', function (int $a, int $b, int $c, int $d) {
+    expect(true)->toBeTrue();
+})->with([[1, 2, 3, 100], [1, 2, 3, 200]]);
+        `;
+
+        const test = givenTest(file, content, 'it same prefix');
+        const labels = test?.annotations?.dataset as string[];
+        expect(labels).toBeDefined();
+        expect(labels.length).toBe(2);
+        expect(labels[0]).not.toBe(labels[1]);
+    });
+
     it('string values dataset', () => {
         const content = `<?php
 
