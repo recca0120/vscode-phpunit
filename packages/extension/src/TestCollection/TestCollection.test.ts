@@ -1763,6 +1763,28 @@ class NoDatasetTest extends TestCase
             }
         });
 
+        it('reset should clear testsuite and namespace nodes from tree (#390)', async () => {
+            const collection = givenTestCollection(`
+                <testsuites>
+                    <testsuite name="Unit">
+                        <directory>tests/Unit</directory>
+                    </testsuite>
+                    <testsuite name="Feature">
+                        <directory>tests/Feature</directory>
+                    </testsuite>
+                </testsuites>`);
+
+            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+
+            expect(ctrl.items.size).toBeGreaterThan(0);
+
+            collection.reset();
+
+            // After reset, the VS Code tree should be completely empty
+            expect(ctrl.items.size).toBe(0);
+        });
+
         it('add test — all fixture files discovered', async () => {
             const collection = givenTestCollection(`
                 <testsuites>
