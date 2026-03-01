@@ -159,13 +159,49 @@ function resolvePestLabels(node: AstNode): string[] {
             labels.push(datasetNamed(`dataset "${key}"`));
         }
     }
-    return labels;
+    return deduplicateLabels(labels);
 }
+
+function deduplicateLabels(labels: string[]): string[] {
+    const counts = new Map<string, number>();
+    for (const label of labels) {
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+
+    const duplicates = new Set<string>();
+    for (const [label, count] of counts) {
+        if (count > 1) {
+            duplicates.add(label);
+        }
+    }
+
+    if (duplicates.size === 0) {
+        return labels;
+    }
+
+    const indices = new Map<string, number>();
+    return labels.map((label) => {
+        if (!duplicates.has(label)) {
+            return label;
+        }
+        const idx = (indices.get(label) ?? 0) + 1;
+        indices.set(label, idx);
+        return `${label} #${idx}`;
+    });
+}
+
+const MAX_DATASET_ITEMS = 3;
 
 function formatPestValue(value: unknown): string | undefined {
     if (value instanceof Map || Array.isArray(value)) {
         const items = value instanceof Map ? [...value.values()] : value;
-        return `(${items.map((v) => (typeof v === 'string' ? `'${v}'` : String(v))).join(', ')})`;
+        const truncated = items.length > MAX_DATASET_ITEMS;
+        const visible = items.slice(0, MAX_DATASET_ITEMS);
+        const parts = visible.map((v) => (typeof v === 'string' ? `'${v}'` : String(v)));
+        if (truncated) {
+            parts.push('…');
+        }
+        return `(${parts.join(', ')})`;
     }
     if (typeof value === 'string') {
         return `('${value}')`;
