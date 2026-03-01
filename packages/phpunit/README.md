@@ -107,7 +107,7 @@ await initTreeSitter();
 
 // 2. Load configuration
 const phpUnitXML = new PHPUnitXML();
-phpUnitXML.loadFile('/path/to/phpunit.xml');
+await phpUnitXML.loadFile('/path/to/phpunit.xml');
 
 // 3. Create parser with AST chain (tree-sitter → php-parser fallback)
 const astParser = new ChainAstParser([
@@ -181,7 +181,7 @@ runner.on(TeamcityEvent.testResultSummary, (result) => {
 
 // Runner lifecycle events
 runner.on(TestRunnerEvent.run, (builder) => {
-  console.log('Command:', builder.getRuntime(), builder.getArguments());
+  console.log('Command:', builder.toString());
 });
 runner.on(TestRunnerEvent.close, (code) => {
   console.log('Exit code:', code);
@@ -311,8 +311,7 @@ const writer = new ConsoleWriter();
 printer.start(command);               // → "php vendor/bin/phpunit ..."
 printer.testVersion(result);          // → "🚀 PHPUnit 11.5.0"
 printer.testSuiteStarted(result);     // → "PASS  App\Tests\ExampleTest"
-printer.testFinished(result);         // → "  ✓ test_add  3 ms"
-printer.testFailed(result);           // → "  ⨯ test_sub  5 ms"
+printer.testFinished(result);         // → "  ✓ test_add  3 ms" (or "  ⨯ test_sub  5 ms" for failures)
 printer.testResultSummary(result);    // → "Tests:  1 failed, 3 passed (12 assertions)"
 printer.timeAndMemory(result);        // → "Duration: 0.05s"
 printer.close();                      // flush deferred error details

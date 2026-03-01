@@ -106,7 +106,7 @@ await initTreeSitter();
 
 // 2. 載入設定
 const phpUnitXML = new PHPUnitXML();
-phpUnitXML.loadFile('/path/to/phpunit.xml');
+await phpUnitXML.loadFile('/path/to/phpunit.xml');
 
 // 3. 建立解析器，使用 AST 鏈（tree-sitter → php-parser 備援）
 const astParser = new ChainAstParser([
@@ -180,7 +180,7 @@ runner.on(TeamcityEvent.testResultSummary, (result) => {
 
 // Runner 生命週期事件
 runner.on(TestRunnerEvent.run, (builder) => {
-  console.log('命令:', builder.getRuntime(), builder.getArguments());
+  console.log('命令:', builder.toString());
 });
 runner.on(TestRunnerEvent.close, (code) => {
   console.log('結束代碼:', code);
@@ -310,8 +310,7 @@ const writer = new ConsoleWriter();
 printer.start(command);               // → "php vendor/bin/phpunit ..."
 printer.testVersion(result);          // → "🚀 PHPUnit 11.5.0"
 printer.testSuiteStarted(result);     // → "PASS  App\Tests\ExampleTest"
-printer.testFinished(result);         // → "  ✓ test_add  3 ms"
-printer.testFailed(result);           // → "  ⨯ test_sub  5 ms"
+printer.testFinished(result);         // → "  ✓ test_add  3 ms"（失敗時為 "  ⨯ test_sub  5 ms"）
 printer.testResultSummary(result);    // → "Tests:  1 failed, 3 passed (12 assertions)"
 printer.timeAndMemory(result);        // → "Duration: 0.05s"
 printer.close();                      // 清空延遲的錯誤詳情
