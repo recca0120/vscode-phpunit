@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type TestDefinition, TestType } from '../types';
-import { createDatasetDefinition, resolveDatasetDefinition } from './TestDefinitionBuilder';
+import { datasetExpander as DatasetExpander } from './DatasetExpander';
 
 const parent: TestDefinition = {
     type: TestType.method,
@@ -15,9 +15,9 @@ const parent: TestDefinition = {
     end: { line: 20, character: 0 },
 };
 
-describe('resolveDatasetDefinition', () => {
+describe('DatasetExpander.fromTestOutput', () => {
     it('should return TestDefinition for dataset name', () => {
-        const result = resolveDatasetDefinition('addition_provider with data set #0', parent);
+        const result = DatasetExpander.fromTestOutput(parent, 'addition_provider with data set #0');
 
         expect(result).toBeDefined();
         expect(result?.type).toBe(TestType.dataset);
@@ -27,15 +27,15 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should return undefined for non-dataset name', () => {
-        const result = resolveDatasetDefinition('addition_provider', parent);
+        const result = DatasetExpander.fromTestOutput(parent, 'addition_provider');
 
         expect(result).toBeUndefined();
     });
 
     it('should handle named data set', () => {
-        const result = resolveDatasetDefinition(
-            'addition_provider with data set "adding zeros"',
+        const result = DatasetExpander.fromTestOutput(
             parent,
+            'addition_provider with data set "adding zeros"',
         );
 
         expect(result?.id).toBe(`${parent.id} with data set "adding zeros"`);
@@ -43,9 +43,9 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should preserve teamcity id for pest named dataset', () => {
-        const result = resolveDatasetDefinition(
-            'it adds numbers with data set "dataset "one plus one""',
+        const result = DatasetExpander.fromTestOutput(
             parent,
+            'it adds numbers with data set "dataset "one plus one""',
         );
 
         expect(result).toBeDefined();
@@ -54,9 +54,9 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should preserve teamcity id for pest scalar', () => {
-        const result = resolveDatasetDefinition(
-            'it validates emails with data set "(\'alice@example.com\')"',
+        const result = DatasetExpander.fromTestOutput(
             parent,
+            'it validates emails with data set "(\'alice@example.com\')"',
         );
 
         expect(result).toBeDefined();
@@ -65,9 +65,9 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should preserve teamcity id for pest tuple', () => {
-        const result = resolveDatasetDefinition(
-            'it multiplies numbers with data set "(2, 3, 6)"',
+        const result = DatasetExpander.fromTestOutput(
             parent,
+            'it multiplies numbers with data set "(2, 3, 6)"',
         );
 
         expect(result).toBeDefined();
@@ -76,9 +76,9 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should preserve teamcity id for pest cartesian', () => {
-        const result = resolveDatasetDefinition(
-            `it business closed with data set "('Office') / ('Saturday')"`,
+        const result = DatasetExpander.fromTestOutput(
             parent,
+            `it business closed with data set "('Office') / ('Saturday')"`,
         );
 
         expect(result).toBeDefined();
@@ -87,9 +87,9 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should handle truncated tuple with ellipsis from teamcity', () => {
-        const result = resolveDatasetDefinition(
-            'it has many args with data set "(1, 2, 3, …)"',
+        const result = DatasetExpander.fromTestOutput(
             parent,
+            'it has many args with data set "(1, 2, 3, …)"',
         );
 
         expect(result).toBeDefined();
@@ -98,13 +98,13 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('should handle deduplicated truncated tuple from teamcity', () => {
-        const result1 = resolveDatasetDefinition(
+        const result1 = DatasetExpander.fromTestOutput(
+            parent,
             'it same prefix with data set "(1, 2, 3, …) #1"',
-            parent,
         );
-        const result2 = resolveDatasetDefinition(
-            'it same prefix with data set "(1, 2, 3, …) #2"',
+        const result2 = DatasetExpander.fromTestOutput(
             parent,
+            'it same prefix with data set "(1, 2, 3, …) #2"',
         );
 
         expect(result1).toBeDefined();
@@ -115,52 +115,38 @@ describe('resolveDatasetDefinition', () => {
     });
 
     it('teamcity truncated id matches statically analyzed id', () => {
-        // Static analysis creates: parent.id + " with " + label
-        const staticLabel = 'data set "(1, 2, 3, …)"';
-        const staticDef = createDatasetDefinition(parent, staticLabel);
+        const [staticDef] = DatasetExpander.fromAnnotations(parent, ['data set "(1, 2, 3, …)"']);
 
-        // Teamcity returns: "methodName with data set "(1, 2, 3, …)""
-        const teamcityDef = resolveDatasetDefinition(
-            `addition_provider with data set "(1, 2, 3, …)"`,
+        const teamcityDef = DatasetExpander.fromTestOutput(
             parent,
+            `addition_provider with data set "(1, 2, 3, …)"`,
         );
 
         expect(staticDef.id).toBe(teamcityDef?.id);
     });
 });
 
-describe('createDatasetDefinition', () => {
+describe('DatasetExpander.fromAnnotations', () => {
     it('should create dataset definition with correct type', () => {
-        const result = createDatasetDefinition(parent, 'data set #0');
+        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
 
         expect(result.type).toBe(TestType.dataset);
     });
 
-    it('should create id with "with" prefix when no dataset override', () => {
-        const result = createDatasetDefinition(parent, 'data set #0');
+    it('should create id with "with" prefix', () => {
+        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
 
         expect(result.id).toBe(`${parent.id} with data set #0`);
     });
 
     it('should create label with "with" prefix', () => {
-        const result = createDatasetDefinition(parent, 'data set #0');
+        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
 
         expect(result.label).toBe('with data set #0');
     });
 
-    it('should use dataset parameter for id when provided', () => {
-        const result = createDatasetDefinition(
-            parent,
-            'dataset "one plus one"',
-            ' with data set "dataset "one plus one""',
-        );
-
-        expect(result.id).toBe(`${parent.id} with data set "dataset "one plus one""`);
-        expect(result.label).toBe('with dataset "one plus one"');
-    });
-
     it('should inherit parent classFQN, namespace, className, methodName', () => {
-        const result = createDatasetDefinition(parent, 'data set #0');
+        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
 
         expect(result.classFQN).toBe(parent.classFQN);
         expect(result.namespace).toBe(parent.namespace);
@@ -169,7 +155,7 @@ describe('createDatasetDefinition', () => {
     });
 
     it('should inherit parent file and position', () => {
-        const result = createDatasetDefinition(parent, 'data set #0');
+        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
 
         expect(result.file).toBe(parent.file);
         expect(result.start).toEqual(parent.start);

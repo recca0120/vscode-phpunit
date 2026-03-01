@@ -1,6 +1,6 @@
 import type { PHPUnitXML } from '../Configuration/PHPUnitXML';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
-import { createDatasetDefinition } from '../TestParser/TestDefinitionBuilder';
+import { datasetExpander } from '../TestParser/DatasetExpander';
 import { type TestDefinition, TestType } from '../types';
 
 const GROUP_TAG_PREFIX = 'group';
@@ -109,13 +109,11 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         siblings.push(testItem);
         this.testData.set(testItem, test);
 
-        const allChildren = [...(test.children ?? [])];
-        const dataset = test.annotations?.dataset;
-        if (dataset && dataset.length > 0) {
-            for (const label of dataset) {
-                allChildren.push(createDatasetDefinition(test, label));
-            }
-        }
+        const dataset = (test.annotations?.dataset as string[] | undefined) ?? [];
+        const allChildren = [
+            ...(test.children ?? []),
+            ...datasetExpander.fromAnnotations(test, dataset),
+        ];
 
         if (allChildren.length === 0) {
             return;

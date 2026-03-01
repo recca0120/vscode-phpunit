@@ -1,4 +1,4 @@
-import { datasetNamed } from '../../utils';
+import { datasetExpander } from '../../TestParser/DatasetExpander';
 import type { AstNode, CallNode, ExpressionStatementNode } from '../AstParser/AstNode';
 import { evaluate } from '../Expressions/PhpExpression';
 import type { PHP } from '../PHP';
@@ -155,9 +155,9 @@ function resolvePestLabels(node: AstNode): string[] {
             if (!formatted) {
                 return [];
             }
-            labels.push(datasetNamed(formatted));
+            labels.push(datasetExpander.named(formatted));
         } else {
-            labels.push(datasetNamed(`dataset "${key}"`));
+            labels.push(datasetExpander.named(`dataset "${key}"`));
         }
     }
     return deduplicateLabels(labels);
@@ -167,10 +167,6 @@ function deduplicateLabels(labels: string[]): string[] {
     const counts = new Map<string, number>();
     for (const label of labels) {
         counts.set(label, (counts.get(label) ?? 0) + 1);
-    }
-
-    if ([...counts.values()].every((c) => c === 1)) {
-        return labels;
     }
 
     const indices = new Map<string, number>();
@@ -208,7 +204,9 @@ function cartesianProduct(datasets: string[][]): string[] {
     for (let i = 1; i < datasets.length; i++) {
         combinations = combinations.flatMap((combo) => datasets[i].map((v) => [...combo, v]));
     }
-    return combinations.map((combo) => datasetNamed(combo.map((v) => `('${v}')`).join(' / ')));
+    return combinations.map((combo) =>
+        datasetExpander.named(combo.map((v) => `('${v}')`).join(' / ')),
+    );
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {
