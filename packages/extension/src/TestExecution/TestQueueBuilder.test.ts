@@ -3,6 +3,7 @@ import {
     PHPUnitXML,
     PhpParserAstParser,
     TestParser,
+    TestType,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
 import { generateXML, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
@@ -71,6 +72,36 @@ describe('TestQueueBuilder', () => {
 
         expect(queue.size).toBeGreaterThan(0);
         expect(testRun.enqueued).toHaveBeenCalledTimes(queue.size);
+    });
+
+    it('should enqueue dataset children when a method with datasets is queued', async () => {
+        await collection.add(URI.file(phpUnitProject('tests/DataProviderAttributeTest.php')));
+
+        // Find a method TestItem that has dataset children
+        let methodItem: import('vscode').TestItem | undefined;
+        for (const [, ns] of ctrl.items) {
+            for (const [, cls] of ns.children) {
+                for (const [, m] of cls.children) {
+                    if (m.children.size > 0) {
+                        methodItem = m;
+                        break;
+                    }
+                }
+            }
+        }
+        expect(methodItem).toBeDefined();
+        expect(methodItem!.children.size).toBeGreaterThan(0);
+
+        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const request = {
+            include: [methodItem!],
+        } as unknown as import('vscode').TestRunRequest;
+        const queue = await builder.build(request.include!, request, undefined, testRun);
+
+        // Queue should contain both the method AND its dataset children
+        const types = [...queue.keys()].map((def) => def.type);
+        expect(types).toContain(TestType.dataset);
+        expect(queue.size).toBeGreaterThan(1);
     });
 
     it('should exclude items in request.exclude', async () => {

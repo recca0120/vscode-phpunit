@@ -346,10 +346,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 45, started: 54, passed: 40, failed: 12, end: 1 }],
-                    ['10.0.0', { enqueued: 45, started: 68, passed: 57, failed: 9, end: 1 }],
+                    ['12.0.0', { enqueued: 75, started: 54, passed: 40, failed: 12, end: 1 }],
+                    ['10.0.0', { enqueued: 75, started: 68, passed: 57, failed: 9, end: 1 }],
                 ],
-                { enqueued: 45, started: 46, passed: 27, failed: 17, end: 1 },
+                { enqueued: 75, started: 46, passed: 27, failed: 17, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -361,10 +361,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 44, started: 53, passed: 40, failed: 11, end: 1 }],
-                    ['10.0.0', { enqueued: 44, started: 67, passed: 57, failed: 8, end: 1 }],
+                    ['12.0.0', { enqueued: 74, started: 53, passed: 40, failed: 11, end: 1 }],
+                    ['10.0.0', { enqueued: 74, started: 67, passed: 57, failed: 8, end: 1 }],
                 ],
-                { enqueued: 44, started: 45, passed: 27, failed: 16, end: 1 },
+                { enqueued: 74, started: 45, passed: 27, failed: 16, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -378,10 +378,10 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 9, started: 6, passed: 1, failed: 3, end: 1 }],
-                    ['10.0.0', { enqueued: 9, started: 11, passed: 6, failed: 3, end: 1 }],
+                    ['12.0.0', { enqueued: 12, started: 6, passed: 1, failed: 3, end: 1 }],
+                    ['10.0.0', { enqueued: 12, started: 11, passed: 6, failed: 3, end: 1 }],
                 ],
-                { enqueued: 9, started: 12, passed: 7, failed: 3, end: 1 },
+                { enqueued: 12, started: 12, passed: 7, failed: 3, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -1223,8 +1223,8 @@ describe('Extension Test', () => {
 
             const expected = resolveExpected(
                 pestVersion,
-                [['3.0.0', { enqueued: 73, started: 87, passed: 81, failed: 4, end: 1 }]],
-                { enqueued: 73, started: 80, passed: 78, failed: 0, end: 1 },
+                [['3.0.0', { enqueued: 87, started: 87, passed: 81, failed: 4, end: 1 }]],
+                { enqueued: 87, started: 80, passed: 78, failed: 0, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
@@ -1256,8 +1256,8 @@ describe('Extension Test', () => {
 
             const expected = resolveExpected(
                 pestVersion,
-                [['3.0.0', { enqueued: 1, started: 3, passed: 3, failed: 0, end: 1 }]],
-                { enqueued: 1, started: 2, passed: 2, failed: 0, end: 1 },
+                [['3.0.0', { enqueued: 3, started: 3, passed: 3, failed: 0, end: 1 }]],
+                { enqueued: 3, started: 2, passed: 2, failed: 0, end: 1 },
             );
 
             expectTestResultCalled(ctrl, expected);
