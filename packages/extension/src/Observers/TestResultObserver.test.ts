@@ -53,7 +53,7 @@ describe('TestResultObserver', () => {
         queue = new Map();
         queue.set({} as TestDefinition, testItem);
         const testItemById = buildTestItemById([testItem]);
-        observer = new TestResultObserver(testItemById, queue, testRun);
+        observer = new TestResultObserver(queue, testRun, testItemById);
     });
 
     it('should use TestMessage.diff when expected and actual are present', () => {
@@ -93,7 +93,7 @@ describe('TestResultObserver', () => {
             Uri.file('/project/tests/ExampleTest.php'),
         );
         const testItemById = buildTestItemById([testItem, datasetItem]);
-        const datasetObserver = new TestResultObserver(testItemById, queue, testRun);
+        const datasetObserver = new TestResultObserver(queue, testRun, testItemById);
 
         datasetObserver.testStarted({
             event: 'testStarted' as unknown as TeamcityEvent,
@@ -107,7 +107,7 @@ describe('TestResultObserver', () => {
 
     it('should match dataset child added dynamically by DatasetObserver', () => {
         const testItemById = buildTestItemById([testItem]);
-        const dynamicObserver = new TestResultObserver(testItemById, queue, testRun);
+        const dynamicObserver = new TestResultObserver(queue, testRun, testItemById);
 
         // Simulate DatasetObserver adding a child to the shared map
         const datasetItem = ctrl.createTestItem(

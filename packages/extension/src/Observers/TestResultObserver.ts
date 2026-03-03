@@ -22,9 +22,9 @@ import { URI } from 'vscode-uri';
 
 export class TestResultObserver implements TestRunnerObserver {
     constructor(
-        private testItemById: Map<string, TestItem>,
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
+        private testItemById: Map<string, TestItem>,
     ) {}
 
     abort(): void {
