@@ -56,14 +56,13 @@ export class DebugOutputObserver implements TestRunnerObserver {
         result: { id: string; name: string; locationHint: string; file?: string },
     ) {
         const found = this.testItemById.has(result.id);
-        const status = found ? '✓' : '✗';
         this.writer.appendLine(`[${event}] ${result.name}`);
         this.writer.appendLine(`  id           : ${result.id}`);
         this.writer.appendLine(`  locationHint : ${result.locationHint}`);
         if (result.file) {
             this.writer.appendLine(`  file         : ${result.file}`);
         }
-        this.writer.appendLine(`  find()       : ${status} ${found ? 'found' : 'not found'}`);
+        this.writer.appendLine(`  find()       : ${found ? '✓ found' : '✗ not found'}`);
     }
 
     private clearOutputOnRun() {
