@@ -22,3 +22,4 @@ node_modules/
 # Personal / local
 .claude/
 CLAUDE.md
+.worktrees/
