@@ -14,9 +14,9 @@ import { Configuration } from '../Configuration';
 import { TestCollection } from '../TestCollection/TestCollection';
 import { TYPES } from '../types';
 import { DatasetObserver } from './DatasetObserver';
+import { DebugOutputObserver } from './DebugOutputObserver';
 import { ErrorDialogObserver } from './ErrorDialogObserver';
 import { PrinterObserver } from './PrinterObserver';
-import { RawOutputObserver } from './RawOutputObserver';
 import { TestResultObserver } from './TestResultObserver';
 import { TestRunWriter } from './Writers';
 
@@ -38,8 +38,8 @@ export class ObserverFactory {
 
         return [
             new DatasetObserver(this.testCollection, testItemById),
-            new TestResultObserver(testItemById, queue, testRun),
-            new RawOutputObserver(this.outputChannel, this.configuration),
+            new TestResultObserver(queue, testRun, testItemById),
+            new DebugOutputObserver(this.outputChannel, this.configuration, testItemById),
             new PrinterObserver(
                 new TestRunWriter(testRun, testItemById),
                 new Printer(this.phpUnitXML, format),
