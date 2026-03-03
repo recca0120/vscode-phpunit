@@ -38,7 +38,7 @@ export class ObserverFactory {
 
         return [
             new DatasetObserver(this.testCollection, testItemById),
-            new TestResultObserver(testItemById, queue, testRun),
+            new TestResultObserver(queue, testRun, testItemById),
             new DebugOutputObserver(this.outputChannel, this.configuration, testItemById),
             new PrinterObserver(
                 new TestRunWriter(testRun, testItemById),
