@@ -1,9 +1,15 @@
 import { datasetExpander } from '../../TestParser/DatasetExpander';
-import type { AstNode, CallNode, ExpressionStatementNode } from '../AstParser/AstNode';
+import type {
+    AstNode,
+    CallNode,
+    ClassConstantAccessNode,
+    ExpressionStatementNode,
+} from '../AstParser/AstNode';
 import { evaluate } from '../Expressions/PhpExpression';
 import type { PHP } from '../PHP';
 import type { FileInfo, PestCallDescriptor, Resolver } from '../types';
 import { CallVisitor } from '../Visitors/CallVisitor';
+import { FQNResolver } from './FQNResolver';
 
 const pestFunctionNames = new Set(['test', 'it', 'describe', 'arch']);
 
@@ -34,13 +40,25 @@ export class PestResolver implements Resolver {
     }
 }
 
-function extractDescription(args: AstNode[]): string | undefined {
+function extractDescription(args: AstNode[], php: PHP): string | undefined {
     const firstArg = args[0];
     if (firstArg?.kind === 'string') {
         return firstArg.value;
     }
     if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'string') {
         return firstArg.value.value;
+    }
+    if (firstArg?.kind === 'class_constant_access') {
+        const node = firstArg as ClassConstantAccessNode;
+        if (node.name === 'class') {
+            return php.getResolver(FQNResolver).resolveFQN(node.scope);
+        }
+    }
+    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'class_constant_access') {
+        const node = firstArg.value as ClassConstantAccessNode;
+        if (node.name === 'class') {
+            return php.getResolver(FQNResolver).resolveFQN(node.scope);
+        }
     }
     return undefined;
 }
@@ -101,7 +119,7 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
 
     return {
         fnName: rootCall.name,
-        description: extractDescription(rootCall.arguments),
+        description: extractDescription(rootCall.arguments, php),
         range: rootCall.loc,
         datasets: resolveDatasets(withSources),
         children: rootCall.name === 'describe' ? collectDescribeChildren(rootCall, php) : [],

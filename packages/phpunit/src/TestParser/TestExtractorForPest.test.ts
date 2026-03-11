@@ -581,8 +581,68 @@ it('generates name', function (object $user) {
         );
     });
 
+    it('describe with ::class using use statement', async () => {
+        const content = `<?php
+
+namespace Foo\\tests\\Unit;
+
+use Foo\\Services\\PlaylistService;
+
+describe(PlaylistService::class, function() {
+    it('should detect this test', function() {
+        expect(true)->toBeTrue();
+    });
+});
+        `;
+
+        expect(
+            givenTest(
+                file,
+                content,
+                '`Foo\\Services\\PlaylistService` → it should detect this test',
+            ),
+        ).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::`Foo\\Services\\PlaylistService` → it should detect this test',
+                methodName: '`Foo\\Services\\PlaylistService` → it should detect this test',
+                label: 'it should detect this test',
+                file,
+            }),
+        );
+    });
+
+    it('describe with ::class using fully qualified class name', async () => {
+        const content = `<?php
+
+namespace Foo\\tests\\Unit;
+
+describe(\\Foo\\Services\\PlaylistService::class, function() {
+    it('should detect this test', function() {
+        expect(true)->toBeTrue();
+    });
+});
+        `;
+
+        expect(
+            givenTest(
+                file,
+                content,
+                '`Foo\\Services\\PlaylistService` → it should detect this test',
+            ),
+        ).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::`Foo\\Services\\PlaylistService` → it should detect this test',
+                methodName: '`Foo\\Services\\PlaylistService` → it should detect this test',
+                label: 'it should detect this test',
+                file,
+            }),
+        );
+    });
+
     it('parse describe arch', () => {
-        const content = `<?php 
+        const content = `<?php
 
 describe('Given a project', function () {
     describe('When the architecture is tested', function () {
