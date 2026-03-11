@@ -24,6 +24,6 @@
         "postinstall": "npx lefthook install"
     },
     "devDependencies": {
-        "lefthook": "^2.1.1"
+        "lefthook": "^2.1.3"
     }
 }
