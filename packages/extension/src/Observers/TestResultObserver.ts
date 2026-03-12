@@ -21,6 +21,10 @@ import {
 import { URI } from 'vscode-uri';
 
 export class TestResultObserver implements TestRunnerObserver {
+    private readonly completedItems = new Set<string>();
+    private readonly failedItems = new Set<string>();
+    private readonly parentMarked = new Set<string>();
+
     constructor(
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
@@ -38,7 +42,10 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        this.doRun(result, (test) => this.testRun.started(test));
+        this.doRun(result, (test) => {
+            this.parentMarked.add(test.id);
+            this.testRun.started(test);
+        });
     }
 
     testStarted(result: TestStarted): void {
@@ -46,21 +53,64 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test, result.duration));
+        this.doRun(result, (test) => {
+            this.testRun.passed(test, result.duration);
+            this.completedItems.add(test.id);
+            this.propagateToParent(test);
+        });
     }
 
     testFailed(result: TestFailed): void {
-        this.doRun(result, (test) =>
-            this.testRun.failed(test, this.message(result, test), result.duration),
-        );
+        this.doRun(result, (test) => {
+            this.testRun.failed(test, this.message(result, test), result.duration);
+            this.completedItems.add(test.id);
+            this.failedItems.add(test.id);
+            this.propagateToParent(test);
+        });
     }
 
     testIgnored(result: TestIgnored): void {
-        this.doRun(result, (test) => this.testRun.skipped(test));
+        this.doRun(result, (test) => {
+            this.testRun.skipped(test);
+            this.completedItems.add(test.id);
+            this.propagateToParent(test);
+        });
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (test) => {
+            this.parentMarked.add(test.id);
+            this.testRun.passed(test);
+        });
+    }
+
+    private propagateToParent(test: TestItem): void {
+        const parent = test.parent;
+        if (!parent || this.parentMarked.has(parent.id)) {
+            return;
+        }
+
+        const trackedChildren = [...parent.children]
+            .map(([, child]) => child)
+            .filter((child) => this.testItemById.has(child.id));
+
+        if (
+            trackedChildren.length === 0 ||
+            trackedChildren.some((child) => !this.completedItems.has(child.id))
+        ) {
+            return;
+        }
+
+        this.parentMarked.add(parent.id);
+        if (trackedChildren.some((child) => this.failedItems.has(child.id))) {
+            this.testRun.failed(
+                parent,
+                new TestMessage('One or more dataset entries failed'),
+                undefined,
+            );
+        } else {
+            this.testRun.passed(parent, undefined);
+        }
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {

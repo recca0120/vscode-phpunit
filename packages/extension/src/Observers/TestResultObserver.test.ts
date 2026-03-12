@@ -203,4 +203,82 @@ describe('TestResultObserver', () => {
         expect(testRun.failed).toHaveBeenCalled();
         diffSpy.mockRestore();
     });
+
+    describe('dataset parent status propagation', () => {
+        let parentItem: TestItem;
+        let child1: TestItem;
+        let child2: TestItem;
+        let datasetObserver: TestResultObserver;
+
+        const makeFinished = (id: string): TestFinished =>
+            ({
+                event: 'testFinished' as unknown as TeamcityEvent,
+                id,
+                flowId: 1,
+                name: id,
+                file: '/project/tests/Unit/SampleTests.php',
+                locationHint: '',
+                duration: 10,
+            }) as TestFinished;
+
+        const makeFailed = (id: string): TestFailed => createTestFailed({ id, name: id });
+
+        beforeEach(() => {
+            parentItem = ctrl.createTestItem(
+                'tests/Unit/SampleTests.php::`something` → it should detect OK',
+                'it should detect OK',
+                Uri.file('/project/tests/Unit/SampleTests.php'),
+            );
+            child1 = ctrl.createTestItem(
+                'tests/Unit/SampleTests.php::`something` → it should detect OK with data set "(4)"',
+                'with data set "(4)"',
+                Uri.file('/project/tests/Unit/SampleTests.php'),
+            );
+            child2 = ctrl.createTestItem(
+                'tests/Unit/SampleTests.php::`something` → it should detect OK with data set "(8)"',
+                'with data set "(8)"',
+                Uri.file('/project/tests/Unit/SampleTests.php'),
+            );
+            parentItem.children.add(child1);
+            parentItem.children.add(child2);
+
+            const testItemById = buildTestItemById([parentItem, child1, child2]);
+            datasetObserver = new TestResultObserver(queue, testRun, testItemById);
+        });
+
+        it('marks parent as passed when all dataset children pass', () => {
+            datasetObserver.testFinished(makeFinished(child1.id));
+            expect(testRun.passed).not.toHaveBeenCalledWith(parentItem, undefined);
+
+            datasetObserver.testFinished(makeFinished(child2.id));
+            expect(testRun.passed).toHaveBeenCalledWith(parentItem, undefined);
+        });
+
+        it('marks parent as failed when any dataset child fails', () => {
+            datasetObserver.testFinished(makeFinished(child1.id));
+            datasetObserver.testFailed(makeFailed(child2.id));
+
+            expect(testRun.failed).toHaveBeenCalledWith(
+                parentItem,
+                expect.any(TestMessage),
+                undefined,
+            );
+        });
+
+        it('does not double-mark parent when testSuiteFinished was already called', () => {
+            datasetObserver.testSuiteFinished({
+                event: 'testSuiteFinished' as unknown as TeamcityEvent,
+                id: parentItem.id,
+                flowId: 1,
+                name: parentItem.id,
+            } as never);
+
+            vi.clearAllMocks();
+
+            datasetObserver.testFinished(makeFinished(child1.id));
+            datasetObserver.testFinished(makeFinished(child2.id));
+
+            expect(testRun.passed).not.toHaveBeenCalledWith(parentItem, undefined);
+        });
+    });
 });
