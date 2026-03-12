@@ -4,6 +4,14 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.35] - 2026-03-12
+
+### Fixed
+- Fix: preserve namespace separators (`\`) in Pest describe block names from locationHint — `describe(SomeClass::class, ...)` tests now correctly update Test Explorer icons after a run (#407)
+
+### Docs
+- Document `testing.openTesting` setting for auto-opening Test Results panel; note `dd()` output behavior
+
 ## [3.9.30] - 2026-02-28
 
 ### Removed
