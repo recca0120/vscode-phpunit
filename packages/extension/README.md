@@ -77,8 +77,11 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   // Clear debug output channel before each run (default: true)
   "phpunit.clearDebugOutputOnRun": true,
 
-  // Control when Test Results Panel opens (VS Code built-in setting):
-  // "testing.openTesting": "openOnTestStart" | "openOnTestFailure" | "neverOpen"
+  // Control when Test Results panel opens automatically (VS Code built-in setting):
+  // - "openOnTestStart"    — open as soon as a run starts
+  // - "openOnTestFailure"  — open only when a test fails (useful for seeing dd() output)
+  // - "neverOpen"          — never open automatically
+  // "testing.openTesting": "openOnTestFailure"
 
   // launch.json configuration name for debugging
   "phpunit.debuggerConfig": "",
@@ -325,6 +328,22 @@ Ensure your `phpunit.command` template quotes the variables (this is the default
   "phpunit.command": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}"
 }
 ```
+</details>
+
+<details>
+<summary>Test Results panel does not open automatically after a failure</summary>
+
+By default VS Code does not automatically reveal the Test Results panel. To open it whenever a test fails (useful for inspecting `dd()` output or error messages):
+
+```jsonc
+{
+  "testing.openTesting": "openOnTestFailure"
+}
+```
+
+Other values: `"openOnTestStart"` (open as soon as a run starts), `"neverOpen"` (never open automatically).
+
+> **Note:** `dd()` output appears in the Test Results panel as raw output, since it causes the PHP process to exit before producing any structured test results.
 </details>
 
 <details>
