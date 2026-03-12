@@ -35,9 +35,13 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
             /(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/,
         );
         if (!matched) {
-            const location = PestV1Fixer.fixLocationHint(
-                locationHint.replace(/(pest_qn|file):\/\//, '').replace(/\\/g, '/'),
-            );
+            const raw = locationHint.replace(/(pest_qn|file):\/\//, '');
+            const sepIdx = raw.indexOf('::');
+            const normalized =
+                sepIdx === -1
+                    ? raw.replace(/\\/g, '/')
+                    : raw.slice(0, sepIdx).replace(/\\/g, '/') + raw.slice(sepIdx);
+            const location = PestV1Fixer.fixLocationHint(normalized);
             const id = this.normalizeMethodName(PestV2Fixer.fixId(location, name));
             const file = location.split('::')[0];
 

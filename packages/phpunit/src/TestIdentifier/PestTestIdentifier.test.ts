@@ -46,6 +46,20 @@ describe('PestTestIdentifier', () => {
         });
     });
 
+    describe('fromLocationHint with namespaced describe block (::class)', () => {
+        it.each([
+            [
+                // describe(PlaylistService::class, ...) where PlaylistService is in Foo\\Services namespace
+                'pest_qn://tests/Unit/PlaylistServiceTests.php::`Foo\\Services\\PlaylistService` → it does something',
+                'it does something',
+                'tests/Unit/PlaylistServiceTests.php::`Foo\\Services\\PlaylistService` → it does something',
+            ],
+        ])('fromLocationHint(%j, %j) → id: %s', (locationHint, name, expectedId) => {
+            const result = transformer.fromLocationHint(locationHint, name);
+            expect(result.id).toBe(expectedId);
+        });
+    });
+
     describe('fromLocationHint v2 evaluable testSuiteStarted', () => {
         it.each([
             [
