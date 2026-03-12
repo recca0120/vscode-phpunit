@@ -31,6 +31,19 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
     }
 
     fromLocationHint(locationHint: string, name: string) {
+        // Pest v4: php_qn:// locationHint points to TestCaseFactory.php (eval'd code),
+        // not the test file. Derive file from classFQN embedded in the locationHint.
+        if (locationHint.startsWith('php_qn://')) {
+            const phpQnMatch = locationHint.match(/::(?:\\)?(?<classFQN>P\\[\w\\]+)::/);
+            if (phpQnMatch?.groups?.classFQN) {
+                const classFQN = phpQnMatch.groups.classFQN;
+                const file = `${uncapitalize(classFQN.replace(/^P\\/, '')).replace(/\\/g, '/')}.php`;
+                const decoded = PestV2Fixer.decodeEvaluableV4(name);
+                return { id: `${file}::${decoded}`, file };
+            }
+            return { id: name, file: '' };
+        }
+
         const matched = locationHint.match(
             /(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/,
         );
