@@ -3,6 +3,8 @@ import type {
     TestDefinition,
     TestFailed,
     TestFinished,
+    TestSuiteFinished,
+    TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -187,6 +189,67 @@ describe('TestResultObserver', () => {
 
         expect(message.location).toBeUndefined();
         expect(message.stackTrace).toBeUndefined();
+    });
+
+    // Pest v3 bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
+    // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
+    // are truncated by 2 bytes per → character.
+    it('should find parent item via prefix match when Pest v3 truncates testSuiteStarted name', () => {
+        const parentItem = ctrl.createTestItem(
+            'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
+            'it should detect OK but does not',
+            Uri.file('/project/tests/SampleTests.php'),
+        );
+        const testItemById = buildTestItemById([testItem, parentItem]);
+        const obs = new TestResultObserver(queue, testRun, testItemById);
+
+        obs.testSuiteStarted({
+            event: 'testSuiteStarted' as unknown as TeamcityEvent,
+            id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
+            flowId: 1,
+            name: '`something` \u2192 it should detect OK but does n',
+        } as unknown as TestSuiteStarted);
+
+        expect(testRun.started).toHaveBeenCalledWith(parentItem);
+    });
+
+    it('should mark parent passed via prefix match when Pest v3 truncates testSuiteFinished name', () => {
+        const parentItem = ctrl.createTestItem(
+            'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
+            'it should detect OK but does not',
+            Uri.file('/project/tests/SampleTests.php'),
+        );
+        const testItemById = buildTestItemById([testItem, parentItem]);
+        const obs = new TestResultObserver(queue, testRun, testItemById);
+
+        obs.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
+            flowId: 1,
+            name: '`something` \u2192 it should detect OK but does n',
+        } as unknown as TestSuiteFinished);
+
+        expect(testRun.passed).toHaveBeenCalledWith(parentItem);
+    });
+
+    it('should not use prefix match for regular testStarted events with → in id', () => {
+        const parentItem = ctrl.createTestItem(
+            'tests/Unit/ArchTest.php::preset  \u2192 php ',
+            'preset  \u2192 php ',
+            Uri.file('/project/tests/ArchTest.php'),
+        );
+        const testItemById = buildTestItemById([testItem, parentItem]);
+        const obs = new TestResultObserver(queue, testRun, testItemById);
+
+        // runtime id has no trailing space — should NOT match via prefix fallback for testStarted
+        obs.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'tests/Unit/ArchTest.php::preset  \u2192 php',
+            flowId: 1,
+            name: 'preset  \u2192 php',
+        } as never);
+
+        expect(testRun.started).not.toHaveBeenCalledWith(parentItem);
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {
