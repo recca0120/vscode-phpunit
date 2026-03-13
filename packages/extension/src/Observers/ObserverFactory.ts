@@ -1,4 +1,5 @@
 import {
+    AliasMap,
     type IConfiguration,
     PHPUnitXML,
     type PresetName,
@@ -6,7 +7,6 @@ import {
     type PrinterFormat,
     resolveFormat,
     type TestDefinition,
-    TestItemByIdMap,
     type TestRunnerObserver,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
@@ -31,7 +31,7 @@ export class ObserverFactory {
     ) {}
 
     create(queue: Map<TestDefinition, TestItem>, testRun: TestRun): TestRunnerObserver[] {
-        const testItemById = new TestItemByIdMap<TestItem>(
+        const testItemById = new AliasMap<TestItem>(
             [...queue.values()].map((item) => [item.id, item]),
         );
         const format = resolveFormat(

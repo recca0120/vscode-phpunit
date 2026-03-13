@@ -69,6 +69,6 @@ export const PestV2Fixer = {
         const decoded = decodeEvaluable(methodPart);
         const file = location.split('::')[0];
 
-        return decoded ? `${file}::${decoded}` : file;
+        return `${file}::${decoded}`;
     },
 };

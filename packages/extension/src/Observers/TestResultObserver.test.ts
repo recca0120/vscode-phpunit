@@ -6,7 +6,7 @@ import type {
     TestSuiteFinished,
     TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
-import { TestItemByIdMap } from '@vscode-phpunit/phpunit';
+import { AliasMap } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -34,8 +34,8 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
     };
 }
 
-function buildTestItemById(items: TestItem[]): TestItemByIdMap<TestItem> {
-    return new TestItemByIdMap(items.map((item) => [item.id, item]));
+function buildTestItemById(items: TestItem[]): AliasMap<TestItem> {
+    return new AliasMap(items.map((item) => [item.id, item]));
 }
 
 describe('TestResultObserver', () => {
@@ -195,7 +195,7 @@ describe('TestResultObserver', () => {
     // Pest v3 bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
     // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
     // are truncated by 2 bytes per → character.
-    // TestItemByIdMap automatically registers truncated aliases on set().
+    // AliasMap automatically registers truncated aliases on set().
     it('should find parent item via truncated alias when Pest v3 truncates testSuiteStarted name', () => {
         const parentItem = ctrl.createTestItem(
             'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',

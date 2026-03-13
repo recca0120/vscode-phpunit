@@ -3,7 +3,7 @@ export * from './Printer';
 export * from './ProcessBuilder';
 export * from './TestCollection';
 export * from './TestCoverage';
-export { PestV3Fixer, TestItemByIdMap } from './TestIdentifier/PestFixer';
+export { AliasMap } from './TestIdentifier/PestFixer';
 export * from './TestOutput/types';
 export * from './TestParser';
 export * from './TestRunner';

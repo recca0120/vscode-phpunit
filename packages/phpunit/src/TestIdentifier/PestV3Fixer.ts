@@ -12,7 +12,7 @@ export const PestV3Fixer = {
     },
 };
 
-export class TestItemByIdMap<T> extends Map<string, T> {
+export class AliasMap<T> extends Map<string, T> {
     override set(id: string, item: T): this {
         super.set(id, item);
         const truncated = PestV3Fixer.truncatedId(id);
