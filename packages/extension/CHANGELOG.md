@@ -4,6 +4,15 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.36] - 2026-03-13
+
+### Fixed
+- Fix: Pest v2 `describe()` + `->with()` tests now correctly update Test Explorer icons — `testSuiteStarted` evaluable encoding with `→` separator is now decoded properly
+- Fix: Pest v3 `testSuiteStarted` / `testSuiteFinished` names truncated by PHP byte/char mismatch (`mb_strrpos` + `substr`) — parent test items now correctly reflect pass/fail status after a run
+
+### Changed
+- Refactor: extract `AliasMap<T>` to `@vscode-phpunit/phpunit` — a `Map` subclass that auto-registers Pest v3 truncated ID aliases on `set()`
+
 ## [3.9.35] - 2026-03-12
 
 ### Fixed
