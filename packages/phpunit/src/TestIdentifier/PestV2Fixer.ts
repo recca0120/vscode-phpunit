@@ -4,13 +4,17 @@ function hasPrefix(id?: string) {
     return id?.includes(PREFIX) ?? false;
 }
 
-function decodeDescribePart(inner: string): string {
-    const segments = inner
+function decodeWords(encoded: string): string[] {
+    return encoded
         .replace(/__/g, '\0')
         .split('_')
         .map((s) => s.replace(/\0/g, '_'));
-    const isFQN = segments.every((p) => /^[A-Z]/.test(p));
-    return `\`${segments.join(isFQN ? '\\' : ' ')}\``;
+}
+
+function decodeDescribePart(inner: string): string {
+    const words = decodeWords(inner);
+    const isFQN = words.every((p) => /^[A-Z]/.test(p));
+    return `\`${words.join(isFQN ? '\\' : ' ')}\``;
 }
 
 function decodeEvaluable(encoded: string): string {
@@ -19,7 +23,6 @@ function decodeEvaluable(encoded: string): string {
         return encoded;
     }
 
-    const before = encoded.slice(0, prefixIdx);
     const methodFull = encoded.slice(prefixIdx + PREFIX.length);
 
     const datasetIdx = methodFull.search(/\s+with\s+data\s+set\s+/);
@@ -29,22 +32,17 @@ function decodeEvaluable(encoded: string): string {
             : [methodFull, ''];
 
     const segments = methodPart.split('_\u2192_');
-    if (segments.length < 2) {
-        const decoded = methodPart.replace(/__|_/g, (m) => (m === '__' ? '_' : ' '));
-        return before + decoded + datasetSuffix;
-    }
-
-    const describeParts = segments.slice(0, -1);
     const testPart = segments[segments.length - 1];
+    const describeParts = segments.slice(0, -1);
 
-    const decodedDescribes = describeParts.map((part) => {
-        const inner = part.replace(/^_/, '').replace(/_$/, '');
-        return decodeDescribePart(inner);
-    });
+    const decoded = [
+        ...describeParts.map((part) =>
+            decodeDescribePart(part.replace(/^_/, '').replace(/_$/, '')),
+        ),
+        decodeWords(testPart).join(' '),
+    ].join(' \u2192 ');
 
-    const decodedTest = testPart.replace(/__|_/g, (m) => (m === '__' ? '_' : ' '));
-
-    return before + [...decodedDescribes, decodedTest].join(' \u2192 ') + datasetSuffix;
+    return decoded + datasetSuffix;
 }
 
 export const PestV2Fixer = {
