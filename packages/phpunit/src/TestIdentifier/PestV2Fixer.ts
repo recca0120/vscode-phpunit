@@ -5,23 +5,10 @@ function hasPrefix(id?: string) {
 }
 
 function decodeDescribePart(inner: string): string {
-    const segments: string[] = [];
-    let current = '';
-    let i = 0;
-    while (i < inner.length) {
-        if (inner[i] === '_' && inner[i + 1] === '_') {
-            current += '_';
-            i += 2;
-        } else if (inner[i] === '_') {
-            segments.push(current);
-            current = '';
-            i++;
-        } else {
-            current += inner[i];
-            i++;
-        }
-    }
-    segments.push(current);
+    const segments = inner
+        .replace(/__/g, '\0')
+        .split('_')
+        .map((s) => s.replace(/\0/g, '_'));
     const isFQN = segments.every((p) => /^[A-Z]/.test(p));
     return `\`${segments.join(isFQN ? '\\' : ' ')}\``;
 }
@@ -36,8 +23,10 @@ function decodeEvaluable(encoded: string): string {
     const methodFull = encoded.slice(prefixIdx + PREFIX.length);
 
     const datasetIdx = methodFull.search(/\s+with\s+data\s+set\s+/);
-    const methodPart = datasetIdx >= 0 ? methodFull.slice(0, datasetIdx) : methodFull;
-    const datasetSuffix = datasetIdx >= 0 ? methodFull.slice(datasetIdx) : '';
+    const [methodPart, datasetSuffix] =
+        datasetIdx >= 0
+            ? [methodFull.slice(0, datasetIdx), methodFull.slice(datasetIdx)]
+            : [methodFull, ''];
 
     const segments = methodPart.split('_\u2192_');
     if (segments.length < 2) {
