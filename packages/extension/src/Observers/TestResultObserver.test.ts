@@ -6,7 +6,7 @@ import type {
     TestSuiteFinished,
     TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
-import { PestV3Fixer } from '@vscode-phpunit/phpunit';
+import { TestItemByIdMap } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -34,8 +34,8 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
     };
 }
 
-function buildTestItemById(items: TestItem[]): Map<string, TestItem> {
-    return new Map(items.map((item) => [item.id, item]));
+function buildTestItemById(items: TestItem[]): TestItemByIdMap<TestItem> {
+    return new TestItemByIdMap(items.map((item) => [item.id, item]));
 }
 
 describe('TestResultObserver', () => {
@@ -195,17 +195,18 @@ describe('TestResultObserver', () => {
     // Pest v3 bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
     // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
     // are truncated by 2 bytes per → character.
-    // ObserverFactory registers truncated aliases via PestV3Fixer.truncatedId() at build time.
+    // TestItemByIdMap automatically registers truncated aliases on set().
     it('should find parent item via truncated alias when Pest v3 truncates testSuiteStarted name', () => {
         const parentItem = ctrl.createTestItem(
             'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
             'it should detect OK but does not',
             Uri.file('/project/tests/SampleTests.php'),
         );
-        const testItemById = buildTestItemById([testItem, parentItem]);
-        const truncated = PestV3Fixer.truncatedId(parentItem.id);
-        if (truncated) testItemById.set(truncated, parentItem);
-        const obs = new TestResultObserver(queue, testRun, testItemById);
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([testItem, parentItem]),
+        );
 
         obs.testSuiteStarted({
             event: 'testSuiteStarted' as unknown as TeamcityEvent,
@@ -223,10 +224,11 @@ describe('TestResultObserver', () => {
             'it should detect OK but does not',
             Uri.file('/project/tests/SampleTests.php'),
         );
-        const testItemById = buildTestItemById([testItem, parentItem]);
-        const truncated = PestV3Fixer.truncatedId(parentItem.id);
-        if (truncated) testItemById.set(truncated, parentItem);
-        const obs = new TestResultObserver(queue, testRun, testItemById);
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([testItem, parentItem]),
+        );
 
         obs.testSuiteFinished({
             event: 'testSuiteFinished' as unknown as TeamcityEvent,
@@ -244,10 +246,11 @@ describe('TestResultObserver', () => {
             'preset  \u2192 php ',
             Uri.file('/project/tests/ArchTest.php'),
         );
-        const testItemById = buildTestItemById([testItem, parentItem]);
-        const truncated = PestV3Fixer.truncatedId(parentItem.id);
-        if (truncated) testItemById.set(truncated, parentItem);
-        const obs = new TestResultObserver(queue, testRun, testItemById);
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([testItem, parentItem]),
+        );
 
         // truncated alias = 'tests/Unit/ArchTest.php::preset  → p'
         // runtime id = 'tests/Unit/ArchTest.php::preset  → php' — different, should not match

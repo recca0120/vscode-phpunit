@@ -11,3 +11,15 @@ export const PestV3Fixer = {
         return id.slice(0, -count * 2);
     },
 };
+
+export class TestItemByIdMap<T> extends Map<string, T> {
+    override set(id: string, item: T): this {
+        super.set(id, item);
+        const truncated = PestV3Fixer.truncatedId(id);
+        if (truncated) {
+            super.set(truncated, item);
+        }
+
+        return this;
+    }
+}
