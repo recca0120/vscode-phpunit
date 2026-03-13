@@ -6,6 +6,7 @@ import type {
     TestSuiteFinished,
     TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
+import { PestV3Fixer } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -194,13 +195,16 @@ describe('TestResultObserver', () => {
     // Pest v3 bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
     // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
     // are truncated by 2 bytes per → character.
-    it('should find parent item via prefix match when Pest v3 truncates testSuiteStarted name', () => {
+    // ObserverFactory registers truncated aliases via PestV3Fixer.truncatedId() at build time.
+    it('should find parent item via truncated alias when Pest v3 truncates testSuiteStarted name', () => {
         const parentItem = ctrl.createTestItem(
             'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
             'it should detect OK but does not',
             Uri.file('/project/tests/SampleTests.php'),
         );
         const testItemById = buildTestItemById([testItem, parentItem]);
+        const truncated = PestV3Fixer.truncatedId(parentItem.id);
+        if (truncated) testItemById.set(truncated, parentItem);
         const obs = new TestResultObserver(queue, testRun, testItemById);
 
         obs.testSuiteStarted({
@@ -213,13 +217,15 @@ describe('TestResultObserver', () => {
         expect(testRun.started).toHaveBeenCalledWith(parentItem);
     });
 
-    it('should mark parent passed via prefix match when Pest v3 truncates testSuiteFinished name', () => {
+    it('should mark parent passed via truncated alias when Pest v3 truncates testSuiteFinished name', () => {
         const parentItem = ctrl.createTestItem(
             'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
             'it should detect OK but does not',
             Uri.file('/project/tests/SampleTests.php'),
         );
         const testItemById = buildTestItemById([testItem, parentItem]);
+        const truncated = PestV3Fixer.truncatedId(parentItem.id);
+        if (truncated) testItemById.set(truncated, parentItem);
         const obs = new TestResultObserver(queue, testRun, testItemById);
 
         obs.testSuiteFinished({
@@ -232,16 +238,19 @@ describe('TestResultObserver', () => {
         expect(testRun.passed).toHaveBeenCalledWith(parentItem);
     });
 
-    it('should not use prefix match for regular testStarted events with → in id', () => {
+    it('should not match arch test item when runtime id differs from truncated alias', () => {
         const parentItem = ctrl.createTestItem(
             'tests/Unit/ArchTest.php::preset  \u2192 php ',
             'preset  \u2192 php ',
             Uri.file('/project/tests/ArchTest.php'),
         );
         const testItemById = buildTestItemById([testItem, parentItem]);
+        const truncated = PestV3Fixer.truncatedId(parentItem.id);
+        if (truncated) testItemById.set(truncated, parentItem);
         const obs = new TestResultObserver(queue, testRun, testItemById);
 
-        // runtime id has no trailing space — should NOT match via prefix fallback for testStarted
+        // truncated alias = 'tests/Unit/ArchTest.php::preset  → p'
+        // runtime id = 'tests/Unit/ArchTest.php::preset  → php' — different, should not match
         obs.testStarted({
             event: 'testStarted' as unknown as TeamcityEvent,
             id: 'tests/Unit/ArchTest.php::preset  \u2192 php',

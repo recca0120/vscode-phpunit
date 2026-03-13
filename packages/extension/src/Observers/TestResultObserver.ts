@@ -38,7 +38,7 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testSuiteStarted(result: TestSuiteStarted): void {
-        this.doRun(result, (test) => this.testRun.started(test), true);
+        this.doRun(result, (test) => this.testRun.started(test));
     }
 
     testStarted(result: TestStarted): void {
@@ -60,7 +60,7 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test), true);
+        this.doRun(result, (test) => this.testRun.passed(test));
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {
@@ -100,12 +100,8 @@ export class TestResultObserver implements TestRunnerObserver {
         return message;
     }
 
-    private doRun(
-        result: TestResult,
-        updateTestRun: (testItem: TestItem) => void,
-        usePrefixFallback = false,
-    ) {
-        const testItem = this.find(result, usePrefixFallback);
+    private doRun(result: TestResult, updateTestRun: (testItem: TestItem) => void) {
+        const testItem = this.find(result);
         if (!testItem) {
             return;
         }
@@ -113,32 +109,11 @@ export class TestResultObserver implements TestRunnerObserver {
         updateTestRun(testItem);
     }
 
-    private find(result: TestResult, usePrefixFallback = false) {
+    private find(result: TestResult) {
         if (!('id' in result) || typeof result.id !== 'string') {
             return undefined;
         }
 
-        const exact = this.testItemById.get(result.id);
-        if (exact) {
-            return exact;
-        }
-
-        // Pest v3 has a bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
-        // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
-        // are truncated by 2 bytes per → character. The truncated ID is a prefix of the full parent ID.
-        // Only apply to suite events to avoid false positives on regular test events.
-        if (
-            usePrefixFallback &&
-            result.id.includes('\u2192') &&
-            !result.id.includes(' with data set ')
-        ) {
-            for (const [key, item] of this.testItemById) {
-                if (key.startsWith(result.id) && !key.includes(' with data set ')) {
-                    return item;
-                }
-            }
-        }
-
-        return undefined;
+        return this.testItemById.get(result.id);
     }
 }

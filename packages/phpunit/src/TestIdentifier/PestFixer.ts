@@ -3,6 +3,7 @@ import type { TestResultCache } from '../TestOutput/TestResultCache';
 
 export { PestV1Fixer } from './PestV1Fixer';
 export { PestV2Fixer } from './PestV2Fixer';
+export { PestV3Fixer } from './PestV3Fixer';
 
 export const PestFixer = {
     fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {

@@ -1,5 +1,6 @@
 import {
     type IConfiguration,
+    PestV3Fixer,
     PHPUnitXML,
     type PresetName,
     Printer,
@@ -30,7 +31,14 @@ export class ObserverFactory {
     ) {}
 
     create(queue: Map<TestDefinition, TestItem>, testRun: TestRun): TestRunnerObserver[] {
-        const testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
+        const testItemById = new Map<string, TestItem>();
+        for (const item of queue.values()) {
+            testItemById.set(item.id, item);
+            const truncated = PestV3Fixer.truncatedId(item.id);
+            if (truncated) {
+                testItemById.set(truncated, item);
+            }
+        }
         const format = resolveFormat(
             (this.configuration.get('output.preset') ?? 'collision') as PresetName,
             this.configuration.get('output.format') as Partial<PrinterFormat> | undefined,
