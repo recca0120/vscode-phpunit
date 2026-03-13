@@ -36,9 +36,7 @@ function decodeEvaluable(encoded: string): string {
     const describeParts = segments.slice(0, -1);
 
     const decoded = [
-        ...describeParts.map((part) =>
-            decodeDescribePart(part.replace(/^_/, '').replace(/_$/, '')),
-        ),
+        ...describeParts.map((part) => decodeDescribePart(part.replace(/^_|_$/g, ''))),
         decodeWords(testPart).join(' '),
     ].join(' \u2192 ');
 
