@@ -3,7 +3,10 @@ import type {
     TestDefinition,
     TestFailed,
     TestFinished,
+    TestSuiteFinished,
+    TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
+import { AliasMap } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -31,8 +34,8 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
     };
 }
 
-function buildTestItemById(items: TestItem[]): Map<string, TestItem> {
-    return new Map(items.map((item) => [item.id, item]));
+function buildTestItemById(items: TestItem[]): AliasMap<TestItem> {
+    return new AliasMap(items.map((item) => [item.id, item]));
 }
 
 describe('TestResultObserver', () => {
@@ -187,6 +190,78 @@ describe('TestResultObserver', () => {
 
         expect(message.location).toBeUndefined();
         expect(message.stackTrace).toBeUndefined();
+    });
+
+    // Pest v3 bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
+    // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
+    // are truncated by 2 bytes per → character.
+    // AliasMap automatically registers truncated aliases on set().
+    it('should find parent item via truncated alias when Pest v3 truncates testSuiteStarted name', () => {
+        const parentItem = ctrl.createTestItem(
+            'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
+            'it should detect OK but does not',
+            Uri.file('/project/tests/SampleTests.php'),
+        );
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([testItem, parentItem]),
+        );
+
+        obs.testSuiteStarted({
+            event: 'testSuiteStarted' as unknown as TeamcityEvent,
+            id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
+            flowId: 1,
+            name: '`something` \u2192 it should detect OK but does n',
+        } as unknown as TestSuiteStarted);
+
+        expect(testRun.started).toHaveBeenCalledWith(parentItem);
+    });
+
+    it('should mark parent passed via truncated alias when Pest v3 truncates testSuiteFinished name', () => {
+        const parentItem = ctrl.createTestItem(
+            'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
+            'it should detect OK but does not',
+            Uri.file('/project/tests/SampleTests.php'),
+        );
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([testItem, parentItem]),
+        );
+
+        obs.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
+            flowId: 1,
+            name: '`something` \u2192 it should detect OK but does n',
+        } as unknown as TestSuiteFinished);
+
+        expect(testRun.passed).toHaveBeenCalledWith(parentItem);
+    });
+
+    it('should not match arch test item when runtime id differs from truncated alias', () => {
+        const parentItem = ctrl.createTestItem(
+            'tests/Unit/ArchTest.php::preset  \u2192 php ',
+            'preset  \u2192 php ',
+            Uri.file('/project/tests/ArchTest.php'),
+        );
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([testItem, parentItem]),
+        );
+
+        // truncated alias = 'tests/Unit/ArchTest.php::preset  → p'
+        // runtime id = 'tests/Unit/ArchTest.php::preset  → php' — different, should not match
+        obs.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'tests/Unit/ArchTest.php::preset  \u2192 php',
+            flowId: 1,
+            name: 'preset  \u2192 php',
+        } as never);
+
+        expect(testRun.started).not.toHaveBeenCalledWith(parentItem);
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {

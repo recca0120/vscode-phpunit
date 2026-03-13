@@ -281,7 +281,33 @@ namespace: App\Tests\Unit            App
                                                        └─ with data set "two"
 ```
 
-### 4. Format test output (Printer)
+### 4. Resolve test items by ID at runtime (`AliasMap`)
+
+When test results arrive via Teamcity events, you need to look up the corresponding UI item by its ID. `AliasMap<T>` is a drop-in replacement for `Map<string, T>` that handles a Pest v3 bug automatically.
+
+**The problem**: Pest v3's `Str::beforeLast()` mixes `mb_strrpos` (char offset) with `substr` (byte offset). The `→` character (U+2192) is 3 UTF-8 bytes but 1 char, so `testSuiteStarted` / `testSuiteFinished` event IDs are truncated by 2 bytes per `→` — making a direct `Map.get()` miss the item.
+
+**The solution**: Use `AliasMap` instead of a plain `Map`. Every `set()` call automatically registers the truncated alias alongside the real ID, so `get()` finds the item regardless of which variant the event carries.
+
+```typescript
+import { AliasMap } from '@vscode-phpunit/phpunit';
+
+// Build from your test items — truncated aliases registered automatically
+const testItemById = new AliasMap<MyItem>(
+    items.map((item) => [item.id, item]),
+);
+
+// Lookup works for both the full and the Pest v3 truncated ID
+const fullId      = 'tests/Unit/Foo.php::`something` → it passes';
+const truncatedId = 'tests/Unit/Foo.php::`something` → it pass';  // truncated by Pest v3
+
+testItemById.get(fullId);      // → MyItem  ✓
+testItemById.get(truncatedId); // → MyItem  ✓  (alias registered automatically)
+```
+
+`AliasMap` is framework-agnostic — it works with VS Code `TestItem`, plain objects, or any other type.
+
+### 5. Format test output (Printer)
 
 `Printer` transforms structured test events into human-readable output with configurable templates and ANSI colors. Output is written through the `OutputWriter` interface, keeping the printer decoupled from any specific output target.
 

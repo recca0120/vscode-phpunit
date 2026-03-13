@@ -4,19 +4,43 @@ function hasPrefix(id?: string) {
     return id?.includes(PREFIX) ?? false;
 }
 
-function decodeEvaluable(encoded: string) {
-    const idx = encoded.indexOf(PREFIX);
-    if (idx === -1) {
+function decodeWords(encoded: string): string[] {
+    return encoded
+        .replace(/__/g, '\0')
+        .split('_')
+        .map((s) => s.replace(/\0/g, '_'));
+}
+
+function decodeDescribePart(inner: string): string {
+    const words = decodeWords(inner);
+    const isFQN = words.every((p) => /^[A-Z]/.test(p));
+    return `\`${words.join(isFQN ? '\\' : ' ')}\``;
+}
+
+function decodeEvaluable(encoded: string): string {
+    const prefixIdx = encoded.indexOf(PREFIX);
+    if (prefixIdx === -1) {
         return encoded;
     }
 
-    const before = encoded.slice(0, idx);
-    let method = encoded.slice(idx + PREFIX.length);
+    const methodFull = encoded.slice(prefixIdx + PREFIX.length);
 
-    // reverse: single _ → space, double __ → literal _
-    method = method.replace(/__|_/g, (m) => (m === '__' ? '_' : ' '));
+    const datasetIdx = methodFull.search(/\s+with\s+data\s+set\s+/);
+    const [methodPart, datasetSuffix] =
+        datasetIdx >= 0
+            ? [methodFull.slice(0, datasetIdx), methodFull.slice(datasetIdx)]
+            : [methodFull, ''];
 
-    return before + method;
+    const segments = methodPart.split('_\u2192_');
+    const testPart = segments[segments.length - 1];
+    const describeParts = segments.slice(0, -1);
+
+    const decoded = [
+        ...describeParts.map((part) => decodeDescribePart(part.replace(/^_|_$/g, ''))),
+        decodeWords(testPart).join(' '),
+    ].join(' \u2192 ');
+
+    return decoded + datasetSuffix;
 }
 
 export const PestV2Fixer = {
@@ -30,6 +54,6 @@ export const PestV2Fixer = {
         const decoded = decodeEvaluable(methodPart);
         const file = location.split('::')[0];
 
-        return decoded ? `${file}::${decoded}` : file;
+        return `${file}::${decoded}`;
     },
 };

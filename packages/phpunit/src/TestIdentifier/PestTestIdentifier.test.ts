@@ -77,6 +77,13 @@ describe('PestTestIdentifier', () => {
                 'Users\\path\\to\\tests\\Unit\\DatasetTest::__pest_evaluable_it_business_closed',
                 'tests/Unit/DatasetTest.php::it business closed',
             ],
+            // describe('something', fn() => it('test', fn())->with([...]))
+            // v2 testSuiteStarted uses evaluable encoding with → separator
+            [
+                'file:///path/to/tests/Unit/SampleTests.php',
+                'Users\\path\\to\\tests\\Unit\\SampleTests::__pest_evaluable__something__\u2192_it_should_detect_OK_but_does_not',
+                'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
+            ],
         ])('fromLocationHint(%j, %j) → id: %s', (locationHint, name, expectedId) => {
             const result = transformer.fromLocationHint(locationHint, name);
             expect(result.id).toBe(expectedId);

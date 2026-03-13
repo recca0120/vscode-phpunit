@@ -1,4 +1,5 @@
 import {
+    AliasMap,
     type IConfiguration,
     PHPUnitXML,
     type PresetName,
@@ -30,7 +31,9 @@ export class ObserverFactory {
     ) {}
 
     create(queue: Map<TestDefinition, TestItem>, testRun: TestRun): TestRunnerObserver[] {
-        const testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
+        const testItemById = new AliasMap<TestItem>(
+            [...queue.values()].map((item) => [item.id, item]),
+        );
         const format = resolveFormat(
             (this.configuration.get('output.preset') ?? 'collision') as PresetName,
             this.configuration.get('output.format') as Partial<PrinterFormat> | undefined,

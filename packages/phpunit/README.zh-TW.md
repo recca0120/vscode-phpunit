@@ -280,7 +280,33 @@ namespace: App\Tests\Unit            App
                                                        └─ with data set "two"
 ```
 
-### 4. 格式化測試輸出（Printer）
+### 4. 執行期間依 ID 反查測試項目（`AliasMap`）
+
+當 Teamcity 事件帶來測試結果時，你需要依 ID 找回對應的 UI 項目。`AliasMap<T>` 是 `Map<string, T>` 的直接替代品，能自動處理 Pest v3 的一個已知 bug。
+
+**問題根源**：Pest v3 的 `Str::beforeLast()` 混用了 `mb_strrpos`（字元偏移）與 `substr`（位元組偏移）。`→`（U+2192）是 3 個 UTF-8 位元組但只算 1 個字元，導致 `testSuiteStarted` / `testSuiteFinished` 事件的 ID 每出現一個 `→` 就被截短 2 個位元組 — 直接用 `Map.get()` 就會找不到項目。
+
+**解法**：改用 `AliasMap`。每次呼叫 `set()` 時，它會自動同時登錄截短版的別名 ID，讓 `get()` 無論收到哪個版本都能命中。
+
+```typescript
+import { AliasMap } from '@vscode-phpunit/phpunit';
+
+// 從測試項目建立 — 截短別名自動登錄
+const testItemById = new AliasMap<MyItem>(
+    items.map((item) => [item.id, item]),
+);
+
+// 無論完整 ID 或 Pest v3 截短 ID 都能查到
+const fullId      = 'tests/Unit/Foo.php::`something` → it passes';
+const truncatedId = 'tests/Unit/Foo.php::`something` → it pass';  // Pest v3 截短版
+
+testItemById.get(fullId);      // → MyItem  ✓
+testItemById.get(truncatedId); // → MyItem  ✓  （別名自動登錄）
+```
+
+`AliasMap` 與框架無關，可搭配 VS Code `TestItem`、純物件或任何其他型別使用。
+
+### 5. 格式化測試輸出（Printer）
 
 `Printer` 將結構化測試事件轉換為可讀的輸出，支援可設定的模板與 ANSI 色彩。輸出透過 `OutputWriter` 介面寫入，讓 Printer 與具體輸出目標解耦。
 
