@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { checkFileExists, findAsyncSequential, parseArguments } from '../utils';
 import { BinaryDetector } from './BinaryDetector';
 
@@ -51,7 +52,10 @@ export abstract class BaseConfiguration implements IConfiguration {
         );
         if (configuration) {
             const configurationFile = configuration.replace('--configuration=', '');
-            files = [configurationFile, join(root, configurationFile), ...files];
+            const resolvedConfigurationFile = root
+                ? configurationFile.split(VAR_WORKSPACE_FOLDER).join(root)
+                : configurationFile;
+            files = [resolvedConfigurationFile, join(root, resolvedConfigurationFile), ...files];
         }
 
         return await findAsyncSequential<string>(
