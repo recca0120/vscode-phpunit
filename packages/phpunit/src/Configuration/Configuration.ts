@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { checkFileExists, findAsyncSequential, parseArguments } from '../utils';
 import { BinaryDetector } from './BinaryDetector';
 
@@ -50,7 +51,9 @@ export abstract class BaseConfiguration implements IConfiguration {
             parameter.startsWith('--configuration'),
         );
         if (configuration) {
-            const configurationFile = configuration.replace('--configuration=', '');
+            const configurationFile = configuration
+                .replace('--configuration=', '')
+                .replace(VAR_WORKSPACE_FOLDER, root);
             files = [configurationFile, join(root, configurationFile), ...files];
         }
 
