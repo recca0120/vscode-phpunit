@@ -51,11 +51,10 @@ export abstract class BaseConfiguration implements IConfiguration {
             parameter.startsWith('--configuration'),
         );
         if (configuration) {
-            const configurationFile = configuration.replace('--configuration=', '');
-            const resolvedConfigurationFile = root
-                ? configurationFile.split(VAR_WORKSPACE_FOLDER).join(root)
-                : configurationFile;
-            files = [resolvedConfigurationFile, join(root, resolvedConfigurationFile), ...files];
+            const configurationFile = configuration
+                .replace('--configuration=', '')
+                .replace(VAR_WORKSPACE_FOLDER, root);
+            files = [configurationFile, join(root, configurationFile), ...files];
         }
 
         return await findAsyncSequential<string>(
