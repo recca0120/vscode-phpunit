@@ -29,16 +29,20 @@ export class PathReplacer {
     constructor(
         private options: SpawnOptions = {},
         paths?: Path,
+        workspaceFolder?: string,
     ) {
         this.cwd = this.fixWindowsDriveLetter(
             (this.options?.cwd as string) ?? (process.env.cwd as string),
         );
+        const workspaceFolderPath = workspaceFolder
+            ? this.fixWindowsDriveLetter(workspaceFolder)
+            : this.cwd;
         this.pathVariables = new Map<string, string>();
         this.pathVariables.set(VAR_PWD, this.cwd);
-        this.pathVariables.set(VAR_WORKSPACE_FOLDER, this.cwd);
+        this.pathVariables.set(VAR_WORKSPACE_FOLDER, workspaceFolderPath);
         this.pathVariables.set(
             VAR_WORKSPACE_FOLDER_BASENAME,
-            this.cwd ? path.basename(this.cwd) : '',
+            workspaceFolderPath ? path.basename(workspaceFolderPath) : '',
         );
         this.pathVariables.set(VAR_USER_HOME, os.homedir());
         this.pathVariables.set(VAR_PATH_SEPARATOR, path.sep);
