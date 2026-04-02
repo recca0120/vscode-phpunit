@@ -4,6 +4,12 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.38] - 2026-04-02
+
+### Fixed
+- Fix: `PathReplacer` now correctly resolves `${workspaceFolder}` to the VS Code workspace root instead of `cwd` in monorepo / nested config setups (#413)
+- Fix: rename misleading fallback test to clarify duplicated path segment behavior
+
 ## [3.9.37] - 2026-04-02
 
 ### Fixed
