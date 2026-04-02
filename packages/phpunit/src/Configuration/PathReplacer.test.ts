@@ -332,7 +332,7 @@ describe('PathReplacer', () => {
             expect(result).not.toContain('apps/api/apps/api');
         });
 
-        it(`falls back to cwd when workspaceFolder is not provided`, () => {
+        it(`produces duplicated path segments when workspaceFolder is not provided`, () => {
             const pathReplacer = new PathReplacer({ cwd });
 
             expect(
