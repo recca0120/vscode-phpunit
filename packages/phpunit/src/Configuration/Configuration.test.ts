@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/utils';
+import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { Configuration } from './Configuration';
 
 describe('Configuration Test', () => {
@@ -50,6 +51,15 @@ describe('Configuration Test', () => {
     it('get phpunit.xml', async () => {
         const configuration = new Configuration({});
         const root = phpUnitProject('');
+
+        expect(await configuration.getConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
+    });
+
+    it('resolves workspace folder placeholder in --configuration for discovery', async () => {
+        const root = phpUnitProject('');
+        const configuration = new Configuration({
+            args: ['--configuration', `${VAR_WORKSPACE_FOLDER}/phpunit.xml`],
+        });
 
         expect(await configuration.getConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
     });
