@@ -288,6 +288,46 @@ When using Docker from a WSL workspace, use the full WSL path as the local key:
 | `phpunit.run-by-group` | Run tests by group | — |
 | `phpunit.rerun` | Repeat last test run | `Cmd+T Cmd+L` |
 
+### Keybinding Tips
+
+Use VS Code's `runCommands` to combine opening the Test Results panel with running tests in a single shortcut:
+
+```jsonc
+// .vscode/keybindings.json
+[
+  {
+    "key": "cmd+k cmd+r",
+    "command": "runCommands",
+    "args": {
+      "commands": [
+        "testing.showMostRecentOutput",
+        "phpunit.run-test-at-cursor"
+      ]
+    }
+  },
+  {
+    "key": "cmd+k cmd+p",
+    "command": "runCommands",
+    "args": {
+      "commands": [
+        "testing.showMostRecentOutput",
+        "phpunit.rerun"
+      ]
+    }
+  },
+  {
+    "key": "cmd+k cmd+f",
+    "command": "runCommands",
+    "args": {
+      "commands": [
+        "testing.showMostRecentOutput",
+        "phpunit.run-file"
+      ]
+    }
+  }
+]
+```
+
 ## Troubleshooting
 
 <details>

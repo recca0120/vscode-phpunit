@@ -4,6 +4,16 @@ All notable changes to the "vscode-phpunit" extension will be documented in this
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [3.9.37] - 2026-04-02
+
+### Fixed
+- Fix: resolve `${workspaceFolder}` in `--configuration` argument during test discovery (#410)
+- Fix: remove duplicate test for `${workspaceFolder}` configuration resolution
+
+### Docs
+- Add keybinding tips for combining Test Results panel with test commands (#401)
+- Add missing "Test Results panel not opening" troubleshooting entry to Chinese README
+
 ## [3.9.36] - 2026-03-13
 
 ### Fixed

@@ -69,13 +69,4 @@ describe('Configuration Test', () => {
 
         expect(await configuration.getConfigurationFile()).toBeUndefined();
     });
-
-    it('get phpunit.xml with ${workspaceFolder} in --configuration arg', async () => {
-        const root = phpUnitProject('');
-        const configuration = new Configuration({
-            args: [`--configuration=\${workspaceFolder}/phpunit.xml`],
-        });
-
-        expect(await configuration.getConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
-    });
 });

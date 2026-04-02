@@ -285,7 +285,63 @@ services:
 | `phpunit.run-by-group` | 依群組執行測試 | — |
 | `phpunit.rerun` | 重新執行上次的測試 | `Cmd+T Cmd+L` |
 
+### 快捷鍵技巧
+
+使用 VS Code 的 `runCommands` 將開啟 Test Results 面板與執行測試合併為單一快捷鍵：
+
+```jsonc
+// .vscode/keybindings.json
+[
+  {
+    "key": "cmd+k cmd+r",
+    "command": "runCommands",
+    "args": {
+      "commands": [
+        "testing.showMostRecentOutput",
+        "phpunit.run-test-at-cursor"
+      ]
+    }
+  },
+  {
+    "key": "cmd+k cmd+p",
+    "command": "runCommands",
+    "args": {
+      "commands": [
+        "testing.showMostRecentOutput",
+        "phpunit.rerun"
+      ]
+    }
+  },
+  {
+    "key": "cmd+k cmd+f",
+    "command": "runCommands",
+    "args": {
+      "commands": [
+        "testing.showMostRecentOutput",
+        "phpunit.run-file"
+      ]
+    }
+  }
+]
+```
+
 ## 疑難排解
+
+<details>
+<summary>Test Results 面板不會自動開啟</summary>
+
+VS Code 預設不會自動開啟 Test Results 面板。若要在測試失敗時自動開啟（適合查看 `dd()` 輸出或錯誤訊息）：
+
+```jsonc
+{
+  "testing.openTesting": "openOnTestFailure"
+}
+```
+
+其他選項：`"openOnTestStart"`（測試開始時開啟）、`"neverOpen"`（永不自動開啟）。
+
+> **注意：** `dd()` 的輸出會以原始輸出的形式顯示在 Test Results 面板中，因為它會在產生任何結構化測試結果之前就終止 PHP 程序。
+</details>
 
 <details>
 <summary><code>${workspaceFolder}</code> 解析為 <code>/</code></summary>
