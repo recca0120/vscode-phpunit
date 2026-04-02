@@ -12,23 +12,33 @@ import {
 import { PathReplacer } from './PathReplacer';
 
 describe('PathReplacer', () => {
-    const givenPathReplacer = (paths?: Record<string, string>, cwd?: string) => {
+    const givenPathReplacer = (
+        paths?: Record<string, string>,
+        cwd?: string,
+        workspaceFolder?: string,
+    ) => {
         return new PathReplacer(
             { cwd: cwd ?? phpUnitProject('') },
             paths ?? {
                 [VAR_WORKSPACE_FOLDER]: '/app',
             },
+            workspaceFolder,
         );
     };
 
     const toWindows = (path: string) => path.replace(/\//g, '\\').replace(/\\$/g, '');
 
-    const givenPathReplacerForWindows = (paths?: Record<string, string>, cwd?: string) => {
+    const givenPathReplacerForWindows = (
+        paths?: Record<string, string>,
+        cwd?: string,
+        workspaceFolder?: string,
+    ) => {
         return new PathReplacer(
             { cwd: cwd ?? phpUnitProjectWin('') },
             paths ?? {
                 [VAR_WORKSPACE_FOLDER]: '/app',
             },
+            workspaceFolder,
         );
     };
 
@@ -281,5 +291,53 @@ describe('PathReplacer', () => {
 
         const remotePath = '/app/tests/AssertionsTest.php';
         expect(pathReplacer.toLocal(remotePath)).toEqual(remotePath);
+    });
+
+    describe('workspaceFolder differs from cwd (monorepo / nested config)', () => {
+        const workspace = '/workspace';
+        const cwd = '/workspace/apps/api';
+
+        it(`replaces ${VAR_WORKSPACE_FOLDER} with workspaceFolder, not cwd`, () => {
+            const pathReplacer = new PathReplacer({ cwd }, undefined, workspace);
+
+            expect(
+                pathReplacer.toRemote(`${VAR_WORKSPACE_FOLDER}/apps/api/phpunit.xml.dist`),
+            ).toEqual('/workspace/apps/api/phpunit.xml.dist');
+        });
+
+        it(`replaces ${VAR_WORKSPACE_FOLDER_BASENAME} with basename of workspaceFolder, not cwd`, () => {
+            const pathReplacer = new PathReplacer({ cwd }, undefined, workspace);
+
+            expect(pathReplacer.replacePathVariables(`${VAR_WORKSPACE_FOLDER_BASENAME}`)).toEqual(
+                'workspace',
+            );
+        });
+
+        it(`replaces ${VAR_PWD} with cwd, not workspaceFolder`, () => {
+            const pathReplacer = new PathReplacer({ cwd }, undefined, workspace);
+
+            expect(pathReplacer.toRemote(`${VAR_PWD}/vendor/bin/phpunit`)).toEqual(
+                '/workspace/apps/api/vendor/bin/phpunit',
+            );
+        });
+
+        it(`does not double-nest path when ${VAR_WORKSPACE_FOLDER} contains subdirectory`, () => {
+            const pathReplacer = new PathReplacer({ cwd }, undefined, workspace);
+
+            const result = pathReplacer.toRemote(
+                `${VAR_WORKSPACE_FOLDER}/apps/api/vendor/bin/phpunit`,
+            );
+
+            expect(result).toEqual('/workspace/apps/api/vendor/bin/phpunit');
+            expect(result).not.toContain('apps/api/apps/api');
+        });
+
+        it(`falls back to cwd when workspaceFolder is not provided`, () => {
+            const pathReplacer = new PathReplacer({ cwd });
+
+            expect(
+                pathReplacer.toRemote(`${VAR_WORKSPACE_FOLDER}/apps/api/phpunit.xml.dist`),
+            ).toEqual('/workspace/apps/api/apps/api/phpunit.xml.dist');
+        });
     });
 });
