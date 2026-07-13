@@ -35,6 +35,7 @@ export type Annotations = {
     todoIssue?: string;
     only?: boolean;
     browserTest?: boolean;
+    conditionalSkip?: 'onCi' | 'locally';
 };
 export type TestDefinition = {
     type: TestType;

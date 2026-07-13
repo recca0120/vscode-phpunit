@@ -76,4 +76,5 @@ export interface PestCallDescriptor {
     only?: boolean;
     group?: string[];
     browserTest?: boolean;
+    conditionalSkip?: 'onCi' | 'locally';
 }

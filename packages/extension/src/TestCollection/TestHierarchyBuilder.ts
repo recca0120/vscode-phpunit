@@ -34,6 +34,7 @@ const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>,
     ['only', '$(target)'],
     ['skipped', '$(circle-slash)'],
     ['todo', '$(issue-draft)'],
+    ['conditionalSkip', '$(question)'],
     ['dataProvider', '$(symbol-enum)'],
     ['browserTest', '$(globe)'],
 ];
@@ -88,6 +89,10 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
 
     private resolveDescription(testDefinition: TestDefinition): string | undefined {
         const annotations = testDefinition.annotations;
+        if (annotations?.conditionalSkip) {
+            return annotations.conditionalSkip === 'onCi' ? 'skips on CI' : 'skips locally';
+        }
+
         if (!annotations?.todo) {
             return undefined;
         }

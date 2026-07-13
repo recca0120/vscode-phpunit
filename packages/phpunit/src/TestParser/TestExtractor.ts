@@ -250,6 +250,10 @@ function buildPestTestDef(
         annotations.browserTest = true;
     }
 
+    if (call.conditionalSkip) {
+        annotations.conditionalSkip = call.conditionalSkip;
+    }
+
     const children = isDescribe
         ? call.children.map((child) =>
               buildPestTestDef(child, ctx, [...describeChain, `\`${call.description}\``]),

@@ -12,7 +12,7 @@ import { CallVisitor } from '../Visitors/CallVisitor';
 import { FQNResolver } from './FQNResolver';
 
 const pestFunctionNames = new Set(['test', 'it', 'describe', 'arch']);
-const modifierNames = new Set(['skip', 'todo', 'only', 'group']);
+const modifierNames = new Set(['skip', 'todo', 'only', 'group', 'skipOnCi', 'skipLocally']);
 
 function* walkChain(call: CallNode): Generator<CallNode> {
     let cur: CallNode | undefined = call;
@@ -84,6 +84,7 @@ interface ChainWalkResult {
     todoIssue?: string;
     only: boolean;
     group: string[];
+    conditionalSkip?: 'onCi' | 'locally';
 }
 
 function extractSkipReason(args: AstNode[]): string | undefined {
@@ -125,6 +126,7 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let todoIssue: string | undefined;
     let only = false;
     const groupCalls: string[][] = [];
+    let conditionalSkip: 'onCi' | 'locally' | undefined;
 
     for (const cur of walkChain(call)) {
         if (!rootCall && pestFunctionNames.has(cur.name)) {
@@ -151,6 +153,12 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
                 case 'group':
                     groupCalls.push(extractStringArguments(cur.arguments));
                     break;
+                case 'skipOnCi':
+                    conditionalSkip = 'onCi';
+                    break;
+                case 'skipLocally':
+                    conditionalSkip = 'locally';
+                    break;
             }
             (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (!rootCall) {
@@ -175,6 +183,7 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         todoIssue,
         only,
         group: groupCalls.reverse().flat(),
+        conditionalSkip,
     };
 }
 
@@ -195,6 +204,7 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         todoIssue,
         only,
         group,
+        conditionalSkip,
     } = result;
 
     const isTestCall = rootCall.name === 'it' || rootCall.name === 'test';
@@ -214,6 +224,7 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         only: only || undefined,
         group: group.length > 0 ? group : undefined,
         browserTest: isTestCall ? detectsBrowserTestCall(rootCall) : undefined,
+        conditionalSkip,
     };
 }
 

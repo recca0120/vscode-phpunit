@@ -1065,6 +1065,58 @@ it('does something', function () {
             expect(method.description).toBe('assigned: taylor@laravel.com, issue #123');
         });
 
+        it('Pest ->skipOnCi() shows a distinct conditional-skip icon and description', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipOnCiTest.php'),
+                        code: `<?php
+it('needs a real server', function () {
+    expect(true)->toBeTrue();
+})->skipOnCi();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipOnCiTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipOnCiTest.php::it needs a real server',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(question) it needs a real server');
+            expect(method.description).toBe('skips on CI');
+        });
+
+        it('Pest ->skipLocally() shows a distinct conditional-skip icon and description', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipLocallyTest.php'),
+                        code: `<?php
+it('needs local docker', function () {
+    expect(true)->toBeTrue();
+})->skipLocally();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipLocallyTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipLocallyTest.php::it needs local docker',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(question) it needs local docker');
+            expect(method.description).toBe('skips locally');
+        });
+
         it('Pest ->only() shows a distinct only icon in the label', () => {
             givenCodes(
                 [

@@ -310,6 +310,36 @@ it('does something', function () {
         );
     });
 
+    it('marks ->skipOnCi() tests with annotations.conditionalSkip "onCi"', async () => {
+        const content = `<?php
+
+it('needs a real server', function () {
+    expect(true)->toBeTrue();
+})->skipOnCi();
+        `;
+
+        expect(givenTest(file, content, 'it needs a real server')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ conditionalSkip: 'onCi' }),
+            }),
+        );
+    });
+
+    it('marks ->skipLocally() tests with annotations.conditionalSkip "locally"', async () => {
+        const content = `<?php
+
+it('needs local docker', function () {
+    expect(true)->toBeTrue();
+})->skipLocally();
+        `;
+
+        expect(givenTest(file, content, 'it needs local docker')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ conditionalSkip: 'locally' }),
+            }),
+        );
+    });
+
     it('marks ->only() tests with annotations.only', async () => {
         const content = `<?php
 
