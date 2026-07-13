@@ -11,11 +11,13 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '.';
+import { classifyEvent, SuiteAggregator } from './SuiteAggregator';
 import { TeamcityLineParser } from './TeamcityLineParser';
 import { TestResultCache } from './TestResultCache';
 
 export class TestOutputParser {
     private cache = new TestResultCache();
+    private suites = new SuiteAggregator();
 
     constructor(private testResultParser: TeamcityLineParser = new TeamcityLineParser()) {}
 
@@ -53,6 +55,10 @@ export class TestOutputParser {
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
         this.cache.set(testResult, testResult);
 
+        if (testResult.event === TeamcityEvent.testSuiteStarted) {
+            this.suites.open(testResult.flowId);
+        }
+
         return testResult;
     }
 
@@ -60,10 +66,13 @@ export class TestOutputParser {
         const prevTestResult = this.cache.get(testResult);
 
         if (!prevTestResult) {
-            return PestFixer.fixNoTestStarted(
+            const fixed = PestFixer.fixNoTestStarted(
                 this.cache,
                 PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
             );
+            this.suites.record(fixed.flowId, fixed.event);
+
+            return fixed;
         }
 
         if (prevTestResult.event === TeamcityEvent.testStarted) {
@@ -94,13 +103,16 @@ export class TestOutputParser {
         const result = { ...prevTestResult, ...testResult, event };
         this.cache.delete(testResult);
 
+        if (testResult.event === TeamcityEvent.testSuiteFinished) {
+            return { ...result, ...this.suites.close(testResult.flowId) };
+        }
+
+        this.suites.record(testResult.flowId, event);
+
         return result;
     }
 
     private isFault(testResult: TestResult) {
-        return (
-            testResult.event === TeamcityEvent.testFailed ||
-            testResult.event === TeamcityEvent.testIgnored
-        );
+        return classifyEvent(testResult.event) !== 'passed';
     }
 }

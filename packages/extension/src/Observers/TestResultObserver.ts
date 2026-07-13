@@ -60,7 +60,15 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test));
+        this.doRun(result, (test) => {
+            if (result.failed > 0) {
+                // No message of its own; failures already surfaced on the child tests.
+                this.testRun.failed(test, []);
+                return;
+            }
+
+            this.testRun.passed(test);
+        });
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {

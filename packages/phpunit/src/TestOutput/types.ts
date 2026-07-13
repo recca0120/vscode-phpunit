@@ -68,7 +68,11 @@ export type TestSuiteFinished = BaseResult &
         TestResultIdentify & {
             locationHint: string;
         }
-    >;
+    > & {
+        passed: number;
+        failed: number;
+        skipped: number;
+    };
 
 export type TestVersion = InfoResult & {
     phpunit: string;

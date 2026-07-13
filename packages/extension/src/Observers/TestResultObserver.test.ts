@@ -3,10 +3,12 @@ import type {
     TestDefinition,
     TestFailed,
     TestFinished,
+    TestStarted,
     TestSuiteFinished,
     TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
-import { AliasMap } from '@vscode-phpunit/phpunit';
+import { AliasMap, TestOutputParser } from '@vscode-phpunit/phpunit';
+import { phpUnitProjectWin } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -36,6 +38,42 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
 
 function buildTestItemById(items: TestItem[]): AliasMap<TestItem> {
     return new AliasMap(items.map((item) => [item.id, item]));
+}
+
+function setupAssertionsFlow(
+    ctrl: TestController,
+    queue: Map<TestDefinition, TestItem>,
+    testRun: TestRun,
+    flowId: number,
+    testName: string,
+) {
+    const parser = new TestOutputParser();
+    const file = phpUnitProjectWin('tests/AssertionsTest.php');
+
+    const suiteStarted = parser.parse(
+        `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+    ) as TestSuiteStarted;
+    const childStarted = parser.parse(
+        `##teamcity[testStarted name='${testName}' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::${testName}' flowId='${flowId}']`,
+    ) as TestStarted;
+
+    const suiteItem = ctrl.createTestItem(suiteStarted.id, 'AssertionsTest', Uri.file(file));
+    const childItem = ctrl.createTestItem(childStarted.id, testName, Uri.file(file));
+    suiteItem.children.add(childItem);
+
+    const obs = new TestResultObserver(queue, testRun, buildTestItemById([suiteItem, childItem]));
+
+    obs.testSuiteStarted(suiteStarted);
+    obs.testStarted(childStarted);
+
+    const finishSuite = () =>
+        obs.testSuiteFinished(
+            parser.parse(
+                `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+            ) as TestSuiteFinished,
+        );
+
+    return { parser, obs, suiteItem, childItem, flowId, testName, finishSuite };
 }
 
 describe('TestResultObserver', () => {
@@ -262,6 +300,79 @@ describe('TestResultObserver', () => {
         } as never);
 
         expect(testRun.started).not.toHaveBeenCalledWith(parentItem);
+    });
+
+    it('should mark suite as failed when TestSuiteFinished reports a failed count', () => {
+        observer.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: testItem.id,
+            flowId: 1,
+            name: 'test_example',
+            passed: 0,
+            failed: 1,
+            skipped: 0,
+        } as unknown as TestSuiteFinished);
+
+        expect(testRun.passed).not.toHaveBeenCalledWith(testItem);
+        expect(testRun.failed).toHaveBeenCalledWith(testItem, expect.anything());
+    });
+
+    it('should mark suite as passed when TestSuiteFinished reports no failures', () => {
+        observer.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: testItem.id,
+            flowId: 1,
+            name: 'test_example',
+            passed: 2,
+            failed: 0,
+            skipped: 1,
+        } as unknown as TestSuiteFinished);
+
+        expect(testRun.failed).not.toHaveBeenCalledWith(testItem, expect.anything());
+        expect(testRun.passed).toHaveBeenCalledWith(testItem);
+    });
+
+    it('flows a failing child test through TestOutputParser into a failed suite TestItem end-to-end', () => {
+        const { parser, obs, suiteItem, flowId, testName, finishSuite } = setupAssertionsFlow(
+            ctrl,
+            queue,
+            testRun,
+            42,
+            'test_is_not_same',
+        );
+
+        parser.parse(
+            `##teamcity[testFailed name='${testName}' message='Failed asserting that two arrays are identical.' details='' duration='0' flowId='${flowId}']`,
+        );
+        const childFinished = parser.parse(
+            `##teamcity[testFinished name='${testName}' duration='0' flowId='${flowId}']`,
+        ) as TestFailed;
+        obs.testFailed(childFinished);
+
+        finishSuite();
+
+        expect(testRun.failed).toHaveBeenCalledWith(suiteItem, []);
+        expect(testRun.passed).not.toHaveBeenCalledWith(suiteItem);
+    });
+
+    it('flows an all-passing suite through TestOutputParser into a passed suite TestItem end-to-end', () => {
+        const { parser, obs, suiteItem, flowId, testName, finishSuite } = setupAssertionsFlow(
+            ctrl,
+            queue,
+            testRun,
+            43,
+            'test_passed',
+        );
+
+        const childFinished = parser.parse(
+            `##teamcity[testFinished name='${testName}' duration='0' flowId='${flowId}']`,
+        ) as TestFinished;
+        obs.testFinished(childFinished);
+
+        finishSuite();
+
+        expect(testRun.failed).not.toHaveBeenCalledWith(suiteItem, expect.anything());
+        expect(testRun.passed).toHaveBeenCalledWith(suiteItem);
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {
