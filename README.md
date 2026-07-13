@@ -2,8 +2,8 @@
 
 Monorepo for the **PHPUnit & Pest Test Explorer** VS Code extension.
 
-[![Version](https://img.shields.io/vscode-marketplace/v/recca0120.vscode-phpunit.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
-[![Installs](https://img.shields.io/vscode-marketplace/i/recca0120.vscode-phpunit.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
+[![Version](https://vsmarketplacebadges.dev/version/recca0120.vscode-phpunit.svg)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
+[![Installs](https://vsmarketplacebadges.dev/installs/recca0120.vscode-phpunit.svg)](https://marketplace.visualstudio.com/items?itemName=recca0120.vscode-phpunit)
 [![License](https://img.shields.io/github/license/recca0120/vscode-phpunit.svg?style=flat-square)](LICENSE.md)
 
 ## Packages
