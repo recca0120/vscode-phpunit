@@ -73,9 +73,9 @@ const pestStubs = detectPestStubs();
 
 const configs = [];
 
-// PHPUnit single-folder (first available stub)
+// PHPUnit single-folder (newest available stub)
 if (phpUnitStubs.length > 0) {
-    const stub = phpUnitStubs[0];
+    const stub = phpUnitStubs.at(-1);
     configs.push({
         label: `phpunit:${stub.name}`,
         files: 'out/tests/suite/**/*.test.js',
@@ -94,9 +94,9 @@ if (phpUnitStubs.length > 0) {
     });
 }
 
-// Pest single-folder (first available stub)
+// Pest single-folder (newest available stub)
 if (pestStubs.length > 0) {
-    const stub = pestStubs[0];
+    const stub = pestStubs.at(-1);
     configs.push({
         label: `pest:${stub.name}`,
         files: 'out/tests/suite/**/*.test.js',
@@ -117,8 +117,8 @@ if (pestStubs.length > 0) {
 
 // Multi-workspace test
 if (phpUnitStubs.length > 0 && pestStubs.length > 0) {
-    const phpUnit = phpUnitStubs[0];
-    const pest = pestStubs[0];
+    const phpUnit = phpUnitStubs.at(-1);
+    const pest = pestStubs.at(-1);
     const workspacePath = join(fixturesPath, 'workspaces/multi-workspace.code-workspace');
 
     configs.push({
