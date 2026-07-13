@@ -264,6 +264,34 @@ describe('TestResultObserver', () => {
         expect(testRun.started).not.toHaveBeenCalledWith(parentItem);
     });
 
+    it('should mark suite as failed when a child test failed before testSuiteFinished', () => {
+        const suiteItem = ctrl.createTestItem(
+            'Tests\\ExampleTest',
+            'ExampleTest',
+            Uri.file('/project/tests/ExampleTest.php'),
+        );
+        const childItem = ctrl.createTestItem(
+            'Tests\\ExampleTest::test_example',
+            'test_example',
+            Uri.file('/project/tests/ExampleTest.php'),
+        );
+        suiteItem.children.add(childItem);
+
+        const testItemById = buildTestItemById([suiteItem, childItem]);
+        const obs = new TestResultObserver(queue, testRun, testItemById);
+
+        obs.testFailed(createTestFailed({ id: childItem.id }));
+        obs.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: suiteItem.id,
+            flowId: 1,
+            name: 'ExampleTest',
+        } as unknown as TestSuiteFinished);
+
+        expect(testRun.passed).not.toHaveBeenCalledWith(suiteItem);
+        expect(testRun.failed).toHaveBeenCalledWith(suiteItem, expect.anything());
+    });
+
     it('should not use TestMessage.diff when expected/actual are missing', () => {
         const diffSpy = vi.spyOn(TestMessage, 'diff');
 

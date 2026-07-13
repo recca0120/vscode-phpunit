@@ -346,8 +346,8 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 75, started: 54, passed: 40, failed: 12, end: 1 }],
-                    ['10.0.0', { enqueued: 75, started: 68, passed: 57, failed: 9, end: 1 }],
+                    ['12.0.0', { enqueued: 75, started: 54, passed: 39, failed: 13, end: 1 }],
+                    ['10.0.0', { enqueued: 75, started: 68, passed: 56, failed: 10, end: 1 }],
                 ],
                 { enqueued: 75, started: 46, passed: 27, failed: 17, end: 1 },
             );
@@ -361,8 +361,8 @@ describe('Extension Test', () => {
             const expected = resolveExpected(
                 phpUnitVersion,
                 [
-                    ['12.0.0', { enqueued: 74, started: 53, passed: 40, failed: 11, end: 1 }],
-                    ['10.0.0', { enqueued: 74, started: 67, passed: 57, failed: 8, end: 1 }],
+                    ['12.0.0', { enqueued: 74, started: 53, passed: 39, failed: 12, end: 1 }],
+                    ['10.0.0', { enqueued: 74, started: 67, passed: 56, failed: 9, end: 1 }],
                 ],
                 { enqueued: 74, started: 45, passed: 27, failed: 16, end: 1 },
             );
