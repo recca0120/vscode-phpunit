@@ -103,7 +103,7 @@ export class TestResultObserver implements TestRunnerObserver {
         message.stackTrace = details
             .filter(
                 ({ file, line }) =>
-                    file === resultFile && (!matchingDetail || line !== matchingDetail.line),
+                    !matchingDetail || file !== matchingDetail.file || line !== matchingDetail.line,
             )
             .map(
                 ({ file, line }) =>

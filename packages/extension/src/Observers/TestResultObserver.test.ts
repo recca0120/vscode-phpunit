@@ -215,6 +215,22 @@ describe('TestResultObserver', () => {
         expect(message.stackTrace[0].position.line).toBe(19);
     });
 
+    it('should keep cross-file stackTrace frame when arch() test fails on a different file', () => {
+        observer.testFailed(
+            createTestFailed({
+                file: '/project/tests/Unit/ArchTest.php',
+                details: [{ file: '/project/src/Calculator.php', line: 7 }],
+            }),
+        );
+
+        const failedCall = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0];
+        const message = failedCall[1];
+
+        expect(message.stackTrace).toHaveLength(1);
+        expect(message.stackTrace[0].uri.fsPath).toBe('/project/src/Calculator.php');
+        expect(message.stackTrace[0].position.line).toBe(6);
+    });
+
     it('should not set location when result.file is undefined', () => {
         observer.testFailed(
             createTestFailed({
