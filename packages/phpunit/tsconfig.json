@@ -13,7 +13,9 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "isolatedModules": true,
-        "declaration": true
+        "declaration": true,
+        "types": ["node"],
+        "ignoreDeprecations": "6.0"
     },
     "include": ["src/**/*.ts", "tests/**/*.ts"],
     "exclude": ["tests/fixtures/**/*", "tests/__mocks__/*"]

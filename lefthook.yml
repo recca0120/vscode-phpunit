@@ -13,10 +13,17 @@ pre-commit:
       root: "packages/phpunit/"
       glob: "*.{ts,tsx}"
       run: npx tsc --noEmit
-    - name: typecheck-extension
-      root: "packages/extension/"
-      glob: "*.{ts,tsx}"
-      run: npx tsc --noEmit
+    - group:
+        parallel: false
+        jobs:
+          - name: build-phpunit-types
+            root: "packages/phpunit/"
+            glob: "*.{ts,tsx}"
+            run: npx tsup
+          - name: typecheck-extension
+            root: "packages/extension/"
+            glob: "*.{ts,tsx}"
+            run: npx tsc -p tsconfig.test.json --noEmit
     - name: pint-phpunit-stub
       root: "packages/phpunit/tests/fixtures/phpunit-stub/"
       glob: "*.php"
