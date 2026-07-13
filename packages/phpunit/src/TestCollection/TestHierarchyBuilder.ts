@@ -52,6 +52,10 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         return testDefinition.label;
     }
 
+    protected decorateItem(_testItem: T, _testDefinition: TestDefinition): void {
+        // no-op by default; subclasses can attach extra display info (e.g. description)
+    }
+
     private processNode(test: TestDefinition, parentChildren: ItemCollection<T>) {
         switch (test.type) {
             case TestType.namespace:
@@ -257,6 +261,8 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         if (tags.length > 0) {
             testItem.tags = tags;
         }
+
+        this.decorateItem(testItem, testDefinition);
 
         return testItem;
     }

@@ -1039,6 +1039,110 @@ it('does something', function () {
             expect(method.label).toBe('$(issue-draft) it does something');
         });
 
+        it('Pest ->todo(assignee:, issue:) shows the assignment info as item description', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/TodoAssignedTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo(assignee: 'taylor@laravel.com', issue: 123);`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\TodoAssignedTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/TodoAssignedTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(issue-draft) it does something');
+            expect(method.description).toBe('assigned: taylor@laravel.com, issue #123');
+        });
+
+        it('Pest ->skipOnCi() shows a distinct conditional-skip icon and description', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipOnCiTest.php'),
+                        code: `<?php
+it('needs a real server', function () {
+    expect(true)->toBeTrue();
+})->skipOnCi();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipOnCiTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipOnCiTest.php::it needs a real server',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(question) it needs a real server');
+            expect(method.description).toBe('skips on CI');
+        });
+
+        it('Pest ->skipLocally() shows a distinct conditional-skip icon and description', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipLocallyTest.php'),
+                        code: `<?php
+it('needs local docker', function () {
+    expect(true)->toBeTrue();
+})->skipLocally();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipLocallyTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipLocallyTest.php::it needs local docker',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(question) it needs local docker');
+            expect(method.description).toBe('skips locally');
+        });
+
+        it('does not show a conditional-skip description when ->skip() already applies', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipAndSkipOnCiTest.php'),
+                        code: `<?php
+it('needs a real server', function () {
+    expect(true)->toBeTrue();
+})->skip()->skipOnCi();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipAndSkipOnCiTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipAndSkipOnCiTest.php::it needs a real server',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(circle-slash) it needs a real server');
+            expect(method.description).toBeUndefined();
+        });
+
         it('Pest ->only() shows a distinct only icon in the label', () => {
             givenCodes(
                 [

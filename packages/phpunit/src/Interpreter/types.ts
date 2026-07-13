@@ -71,7 +71,10 @@ export interface PestCallDescriptor {
     skipped?: boolean;
     skipReason?: string;
     todo?: boolean;
+    todoAssignee?: string;
+    todoIssue?: string;
     only?: boolean;
     group?: string[];
     browserTest?: boolean;
+    conditionalSkip?: 'onCi' | 'locally';
 }

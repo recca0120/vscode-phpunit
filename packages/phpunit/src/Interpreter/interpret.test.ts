@@ -314,6 +314,8 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                 it('does something', function () {})->todo();
             `);
             expect(info.pestCalls[0].todo).toBe(true);
+            expect(info.pestCalls[0].todoAssignee).toBeUndefined();
+            expect(info.pestCalls[0].todoIssue).toBeUndefined();
         });
 
         it('marks ->todo() with assignee/issue arguments as todo', () => {
@@ -321,6 +323,24 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                 it('does something', function () {})->todo(assignee: 'jane', issue: 123);
             `);
             expect(info.pestCalls[0].todo).toBe(true);
+            expect(info.pestCalls[0].todoAssignee).toBe('jane');
+            expect(info.pestCalls[0].todoIssue).toBe('123');
+        });
+
+        it('marks ->todo() with only assignee argument', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo(assignee: 'jane');
+            `);
+            expect(info.pestCalls[0].todoAssignee).toBe('jane');
+            expect(info.pestCalls[0].todoIssue).toBeUndefined();
+        });
+
+        it('marks ->todo() with only issue argument', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo(issue: 123);
+            `);
+            expect(info.pestCalls[0].todoAssignee).toBeUndefined();
+            expect(info.pestCalls[0].todoIssue).toBe('123');
         });
 
         it('does not mark ordinary chained calls as skipped or todo', () => {
@@ -329,6 +349,35 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
             `);
             expect(info.pestCalls[0].skipped).toBeFalsy();
             expect(info.pestCalls[0].todo).toBeFalsy();
+        });
+
+        it('marks ->skipOnCi() with conditionalSkip "onCi"', () => {
+            const info = given(`<?php
+                it('needs a real server', function () {})->skipOnCi();
+            `);
+            expect(info.pestCalls[0].conditionalSkip).toBe('onCi');
+        });
+
+        it('marks ->skipLocally() with conditionalSkip "locally"', () => {
+            const info = given(`<?php
+                it('needs local docker', function () {})->skipLocally();
+            `);
+            expect(info.pestCalls[0].conditionalSkip).toBe('locally');
+        });
+
+        it('leaves conditionalSkip undefined when no such modifier is present', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('slow');
+            `);
+            expect(info.pestCalls[0].conditionalSkip).toBeUndefined();
+        });
+
+        it('does not let ->skip() and ->skipOnCi() interfere with each other', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip()->skipOnCi();
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+            expect(info.pestCalls[0].conditionalSkip).toBe('onCi');
         });
 
         it('marks ->only() as only', () => {

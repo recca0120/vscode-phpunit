@@ -230,6 +230,12 @@ function buildPestTestDef(
 
     if (call.todo) {
         annotations.todo = true;
+        if (call.todoAssignee) {
+            annotations.todoAssignee = call.todoAssignee;
+        }
+        if (call.todoIssue) {
+            annotations.todoIssue = call.todoIssue;
+        }
     }
 
     if (call.only) {
@@ -242,6 +248,10 @@ function buildPestTestDef(
 
     if (call.browserTest) {
         annotations.browserTest = true;
+    }
+
+    if (call.conditionalSkip) {
+        annotations.conditionalSkip = call.conditionalSkip;
     }
 
     const children = isDescribe

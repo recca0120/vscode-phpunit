@@ -12,7 +12,7 @@ import { CallVisitor } from '../Visitors/CallVisitor';
 import { FQNResolver } from './FQNResolver';
 
 const pestFunctionNames = new Set(['test', 'it', 'describe', 'arch']);
-const modifierNames = new Set(['skip', 'todo', 'only', 'group']);
+const modifierNames = new Set(['skip', 'todo', 'only', 'group', 'skipOnCi', 'skipLocally']);
 
 function* walkChain(call: CallNode): Generator<CallNode> {
     let cur: CallNode | undefined = call;
@@ -80,8 +80,11 @@ interface ChainWalkResult {
     skipped: boolean;
     skipReason?: string;
     todo: boolean;
+    todoAssignee?: string;
+    todoIssue?: string;
     only: boolean;
     group: string[];
+    conditionalSkip?: 'onCi' | 'locally';
 }
 
 function extractSkipReason(args: AstNode[]): string | undefined {
@@ -96,6 +99,18 @@ function extractStringArguments(args: AstNode[]): string[] {
         .map((arg) => arg.value);
 }
 
+function extractNamedArgument(args: AstNode[], name: string): string | undefined {
+    const arg = args.find((a) => a.kind === 'argument' && a.name === name);
+    const value = unwrapArgument(arg);
+    if (value?.kind === 'string') {
+        return value.value;
+    }
+    if (value?.kind === 'number') {
+        return String(value.value);
+    }
+    return undefined;
+}
+
 function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let rootCall: CallNode | undefined;
     const preRoot: string[] = [];
@@ -104,8 +119,11 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let skipped = false;
     let skipReason: string | undefined;
     let todo = false;
+    let todoAssignee: string | undefined;
+    let todoIssue: string | undefined;
     let only = false;
     const groupCalls: string[][] = [];
+    let conditionalSkip: 'onCi' | 'locally' | undefined;
 
     for (const cur of walkChain(call)) {
         if (!rootCall && pestFunctionNames.has(cur.name)) {
@@ -123,12 +141,20 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
                     break;
                 case 'todo':
                     todo = true;
+                    todoAssignee = extractNamedArgument(cur.arguments, 'assignee') ?? todoAssignee;
+                    todoIssue = extractNamedArgument(cur.arguments, 'issue') ?? todoIssue;
                     break;
                 case 'only':
                     only = true;
                     break;
                 case 'group':
                     groupCalls.push(extractStringArguments(cur.arguments));
+                    break;
+                case 'skipOnCi':
+                    conditionalSkip = 'onCi';
+                    break;
+                case 'skipLocally':
+                    conditionalSkip = 'locally';
                     break;
             }
             (rootCall ? preRoot : postRoot).push(cur.name);
@@ -150,8 +176,11 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         skipped,
         skipReason,
         todo,
+        todoAssignee,
+        todoIssue,
         only,
         group: groupCalls.reverse().flat(),
+        conditionalSkip,
     };
 }
 
@@ -161,7 +190,19 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         return undefined;
     }
 
-    const { rootCall, chainCalls, withSources, skipped, skipReason, todo, only, group } = result;
+    const {
+        rootCall,
+        chainCalls,
+        withSources,
+        skipped,
+        skipReason,
+        todo,
+        todoAssignee,
+        todoIssue,
+        only,
+        group,
+        conditionalSkip,
+    } = result;
 
     const isTestCall = rootCall.name === 'it' || rootCall.name === 'test';
 
@@ -175,9 +216,12 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         skipped: skipped || undefined,
         skipReason,
         todo: todo || undefined,
+        todoAssignee,
+        todoIssue,
         only: only || undefined,
         group: group.length > 0 ? group : undefined,
         browserTest: isTestCall ? detectsBrowserTestCall(rootCall) : undefined,
+        conditionalSkip,
     };
 }
 
