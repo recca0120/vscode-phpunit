@@ -1,9 +1,23 @@
 import { execSync } from 'node:child_process';
+import { platform, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { defineConfig } from '@vscode/test-cli';
 
 const fixturesPath = resolve(import.meta.dirname, '../phpunit/tests/fixtures');
 const mochaOpts = { ui: 'tdd', timeout: 30_000 };
+
+// macOS caps AF_UNIX socket paths at 104 bytes; the default user-data-dir
+// (nested under the checkout path, e.g. .../vscode-phpunit/vscode-phpunit/
+// packages/extension/.vscode-test/user-data) can exceed that on CI runners
+// and crash VS Code with "listen EINVAL". Force a short, fixed path instead.
+// os.tmpdir() itself is too long on macOS (a per-process /var/folders/...
+// path), so prefer RUNNER_TEMP (short and job-scoped on GitHub Actions) or,
+// failing that, the short, stable /tmp.
+function userDataDirArgs(label) {
+    const base = platform() === 'darwin' ? (process.env.RUNNER_TEMP ?? '/tmp') : tmpdir();
+
+    return ['--user-data-dir', join(base, 'vsc-e2e', label)];
+}
 
 function detectPhpUnitStubs() {
     const versions = [9, 10, 11, 12];
@@ -59,14 +73,18 @@ const pestStubs = detectPestStubs();
 
 const configs = [];
 
-// PHPUnit single-folder (first available stub)
+// PHPUnit single-folder (newest available stub)
 if (phpUnitStubs.length > 0) {
-    const stub = phpUnitStubs[0];
+    const stub = phpUnitStubs.at(-1);
     configs.push({
         label: `phpunit:${stub.name}`,
         files: 'out/tests/suite/**/*.test.js',
         mocha: mochaOpts,
-        launchArgs: [...stub.launchArgs, '--disable-extensions'],
+        launchArgs: [
+            ...stub.launchArgs,
+            '--disable-extensions',
+            ...userDataDirArgs(`phpunit-${stub.name}`),
+        ],
         env: {
             STUB_TYPE: stub.type,
             STUB_VERSION: stub.name,
@@ -76,14 +94,18 @@ if (phpUnitStubs.length > 0) {
     });
 }
 
-// Pest single-folder (first available stub)
+// Pest single-folder (newest available stub)
 if (pestStubs.length > 0) {
-    const stub = pestStubs[0];
+    const stub = pestStubs.at(-1);
     configs.push({
         label: `pest:${stub.name}`,
         files: 'out/tests/suite/**/*.test.js',
         mocha: mochaOpts,
-        launchArgs: [...stub.launchArgs, '--disable-extensions'],
+        launchArgs: [
+            ...stub.launchArgs,
+            '--disable-extensions',
+            ...userDataDirArgs(`pest-${stub.name}`),
+        ],
         env: {
             STUB_TYPE: stub.type,
             STUB_VERSION: stub.name,
@@ -95,15 +117,19 @@ if (pestStubs.length > 0) {
 
 // Multi-workspace test
 if (phpUnitStubs.length > 0 && pestStubs.length > 0) {
-    const phpUnit = phpUnitStubs[0];
-    const pest = pestStubs[0];
+    const phpUnit = phpUnitStubs.at(-1);
+    const pest = pestStubs.at(-1);
     const workspacePath = join(fixturesPath, 'workspaces/multi-workspace.code-workspace');
 
     configs.push({
         label: 'multi-workspace',
         files: 'out/tests/suite-multi/**/*.test.js',
         mocha: mochaOpts,
-        launchArgs: [workspacePath, '--disable-extensions'],
+        launchArgs: [
+            workspacePath,
+            '--disable-extensions',
+            ...userDataDirArgs('multi-workspace'),
+        ],
         env: {
             PHPUNIT_STUB_VERSION: phpUnit.name,
             PHPUNIT_STUB_BINARY: phpUnit.binary,
@@ -126,7 +152,7 @@ try {
         label: 'issue-381',
         files: 'out/tests/suite-issue-381/**/*.test.js',
         mocha: mochaOpts,
-        launchArgs: [workspacePath, '--disable-extensions'],
+        launchArgs: [workspacePath, '--disable-extensions', ...userDataDirArgs('issue-381')],
         env: {
             ISSUE381_PHPUNIT_BINARY: issue381Binary,
         },
