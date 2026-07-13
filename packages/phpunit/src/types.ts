@@ -31,6 +31,8 @@ export type Annotations = {
     skipped?: boolean;
     skipReason?: string;
     todo?: boolean;
+    todoAssignee?: string;
+    todoIssue?: string;
     only?: boolean;
     browserTest?: boolean;
 };

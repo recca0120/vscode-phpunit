@@ -71,6 +71,10 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
         return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
     }
 
+    protected override decorateItem(testItem: TestItem, testDefinition: TestDefinition): void {
+        testItem.description = this.resolveDescription(testDefinition);
+    }
+
     private resolveIconPrefix(testDefinition: TestDefinition): string {
         if (testDefinition.type !== TestType.method) {
             return icon(testDefinition.type);
@@ -80,5 +84,22 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
         const match = ANNOTATION_ICONS.find(([key]) => annotations?.[key]);
 
         return match ? match[1] : icon(testDefinition.type);
+    }
+
+    private resolveDescription(testDefinition: TestDefinition): string | undefined {
+        const annotations = testDefinition.annotations;
+        if (!annotations?.todo) {
+            return undefined;
+        }
+
+        const parts: string[] = [];
+        if (annotations.todoAssignee) {
+            parts.push(`assigned: ${annotations.todoAssignee}`);
+        }
+        if (annotations.todoIssue) {
+            parts.push(`issue #${annotations.todoIssue}`);
+        }
+
+        return parts.length > 0 ? parts.join(', ') : undefined;
     }
 }

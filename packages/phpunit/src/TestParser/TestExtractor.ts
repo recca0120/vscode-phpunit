@@ -230,6 +230,12 @@ function buildPestTestDef(
 
     if (call.todo) {
         annotations.todo = true;
+        if (call.todoAssignee) {
+            annotations.todoAssignee = call.todoAssignee;
+        }
+        if (call.todoIssue) {
+            annotations.todoIssue = call.todoIssue;
+        }
     }
 
     if (call.only) {

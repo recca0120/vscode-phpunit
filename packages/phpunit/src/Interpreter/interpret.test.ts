@@ -314,6 +314,8 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                 it('does something', function () {})->todo();
             `);
             expect(info.pestCalls[0].todo).toBe(true);
+            expect(info.pestCalls[0].todoAssignee).toBeUndefined();
+            expect(info.pestCalls[0].todoIssue).toBeUndefined();
         });
 
         it('marks ->todo() with assignee/issue arguments as todo', () => {
@@ -321,6 +323,24 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
                 it('does something', function () {})->todo(assignee: 'jane', issue: 123);
             `);
             expect(info.pestCalls[0].todo).toBe(true);
+            expect(info.pestCalls[0].todoAssignee).toBe('jane');
+            expect(info.pestCalls[0].todoIssue).toBe('123');
+        });
+
+        it('marks ->todo() with only assignee argument', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo(assignee: 'jane');
+            `);
+            expect(info.pestCalls[0].todoAssignee).toBe('jane');
+            expect(info.pestCalls[0].todoIssue).toBeUndefined();
+        });
+
+        it('marks ->todo() with only issue argument', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo(issue: 123);
+            `);
+            expect(info.pestCalls[0].todoAssignee).toBeUndefined();
+            expect(info.pestCalls[0].todoIssue).toBe('123');
         });
 
         it('does not mark ordinary chained calls as skipped or todo', () => {

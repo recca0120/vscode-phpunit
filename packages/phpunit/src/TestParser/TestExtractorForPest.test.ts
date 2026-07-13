@@ -291,6 +291,25 @@ it('does something', function () {
         );
     });
 
+    it('marks ->todo(assignee:, issue:) tests with annotations.todoAssignee/todoIssue', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo(assignee: 'taylor@laravel.com', issue: 123);
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({
+                    todo: true,
+                    todoAssignee: 'taylor@laravel.com',
+                    todoIssue: '123',
+                }),
+            }),
+        );
+    });
+
     it('marks ->only() tests with annotations.only', async () => {
         const content = `<?php
 

@@ -1039,6 +1039,32 @@ it('does something', function () {
             expect(method.label).toBe('$(issue-draft) it does something');
         });
 
+        it('Pest ->todo(assignee:, issue:) shows the assignment info as item description', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/TodoAssignedTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo(assignee: 'taylor@laravel.com', issue: 123);`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\TodoAssignedTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/TodoAssignedTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(issue-draft) it does something');
+            expect(method.description).toBe('assigned: taylor@laravel.com, issue #123');
+        });
+
         it('Pest ->only() shows a distinct only icon in the label', () => {
             givenCodes(
                 [
