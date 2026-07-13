@@ -989,6 +989,56 @@ it('adds numbers', function (int $a, int $b, int $expected) {
             ).toBeDefined();
         });
 
+        it('Pest ->skip() shows a distinct skipped icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip('not ready yet');`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(circle-slash) it does something');
+        });
+
+        it('Pest ->todo() shows a distinct todo icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/TodoTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\TodoTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/TodoTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(issue-draft) it does something');
+        });
+
         it('Pest ->with() numeric', () => {
             givenCodes(
                 [

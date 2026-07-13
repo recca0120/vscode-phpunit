@@ -73,6 +73,20 @@ interface ChainWalkResult {
     rootCall: CallNode;
     chainCalls: string[];
     withSources: AstNode[];
+    skipped: boolean;
+    skipReason?: string;
+    todo: boolean;
+}
+
+function extractSkipReason(args: AstNode[]): string | undefined {
+    const firstArg = args[0];
+    if (firstArg?.kind === 'string') {
+        return firstArg.value;
+    }
+    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'string') {
+        return firstArg.value.value;
+    }
+    return undefined;
 }
 
 function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
@@ -80,6 +94,9 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     const preRoot: string[] = [];
     const postRoot: string[] = [];
     const withSources: AstNode[] = [];
+    let skipped = false;
+    let skipReason: string | undefined;
+    let todo = false;
 
     let cur: CallNode | undefined = call;
     while (cur) {
@@ -90,6 +107,13 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
             if (arg && supportedWithKinds.has(arg.kind)) {
                 withSources.push(arg);
             }
+        } else if (cur.name === 'skip') {
+            skipped = true;
+            skipReason = extractSkipReason(cur.arguments) ?? skipReason;
+            (rootCall ? preRoot : postRoot).push(cur.name);
+        } else if (cur.name === 'todo') {
+            todo = true;
+            (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (!rootCall) {
             postRoot.push(cur.name);
         } else {
@@ -106,6 +130,9 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         rootCall,
         chainCalls: [...preRoot.reverse(), ...postRoot.reverse()],
         withSources: withSources.reverse(),
+        skipped,
+        skipReason,
+        todo,
     };
 }
 
@@ -115,7 +142,7 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         return undefined;
     }
 
-    const { rootCall, chainCalls, withSources } = result;
+    const { rootCall, chainCalls, withSources, skipped, skipReason, todo } = result;
 
     return {
         fnName: rootCall.name,
@@ -124,6 +151,8 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         datasets: resolveDatasets(withSources),
         children: rootCall.name === 'describe' ? collectDescribeChildren(rootCall, php) : [],
         chainCalls,
+        ...(skipped ? { skipped, ...(skipReason ? { skipReason } : {}) } : {}),
+        ...(todo ? { todo } : {}),
     };
 }
 

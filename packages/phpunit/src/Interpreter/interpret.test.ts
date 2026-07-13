@@ -285,5 +285,50 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
             expect(info.pestCalls).toHaveLength(1);
             expect(info.pestCalls[0].fnName).toBe('arch');
         });
+
+        it('marks ->skip() as skipped', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip();
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+            expect(info.pestCalls[0].skipReason).toBeUndefined();
+        });
+
+        it('captures the reason passed to ->skip()', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip('not ready yet');
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+            expect(info.pestCalls[0].skipReason).toBe('not ready yet');
+        });
+
+        it('treats a dynamic ->skip() condition as skipped conservatively', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip(fn () => true);
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+        });
+
+        it('marks ->todo() as todo', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo();
+            `);
+            expect(info.pestCalls[0].todo).toBe(true);
+        });
+
+        it('marks ->todo() with assignee/issue arguments as todo', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo(assignee: 'jane', issue: 123);
+            `);
+            expect(info.pestCalls[0].todo).toBe(true);
+        });
+
+        it('does not mark ordinary chained calls as skipped or todo', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('slow');
+            `);
+            expect(info.pestCalls[0].skipped).toBeFalsy();
+            expect(info.pestCalls[0].todo).toBeFalsy();
+        });
     });
 });

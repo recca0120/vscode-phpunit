@@ -56,11 +56,28 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
     }
 
     protected override formatLabel(testDefinition: TestDefinition): string {
-        const prefix =
-            testDefinition.type === TestType.method && testDefinition.annotations?.dataProvider
-                ? '$(symbol-enum)'
-                : icon(testDefinition.type);
+        const prefix = this.resolveIconPrefix(testDefinition);
 
         return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
+    }
+
+    private resolveIconPrefix(testDefinition: TestDefinition): string {
+        if (testDefinition.type !== TestType.method) {
+            return icon(testDefinition.type);
+        }
+
+        if (testDefinition.annotations?.skipped) {
+            return '$(circle-slash)';
+        }
+
+        if (testDefinition.annotations?.todo) {
+            return '$(issue-draft)';
+        }
+
+        if (testDefinition.annotations?.dataProvider) {
+            return '$(symbol-enum)';
+        }
+
+        return icon(testDefinition.type);
     }
 }

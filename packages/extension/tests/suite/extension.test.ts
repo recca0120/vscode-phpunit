@@ -144,6 +144,24 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         ]);
     });
 
+    test('should show skip/todo icons for Pest skipped and todo tests', async () => {
+        if (stubType !== 'pest') return;
+
+        const skipped = findTestItem(ctrl.items, 'tests/Unit/SkipTodoTest.php::it is skipped');
+        assert.ok(skipped, 'Should find the skipped test item');
+        assert.ok(
+            skipped?.label.startsWith('$(circle-slash)'),
+            `Skipped test label should start with $(circle-slash), got "${skipped?.label}"`,
+        );
+
+        const todo = findTestItem(ctrl.items, 'tests/Unit/SkipTodoTest.php::it is a todo');
+        assert.ok(todo, 'Should find the todo test item');
+        assert.ok(
+            todo?.label.startsWith('$(issue-draft)'),
+            `Todo test label should start with $(issue-draft), got "${todo?.label}"`,
+        );
+    });
+
     test('should have correct properties on test items', async () => {
         const findMethodItem = (items: vscode.TestItemCollection): vscode.TestItem | undefined => {
             for (const [, item] of items) {

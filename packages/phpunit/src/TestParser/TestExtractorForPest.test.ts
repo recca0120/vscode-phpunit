@@ -243,6 +243,54 @@ it('example 2')->assertTrue(true);
         );
     });
 
+    it('marks ->skip() tests with annotations.skipped', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip();
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ skipped: true }),
+            }),
+        );
+    });
+
+    it('captures ->skip(reason) in annotations.skipReason', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip('not ready yet');
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({
+                    skipped: true,
+                    skipReason: 'not ready yet',
+                }),
+            }),
+        );
+    });
+
+    it('marks ->todo() tests with annotations.todo', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo();
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ todo: true }),
+            }),
+        );
+    });
+
     it('not it or test', async () => {
         const content = `<?php 
 

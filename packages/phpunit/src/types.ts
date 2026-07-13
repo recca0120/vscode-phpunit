@@ -28,6 +28,9 @@ export type Annotations = {
     dataset?: string[];
     testdox?: string[];
     group?: string[];
+    skipped?: boolean;
+    skipReason?: string;
+    todo?: boolean;
 };
 export type TestDefinition = {
     type: TestType;

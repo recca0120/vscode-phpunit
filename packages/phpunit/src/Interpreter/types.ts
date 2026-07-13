@@ -68,4 +68,7 @@ export interface PestCallDescriptor {
     datasets: string[];
     children: PestCallDescriptor[];
     chainCalls: string[];
+    skipped?: boolean;
+    skipReason?: string;
+    todo?: boolean;
 }
