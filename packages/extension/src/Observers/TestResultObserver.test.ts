@@ -40,6 +40,42 @@ function buildTestItemById(items: TestItem[]): AliasMap<TestItem> {
     return new AliasMap(items.map((item) => [item.id, item]));
 }
 
+function setupAssertionsFlow(
+    ctrl: TestController,
+    queue: Map<TestDefinition, TestItem>,
+    testRun: TestRun,
+    flowId: number,
+    testName: string,
+) {
+    const parser = new TestOutputParser();
+    const file = phpUnitProjectWin('tests/AssertionsTest.php');
+
+    const suiteStarted = parser.parse(
+        `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+    ) as TestSuiteStarted;
+    const childStarted = parser.parse(
+        `##teamcity[testStarted name='${testName}' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::${testName}' flowId='${flowId}']`,
+    ) as TestStarted;
+
+    const suiteItem = ctrl.createTestItem(suiteStarted.id, 'AssertionsTest', Uri.file(file));
+    const childItem = ctrl.createTestItem(childStarted.id, testName, Uri.file(file));
+    suiteItem.children.add(childItem);
+
+    const obs = new TestResultObserver(queue, testRun, buildTestItemById([suiteItem, childItem]));
+
+    obs.testSuiteStarted(suiteStarted);
+    obs.testStarted(childStarted);
+
+    const finishSuite = () =>
+        obs.testSuiteFinished(
+            parser.parse(
+                `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+            ) as TestSuiteFinished,
+        );
+
+    return { parser, obs, suiteItem, childItem, flowId, testName, finishSuite };
+}
+
 describe('TestResultObserver', () => {
     let ctrl: TestController;
     let queue: Map<TestDefinition, TestItem>;
@@ -297,81 +333,43 @@ describe('TestResultObserver', () => {
     });
 
     it('flows a failing child test through TestOutputParser into a failed suite TestItem end-to-end', () => {
-        const parser = new TestOutputParser();
-        const flowId = 42;
-        const file = phpUnitProjectWin('tests/AssertionsTest.php');
-
-        const suiteStarted = parser.parse(
-            `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
-        ) as TestSuiteStarted;
-        const childStarted = parser.parse(
-            `##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='${flowId}']`,
-        ) as TestStarted;
-
-        const suiteItem = ctrl.createTestItem(suiteStarted.id, 'AssertionsTest', Uri.file(file));
-        const childItem = ctrl.createTestItem(childStarted.id, 'test_is_not_same', Uri.file(file));
-        suiteItem.children.add(childItem);
-
-        const obs = new TestResultObserver(
+        const { parser, obs, suiteItem, flowId, testName, finishSuite } = setupAssertionsFlow(
+            ctrl,
             queue,
             testRun,
-            buildTestItemById([suiteItem, childItem]),
+            42,
+            'test_is_not_same',
         );
-
-        obs.testSuiteStarted(suiteStarted);
-        obs.testStarted(childStarted);
 
         parser.parse(
-            `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details='' duration='0' flowId='${flowId}']`,
+            `##teamcity[testFailed name='${testName}' message='Failed asserting that two arrays are identical.' details='' duration='0' flowId='${flowId}']`,
         );
         const childFinished = parser.parse(
-            `##teamcity[testFinished name='test_is_not_same' duration='0' flowId='${flowId}']`,
+            `##teamcity[testFinished name='${testName}' duration='0' flowId='${flowId}']`,
         ) as TestFailed;
         obs.testFailed(childFinished);
 
-        const suiteFinished = parser.parse(
-            `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
-        ) as TestSuiteFinished;
-        obs.testSuiteFinished(suiteFinished);
+        finishSuite();
 
         expect(testRun.failed).toHaveBeenCalledWith(suiteItem, []);
         expect(testRun.passed).not.toHaveBeenCalledWith(suiteItem);
     });
 
     it('flows an all-passing suite through TestOutputParser into a passed suite TestItem end-to-end', () => {
-        const parser = new TestOutputParser();
-        const flowId = 43;
-        const file = phpUnitProjectWin('tests/AssertionsTest.php');
-
-        const suiteStarted = parser.parse(
-            `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
-        ) as TestSuiteStarted;
-        const childStarted = parser.parse(
-            `##teamcity[testStarted name='test_passed' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='${flowId}']`,
-        ) as TestStarted;
-
-        const suiteItem = ctrl.createTestItem(suiteStarted.id, 'AssertionsTest', Uri.file(file));
-        const childItem = ctrl.createTestItem(childStarted.id, 'test_passed', Uri.file(file));
-        suiteItem.children.add(childItem);
-
-        const obs = new TestResultObserver(
+        const { parser, obs, suiteItem, flowId, testName, finishSuite } = setupAssertionsFlow(
+            ctrl,
             queue,
             testRun,
-            buildTestItemById([suiteItem, childItem]),
+            43,
+            'test_passed',
         );
 
-        obs.testSuiteStarted(suiteStarted);
-        obs.testStarted(childStarted);
-
         const childFinished = parser.parse(
-            `##teamcity[testFinished name='test_passed' duration='0' flowId='${flowId}']`,
+            `##teamcity[testFinished name='${testName}' duration='0' flowId='${flowId}']`,
         ) as TestFinished;
         obs.testFinished(childFinished);
 
-        const suiteFinished = parser.parse(
-            `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
-        ) as TestSuiteFinished;
-        obs.testSuiteFinished(suiteFinished);
+        finishSuite();
 
         expect(testRun.failed).not.toHaveBeenCalledWith(suiteItem, expect.anything());
         expect(testRun.passed).toHaveBeenCalledWith(suiteItem);
