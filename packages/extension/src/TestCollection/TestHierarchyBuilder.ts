@@ -28,6 +28,8 @@ export function icon(type: TestType): string {
     return TEST_ICONS[type] ?? '';
 }
 
+// Order is priority: the first matching annotation wins when a test carries more than one
+// (e.g. an ->only() test is never also shown as a plain browser test).
 const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>, string]> = [
     ['only', '$(target)'],
     ['skipped', '$(circle-slash)'],
