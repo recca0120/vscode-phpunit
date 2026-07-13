@@ -7,7 +7,7 @@ import type {
     TestSuiteFinished,
     TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
-import { AliasMap, TestOutputParser } from '@vscode-phpunit/phpunit';
+import { AliasMap, TestOutputParser, TestType } from '@vscode-phpunit/phpunit';
 import { phpUnitProjectWin } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -38,6 +38,15 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
 
 function buildTestItemById(items: TestItem[]): AliasMap<TestItem> {
     return new AliasMap(items.map((item) => [item.id, item]));
+}
+
+function createTestDefinition(overrides: Partial<TestDefinition> = {}): TestDefinition {
+    return {
+        type: TestType.method,
+        id: 'Tests\\ExampleTest::test_example',
+        label: 'test_example',
+        ...overrides,
+    };
 }
 
 function setupAssertionsFlow(
@@ -421,8 +430,8 @@ describe('TestResultObserver', () => {
             );
 
             const localQueue = new Map<TestDefinition, TestItem>();
-            localQueue.set({ file, annotations: { only: true } } as TestDefinition, onlyItem);
-            localQueue.set({ file, annotations: {} } as TestDefinition, otherItem);
+            localQueue.set(createTestDefinition({ file, annotations: { only: true } }), onlyItem);
+            localQueue.set(createTestDefinition({ file, annotations: {} }), otherItem);
 
             const testItemById = buildTestItemById([onlyItem, otherItem]);
             const obs = new TestResultObserver(localQueue, testRun, testItemById);
@@ -472,7 +481,7 @@ describe('TestResultObserver', () => {
                 Uri.file(file),
             );
             const localQueue = new Map<TestDefinition, TestItem>();
-            localQueue.set({ file, annotations: {} } as TestDefinition, item);
+            localQueue.set(createTestDefinition({ file, annotations: {} }), item);
             const obs = new TestResultObserver(localQueue, testRun, buildTestItemById([item]));
 
             obs.done();

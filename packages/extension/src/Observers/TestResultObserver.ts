@@ -49,19 +49,21 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFinished(result: TestFinished): void {
-        this.doRun(result, (test) => this.testRun.passed(test, result.duration), true);
+        this.doRun(result, (test) => this.testRun.passed(test, result.duration), {
+            markAsReported: true,
+        });
     }
 
     testFailed(result: TestFailed): void {
         this.doRun(
             result,
             (test) => this.testRun.failed(test, this.message(result, test), result.duration),
-            true,
+            { markAsReported: true },
         );
     }
 
     testIgnored(result: TestIgnored): void {
-        this.doRun(result, (test) => this.testRun.skipped(test), true);
+        this.doRun(result, (test) => this.testRun.skipped(test), { markAsReported: true });
     }
 
     testSuiteFinished(result: TestSuiteFinished): void {
@@ -76,7 +78,7 @@ export class TestResultObserver implements TestRunnerObserver {
 
                 this.testRun.passed(test);
             },
-            true,
+            { markAsReported: true },
         );
     }
 
@@ -123,7 +125,7 @@ export class TestResultObserver implements TestRunnerObserver {
     private doRun(
         result: TestResult,
         updateTestRun: (testItem: TestItem) => void,
-        markAsReported = false,
+        { markAsReported = false }: { markAsReported?: boolean } = {},
     ) {
         const testItem = this.find(result);
         if (!testItem) {

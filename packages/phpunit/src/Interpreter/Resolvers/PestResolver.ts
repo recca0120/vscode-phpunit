@@ -12,6 +12,15 @@ import { CallVisitor } from '../Visitors/CallVisitor';
 import { FQNResolver } from './FQNResolver';
 
 const pestFunctionNames = new Set(['test', 'it', 'describe', 'arch']);
+const modifierNames = new Set(['skip', 'todo', 'only', 'group']);
+
+function* walkChain(call: CallNode): Generator<CallNode> {
+    let cur: CallNode | undefined = call;
+    while (cur) {
+        yield cur;
+        cur = cur.chain;
+    }
+}
 
 export class PestResolver implements Resolver {
     private _pestCalls: PestCallDescriptor[] = [];
@@ -98,24 +107,7 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let only = false;
     const groupCalls: string[][] = [];
 
-    const modifierHandlers: Record<string, (args: AstNode[]) => void> = {
-        skip: (args) => {
-            skipped = true;
-            skipReason = extractSkipReason(args) ?? skipReason;
-        },
-        todo: () => {
-            todo = true;
-        },
-        only: () => {
-            only = true;
-        },
-        group: (args) => {
-            groupCalls.push(extractStringArguments(args));
-        },
-    };
-
-    let cur: CallNode | undefined = call;
-    while (cur) {
+    for (const cur of walkChain(call)) {
         if (!rootCall && pestFunctionNames.has(cur.name)) {
             rootCall = cur;
         } else if (cur.name === 'with') {
@@ -123,15 +115,28 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
             if (arg && supportedWithKinds.has(arg.kind)) {
                 withSources.push(arg);
             }
-        } else if (modifierHandlers[cur.name]) {
-            modifierHandlers[cur.name](cur.arguments);
+        } else if (modifierNames.has(cur.name)) {
+            switch (cur.name) {
+                case 'skip':
+                    skipped = true;
+                    skipReason = extractSkipReason(cur.arguments) ?? skipReason;
+                    break;
+                case 'todo':
+                    todo = true;
+                    break;
+                case 'only':
+                    only = true;
+                    break;
+                case 'group':
+                    groupCalls.push(extractStringArguments(cur.arguments));
+                    break;
+            }
             (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (!rootCall) {
             postRoot.push(cur.name);
         } else {
             preRoot.push(cur.name);
         }
-        cur = cur.chain;
     }
 
     if (!rootCall) {
@@ -220,12 +225,10 @@ function expressionHasVisitCall(node: AstNode | undefined): boolean {
         return false;
     }
 
-    let cur: CallNode | undefined = node;
-    while (cur) {
+    for (const cur of walkChain(node)) {
         if (cur.name === 'visit') {
             return true;
         }
-        cur = cur.chain;
     }
     return false;
 }
