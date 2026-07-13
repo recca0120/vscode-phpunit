@@ -114,6 +114,25 @@ jobs:
       - name: Run the tests
         run: pnpm vitest --coverage
 
+      - name: Cache VS Code binary
+        if: matrix.php == '8.4'
+        uses: actions/cache@v4
+        with:
+          path: packages/extension/.vscode-test
+          key: vscode-test-${{ matrix.os }}-stable
+
+      - name: Compile extension and tests
+        if: matrix.php == '8.4'
+        run: pnpm compile && pnpm compile-tests
+
+      - name: Run e2e tests (Linux)
+        if: matrix.php == '8.4' && runner.os == 'Linux'
+        run: xvfb-run -a pnpm test:e2e
+
+      - name: Run e2e tests (non-Linux)
+        if: matrix.php == '8.4' && runner.os != 'Linux'
+        run: pnpm test:e2e
+
       - name: Send to codecov
         if: matrix.os == 'ubuntu-latest' && matrix.php == '8.4'
         uses: codecov/codecov-action@v5
