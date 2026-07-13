@@ -11,7 +11,7 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '.';
-import { SuiteAggregator } from './SuiteAggregator';
+import { classifyEvent, SuiteAggregator } from './SuiteAggregator';
 import { TeamcityLineParser } from './TeamcityLineParser';
 import { TestResultCache } from './TestResultCache';
 
@@ -113,9 +113,6 @@ export class TestOutputParser {
     }
 
     private isFault(testResult: TestResult) {
-        return (
-            testResult.event === TeamcityEvent.testFailed ||
-            testResult.event === TeamcityEvent.testIgnored
-        );
+        return classifyEvent(testResult.event) !== 'passed';
     }
 }

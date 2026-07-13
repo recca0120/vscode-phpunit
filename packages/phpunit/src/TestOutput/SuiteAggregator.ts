@@ -1,6 +1,18 @@
 import { TeamcityEvent } from './types';
 
 export type SuiteCounts = { passed: number; failed: number; skipped: number };
+export type SuiteBucket = keyof SuiteCounts;
+
+export function classifyEvent(event: TeamcityEvent): SuiteBucket {
+    if (event === TeamcityEvent.testFailed) {
+        return 'failed';
+    }
+    if (event === TeamcityEvent.testIgnored) {
+        return 'skipped';
+    }
+
+    return 'passed';
+}
 
 export class SuiteAggregator {
     private stacks = new Map<number, SuiteCounts[]>();
@@ -23,15 +35,9 @@ export class SuiteAggregator {
             return;
         }
 
-        const key: keyof SuiteCounts =
-            event === TeamcityEvent.testFailed
-                ? 'failed'
-                : event === TeamcityEvent.testIgnored
-                  ? 'skipped'
-                  : 'passed';
-
+        const bucket = classifyEvent(event);
         for (const counts of stack) {
-            counts[key] += 1;
+            counts[bucket] += 1;
         }
     }
 }
