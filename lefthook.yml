@@ -9,12 +9,12 @@ pre-commit:
       root: "packages/phpunit/"
       glob: "*.{js,ts,jsx,tsx,json}"
       run: npx biome check --no-errors-on-unmatched {staged_files}
-    - name: typecheck-extension
-      root: "packages/extension/"
-      glob: "*.{ts,tsx}"
-      run: npx tsc --noEmit
     - name: typecheck-phpunit
       root: "packages/phpunit/"
+      glob: "*.{ts,tsx}"
+      run: npx tsc --noEmit
+    - name: typecheck-extension
+      root: "packages/extension/"
       glob: "*.{ts,tsx}"
       run: npx tsc --noEmit
     - name: pint-phpunit-stub
