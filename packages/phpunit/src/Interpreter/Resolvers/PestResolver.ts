@@ -101,14 +101,11 @@ function extractStringArguments(args: AstNode[]): string[] {
 
 function extractNamedArgument(args: AstNode[], name: string): string | undefined {
     const arg = args.find((a) => a.kind === 'argument' && a.name === name);
-    if (arg?.kind !== 'argument') {
-        return undefined;
-    }
-    const value = arg.value;
-    if (value.kind === 'string') {
+    const value = unwrapArgument(arg);
+    if (value?.kind === 'string') {
         return value.value;
     }
-    if (value.kind === 'number') {
+    if (value?.kind === 'number') {
         return String(value.value);
     }
     return undefined;

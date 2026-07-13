@@ -1117,6 +1117,32 @@ it('needs local docker', function () {
             expect(method.description).toBe('skips locally');
         });
 
+        it('does not show a conditional-skip description when ->skip() already applies', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipAndSkipOnCiTest.php'),
+                        code: `<?php
+it('needs a real server', function () {
+    expect(true)->toBeTrue();
+})->skip()->skipOnCi();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipAndSkipOnCiTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipAndSkipOnCiTest.php::it needs a real server',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(circle-slash) it needs a real server');
+            expect(method.description).toBeUndefined();
+        });
+
         it('Pest ->only() shows a distinct only icon in the label', () => {
             givenCodes(
                 [

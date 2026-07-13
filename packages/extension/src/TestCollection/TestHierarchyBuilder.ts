@@ -89,7 +89,9 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
 
     private resolveDescription(testDefinition: TestDefinition): string | undefined {
         const annotations = testDefinition.annotations;
-        if (annotations?.conditionalSkip) {
+        // Unconditional ->skip() already wins the icon (see ANNOTATION_ICONS priority above),
+        // so don't also claim a conditional CI/local skip — that would contradict the icon.
+        if (annotations?.conditionalSkip && !annotations?.skipped) {
             return annotations.conditionalSkip === 'onCi' ? 'skips on CI' : 'skips locally';
         }
 
