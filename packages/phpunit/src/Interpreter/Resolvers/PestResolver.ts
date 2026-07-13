@@ -12,6 +12,15 @@ import { CallVisitor } from '../Visitors/CallVisitor';
 import { FQNResolver } from './FQNResolver';
 
 const pestFunctionNames = new Set(['test', 'it', 'describe', 'arch']);
+const modifierNames = new Set(['skip', 'todo', 'only', 'group']);
+
+function* walkChain(call: CallNode): Generator<CallNode> {
+    let cur: CallNode | undefined = call;
+    while (cur) {
+        yield cur;
+        cur = cur.chain;
+    }
+}
 
 export class PestResolver implements Resolver {
     private _pestCalls: PestCallDescriptor[] = [];
@@ -40,22 +49,17 @@ export class PestResolver implements Resolver {
     }
 }
 
+function unwrapArgument(node: AstNode | undefined): AstNode | undefined {
+    return node?.kind === 'argument' ? node.value : node;
+}
+
 function extractDescription(args: AstNode[], php: PHP): string | undefined {
-    const firstArg = args[0];
+    const firstArg = unwrapArgument(args[0]);
     if (firstArg?.kind === 'string') {
         return firstArg.value;
     }
-    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'string') {
-        return firstArg.value.value;
-    }
     if (firstArg?.kind === 'class_constant_access') {
         const node = firstArg as ClassConstantAccessNode;
-        if (node.name === 'class') {
-            return php.getResolver(FQNResolver).resolveFQN(node.scope);
-        }
-    }
-    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'class_constant_access') {
-        const node = firstArg.value as ClassConstantAccessNode;
         if (node.name === 'class') {
             return php.getResolver(FQNResolver).resolveFQN(node.scope);
         }
@@ -73,6 +77,23 @@ interface ChainWalkResult {
     rootCall: CallNode;
     chainCalls: string[];
     withSources: AstNode[];
+    skipped: boolean;
+    skipReason?: string;
+    todo: boolean;
+    only: boolean;
+    group: string[];
+}
+
+function extractSkipReason(args: AstNode[]): string | undefined {
+    const firstArg = unwrapArgument(args[0]);
+    return firstArg?.kind === 'string' ? firstArg.value : undefined;
+}
+
+function extractStringArguments(args: AstNode[]): string[] {
+    return args
+        .map(unwrapArgument)
+        .filter((arg): arg is AstNode & { value: string } => arg?.kind === 'string')
+        .map((arg) => arg.value);
 }
 
 function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
@@ -80,9 +101,13 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     const preRoot: string[] = [];
     const postRoot: string[] = [];
     const withSources: AstNode[] = [];
+    let skipped = false;
+    let skipReason: string | undefined;
+    let todo = false;
+    let only = false;
+    const groupCalls: string[][] = [];
 
-    let cur: CallNode | undefined = call;
-    while (cur) {
+    for (const cur of walkChain(call)) {
         if (!rootCall && pestFunctionNames.has(cur.name)) {
             rootCall = cur;
         } else if (cur.name === 'with') {
@@ -90,12 +115,28 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
             if (arg && supportedWithKinds.has(arg.kind)) {
                 withSources.push(arg);
             }
+        } else if (modifierNames.has(cur.name)) {
+            switch (cur.name) {
+                case 'skip':
+                    skipped = true;
+                    skipReason = extractSkipReason(cur.arguments) ?? skipReason;
+                    break;
+                case 'todo':
+                    todo = true;
+                    break;
+                case 'only':
+                    only = true;
+                    break;
+                case 'group':
+                    groupCalls.push(extractStringArguments(cur.arguments));
+                    break;
+            }
+            (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (!rootCall) {
             postRoot.push(cur.name);
         } else {
             preRoot.push(cur.name);
         }
-        cur = cur.chain;
     }
 
     if (!rootCall) {
@@ -106,6 +147,11 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         rootCall,
         chainCalls: [...preRoot.reverse(), ...postRoot.reverse()],
         withSources: withSources.reverse(),
+        skipped,
+        skipReason,
+        todo,
+        only,
+        group: groupCalls.reverse().flat(),
     };
 }
 
@@ -115,7 +161,9 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         return undefined;
     }
 
-    const { rootCall, chainCalls, withSources } = result;
+    const { rootCall, chainCalls, withSources, skipped, skipReason, todo, only, group } = result;
+
+    const isTestCall = rootCall.name === 'it' || rootCall.name === 'test';
 
     return {
         fnName: rootCall.name,
@@ -124,7 +172,65 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         datasets: resolveDatasets(withSources),
         children: rootCall.name === 'describe' ? collectDescribeChildren(rootCall, php) : [],
         chainCalls,
+        skipped: skipped || undefined,
+        skipReason,
+        todo: todo || undefined,
+        only: only || undefined,
+        group: group.length > 0 ? group : undefined,
+        browserTest: isTestCall ? detectsBrowserTestCall(rootCall) : undefined,
     };
+}
+
+// --- Browser test detection (Pest 4) ---
+//
+// visit() is not a chained modifier like ->skip()/->todo(); it's a statement
+// written inside the test closure's body. This scan is fully independent of
+// walkAndCollect's chain-walking logic: it only looks at the closure argument
+// of the test's root call (it/test) and walks its body for a `visit(...)` call.
+
+function detectsBrowserTestCall(rootCall: CallNode): boolean {
+    const closureArg = rootCall.arguments[rootCall.arguments.length - 1];
+    if (!closureArg) {
+        return false;
+    }
+
+    const body = unwrapClosureBody(closureArg);
+    if (!body) {
+        return false;
+    }
+
+    return detectsBrowserTest(body);
+}
+
+function detectsBrowserTest(closureBody: AstNode): boolean {
+    if (closureBody.kind !== 'compound_statement') {
+        return expressionHasVisitCall(closureBody);
+    }
+
+    return closureBody.children.some(
+        (stmt) => stmt.kind === 'expression_statement' && expressionHasVisitCall(stmt.expression),
+    );
+}
+
+function expressionHasVisitCall(node: AstNode | undefined): boolean {
+    if (!node) {
+        return false;
+    }
+
+    if (node.kind === 'assignment_expression') {
+        return expressionHasVisitCall(node.value);
+    }
+
+    if (node.kind !== 'function_call_expression') {
+        return false;
+    }
+
+    for (const cur of walkChain(node)) {
+        if (cur.name === 'visit') {
+            return true;
+        }
+    }
+    return false;
 }
 
 function resolveDatasets(sources: AstNode[]): string[] {
@@ -228,14 +334,9 @@ function cartesianProduct(datasets: string[][]): string[] {
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {
-    if (node.kind === 'anonymous_function' || node.kind === 'arrow_function') {
-        return node.body;
-    }
-    if (node.kind === 'argument') {
-        const val = node.value;
-        if (val.kind === 'anonymous_function' || val.kind === 'arrow_function') {
-            return val.body;
-        }
+    const value = unwrapArgument(node);
+    if (value?.kind === 'anonymous_function' || value?.kind === 'arrow_function') {
+        return value.body;
     }
     return undefined;
 }

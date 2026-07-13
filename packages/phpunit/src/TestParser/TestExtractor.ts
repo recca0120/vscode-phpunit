@@ -221,6 +221,29 @@ function buildPestTestDef(
         annotations.dataset = call.datasets;
     }
 
+    if (call.skipped) {
+        annotations.skipped = true;
+        if (call.skipReason) {
+            annotations.skipReason = call.skipReason;
+        }
+    }
+
+    if (call.todo) {
+        annotations.todo = true;
+    }
+
+    if (call.only) {
+        annotations.only = true;
+    }
+
+    if (call.group && call.group.length > 0) {
+        annotations.group = call.group;
+    }
+
+    if (call.browserTest) {
+        annotations.browserTest = true;
+    }
+
     const children = isDescribe
         ? call.children.map((child) =>
               buildPestTestDef(child, ctx, [...describeChain, `\`${call.description}\``]),

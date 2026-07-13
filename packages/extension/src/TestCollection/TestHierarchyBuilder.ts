@@ -28,6 +28,16 @@ export function icon(type: TestType): string {
     return TEST_ICONS[type] ?? '';
 }
 
+// Order is priority: the first matching annotation wins when a test carries more than one
+// (e.g. an ->only() test is never also shown as a plain browser test).
+const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>, string]> = [
+    ['only', '$(target)'],
+    ['skipped', '$(circle-slash)'],
+    ['todo', '$(issue-draft)'],
+    ['dataProvider', '$(symbol-enum)'],
+    ['browserTest', '$(globe)'],
+];
+
 export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
     private ctrl: TestController;
 
@@ -56,11 +66,19 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
     }
 
     protected override formatLabel(testDefinition: TestDefinition): string {
-        const prefix =
-            testDefinition.type === TestType.method && testDefinition.annotations?.dataProvider
-                ? '$(symbol-enum)'
-                : icon(testDefinition.type);
+        const prefix = this.resolveIconPrefix(testDefinition);
 
         return prefix ? `${prefix} ${testDefinition.label}` : testDefinition.label;
+    }
+
+    private resolveIconPrefix(testDefinition: TestDefinition): string {
+        if (testDefinition.type !== TestType.method) {
+            return icon(testDefinition.type);
+        }
+
+        const annotations = testDefinition.annotations;
+        const match = ANNOTATION_ICONS.find(([key]) => annotations?.[key]);
+
+        return match ? match[1] : icon(testDefinition.type);
     }
 }

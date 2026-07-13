@@ -989,6 +989,107 @@ it('adds numbers', function (int $a, int $b, int $expected) {
             ).toBeDefined();
         });
 
+        it('Pest ->skip() shows a distinct skipped icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/SkipTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip('not ready yet');`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\SkipTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/SkipTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(circle-slash) it does something');
+        });
+
+        it('Pest ->todo() shows a distinct todo icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/TodoTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\TodoTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/TodoTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(issue-draft) it does something');
+        });
+
+        it('Pest ->only() shows a distinct only icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/OnlyTest.php'),
+                        code: `<?php
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->only();`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\OnlyTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/OnlyTest.php::it does something',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(target) it does something');
+        });
+
+        it('Pest browser test (visit()) shows a distinct browser icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/BrowserTest.php'),
+                        code: `<?php
+it('may welcome the user', function () {
+    $page = visit('/');
+    $page->assertSee('Welcome');
+});`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\BrowserTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/BrowserTest.php::it may welcome the user',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(globe) it may welcome the user');
+        });
+
         it('Pest ->with() numeric', () => {
             givenCodes(
                 [

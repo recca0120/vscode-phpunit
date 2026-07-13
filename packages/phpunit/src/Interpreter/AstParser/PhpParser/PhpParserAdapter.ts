@@ -17,6 +17,43 @@ function convertLoc(loc: RawNode): AstNodeLoc | undefined {
     };
 }
 
+// Whitespace, /* */ comments, and // comments, but not a #[ attribute group.
+const TRIVIA = /^(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n]*|#(?!\[)[^\n]*)*/;
+
+/**
+ * php-parser (as of 3.7) includes leading #[Attr] groups — and any doc
+ * comment between the attribute and the declaration — inside a
+ * declaration's own loc, but tree-sitter starts at the declaration keyword.
+ * Skip past the last attribute group and any trailing trivia (whitespace,
+ * doc comments) so both parsers agree on where a class/method "starts".
+ */
+function declarationLoc(raw: RawNode): RawNode {
+    const groups = raw.attrGroups;
+    const lastEnd = groups?.[groups.length - 1]?.loc?.end;
+    if (!raw.loc || !lastEnd || lastEnd.offset === undefined) {
+        return raw.loc;
+    }
+
+    const skipped = lastEnd.offset - raw.loc.start.offset;
+    if (skipped < 0) {
+        return raw.loc;
+    }
+
+    const trivia = (raw.loc.source ?? '').slice(skipped).match(TRIVIA)?.[0] ?? '';
+    const newlineCount = (trivia.match(/\n/g) ?? []).length;
+    const lastNewline = trivia.lastIndexOf('\n');
+
+    return {
+        ...raw.loc,
+        start: {
+            line: lastEnd.line + newlineCount,
+            column:
+                newlineCount > 0 ? trivia.length - lastNewline - 1 : lastEnd.column + trivia.length,
+            offset: lastEnd.offset + trivia.length,
+        },
+    };
+}
+
 function convertComments(comments: RawNode[] | undefined): RawNode[] | undefined {
     if (!comments) {
         return undefined;
@@ -52,7 +89,7 @@ function adaptChildren(children: RawNode[]): AstNode[] {
 }
 
 function adaptNode(raw: RawNode): AstNode | undefined {
-    if (!raw || !raw.kind) {
+    if (!raw?.kind) {
         return undefined;
     }
 
@@ -144,6 +181,8 @@ function adaptNode(raw: RawNode): AstNode | undefined {
             };
         case 'parenthesis':
             return raw.inner ? adaptNode(raw.inner) : undefined;
+        case 'assign':
+            return adaptAssignment(raw);
         default:
             return undefined;
     }
@@ -183,7 +222,7 @@ function adaptClass(raw: RawNode): AstNode {
         body,
         leadingComments: convertComments(raw.leadingComments),
         attrGroups: raw.attrGroups,
-        loc: convertLoc(raw.loc) ?? zeroLoc,
+        loc: convertLoc(declarationLoc(raw)) ?? zeroLoc,
     };
 }
 
@@ -196,7 +235,7 @@ function adaptMethod(raw: RawNode): AstNode {
         body: raw.body ? adaptMethodBody(raw.body) : undefined,
         leadingComments: convertComments(raw.leadingComments),
         attrGroups: raw.attrGroups,
-        loc: convertLoc(raw.loc) ?? zeroLoc,
+        loc: convertLoc(declarationLoc(raw)) ?? zeroLoc,
     };
 }
 

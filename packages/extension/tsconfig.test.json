@@ -3,7 +3,8 @@
     "compilerOptions": {
         "module": "CommonJS",
         "moduleResolution": "node",
-        "outDir": "out"
+        "outDir": "out",
+        "types": ["node", "mocha"]
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],
     "exclude": ["**/__mocks__/*", "src/**/*.test.ts"]

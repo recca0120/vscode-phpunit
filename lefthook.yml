@@ -13,10 +13,19 @@ pre-commit:
       root: "packages/phpunit/"
       glob: "*.{ts,tsx}"
       run: npx tsc --noEmit
-    - name: typecheck-extension
-      root: "packages/extension/"
-      glob: "*.{ts,tsx}"
-      run: npx tsc --noEmit
+    # Sequential: extension's tsconfig resolves @vscode-phpunit/phpunit via the
+    # built dist output (not source), so its typecheck needs a fresh build first.
+    - group:
+        parallel: false
+        jobs:
+          - name: build-phpunit-types
+            root: "packages/phpunit/"
+            glob: "*.{ts,tsx}"
+            run: npx tsup
+          - name: typecheck-extension
+            root: "packages/extension/"
+            glob: "*.{ts,tsx}"
+            run: npx tsc -p tsconfig.test.json --noEmit
     - name: pint-phpunit-stub
       root: "packages/phpunit/tests/fixtures/phpunit-stub/"
       glob: "*.php"

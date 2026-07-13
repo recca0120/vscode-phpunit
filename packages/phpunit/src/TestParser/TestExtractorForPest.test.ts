@@ -243,6 +243,111 @@ it('example 2')->assertTrue(true);
         );
     });
 
+    it('marks ->skip() tests with annotations.skipped', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip();
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ skipped: true }),
+            }),
+        );
+    });
+
+    it('captures ->skip(reason) in annotations.skipReason', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip('not ready yet');
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({
+                    skipped: true,
+                    skipReason: 'not ready yet',
+                }),
+            }),
+        );
+    });
+
+    it('marks ->todo() tests with annotations.todo', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->todo();
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ todo: true }),
+            }),
+        );
+    });
+
+    it('marks ->only() tests with annotations.only', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->only();
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ only: true }),
+            }),
+        );
+    });
+
+    it('collects ->group() arguments into annotations.group', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->group('slow', 'network');
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ group: ['slow', 'network'] }),
+            }),
+        );
+    });
+
+    it('marks browser tests with annotations.browserTest', async () => {
+        const content = `<?php
+
+it('may welcome the user', function () {
+    $page = visit('/');
+    $page->assertSee('Welcome');
+});
+        `;
+
+        expect(givenTest(file, content, 'it may welcome the user')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ browserTest: true }),
+            }),
+        );
+    });
+
+    it('does not mark ordinary tests with annotations.browserTest', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(file, content, 'it does something')?.annotations?.browserTest).toBeFalsy();
+    });
+
     it('not it or test', async () => {
         const content = `<?php 
 

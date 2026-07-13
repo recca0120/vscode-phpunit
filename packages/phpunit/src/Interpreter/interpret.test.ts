@@ -285,5 +285,149 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
             expect(info.pestCalls).toHaveLength(1);
             expect(info.pestCalls[0].fnName).toBe('arch');
         });
+
+        it('marks ->skip() as skipped', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip();
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+            expect(info.pestCalls[0].skipReason).toBeUndefined();
+        });
+
+        it('captures the reason passed to ->skip()', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip('not ready yet');
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+            expect(info.pestCalls[0].skipReason).toBe('not ready yet');
+        });
+
+        it('treats a dynamic ->skip() condition as skipped conservatively', () => {
+            const info = given(`<?php
+                it('does something', function () {})->skip(fn () => true);
+            `);
+            expect(info.pestCalls[0].skipped).toBe(true);
+        });
+
+        it('marks ->todo() as todo', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo();
+            `);
+            expect(info.pestCalls[0].todo).toBe(true);
+        });
+
+        it('marks ->todo() with assignee/issue arguments as todo', () => {
+            const info = given(`<?php
+                it('does something', function () {})->todo(assignee: 'jane', issue: 123);
+            `);
+            expect(info.pestCalls[0].todo).toBe(true);
+        });
+
+        it('does not mark ordinary chained calls as skipped or todo', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('slow');
+            `);
+            expect(info.pestCalls[0].skipped).toBeFalsy();
+            expect(info.pestCalls[0].todo).toBeFalsy();
+        });
+
+        it('marks ->only() as only', () => {
+            const info = given(`<?php
+                it('does something', function () {})->only();
+            `);
+            expect(info.pestCalls[0].only).toBe(true);
+        });
+
+        it('does not mark ordinary tests as only', () => {
+            const info = given(`<?php
+                it('does something', function () {});
+            `);
+            expect(info.pestCalls[0].only).toBeFalsy();
+        });
+
+        it('collects a single ->group() argument', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('slow');
+            `);
+            expect(info.pestCalls[0].group).toEqual(['slow']);
+        });
+
+        it('collects multiple ->group() arguments', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('a', 'b');
+            `);
+            expect(info.pestCalls[0].group).toEqual(['a', 'b']);
+        });
+
+        it('merges groups from multiple ->group() calls', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('a')->group('b');
+            `);
+            expect(info.pestCalls[0].group).toEqual(['a', 'b']);
+        });
+
+        it('does not set group when ->group() is absent', () => {
+            const info = given(`<?php
+                it('does something', function () {});
+            `);
+            expect(info.pestCalls[0].group).toBeUndefined();
+        });
+
+        it('marks a test with a direct visit() statement as a browser test', () => {
+            const info = given(`<?php
+                it('may welcome the user', function () {
+                    visit('/');
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('marks a test with an assigned visit() call as a browser test', () => {
+            const info = given(`<?php
+                it('may welcome the user', function () {
+                    $page = visit('/');
+                    $page->assertSee('Welcome');
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('marks a test with a chained visit() call as a browser test', () => {
+            const info = given(`<?php
+                it('may welcome the user', function () {
+                    visit('/')->assertSee('Welcome');
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('marks a test with visit() over multiple pages as a browser test', () => {
+            const info = given(`<?php
+                it('has no smoke', function () {
+                    visit(['/', '/about'])->assertNoSmoke();
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('does not mark an ordinary test as a browser test', () => {
+            const info = given(`<?php
+                it('does something', function () {
+                    expect(true)->toBeTrue();
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBeFalsy();
+        });
+
+        it('does not mark describe() or arch() as browser tests', () => {
+            const info = given(`<?php
+                describe('math', function () {
+                    visit('/');
+                });
+                arch()->preset()->php();
+            `);
+            expect(info.pestCalls[0].browserTest).toBeFalsy();
+            expect(info.pestCalls[1].browserTest).toBeFalsy();
+        });
     });
 });

@@ -1182,9 +1182,18 @@ class PropertyHooksTest extends TestCase
 `;
 
     const givenTest = (id: string) => findTest(parse(content, file, new TreeSitterAstParser()), id);
+    const givenPhpParserTest = (id: string) =>
+        findTest(parse(content, file, new PhpParserAstParser()), id);
 
-    it('php-parser fails to parse property hooks', () => {
-        expect(parse(content, file, new PhpParserAstParser())).toEqual([]);
+    it('php-parser (3.7+) parses class with property hooks', () => {
+        expect(givenPhpParserTest('PropertyHooksTest')).toEqual(
+            expect.objectContaining({
+                type: TestType.class,
+                file,
+                classFQN: 'Tests\\PropertyHooksTest',
+                className: 'PropertyHooksTest',
+            }),
+        );
     });
 
     it('tree-sitter parses class with property hooks', () => {

@@ -15,9 +15,10 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "declaration": true,
+        "types": ["node"],
+        "ignoreDeprecations": "6.0",
         "paths": {
-            "vscode": ["./vscode.d.ts"],
-            "@vscode-phpunit/phpunit": ["../phpunit/src/index.ts"]
+            "vscode": ["./vscode.d.ts"]
         }
     },
     "include": ["src/**/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],

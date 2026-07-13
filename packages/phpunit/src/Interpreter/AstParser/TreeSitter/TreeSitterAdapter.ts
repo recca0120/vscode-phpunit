@@ -64,10 +64,10 @@ function collectAttrGroups(node: SyntaxNode): AstNodeAttrGroup[] {
     const attrGroups: AstNodeAttrGroup[] = [];
 
     for (const child of node.children) {
-        if (!child || child.type !== 'attribute_list') continue;
+        if (child?.type !== 'attribute_list') continue;
 
         for (const group of child.children) {
-            if (!group || group.type !== 'attribute_group') continue;
+            if (group?.type !== 'attribute_group') continue;
 
             const attrs = group.namedChildren
                 .filter(
@@ -808,6 +808,7 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
     binary_expression: adaptBinaryExpression,
     conditional_expression: adaptConditionalExpression,
     parenthesized_expression: adaptParenthesizedExpression,
+    assignment_expression: adaptAssignment,
 };
 
 function adaptBinaryExpression(node: SyntaxNode): AstNode {
