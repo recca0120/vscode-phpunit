@@ -128,6 +128,9 @@ function runLifecycle(printer: Printer) {
             name: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
             flowId: 8024,
+            passed: 0,
+            failed: 0,
+            skipped: 1,
         }),
         printer.timeAndMemory({
             text: 'Time: 00:00.123, Memory: 10.00 MB',

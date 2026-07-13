@@ -14,8 +14,11 @@ import {
 import { TeamcityLineParser } from './TeamcityLineParser';
 import { TestResultCache } from './TestResultCache';
 
+type SuiteCounts = { passed: number; failed: number; skipped: number };
+
 export class TestOutputParser {
     private cache = new TestResultCache();
+    private suiteStacks = new Map<number, SuiteCounts[]>();
 
     constructor(private testResultParser: TeamcityLineParser = new TeamcityLineParser()) {}
 
@@ -53,6 +56,10 @@ export class TestOutputParser {
     private handleStarted(testResult: TestSuiteStarted | TestStarted) {
         this.cache.set(testResult, testResult);
 
+        if (testResult.event === TeamcityEvent.testSuiteStarted) {
+            this.pushSuite(testResult.flowId);
+        }
+
         return testResult;
     }
 
@@ -60,10 +67,13 @@ export class TestOutputParser {
         const prevTestResult = this.cache.get(testResult);
 
         if (!prevTestResult) {
-            return PestFixer.fixNoTestStarted(
+            const fixed = PestFixer.fixNoTestStarted(
                 this.cache,
                 PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
             );
+            this.bumpSuiteCounts(fixed.flowId, fixed.event);
+
+            return fixed;
         }
 
         if (prevTestResult.event === TeamcityEvent.testStarted) {
@@ -94,6 +104,12 @@ export class TestOutputParser {
         const result = { ...prevTestResult, ...testResult, event };
         this.cache.delete(testResult);
 
+        if (testResult.event === TeamcityEvent.testSuiteFinished) {
+            return { ...result, ...this.popSuite(testResult.flowId) };
+        }
+
+        this.bumpSuiteCounts(testResult.flowId, event);
+
         return result;
     }
 
@@ -102,5 +118,35 @@ export class TestOutputParser {
             testResult.event === TeamcityEvent.testFailed ||
             testResult.event === TeamcityEvent.testIgnored
         );
+    }
+
+    private pushSuite(flowId: number): void {
+        const stack = this.suiteStacks.get(flowId) ?? [];
+        stack.push({ passed: 0, failed: 0, skipped: 0 });
+        this.suiteStacks.set(flowId, stack);
+    }
+
+    private popSuite(flowId: number): SuiteCounts {
+        const stack = this.suiteStacks.get(flowId);
+
+        return stack?.pop() ?? { passed: 0, failed: 0, skipped: 0 };
+    }
+
+    private bumpSuiteCounts(flowId: number, event: TeamcityEvent): void {
+        const stack = this.suiteStacks.get(flowId);
+        if (!stack) {
+            return;
+        }
+
+        const key: keyof SuiteCounts =
+            event === TeamcityEvent.testFailed
+                ? 'failed'
+                : event === TeamcityEvent.testIgnored
+                  ? 'skipped'
+                  : 'passed';
+
+        for (const counts of stack) {
+            counts[key] += 1;
+        }
     }
 }
