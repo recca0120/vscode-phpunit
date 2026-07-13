@@ -40,22 +40,17 @@ export class PestResolver implements Resolver {
     }
 }
 
+function unwrapArgument(node: AstNode | undefined): AstNode | undefined {
+    return node?.kind === 'argument' ? node.value : node;
+}
+
 function extractDescription(args: AstNode[], php: PHP): string | undefined {
-    const firstArg = args[0];
+    const firstArg = unwrapArgument(args[0]);
     if (firstArg?.kind === 'string') {
         return firstArg.value;
     }
-    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'string') {
-        return firstArg.value.value;
-    }
     if (firstArg?.kind === 'class_constant_access') {
         const node = firstArg as ClassConstantAccessNode;
-        if (node.name === 'class') {
-            return php.getResolver(FQNResolver).resolveFQN(node.scope);
-        }
-    }
-    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'class_constant_access') {
-        const node = firstArg.value as ClassConstantAccessNode;
         if (node.name === 'class') {
             return php.getResolver(FQNResolver).resolveFQN(node.scope);
         }
@@ -81,19 +76,13 @@ interface ChainWalkResult {
 }
 
 function extractSkipReason(args: AstNode[]): string | undefined {
-    const firstArg = args[0];
-    if (firstArg?.kind === 'string') {
-        return firstArg.value;
-    }
-    if (firstArg?.kind === 'argument' && firstArg.value?.kind === 'string') {
-        return firstArg.value.value;
-    }
-    return undefined;
+    const firstArg = unwrapArgument(args[0]);
+    return firstArg?.kind === 'string' ? firstArg.value : undefined;
 }
 
 function extractStringArguments(args: AstNode[]): string[] {
     return args
-        .map((arg) => (arg.kind === 'argument' ? arg.value : arg))
+        .map(unwrapArgument)
         .filter((arg): arg is AstNode & { value: string } => arg?.kind === 'string')
         .map((arg) => arg.value);
 }
@@ -107,7 +96,23 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let skipReason: string | undefined;
     let todo = false;
     let only = false;
-    const group: string[] = [];
+    const groupCalls: string[][] = [];
+
+    const modifierHandlers: Record<string, (args: AstNode[]) => void> = {
+        skip: (args) => {
+            skipped = true;
+            skipReason = extractSkipReason(args) ?? skipReason;
+        },
+        todo: () => {
+            todo = true;
+        },
+        only: () => {
+            only = true;
+        },
+        group: (args) => {
+            groupCalls.push(extractStringArguments(args));
+        },
+    };
 
     let cur: CallNode | undefined = call;
     while (cur) {
@@ -118,18 +123,8 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
             if (arg && supportedWithKinds.has(arg.kind)) {
                 withSources.push(arg);
             }
-        } else if (cur.name === 'skip') {
-            skipped = true;
-            skipReason = extractSkipReason(cur.arguments) ?? skipReason;
-            (rootCall ? preRoot : postRoot).push(cur.name);
-        } else if (cur.name === 'todo') {
-            todo = true;
-            (rootCall ? preRoot : postRoot).push(cur.name);
-        } else if (cur.name === 'only') {
-            only = true;
-            (rootCall ? preRoot : postRoot).push(cur.name);
-        } else if (cur.name === 'group') {
-            group.unshift(...extractStringArguments(cur.arguments));
+        } else if (modifierHandlers[cur.name]) {
+            modifierHandlers[cur.name](cur.arguments);
             (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (!rootCall) {
             postRoot.push(cur.name);
@@ -151,7 +146,7 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         skipReason,
         todo,
         only,
-        group,
+        group: groupCalls.reverse().flat(),
     };
 }
 
@@ -170,10 +165,11 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         datasets: resolveDatasets(withSources),
         children: rootCall.name === 'describe' ? collectDescribeChildren(rootCall, php) : [],
         chainCalls,
-        ...(skipped ? { skipped, ...(skipReason ? { skipReason } : {}) } : {}),
-        ...(todo ? { todo } : {}),
-        ...(only ? { only } : {}),
-        ...(group.length > 0 ? { group } : {}),
+        skipped: skipped || undefined,
+        skipReason,
+        todo: todo || undefined,
+        only: only || undefined,
+        group: group.length > 0 ? group : undefined,
     };
 }
 
@@ -278,14 +274,9 @@ function cartesianProduct(datasets: string[][]): string[] {
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {
-    if (node.kind === 'anonymous_function' || node.kind === 'arrow_function') {
-        return node.body;
-    }
-    if (node.kind === 'argument') {
-        const val = node.value;
-        if (val.kind === 'anonymous_function' || val.kind === 'arrow_function') {
-            return val.body;
-        }
+    const value = unwrapArgument(node);
+    if (value?.kind === 'anonymous_function' || value?.kind === 'arrow_function') {
+        return value.body;
     }
     return undefined;
 }

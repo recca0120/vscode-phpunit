@@ -100,6 +100,9 @@ export class TestResultObserver implements TestRunnerObserver {
             new Range(new Position(line, 0), new Position(line, 0)),
         );
 
+        // Cross-file frames are kept (e.g. Pest arch() violations point at the
+        // offending source file, not the test file) — only the frame duplicating
+        // the primary location above is dropped.
         message.stackTrace = details
             .filter(
                 ({ file, line }) =>

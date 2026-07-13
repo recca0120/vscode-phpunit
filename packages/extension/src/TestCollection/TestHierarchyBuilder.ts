@@ -28,6 +28,13 @@ export function icon(type: TestType): string {
     return TEST_ICONS[type] ?? '';
 }
 
+const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>, string]> = [
+    ['only', '$(target)'],
+    ['skipped', '$(circle-slash)'],
+    ['todo', '$(issue-draft)'],
+    ['dataProvider', '$(symbol-enum)'],
+];
+
 export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
     private ctrl: TestController;
 
@@ -66,22 +73,9 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
             return icon(testDefinition.type);
         }
 
-        if (testDefinition.annotations?.only) {
-            return '$(target)';
-        }
+        const annotations = testDefinition.annotations;
+        const match = ANNOTATION_ICONS.find(([key]) => annotations?.[key]);
 
-        if (testDefinition.annotations?.skipped) {
-            return '$(circle-slash)';
-        }
-
-        if (testDefinition.annotations?.todo) {
-            return '$(issue-draft)';
-        }
-
-        if (testDefinition.annotations?.dataProvider) {
-            return '$(symbol-enum)';
-        }
-
-        return icon(testDefinition.type);
+        return match ? match[1] : icon(testDefinition.type);
     }
 }
