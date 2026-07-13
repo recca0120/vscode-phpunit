@@ -181,6 +181,8 @@ function adaptNode(raw: RawNode): AstNode | undefined {
             };
         case 'parenthesis':
             return raw.inner ? adaptNode(raw.inner) : undefined;
+        case 'assign':
+            return adaptAssignment(raw);
         default:
             return undefined;
     }

@@ -372,5 +372,62 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
             `);
             expect(info.pestCalls[0].group).toBeUndefined();
         });
+
+        it('marks a test with a direct visit() statement as a browser test', () => {
+            const info = given(`<?php
+                it('may welcome the user', function () {
+                    visit('/');
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('marks a test with an assigned visit() call as a browser test', () => {
+            const info = given(`<?php
+                it('may welcome the user', function () {
+                    $page = visit('/');
+                    $page->assertSee('Welcome');
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('marks a test with a chained visit() call as a browser test', () => {
+            const info = given(`<?php
+                it('may welcome the user', function () {
+                    visit('/')->assertSee('Welcome');
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('marks a test with visit() over multiple pages as a browser test', () => {
+            const info = given(`<?php
+                it('has no smoke', function () {
+                    visit(['/', '/about'])->assertNoSmoke();
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBe(true);
+        });
+
+        it('does not mark an ordinary test as a browser test', () => {
+            const info = given(`<?php
+                it('does something', function () {
+                    expect(true)->toBeTrue();
+                });
+            `);
+            expect(info.pestCalls[0].browserTest).toBeFalsy();
+        });
+
+        it('does not mark describe() or arch() as browser tests', () => {
+            const info = given(`<?php
+                describe('math', function () {
+                    visit('/');
+                });
+                arch()->preset()->php();
+            `);
+            expect(info.pestCalls[0].browserTest).toBeFalsy();
+            expect(info.pestCalls[1].browserTest).toBeFalsy();
+        });
     });
 });

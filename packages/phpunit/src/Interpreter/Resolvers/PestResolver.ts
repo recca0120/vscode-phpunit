@@ -158,6 +158,8 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
 
     const { rootCall, chainCalls, withSources, skipped, skipReason, todo, only, group } = result;
 
+    const isTestCall = rootCall.name === 'it' || rootCall.name === 'test';
+
     return {
         fnName: rootCall.name,
         description: extractDescription(rootCall.arguments, php),
@@ -170,7 +172,62 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         todo: todo || undefined,
         only: only || undefined,
         group: group.length > 0 ? group : undefined,
+        browserTest: isTestCall ? detectsBrowserTestCall(rootCall) : undefined,
     };
+}
+
+// --- Browser test detection (Pest 4) ---
+//
+// visit() is not a chained modifier like ->skip()/->todo(); it's a statement
+// written inside the test closure's body. This scan is fully independent of
+// walkAndCollect's chain-walking logic: it only looks at the closure argument
+// of the test's root call (it/test) and walks its body for a `visit(...)` call.
+
+function detectsBrowserTestCall(rootCall: CallNode): boolean {
+    const closureArg = rootCall.arguments[rootCall.arguments.length - 1];
+    if (!closureArg) {
+        return false;
+    }
+
+    const body = unwrapClosureBody(closureArg);
+    if (!body) {
+        return false;
+    }
+
+    return detectsBrowserTest(body);
+}
+
+function detectsBrowserTest(closureBody: AstNode): boolean {
+    if (closureBody.kind !== 'compound_statement') {
+        return expressionHasVisitCall(closureBody);
+    }
+
+    return closureBody.children.some(
+        (stmt) => stmt.kind === 'expression_statement' && expressionHasVisitCall(stmt.expression),
+    );
+}
+
+function expressionHasVisitCall(node: AstNode | undefined): boolean {
+    if (!node) {
+        return false;
+    }
+
+    if (node.kind === 'assignment_expression') {
+        return expressionHasVisitCall(node.value);
+    }
+
+    if (node.kind !== 'function_call_expression') {
+        return false;
+    }
+
+    let cur: CallNode | undefined = node;
+    while (cur) {
+        if (cur.name === 'visit') {
+            return true;
+        }
+        cur = cur.chain;
+    }
+    return false;
 }
 
 function resolveDatasets(sources: AstNode[]): string[] {

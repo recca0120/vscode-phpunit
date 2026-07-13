@@ -32,6 +32,7 @@ export type Annotations = {
     skipReason?: string;
     todo?: boolean;
     only?: boolean;
+    browserTest?: boolean;
 };
 export type TestDefinition = {
     type: TestType;

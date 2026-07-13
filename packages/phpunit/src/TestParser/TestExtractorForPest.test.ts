@@ -321,6 +321,33 @@ it('does something', function () {
         );
     });
 
+    it('marks browser tests with annotations.browserTest', async () => {
+        const content = `<?php
+
+it('may welcome the user', function () {
+    $page = visit('/');
+    $page->assertSee('Welcome');
+});
+        `;
+
+        expect(givenTest(file, content, 'it may welcome the user')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ browserTest: true }),
+            }),
+        );
+    });
+
+    it('does not mark ordinary tests with annotations.browserTest', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(file, content, 'it does something')?.annotations?.browserTest).toBeFalsy();
+    });
+
     it('not it or test', async () => {
         const content = `<?php 
 

@@ -33,6 +33,7 @@ const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>,
     ['skipped', '$(circle-slash)'],
     ['todo', '$(issue-draft)'],
     ['dataProvider', '$(symbol-enum)'],
+    ['browserTest', '$(globe)'],
 ];
 
 export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {

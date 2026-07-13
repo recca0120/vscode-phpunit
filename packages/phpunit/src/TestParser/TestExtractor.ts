@@ -240,6 +240,10 @@ function buildPestTestDef(
         annotations.group = call.group;
     }
 
+    if (call.browserTest) {
+        annotations.browserTest = true;
+    }
+
     const children = isDescribe
         ? call.children.map((child) =>
               buildPestTestDef(child, ctx, [...describeChain, `\`${call.description}\``]),

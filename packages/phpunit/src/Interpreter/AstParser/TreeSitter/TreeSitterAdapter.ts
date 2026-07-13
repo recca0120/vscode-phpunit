@@ -808,6 +808,7 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
     binary_expression: adaptBinaryExpression,
     conditional_expression: adaptConditionalExpression,
     parenthesized_expression: adaptParenthesizedExpression,
+    assignment_expression: adaptAssignment,
 };
 
 function adaptBinaryExpression(node: SyntaxNode): AstNode {

@@ -1064,6 +1064,32 @@ it('does something', function () {
             expect(method.label).toBe('$(target) it does something');
         });
 
+        it('Pest browser test (visit()) shows a distinct browser icon in the label', () => {
+            givenCodes(
+                [
+                    {
+                        testsuite: { name: 'default', path: 'tests' },
+                        file: pestProject('tests/Unit/BrowserTest.php'),
+                        code: `<?php
+it('may welcome the user', function () {
+    $page = visit('/');
+    $page->assertSee('Welcome');
+});`,
+                    },
+                ],
+                pestProject('phpunit.xml'),
+            );
+
+            const ns = ctrl.items.get('namespace:Tests') as TestItem;
+            const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
+            const cls = unitNs.children.get('Tests\\Unit\\BrowserTest') as TestItem;
+            const method = cls.children.get(
+                'tests/Unit/BrowserTest.php::it may welcome the user',
+            ) as TestItem;
+            expect(method).toBeDefined();
+            expect(method.label).toBe('$(globe) it may welcome the user');
+        });
+
         it('Pest ->with() numeric', () => {
             givenCodes(
                 [

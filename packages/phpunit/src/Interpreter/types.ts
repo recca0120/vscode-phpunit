@@ -73,4 +73,5 @@ export interface PestCallDescriptor {
     todo?: boolean;
     only?: boolean;
     group?: string[];
+    browserTest?: boolean;
 }
