@@ -11,9 +11,10 @@ const mochaOpts = { ui: 'tdd', timeout: 30_000 };
 // packages/extension/.vscode-test/user-data) can exceed that on CI runners
 // and crash VS Code with "listen EINVAL". Force a short, fixed path instead.
 // os.tmpdir() itself is too long on macOS (a per-process /var/folders/...
-// path), so prefer the short, stable /tmp there.
+// path), so prefer RUNNER_TEMP (short and job-scoped on GitHub Actions) or,
+// failing that, the short, stable /tmp.
 function userDataDirArgs(label) {
-    const base = platform() === 'darwin' ? '/tmp' : tmpdir();
+    const base = platform() === 'darwin' ? (process.env.RUNNER_TEMP ?? '/tmp') : tmpdir();
 
     return ['--user-data-dir', join(base, 'vsc-e2e', label)];
 }
