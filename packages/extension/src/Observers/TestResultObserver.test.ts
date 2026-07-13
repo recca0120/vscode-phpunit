@@ -3,10 +3,12 @@ import type {
     TestDefinition,
     TestFailed,
     TestFinished,
+    TestStarted,
     TestSuiteFinished,
     TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
-import { AliasMap } from '@vscode-phpunit/phpunit';
+import { AliasMap, TestOutputParser } from '@vscode-phpunit/phpunit';
+import { phpUnitProjectWin } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type TestController,
@@ -264,32 +266,115 @@ describe('TestResultObserver', () => {
         expect(testRun.started).not.toHaveBeenCalledWith(parentItem);
     });
 
-    it('should mark suite as failed when a child test failed before testSuiteFinished', () => {
-        const suiteItem = ctrl.createTestItem(
-            'Tests\\ExampleTest',
-            'ExampleTest',
-            Uri.file('/project/tests/ExampleTest.php'),
-        );
-        const childItem = ctrl.createTestItem(
-            'Tests\\ExampleTest::test_example',
-            'test_example',
-            Uri.file('/project/tests/ExampleTest.php'),
-        );
-        suiteItem.children.add(childItem);
-
-        const testItemById = buildTestItemById([suiteItem, childItem]);
-        const obs = new TestResultObserver(queue, testRun, testItemById);
-
-        obs.testFailed(createTestFailed({ id: childItem.id }));
-        obs.testSuiteFinished({
+    it('should mark suite as failed when TestSuiteFinished reports a failed count', () => {
+        observer.testSuiteFinished({
             event: 'testSuiteFinished' as unknown as TeamcityEvent,
-            id: suiteItem.id,
+            id: testItem.id,
             flowId: 1,
-            name: 'ExampleTest',
+            name: 'test_example',
+            passed: 0,
+            failed: 1,
+            skipped: 0,
         } as unknown as TestSuiteFinished);
 
+        expect(testRun.passed).not.toHaveBeenCalledWith(testItem);
+        expect(testRun.failed).toHaveBeenCalledWith(testItem, expect.anything());
+    });
+
+    it('should mark suite as passed when TestSuiteFinished reports no failures', () => {
+        observer.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: testItem.id,
+            flowId: 1,
+            name: 'test_example',
+            passed: 2,
+            failed: 0,
+            skipped: 1,
+        } as unknown as TestSuiteFinished);
+
+        expect(testRun.failed).not.toHaveBeenCalledWith(testItem, expect.anything());
+        expect(testRun.passed).toHaveBeenCalledWith(testItem);
+    });
+
+    it('flows a failing child test through TestOutputParser into a failed suite TestItem end-to-end', () => {
+        const parser = new TestOutputParser();
+        const flowId = 42;
+        const file = phpUnitProjectWin('tests/AssertionsTest.php');
+
+        const suiteStarted = parser.parse(
+            `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+        ) as TestSuiteStarted;
+        const childStarted = parser.parse(
+            `##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='${flowId}']`,
+        ) as TestStarted;
+
+        const suiteItem = ctrl.createTestItem(suiteStarted.id, 'AssertionsTest', Uri.file(file));
+        const childItem = ctrl.createTestItem(childStarted.id, 'test_is_not_same', Uri.file(file));
+        suiteItem.children.add(childItem);
+
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([suiteItem, childItem]),
+        );
+
+        obs.testSuiteStarted(suiteStarted);
+        obs.testStarted(childStarted);
+
+        parser.parse(
+            `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details='' duration='0' flowId='${flowId}']`,
+        );
+        const childFinished = parser.parse(
+            `##teamcity[testFinished name='test_is_not_same' duration='0' flowId='${flowId}']`,
+        ) as TestFailed;
+        obs.testFailed(childFinished);
+
+        const suiteFinished = parser.parse(
+            `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+        ) as TestSuiteFinished;
+        obs.testSuiteFinished(suiteFinished);
+
+        expect(testRun.failed).toHaveBeenCalledWith(suiteItem, []);
         expect(testRun.passed).not.toHaveBeenCalledWith(suiteItem);
-        expect(testRun.failed).toHaveBeenCalledWith(suiteItem, expect.anything());
+    });
+
+    it('flows an all-passing suite through TestOutputParser into a passed suite TestItem end-to-end', () => {
+        const parser = new TestOutputParser();
+        const flowId = 43;
+        const file = phpUnitProjectWin('tests/AssertionsTest.php');
+
+        const suiteStarted = parser.parse(
+            `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+        ) as TestSuiteStarted;
+        const childStarted = parser.parse(
+            `##teamcity[testStarted name='test_passed' locationHint='php_qn://${file}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='${flowId}']`,
+        ) as TestStarted;
+
+        const suiteItem = ctrl.createTestItem(suiteStarted.id, 'AssertionsTest', Uri.file(file));
+        const childItem = ctrl.createTestItem(childStarted.id, 'test_passed', Uri.file(file));
+        suiteItem.children.add(childItem);
+
+        const obs = new TestResultObserver(
+            queue,
+            testRun,
+            buildTestItemById([suiteItem, childItem]),
+        );
+
+        obs.testSuiteStarted(suiteStarted);
+        obs.testStarted(childStarted);
+
+        const childFinished = parser.parse(
+            `##teamcity[testFinished name='test_passed' duration='0' flowId='${flowId}']`,
+        ) as TestFinished;
+        obs.testFinished(childFinished);
+
+        const suiteFinished = parser.parse(
+            `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='${flowId}']`,
+        ) as TestSuiteFinished;
+        obs.testSuiteFinished(suiteFinished);
+
+        expect(testRun.failed).not.toHaveBeenCalledWith(suiteItem, expect.anything());
+        expect(testRun.passed).toHaveBeenCalledWith(suiteItem);
     });
 
     it('should not use TestMessage.diff when expected/actual are missing', () => {

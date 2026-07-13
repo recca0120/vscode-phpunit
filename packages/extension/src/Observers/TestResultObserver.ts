@@ -21,8 +21,6 @@ import {
 import { URI } from 'vscode-uri';
 
 export class TestResultObserver implements TestRunnerObserver {
-    private failedSuiteIds = new Set<string>();
-
     constructor(
         private queue: Map<TestDefinition, TestItem>,
         private testRun: TestRun,
@@ -52,10 +50,9 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFailed(result: TestFailed): void {
-        this.doRun(result, (test) => {
-            this.markAncestorsFailed(test);
-            this.testRun.failed(test, this.message(result, test), result.duration);
-        });
+        this.doRun(result, (test) =>
+            this.testRun.failed(test, this.message(result, test), result.duration),
+        );
     }
 
     testIgnored(result: TestIgnored): void {
@@ -64,7 +61,7 @@ export class TestResultObserver implements TestRunnerObserver {
 
     testSuiteFinished(result: TestSuiteFinished): void {
         this.doRun(result, (test) => {
-            if (this.failedSuiteIds.has(test.id)) {
+            if (result.failed > 0) {
                 // No message of its own; failures already surfaced on the child tests.
                 this.testRun.failed(test, []);
                 return;
@@ -72,12 +69,6 @@ export class TestResultObserver implements TestRunnerObserver {
 
             this.testRun.passed(test);
         });
-    }
-
-    private markAncestorsFailed(test: TestItem): void {
-        for (let ancestor = test.parent; ancestor; ancestor = ancestor.parent) {
-            this.failedSuiteIds.add(ancestor.id);
-        }
     }
 
     private message(result: TestFailed | TestIgnored, test: TestItem) {
