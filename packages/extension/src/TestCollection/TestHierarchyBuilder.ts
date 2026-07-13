@@ -28,6 +28,24 @@ export function icon(type: TestType): string {
     return TEST_ICONS[type] ?? '';
 }
 
+function resolveConditionalSkipDescription(conditionalSkip: 'onCi' | 'locally'): string {
+    return conditionalSkip === 'onCi' ? 'skips on CI' : 'skips locally';
+}
+
+function resolveTodoDescription(
+    annotations: NonNullable<TestDefinition['annotations']>,
+): string | undefined {
+    const parts: string[] = [];
+    if (annotations.todoAssignee) {
+        parts.push(`assigned: ${annotations.todoAssignee}`);
+    }
+    if (annotations.todoIssue) {
+        parts.push(`issue #${annotations.todoIssue}`);
+    }
+
+    return parts.join(', ') || undefined;
+}
+
 // Order is priority: the first matching annotation wins when a test carries more than one
 // (e.g. an ->only() test is never also shown as a plain browser test).
 const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>, string]> = [
@@ -76,37 +94,36 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
         testItem.description = this.resolveDescription(testDefinition);
     }
 
-    private resolveIconPrefix(testDefinition: TestDefinition): string {
+    // The winning annotation for a test with multiple modifiers — same priority order
+    // ANNOTATION_ICONS declares, shared by the icon and the description so they can
+    // never disagree (e.g. ->skip()->skipOnCi() must not show "skips on CI" next to
+    // an unconditional-skip icon).
+    private resolveWinningAnnotation(
+        testDefinition: TestDefinition,
+    ): (typeof ANNOTATION_ICONS)[number] | undefined {
         if (testDefinition.type !== TestType.method) {
-            return icon(testDefinition.type);
-        }
-
-        const annotations = testDefinition.annotations;
-        const match = ANNOTATION_ICONS.find(([key]) => annotations?.[key]);
-
-        return match ? match[1] : icon(testDefinition.type);
-    }
-
-    private resolveDescription(testDefinition: TestDefinition): string | undefined {
-        const annotations = testDefinition.annotations;
-        // Unconditional ->skip() already wins the icon (see ANNOTATION_ICONS priority above),
-        // so don't also claim a conditional CI/local skip — that would contradict the icon.
-        if (annotations?.conditionalSkip && !annotations?.skipped) {
-            return annotations.conditionalSkip === 'onCi' ? 'skips on CI' : 'skips locally';
-        }
-
-        if (!annotations?.todo) {
             return undefined;
         }
 
-        const parts: string[] = [];
-        if (annotations.todoAssignee) {
-            parts.push(`assigned: ${annotations.todoAssignee}`);
+        const annotations = testDefinition.annotations;
+        return ANNOTATION_ICONS.find(([key]) => annotations?.[key]);
+    }
+
+    private resolveIconPrefix(testDefinition: TestDefinition): string {
+        return this.resolveWinningAnnotation(testDefinition)?.[1] ?? icon(testDefinition.type);
+    }
+
+    private resolveDescription(testDefinition: TestDefinition): string | undefined {
+        const winningKey = this.resolveWinningAnnotation(testDefinition)?.[0];
+        const annotations = testDefinition.annotations;
+
+        if (winningKey === 'conditionalSkip' && annotations?.conditionalSkip) {
+            return resolveConditionalSkipDescription(annotations.conditionalSkip);
         }
-        if (annotations.todoIssue) {
-            parts.push(`issue #${annotations.todoIssue}`);
+        if (annotations?.todo) {
+            return resolveTodoDescription(annotations);
         }
 
-        return parts.length > 0 ? parts.join(', ') : undefined;
+        return undefined;
     }
 }
