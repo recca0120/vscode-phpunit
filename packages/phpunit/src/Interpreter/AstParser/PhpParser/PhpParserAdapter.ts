@@ -89,7 +89,7 @@ function adaptChildren(children: RawNode[]): AstNode[] {
 }
 
 function adaptNode(raw: RawNode): AstNode | undefined {
-    if (!raw || !raw.kind) {
+    if (!raw?.kind) {
         return undefined;
     }
 

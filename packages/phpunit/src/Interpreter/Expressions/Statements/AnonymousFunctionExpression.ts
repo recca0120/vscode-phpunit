@@ -9,7 +9,7 @@ class AnonymousFunctionExpression implements Expression<unknown> {
 
     resolve(node: AstNode, context: Context): unknown {
         const body = (node as { body?: AstNode }).body;
-        if (!body || body.kind !== 'compound_statement') {
+        if (body?.kind !== 'compound_statement') {
             return undefined;
         }
 
