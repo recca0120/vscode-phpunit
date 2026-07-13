@@ -389,4 +389,79 @@ describe('TestResultObserver', () => {
         expect(testRun.failed).toHaveBeenCalled();
         diffSpy.mockRestore();
     });
+
+    describe('Pest ->only() pending test cleanup on done()', () => {
+        function buildQueueWithOnlySibling() {
+            const file = '/project/tests/OnlyTest.php';
+            const onlyItem = ctrl.createTestItem(
+                'Tests\\OnlyTest::it is the only one',
+                'it is the only one',
+                Uri.file(file),
+            );
+            const otherItem = ctrl.createTestItem(
+                'Tests\\OnlyTest::it never runs',
+                'it never runs',
+                Uri.file(file),
+            );
+
+            const localQueue = new Map<TestDefinition, TestItem>();
+            localQueue.set({ file, annotations: { only: true } } as TestDefinition, onlyItem);
+            localQueue.set({ file, annotations: {} } as TestDefinition, otherItem);
+
+            const testItemById = buildTestItemById([onlyItem, otherItem]);
+            const obs = new TestResultObserver(localQueue, testRun, testItemById);
+
+            return { obs, onlyItem, otherItem };
+        }
+
+        it('marks non-only tests left pending in the same file as skipped when done() is called', () => {
+            const { obs, otherItem } = buildQueueWithOnlySibling();
+
+            obs.done();
+
+            expect(testRun.skipped).toHaveBeenCalledWith(otherItem);
+        });
+
+        it('does not mark the only-flagged test itself as skipped', () => {
+            const { obs, onlyItem } = buildQueueWithOnlySibling();
+
+            obs.done();
+
+            expect(testRun.skipped).not.toHaveBeenCalledWith(onlyItem);
+        });
+
+        it('does not skip a test that already reported a result before done()', () => {
+            const { obs, otherItem } = buildQueueWithOnlySibling();
+
+            obs.testFinished({
+                event: 'testFinished' as unknown as TeamcityEvent,
+                id: 'Tests\\OnlyTest::it never runs',
+                flowId: 1,
+                name: 'it never runs',
+                file: '/project/tests/OnlyTest.php',
+                locationHint: '',
+                duration: 1,
+            } as TestFinished);
+
+            obs.done();
+
+            expect(testRun.skipped).not.toHaveBeenCalledWith(otherItem);
+        });
+
+        it('does not skip anything when no test in the file is marked only', () => {
+            const file = '/project/tests/PlainTest.php';
+            const item = ctrl.createTestItem(
+                'Tests\\PlainTest::it does something',
+                'it does something',
+                Uri.file(file),
+            );
+            const localQueue = new Map<TestDefinition, TestItem>();
+            localQueue.set({ file, annotations: {} } as TestDefinition, item);
+            const obs = new TestResultObserver(localQueue, testRun, buildTestItemById([item]));
+
+            obs.done();
+
+            expect(testRun.skipped).not.toHaveBeenCalledWith(item);
+        });
+    });
 });

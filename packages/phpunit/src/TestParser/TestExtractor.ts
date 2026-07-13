@@ -232,6 +232,14 @@ function buildPestTestDef(
         annotations.todo = true;
     }
 
+    if (call.only) {
+        annotations.only = true;
+    }
+
+    if (call.group && call.group.length > 0) {
+        annotations.group = call.group;
+    }
+
     const children = isDescribe
         ? call.children.map((child) =>
               buildPestTestDef(child, ctx, [...describeChain, `\`${call.description}\``]),

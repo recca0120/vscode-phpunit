@@ -71,4 +71,6 @@ export interface PestCallDescriptor {
     skipped?: boolean;
     skipReason?: string;
     todo?: boolean;
+    only?: boolean;
+    group?: string[];
 }

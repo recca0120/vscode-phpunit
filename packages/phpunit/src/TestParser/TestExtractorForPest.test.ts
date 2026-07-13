@@ -291,6 +291,36 @@ it('does something', function () {
         );
     });
 
+    it('marks ->only() tests with annotations.only', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->only();
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ only: true }),
+            }),
+        );
+    });
+
+    it('collects ->group() arguments into annotations.group', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->group('slow', 'network');
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({ group: ['slow', 'network'] }),
+            }),
+        );
+    });
+
     it('not it or test', async () => {
         const content = `<?php 
 

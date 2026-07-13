@@ -76,6 +76,8 @@ interface ChainWalkResult {
     skipped: boolean;
     skipReason?: string;
     todo: boolean;
+    only: boolean;
+    group: string[];
 }
 
 function extractSkipReason(args: AstNode[]): string | undefined {
@@ -89,6 +91,13 @@ function extractSkipReason(args: AstNode[]): string | undefined {
     return undefined;
 }
 
+function extractStringArguments(args: AstNode[]): string[] {
+    return args
+        .map((arg) => (arg.kind === 'argument' ? arg.value : arg))
+        .filter((arg): arg is AstNode & { value: string } => arg?.kind === 'string')
+        .map((arg) => arg.value);
+}
+
 function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let rootCall: CallNode | undefined;
     const preRoot: string[] = [];
@@ -97,6 +106,8 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     let skipped = false;
     let skipReason: string | undefined;
     let todo = false;
+    let only = false;
+    const group: string[] = [];
 
     let cur: CallNode | undefined = call;
     while (cur) {
@@ -113,6 +124,12 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
             (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (cur.name === 'todo') {
             todo = true;
+            (rootCall ? preRoot : postRoot).push(cur.name);
+        } else if (cur.name === 'only') {
+            only = true;
+            (rootCall ? preRoot : postRoot).push(cur.name);
+        } else if (cur.name === 'group') {
+            group.unshift(...extractStringArguments(cur.arguments));
             (rootCall ? preRoot : postRoot).push(cur.name);
         } else if (!rootCall) {
             postRoot.push(cur.name);
@@ -133,6 +150,8 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         skipped,
         skipReason,
         todo,
+        only,
+        group,
     };
 }
 
@@ -142,7 +161,7 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         return undefined;
     }
 
-    const { rootCall, chainCalls, withSources, skipped, skipReason, todo } = result;
+    const { rootCall, chainCalls, withSources, skipped, skipReason, todo, only, group } = result;
 
     return {
         fnName: rootCall.name,
@@ -153,6 +172,8 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
         chainCalls,
         ...(skipped ? { skipped, ...(skipReason ? { skipReason } : {}) } : {}),
         ...(todo ? { todo } : {}),
+        ...(only ? { only } : {}),
+        ...(group.length > 0 ? { group } : {}),
     };
 }
 

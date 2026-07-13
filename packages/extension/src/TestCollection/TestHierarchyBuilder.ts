@@ -66,6 +66,10 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
             return icon(testDefinition.type);
         }
 
+        if (testDefinition.annotations?.only) {
+            return '$(target)';
+        }
+
         if (testDefinition.annotations?.skipped) {
             return '$(circle-slash)';
         }

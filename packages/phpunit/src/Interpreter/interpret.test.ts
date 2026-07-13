@@ -330,5 +330,47 @@ describe.each(parsers)('interpret (%s)', (_name, createParser) => {
             expect(info.pestCalls[0].skipped).toBeFalsy();
             expect(info.pestCalls[0].todo).toBeFalsy();
         });
+
+        it('marks ->only() as only', () => {
+            const info = given(`<?php
+                it('does something', function () {})->only();
+            `);
+            expect(info.pestCalls[0].only).toBe(true);
+        });
+
+        it('does not mark ordinary tests as only', () => {
+            const info = given(`<?php
+                it('does something', function () {});
+            `);
+            expect(info.pestCalls[0].only).toBeFalsy();
+        });
+
+        it('collects a single ->group() argument', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('slow');
+            `);
+            expect(info.pestCalls[0].group).toEqual(['slow']);
+        });
+
+        it('collects multiple ->group() arguments', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('a', 'b');
+            `);
+            expect(info.pestCalls[0].group).toEqual(['a', 'b']);
+        });
+
+        it('merges groups from multiple ->group() calls', () => {
+            const info = given(`<?php
+                it('does something', function () {})->group('a')->group('b');
+            `);
+            expect(info.pestCalls[0].group).toEqual(['a', 'b']);
+        });
+
+        it('does not set group when ->group() is absent', () => {
+            const info = given(`<?php
+                it('does something', function () {});
+            `);
+            expect(info.pestCalls[0].group).toBeUndefined();
+        });
     });
 });
