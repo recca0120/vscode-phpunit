@@ -17,7 +17,7 @@ export default defineConfig({
             provider: 'v8',
             reportsDirectory: 'coverage',
         },
-        setupFiles: ['reflect-metadata'],
+        setupFiles: ['reflect-metadata', 'fakes/vscode/setup.ts'],
         include: ['**/__tests__/**/*.test.[jt]s?(x)', '**/?(*.)+(spec|test).[tj]s?(x)'],
         exclude: ['node_modules', 'out', 'tests/', '.vscode-test'],
     },
