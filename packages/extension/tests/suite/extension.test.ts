@@ -7,6 +7,7 @@ import {
     type ExtensionApi,
     findTestItem,
     waitForTestItems,
+    waitUntil,
 } from '../helper';
 
 const stubType = process.env.STUB_TYPE ?? 'phpunit';
@@ -229,5 +230,72 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         await api.testRunProfile.runHandler(request, cts.token);
 
         assert.ok(cts.token.isCancellationRequested);
+    });
+
+    suite('a trait used by a test class', () => {
+        const traitPath =
+            stubType === 'pest'
+                ? 'tests/Unit/Concerns/SharedTests.php'
+                : 'tests/Concerns/SharedTests.php';
+        const classId =
+            stubType === 'pest'
+                ? 'Shared Trait User (Tests\\Unit\\SharedTraitUser)'
+                : 'Shared Trait User (Tests\\SharedTraitUser)';
+        const traitUri = () => {
+            const folder = vscode.workspace.workspaceFolders?.[0];
+            assert.ok(folder, 'workspace folder');
+            return vscode.Uri.joinPath(folder.uri, traitPath);
+        };
+        const methodIds = () =>
+            collectTestItemIds(findTestItem(ctrl.items, classId)?.children ?? ctrl.items).filter(
+                (id) => id.startsWith(`${classId}::`),
+            );
+        let original: Uint8Array;
+
+        suiteSetup(async () => {
+            await ctrl.resolveHandler?.(undefined);
+            await waitUntil(
+                () => methodIds().includes(`${classId}::From shared trait`),
+                'the trait method is listed',
+            );
+            original = await vscode.workspace.fs.readFile(traitUri());
+        });
+
+        test('updates the test class when the trait is edited', async () => {
+            const source = new TextDecoder().decode(original);
+            const end = source.lastIndexOf('}');
+            const edited = `${source.slice(0, end)}    public function test_added_in_e2e(): void\n    {\n        $this->assertTrue(true);\n    }\n${source.slice(end)}`;
+            try {
+                await vscode.workspace.fs.writeFile(traitUri(), new TextEncoder().encode(edited));
+                await waitUntil(
+                    () => methodIds().includes(`${classId}::Added in e2e`),
+                    'the method added to the trait is listed',
+                );
+            } finally {
+                await vscode.workspace.fs.writeFile(traitUri(), original);
+                await waitUntil(
+                    () => !methodIds().includes(`${classId}::Added in e2e`),
+                    'the restored trait no longer lists the added method',
+                );
+            }
+        });
+
+        test('drops the trait methods when the trait file is deleted', async () => {
+            try {
+                await vscode.workspace.fs.delete(traitUri());
+                await waitUntil(
+                    () =>
+                        !methodIds().includes(`${classId}::From shared trait`) &&
+                        methodIds().includes(`${classId}::Own`),
+                    'only the own method is listed',
+                );
+            } finally {
+                await vscode.workspace.fs.writeFile(traitUri(), original);
+                await waitUntil(
+                    () => methodIds().includes(`${classId}::From shared trait`),
+                    'the restored trait method is listed again',
+                );
+            }
+        });
     });
 });

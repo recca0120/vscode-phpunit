@@ -85,6 +85,14 @@ export class TestIndex {
         await this.change(uri);
     }
 
+    async deleteClasses(uri: URI): Promise<ChangeResult> {
+        return new Promise<ChangeResult>((resolve, reject) => {
+            this.parseQueue = this.parseQueue
+                .catch(() => {})
+                .then(() => this.doDeleteClasses(uri).then(resolve, reject));
+        });
+    }
+
     delete(uri: URI): File<TestDefinition> | undefined {
         const file = this.store.findFile(uri);
         this.deleteFiles(uri);
@@ -125,6 +133,12 @@ export class TestIndex {
         yield* this.store.gatherFiles();
     }
 
+    private async doDeleteClasses(uri: URI): Promise<ChangeResult> {
+        const previous = this.classHierarchy.unregister(uri.fsPath);
+
+        return this.reparseDependents(uri, previous);
+    }
+
     private async doChange(uri: URI): Promise<ChangeResult> {
         const parsed: ChangeResult['parsed'] = [];
         const deleted: ChangeResult['deleted'] = [];
@@ -133,6 +147,8 @@ export class TestIndex {
         if (!testsuite) {
             return this.isSupportFile(uri) ? this.indexSupportFile(uri) : { parsed, deleted };
         }
+
+        const previous = this.classHierarchy.unregister(uri.fsPath);
 
         this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
@@ -146,9 +162,12 @@ export class TestIndex {
             parsed.push({ uri, tests });
         }
 
-        parsed.push(...(await this.reparseDependents(uri)));
+        const dependents = await this.reparseDependents(uri, previous);
 
-        return { parsed, deleted };
+        return {
+            parsed: [...parsed, ...dependents.parsed],
+            deleted: [...deleted, ...dependents.deleted],
+        };
     }
 
     private isSupportFile(uri: URI): boolean {
@@ -159,10 +178,11 @@ export class TestIndex {
     }
 
     private async indexSupportFile(uri: URI): Promise<ChangeResult> {
+        const previous = this.classHierarchy.unregister(uri.fsPath);
         const parseResult = await this.testParser.parseFile(uri.fsPath);
         await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
 
-        return { parsed: await this.reparseDependents(uri), deleted: [] };
+        return this.reparseDependents(uri, previous);
     }
 
     private async registerClasses(classes: ClassInfo[], includes: string[] = []): Promise<void> {
@@ -221,22 +241,21 @@ export class TestIndex {
         return undefined;
     }
 
-    private async reparseDependents(uri: URI): Promise<ChangeResult['parsed']> {
-        const parsed: ChangeResult['parsed'] = [];
-        const files = new Set(this.getDependentClasses(uri.fsPath).map((child) => child.uri));
+    private async reparseDependents(uri: URI, previous: ClassInfo[] = []): Promise<ChangeResult> {
+        const result: ChangeResult = { parsed: [], deleted: [] };
+        const files = new Set(
+            this.getDependentClasses(uri.fsPath, previous).map((child) => child.uri),
+        );
         for (const file of files) {
-            const entry = await this.reparseFile(URI.file(file));
-            if (entry) {
-                parsed.push(entry);
-            }
+            await this.reparseFile(URI.file(file), result);
         }
 
-        return parsed;
+        return result;
     }
 
-    private getDependentClasses(fsPath: string) {
+    private getDependentClasses(fsPath: string, previous: ClassInfo[]) {
         const dependents = new Map<string, ClassInfo>();
-        const pending = this.classHierarchy.getClassesByUri(fsPath);
+        const pending = [...previous, ...this.classHierarchy.getClassesByUri(fsPath)];
         for (let classInfo = pending.shift(); classInfo; classInfo = pending.shift()) {
             for (const dependent of [
                 ...this.classHierarchy.getChildClasses(classInfo.classFQN),
@@ -253,24 +272,27 @@ export class TestIndex {
         return [...dependents.values()].filter((dependent) => dependent.uri !== fsPath);
     }
 
-    private async reparseFile(
-        uri: URI,
-    ): Promise<{ uri: URI; tests: TestDefinition[] } | undefined> {
+    private async reparseFile(uri: URI, result: ChangeResult): Promise<void> {
         const own = this.ownTests.get(uri.toString());
         const testsuite = own?.testsuite ?? this.testSuiteMatcher.testsuiteOf(uri);
         if (!testsuite) {
-            return undefined;
+            return;
         }
 
         const tests = own
             ? this.classHierarchy.enrichTests(own.tests)
             : await this.parseTests(uri, testsuite);
-        if (tests.length === 0) {
-            return undefined;
+        if (tests.length > 0) {
+            this.store.set(testsuite, uri, tests);
+            result.parsed.push({ uri, tests });
+            return;
         }
 
-        this.store.set(testsuite, uri, tests);
-        return { uri, tests };
+        const file = this.store.findFile(uri);
+        if (file) {
+            this.store.remove(file.testsuite, file.uri);
+            result.deleted.push(file);
+        }
     }
 
     private removeFile(file: File<TestDefinition>): void {

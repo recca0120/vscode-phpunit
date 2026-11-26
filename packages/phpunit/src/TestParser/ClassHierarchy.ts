@@ -1,3 +1,4 @@
+import { sep } from 'node:path';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { PHPUNIT_TESTCASE_FQN, type TestDefinition, TestType } from '../types';
 
@@ -30,6 +31,16 @@ export class ClassHierarchy {
 
     register(info: ClassInfo): void {
         this.registry.set(info.classFQN, info);
+    }
+
+    unregister(uri: string): ClassInfo[] {
+        const removed = this.filterValues(
+            (info) => info.uri === uri || info.uri.startsWith(`${uri}${sep}`),
+        );
+        for (const info of removed) {
+            this.registry.delete(info.classFQN);
+        }
+        return removed;
     }
 
     get(classFQN: string): ClassInfo | undefined {

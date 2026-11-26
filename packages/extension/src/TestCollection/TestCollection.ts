@@ -154,11 +154,12 @@ export class TestCollection {
         return result;
     }
 
-    delete(uri: URI) {
+    async delete(uri: URI) {
         const files = this.testIndex.deleteFiles(uri);
         for (const file of files) {
             this.handleFileDeleted(file);
         }
+        this.applyChangeResult(await this.testIndex.deleteClasses(uri));
         return files.find((file) => file.uri.toString() === uri.toString());
     }
 

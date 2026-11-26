@@ -69,3 +69,18 @@ export function collectTestItemIds(items: vscode.TestItemCollection): string[] {
     });
     return ids;
 }
+
+export async function waitUntil(
+    condition: () => boolean,
+    message: string,
+    timeout = 10_000,
+): Promise<void> {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+        if (condition()) {
+            return;
+        }
+        await new Promise((r) => setTimeout(r, 200));
+    }
+    throw new Error(`Timed out waiting until ${message}`);
+}
