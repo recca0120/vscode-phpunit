@@ -1,27 +1,19 @@
 import { URI } from 'vscode-uri';
 import { ComposerAutoload } from '../Configuration/ComposerAutoload';
-import { TestSuiteMatcher } from '../Configuration/TestSuiteMatcher';
 import type { PHPUnitXML, TestDefinition, TestParser } from '../index';
 import type { TestStarted } from '../TestOutput';
-import { ClassHierarchy, type ClassInfo } from '../TestParser/ClassHierarchy';
+import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import type { ClassInfo } from '../TestParser/ClassInfo';
 import { datasetExpander } from '../TestParser/DatasetExpander';
 import { PHPUNIT_TESTCASE_FQN } from '../types';
 import { checkFileExists } from '../utils';
-import { TestStore } from './TestStore';
-
-export interface File<T> {
-    testsuite: string;
-    uri: URI;
-    tests: T[];
-}
-
-export interface ChangeResult {
-    parsed: { uri: URI; tests: TestDefinition[] }[];
-    deleted: File<TestDefinition>[];
-}
+import type { IndexChange } from './IndexChange';
+import type { IndexedFile } from './IndexedFile';
+import { IndexStore } from './IndexStore';
+import { TestSuiteMatcher } from './TestSuiteMatcher';
 
 export class TestIndex {
-    private store = new TestStore();
+    private store = new IndexStore();
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
@@ -41,7 +33,7 @@ export class TestIndex {
     }
 
     async change(uri: URI) {
-        return new Promise<ChangeResult>((resolve, reject) => {
+        return new Promise<IndexChange>((resolve, reject) => {
             this.parseQueue = this.parseQueue
                 .catch(() => {})
                 .then(() => this.doChange(uri).then(resolve, reject));
@@ -85,21 +77,21 @@ export class TestIndex {
         await this.change(uri);
     }
 
-    async deleteClasses(uri: URI): Promise<ChangeResult> {
-        return new Promise<ChangeResult>((resolve, reject) => {
+    async deleteClasses(uri: URI): Promise<IndexChange> {
+        return new Promise<IndexChange>((resolve, reject) => {
             this.parseQueue = this.parseQueue
                 .catch(() => {})
                 .then(() => this.doDeleteClasses(uri).then(resolve, reject));
         });
     }
 
-    delete(uri: URI): File<TestDefinition> | undefined {
+    delete(uri: URI): IndexedFile<TestDefinition> | undefined {
         const file = this.store.findFile(uri);
         this.deleteFiles(uri);
         return file;
     }
 
-    deleteFiles(uri: URI): File<TestDefinition>[] {
+    deleteFiles(uri: URI): IndexedFile<TestDefinition>[] {
         const file = this.store.findFile(uri);
         if (file) {
             this.removeFile(file);
@@ -125,7 +117,7 @@ export class TestIndex {
         this.autoload.reset();
     }
 
-    findFile(uri: URI): File<TestDefinition> | undefined {
+    findFile(uri: URI): IndexedFile<TestDefinition> | undefined {
         return this.store.findFile(uri);
     }
 
@@ -133,15 +125,15 @@ export class TestIndex {
         yield* this.store.gatherFiles();
     }
 
-    private async doDeleteClasses(uri: URI): Promise<ChangeResult> {
+    private async doDeleteClasses(uri: URI): Promise<IndexChange> {
         const previous = this.classHierarchy.unregister(uri.fsPath);
 
         return this.reparseDependents(uri, previous);
     }
 
-    private async doChange(uri: URI): Promise<ChangeResult> {
-        const parsed: ChangeResult['parsed'] = [];
-        const deleted: ChangeResult['deleted'] = [];
+    private async doChange(uri: URI): Promise<IndexChange> {
+        const parsed: IndexChange['parsed'] = [];
+        const deleted: IndexChange['deleted'] = [];
 
         const testsuite = this.testSuiteMatcher.testsuiteOf(uri);
         if (!testsuite) {
@@ -177,7 +169,7 @@ export class TestIndex {
         );
     }
 
-    private async indexSupportFile(uri: URI): Promise<ChangeResult> {
+    private async indexSupportFile(uri: URI): Promise<IndexChange> {
         const previous = this.classHierarchy.unregister(uri.fsPath);
         const parseResult = await this.testParser.parseFile(uri.fsPath);
         await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
@@ -241,8 +233,8 @@ export class TestIndex {
         return undefined;
     }
 
-    private async reparseDependents(uri: URI, previous: ClassInfo[] = []): Promise<ChangeResult> {
-        const result: ChangeResult = { parsed: [], deleted: [] };
+    private async reparseDependents(uri: URI, previous: ClassInfo[] = []): Promise<IndexChange> {
+        const result: IndexChange = { parsed: [], deleted: [] };
         const files = new Set(
             this.getDependentClasses(uri.fsPath, previous).map((child) => child.uri),
         );
@@ -272,7 +264,7 @@ export class TestIndex {
         return [...dependents.values()].filter((dependent) => dependent.uri !== fsPath);
     }
 
-    private async reparseFile(uri: URI, result: ChangeResult): Promise<void> {
+    private async reparseFile(uri: URI, result: IndexChange): Promise<void> {
         const own = this.ownTests.get(uri.toString());
         const testsuite = own?.testsuite ?? this.testSuiteMatcher.testsuiteOf(uri);
         if (!testsuite) {
@@ -295,7 +287,7 @@ export class TestIndex {
         }
     }
 
-    private removeFile(file: File<TestDefinition>): void {
+    private removeFile(file: IndexedFile<TestDefinition>): void {
         this.store.remove(file.testsuite, file.uri);
         this.ownTests.delete(file.uri.toString());
     }

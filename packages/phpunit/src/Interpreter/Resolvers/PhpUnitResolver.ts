@@ -1,4 +1,4 @@
-import type { TraitAdaptation } from '../../TestParser/ClassHierarchy';
+import type { TraitAdaptation } from '../../TestParser/ClassInfo';
 import type {
     AstNode,
     ClassNode,

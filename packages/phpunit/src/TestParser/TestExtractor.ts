@@ -2,19 +2,14 @@ import type { ClassDescriptor, FileInfo, PestCallDescriptor, Range } from '../In
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { type Annotations, type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
-import type { ClassInfo } from './ClassHierarchy';
+import type { ClassInfo } from './ClassInfo';
+import type { ParseResult } from './ParseResult';
 import { generatePestClassFQN } from './PestClassFQNGenerator';
 
 interface BuildContext {
     file: string;
     namespace: string | undefined;
     transformer: ReturnType<typeof TestIdentifierFactory.create>;
-}
-
-export interface ParseResult {
-    tests: TestDefinition[];
-    classes: ClassInfo[];
-    includes?: string[];
 }
 
 export function extractTests(

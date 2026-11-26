@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import type { TestDefinition } from '../types';
 import { TestType } from '../types';
-import { TestStore } from './TestStore';
+import { IndexStore } from './IndexStore';
 
 const makeTests = (ids: string[], file?: string): TestDefinition[] =>
     ids.map((id) => ({ id, label: id, type: TestType.method, file }));
 
 describe('TestStore', () => {
     it('set and findFile', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
         const tests = makeTests(['t1', 't2'], uri.fsPath);
 
@@ -22,12 +22,12 @@ describe('TestStore', () => {
     });
 
     it('findFile returns undefined for unknown uri', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         expect(store.findFile(URI.file('/unknown.php'))).toBeUndefined();
     });
 
     it('remove clears file and indexes', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
         const tests = makeTests(['t1', 't2'], uri.fsPath);
 
@@ -40,7 +40,7 @@ describe('TestStore', () => {
     });
 
     it('set replaces previous tests and cleans old definitions', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
 
         store.set('default', uri, makeTests(['old1', 'old2'], uri.fsPath));
@@ -53,7 +53,7 @@ describe('TestStore', () => {
     });
 
     it('getDefinition and hasDefinition', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
         const tests = makeTests(['t1'], uri.fsPath);
 
@@ -66,7 +66,7 @@ describe('TestStore', () => {
     });
 
     it('indexes children recursively', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
         const child: TestDefinition = {
             id: 'child1',
@@ -89,7 +89,7 @@ describe('TestStore', () => {
     });
 
     it('remove clears children from index', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
         const child: TestDefinition = {
             id: 'child1',
@@ -113,7 +113,7 @@ describe('TestStore', () => {
     });
 
     it('addDefinition appends to existing file tests', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
 
         store.set('default', uri, makeTests(['t1'], uri.fsPath));
@@ -131,7 +131,7 @@ describe('TestStore', () => {
     });
 
     it('addDefinition ignores definition without file', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
 
         store.set('default', uri, makeTests(['t1'], uri.fsPath));
@@ -143,7 +143,7 @@ describe('TestStore', () => {
     });
 
     it('addDefinition ignores definition when file not tracked', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
 
         const def: TestDefinition = {
             id: 'x',
@@ -157,7 +157,7 @@ describe('TestStore', () => {
     });
 
     it('gatherFiles yields all files', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri1 = URI.file('/project/tests/ATest.php');
         const uri2 = URI.file('/project/tests/BTest.php');
 
@@ -170,7 +170,7 @@ describe('TestStore', () => {
     });
 
     it('size returns number of suites', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         expect(store.size).toBe(0);
 
         const uri = URI.file('/project/tests/ATest.php');
@@ -179,7 +179,7 @@ describe('TestStore', () => {
     });
 
     it('clear resets everything', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
 
         store.set('default', uri, makeTests(['t1'], uri.fsPath));
@@ -191,14 +191,14 @@ describe('TestStore', () => {
     });
 
     it('initSuites creates empty suite entries', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         store.initSuites(['unit', 'feature']);
 
         expect(store.size).toBe(2);
     });
 
     it('set removes file from old suite when moving to new suite', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
 
         store.set('suiteA', uri, makeTests(['t1'], uri.fsPath));
@@ -213,7 +213,7 @@ describe('TestStore', () => {
     });
 
     it('initSuites does not overwrite existing suites', () => {
-        const store = new TestStore();
+        const store = new IndexStore();
         const uri = URI.file('/project/tests/FooTest.php');
         store.set('unit', uri, makeTests(['t1'], uri.fsPath));
 

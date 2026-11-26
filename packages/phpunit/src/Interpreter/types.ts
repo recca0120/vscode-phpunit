@@ -27,7 +27,7 @@ export interface FileInfo {
     pestCalls: PestCallDescriptor[];
 }
 
-import type { TraitAdaptation } from '../TestParser/ClassHierarchy';
+import type { TraitAdaptation } from '../TestParser/ClassInfo';
 
 export interface TraitUseDescriptor {
     traitFQN: string;

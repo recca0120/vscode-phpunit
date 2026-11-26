@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TestType } from '../types';
-import type { ClassInfo } from './ClassHierarchy';
 import { ClassHierarchy } from './ClassHierarchy';
+import type { ClassInfo } from './ClassInfo';
 
 const classInfo = (
     overrides: Partial<ClassInfo> & Pick<ClassInfo, 'uri' | 'classFQN'>,

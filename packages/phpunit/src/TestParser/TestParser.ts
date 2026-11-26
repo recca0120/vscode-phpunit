@@ -3,7 +3,7 @@ import type { PHPUnitXML } from '../Configuration';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { interpret } from '../Interpreter/PHP';
 import { resolveIncludes } from './IncludeResolver';
-import type { ParseResult } from './TestExtractor';
+import type { ParseResult } from './ParseResult';
 import { extractTests } from './TestExtractor';
 
 const textDecoder = new TextDecoder('utf-8');
