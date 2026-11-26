@@ -1992,6 +1992,8 @@ class NoDatasetTest extends TestCase
                 'phpunit-stub\\src\\',
                 '/AbstractTest.php',
                 '\\AbstractTest.php',
+                '/Concerns/SharedTests.php',
+                '\\Concerns\\SharedTests.php',
             ];
             const expectedFiles = files
                 .filter((file) => !skips.some((skip) => file.fsPath.includes(skip)))

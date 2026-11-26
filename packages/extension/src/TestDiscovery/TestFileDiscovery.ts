@@ -30,7 +30,9 @@ export class TestFileDiscovery {
     async getWorkspaceTestPattern(): Promise<WorkspaceTestPattern> {
         await this.ensureConfigLoaded();
 
-        const { includes, excludes } = this.phpUnitXML.getPatterns(this.workspaceFolder.uri.fsPath);
+        const { includes, excludes } = this.phpUnitXML.getIndexPatterns(
+            this.workspaceFolder.uri.fsPath,
+        );
 
         const toRelativePattern = (pattern: TestGlobPattern) => {
             const { uri, pattern: glob } = pattern.toGlobPattern();

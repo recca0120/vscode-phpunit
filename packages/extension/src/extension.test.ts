@@ -88,6 +88,9 @@ const getTestRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) 
     return testRunProfile;
 };
 
+const childLabels = (items: TestItemCollection, id: string) =>
+    [...(findTest(items, id)?.children ?? [])].map(([, item]) => item.label).sort();
+
 const findTest = (items: TestItemCollection, id: string): TestItem | undefined => {
     for (const [_id, item] of items) {
         if (item.id === id) {
@@ -296,6 +299,21 @@ describe('Extension Test', () => {
             beforeEach(() => setupEnvironment(root, binary, args));
             afterEach(() => vi.clearAllMocks());
 
+            it('includes test methods of a trait whose file does not match the testsuite suffix', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    childLabels(
+                        getTestController().items,
+                        'Shared Trait User (Tests\\SharedTraitUser)',
+                    ),
+                ).toEqual([
+                    `${icon(TestType.method)} test_from_shared_trait`,
+                    `${icon(TestType.method)} test_own`,
+                ]);
+            });
+
             it('should load tests', async () => {
                 await activate(context);
                 const ctrl = getTestController();
@@ -380,10 +398,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 75, started: 54, passed: 39, failed: 13, end: 1 }],
-                        ['10.0.0', { enqueued: 75, started: 68, passed: 56, failed: 10, end: 1 }],
+                        ['12.0.0', { enqueued: 76, started: 55, passed: 40, failed: 13, end: 1 }],
+                        ['10.0.0', { enqueued: 76, started: 69, passed: 57, failed: 10, end: 1 }],
                     ],
-                    { enqueued: 75, started: 46, passed: 27, failed: 17, end: 1 },
+                    { enqueued: 76, started: 47, passed: 28, failed: 17, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -395,10 +413,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 74, started: 53, passed: 39, failed: 12, end: 1 }],
-                        ['10.0.0', { enqueued: 74, started: 67, passed: 56, failed: 9, end: 1 }],
+                        ['12.0.0', { enqueued: 75, started: 54, passed: 40, failed: 12, end: 1 }],
+                        ['10.0.0', { enqueued: 75, started: 68, passed: 57, failed: 9, end: 1 }],
                     ],
-                    { enqueued: 74, started: 45, passed: 27, failed: 16, end: 1 },
+                    { enqueued: 75, started: 46, passed: 28, failed: 16, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -625,7 +643,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(99);
+                expect(countItems(ctrl.items)).toEqual(102);
 
                 const annotationMulti = findTest(
                     ctrl.items,
@@ -715,7 +733,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(104);
+                expect(countItems(ctrl.items)).toEqual(107);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {
@@ -1333,13 +1351,28 @@ describe('Extension Test', () => {
             beforeEach(() => setupEnvironment(root, binary, args));
             afterEach(() => vi.clearAllMocks());
 
+            it('includes test methods of a trait whose file does not match the testsuite suffix', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    childLabels(
+                        getTestController().items,
+                        'Shared Trait User (Tests\\Unit\\SharedTraitUser)',
+                    ),
+                ).toEqual([
+                    `${icon(TestType.method)} test_from_shared_trait`,
+                    `${icon(TestType.method)} test_own`,
+                ]);
+            });
+
             it('should run all tests', async () => {
                 const ctrl = await activateAndRun();
 
                 const expected = resolveExpected(
                     pestVersion,
-                    [['3.0.0', { enqueued: 89, started: 89, passed: 82, failed: 4, end: 1 }]],
-                    { enqueued: 89, started: 82, passed: 78, failed: 0, end: 1 },
+                    [['3.0.0', { enqueued: 90, started: 90, passed: 83, failed: 4, end: 1 }]],
+                    { enqueued: 90, started: 83, passed: 79, failed: 0, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);

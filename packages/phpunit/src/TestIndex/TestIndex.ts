@@ -127,7 +127,9 @@ export class TestIndex {
 
         const testsuite = this.parseTestsuite(uri);
         if (!testsuite) {
-            return { parsed, deleted };
+            return this.parseTestsuite(uri, '.php')
+                ? this.indexSupportFile(uri)
+                : { parsed, deleted };
         }
 
         this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
@@ -142,6 +144,22 @@ export class TestIndex {
             parsed.push({ uri, tests });
         }
 
+        parsed.push(...(await this.reparseDependents(uri)));
+
+        return { parsed, deleted };
+    }
+
+    private async indexSupportFile(uri: URI): Promise<ChangeResult> {
+        const parseResult = await this.testParser.parseFile(uri.fsPath);
+        for (const cls of parseResult?.classes ?? []) {
+            this.classHierarchy.register(cls);
+        }
+
+        return { parsed: await this.reparseDependents(uri), deleted: [] };
+    }
+
+    private async reparseDependents(uri: URI): Promise<ChangeResult['parsed']> {
+        const parsed: ChangeResult['parsed'] = [];
         for (const child of this.getDependentClasses(uri.fsPath)) {
             const entry = await this.reparseFile(URI.file(child.uri));
             if (entry) {
@@ -149,7 +167,7 @@ export class TestIndex {
             }
         }
 
-        return { parsed, deleted };
+        return parsed;
     }
 
     private getDependentClasses(fsPath: string) {
@@ -192,10 +210,10 @@ export class TestIndex {
         return this.classHierarchy.enrichTests(parseResult.tests);
     }
 
-    private parseTestsuite(uri: URI) {
+    private parseTestsuite(uri: URI, suffix?: string) {
         const testSuites = this.phpUnitXML.getTestSuites();
         const testsuite = testSuites.find((item) => {
-            return ['directory', 'file'].includes(item.tag) && this.match(item, uri);
+            return ['directory', 'file'].includes(item.tag) && this.match(item, uri, suffix);
         });
 
         if (!testsuite) {
@@ -213,7 +231,7 @@ export class TestIndex {
         return testsuite.name;
     }
 
-    private match(testSuite: TestSuite, uri: URI) {
+    private match(testSuite: TestSuite, uri: URI, suffixOverride?: string) {
         const workspace = this.getRootUri();
         const isFile =
             testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
@@ -222,7 +240,7 @@ export class TestIndex {
             return join(workspace.fsPath, testSuite.value) === uri.fsPath;
         }
 
-        const suffix = testSuite.suffix ?? '.php';
+        const suffix = suffixOverride ?? testSuite.suffix ?? '.php';
 
         let suffixMap = this.matcherCache.get(testSuite.value);
         if (!suffixMap) {
