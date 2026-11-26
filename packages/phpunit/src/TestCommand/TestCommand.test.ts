@@ -6,9 +6,9 @@ import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { TestCommand } from './TestCommand';
 import { Mode, Xdebug } from './Xdebug';
 
-describe('ProcessBuilder Test', () => {
+describe('TestCommand', () => {
     describe('LocalCommand', () => {
-        const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
+        const givenCommand = (configuration: Record<string, unknown>, cwd?: string) => {
             const config = new Configuration({ php: 'php', ...configuration });
             const options = { cwd: cwd ?? phpUnitProject('') };
             const pathReplacer = new PathReplacer(
@@ -19,17 +19,17 @@ describe('ProcessBuilder Test', () => {
         };
 
         it('getPathReplacer returns PathReplacer instance', () => {
-            const builder = givenBuilder({ phpunit: 'vendor/bin/phpunit' });
+            const command = givenCommand({ phpunit: 'vendor/bin/phpunit' });
 
-            expect(builder.getPathReplacer()).toBeInstanceOf(PathReplacer);
+            expect(command.getPathReplacer()).toBeInstanceOf(PathReplacer);
         });
 
         it('run paratest with --functional and --filter', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/paratest',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
@@ -43,14 +43,14 @@ describe('ProcessBuilder Test', () => {
         it('should run Windows Path', () => {
             const cwd = phpUnitProjectWin('');
             const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
-            const builder = givenBuilder(
+            const command = givenCommand(
                 {
                     phpunit: phpUnitProjectWin('vendor/bin/phpunit'),
                 },
                 cwd,
             ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 phpUnitProjectWin('vendor/bin/phpunit'),
@@ -62,11 +62,11 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('should keep repeated --group arguments (#432)', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
             }).setArguments('--group=command --group=use-db tests/DbCommandTest.php');
 
-            const { args } = builder.build();
+            const { args } = command.build();
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 '--group=command',
@@ -78,12 +78,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('should not let a flag from args swallow the test file', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--stop-on-failure'],
             }).setArguments('/a/FooTest.php');
 
-            const { args } = builder.build();
+            const { args } = command.build();
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 '--stop-on-failure',
@@ -94,12 +94,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('should keep an args option value containing spaces as one argument', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--group=my group'],
             }).setArguments('/a/FooTest.php');
 
-            const { args } = builder.build();
+            const { args } = command.build();
             expect(args).toEqual([
                 'vendor/bin/phpunit',
                 '--group=my group',
@@ -110,12 +110,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('should remove caml case parameters', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--repeat=2', '--order-by=random'],
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -127,12 +127,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('should not transform arguments prefixed with --no to boolean', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--no-coverage', '--no-logging'],
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -149,9 +149,9 @@ describe('ProcessBuilder Test', () => {
                 MEMORY_LIMIT: '-1',
             };
 
-            const builder = givenBuilder({ environment, phpunit: 'vendor/bin/phpunit' });
+            const command = givenCommand({ environment, phpunit: 'vendor/bin/phpunit' });
 
-            const { runtime, args, options } = builder.build();
+            const { runtime, args, options } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual(['vendor/bin/phpunit', '--colors=always', '--teamcity']);
             expect(options.cwd).toEqual(phpUnitProject(''));
@@ -164,9 +164,9 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('artisan test', () => {
-            const builder = givenBuilder({ phpunit: 'artisan test' });
+            const command = givenCommand({ phpunit: 'artisan test' });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual(['artisan', 'test', '--colors=always', '--teamcity']);
         });
@@ -176,14 +176,14 @@ describe('ProcessBuilder Test', () => {
 
             const cwd = phpUnitProject('');
             const testFile = phpUnitProject('tests/AssertionsTest.php');
-            const builder = givenBuilder(
+            const command = givenCommand(
                 {
                     phpunit: 'vendor/bin/pest',
                 },
                 cwd,
             ).setArguments(`${testFile} --filter="${filter}"`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/pest',
@@ -194,26 +194,26 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
         it('should handle php binary path with spaces', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 php: 'C:\\Program Files\\PHP\\php',
                 phpunit: 'vendor/bin/phpunit',
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('C:\\Program Files\\PHP\\php');
             expect(args).toEqual(['vendor/bin/phpunit', '--colors=always', '--teamcity']);
         });
 
         it('should handle phpunit binary path with spaces', () => {
             const cwd = 'd:\\All Project\\adminservice-collaboration';
-            const builder = givenBuilder(
+            const command = givenCommand(
                 {
                     phpunit: 'd:\\All Project\\adminservice-collaboration\\vendor\\bin\\phpunit',
                 },
                 cwd,
             );
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'd:\\All Project\\adminservice-collaboration\\vendor\\bin\\phpunit',
@@ -225,14 +225,14 @@ describe('ProcessBuilder Test', () => {
         it('should handle paths with spaces', () => {
             const cwd = 'd:\\All Project\\adminservice-collaboration';
             const testFile = 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php';
-            const builder = givenBuilder(
+            const command = givenCommand(
                 {
                     phpunit: 'vendor/bin/phpunit',
                 },
                 cwd,
             ).setArguments(`"${testFile}"`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -245,14 +245,14 @@ describe('ProcessBuilder Test', () => {
         it('should handle paths with spaces and filter', () => {
             const cwd = 'd:\\All Project\\adminservice-collaboration';
             const testFile = 'd:\\All Project\\adminservice-collaboration\\tests\\AppTest.php';
-            const builder = givenBuilder(
+            const command = givenCommand(
                 {
                     phpunit: 'vendor/bin/phpunit',
                 },
                 cwd,
             ).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$' "${testFile}"`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/phpunit',
@@ -265,7 +265,7 @@ describe('ProcessBuilder Test', () => {
     });
 
     describe('RemoteCommand', () => {
-        const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
+        const givenCommand = (configuration: Record<string, unknown>, cwd?: string) => {
             const config = new Configuration({ php: 'php', ...configuration });
             const options = { cwd: cwd ?? phpUnitProject('') };
             const pathReplacer = new PathReplacer(
@@ -277,12 +277,12 @@ describe('ProcessBuilder Test', () => {
 
         it('run paratest with --functional', () => {
             const cwd = phpUnitProject('');
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: `docker run -i --rm -v ${VAR_PWD}:/app -w /app phpunit-stub`,
                 phpunit: 'vendor/bin/paratest',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'run',
@@ -303,12 +303,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('docker with sh -c', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'vendor/bin/paratest',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -328,13 +328,13 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('docker sh -c quotes an args option value containing spaces', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--group=my group'],
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -357,12 +357,12 @@ describe('ProcessBuilder Test', () => {
                 `--filter='/^.*::(it has user\\'s email` +
                 ` with data set "\\(\\'other@example\\.com\\'\\)")$/'`;
             const testFile = '%2Fpest-stub%2Ftests%2FUnit%2FExampleTest.php';
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: 'docker exec -t vscode-phpunit /bin/sh -c',
                 phpunit: 'vendor/bin/pest',
             }).setArguments(`${filter} ${testFile}`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
 
             const shCmd = args[args.length - 1];
@@ -377,7 +377,7 @@ describe('ProcessBuilder Test', () => {
 
         it(`should replace ${VAR_WORKSPACE_FOLDER}`, () => {
             const testFile = phpUnitProject('tests/AssertionsTest.php');
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name',
                 phpunit: 'vendor/bin/phpunit',
                 paths: {
@@ -385,7 +385,7 @@ describe('ProcessBuilder Test', () => {
                 },
             }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -403,7 +403,7 @@ describe('ProcessBuilder Test', () => {
         it(`should replace ${VAR_WORKSPACE_FOLDER} for Windows Path`, () => {
             const cwd = phpUnitProjectWin('');
             const testFile = phpUnitProjectWin('tests/AssertionsTest.php');
-            const builder = givenBuilder(
+            const command = givenCommand(
                 {
                     command: 'docker exec --workdir=/var/www/ container_name',
                     phpunit: 'vendor/bin/phpunit',
@@ -414,7 +414,7 @@ describe('ProcessBuilder Test', () => {
                 cwd,
             ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -430,12 +430,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('docker with artisan test', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -455,13 +455,13 @@ describe('ProcessBuilder Test', () => {
         });
 
         it('ssh', () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command:
                     'ssh -i dockerfiles/vscode-phpunit/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('ssh');
             expect(args).toEqual([
                 '-i',
@@ -486,7 +486,7 @@ describe('ProcessBuilder Test', () => {
     });
 
     describe('phpunit.command has variable', () => {
-        const givenBuilder = (configuration: Record<string, unknown>, cwd?: string) => {
+        const givenCommand = (configuration: Record<string, unknown>, cwd?: string) => {
             const config = new Configuration({
                 command: CMD_TEMPLATE,
                 php: 'php',
@@ -501,21 +501,21 @@ describe('ProcessBuilder Test', () => {
         };
 
         it(`command is ${CMD_TEMPLATE}`, () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual(['vendor/bin/phpunit', '--colors=always', '--teamcity']);
         });
 
         it(`command is ${CMD_TEMPLATE} --functional`, () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 phpunit: 'vendor/bin/paratest',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual([
                 'vendor/bin/paratest',
@@ -527,23 +527,23 @@ describe('ProcessBuilder Test', () => {
         });
 
         it(`command is ${CMD_TEMPLATE} and phpunit is artisan test`, () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: CMD_TEMPLATE,
                 phpunit: 'artisan test',
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
             expect(args).toEqual(['artisan', 'test', '--colors=always', '--teamcity']);
         });
 
         it(`command is ${CMD_TEMPLATE} and environment`, () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: `XDEBUG_MODE=coverage MEMORY_LIMIT=-1 ${CMD_TEMPLATE}`,
                 phpunit: 'vendor/bin/phpunit',
             });
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('XDEBUG_MODE=coverage');
             expect(args).toEqual([
                 'MEMORY_LIMIT=-1',
@@ -555,12 +555,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it(`command is ${CMD_TEMPLATE} with ssh`, () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: `ssh -i dockerfiles/vscode-phpunit/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${CMD_TEMPLATE}"`,
                 phpunit: 'artisan test',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('ssh');
             expect(args).toEqual([
                 '-i',
@@ -584,12 +584,12 @@ describe('ProcessBuilder Test', () => {
         });
 
         it(`command is ${CMD_TEMPLATE} with docker`, () => {
-            const builder = givenBuilder({
+            const command = givenCommand({
                 command: `docker exec -t container_name /bin/sh -c '${CMD_TEMPLATE}'`,
                 phpunit: 'vendor/bin/phpunit',
             }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
-            const { runtime, args } = builder.build();
+            const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
             expect(args).toEqual([
                 'exec',
@@ -608,8 +608,8 @@ describe('ProcessBuilder Test', () => {
         });
     });
 
-    describe('assignCloverFile', () => {
-        const givenCoverageBuilder = async (mode?: Mode, paths: Record<string, string> = {}) => {
+    describe('coverage clover', () => {
+        const givenCoverageCommand = async (mode?: Mode, paths: Record<string, string> = {}) => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: '/local/workspace' };
             const pathReplacer = new PathReplacer(options, paths);
@@ -617,22 +617,22 @@ describe('ProcessBuilder Test', () => {
             return new TestCommand(config, options, pathReplacer, xdebug);
         };
 
-        it('setCloverFile / getCloverFile', async () => {
-            const builder = (await givenCoverageBuilder(Mode.coverage)).withCoverageClover(
+        it('withCoverageClover sets the clover file', async () => {
+            const command = (await givenCoverageCommand(Mode.coverage)).withCoverageClover(
                 '/workspace/.phpunit.cache/coverage-abc-0.xml',
             );
 
-            expect(builder.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+            expect(command.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
         });
 
-        it('getPhpUnitArgs returns empty when no clover file set', async () => {
-            const { args } = (await givenCoverageBuilder(Mode.coverage)).build();
+        it('adds no --coverage-clover without a clover file', async () => {
+            const { args } = (await givenCoverageCommand(Mode.coverage)).build();
 
             expect(args).not.toContain('--coverage-clover');
         });
 
-        it('getPhpUnitArgs returns --coverage-clover with local path', async () => {
-            const { args } = (await givenCoverageBuilder(Mode.coverage))
+        it('adds --coverage-clover with the local path', async () => {
+            const { args } = (await givenCoverageCommand(Mode.coverage))
                 .withCoverageClover('/workspace/.phpunit.cache/coverage-abc-0.xml')
                 .build();
 
@@ -642,9 +642,9 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('getPhpUnitArgs applies pathReplacer.toRemote to clover path', async () => {
+        it('maps the clover path to the remote path', async () => {
             const { args } = (
-                await givenCoverageBuilder(Mode.coverage, { [VAR_WORKSPACE_FOLDER]: '/app' })
+                await givenCoverageCommand(Mode.coverage, { [VAR_WORKSPACE_FOLDER]: '/app' })
             )
                 .withCoverageClover('/local/workspace/.phpunit.cache/coverage-abc-0.xml')
                 .build();
@@ -655,31 +655,31 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
-        it('clone preserves clover file', async () => {
-            const builder = (await givenCoverageBuilder(Mode.coverage)).withCoverageClover(
+        it('clone keeps the clover file', async () => {
+            const command = (await givenCoverageCommand(Mode.coverage)).withCoverageClover(
                 '/workspace/.phpunit.cache/coverage-abc-0.xml',
             );
 
-            expect(builder.clone().getCloverFile()).toBe(
+            expect(command.clone().getCloverFile()).toBe(
                 '/workspace/.phpunit.cache/coverage-abc-0.xml',
             );
         });
 
-        it('clone can be given a new clover file independently', async () => {
-            const builder = (await givenCoverageBuilder(Mode.coverage)).withCoverageClover(
+        it('withCoverageClover returns an independent copy', async () => {
+            const command = (await givenCoverageCommand(Mode.coverage)).withCoverageClover(
                 '/workspace/.phpunit.cache/coverage-abc-0.xml',
             );
 
-            const other = builder.withCoverageClover(
+            const other = command.withCoverageClover(
                 '/workspace/.phpunit.cache/coverage-abc-1.xml',
             );
 
-            expect(builder.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+            expect(command.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
             expect(other.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
         });
 
-        it('getPhpUnitArgs returns empty in debug mode', async () => {
-            const { args } = (await givenCoverageBuilder(Mode.debug)).build();
+        it('adds no --coverage-clover in debug mode', async () => {
+            const { args } = (await givenCoverageCommand(Mode.debug)).build();
 
             expect(args).not.toContain('--coverage-clover');
         });
@@ -689,18 +689,18 @@ describe('ProcessBuilder Test', () => {
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
             const xdebug = new Xdebug(config);
-            const builder = new TestCommand(config, options, pathReplacer, xdebug);
+            const command = new TestCommand(config, options, pathReplacer, xdebug);
 
-            expect(builder.getCloverFile()).toBeUndefined();
+            expect(command.getCloverFile()).toBeUndefined();
         });
 
         it('should return undefined when no xdebug', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
-            const builder = new TestCommand(config, options, pathReplacer);
+            const command = new TestCommand(config, options, pathReplacer);
 
-            expect(builder.getCloverFile()).toBeUndefined();
+            expect(command.getCloverFile()).toBeUndefined();
         });
     });
 
@@ -709,9 +709,9 @@ describe('ProcessBuilder Test', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
-            const builder = new TestCommand(config, options, pathReplacer);
+            const command = new TestCommand(config, options, pathReplacer);
 
-            const cloned = builder.clone();
+            const cloned = command.clone();
 
             expect(cloned.getXdebug()).toBeUndefined();
         });

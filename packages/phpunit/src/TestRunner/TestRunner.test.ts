@@ -198,7 +198,7 @@ const generateTestResult = (
     }
 };
 
-const expectedCommand = async (builder: TestCommand, expected: string[]) => {
+const expectedCommand = async (command: TestCommand, expected: string[]) => {
     const testRunner = new TestRunner();
     for (const [eventName, fn] of onTestResultEvents) {
         testRunner.on(eventName, (test: unknown) => fn(test));
@@ -206,7 +206,7 @@ const expectedCommand = async (builder: TestCommand, expected: string[]) => {
     for (const [eventName, fn] of onTestRunnerEvents) {
         testRunner.on(eventName, (test: unknown) => fn(test));
     }
-    await testRunner.run(builder).run();
+    await testRunner.run(command).run();
 
     const call = (spawn as Mock).mock.calls[0];
     expect([call[0], ...call[1]]).toEqual(expected);
@@ -239,13 +239,13 @@ describe('TestRunner Test', () => {
         );
         const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
         const options = { cwd: phpUnitProject('') };
-        const builder = new TestCommand(configuration, options, new PathReplacer(options, {}));
+        const command = new TestCommand(configuration, options, new PathReplacer(options, {}));
         const testRunner = new TestRunner();
         const events: string[] = [];
         testRunner.on(TestRunnerEvent.error, () => events.push('error'));
         testRunner.on(TestRunnerEvent.line, (line) => events.push(`line: ${line}`));
 
-        const process = testRunner.run(builder);
+        const process = testRunner.run(command);
         const running = process.run().then(() => events.push('resolved'));
         process.abort();
         await running;
@@ -263,7 +263,7 @@ describe('TestRunner Test', () => {
         });
 
         const options = { cwd };
-        const builder = new TestCommand(
+        const command = new TestCommand(
             configuration,
             options,
             new PathReplacer(options, configuration.get('paths') as Path),
@@ -275,7 +275,7 @@ describe('TestRunner Test', () => {
             '--colors=always',
             '--teamcity',
         ];
-        await expectedCommand(builder, expected);
+        await expectedCommand(command, expected);
 
         const errorEvent = onTestRunnerEvents.get(TestRunnerEvent.error);
         const closeEvent = onTestRunnerEvents.get(TestRunnerEvent.close);
@@ -316,7 +316,7 @@ describe('TestRunner Test', () => {
 
         describe(name, () => {
             const spawnOptions = { cwd: projectPath('') };
-            const builder = new TestCommand(
+            const command = new TestCommand(
                 configuration,
                 spawnOptions,
                 new PathReplacer(spawnOptions, configuration.get('paths') as Path),
@@ -335,7 +335,7 @@ describe('TestRunner Test', () => {
                 finished: any,
             ) => {
                 generateTestResult(start, appPath, start.phpVfsComposer);
-                await expectedCommand(builder, expected);
+                await expectedCommand(command, expected);
                 expectedTestResult(finished, projectPath);
             };
 
@@ -350,7 +350,7 @@ describe('TestRunner Test', () => {
             });
 
             it('should run test suite', async () => {
-                builder.setArguments(localFile);
+                command.setArguments(localFile);
                 await runTest(
                     buildCommand(testFile),
                     startEvent(TeamcityEvent.testSuiteStarted),
@@ -359,7 +359,7 @@ describe('TestRunner Test', () => {
             });
 
             it('should run test passed', async () => {
-                builder.setArguments(`${localFile} --filter "${passedPattern}"`);
+                command.setArguments(`${localFile} --filter "${passedPattern}"`);
                 await runTest(
                     buildCommand(filterPassed, testFile),
                     startEvent(TeamcityEvent.testStarted, { name: 'test_passed' }),
@@ -368,7 +368,7 @@ describe('TestRunner Test', () => {
             });
 
             it('should run test failed', async () => {
-                builder.setArguments(`${localFile} --filter "${failedPattern}"`);
+                command.setArguments(`${localFile} --filter "${failedPattern}"`);
                 await runTest(
                     buildCommand(filterFailed, testFile),
                     startEvent(TeamcityEvent.testFailed, { name: 'test_failed' }),
@@ -381,7 +381,7 @@ describe('TestRunner Test', () => {
 
             if (!options?.skipPhpVfsComposer) {
                 it('should run test failed with phpvfscomposer', async () => {
-                    builder.setArguments(`${localFile} --filter "${failedPattern}"`);
+                    command.setArguments(`${localFile} --filter "${failedPattern}"`);
                     await runTest(
                         buildCommand(filterFailed, testFile),
                         startEvent(TeamcityEvent.testFailed, {
