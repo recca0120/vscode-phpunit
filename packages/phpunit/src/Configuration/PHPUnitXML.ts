@@ -120,17 +120,11 @@ export class PHPUnitXML {
     }
 
     getPatterns(root: string) {
-        const includes = new TestGlobPattern(root, this.root());
-        const excludes = new TestGlobPattern(root, this.root(), [
-            '**/.git/**',
-            '**/node_modules/**',
-        ]);
+        return this.buildPatterns(root, (item) => item);
+    }
 
-        for (const item of this.getTestSuites()) {
-            item.tag !== 'exclude' ? includes.push(item, '.php') : excludes.push(item);
-        }
-
-        return { includes, excludes };
+    getIndexPatterns(root: string) {
+        return this.buildPatterns(root, (item) => ({ ...item, suffix: undefined }));
     }
 
     getIncludes(): Source[] {
@@ -223,5 +217,19 @@ export class PHPUnitXML {
                     ) ?? []
             );
         });
+    }
+
+    private buildPatterns(root: string, toInclude: (item: TestSuite) => TestSuite) {
+        const includes = new TestGlobPattern(root, this.root());
+        const excludes = new TestGlobPattern(root, this.root(), [
+            '**/.git/**',
+            '**/node_modules/**',
+        ]);
+
+        for (const item of this.getTestSuites()) {
+            item.tag !== 'exclude' ? includes.push(toInclude(item), '.php') : excludes.push(item);
+        }
+
+        return { includes, excludes };
     }
 }
