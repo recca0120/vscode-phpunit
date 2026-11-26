@@ -57,6 +57,36 @@ describe('FilterStrategyFactory', () => {
         expect(filter).not.toContain('--filter=');
     });
 
+    it('class type with single group uses --group', () => {
+        const testDef: TestDefinition = {
+            type: TestType.class,
+            id: 'App\\Tests\\Command\\DbCommandTest',
+            label: 'DbCommandTest',
+            classFQN: 'App\\Tests\\Command\\DbCommandTest',
+            file: '/path/to/DbCommandTest.php',
+            annotations: { group: ['command'] },
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe('--group=command /path/to/DbCommandTest.php');
+    });
+
+    it('class type with multiple groups repeats --group for each group (#432)', () => {
+        const testDef: TestDefinition = {
+            type: TestType.class,
+            id: 'App\\Tests\\Command\\DbCommandTest',
+            label: 'DbCommandTest',
+            classFQN: 'App\\Tests\\Command\\DbCommandTest',
+            file: '/path/to/DbCommandTest.php',
+            annotations: { group: ['command', 'use-db'] },
+        };
+
+        const filter = FilterStrategyFactory.create(testDef).getFilter();
+
+        expect(filter).toBe('--group=command --group=use-db /path/to/DbCommandTest.php');
+    });
+
     it('method type uses --filter with method name', () => {
         const testDef: TestDefinition = {
             type: TestType.method,

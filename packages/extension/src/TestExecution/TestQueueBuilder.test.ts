@@ -89,14 +89,15 @@ describe('TestQueueBuilder', () => {
                 }
             }
         }
-        expect(methodItem).toBeDefined();
-        expect(methodItem!.children.size).toBeGreaterThan(0);
+        if (!methodItem) {
+            throw new Error('Expected a method TestItem with dataset children');
+        }
+        expect(methodItem.children.size).toBeGreaterThan(0);
 
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
-        const request = {
-            include: [methodItem!],
-        } as unknown as import('vscode').TestRunRequest;
-        const queue = await builder.build(request.include!, request, undefined, testRun);
+        const include = [methodItem];
+        const request = { include } as unknown as import('vscode').TestRunRequest;
+        const queue = await builder.build(include, request, undefined, testRun);
 
         // Queue should contain both the method AND its dataset children
         const types = [...queue.keys()].map((def) => def.type);

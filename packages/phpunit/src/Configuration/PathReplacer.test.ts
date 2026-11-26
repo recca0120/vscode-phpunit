@@ -162,7 +162,7 @@ describe('PathReplacer', () => {
         expect(pathReplacer.toLocal(path)).toEqual(path);
     });
 
-    it('to local replace . to project root', () => {
+    it('to local replace . to project root for windows', () => {
         const pathReplacer = givenPathReplacerForWindows();
 
         const path = './tests/AssertionsTest.php';

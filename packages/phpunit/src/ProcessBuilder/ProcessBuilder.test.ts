@@ -61,6 +61,22 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
+        it('should keep repeated --group arguments (#432)', () => {
+            const builder = givenBuilder({
+                phpunit: 'vendor/bin/phpunit',
+            }).setArguments('--group=command --group=use-db tests/DbCommandTest.php');
+
+            const { args } = builder.build();
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                '--group=command',
+                '--group=use-db',
+                'tests/DbCommandTest.php',
+                '--colors=always',
+                '--teamcity',
+            ]);
+        });
+
         it('should remove caml case parameters', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/phpunit',

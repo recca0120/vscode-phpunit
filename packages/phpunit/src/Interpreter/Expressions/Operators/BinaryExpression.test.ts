@@ -27,23 +27,14 @@ const resolver: Context = {
 
 describe('binaryExpr', () => {
     describe('supports', () => {
-        it.each([
-            '.',
-            '+',
-            '-',
-            '*',
-            '%',
-            '<',
-            '<=',
-            '>',
-            '>=',
-            '==',
-            '===',
-            '!=',
-            '!==',
-        ])('should support %s', (op) => {
-            expect(binaryExpr.supports(binaryNode(numberNode(1), op, numberNode(2)))).toBe(true);
-        });
+        it.each(['.', '+', '-', '*', '%', '<', '<=', '>', '>=', '==', '===', '!=', '!=='])(
+            'should support %s',
+            (op) => {
+                expect(binaryExpr.supports(binaryNode(numberNode(1), op, numberNode(2)))).toBe(
+                    true,
+                );
+            },
+        );
 
         it('should not support non-binary nodes', () => {
             expect(binaryExpr.supports(numberNode(1))).toBe(false);

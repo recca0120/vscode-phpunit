@@ -257,511 +257,518 @@ describe('Extension Test', () => {
         });
     });
 
-    describe.each(detectPhpUnitStubs())('PHPUnit $name ($phpUnitVersion)', ({
-        root,
-        phpUnitVersion,
-        binary,
-        args,
-    }) => {
-        beforeEach(() => setupEnvironment(root, binary, args));
-        afterEach(() => vi.clearAllMocks());
-
-        it('should load tests', async () => {
-            await activate(context);
-            const ctrl = getTestController();
-            const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
-            const itemId = `Assertions (Tests\\Assertions)`;
-
-            const parent = findTest(ctrl.items, itemId);
-            expect(parent).toBeDefined();
-            const child = parent?.children.get(`${itemId}::Passed`);
-
-            expect(parent).toEqual(
-                expect.objectContaining({
-                    id: itemId,
-                    uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: `${icon(TestType.class)} AssertionsTest`,
-                }),
-            );
-
-            expect(child).toEqual(
-                expect.objectContaining({
-                    id: `${itemId}::Passed`,
-                    uri: expect.objectContaining({ fsPath: uri.fsPath }),
-                    label: `${icon(TestType.method)} test_passed`,
-                    range: {
-                        start: expect.objectContaining({ line: 15, character: 4 }),
-                        end: expect.objectContaining({ line: 18, character: 5 }),
-                    },
-                    tags: expect.arrayContaining([
-                        expect.objectContaining({ id: 'group:integration' }),
-                    ]),
-                }),
-            );
-
-            expect(workspace.getConfiguration).toHaveBeenCalledWith('phpunit', expect.anything());
-            expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit Debug', 'phpunit');
-            expect(tests.createTestController).toHaveBeenCalledWith('phpunit', 'PHPUnit');
-            for (const cmd of [
-                'phpunit.reload',
-                'phpunit.run-all',
-                'phpunit.run-file',
-                'phpunit.run-test-at-cursor',
-                'phpunit.run-by-group',
-                'phpunit.rerun',
-            ]) {
-                expect(commands.registerCommand).toHaveBeenCalledWith(cmd, expect.any(Function));
-            }
-            expect(context.subscriptions.push).toHaveBeenCalledTimes(5);
-        });
-
-        it('should only update configuration when phpunit settings change', async () => {
-            await activate(context);
-
-            const onDidChangeConfig = workspace.onDidChangeConfiguration as Mock;
-            const listenerCall = onDidChangeConfig.mock.calls.find(
-                (call: unknown[]) => typeof call[0] === 'function',
-            );
-            expect(listenerCall).toBeDefined();
-            const listener = listenerCall?.[0];
-
-            const spy = vi.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
-
-            // phpunit config change → should update
-            listener({ affectsConfiguration: (section: string) => section === 'phpunit' });
-            expect(spy).toHaveBeenCalledTimes(1);
-
-            spy.mockClear();
-
-            // non-phpunit config change → should NOT update
-            listener({ affectsConfiguration: (section: string) => section === 'editor' });
-            expect(spy).not.toHaveBeenCalled();
-
-            spy.mockRestore();
-        });
-
-        it('should run all tests', async () => {
-            const ctrl = await activateAndRun();
-
-            const expected = resolveExpected(
-                phpUnitVersion,
-                [
-                    ['12.0.0', { enqueued: 75, started: 54, passed: 39, failed: 13, end: 1 }],
-                    ['10.0.0', { enqueued: 75, started: 68, passed: 56, failed: 10, end: 1 }],
-                ],
-                { enqueued: 75, started: 46, passed: 27, failed: 17, end: 1 },
-            );
-
-            expectTestResultCalled(ctrl, expected);
-        });
-
-        it('should run test by namespace', async () => {
-            const ctrl = await activateAndRun({ include: 'namespace:Tests' });
-
-            const expected = resolveExpected(
-                phpUnitVersion,
-                [
-                    ['12.0.0', { enqueued: 74, started: 53, passed: 39, failed: 12, end: 1 }],
-                    ['10.0.0', { enqueued: 74, started: 67, passed: 56, failed: 9, end: 1 }],
-                ],
-                { enqueued: 74, started: 45, passed: 27, failed: 16, end: 1 },
-            );
-
-            expectTestResultCalled(ctrl, expected);
-        });
-
-        it('should run test class', async () => {
-            const ctrl = await activateAndRun({
-                include: 'Assertions (Tests\\Assertions)',
-            });
-
-            const expected = resolveExpected(
-                phpUnitVersion,
-                [
-                    ['12.0.0', { enqueued: 12, started: 6, passed: 1, failed: 3, end: 1 }],
-                    ['10.0.0', { enqueued: 12, started: 11, passed: 6, failed: 3, end: 1 }],
-                ],
-                { enqueued: 12, started: 12, passed: 7, failed: 3, end: 1 },
-            );
-
-            expectTestResultCalled(ctrl, expected);
-        });
-
-        it('should run test case', async () => {
-            const id = `Calculator (Tests\\Calculator)::Throw exception`;
-            const ctrl = await activateAndRun({ include: id });
-
-            expectTestResultCalled(ctrl, {
-                enqueued: 1,
-                started: 1,
-                passed: 0,
-                failed: 1,
-                end: 1,
-            });
-
-            const { failed } = getTestRun(ctrl);
-            const call = (failed as Mock).mock.calls.find(
-                ([test]: { id: string }[]) => test.id === id,
-            );
-            expect(call).toBeDefined();
-            const [, message] = call ?? [];
-
-            expect(message.location).toEqual(
-                expect.objectContaining({
-                    range: {
-                        start: expect.objectContaining({ line: 53, character: 0 }),
-                        end: expect.objectContaining({ line: 53, character: 0 }),
-                    },
-                }),
-            );
-        });
-
-        it('should run test case with dataset', async () => {
-            const id = `Data Provider Attribute (Tests\\DataProviderAttribute)::Attribute provider with data set "two plus three"`;
-            await activateAndRun({ include: id });
-
-            expectSpawnCalled([
-                binary,
-                /--filter=.*testAttributeProvider with data set "two plus three"/,
-                '--colors=always',
-                '--teamcity',
-                /DataProviderAttributeTest\.php/,
-            ]);
-        });
-
-        it('should run all tests via run-all command', async () => {
-            await activate(context);
-
-            await commands.executeCommand('phpunit.run-all');
-
-            expectSpawnCalled([binary, '--colors=always', '--teamcity']);
-        });
-
-        it('should rerun previous test via rerun command', async () => {
-            await activate(context);
-            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
-                line: 17,
-                character: 14,
-            });
-
-            await commands.executeCommand('phpunit.run-test-at-cursor');
-
-            vi.mocked(spawn).mockClear();
-
-            await commands.executeCommand('phpunit.rerun');
-
-            expectSpawnCalled([
-                binary,
-                filterPattern('test_passed'),
-                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=always',
-                '--teamcity',
-            ]);
-        });
-
-        it('should run all tests with group arg', async () => {
-            const configuration = workspace.getConfiguration('phpunit', Uri.file(cwd));
-            await configuration.update('args', ['--group=integration']);
-
-            await activateAndRun();
-
-            expectSpawnCalled([binary, '--group=integration', '--colors=always', '--teamcity']);
-
-            await configuration.update('args', []);
-        });
-
-        it('should run tests by selected group', async () => {
-            await activate(context);
-            (window.showQuickPick as Mock).mockResolvedValue('integration');
-
-            await commands.executeCommand('phpunit.run-by-group');
-
-            expect(window.showQuickPick).toHaveBeenCalledWith(
-                expect.arrayContaining(['integration']),
-                expect.objectContaining({
-                    placeHolder: 'Select a PHPUnit group to run',
-                }),
-            );
-
-            // Group tests are run by selecting specific test items, not --group flag
-            expectSpawnCalled([binary, '--colors=always', '--teamcity']);
-        });
-
-        it('should run class with group', async () => {
-            await activateAndRun({ include: 'Attribute (Tests\\Attribute)' });
-
-            expectSpawnCalled([
-                binary,
-                '--group=integration',
-                Uri.file(phpUnitProject('tests/AttributeTest.php')).fsPath,
-                '--colors=always',
-                '--teamcity',
-            ]);
-        });
-
-        it('should run method with group', async () => {
-            await activateAndRun({ include: 'Assertions (Tests\\Assertions)::Passed' });
-
-            expectSpawnCalled([
-                binary,
-                filterPattern('test_passed'),
-                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=always',
-                '--teamcity',
-            ]);
-        });
-
-        it('should run at cursor with group', async () => {
-            await activate(context);
-            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
-                line: 17,
-                character: 14,
-            });
-
-            await commands.executeCommand('phpunit.run-test-at-cursor');
-
-            expectSpawnCalled([
-                binary,
-                filterPattern('test_passed'),
-                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=always',
-                '--teamcity',
-            ]);
-        });
-
-        it('should refresh tests', async () => {
-            await activate(context);
-
-            const ctrl = getTestController();
-
-            await ctrl.refreshHandler();
-        });
-
-        it('should resolve tests', async () => {
-            await activate(context);
-
-            const ctrl = getTestController();
-
-            await ctrl.resolveHandler();
-
-            expect(countItems(ctrl.items)).toEqual(99);
-
-            const annotationMulti = findTest(
-                ctrl.items,
-                'Data Provider Annotation (Tests\\DataProviderAnnotation)::Multi provider',
-            );
-            expect(annotationMulti).toBeDefined();
-            const annotationChildIds: string[] = [];
-            for (const [id] of annotationMulti?.children ?? []) {
-                annotationChildIds.push(id);
-            }
-            expect(annotationChildIds).toEqual([
-                'Data Provider Annotation (Tests\\DataProviderAnnotation)::Multi provider with data set "one plus one"',
-                'Data Provider Annotation (Tests\\DataProviderAnnotation)::Multi provider with data set #0',
-            ]);
-
-            const attributeMulti = findTest(
-                ctrl.items,
-                'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider',
-            );
-            expect(attributeMulti).toBeDefined();
-            const attributeChildIds: string[] = [];
-            for (const [id] of attributeMulti?.children ?? []) {
-                attributeChildIds.push(id);
-            }
-            expect(attributeChildIds).toEqual([
-                'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider with data set "one plus one"',
-                'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider with data set #0',
-            ]);
-
-            const forLoopProvider = findTest(
-                ctrl.items,
-                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider',
-            );
-            expect(forLoopProvider).toBeDefined();
-            const forLoopChildIds: string[] = [];
-            for (const [id] of forLoopProvider?.children ?? []) {
-                forLoopChildIds.push(id);
-            }
-            expect(forLoopChildIds).toEqual([
-                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 0"',
-                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 1"',
-                'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 2"',
-            ]);
-
-            const foreachArrayProvider = findTest(
-                ctrl.items,
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider',
-            );
-            expect(foreachArrayProvider).toBeDefined();
-            const foreachArrayChildIds: string[] = [];
-            for (const [id] of foreachArrayProvider?.children ?? []) {
-                foreachArrayChildIds.push(id);
-            }
-            expect(foreachArrayChildIds).toEqual([
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "alpha"',
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "beta"',
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "gamma"',
-            ]);
-
-            const foreachConstProvider = findTest(
-                ctrl.items,
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider',
-            );
-            expect(foreachConstProvider).toBeDefined();
-            const foreachConstChildIds: string[] = [];
-            for (const [id] of foreachConstProvider?.children ?? []) {
-                foreachConstChildIds.push(id);
-            }
-            expect(foreachConstChildIds).toEqual([
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "alpha"',
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "beta"',
-                'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "gamma"',
-            ]);
-        });
-
-        it('should resolve tests without phpunit.xml', async () => {
-            const testsRoot = phpUnitProject('tests');
-            setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(testsRoot) }]);
-            setTextDocuments(
-                globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: testsRoot })),
-            );
-            await workspace.getConfiguration('phpunit', Uri.file(testsRoot)).update('args', []);
-
-            await activate(context);
-
-            const ctrl = getTestController();
-
-            await ctrl.resolveHandler();
-
-            expect(countItems(ctrl.items)).toEqual(104);
-        });
-
-        it('should resolve tests with phpunit.xml.dist', async () => {
-            await workspace
-                .getConfiguration('phpunit', Uri.file(cwd))
-                .update('args', ['-c', phpUnitProject('phpunit.xml.dist')]);
-
-            await activate(context);
-
-            const ctrl = getTestController();
-
-            await ctrl.resolveHandler();
-
-            expect(countItems(ctrl.items)).toEqual(12);
-        });
-
-        it('run phpunit.run-file', async () => {
-            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'));
-            await activate(context);
-
-            await commands.executeCommand('phpunit.run-file');
-
-            expectSpawnCalled([
-                binary,
-                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=always',
-                '--teamcity',
-            ]);
-        });
-
-        it('run phpunit.run-test-at-cursor', async () => {
-            await activate(context);
-            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
-                line: 17,
-                character: 14,
-            });
-
-            await commands.executeCommand('phpunit.run-test-at-cursor');
-
-            expectSpawnCalled([
-                binary,
-                filterPattern('test_passed'),
-                Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
-                '--colors=always',
-                '--teamcity',
-            ]);
-        });
-
-        describe('Xdebug', () => {
-            it('Debug', async () => {
-                await activateAndRun({ kind: TestRunProfileKind.Debug });
-
-                expectSpawnCalled(
-                    [
-                        '-dxdebug.mode=debug',
-                        '-dxdebug.start_with_request=1',
-                        /-dxdebug\.client_port=\d+/,
-                        binary,
-                        '--colors=always',
-                        '--teamcity',
-                    ],
-                    { XDEBUG_MODE: 'debug' },
-                );
-
-                expect(debug.startDebugging).toHaveBeenCalledWith(expect.anything(), {
-                    type: 'php',
-                    request: 'launch',
-                    name: 'PHPUnit',
-                    port: expect.any(Number),
-                });
-                expect(debug.stopDebugging).toHaveBeenCalledWith({ type: 'php' });
-            });
-
-            it('Coverage', async () => {
-                const fakeData: FileCoverageData[] = [
-                    { filePath: join(root, 'src/Foo.php'), covered: 1, total: 2, lines: [] },
-                ];
-                const parseCloverSpy = vi
-                    .spyOn(CloverParser.prototype, 'parseClover')
-                    .mockResolvedValue(fakeData);
-
+    describe.each(detectPhpUnitStubs())(
+        'PHPUnit $name ($phpUnitVersion)',
+        ({ root, phpUnitVersion, binary, args }) => {
+            beforeEach(() => setupEnvironment(root, binary, args));
+            afterEach(() => vi.clearAllMocks());
+
+            it('should load tests', async () => {
                 await activate(context);
                 const ctrl = getTestController();
-                const testRunProfile = getTestRunProfile(ctrl, TestRunProfileKind.Coverage);
-                const include = ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)']
-                    .map((id) => findTest(ctrl.items, id))
-                    .filter((item): item is TestItem => item !== undefined);
-                const request = { include, exclude: [], profile: testRunProfile };
-                await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+                const uri = Uri.file(join(root, 'tests/AssertionsTest.php'));
+                const itemId = `Assertions (Tests\\Assertions)`;
 
-                ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
-                    expectSpawnCalled(
-                        [
-                            '-dxdebug.mode=coverage',
-                            binary,
-                            new RegExp(file),
-                            '--colors=always',
-                            '--teamcity',
-                            '--coverage-clover',
-                            new RegExp(`\\.phpunit\\.cache[/\\\\]coverage-.+-${i}\\.xml`),
-                        ],
-                        { XDEBUG_MODE: 'coverage' },
+                const parent = findTest(ctrl.items, itemId);
+                expect(parent).toBeDefined();
+                const child = parent?.children.get(`${itemId}::Passed`);
+
+                expect(parent).toEqual(
+                    expect.objectContaining({
+                        id: itemId,
+                        uri: expect.objectContaining({ fsPath: uri.fsPath }),
+                        label: `${icon(TestType.class)} AssertionsTest`,
+                    }),
+                );
+
+                expect(child).toEqual(
+                    expect.objectContaining({
+                        id: `${itemId}::Passed`,
+                        uri: expect.objectContaining({ fsPath: uri.fsPath }),
+                        label: `${icon(TestType.method)} test_passed`,
+                        range: {
+                            start: expect.objectContaining({ line: 15, character: 4 }),
+                            end: expect.objectContaining({ line: 18, character: 5 }),
+                        },
+                        tags: expect.arrayContaining([
+                            expect.objectContaining({ id: 'group:integration' }),
+                        ]),
+                    }),
+                );
+
+                expect(workspace.getConfiguration).toHaveBeenCalledWith(
+                    'phpunit',
+                    expect.anything(),
+                );
+                expect(window.createOutputChannel).toHaveBeenCalledWith('PHPUnit Debug', 'phpunit');
+                expect(tests.createTestController).toHaveBeenCalledWith('phpunit', 'PHPUnit');
+                for (const cmd of [
+                    'phpunit.reload',
+                    'phpunit.run-all',
+                    'phpunit.run-file',
+                    'phpunit.run-test-at-cursor',
+                    'phpunit.run-by-group',
+                    'phpunit.rerun',
+                ]) {
+                    expect(commands.registerCommand).toHaveBeenCalledWith(
+                        cmd,
+                        expect.any(Function),
                     );
+                }
+                expect(context.subscriptions.push).toHaveBeenCalledTimes(5);
+            });
+
+            it('should only update configuration when phpunit settings change', async () => {
+                await activate(context);
+
+                const onDidChangeConfig = workspace.onDidChangeConfiguration as Mock;
+                const listenerCall = onDidChangeConfig.mock.calls.find(
+                    (call: unknown[]) => typeof call[0] === 'function',
+                );
+                expect(listenerCall).toBeDefined();
+                const listener = listenerCall?.[0];
+
+                const spy = vi.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
+
+                // phpunit config change → should update
+                listener({ affectsConfiguration: (section: string) => section === 'phpunit' });
+                expect(spy).toHaveBeenCalledTimes(1);
+
+                spy.mockClear();
+
+                // non-phpunit config change → should NOT update
+                listener({ affectsConfiguration: (section: string) => section === 'editor' });
+                expect(spy).not.toHaveBeenCalled();
+
+                spy.mockRestore();
+            });
+
+            it('should run all tests', async () => {
+                const ctrl = await activateAndRun();
+
+                const expected = resolveExpected(
+                    phpUnitVersion,
+                    [
+                        ['12.0.0', { enqueued: 75, started: 54, passed: 39, failed: 13, end: 1 }],
+                        ['10.0.0', { enqueued: 75, started: 68, passed: 56, failed: 10, end: 1 }],
+                    ],
+                    { enqueued: 75, started: 46, passed: 27, failed: 17, end: 1 },
+                );
+
+                expectTestResultCalled(ctrl, expected);
+            });
+
+            it('should run test by namespace', async () => {
+                const ctrl = await activateAndRun({ include: 'namespace:Tests' });
+
+                const expected = resolveExpected(
+                    phpUnitVersion,
+                    [
+                        ['12.0.0', { enqueued: 74, started: 53, passed: 39, failed: 12, end: 1 }],
+                        ['10.0.0', { enqueued: 74, started: 67, passed: 56, failed: 9, end: 1 }],
+                    ],
+                    { enqueued: 74, started: 45, passed: 27, failed: 16, end: 1 },
+                );
+
+                expectTestResultCalled(ctrl, expected);
+            });
+
+            it('should run test class', async () => {
+                const ctrl = await activateAndRun({
+                    include: 'Assertions (Tests\\Assertions)',
                 });
 
-                expect(parseCloverSpy).toHaveBeenCalledTimes(2);
-                expect(parseCloverSpy.mock.calls[0][0]).toMatch(
-                    /\.phpunit\.cache[/\\]coverage-.+-0\.xml$/,
-                );
-                expect(parseCloverSpy.mock.calls[1][0]).toMatch(
-                    /\.phpunit\.cache[/\\]coverage-.+-1\.xml$/,
+                const expected = resolveExpected(
+                    phpUnitVersion,
+                    [
+                        ['12.0.0', { enqueued: 12, started: 6, passed: 1, failed: 3, end: 1 }],
+                        ['10.0.0', { enqueued: 12, started: 11, passed: 6, failed: 3, end: 1 }],
+                    ],
+                    { enqueued: 12, started: 12, passed: 7, failed: 3, end: 1 },
                 );
 
-                const testRun = getTestRun(ctrl);
-                expect(testRun.addCoverage).toHaveBeenCalledTimes(2);
-
-                // createTestRun must receive the ORIGINAL request object (same reference).
-                // VS Code uses object identity to link the TestRun to the coverage profile —
-                // if a new TestRunRequest is created instead, the Coverage Panel won't appear.
-                const createTestRunCalls = (ctrl.createTestRun as Mock).mock.calls;
-                expect(createTestRunCalls.length).toBeGreaterThan(0);
-                for (const [calledRequest] of createTestRunCalls) {
-                    expect(calledRequest).toBe(request);
-                }
+                expectTestResultCalled(ctrl, expected);
             });
-        });
-    });
+
+            it('should run test case', async () => {
+                const id = `Calculator (Tests\\Calculator)::Throw exception`;
+                const ctrl = await activateAndRun({ include: id });
+
+                expectTestResultCalled(ctrl, {
+                    enqueued: 1,
+                    started: 1,
+                    passed: 0,
+                    failed: 1,
+                    end: 1,
+                });
+
+                const { failed } = getTestRun(ctrl);
+                const call = (failed as Mock).mock.calls.find(
+                    ([test]: { id: string }[]) => test.id === id,
+                );
+                expect(call).toBeDefined();
+                const [, message] = call ?? [];
+
+                expect(message.location).toEqual(
+                    expect.objectContaining({
+                        range: {
+                            start: expect.objectContaining({ line: 53, character: 0 }),
+                            end: expect.objectContaining({ line: 53, character: 0 }),
+                        },
+                    }),
+                );
+            });
+
+            it('should run test case with dataset', async () => {
+                const id = `Data Provider Attribute (Tests\\DataProviderAttribute)::Attribute provider with data set "two plus three"`;
+                await activateAndRun({ include: id });
+
+                expectSpawnCalled([
+                    binary,
+                    /--filter=.*testAttributeProvider with data set "two plus three"/,
+                    '--colors=always',
+                    '--teamcity',
+                    /DataProviderAttributeTest\.php/,
+                ]);
+            });
+
+            it('should run all tests via run-all command', async () => {
+                await activate(context);
+
+                await commands.executeCommand('phpunit.run-all');
+
+                expectSpawnCalled([binary, '--colors=always', '--teamcity']);
+            });
+
+            it('should rerun previous test via rerun command', async () => {
+                await activate(context);
+                setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                    line: 17,
+                    character: 14,
+                });
+
+                await commands.executeCommand('phpunit.run-test-at-cursor');
+
+                vi.mocked(spawn).mockClear();
+
+                await commands.executeCommand('phpunit.rerun');
+
+                expectSpawnCalled([
+                    binary,
+                    filterPattern('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
+            it('should run all tests with group arg', async () => {
+                const configuration = workspace.getConfiguration('phpunit', Uri.file(cwd));
+                await configuration.update('args', ['--group=integration']);
+
+                await activateAndRun();
+
+                expectSpawnCalled([binary, '--group=integration', '--colors=always', '--teamcity']);
+
+                await configuration.update('args', []);
+            });
+
+            it('should run tests by selected group', async () => {
+                await activate(context);
+                (window.showQuickPick as Mock).mockResolvedValue('integration');
+
+                await commands.executeCommand('phpunit.run-by-group');
+
+                expect(window.showQuickPick).toHaveBeenCalledWith(
+                    expect.arrayContaining(['integration']),
+                    expect.objectContaining({
+                        placeHolder: 'Select a PHPUnit group to run',
+                    }),
+                );
+
+                // Group tests are run by selecting specific test items, not --group flag
+                expectSpawnCalled([binary, '--colors=always', '--teamcity']);
+            });
+
+            it('should run class with group', async () => {
+                await activateAndRun({ include: 'Attribute (Tests\\Attribute)' });
+
+                expectSpawnCalled([
+                    binary,
+                    '--group=integration',
+                    Uri.file(phpUnitProject('tests/AttributeTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
+            it('should run method with group', async () => {
+                await activateAndRun({ include: 'Assertions (Tests\\Assertions)::Passed' });
+
+                expectSpawnCalled([
+                    binary,
+                    filterPattern('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
+            it('should run at cursor with group', async () => {
+                await activate(context);
+                setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                    line: 17,
+                    character: 14,
+                });
+
+                await commands.executeCommand('phpunit.run-test-at-cursor');
+
+                expectSpawnCalled([
+                    binary,
+                    filterPattern('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
+            it('should refresh tests', async () => {
+                await activate(context);
+
+                const ctrl = getTestController();
+
+                await ctrl.refreshHandler();
+            });
+
+            it('should resolve tests', async () => {
+                await activate(context);
+
+                const ctrl = getTestController();
+
+                await ctrl.resolveHandler();
+
+                expect(countItems(ctrl.items)).toEqual(99);
+
+                const annotationMulti = findTest(
+                    ctrl.items,
+                    'Data Provider Annotation (Tests\\DataProviderAnnotation)::Multi provider',
+                );
+                expect(annotationMulti).toBeDefined();
+                const annotationChildIds: string[] = [];
+                for (const [id] of annotationMulti?.children ?? []) {
+                    annotationChildIds.push(id);
+                }
+                expect(annotationChildIds).toEqual([
+                    'Data Provider Annotation (Tests\\DataProviderAnnotation)::Multi provider with data set "one plus one"',
+                    'Data Provider Annotation (Tests\\DataProviderAnnotation)::Multi provider with data set #0',
+                ]);
+
+                const attributeMulti = findTest(
+                    ctrl.items,
+                    'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider',
+                );
+                expect(attributeMulti).toBeDefined();
+                const attributeChildIds: string[] = [];
+                for (const [id] of attributeMulti?.children ?? []) {
+                    attributeChildIds.push(id);
+                }
+                expect(attributeChildIds).toEqual([
+                    'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider with data set "one plus one"',
+                    'Data Provider Attribute (Tests\\DataProviderAttribute)::Multi provider with data set #0',
+                ]);
+
+                const forLoopProvider = findTest(
+                    ctrl.items,
+                    'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider',
+                );
+                expect(forLoopProvider).toBeDefined();
+                const forLoopChildIds: string[] = [];
+                for (const [id] of forLoopProvider?.children ?? []) {
+                    forLoopChildIds.push(id);
+                }
+                expect(forLoopChildIds).toEqual([
+                    'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 0"',
+                    'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 1"',
+                    'Data Provider Loop (Tests\\DataProviderLoop)::For loop provider with data set "case 2"',
+                ]);
+
+                const foreachArrayProvider = findTest(
+                    ctrl.items,
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider',
+                );
+                expect(foreachArrayProvider).toBeDefined();
+                const foreachArrayChildIds: string[] = [];
+                for (const [id] of foreachArrayProvider?.children ?? []) {
+                    foreachArrayChildIds.push(id);
+                }
+                expect(foreachArrayChildIds).toEqual([
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "alpha"',
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "beta"',
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach array provider with data set "gamma"',
+                ]);
+
+                const foreachConstProvider = findTest(
+                    ctrl.items,
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider',
+                );
+                expect(foreachConstProvider).toBeDefined();
+                const foreachConstChildIds: string[] = [];
+                for (const [id] of foreachConstProvider?.children ?? []) {
+                    foreachConstChildIds.push(id);
+                }
+                expect(foreachConstChildIds).toEqual([
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "alpha"',
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "beta"',
+                    'Data Provider Loop (Tests\\DataProviderLoop)::Foreach const provider with data set "gamma"',
+                ]);
+            });
+
+            it('should resolve tests without phpunit.xml', async () => {
+                const testsRoot = phpUnitProject('tests');
+                setWorkspaceFolders([{ index: 0, name: 'phpunit', uri: Uri.file(testsRoot) }]);
+                setTextDocuments(
+                    globTextDocuments('**/*Test.php', expect.objectContaining({ cwd: testsRoot })),
+                );
+                await workspace.getConfiguration('phpunit', Uri.file(testsRoot)).update('args', []);
+
+                await activate(context);
+
+                const ctrl = getTestController();
+
+                await ctrl.resolveHandler();
+
+                expect(countItems(ctrl.items)).toEqual(104);
+            });
+
+            it('should resolve tests with phpunit.xml.dist', async () => {
+                await workspace
+                    .getConfiguration('phpunit', Uri.file(cwd))
+                    .update('args', ['-c', phpUnitProject('phpunit.xml.dist')]);
+
+                await activate(context);
+
+                const ctrl = getTestController();
+
+                await ctrl.resolveHandler();
+
+                expect(countItems(ctrl.items)).toEqual(12);
+            });
+
+            it('run phpunit.run-file', async () => {
+                setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'));
+                await activate(context);
+
+                await commands.executeCommand('phpunit.run-file');
+
+                expectSpawnCalled([
+                    binary,
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
+            it('run phpunit.run-test-at-cursor', async () => {
+                await activate(context);
+                setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                    line: 17,
+                    character: 14,
+                });
+
+                await commands.executeCommand('phpunit.run-test-at-cursor');
+
+                expectSpawnCalled([
+                    binary,
+                    filterPattern('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
+            describe('Xdebug', () => {
+                it('Debug', async () => {
+                    await activateAndRun({ kind: TestRunProfileKind.Debug });
+
+                    expectSpawnCalled(
+                        [
+                            '-dxdebug.mode=debug',
+                            '-dxdebug.start_with_request=1',
+                            /-dxdebug\.client_port=\d+/,
+                            binary,
+                            '--colors=always',
+                            '--teamcity',
+                        ],
+                        { XDEBUG_MODE: 'debug' },
+                    );
+
+                    expect(debug.startDebugging).toHaveBeenCalledWith(expect.anything(), {
+                        type: 'php',
+                        request: 'launch',
+                        name: 'PHPUnit',
+                        port: expect.any(Number),
+                    });
+                    expect(debug.stopDebugging).toHaveBeenCalledWith({ type: 'php' });
+                });
+
+                it('Coverage', async () => {
+                    const fakeData: FileCoverageData[] = [
+                        { filePath: join(root, 'src/Foo.php'), covered: 1, total: 2, lines: [] },
+                    ];
+                    const parseCloverSpy = vi
+                        .spyOn(CloverParser.prototype, 'parseClover')
+                        .mockResolvedValue(fakeData);
+
+                    await activate(context);
+                    const ctrl = getTestController();
+                    const testRunProfile = getTestRunProfile(ctrl, TestRunProfileKind.Coverage);
+                    const include = [
+                        'Assertions (Tests\\Assertions)',
+                        'Calculator (Tests\\Calculator)',
+                    ]
+                        .map((id) => findTest(ctrl.items, id))
+                        .filter((item): item is TestItem => item !== undefined);
+                    const request = { include, exclude: [], profile: testRunProfile };
+                    await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+
+                    ['AssertionsTest.php', 'CalculatorTest.php'].forEach((file, i) => {
+                        expectSpawnCalled(
+                            [
+                                '-dxdebug.mode=coverage',
+                                binary,
+                                new RegExp(file),
+                                '--colors=always',
+                                '--teamcity',
+                                '--coverage-clover',
+                                new RegExp(`\\.phpunit\\.cache[/\\\\]coverage-.+-${i}\\.xml`),
+                            ],
+                            { XDEBUG_MODE: 'coverage' },
+                        );
+                    });
+
+                    expect(parseCloverSpy).toHaveBeenCalledTimes(2);
+                    expect(parseCloverSpy.mock.calls[0][0]).toMatch(
+                        /\.phpunit\.cache[/\\]coverage-.+-0\.xml$/,
+                    );
+                    expect(parseCloverSpy.mock.calls[1][0]).toMatch(
+                        /\.phpunit\.cache[/\\]coverage-.+-1\.xml$/,
+                    );
+
+                    const testRun = getTestRun(ctrl);
+                    expect(testRun.addCoverage).toHaveBeenCalledTimes(2);
+
+                    // createTestRun must receive the ORIGINAL request object (same reference).
+                    // VS Code uses object identity to link the TestRun to the coverage profile —
+                    // if a new TestRunRequest is created instead, the Coverage Panel won't appear.
+                    const createTestRunCalls = (ctrl.createTestRun as Mock).mock.calls;
+                    expect(createTestRunCalls.length).toBeGreaterThan(0);
+                    for (const [calledRequest] of createTestRunCalls) {
+                        expect(calledRequest).toBe(request);
+                    }
+                });
+            });
+        },
+    );
 
     describe.each(detectParatestStubs())('Paratest $name', ({ root, binary, args }) => {
         beforeEach(async () => {
@@ -1209,82 +1216,80 @@ describe('Extension Test', () => {
         });
     });
 
-    describe.each(detectPestStubs())('Pest $name ($pestVersion)', ({
-        root,
-        pestVersion,
-        binary,
-        args,
-    }) => {
-        beforeEach(() => setupEnvironment(root, binary, args));
-        afterEach(() => vi.clearAllMocks());
+    describe.each(detectPestStubs())(
+        'Pest $name ($pestVersion)',
+        ({ root, pestVersion, binary, args }) => {
+            beforeEach(() => setupEnvironment(root, binary, args));
+            afterEach(() => vi.clearAllMocks());
 
-        it('should run all tests', async () => {
-            const ctrl = await activateAndRun();
+            it('should run all tests', async () => {
+                const ctrl = await activateAndRun();
 
-            const expected = resolveExpected(
-                pestVersion,
-                [['3.0.0', { enqueued: 89, started: 89, passed: 82, failed: 4, end: 1 }]],
-                { enqueued: 89, started: 82, passed: 78, failed: 0, end: 1 },
-            );
+                const expected = resolveExpected(
+                    pestVersion,
+                    [['3.0.0', { enqueued: 89, started: 89, passed: 82, failed: 4, end: 1 }]],
+                    { enqueued: 89, started: 82, passed: 78, failed: 0, end: 1 },
+                );
 
-            expectTestResultCalled(ctrl, expected);
-        });
-
-        it('should run test case', async () => {
-            const id = `tests/Unit/ExampleTest.php::test_description`;
-            const ctrl = await activateAndRun({ include: id });
-
-            expectTestResultCalled(ctrl, {
-                enqueued: 1,
-                started: 1,
-                passed: 1,
-                failed: 0,
-                end: 1,
+                expectTestResultCalled(ctrl, expected);
             });
-        });
 
-        it('should run test case with dataset', async () => {
-            const id = `tests/Unit/ExampleTest.php::it has user's email`;
-            const ctrl = await activateAndRun({ include: id });
+            it('should run test case', async () => {
+                const id = `tests/Unit/ExampleTest.php::test_description`;
+                const ctrl = await activateAndRun({ include: id });
 
-            expectSpawnCalled([
-                binary,
-                filterPattern(`it has user\\'s email`),
-                '--colors=always',
-                '--teamcity',
-            ]);
+                expectTestResultCalled(ctrl, {
+                    enqueued: 1,
+                    started: 1,
+                    passed: 1,
+                    failed: 0,
+                    end: 1,
+                });
+            });
 
-            const expected = resolveExpected(
-                pestVersion,
-                [['3.0.0', { enqueued: 3, started: 3, passed: 3, failed: 0, end: 1 }]],
-                { enqueued: 3, started: 2, passed: 2, failed: 0, end: 1 },
-            );
+            it('should run test case with dataset', async () => {
+                const id = `tests/Unit/ExampleTest.php::it has user's email`;
+                const ctrl = await activateAndRun({ include: id });
 
-            expectTestResultCalled(ctrl, expected);
-        });
+                expectSpawnCalled([
+                    binary,
+                    filterPattern(`it has user\\'s email`),
+                    '--colors=always',
+                    '--teamcity',
+                ]);
 
-        it('should run dataset child with correct filter', async () => {
-            const id = `tests/Unit/ExampleTest.php::it has user's email with data set "('enunomaduro@gmail.com')"`;
-            await activateAndRun({ include: id });
+                const expected = resolveExpected(
+                    pestVersion,
+                    [['3.0.0', { enqueued: 3, started: 3, passed: 3, failed: 0, end: 1 }]],
+                    { enqueued: 3, started: 2, passed: 2, failed: 0, end: 1 },
+                );
 
-            expectSpawnCalled([
-                binary,
-                `--filter=/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/`,
-                '--colors=always',
-                '--teamcity',
-                /ExampleTest\.php/,
-            ]);
-        });
+                expectTestResultCalled(ctrl, expected);
+            });
 
-        it('should run all tests with group arg', async () => {
-            const configuration = workspace.getConfiguration('phpunit', Uri.file(cwd));
-            await configuration.update('args', ['--group=integration']);
+            it('should run dataset child with correct filter', async () => {
+                const id = `tests/Unit/ExampleTest.php::it has user's email with data set "('enunomaduro@gmail.com')"`;
+                await activateAndRun({ include: id });
 
-            await activateAndRun();
+                expectSpawnCalled([
+                    binary,
+                    `--filter=/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/`,
+                    '--colors=always',
+                    '--teamcity',
+                    /ExampleTest\.php/,
+                ]);
+            });
 
-            expectSpawnCalled([binary, '--group=integration', '--colors=always', '--teamcity']);
+            it('should run all tests with group arg', async () => {
+                const configuration = workspace.getConfiguration('phpunit', Uri.file(cwd));
+                await configuration.update('args', ['--group=integration']);
 
-            await configuration.update('args', []);
-        });
-    });
+                await activateAndRun();
+
+                expectSpawnCalled([binary, '--group=integration', '--colors=always', '--teamcity']);
+
+                await configuration.update('args', []);
+            });
+        },
+    );
 });
