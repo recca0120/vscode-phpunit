@@ -2,9 +2,7 @@ import type { AstNode } from './AstParser/AstNode';
 import { FQNResolver } from './Resolvers/FQNResolver';
 import { PestResolver } from './Resolvers/PestResolver';
 import { PhpUnitResolver } from './Resolvers/PhpUnitResolver';
-import { TestTagResolver } from './Resolvers/TestTagResolver';
 import type { FileInfo, Resolver, Visitor } from './types';
-import { AttributeVisitor } from './Visitors/AttributeVisitor';
 import { CallVisitor } from './Visitors/CallVisitor';
 import { ClassVisitor } from './Visitors/ClassVisitor';
 import { NamespaceVisitor } from './Visitors/NamespaceVisitor';
@@ -81,10 +79,8 @@ export class PHP {
 
         php.useVisitor(new NamespaceVisitor());
         php.useVisitor(new ClassVisitor());
-        php.useVisitor(new AttributeVisitor());
         php.useVisitor(new CallVisitor());
 
-        php.useResolver(new TestTagResolver());
         php.useResolver(new FQNResolver());
         php.useResolver(new PhpUnitResolver());
         php.useResolver(new PestResolver());

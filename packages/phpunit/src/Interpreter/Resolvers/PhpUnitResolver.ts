@@ -7,6 +7,12 @@ import type {
     TraitUseNode,
 } from '../AstParser/AstNode';
 import { resolveLabels } from '../Expressions/PhpExpression';
+import { AnnotationParser } from '../Metadata/AnnotationParser';
+import { AttributeParser } from '../Metadata/AttributeParser';
+import type { Metadata } from '../Metadata/Metadata';
+import type { MetadataParser } from '../Metadata/MetadataParser';
+import { MetadataParserChain } from '../Metadata/MetadataParserChain';
+import { toAnnotations } from '../Metadata/toAnnotations';
 import type { PHP } from '../PHP';
 import type {
     ClassDescriptor,
@@ -18,12 +24,11 @@ import type {
 } from '../types';
 import { ClassVisitor } from '../Visitors/ClassVisitor';
 import { FQNResolver } from './FQNResolver';
-import { TestTagResolver } from './TestTagResolver';
 
 export class PhpUnitResolver implements Resolver {
     private _classes: ClassDescriptor[] = [];
     private ns!: FQNResolver;
-    private annotations!: TestTagResolver;
+    private metadata!: MetadataParser;
 
     get classes(): ClassDescriptor[] {
         return this._classes;
@@ -35,7 +40,10 @@ export class PhpUnitResolver implements Resolver {
 
     resolve(php: PHP): void {
         this.ns = php.getResolver(FQNResolver);
-        this.annotations = php.getResolver(TestTagResolver);
+        this.metadata = new MetadataParserChain([
+            new AttributeParser((name) => this.ns.resolveFQN(name)),
+            new AnnotationParser(),
+        ]);
 
         const visitor = php.getVisitor(ClassVisitor);
         this._classes = visitor.nodes.map((node) => this.buildClassDescriptor(node));
@@ -50,7 +58,7 @@ export class PhpUnitResolver implements Resolver {
         const namespace = this.ns.namespace;
         const fqn = namespace ? `${namespace}\\${name}` : name;
         const parentFQN = node.extendsName ? this.ns.resolveFQN(node.extendsName) : undefined;
-        const classAnnotations = this.annotations.parseAnnotations(node);
+        const classAnnotations = toAnnotations(this.metadata.forClass(node));
 
         const traitUseNodes: TraitUseNode[] = [];
         const constants: ConstantDescriptor[] = [];
@@ -90,7 +98,8 @@ export class PhpUnitResolver implements Resolver {
         allMethodNodes: MethodNode[],
         classBody: AstNode[],
     ): MethodDescriptor {
-        const methodAnnotations = this.annotations.parseAnnotations(method);
+        const metadata = this.metadata.forMethod(method);
+        const methodAnnotations = toAnnotations(metadata);
 
         return {
             name: method.name,
@@ -98,7 +107,7 @@ export class PhpUnitResolver implements Resolver {
             isAbstract: method.isAbstract,
             range: method.loc,
             annotations: methodAnnotations,
-            isTestMethod: this.annotations.isTest(method),
+            isTestMethod: isTest(method, metadata),
             dataProviderLabels:
                 (methodAnnotations.dataset as string[]) ??
                 ((methodAnnotations.dataProvider as string[]) ?? []).flatMap((name) => {
@@ -107,6 +116,17 @@ export class PhpUnitResolver implements Resolver {
                 }),
         };
     }
+}
+
+function isTest(method: MethodNode, metadata: Metadata[]): boolean {
+    const visibility = method.visibility ?? '';
+    if (visibility !== '' && visibility !== 'public') {
+        return false;
+    }
+    if (method.name.startsWith('test')) {
+        return true;
+    }
+    return metadata.some((item) => item.kind === 'test');
 }
 
 function collectTraitAdaptations(

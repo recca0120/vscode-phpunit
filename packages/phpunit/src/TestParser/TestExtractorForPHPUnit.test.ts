@@ -768,6 +768,76 @@ ${docblock}
         });
     });
 
+    describe('attributes', () => {
+        const file = phpUnitProject('tests/AttributeMetadataTest.php');
+        const givenMethod = (uses: string, attributes: string, method = 'subject') =>
+            givenTest(
+                file,
+                `<?php
+
+namespace Tests;
+
+${uses}
+use PHPUnit\\Framework\\TestCase;
+
+class AttributeMetadataTest extends TestCase
+{
+    public function testProducer() {}
+
+    ${attributes}
+    public function ${method}() {}
+}
+`,
+                method,
+            );
+
+        it('resolves an aliased attribute', () => {
+            expect(
+                givenMethod('use PHPUnit\\Framework\\Attributes\\Test as T;', '#[T]'),
+            ).toBeDefined();
+        });
+
+        it('resolves an attribute through a namespace alias', () => {
+            expect(
+                givenMethod('use PHPUnit\\Framework\\Attributes as PA;', '#[PA\\Test]'),
+            ).toBeDefined();
+        });
+
+        it('ignores an attribute of the same name from another namespace', () => {
+            expect(givenMethod('use App\\Attributes\\Test;', '#[Test]')).toBeUndefined();
+        });
+
+        it('targets in another class are not taken as method names', () => {
+            expect(
+                givenMethod(
+                    'use PHPUnit\\Framework\\Attributes\\{DataProviderExternal, DependsExternal, DependsOnClass};',
+                    "#[DependsExternal(OtherTest::class, 'testProducer'), DataProviderExternal(Provider::class, 'rows'), DependsOnClass(OtherTest::class)]",
+                    'testSubject',
+                )?.annotations,
+            ).toEqual({});
+        });
+
+        it('depends using a clone keeps the method name', () => {
+            expect(
+                givenMethod(
+                    'use PHPUnit\\Framework\\Attributes\\DependsUsingDeepClone;',
+                    "#[DependsUsingDeepClone('testProducer')]",
+                    'testSubject',
+                )?.annotations,
+            ).toEqual({ depends: ['testProducer'] });
+        });
+
+        it('ticket and size attributes are groups', () => {
+            expect(
+                givenMethod(
+                    'use PHPUnit\\Framework\\Attributes\\{Small, Ticket};',
+                    "#[Ticket('123'), Small]",
+                    'testSubject',
+                )?.annotations,
+            ).toEqual({ group: ['123', 'small'] });
+        });
+    });
+
     describe('Inherited test methods with ClassHierarchy', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const phpUnitXML = new PHPUnitXML();
