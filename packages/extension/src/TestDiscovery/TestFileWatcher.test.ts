@@ -179,4 +179,15 @@ describe('TestFileWatcher', () => {
             expect(newTestWatcher.pattern.pattern).toBe('{Unit/**/*.php,Feature/**/*.php}');
         });
     });
+    describe('lifecycle', () => {
+        it('startWatching again disposes the previous watchers', async () => {
+            await fileWatcher.startWatching();
+            const previous = [...mockWorkspace.createdWatchers];
+
+            await fileWatcher.startWatching();
+
+            expect(previous.every((w) => w.disposed)).toBe(true);
+            expect(mockWorkspace.createdWatchers.slice(2).some((w) => w.disposed)).toBe(false);
+        });
+    });
 });

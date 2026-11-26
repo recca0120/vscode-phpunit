@@ -7,6 +7,7 @@ import { TestFileDiscovery } from './TestFileDiscovery';
 @injectable()
 export class TestFileWatcher {
     private testWatcher?: Disposable;
+    private configWatcher?: Disposable;
 
     constructor(
         @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
@@ -15,7 +16,8 @@ export class TestFileWatcher {
     ) {}
 
     async startWatching(): Promise<Disposable> {
-        this.createTestWatcher();
+        this.dispose();
+        await this.createTestWatcher();
 
         const { workspaceFolder } = await this.testFileDiscovery.getWorkspaceTestPattern();
         const configPattern = this.testFileDiscovery.getConfigFilePattern();
@@ -24,18 +26,21 @@ export class TestFileWatcher {
         );
         const reload = async () => {
             await this.testFileDiscovery.reloadAll();
-            this.createTestWatcher();
+            await this.createTestWatcher();
         };
         configWatcher.onDidCreate(reload);
         configWatcher.onDidChange(reload);
         configWatcher.onDidDelete(reload);
+        this.configWatcher = configWatcher;
 
-        return {
-            dispose: () => {
-                this.testWatcher?.dispose();
-                configWatcher.dispose();
-            },
-        };
+        return { dispose: () => this.dispose() };
+    }
+
+    dispose(): void {
+        this.testWatcher?.dispose();
+        this.testWatcher = undefined;
+        this.configWatcher?.dispose();
+        this.configWatcher = undefined;
     }
 
     private async createTestWatcher() {
