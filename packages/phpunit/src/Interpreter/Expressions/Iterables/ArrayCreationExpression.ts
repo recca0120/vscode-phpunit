@@ -12,6 +12,9 @@ class ArrayCreationExpression implements Expression<Map<string, unknown>> {
         const result = new Map<string, unknown>();
         for (const entry of entries) {
             const key = entry.key ? context.resolve(entry.key) : undefined;
+            if (entry.key && key === undefined) {
+                return undefined;
+            }
             const keyStr = key !== undefined ? String(key) : String(numericIndex++);
             const value = entry.value ? context.resolve(entry.value) : undefined;
             result.set(keyStr, value);

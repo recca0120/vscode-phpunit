@@ -179,11 +179,11 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 loc: convertLoc(raw.loc),
             };
         case 'number':
-            return {
-                kind: 'number',
-                value: Number(raw.value ?? 0),
-                loc: convertLoc(raw.loc),
-            };
+            return adaptNumber(raw);
+        case 'boolean':
+            return { kind: 'boolean', value: raw.value === true, loc: convertLoc(raw.loc) };
+        case 'nullkeyword':
+            return { kind: 'null', loc: convertLoc(raw.loc) };
         case 'staticlookup':
             return {
                 kind: 'class_constant_access',
@@ -195,16 +195,16 @@ function adaptNode(raw: RawNode): AstNode | undefined {
             return {
                 kind: 'binary_expression',
                 operator: raw.type ?? '.',
-                left: adaptNode(raw.left) ?? EMPTY_STRING_NODE,
-                right: adaptNode(raw.right) ?? EMPTY_STRING_NODE,
+                left: adaptExpression(raw.left),
+                right: adaptExpression(raw.right),
                 loc: convertLoc(raw.loc),
             };
         case 'retif':
             return {
                 kind: 'conditional_expression',
-                condition: adaptNode(raw.test) ?? EMPTY_STRING_NODE,
-                consequent: adaptNode(raw.trueExpr) ?? EMPTY_STRING_NODE,
-                alternate: adaptNode(raw.falseExpr) ?? EMPTY_STRING_NODE,
+                condition: adaptExpression(raw.test),
+                consequent: adaptExpression(raw.trueExpr),
+                alternate: adaptExpression(raw.falseExpr),
                 loc: convertLoc(raw.loc),
             };
         case 'offsetlookup':
@@ -221,6 +221,20 @@ function adaptNode(raw: RawNode): AstNode | undefined {
         default:
             return undefined;
     }
+}
+
+function adaptExpression(raw: RawNode): AstNode {
+    return adaptNode(raw) ?? { kind: 'unsupported_expression', loc: convertLoc(raw?.loc) };
+}
+
+function adaptNumber(raw: RawNode): AstNode {
+    const text = String(raw.value ?? 0);
+    const isFloat = !/^0[xb]/i.test(text) && /[.e]/i.test(text);
+    return {
+        kind: isFloat ? 'float' : 'number',
+        value: Number(text),
+        loc: convertLoc(raw.loc),
+    };
 }
 
 function adaptNamespace(raw: RawNode): AstNode {
@@ -557,9 +571,7 @@ function adaptUseItem(raw: RawNode): AstNode {
 }
 
 function adaptCall(raw: RawNode): CallNode {
-    const args = (raw.arguments ?? [])
-        .map((a: RawNode) => adaptNode(a))
-        .filter(Boolean) as AstNode[];
+    const args = (raw.arguments ?? []).map((a: RawNode) => adaptExpression(a));
 
     const { name, chain } = resolveCallChain(raw.what);
 
@@ -626,7 +638,7 @@ function adaptNamedArgument(raw: RawNode): AstNode {
     return {
         kind: 'argument',
         name: typeof raw.name === 'string' ? raw.name : extractName(raw.name),
-        value: adaptNode(raw.value) ?? { kind: 'string', value: '', loc: convertLoc(raw.loc) },
+        value: adaptExpression(raw.value),
         loc: convertLoc(raw.loc),
     };
 }
@@ -703,8 +715,8 @@ function adaptArrayCreation(raw: RawNode): AstNode {
 }
 
 function adaptArrayEntry(raw: RawNode): AstNode {
-    const key = raw.key ? adaptNode(raw.key) : undefined;
-    const value = adaptNode(raw.value) ?? { kind: 'string', value: '', loc: convertLoc(raw.loc) };
+    const key = raw.key ? adaptExpression(raw.key) : undefined;
+    const value = adaptExpression(raw.value);
 
     return {
         kind: 'array_element_initializer',

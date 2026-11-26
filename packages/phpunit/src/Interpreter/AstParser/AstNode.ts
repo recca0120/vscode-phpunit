@@ -244,6 +244,28 @@ export interface NumberNode {
     loc?: AstNodeLoc;
 }
 
+export interface FloatNode {
+    kind: 'float';
+    value: number;
+    loc?: AstNodeLoc;
+}
+
+export interface BooleanNode {
+    kind: 'boolean';
+    value: boolean;
+    loc?: AstNodeLoc;
+}
+
+export interface NullNode {
+    kind: 'null';
+    loc?: AstNodeLoc;
+}
+
+export interface UnsupportedExpressionNode {
+    kind: 'unsupported_expression';
+    loc?: AstNodeLoc;
+}
+
 export interface ClassConstantAccessNode {
     kind: 'class_constant_access';
     scope: string;
@@ -324,6 +346,10 @@ export type AstNode =
     | EncapsedStringNode
     | VariableNode
     | NumberNode
+    | FloatNode
+    | BooleanNode
+    | NullNode
+    | UnsupportedExpressionNode
     | ClassConstantAccessNode
     | ConstDeclarationNode
     | SubscriptAccessNode;

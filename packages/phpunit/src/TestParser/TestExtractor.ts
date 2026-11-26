@@ -209,6 +209,7 @@ function buildPestTestDef(
     if (isDescribe) {
         methodName = `\`${methodName}\``;
     }
+    const segment = methodName;
 
     if (describeChain.length > 0) {
         methodName = [...describeChain, methodName].join(' → ');
@@ -255,9 +256,7 @@ function buildPestTestDef(
     }
 
     const children = isDescribe
-        ? call.children.map((child) =>
-              buildPestTestDef(child, ctx, [...describeChain, `\`${call.description}\``]),
-          )
+        ? call.children.map((child) => buildPestTestDef(child, ctx, [...describeChain, segment]))
         : [];
 
     return buildDef(ctx.transformer, {

@@ -762,6 +762,17 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
         value: Number(node.text),
         loc: locOf(node),
     }),
+    float: (node) => ({
+        kind: 'float',
+        value: Number(node.text),
+        loc: locOf(node),
+    }),
+    boolean: (node) => ({
+        kind: 'boolean',
+        value: node.text.toLowerCase() === 'true',
+        loc: locOf(node),
+    }),
+    null: (node) => ({ kind: 'null', loc: locOf(node) }),
     variable_name: (node) => ({
         kind: 'variable',
         name: node.text.replace(/^\$/, ''),
@@ -831,7 +842,7 @@ function adaptExpression(node: SyntaxNode): AstNode {
     if (adapter) {
         return adapter(node);
     }
-    return { kind: 'string', value: node.text, loc: locOf(node) };
+    return { kind: 'unsupported_expression', loc: locOf(node) };
 }
 
 function adaptArray(node: SyntaxNode): AstNode {
