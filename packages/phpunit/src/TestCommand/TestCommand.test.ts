@@ -699,80 +699,17 @@ describe('TestCommand', () => {
         });
     });
 
-    describe('coverage clover', () => {
-        const givenCoverageCommand = async (mode?: Mode, paths: Record<string, string> = {}) => {
+    describe('assignCloverFile', () => {
+        it('should set clover file on xdebug when in coverage mode', async () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
-            const options = { cwd: '/local/workspace' };
-            const pathReplacer = new PathReplacer(options, paths);
-            const xdebug = mode ? await new Xdebug(config).setMode(mode) : undefined;
-            return new TestCommand(config, options, pathReplacer, xdebug);
-        };
+            const options = { cwd: phpUnitProject('') };
+            const pathReplacer = new PathReplacer(options, {});
+            const xdebug = await new Xdebug(config).setMode(Mode.coverage);
+            const command = new TestCommand(config, options, pathReplacer, xdebug);
 
-        it('withCoverageClover sets the clover file', async () => {
-            const command = (await givenCoverageCommand(Mode.coverage)).withCoverageClover(
-                '/workspace/.phpunit.cache/coverage-abc-0.xml',
-            );
+            command.assignCloverFile(0);
 
-            expect(command.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
-        });
-
-        it('adds no --coverage-clover without a clover file', async () => {
-            const { args } = (await givenCoverageCommand(Mode.coverage)).build();
-
-            expect(args).not.toContain('--coverage-clover');
-        });
-
-        it('adds --coverage-clover with the local path', async () => {
-            const { args } = (await givenCoverageCommand(Mode.coverage))
-                .withCoverageClover('/workspace/.phpunit.cache/coverage-abc-0.xml')
-                .build();
-
-            expect(args.slice(-2)).toEqual([
-                '--coverage-clover',
-                '/workspace/.phpunit.cache/coverage-abc-0.xml',
-            ]);
-        });
-
-        it('maps the clover path to the remote path', async () => {
-            const { args } = (
-                await givenCoverageCommand(Mode.coverage, { [VAR_WORKSPACE_FOLDER]: '/app' })
-            )
-                .withCoverageClover('/local/workspace/.phpunit.cache/coverage-abc-0.xml')
-                .build();
-
-            expect(args.slice(-2)).toEqual([
-                '--coverage-clover',
-                '/app/.phpunit.cache/coverage-abc-0.xml',
-            ]);
-        });
-
-        it('clone keeps the clover file', async () => {
-            const command = (await givenCoverageCommand(Mode.coverage)).withCoverageClover(
-                '/workspace/.phpunit.cache/coverage-abc-0.xml',
-            );
-
-            expect(command.clone().getCloverFile()).toBe(
-                '/workspace/.phpunit.cache/coverage-abc-0.xml',
-            );
-        });
-
-        it('withCoverageClover returns an independent copy', async () => {
-            const command = (await givenCoverageCommand(Mode.coverage)).withCoverageClover(
-                '/workspace/.phpunit.cache/coverage-abc-0.xml',
-            );
-
-            const other = command.withCoverageClover(
-                '/workspace/.phpunit.cache/coverage-abc-1.xml',
-            );
-
-            expect(command.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
-            expect(other.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
-        });
-
-        it('adds no --coverage-clover in debug mode', async () => {
-            const { args } = (await givenCoverageCommand(Mode.debug)).build();
-
-            expect(args).not.toContain('--coverage-clover');
+            expect(command.getCloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
         });
 
         it('should return undefined when not in coverage mode', () => {
@@ -796,6 +733,18 @@ describe('TestCommand', () => {
     });
 
     describe('clone', () => {
+        it('should deep-copy Xdebug so cloned command has independent Xdebug', () => {
+            const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
+            const options = { cwd: phpUnitProject('') };
+            const pathReplacer = new PathReplacer(options, {});
+            const xdebug = new Xdebug(config);
+            const command = new TestCommand(config, options, pathReplacer, xdebug);
+
+            const cloned = command.clone();
+
+            expect(cloned.getXdebug()).not.toBe(command.getXdebug());
+        });
+
         it('should clone without Xdebug when none is set', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };

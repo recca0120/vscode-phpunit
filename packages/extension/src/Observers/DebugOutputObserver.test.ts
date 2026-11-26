@@ -82,7 +82,7 @@ describe('DebugOutputObserver', () => {
     describe('run()', () => {
         it('logs the command', () => {
             const observer = new DebugOutputObserver(outputChannel, configuration, new Map());
-            observer.run(createCommand('php').toString());
+            observer.run(createCommand('php'));
 
             expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringContaining('php'));
         });
@@ -90,7 +90,7 @@ describe('DebugOutputObserver', () => {
         it('logs queue keys when testItemById is not empty', () => {
             const testItemById = new Map([[ID, createTestItem(ID)]]);
             const observer = new DebugOutputObserver(outputChannel, configuration, testItemById);
-            observer.run(createCommand('php').toString());
+            observer.run(createCommand('php'));
 
             expect(outputChannel.appendLine).toHaveBeenCalledWith(
                 expect.stringContaining('[Queue]'),
@@ -100,7 +100,7 @@ describe('DebugOutputObserver', () => {
 
         it('does not log queue section when testItemById is empty', () => {
             const observer = new DebugOutputObserver(outputChannel, configuration, new Map());
-            observer.run(createCommand('php').toString());
+            observer.run(createCommand('php'));
 
             expect(outputChannel.appendLine).not.toHaveBeenCalledWith(
                 expect.stringContaining('[Queue]'),
@@ -109,8 +109,8 @@ describe('DebugOutputObserver', () => {
 
         it('clears output once per request when clearDebugOutputOnRun is true', () => {
             const observer = new DebugOutputObserver(outputChannel, configuration, new Map());
-            observer.run(createCommand('cmd-1').toString());
-            observer.run(createCommand('cmd-2').toString());
+            observer.run(createCommand('cmd-1'));
+            observer.run(createCommand('cmd-2'));
 
             expect(outputChannel.clear).toHaveBeenCalledTimes(1);
         });

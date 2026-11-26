@@ -1,5 +1,6 @@
 import type { SpawnOptions } from 'node:child_process';
 import type { IConfiguration, PathReplacer } from '../Configuration';
+import { CoverageFiles } from '../TestCoverage';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance } from '../utils';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
@@ -8,7 +9,6 @@ import type { Xdebug } from './Xdebug';
 
 export class TestCommand {
     private arguments = '';
-    private cloverFile?: string;
 
     constructor(
         private configuration: IConfiguration,
@@ -18,13 +18,24 @@ export class TestCommand {
     ) {}
 
     clone(): TestCommand {
-        return cloneInstance(this);
+        const cloned = cloneInstance(this);
+        if (this.xdebug) {
+            cloned.xdebug = this.xdebug.clone();
+        }
+        return cloned;
     }
 
     withCoverageClover(cloverFile: string): TestCommand {
         const cloned = this.clone();
-        cloned.cloverFile = cloverFile;
+        cloned.xdebug?.setCloverFile(cloverFile);
         return cloned;
+    }
+
+    assignCloverFile(index: number) {
+        if (!this.xdebug?.isCoverageMode()) {
+            return;
+        }
+        this.xdebug.setCloverFile(new CoverageFiles(this.getCwd()).allocate(index));
     }
 
     setArguments(args: string) {
@@ -42,7 +53,7 @@ export class TestCommand {
     }
 
     getCloverFile() {
-        return this.cloverFile;
+        return this.xdebug?.getCloverFile();
     }
 
     getPathReplacer() {
@@ -111,11 +122,7 @@ export class TestCommand {
             args.push('--functional');
         }
 
-        if (this.cloverFile) {
-            args.push('--coverage-clover', this.pathReplacer.toRemote(this.cloverFile));
-        }
-
-        return args;
+        return [...args, ...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? [])];
     }
 
     private getEnvironment() {
