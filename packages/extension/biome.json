@@ -25,7 +25,7 @@
             }
         },
         {
-            "includes": ["**/__mocks__/**"],
+            "includes": ["fakes/vscode/**"],
             "linter": {
                 "rules": {
                     "suspicious": { "noExplicitAny": "off", "noRedeclare": "off" },
