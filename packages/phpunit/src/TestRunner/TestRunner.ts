@@ -1,11 +1,7 @@
 import type { ProcessCommand } from './ProcessCommand';
-import {
-    createTestRunnerEventProxy,
-    type EventResultMap,
-    type TestRunnerEmitter,
-    type TestRunnerEventProxy,
-    type TestRunnerObserver,
-} from './TestRunnerObserver';
+import type { EventResultMap } from './TestRunnerEvent';
+import { createTestRunnerEventProxy, type TestRunnerEventProxy } from './TestRunnerEventProxy';
+import type { TestRunnerEmitter, TestRunnerObserver } from './TestRunnerObserver';
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 export class TestRunner implements TestRunnerEmitter {

@@ -5,7 +5,8 @@ import { rm } from 'node:fs/promises';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
 import { TestOutputParser, type TestResult, toLocalResult } from '../TestOutput';
 import type { ProcessCommand } from './ProcessCommand';
-import { type TestRunnerEmitter, TestRunnerEvent } from './TestRunnerObserver';
+import { TestRunnerEvent } from './TestRunnerEvent';
+import type { TestRunnerEmitter } from './TestRunnerObserver';
 
 const TEAMCITY_PATTERN = /##teamcity\[/i;
 

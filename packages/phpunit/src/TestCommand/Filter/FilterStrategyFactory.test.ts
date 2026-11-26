@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type TestDefinition, TestType } from '../types';
-import { FilterStrategyFactory } from './FilterStrategy';
+import { type TestDefinition, TestType } from '../../types';
+import { FilterStrategyFactory } from './FilterStrategyFactory';
 
 describe('FilterStrategyFactory', () => {
     it('workspace type returns empty filter (run all tests)', () => {

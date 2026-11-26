@@ -1,5 +1,5 @@
 import * as net from 'node:net';
-import type { IConfiguration } from '../Configuration';
+import type { IConfiguration } from '../../Configuration';
 import type { CommandOption } from './CommandOption';
 import { XdebugCoverage } from './XdebugCoverage';
 import { XdebugDebug } from './XdebugDebug';

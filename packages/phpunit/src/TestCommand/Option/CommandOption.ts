@@ -1,4 +1,4 @@
-import type { PathMapper } from '../Path/PathMapper';
+import type { PathMapper } from '../../Path/PathMapper';
 
 export interface CommandOption {
     isEnabled(): boolean;

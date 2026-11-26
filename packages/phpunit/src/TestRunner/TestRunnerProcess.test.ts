@@ -4,8 +4,8 @@ import { fixturePath, phpUnitProject } from '../../tests/utils';
 import { Configuration } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { RemotePathMapper } from '../Path';
+import { Mode, Xdebug } from '../TestCommand/Option/Xdebug';
 import { TestCommand } from '../TestCommand/TestCommand';
-import { Mode, Xdebug } from '../TestCommand/Xdebug';
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 vi.mock('node:fs/promises', async () => {

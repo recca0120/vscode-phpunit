@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IConfiguration } from '../Configuration';
+import type { IConfiguration } from '../../Configuration';
 import { Mode, Xdebug } from './Xdebug';
 import { XdebugCoverage } from './XdebugCoverage';
 
