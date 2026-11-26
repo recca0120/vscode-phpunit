@@ -937,6 +937,21 @@ it('business closed', function (string $business, string $day) {
             `data set "dataset "bank" / ('Saturday')"`,
         ]);
     });
+
+    it('bool and null dataset keys are cast like PHP array keys', () => {
+        const content = `<?php
+
+test('casts', function (string $value) {
+    expect($value)->toBeString();
+})->with([true => 'yes', false => 'no', null => 'none']);
+        `;
+
+        expect(givenTest(file, content, 'casts')?.annotations?.dataset).toEqual([
+            `data set "('yes')"`,
+            `data set "('no')"`,
+            'data set "dataset """',
+        ]);
+    });
     it('generator closure dataset with named keys', () => {
         const content = `<?php
 it('adds numbers', function (int $a, int $b, int $expected) {
