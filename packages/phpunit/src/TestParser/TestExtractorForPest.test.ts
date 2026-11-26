@@ -397,6 +397,24 @@ it('does something', function () {
         expect(givenTest(file, content, 'it does something')?.annotations?.browserTest).toBeFalsy();
     });
 
+    it('double-quoted test description', async () => {
+        const content = `<?php
+
+test("plain double", function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(file, content, 'plain double')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::plain double',
+                methodName: 'plain double',
+                label: 'plain double',
+            }),
+        );
+    });
+
     it('not it or test', async () => {
         const content = `<?php 
 
@@ -638,6 +656,21 @@ it('validates emails', function (string $email) {
                 },
             }),
         );
+    });
+
+    it('integer values dataset', () => {
+        const content = `<?php
+
+test('numbers', function (int $n) {
+    expect($n)->toBeInt();
+})->with([1, 2, 3]);
+        `;
+
+        expect(givenTest(file, content, 'numbers')?.annotations?.dataset).toEqual([
+            'data set "(1)"',
+            'data set "(2)"',
+            'data set "(3)"',
+        ]);
     });
 
     it('chained ->with()->with() produces cartesian product (#21)', () => {
