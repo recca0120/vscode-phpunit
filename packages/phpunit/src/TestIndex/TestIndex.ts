@@ -2,21 +2,23 @@ import { URI } from 'vscode-uri';
 import { ComposerAutoload } from '../Configuration/ComposerAutoload';
 import type { PHPUnitXML, TestDefinition, TestParser } from '../index';
 import type { TestStarted } from '../TestOutput';
-import { ClassHierarchy } from '../TestParser/ClassHierarchy';
 import type { ClassInfo } from '../TestParser/ClassInfo';
 import { datasetExpander } from '../TestParser/DatasetExpander';
 import { PHPUNIT_TESTCASE_FQN } from '../types';
 import { checkFileExists } from '../utils';
+import { ClassRegistry } from './ClassRegistry';
 import type { IndexChange } from './IndexChange';
 import type { IndexedFile } from './IndexedFile';
 import { IndexStore } from './IndexStore';
+import { InheritanceResolver } from './InheritanceResolver';
 import { TestSuiteMatcher } from './TestSuiteMatcher';
 
 export class TestIndex {
     private store = new IndexStore();
     private parseQueue: Promise<void> = Promise.resolve();
 
-    private classHierarchy = new ClassHierarchy();
+    private classes = new ClassRegistry();
+    private inheritance = new InheritanceResolver(this.classes);
     private ownTests = new Map<string, { testsuite: string; tests: TestDefinition[] }>();
     private testSuiteMatcher: TestSuiteMatcher;
 
@@ -113,7 +115,7 @@ export class TestIndex {
         this.store.clear();
         this.ownTests.clear();
         this.testSuiteMatcher.reset();
-        this.classHierarchy.clear();
+        this.classes.clear();
         this.autoload.reset();
     }
 
@@ -126,7 +128,7 @@ export class TestIndex {
     }
 
     private async doDeleteClasses(uri: URI): Promise<IndexChange> {
-        const previous = this.classHierarchy.unregister(uri.fsPath);
+        const previous = this.classes.unregister(uri.fsPath);
 
         return this.reparseDependents(uri, previous);
     }
@@ -140,7 +142,7 @@ export class TestIndex {
             return this.isSupportFile(uri) ? this.indexSupportFile(uri) : { parsed, deleted };
         }
 
-        const previous = this.classHierarchy.unregister(uri.fsPath);
+        const previous = this.classes.unregister(uri.fsPath);
 
         this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
@@ -165,12 +167,12 @@ export class TestIndex {
     private isSupportFile(uri: URI): boolean {
         return (
             this.testSuiteMatcher.isInTestsuiteDirectory(uri) ||
-            this.classHierarchy.getClassesByUri(uri.fsPath).length > 0
+            this.classes.getClassesByUri(uri.fsPath).length > 0
         );
     }
 
     private async indexSupportFile(uri: URI): Promise<IndexChange> {
-        const previous = this.classHierarchy.unregister(uri.fsPath);
+        const previous = this.classes.unregister(uri.fsPath);
         const parseResult = await this.testParser.parseFile(uri.fsPath);
         await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
 
@@ -179,7 +181,7 @@ export class TestIndex {
 
     private async registerClasses(classes: ClassInfo[], includes: string[] = []): Promise<void> {
         for (const cls of classes) {
-            this.classHierarchy.register(cls);
+            this.classes.register(cls);
         }
         for (const cls of classes) {
             await this.indexAncestors(cls);
@@ -191,16 +193,13 @@ export class TestIndex {
 
     private hasUnresolvedAncestors(cls: ClassInfo): boolean {
         return [cls.parentFQN, ...cls.traitFQNs].some(
-            (fqn) => !!fqn && fqn !== PHPUNIT_TESTCASE_FQN && !this.classHierarchy.get(fqn),
+            (fqn) => !!fqn && fqn !== PHPUNIT_TESTCASE_FQN && !this.classes.get(fqn),
         );
     }
 
     private async indexIncludedFiles(includes: string[]): Promise<void> {
         for (const file of includes) {
-            if (
-                this.classHierarchy.getClassesByUri(file).length > 0 ||
-                !(await checkFileExists(file))
-            ) {
+            if (this.classes.getClassesByUri(file).length > 0 || !(await checkFileExists(file))) {
                 continue;
             }
             const parseResult = await this.testParser.parseFile(file);
@@ -210,7 +209,7 @@ export class TestIndex {
 
     private async indexAncestors(cls: ClassInfo): Promise<void> {
         for (const fqn of [cls.parentFQN, ...cls.traitFQNs]) {
-            if (!fqn || fqn === PHPUNIT_TESTCASE_FQN || this.classHierarchy.get(fqn)) {
+            if (!fqn || fqn === PHPUNIT_TESTCASE_FQN || this.classes.get(fqn)) {
                 continue;
             }
 
@@ -247,11 +246,11 @@ export class TestIndex {
 
     private getDependentClasses(fsPath: string, previous: ClassInfo[]) {
         const dependents = new Map<string, ClassInfo>();
-        const pending = [...previous, ...this.classHierarchy.getClassesByUri(fsPath)];
+        const pending = [...previous, ...this.classes.getClassesByUri(fsPath)];
         for (let classInfo = pending.shift(); classInfo; classInfo = pending.shift()) {
             for (const dependent of [
-                ...this.classHierarchy.getChildClasses(classInfo.classFQN),
-                ...this.classHierarchy.getTraitUsers(classInfo.classFQN),
+                ...this.classes.getChildClasses(classInfo.classFQN),
+                ...this.classes.getTraitUsers(classInfo.classFQN),
             ]) {
                 if (dependents.has(dependent.classFQN)) {
                     continue;
@@ -272,7 +271,7 @@ export class TestIndex {
         }
 
         const tests = own
-            ? this.classHierarchy.enrichTests(own.tests)
+            ? this.inheritance.enrichTests(own.tests)
             : await this.parseTests(uri, testsuite);
         if (tests.length > 0) {
             this.store.set(testsuite, uri, tests);
@@ -301,6 +300,6 @@ export class TestIndex {
         this.ownTests.set(uri.toString(), { testsuite, tests: parseResult.tests });
         await this.registerClasses(parseResult.classes, parseResult.includes);
 
-        return this.classHierarchy.enrichTests(parseResult.tests);
+        return this.inheritance.enrichTests(parseResult.tests);
     }
 }
