@@ -2,6 +2,7 @@ import {
     ChainAstParser,
     PHPUnitXML,
     PhpParserAstParser,
+    TestIndex,
     TestParser,
     TestType,
     TreeSitterAstParser,
@@ -32,7 +33,7 @@ describe('TestQueueBuilder', () => {
         );
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        collection = new TestCollection(ctrl, phpUnitXML, testParser);
+        collection = new TestCollection(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
         builder = new TestQueueBuilder(collection);
     });
 

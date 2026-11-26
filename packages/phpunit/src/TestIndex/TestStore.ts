@@ -1,6 +1,6 @@
 import { URI } from 'vscode-uri';
 import type { TestDefinition } from '../types';
-import type { File } from './TestCollection';
+import type { File } from './TestIndex';
 
 export class TestStore {
     private suites = new Map<string, Map<string, TestDefinition[]>>();

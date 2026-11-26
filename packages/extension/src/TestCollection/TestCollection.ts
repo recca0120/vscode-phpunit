@@ -1,10 +1,9 @@
 import {
-    TestCollection as BaseTestCollection,
     type ChangeResult,
     type File,
     PHPUnitXML,
     type TestDefinition,
-    TestParser,
+    TestIndex,
     type TestStarted,
     TestType,
 } from '@vscode-phpunit/phpunit';
@@ -23,17 +22,15 @@ import { TestDefinitionIndex } from './TestDefinitionIndex';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
 
 @injectable()
-export class TestCollection extends BaseTestCollection {
+export class TestCollection {
     private readonly index = new TestDefinitionIndex();
     private _rootItems: TestItemCollection | undefined;
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
-        @inject(PHPUnitXML) phpUnitXML: PHPUnitXML,
-        @inject(TestParser) testParser: TestParser,
-    ) {
-        super(phpUnitXML, testParser);
-    }
+        @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
+        @inject(TestIndex) private testIndex: TestIndex,
+    ) {}
 
     get rootItems(): TestItemCollection {
         return this._rootItems ?? this.ctrl.items;
@@ -67,7 +64,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     resolveDatasetChild(result: TestStarted): TestItem | undefined {
-        const resolved = super.resolveDataset(result);
+        const resolved = this.testIndex.resolveDataset(result);
         if (!resolved) {
             return undefined;
         }
@@ -136,23 +133,38 @@ export class TestCollection extends BaseTestCollection {
         return this.index.getItemsByGroup(group);
     }
 
-    override async change(uri: URI) {
-        const result = await super.change(uri);
+    has(uri: URI) {
+        return this.testIndex.has(uri);
+    }
+
+    gatherFiles() {
+        return this.testIndex.gatherFiles();
+    }
+
+    async add(uri: URI) {
+        if (this.has(uri)) {
+            return;
+        }
+        await this.change(uri);
+    }
+
+    async change(uri: URI) {
+        const result = await this.testIndex.change(uri);
         this.applyChangeResult(result);
         return result;
     }
 
-    override delete(uri: URI) {
-        const file = super.delete(uri);
-        if (file) {
+    delete(uri: URI) {
+        const files = this.testIndex.deleteFiles(uri);
+        for (const file of files) {
             this.handleFileDeleted(file);
         }
-        return file;
+        return files.find((file) => file.uri.toString() === uri.toString());
     }
 
-    override reset() {
+    reset() {
         this.handleReset();
-        super.reset();
+        this.testIndex.reset();
     }
 
     private applyChangeResult(result: ChangeResult) {

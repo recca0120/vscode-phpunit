@@ -7,7 +7,7 @@ import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterPa
 import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser, TestType } from '../index';
 import { TeamcityEvent, type TestStarted } from '../TestOutput';
 import { ClassHierarchy } from '../TestParser/ClassHierarchy';
-import { TestCollection } from './TestCollection';
+import { TestIndex } from './TestIndex';
 
 beforeAll(async () => initTreeSitter());
 
@@ -15,7 +15,7 @@ describe('TestCollection', () => {
     const phpUnitXML = new PHPUnitXML();
     const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
     const testParser = new TestParser(phpUnitXML, astParser);
-    const testCollection = new TestCollection(phpUnitXML, testParser);
+    const testCollection = new TestIndex(phpUnitXML, testParser);
 
     const givenTestCollection = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
@@ -25,7 +25,7 @@ describe('TestCollection', () => {
     };
 
     const shouldBe = async (
-        collection: TestCollection,
+        collection: TestIndex,
         testsuites: Record<string, import('vscode-uri').URI[]>,
     ) => {
         const phpUnitXML = new PHPUnitXML();

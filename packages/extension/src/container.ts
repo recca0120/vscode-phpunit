@@ -3,6 +3,7 @@ import {
     ChainAstParser,
     PHPUnitXML,
     PhpParserAstParser,
+    TestIndex,
     TestParser,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
@@ -86,6 +87,12 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
 
     child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
     child.bind(ObserverFactory).toSelf().inSingletonScope();
+    child
+        .bind(TestIndex)
+        .toDynamicValue(
+            (context) => new TestIndex(context.get(PHPUnitXML), context.get(TestParser)),
+        )
+        .inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();
     child.bind(TestQueueBuilder).toSelf().inSingletonScope();
     child.bind(DebugSessionManager).toSelf().inSingletonScope();

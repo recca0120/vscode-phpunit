@@ -4,6 +4,7 @@ export * from './ProcessBuilder';
 export * from './TestCollection';
 export * from './TestCoverage';
 export { AliasMap } from './TestIdentifier/PestFixer';
+export * from './TestIndex';
 export * from './TestOutput';
 export * from './TestParser';
 export * from './TestRunner';
