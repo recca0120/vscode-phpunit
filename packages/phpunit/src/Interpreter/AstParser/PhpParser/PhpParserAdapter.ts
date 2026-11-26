@@ -7,6 +7,8 @@ const ZERO_NODE = { kind: 'number', value: 0 } as AstNode;
 const EMPTY_STRING_NODE = { kind: 'string', value: '' } as AstNode;
 const zeroLoc: AstNodeLoc = { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
 
+let source = '';
+
 function convertLoc(loc: RawNode): AstNodeLoc | undefined {
     if (!loc) {
         return undefined;
@@ -46,11 +48,8 @@ function declarationLoc(raw: RawNode): RawNode {
     };
 }
 
-function convertComments(comments: RawNode[] | undefined): RawNode[] | undefined {
-    if (!comments) {
-        return undefined;
-    }
-    return comments.map((c: RawNode) => ({
+function convertComments(comments: RawNode[] | undefined): RawNode[] {
+    return (comments ?? []).map((c: RawNode) => ({
         kind: 'comment',
         value: c.value,
         loc: convertLoc(c.loc),
@@ -58,7 +57,42 @@ function convertComments(comments: RawNode[] | undefined): RawNode[] | undefined
 }
 
 export function adapt(raw: RawNode): AstNode {
+    source = raw.loc?.source ?? '';
     return adaptProgram(raw);
+}
+
+function positionAt(offset: number): RawNode {
+    const before = source.slice(0, offset);
+    return {
+        line: (before.match(/\n/g) ?? []).length + 1,
+        column: offset - (before.lastIndexOf('\n') + 1),
+        offset,
+    };
+}
+
+function withoutTrailingSemicolon(loc: RawNode): RawNode {
+    if (!loc?.source?.endsWith(';')) {
+        return loc;
+    }
+    return { ...loc, end: positionAt(loc.end.offset - 1) };
+}
+
+function withTrailingSemicolon(loc: RawNode): RawNode {
+    if (!loc || source[loc.end.offset] !== ';') {
+        return loc;
+    }
+    return { ...loc, end: positionAt(loc.end.offset + 1) };
+}
+
+function namespaceStatementLoc(raw: RawNode): RawNode {
+    if (raw.withBrackets || !raw.loc) {
+        return raw.loc;
+    }
+    const semicolon = source.indexOf(';', raw.loc.start.offset);
+    if (semicolon === -1) {
+        return raw.loc;
+    }
+    return { ...raw.loc, end: positionAt(semicolon + 1) };
 }
 
 function adaptProgram(raw: RawNode): AstNode {
@@ -185,23 +219,29 @@ function adaptNamespace(raw: RawNode): AstNode {
         kind: 'namespace_definition',
         name: extractName(raw.name),
         children: adaptChildren(raw.children ?? []),
-        loc: convertLoc(raw.loc),
+        loc: convertLoc(namespaceStatementLoc(raw)),
     };
 }
 
 function adaptClass(raw: RawNode): AstNode {
-    const body = adaptChildren(raw.body ?? []);
+    const body: AstNode[] = [];
 
     for (const child of raw.body ?? []) {
-        if (child?.kind === 'classconstant') {
-            for (const constant of child.constants ?? []) {
-                body.push({
-                    kind: 'const_declaration',
-                    name: extractName(constant.name),
-                    value: constant.value ? adaptNode(constant.value) : undefined,
-                    loc: convertLoc(child.loc),
-                } as AstNode);
+        if (child?.kind !== 'classconstant') {
+            const adapted = adaptNode(child);
+            if (adapted) {
+                body.push(adapted);
             }
+            continue;
+        }
+
+        for (const constant of child.constants ?? []) {
+            body.push({
+                kind: 'const_declaration',
+                name: extractName(constant.name),
+                value: constant.value ? adaptNode(constant.value) : undefined,
+                loc: convertLoc(withTrailingSemicolon(child.loc)),
+            } as AstNode);
         }
     }
 
@@ -399,7 +439,7 @@ function adaptAssignment(raw: RawNode): AstNode {
         operator: raw.operator !== '=' ? raw.operator : undefined,
         variable: extractName(raw.left?.name ?? raw.left),
         value: adaptNode(raw.right) ?? ZERO_NODE,
-        loc: convertLoc(raw.loc),
+        loc: convertLoc(withoutTrailingSemicolon(raw.loc)),
     };
 }
 
@@ -417,7 +457,7 @@ function adaptYieldExpression(raw: RawNode): AstNode {
         kind: 'yield_expression',
         key: raw.key ? adaptNode(raw.key) : undefined,
         value: raw.value ? adaptNode(raw.value) : undefined,
-        loc: convertLoc(raw.loc),
+        loc: convertLoc(withoutTrailingSemicolon(raw.loc)),
     } as AstNode;
 }
 
@@ -473,7 +513,7 @@ function adaptUseGroup(raw: RawNode): AstNode {
     return {
         kind: 'namespace_use_declaration',
         items,
-        loc: convertLoc(raw.loc),
+        loc: convertLoc(withTrailingSemicolon(raw.loc)),
     };
 }
 
@@ -497,7 +537,7 @@ function adaptCall(raw: RawNode): CallNode {
         name,
         arguments: args,
         chain,
-        loc: convertLoc(raw.loc) ?? zeroLoc,
+        loc: convertLoc(withoutTrailingSemicolon(raw.loc)) ?? zeroLoc,
     };
 }
 
