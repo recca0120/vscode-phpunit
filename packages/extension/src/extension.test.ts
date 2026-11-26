@@ -716,7 +716,12 @@ describe('Extension Test', () => {
 
                 const ctrl = getTestController();
 
+                await workspace
+                    .getConfiguration('phpunit', Uri.file(cwd))
+                    .update('args', ['-c', phpUnitProject('phpunit.xml.dist')]);
                 await ctrl.refreshHandler();
+
+                expect(countItems(ctrl.items)).toEqual(12);
             });
 
             it('should resolve tests', async () => {
