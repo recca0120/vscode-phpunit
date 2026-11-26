@@ -1,0 +1,221 @@
+import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
+import type { ClassInfo, TraitAdaptation } from '../TestParser/ClassInfo';
+import { PHPUNIT_TESTCASE_FQN, type TestDefinition, TestType } from '../types';
+import type { ClassRegistry } from './ClassRegistry';
+
+export class InheritanceResolver {
+    constructor(private registry: ClassRegistry) {}
+
+    mayExtendTestCase(classFQN: string): boolean {
+        const visited = new Set<string>();
+        let current = classFQN;
+        while (current !== PHPUNIT_TESTCASE_FQN) {
+            const info = this.registry.get(current);
+            if (!info) {
+                return true;
+            }
+            if (!info.parentFQN || visited.has(current)) {
+                return false;
+            }
+            visited.add(current);
+            current = info.parentFQN;
+        }
+        return true;
+    }
+
+    resolveInheritedMethods(classFQN: string): TestDefinition[] {
+        const methodMap = new Map<string, TestDefinition>();
+        this.walkAncestors(classFQN, (_current, info) => {
+            if (!info) {
+                return false;
+            }
+            for (const method of info.methods) {
+                if (method.methodName && !methodMap.has(method.methodName)) {
+                    methodMap.set(method.methodName, method);
+                }
+            }
+            for (const method of this.resolveTraitMethods(info)) {
+                if (method.methodName && !methodMap.has(method.methodName)) {
+                    methodMap.set(method.methodName, method);
+                }
+            }
+            return false;
+        });
+        return [...methodMap.values()];
+    }
+
+    enrichTests(tests: TestDefinition[]): TestDefinition[] {
+        return tests
+            .map((test) =>
+                test.type === TestType.class ? this.enrichClass(test) : this.enrichNonClass(test),
+            )
+            .filter((t): t is TestDefinition => t !== undefined);
+    }
+
+    private enrichNonClass(test: TestDefinition): TestDefinition | undefined {
+        if (!test.children) {
+            return test;
+        }
+
+        const enrichedChildren = this.enrichTests(test.children);
+        if (enrichedChildren.length === 0) {
+            return undefined;
+        }
+
+        return { ...test, children: enrichedChildren };
+    }
+
+    private enrichClass(test: TestDefinition): TestDefinition | undefined {
+        if (!test.classFQN) {
+            return test;
+        }
+
+        if (!this.mayExtendTestCase(test.classFQN)) {
+            return undefined;
+        }
+
+        const ownMethodNames = new Set(
+            (test.children ?? []).map((m) => m.methodName).filter(Boolean),
+        );
+
+        const transformer = TestIdentifierFactory.create(test.classFQN);
+        const allMethods = this.resolveInheritedMethods(test.classFQN);
+        const inheritedMethods = allMethods
+            .filter((m) => m.methodName && !ownMethodNames.has(m.methodName))
+            .map((m) => {
+                const method = {
+                    ...m,
+                    file: test.file,
+                    classFQN: test.classFQN,
+                    namespace: test.namespace,
+                    className: test.className,
+                    start: test.start,
+                    end: test.end,
+                };
+                return { ...method, id: transformer.uniqueId(method) };
+            });
+
+        return {
+            ...test,
+            children: [...(test.children ?? []), ...inheritedMethods],
+        };
+    }
+
+    private resolveTraitMethods(info: ClassInfo, visited?: Set<string>): TestDefinition[] {
+        const collected = this.collectTraitMethods(info, visited ?? new Set<string>());
+        this.applyInsteadofAdaptations(collected, info.traitAdaptations);
+        this.applyAliasAdaptations(collected, info.traitAdaptations);
+
+        return [...collected.values()].map((e) => e.method);
+    }
+
+    private collectTraitMethods(
+        info: ClassInfo,
+        seen: Set<string>,
+    ): Map<string, { trait: string; method: TestDefinition }> {
+        const collected = new Map<string, { trait: string; method: TestDefinition }>();
+
+        for (const traitFQN of info.traitFQNs) {
+            if (seen.has(traitFQN)) {
+                continue;
+            }
+            seen.add(traitFQN);
+
+            const traitInfo = this.registry.get(traitFQN);
+            if (!traitInfo) {
+                continue;
+            }
+
+            const nestedMethods = this.resolveTraitMethods(traitInfo, seen);
+            for (const m of nestedMethods) {
+                if (m.methodName && !collected.has(m.methodName)) {
+                    collected.set(m.methodName, { trait: traitFQN, method: m });
+                }
+            }
+
+            for (const m of traitInfo.methods) {
+                if (m.methodName) {
+                    collected.set(m.methodName, { trait: traitFQN, method: m });
+                }
+            }
+        }
+
+        return collected;
+    }
+
+    private applyInsteadofAdaptations(
+        collected: Map<string, { trait: string; method: TestDefinition }>,
+        adaptations: TraitAdaptation[],
+    ): void {
+        for (const adapt of adaptations) {
+            if (adapt.kind !== 'insteadof' || !adapt.trait || !adapt.instead) {
+                continue;
+            }
+            const entry = collected.get(adapt.method);
+            if (!entry) {
+                continue;
+            }
+            if (entry.trait !== adapt.trait && !adapt.instead.includes(entry.trait)) {
+                continue;
+            }
+            const preferredTrait = this.registry.get(adapt.trait);
+            if (!preferredTrait) {
+                continue;
+            }
+            const preferredMethod = preferredTrait.methods.find(
+                (m) => m.methodName === adapt.method,
+            );
+            if (preferredMethod) {
+                collected.set(adapt.method, { trait: adapt.trait, method: preferredMethod });
+            }
+        }
+    }
+
+    private applyAliasAdaptations(
+        collected: Map<string, { trait: string; method: TestDefinition }>,
+        adaptations: TraitAdaptation[],
+    ): void {
+        for (const adapt of adaptations) {
+            if (adapt.kind !== 'as' || !adapt.alias) {
+                continue;
+            }
+
+            let sourceMethod: TestDefinition | undefined;
+            if (adapt.trait) {
+                const traitInfo = this.registry.get(adapt.trait);
+                sourceMethod = traitInfo?.methods.find((m) => m.methodName === adapt.method);
+            } else {
+                sourceMethod = collected.get(adapt.method)?.method;
+            }
+
+            if (sourceMethod) {
+                collected.set(adapt.alias, {
+                    trait: adapt.trait ?? '',
+                    method: { ...sourceMethod, methodName: adapt.alias },
+                });
+            }
+        }
+    }
+
+    private walkAncestors(
+        classFQN: string,
+        visitor: (classFQN: string, info: ClassInfo | undefined) => boolean,
+    ): void {
+        const visited = new Set<string>();
+        let current: string | undefined = classFQN;
+        while (current) {
+            if (visited.has(current)) {
+                return;
+            }
+            visited.add(current);
+            const info = this.registry.get(current);
+            if (visitor(current, info)) {
+                return;
+            }
+            if (!info) {
+                return;
+            }
+            current = info.parentFQN;
+        }
+    }
+}
