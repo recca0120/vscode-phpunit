@@ -14,6 +14,7 @@ interface BuildContext {
 export interface ParseResult {
     tests: TestDefinition[];
     classes: ClassInfo[];
+    includes?: string[];
 }
 
 export function extractTests(

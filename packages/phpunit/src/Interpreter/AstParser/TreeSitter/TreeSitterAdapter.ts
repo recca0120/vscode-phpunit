@@ -741,6 +741,10 @@ function adaptEncapsedString(node: SyntaxNode): AstNode {
 }
 
 const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
+    name: (node) =>
+        MAGIC_CONSTANTS.has(node.text)
+            ? { kind: 'magic_constant', name: node.text, loc: locOf(node) }
+            : unsupportedExpression(node),
     string: adaptString,
     encapsed_string: adaptEncapsedString,
     integer: (node) => ({
@@ -925,16 +929,33 @@ function adaptBlock(node: SyntaxNode): AstNode {
     };
 }
 
+const INCLUDE_EXPRESSIONS = new Set([
+    'include_expression',
+    'include_once_expression',
+    'require_expression',
+    'require_once_expression',
+]);
+const MAGIC_CONSTANTS = new Set(['__DIR__', '__FILE__']);
+
+function unsupportedExpression(node: SyntaxNode): AstNode {
+    return { kind: 'unsupported_expression', loc: locOf(node) };
+}
+
 function adaptExpressionStatement(node: SyntaxNode): AstNode | null {
     const exprNode = node.namedChildren[0];
     if (!exprNode) {
         return null;
     }
 
-    if (exprNode.type === 'include_expression' || exprNode.type === 'include_once_expression') {
+    if (INCLUDE_EXPRESSIONS.has(exprNode.type)) {
+        const pathNode = exprNode.namedChildren[0];
         return {
             kind: 'expression_statement',
-            expression: { kind: 'include_expression' },
+            expression: {
+                kind: 'include_expression',
+                path: pathNode ? adaptExpression(pathNode) : unsupportedExpression(exprNode),
+                loc: locOf(exprNode),
+            },
             loc: locOf(node),
         };
     }
