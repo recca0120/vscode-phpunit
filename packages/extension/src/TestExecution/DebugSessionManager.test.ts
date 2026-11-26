@@ -44,7 +44,7 @@ describe('DebugSessionManager', () => {
 
         const error = new Error('test run failed');
         await expect(
-            manager.wrap(builder, async () => {
+            manager.wrap(builder.getXdebug(), async () => {
                 throw error;
             }),
         ).rejects.toThrow('test run failed');
@@ -55,7 +55,7 @@ describe('DebugSessionManager', () => {
     it('should pass through when not in debug mode', async () => {
         const builder = await givenBuilder({ mode: Mode.coverage });
 
-        const result = await manager.wrap(builder, async () => 'passthru');
+        const result = await manager.wrap(builder.getXdebug(), async () => 'passthru');
 
         expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe('DebugSessionManager', () => {
     it('should pass through when no xdebug', async () => {
         const builder = await givenBuilder();
 
-        const result = await manager.wrap(builder, async () => 'passthru');
+        const result = await manager.wrap(builder.getXdebug(), async () => 'passthru');
 
         expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();

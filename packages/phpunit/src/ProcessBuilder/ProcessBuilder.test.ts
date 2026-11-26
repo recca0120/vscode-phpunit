@@ -609,16 +609,79 @@ describe('ProcessBuilder Test', () => {
     });
 
     describe('assignCloverFile', () => {
-        it('should set clover file on xdebug when in coverage mode', async () => {
+        const givenCoverageBuilder = async (mode?: Mode, paths: Record<string, string> = {}) => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
-            const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
-            const xdebug = await new Xdebug(config).setMode(Mode.coverage);
-            const builder = new ProcessBuilder(config, options, pathReplacer, xdebug);
+            const options = { cwd: '/local/workspace' };
+            const pathReplacer = new PathReplacer(options, paths);
+            const xdebug = mode ? await new Xdebug(config).setMode(mode) : undefined;
+            return new ProcessBuilder(config, options, pathReplacer, xdebug);
+        };
 
-            builder.assignCloverFile(0);
+        it('setCloverFile / getCloverFile', async () => {
+            const builder = (await givenCoverageBuilder(Mode.coverage)).withCoverageClover(
+                '/workspace/.phpunit.cache/coverage-abc-0.xml',
+            );
 
-            expect(builder.getCloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
+            expect(builder.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+        });
+
+        it('getPhpUnitArgs returns empty when no clover file set', async () => {
+            const { args } = (await givenCoverageBuilder(Mode.coverage)).build();
+
+            expect(args).not.toContain('--coverage-clover');
+        });
+
+        it('getPhpUnitArgs returns --coverage-clover with local path', async () => {
+            const { args } = (await givenCoverageBuilder(Mode.coverage))
+                .withCoverageClover('/workspace/.phpunit.cache/coverage-abc-0.xml')
+                .build();
+
+            expect(args.slice(-2)).toEqual([
+                '--coverage-clover',
+                '/workspace/.phpunit.cache/coverage-abc-0.xml',
+            ]);
+        });
+
+        it('getPhpUnitArgs applies pathReplacer.toRemote to clover path', async () => {
+            const { args } = (
+                await givenCoverageBuilder(Mode.coverage, { [VAR_WORKSPACE_FOLDER]: '/app' })
+            )
+                .withCoverageClover('/local/workspace/.phpunit.cache/coverage-abc-0.xml')
+                .build();
+
+            expect(args.slice(-2)).toEqual([
+                '--coverage-clover',
+                '/app/.phpunit.cache/coverage-abc-0.xml',
+            ]);
+        });
+
+        it('clone preserves clover file', async () => {
+            const builder = (await givenCoverageBuilder(Mode.coverage)).withCoverageClover(
+                '/workspace/.phpunit.cache/coverage-abc-0.xml',
+            );
+
+            expect(builder.clone().getCloverFile()).toBe(
+                '/workspace/.phpunit.cache/coverage-abc-0.xml',
+            );
+        });
+
+        it('clone can be given a new clover file independently', async () => {
+            const builder = (await givenCoverageBuilder(Mode.coverage)).withCoverageClover(
+                '/workspace/.phpunit.cache/coverage-abc-0.xml',
+            );
+
+            const other = builder.withCoverageClover(
+                '/workspace/.phpunit.cache/coverage-abc-1.xml',
+            );
+
+            expect(builder.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+            expect(other.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
+        });
+
+        it('getPhpUnitArgs returns empty in debug mode', async () => {
+            const { args } = (await givenCoverageBuilder(Mode.debug)).build();
+
+            expect(args).not.toContain('--coverage-clover');
         });
 
         it('should return undefined when not in coverage mode', () => {
@@ -642,18 +705,6 @@ describe('ProcessBuilder Test', () => {
     });
 
     describe('clone', () => {
-        it('should deep-copy Xdebug so cloned builder has independent Xdebug', () => {
-            const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
-            const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
-            const xdebug = new Xdebug(config);
-            const builder = new ProcessBuilder(config, options, pathReplacer, xdebug);
-
-            const cloned = builder.clone();
-
-            expect(cloned.getXdebug()).not.toBe(builder.getXdebug());
-        });
-
         it('should clone without Xdebug when none is set', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };

@@ -1,6 +1,5 @@
 import * as net from 'node:net';
-import type { IConfiguration, PathReplacer } from '../Configuration';
-import { cloneInstance } from '../utils';
+import type { IConfiguration } from '../Configuration';
 
 async function getFreePort(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
@@ -26,7 +25,6 @@ export enum Mode {
 export class Xdebug {
     private mode?: Mode;
     private port?: number;
-    private cloverFile?: string;
 
     constructor(private configuration: IConfiguration) {}
 
@@ -40,20 +38,6 @@ export class Xdebug {
 
     get name() {
         return this.configuration.get('debuggerConfig') as string | undefined;
-    }
-
-    getCloverFile() {
-        if (this.mode !== Mode.coverage) {
-            return undefined;
-        }
-
-        return this.cloverFile;
-    }
-
-    setCloverFile(cloverFile: string) {
-        this.cloverFile = cloverFile;
-
-        return this;
     }
 
     async setMode(mode?: Mode) {
@@ -96,17 +80,5 @@ export class Xdebug {
         }
 
         return [];
-    }
-
-    getPhpUnitArgs(pathReplacer: PathReplacer): string[] {
-        if (this.mode !== Mode.coverage || !this.cloverFile) {
-            return [];
-        }
-
-        return ['--coverage-clover', pathReplacer.toRemote(this.cloverFile)];
-    }
-
-    clone() {
-        return cloneInstance(this);
     }
 }

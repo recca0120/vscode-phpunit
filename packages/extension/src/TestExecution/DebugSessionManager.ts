@@ -1,4 +1,4 @@
-import type { ProcessBuilder } from '@vscode-phpunit/phpunit';
+import type { Xdebug } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
 import type { WorkspaceFolder } from 'vscode';
 import { debug } from 'vscode';
@@ -8,9 +8,7 @@ import { TYPES } from '../types';
 export class DebugSessionManager {
     constructor(@inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder) {}
 
-    async wrap<T>(builder: ProcessBuilder, fn: () => Promise<T>): Promise<T> {
-        const xdebug = builder.getXdebug();
-
+    async wrap<T>(xdebug: Xdebug | undefined, fn: () => Promise<T>): Promise<T> {
         if (xdebug?.isDebugMode()) {
             await debug.startDebugging(
                 this.workspaceFolder,
