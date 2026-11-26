@@ -4,7 +4,7 @@ import { RemotePathMapper } from '../../Path';
 import { XdebugCoverage } from './XdebugCoverage';
 
 describe('XdebugCoverage', () => {
-    it('withCloverFile / getCloverFile', () => {
+    it('withCloverFile / cloverFile', () => {
         const coverage = new XdebugCoverage(true).withCloverFile(
             '/workspace/.phpunit.cache/coverage-abc-0.xml',
         );
@@ -12,7 +12,7 @@ describe('XdebugCoverage', () => {
         expect(coverage.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
     });
 
-    it('getCloverFile returns undefined when not in coverage mode', () => {
+    it('cloverFile returns undefined when not in coverage mode', () => {
         const coverage = new XdebugCoverage(false).withCloverFile(
             '/workspace/.phpunit.cache/coverage-abc-0.xml',
         );
