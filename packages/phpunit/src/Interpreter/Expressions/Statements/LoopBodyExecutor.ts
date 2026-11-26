@@ -1,14 +1,22 @@
-import { datasetExpander } from '../../../TestParser/DatasetExpander';
-import type { AstNode, IfStatementNode } from '../../AstParser/AstNode';
+import type { AstNode, IfStatementNode, YieldExpressionNode } from '../../AstParser/AstNode';
 import type { Context } from '../Expression';
 export const MAX_ITERATIONS = 1000;
 
 export type LoopContext = {
     context: Context;
-    labels: string[];
+    entries: Map<string, unknown>;
     numericIndex: number;
+    unresolved: boolean;
 };
 export type StmtResult = 'break' | 'continue' | undefined;
+
+export function createLoopContext(context: Context): LoopContext {
+    return { context, entries: new Map(), numericIndex: 0, unresolved: false };
+}
+
+export function loopResult(ctx: LoopContext): Map<string, unknown> | undefined {
+    return ctx.unresolved ? undefined : ctx.entries;
+}
 
 export function buildConditionNode(variable: string, operator: string, right: AstNode): AstNode {
     return {
@@ -19,10 +27,21 @@ export function buildConditionNode(variable: string, operator: string, right: As
     } as AstNode;
 }
 
+function collect(ctx: LoopContext, key: unknown, value: unknown): void {
+    if (typeof key === 'number' || (typeof key === 'string' && /^\d+$/.test(key))) {
+        ctx.entries.set(String(ctx.numericIndex++), value);
+        return;
+    }
+    ctx.entries.set(String(key), value);
+}
+
 function resolveAndCollect(stmt: AstNode, ctx: LoopContext): StmtResult {
     const result = ctx.context.resolve(stmt);
-    if (Array.isArray(result)) {
-        ctx.labels.push(...result);
+    if (!(result instanceof Map)) {
+        return undefined;
+    }
+    for (const [key, value] of result) {
+        collect(ctx, key, value);
     }
     return undefined;
 }
@@ -45,12 +64,18 @@ const bodyStatementHandlers: Record<string, (stmt: AstNode, ctx: LoopContext) =>
         return executeBodyStatements(branch, ctx);
     },
     yield_expression: (stmt, ctx) => {
-        const resolvedKey = ctx.context.resolve(stmt);
-        if (resolvedKey !== undefined) {
-            ctx.labels.push(datasetExpander.named(String(resolvedKey)));
-        } else {
-            ctx.labels.push(datasetExpander.indexed(ctx.numericIndex++));
+        const yieldNode = stmt as YieldExpressionNode;
+        const value = yieldNode.value ? ctx.context.resolve(yieldNode.value) : undefined;
+        if (!yieldNode.key) {
+            collect(ctx, ctx.numericIndex, value);
+            return undefined;
         }
+        const key = ctx.context.resolve(stmt);
+        if (key === undefined) {
+            ctx.unresolved = true;
+            return 'break';
+        }
+        collect(ctx, key, value);
         return undefined;
     },
     for_statement: resolveAndCollect,

@@ -3,46 +3,63 @@ import { getAstChildren } from '../AstParser/AstNode';
 import type { PHP } from '../PHP';
 import type { Range, Visitor } from '../types';
 
+export interface NamespaceScope {
+    readonly name?: string;
+    readonly range?: Range;
+    readonly useMap: Map<string, string>;
+}
+
+export interface NamespaceSection {
+    scope: NamespaceScope;
+    children: AstNode[];
+}
+
 export class NamespaceVisitor implements Visitor {
     readonly nodeKinds = ['namespace_use_declaration'];
 
-    private _namespace?: string;
-    private _namespaceRange?: Range;
-    private _useMap = new Map<string, string>();
+    private _scopes: NamespaceScope[] = [];
+    private _current?: NamespaceScope;
 
-    get namespace(): string | undefined {
-        return this._namespace;
+    get scopes(): readonly NamespaceScope[] {
+        return this._scopes;
     }
 
-    get namespaceRange(): Range | undefined {
-        return this._namespaceRange;
-    }
-
-    get useMap(): ReadonlyMap<string, string> {
-        return this._useMap;
+    get current(): NamespaceScope | undefined {
+        return this._current;
     }
 
     reset(): void {
-        this._namespace = undefined;
-        this._namespaceRange = undefined;
-        this._useMap.clear();
+        this._scopes = [];
+        this._current = undefined;
     }
 
-    resolveSource(ast: AstNode): AstNode[] {
+    resolveSections(ast: AstNode): NamespaceSection[] {
         const children = getAstChildren(ast);
-        const namespaceNode = children.find(
+        const namespaceNodes = children.filter(
             (c): c is NamespaceNode => c.kind === 'namespace_definition',
         );
+        const sections =
+            namespaceNodes.length > 0
+                ? namespaceNodes.map((node) => ({
+                      scope: { name: node.name, range: node.loc, useMap: new Map() },
+                      children: node.children,
+                  }))
+                : [{ scope: { useMap: new Map() }, children }];
 
-        this._namespace = namespaceNode?.name;
-        this._namespaceRange = namespaceNode?.loc;
+        this._scopes = sections.map((section) => section.scope);
+        return sections;
+    }
 
-        return namespaceNode ? namespaceNode.children : children;
+    enter(scope: NamespaceScope): void {
+        this._current = scope;
     }
 
     visit(node: AstNode, _php: PHP): void {
         for (const item of (node as UseGroupNode).items) {
-            this._useMap.set(item.alias ?? item.name.split('\\').pop() ?? item.name, item.name);
+            this._current?.useMap.set(
+                item.alias ?? item.name.split('\\').pop() ?? item.name,
+                item.name,
+            );
         }
     }
 }

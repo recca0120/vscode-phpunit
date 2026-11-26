@@ -28,6 +28,7 @@ import { subscriptAccessExpression } from './Literals/SubscriptAccessExpression'
 import { variableExpression } from './Literals/VariableExpression';
 import { binaryExpr } from './Operators/BinaryExpression';
 import { conditionalExpression } from './Operators/ConditionalExpression';
+import { unaryExpression } from './Operators/UnaryExpression';
 import { anonymousFunctionExpression } from './Statements/AnonymousFunctionExpression';
 import { arrowFunctionExpression } from './Statements/ArrowFunctionExpression';
 import { assignmentExpression } from './Statements/AssignmentExpression';
@@ -51,6 +52,7 @@ const allExpressions: Expression<unknown>[] = [
     subscriptAccessExpression,
     encapsedStringExpression,
     binaryExpr,
+    unaryExpression,
     conditionalExpression,
     strtoupperExpression,
     strtolowerExpression,
@@ -111,12 +113,22 @@ export function extractLabels(resolved: unknown): string[] | undefined {
     if (!(resolved instanceof Map)) {
         return undefined;
     }
-    return [...resolved.keys()].map((key: string) =>
-        /^\d+$/.test(key) ? datasetExpander.indexed(key) : datasetExpander.named(key),
-    );
+    return toLabels(resolved, { index: 0 });
 }
 
-export function resolveLabels(node: AstNode, classBody?: AstNode[]): string[] {
-    const resolved = evaluate(node, {}, classBody);
-    return extractLabels(resolved) ?? (Array.isArray(resolved) ? (resolved as string[]) : []);
+export function resolveLabels(nodes: AstNode | AstNode[], classBody?: AstNode[]): string[] {
+    const counter = { index: 0 };
+    return [nodes].flat().flatMap((node) => {
+        const resolved = evaluate(node, {}, classBody);
+        if (resolved instanceof Map) {
+            return toLabels(resolved, counter);
+        }
+        return Array.isArray(resolved) ? (resolved as string[]) : [];
+    });
+}
+
+function toLabels(resolved: Map<string, unknown>, counter: { index: number }): string[] {
+    return [...resolved.keys()].map((key: string) =>
+        /^\d+$/.test(key) ? datasetExpander.indexed(counter.index++) : datasetExpander.named(key),
+    );
 }

@@ -1,45 +1,38 @@
 import type { PHP } from '../PHP';
 import type { FileInfo, Range, Resolver } from '../types';
-import { NamespaceVisitor } from '../Visitors/NamespaceVisitor';
+import { type NamespaceScope, NamespaceVisitor } from '../Visitors/NamespaceVisitor';
 
 export class FQNResolver implements Resolver {
-    private _namespace?: string;
-    private _namespaceRange?: Range;
-    private _useMap: ReadonlyMap<string, string> = new Map();
+    private _scopes: readonly NamespaceScope[] = [];
 
     get namespace(): string | undefined {
-        return this._namespace;
+        return this._scopes[0]?.name;
     }
 
     get namespaceRange(): Range | undefined {
-        return this._namespaceRange;
+        return this._scopes[0]?.range;
     }
 
     reset(): void {
-        this._namespace = undefined;
-        this._namespaceRange = undefined;
-        this._useMap = new Map();
+        this._scopes = [];
     }
 
     resolve(php: PHP): void {
-        const visitor = php.getVisitor(NamespaceVisitor);
-        this._namespace = visitor.namespace;
-        this._namespaceRange = visitor.namespaceRange;
-        this._useMap = visitor.useMap;
+        this._scopes = php.getVisitor(NamespaceVisitor).scopes;
     }
 
     contribute(result: Partial<FileInfo>): void {
-        result.namespace = this._namespace;
-        result.namespaceRange = this._namespaceRange;
+        result.namespace = this.namespace;
+        result.namespaceRange = this.namespaceRange;
     }
 
-    resolveFQN(raw: string): string {
+    resolveFQN(raw: string, scope: NamespaceScope | undefined = this._scopes[0]): string {
         if (raw.startsWith('\\')) {
             return raw.substring(1);
         }
 
         const firstPart = raw.split('\\')[0];
-        const resolved = this._useMap.get(firstPart);
+        const resolved = scope?.useMap.get(firstPart);
         if (resolved) {
             if (raw.includes('\\')) {
                 return `${resolved}\\${raw.substring(firstPart.length + 1)}`;
@@ -47,8 +40,8 @@ export class FQNResolver implements Resolver {
             return resolved;
         }
 
-        if (this._namespace) {
-            return `${this._namespace}\\${raw}`;
+        if (scope?.name) {
+            return `${scope.name}\\${raw}`;
         }
 
         return raw;

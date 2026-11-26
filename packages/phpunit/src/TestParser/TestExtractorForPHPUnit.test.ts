@@ -1155,6 +1155,44 @@ class OverrideTest extends AbstractTest {
             expect(overrideMethods[0].file).toBe(phpUnitProject('tests/OverrideTest.php'));
         });
     });
+
+    describe('file with several braced namespaces', () => {
+        const file = phpUnitProject('tests/MultipleNamespacesTest.php');
+        const content = `<?php
+namespace First {
+    use PHPUnit\\Framework\\TestCase;
+    class FooTest extends TestCase { public function test_first() {} }
+}
+namespace Second {
+    use PHPUnit\\Framework\\TestCase as Base;
+    class BarTest extends Base { public function test_second() {} }
+}
+`;
+
+        it('parses the test from the second namespace', () => {
+            expect(givenTest(file, content, 'test_second')).toEqual(
+                expect.objectContaining({
+                    type: TestType.method,
+                    id: 'Bar (Second\\Bar)::Second',
+                    classFQN: 'Second\\BarTest',
+                    namespace: 'Second',
+                    className: 'BarTest',
+                    methodName: 'test_second',
+                }),
+            );
+        });
+
+        it('second namespace range covers its own block', () => {
+            expect(givenTest(file, content, 'Second')).toEqual(
+                expect.objectContaining({
+                    type: TestType.namespace,
+                    id: 'namespace:Second',
+                    start: { line: 6, character: 0 },
+                    end: { line: 9, character: 1 },
+                }),
+            );
+        });
+    });
 });
 
 describe.each(parsers)('PHPUnit multiple @dataProvider (#13) (%s)', (_name, createParser) => {
@@ -1240,6 +1278,44 @@ class MultiAttrProviderTest extends TestCase
                 annotations: {
                     dataProvider: ['providerA', 'providerB'],
                     dataset: ['data set "one plus one"', 'data set #0'],
+                },
+            }),
+        );
+    });
+
+    it('continues integer data set numbering across multiple providers', () => {
+        const file = phpUnitProject('tests/MultiProviderTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class MultiProviderTest extends TestCase
+{
+    /**
+     * @dataProvider providerA
+     * @dataProvider providerB
+     */
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function providerA(): array
+    {
+        return [[1, 1, 2]];
+    }
+
+    public static function providerB(): array
+    {
+        return [[2, 3, 5]];
+    }
+}`;
+        expect(givenTest(file, content, 'test_add')).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['providerA', 'providerB'],
+                    dataset: ['data set #0', 'data set #1'],
                 },
             }),
         );
@@ -1385,6 +1461,100 @@ class YieldNoKeyTest extends TestCase
                 },
             }),
         );
+    });
+
+    const givenProviderTest = (providerBody: string) => {
+        const file = phpUnitProject('tests/LoopProviderTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class LoopProviderTest extends TestCase
+{
+    /**
+     * @dataProvider provider
+     */
+    public function test_loop(int $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): iterable
+    {
+        ${providerBody}
+    }
+}`;
+        return givenTest(file, content, 'test_loop');
+    };
+
+    it('for loop starting from a constant has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = START; $i < 2; $i++) { yield "case $i" => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('for loop bounded by a constant has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = 2; $i > LIMIT; $i--) { yield "case $i" => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('for loop with an unsupported update has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = 0; $i < 3; $i += 1) { yield "case $i" => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('while loop bounded by a constant has no static labels', () => {
+        expect(
+            givenProviderTest('$i = 2; while ($i > LIMIT) { yield "case $i" => [$i]; $i--; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('while loop counter assigned from a constant has no static labels', () => {
+        expect(
+            givenProviderTest('$i = START; while ($i < 2) { yield "case $i" => [$i]; $i++; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('foreach over a parenthesized array', () => {
+        expect(givenProviderTest("foreach ((['x', 'y']) as $v) { yield $v => [$v]; }")).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set "x"', 'data set "y"'],
+                },
+            }),
+        );
+    });
+
+    it('loop yielding integer keys is renumbered like PHPUnit', () => {
+        expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set #0', 'data set #1'],
+                },
+            }),
+        );
+    });
+
+    it('returned array with explicit integer keys is renumbered like PHPUnit', () => {
+        expect(givenProviderTest("return [5 => [1], 'named' => [2], 7 => [3]];")).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set #0', 'data set "named"', 'data set #1'],
+                },
+            }),
+        );
+    });
+
+    it('loop yield with an unresolvable key has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = 0; $i < 2; $i++) { yield PHP_VERSION => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
     });
 });
 

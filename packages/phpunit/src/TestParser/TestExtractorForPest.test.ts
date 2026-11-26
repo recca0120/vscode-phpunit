@@ -1178,4 +1178,80 @@ describe('Given a project', function () {
             }),
         );
     });
+
+    it('generator closure dataset with integer keys inside a loop', () => {
+        const content = `<?php
+it('handles numbers', function (int $i) {
+    expect($i)->toBeInt();
+})->with(function () {
+    for ($i = 5; $i < 7; $i++) {
+        yield $i => [$i];
+    }
+});
+    `;
+        expect(givenTest(file, content, 'it handles numbers')?.annotations?.dataset).toEqual([
+            'data set "(5)"',
+            'data set "(6)"',
+        ]);
+    });
+
+    it('generator closure dataset with keyless yields inside a loop', () => {
+        const content = `<?php
+it('handles numbers', function (int $i) {
+    expect($i)->toBeInt();
+})->with(function () {
+    for ($i = 0; $i < 2; $i++) {
+        yield [$i];
+    }
+});
+    `;
+        expect(givenTest(file, content, 'it handles numbers')?.annotations?.dataset).toEqual([
+            'data set "(0)"',
+            'data set "(1)"',
+        ]);
+    });
+
+    it('arrow function dataset returning a list', () => {
+        const content = `<?php
+test('numbers', function (int $n) {
+    expect($n)->toBeInt();
+})->with(fn () => [1, 2]);
+    `;
+        expect(givenTest(file, content, 'numbers')?.annotations?.dataset).toEqual([
+            'data set "(1)"',
+            'data set "(2)"',
+        ]);
+    });
+
+    it('closure dataset returning an array', () => {
+        const content = `<?php
+it('adds numbers', function (int $a, int $b) {
+    expect($a + $b)->toBeInt();
+})->with(function () {
+    return [
+        'one plus one' => [1, 1],
+        [2, 3],
+    ];
+});
+    `;
+        expect(givenTest(file, content, 'it adds numbers')?.annotations?.dataset).toEqual([
+            'data set "dataset "one plus one""',
+            'data set "(2, 3)"',
+        ]);
+    });
+
+    it('signed number values dataset', () => {
+        const content = `<?php
+
+test('signed', function (int|float $n) {
+    expect($n)->toBeNumeric();
+})->with([-1, -1.5, +2]);
+        `;
+
+        expect(givenTest(file, content, 'signed')?.annotations?.dataset).toEqual([
+            'data set "(-1)"',
+            'data set "(-1.5)"',
+            'data set "(2)"',
+        ]);
+    });
 });

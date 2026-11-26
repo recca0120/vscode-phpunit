@@ -199,6 +199,13 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 right: adaptExpression(raw.right),
                 loc: convertLoc(raw.loc),
             };
+        case 'unary':
+            return {
+                kind: 'unary_expression',
+                operator: raw.type,
+                operand: adaptExpression(raw.what),
+                loc: convertLoc(raw.loc),
+            };
         case 'retif':
             return {
                 kind: 'conditional_expression',
@@ -328,8 +335,7 @@ function adaptMethodBody(body: RawNode): AstNode[] {
 
     for (const child of body.children ?? []) {
         if (!child) continue;
-        const statement =
-            child.kind === 'return' ? adaptReturnStatement(child) : adaptBodyStatement(child);
+        const statement = adaptBodyStatement(child);
         if (statement) {
             statements.push(statement);
         }
@@ -349,6 +355,8 @@ function adaptReturnStatement(raw: RawNode): AstNode {
 
 function adaptBodyStatement(raw: RawNode): AstNode | null {
     switch (raw.kind) {
+        case 'return':
+            return adaptReturnStatement(raw);
         case 'for':
             return adaptForStatement(raw);
         case 'foreach':
@@ -397,7 +405,7 @@ function adaptForStatement(raw: RawNode): AstNode {
         const assign = raw.init[0];
         init = {
             variable: extractName(assign.left?.name ?? assign.left),
-            value: adaptNode(assign.right) ?? ZERO_NODE,
+            value: adaptExpression(assign.right),
         };
     }
 
@@ -406,11 +414,11 @@ function adaptForStatement(raw: RawNode): AstNode {
         condition = {
             variable: extractName(test.left?.name ?? test.left),
             operator: test.type ?? test.operator ?? '<',
-            value: adaptNode(test.right) ?? ZERO_NODE,
+            value: adaptExpression(test.right),
         };
     }
 
-    if (raw.increment?.[0]) {
+    if (raw.increment?.[0]?.kind === 'post' || raw.increment?.[0]?.kind === 'pre') {
         const inc = raw.increment[0];
         update = {
             variable: extractName(inc.what?.name ?? inc.what),
@@ -450,7 +458,7 @@ function adaptWhileStatement(raw: RawNode): AstNode {
         condition = {
             variable: extractName(test.left?.name ?? test.left),
             operator: test.type ?? test.operator ?? '<',
-            value: adaptNode(test.right) ?? ZERO_NODE,
+            value: adaptExpression(test.right),
         };
     }
     return {
@@ -480,7 +488,7 @@ function adaptAssignment(raw: RawNode): AstNode {
         kind: 'assignment_expression',
         operator: raw.operator !== '=' ? raw.operator : undefined,
         variable: extractName(raw.left?.name ?? raw.left),
-        value: adaptNode(raw.right) ?? ZERO_NODE,
+        value: adaptExpression(raw.right),
         loc: convertLoc(withoutTrailingSemicolon(raw.loc)),
     };
 }
@@ -497,8 +505,8 @@ function adaptUpdateExpression(raw: RawNode): AstNode {
 function adaptYieldExpression(raw: RawNode): AstNode {
     return {
         kind: 'yield_expression',
-        key: raw.key ? adaptNode(raw.key) : undefined,
-        value: raw.value ? adaptNode(raw.value) : undefined,
+        key: raw.key ? adaptExpression(raw.key) : undefined,
+        value: raw.value ? adaptExpression(raw.value) : undefined,
         loc: convertLoc(withoutTrailingSemicolon(raw.loc)),
     } as AstNode;
 }

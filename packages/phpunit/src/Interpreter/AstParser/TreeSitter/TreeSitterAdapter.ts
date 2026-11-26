@@ -7,6 +7,7 @@ import type {
     AstNodeComment,
     AstNodeLoc,
     CallNode,
+    NamespaceNode,
     TraitAdaptationNode,
     UseItemNode,
 } from '../AstNode';
@@ -275,10 +276,7 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
 
     for (const child of bodyNode.namedChildren) {
         if (!child) continue;
-        const statement =
-            child.type === 'return_statement'
-                ? adaptReturnStatement(child)
-                : adaptBodyStatement(child);
+        const statement = adaptBodyStatement(child);
         if (statement) {
             statements.push(statement);
         }
@@ -298,6 +296,8 @@ function adaptReturnStatement(node: SyntaxNode): AstNode {
 
 function adaptBodyStatement(node: SyntaxNode): AstNode | null {
     switch (node.type) {
+        case 'return_statement':
+            return adaptReturnStatement(node);
         case 'for_statement':
             return adaptForStatement(node);
         case 'foreach_statement':
@@ -401,7 +401,7 @@ function adaptForeachStatement(node: SyntaxNode): AstNode {
 
     for (const child of node.children) {
         if (!child) continue;
-        if (!foundAs && isExpressionType(child.type)) {
+        if (!foundAs && child.isNamed) {
             source = adaptExpression(child);
         } else if (child.type === 'as') {
             foundAs = true;
@@ -504,33 +504,19 @@ function adaptUpdateExpression(node: SyntaxNode): AstNode {
     };
 }
 
-function isExpressionType(type: string): boolean {
-    return (
-        type === 'array_creation_expression' ||
-        type === 'class_constant_access_expression' ||
-        type === 'variable_name' ||
-        type === 'function_call_expression'
-    );
-}
-
 function adaptYield(node: SyntaxNode): AstNode {
     const children = node.namedChildren.filter((c): c is NonNullable<typeof c> => !!c);
 
-    if (children.length === 1 && children[0].type === 'array_element_initializer') {
-        const entry = children[0];
-        const keyNode = entry.namedChildren[0];
-        const valueNode = entry.namedChildren[1];
-        return {
-            kind: 'yield_expression',
-            key: keyNode ? adaptExpression(keyNode) : undefined,
-            value: valueNode ? adaptExpression(valueNode) : undefined,
-            loc: locOf(node),
-        };
-    }
+    const entry =
+        children.length === 1 && children[0].type === 'array_element_initializer'
+            ? children[0].namedChildren.filter((c): c is NonNullable<typeof c> => !!c)
+            : children;
+    const [keyNode, valueNode] = entry.length === 2 ? entry : [undefined, entry[0]];
 
     return {
         kind: 'yield_expression',
-        value: children.length > 0 ? adaptExpression(children[0]) : undefined,
+        key: keyNode ? adaptExpression(keyNode) : undefined,
+        value: valueNode ? adaptExpression(valueNode) : undefined,
         loc: locOf(node),
     };
 }
@@ -801,6 +787,7 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
     member_call_expression: adaptMemberCallAsCall,
     array_creation_expression: adaptArray,
     binary_expression: adaptBinaryExpression,
+    unary_op_expression: adaptUnaryExpression,
     conditional_expression: adaptConditionalExpression,
     parenthesized_expression: adaptParenthesizedExpression,
     assignment_expression: adaptAssignment,
@@ -815,6 +802,19 @@ function adaptBinaryExpression(node: SyntaxNode): AstNode {
         operator,
         left: left ? adaptExpression(left) : EMPTY_STRING_NODE,
         right: right ? adaptExpression(right) : EMPTY_STRING_NODE,
+        loc: locOf(node),
+    };
+}
+
+function adaptUnaryExpression(node: SyntaxNode): AstNode {
+    const operand = node.childForFieldName('argument');
+    if (!operand) {
+        return { kind: 'unsupported_expression', loc: locOf(node) };
+    }
+    return {
+        kind: 'unary_expression',
+        operator: node.childForFieldName('operator')?.text ?? '',
+        operand: adaptExpression(operand),
         loc: locOf(node),
     };
 }
@@ -967,7 +967,7 @@ function adaptTopLevelNode(node: SyntaxNode): AstNode | null {
     }
 }
 
-function adaptNamespace(node: SyntaxNode): AstNode {
+function adaptNamespace(node: SyntaxNode): NamespaceNode {
     const nameNode = node.childForFieldName('name');
     const name = nameNode ? nameNode.text : '';
     const bodyNode = node.childForFieldName('body');
@@ -993,49 +993,20 @@ function adaptNamespace(node: SyntaxNode): AstNode {
 }
 
 export function adapt(rootNode: SyntaxNode): AstNode {
-    const programChildren = rootNode.namedChildren;
     const children: AstNode[] = [];
+    let current = children;
 
-    const nsIndex = programChildren.findIndex((c) => c?.type === 'namespace_definition');
-
-    const nsNode = nsIndex >= 0 ? programChildren[nsIndex] : undefined;
-    if (nsNode) {
-        const hasBraces = nsNode.childForFieldName('body') !== null;
-
-        if (hasBraces) {
-            children.push(adaptNamespace(nsNode));
-        } else {
-            const nsChildren: AstNode[] = [];
-
-            for (let i = nsIndex + 1; i < programChildren.length; i++) {
-                const child = programChildren[i];
-                if (!child) continue;
-                const adapted = adaptTopLevelNode(child);
-                if (adapted) {
-                    nsChildren.push(adapted);
-                }
-            }
-
-            const nameNode = nsNode.childForFieldName('name');
-            const name = nameNode ? nameNode.text : '';
-
-            children.push({
-                kind: 'namespace_definition',
-                name,
-                children: nsChildren,
-                loc: locOf(nsNode),
-            });
+    for (const child of rootNode.namedChildren) {
+        if (!child) continue;
+        if (child.type === 'namespace_definition') {
+            const namespace = adaptNamespace(child);
+            children.push(namespace);
+            current = child.childForFieldName('body') ? children : namespace.children;
+            continue;
         }
-    } else {
-        for (const child of programChildren) {
-            if (!child) continue;
-            if (child.type === 'php_tag' || child.type === 'text') {
-                continue;
-            }
-            const adapted = adaptTopLevelNode(child);
-            if (adapted) {
-                children.push(adapted);
-            }
+        const adapted = adaptTopLevelNode(child);
+        if (adapted) {
+            current.push(adapted);
         }
     }
 
