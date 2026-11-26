@@ -1,4 +1,5 @@
 import {
+    CoverageFiles,
     FilterStrategyFactory,
     type ProcessBuilder,
     type TestDefinition,
@@ -51,11 +52,14 @@ export class TestRunHandler {
         cancellation?: CancellationToken,
     ) {
         const builder = await this.processBuilderFactory.create(request.profile?.kind);
-        await builder.ensureCacheDir();
+        const coverage = builder.getXdebug()?.isCoverageMode()
+            ? new CoverageFiles(builder.getCwd())
+            : undefined;
+        await coverage?.prepare();
 
-        await this.debugSession.wrap(builder, async () => {
+        await this.debugSession.wrap(builder.getXdebug(), async () => {
             const testRun = this.ctrl.createTestRun(request);
-            await this.runTestQueue(builder, testRun, request, include, cancellation);
+            await this.runTestQueue(builder, testRun, request, include, cancellation, coverage);
         });
 
         if (request.continuous) {
@@ -72,6 +76,7 @@ export class TestRunHandler {
         request: TestRunRequest,
         include?: readonly TestItem[],
         cancellation?: CancellationToken,
+        coverage?: CoverageFiles,
     ) {
         const items = include ?? request.include;
         const queue = items
@@ -86,7 +91,7 @@ export class TestRunHandler {
 
         let cancellationListener: Disposable | undefined;
         try {
-            const processes = this.createProcesses(runner, builder, items);
+            const processes = this.createProcesses(runner, builder, items, coverage);
             cancellationListener = cancellation?.onCancellationRequested(() => {
                 for (const process of processes) {
                     process.abort();
@@ -130,27 +135,24 @@ export class TestRunHandler {
         runner: TestRunner,
         builder: ProcessBuilder,
         include: readonly TestItem[] | undefined,
+        coverage: CoverageFiles | undefined,
     ) {
+        const withCoverage = (configured: ProcessBuilder, index: number) =>
+            coverage ? configured.withCoverageClover(coverage.allocate(index)) : configured;
+
         if (!include) {
-            builder.assignCloverFile(0);
-            return [runner.run(builder)];
+            return [runner.run(withCoverage(builder, 0))];
         }
 
         return include
             .map((testItem) => this.testCollection.getTestDefinition(testItem))
             .filter((testDef): testDef is TestDefinition => testDef !== undefined)
-            .map((testDef, index) => this.configureBuilderForTestCase(builder, testDef, index))
+            .map((testDef, index) => withCoverage(this.withFilter(builder, testDef), index))
             .map((configured) => runner.run(configured));
     }
 
-    private configureBuilderForTestCase(
-        builder: ProcessBuilder,
-        testDefinition: TestDefinition,
-        index: number,
-    ): ProcessBuilder {
+    private withFilter(builder: ProcessBuilder, testDefinition: TestDefinition): ProcessBuilder {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        const cloned = builder.clone().setArguments(filter);
-        cloned.assignCloverFile(index);
-        return cloned;
+        return builder.clone().setArguments(filter);
     }
 }

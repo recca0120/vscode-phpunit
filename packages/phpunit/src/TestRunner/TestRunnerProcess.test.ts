@@ -55,9 +55,8 @@ describe('TestRunnerProcess', () => {
         await xdebug?.setMode(Mode.coverage);
 
         const cloverFile = fixturePath('test1.clover.xml');
-        xdebug?.setCloverFile(cloverFile);
 
-        const process = new TestRunnerProcess(builder);
+        const process = new TestRunnerProcess(builder.withCoverageClover(cloverFile));
         const result = await process.readCoverage();
 
         expect(rm).toHaveBeenCalledWith(cloverFile, { force: true });

@@ -1,7 +1,4 @@
 import type { SpawnOptions } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
 import type { IConfiguration, PathReplacer } from '../Configuration';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance } from '../utils';
@@ -11,6 +8,7 @@ import type { Xdebug } from './Xdebug';
 
 export class ProcessBuilder {
     private arguments = '';
+    private cloverFile?: string;
 
     constructor(
         private configuration: IConfiguration,
@@ -20,10 +18,12 @@ export class ProcessBuilder {
     ) {}
 
     clone(): ProcessBuilder {
-        const cloned = cloneInstance(this);
-        if (this.xdebug) {
-            cloned.xdebug = this.xdebug.clone();
-        }
+        return cloneInstance(this);
+    }
+
+    withCoverageClover(cloverFile: string): ProcessBuilder {
+        const cloned = this.clone();
+        cloned.cloverFile = cloverFile;
         return cloned;
     }
 
@@ -41,34 +41,8 @@ export class ProcessBuilder {
         return String(this.options.cwd ?? '.');
     }
 
-    isCoverageMode() {
-        return this.xdebug?.isCoverageMode() ?? false;
-    }
-
-    async ensureCacheDir() {
-        if (!this.isCoverageMode()) {
-            return;
-        }
-        await mkdir(this.cacheDir(), { recursive: true });
-    }
-
     getCloverFile() {
-        return this.xdebug?.getCloverFile();
-    }
-
-    assignCloverFile(index: number) {
-        if (!this.isCoverageMode()) {
-            return;
-        }
-        const cloverFile = join(
-            this.cacheDir(),
-            `coverage-${randomBytes(4).toString('hex')}-${index}.xml`,
-        );
-        this.xdebug?.setCloverFile(cloverFile);
-    }
-
-    private cacheDir() {
-        return join(this.getCwd(), '.phpunit.cache');
+        return this.cloverFile;
     }
 
     getPathReplacer() {
@@ -137,7 +111,11 @@ export class ProcessBuilder {
             args.push('--functional');
         }
 
-        return [...args, ...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? [])];
+        if (this.cloverFile) {
+            args.push('--coverage-clover', this.pathReplacer.toRemote(this.cloverFile));
+        }
+
+        return args;
     }
 
     private getEnvironment() {
