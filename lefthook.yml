@@ -25,7 +25,7 @@ pre-commit:
           - name: typecheck-extension
             root: "packages/extension/"
             glob: "*.{ts,tsx}"
-            run: npx tsc -p tsconfig.test.json --noEmit
+            run: pnpm run typecheck
     - name: pint-phpunit-stub
       root: "packages/phpunit/tests/fixtures/phpunit-stub/"
       glob: "*.php"
