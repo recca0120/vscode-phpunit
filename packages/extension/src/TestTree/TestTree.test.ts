@@ -16,8 +16,8 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { TestCollection } from './TestCollection';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
+import { TestTree } from './TestTree';
 
 type CODE = {
     testsuite: { name: string; path: string };
@@ -41,7 +41,7 @@ ${methods
     .join('')}
 }`;
 
-describe('TestCollection', () => {
+describe('TestTree', () => {
     const root = phpUnitProject('');
     const workspaceFolder = { index: 0, name: 'phpunit', uri: Uri.file(root) };
     let ctrl: TestController;
@@ -74,17 +74,14 @@ describe('TestCollection', () => {
         return [...new Set(files)];
     };
 
-    const givenTestCollection = (
-        text: string,
-        configurationFile = phpUnitProject('phpunit.xml'),
-    ) => {
+    const givenTestTree = (text: string, configurationFile = phpUnitProject('phpunit.xml')) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.load(generateXML(text), configurationFile);
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
 
-        return new TestCollection(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
+        return new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
     };
 
     const givenCodes = (codes: CODE[], configurationFile: string) => {
@@ -226,7 +223,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('re-parse replaces children, not accumulates', async () => {
-                const collection = givenTestCollection(`
+                const collection = givenTestTree(`
                     <testsuites>
                         <testsuite name="default">
                             <directory>tests</directory>
@@ -245,7 +242,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('with folder root (multi-workspace)', async () => {
-                const collection = givenTestCollection(`
+                const collection = givenTestTree(`
                     <testsuites>
                         <testsuite name="default">
                             <directory>tests</directory>
@@ -376,7 +373,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('scrambled add order preserves testsuite order and namespace stripping', async () => {
-                const collection = givenTestCollection(`
+                const collection = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -405,7 +402,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('change updates tree without corrupting other testsuite', async () => {
-                const collection = givenTestCollection(`
+                const collection = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -429,7 +426,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('delete cleans up empty parents', async () => {
-                const collection = givenTestCollection(`
+                const collection = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -453,7 +450,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('full lifecycle: scrambled add → change → delete', async () => {
-                const collection = givenTestCollection(`
+                const collection = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -498,7 +495,7 @@ class NoNamespaceTest extends TestCase
         });
 
         it('delete folder removes all tests under that folder', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -520,7 +517,7 @@ class NoNamespaceTest extends TestCase
         });
 
         it('file outside all testsuite directories should not appear in tree', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -1694,7 +1691,7 @@ class NoDatasetTest extends TestCase
             }) as unknown as TestStarted;
 
         it('creates dataset child with correct TestDefinition in index', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -1725,7 +1722,7 @@ class NoDatasetTest extends TestCase
         });
 
         it('skips on repeated calls when child already exists', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -1794,7 +1791,7 @@ class ChildTest extends BaseCase
 
         it('updates the subclass tests when the parent class changes', async () => {
             const { root, writeBase } = await writeProject(['test_a']);
-            const collection = givenTestCollection(
+            const collection = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests/Unit</directory>
@@ -1825,7 +1822,7 @@ class ChildTest extends BaseCase
             for (const [file, code] of Object.entries(files)) {
                 await writeFile(join(root, 'tests', file), code);
             }
-            const collection = givenTestCollection(
+            const collection = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests</directory>
@@ -1927,7 +1924,7 @@ trait Inner
             for (const [file, code] of Object.entries(files)) {
                 await writeFile(join(root, 'tests', file), code);
             }
-            const collection = givenTestCollection(
+            const collection = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests</directory>
@@ -2089,7 +2086,7 @@ class ExtendsPlainBaseTest extends PlainBase
 }
 `,
             );
-            const collection = givenTestCollection(
+            const collection = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests/Unit</directory>
@@ -2110,7 +2107,7 @@ class ExtendsPlainBaseTest extends PlainBase
 
     describe('index operations', () => {
         it('find groups and tests by group', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2134,7 +2131,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('findTestsByRequest should return matching items by id lookup', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2154,7 +2151,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('findTestsByRequest should return undefined for no match', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2170,7 +2167,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('findTestsByRequest should return undefined when no request', () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2186,7 +2183,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('group index should update when tests are re-parsed', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2201,7 +2198,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('group index should be empty after reset', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2216,7 +2213,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('workspace folder definition should survive reset', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2238,7 +2235,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('delete should clean up index', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2259,7 +2256,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('change in multi-testsuite keeps index for both suites', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -2283,7 +2280,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('multi-testsuite — all fixture files discovered', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="Feature">
                         <directory>tests/Feature</directory>
@@ -2309,7 +2306,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('reset should clear testsuite and namespace nodes from tree (#390)', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -2330,7 +2327,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('add test — all fixture files discovered', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>

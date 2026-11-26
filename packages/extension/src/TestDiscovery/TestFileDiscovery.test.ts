@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import type { Configuration } from '../Configuration';
-import type { TestCollection } from '../TestCollection';
+import type { TestTree } from '../TestTree';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
 const root = '/workspace';
@@ -25,11 +25,11 @@ function createMockCollection() {
         delete: vi.fn(),
         add: vi.fn().mockResolvedValue(undefined),
         gatherFiles: vi.fn().mockReturnValue([]),
-    } as unknown as TestCollection;
+    } as unknown as TestTree;
 }
 
 describe('TestFileDiscovery.getConfigFilePattern', () => {
-    let collection: TestCollection;
+    let collection: TestTree;
     let phpUnitXML: PHPUnitXML;
 
     beforeEach(() => {

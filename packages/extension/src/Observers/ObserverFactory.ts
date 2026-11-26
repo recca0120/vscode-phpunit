@@ -12,7 +12,7 @@ import {
 import { inject, injectable } from 'inversify';
 import type { OutputChannel, TestItem, TestRun } from 'vscode';
 import { Configuration } from '../Configuration';
-import { TestCollection } from '../TestCollection/TestCollection';
+import { TestTree } from '../TestTree/TestTree';
 import { TYPES } from '../types';
 import { DatasetObserver } from './DatasetObserver';
 import { DebugOutputObserver } from './DebugOutputObserver';
@@ -24,7 +24,7 @@ import { TestRunWriter } from './Writers';
 @injectable()
 export class ObserverFactory {
     constructor(
-        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestTree) private testTree: TestTree,
         @inject(TYPES.OutputChannel) private outputChannel: OutputChannel,
         @inject(Configuration) private configuration: IConfiguration,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
@@ -40,7 +40,7 @@ export class ObserverFactory {
         );
 
         return [
-            new DatasetObserver(this.testCollection, testItemById),
+            new DatasetObserver(this.testTree, testItemById),
             new TestResultObserver(queue, testRun, testItemById),
             new DebugOutputObserver(this.outputChannel, this.configuration, testItemById),
             new PrinterObserver(

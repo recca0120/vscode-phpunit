@@ -1,6 +1,5 @@
 export * from './Configuration';
 export * from './Printer';
-export * from './TestCollection';
 export * from './TestCommand';
 export * from './TestCoverage';
 export { AliasMap } from './TestIdentifier/PestFixer';
@@ -8,5 +7,6 @@ export * from './TestIndex';
 export * from './TestOutput';
 export * from './TestParser';
 export * from './TestRunner';
+export * from './TestTree';
 export { type TestDefinition, TestType } from './types';
 export { EOL, semverGte, semverLt } from './utils';

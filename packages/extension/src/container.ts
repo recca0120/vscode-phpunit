@@ -19,7 +19,6 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { ObserverFactory } from './Observers';
-import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import {
     DebugSessionManager,
@@ -29,6 +28,7 @@ import {
     TestRunHandler,
     XdebugFactory,
 } from './TestExecution';
+import { TestTree } from './TestTree';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
@@ -108,7 +108,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
                 ),
         )
         .inSingletonScope();
-    child.bind(TestCollection).toSelf().inSingletonScope();
+    child.bind(TestTree).toSelf().inSingletonScope();
     child.bind(TestQueueBuilder).toSelf().inSingletonScope();
     child.bind(DebugSessionManager).toSelf().inSingletonScope();
     child.bind(TestRunHandler).toSelf().inSingletonScope();

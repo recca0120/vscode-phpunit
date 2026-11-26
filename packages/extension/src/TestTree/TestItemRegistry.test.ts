@@ -1,7 +1,7 @@
 import { type TestDefinition, TestType } from '@vscode-phpunit/phpunit';
 import { describe, expect, it } from 'vitest';
 import type { TestItem } from 'vscode';
-import { TestDefinitionIndex } from './TestDefinitionIndex';
+import { TestItemRegistry } from './TestItemRegistry';
 
 function createTestItem(id: string, tags: { id: string }[] = []): TestItem {
     return { id, tags, children: { size: 0 } } as unknown as TestItem;
@@ -11,9 +11,9 @@ function createTestDef(type: TestType): TestDefinition {
     return { type, id: 'test', label: 'test' };
 }
 
-describe('TestDefinitionIndex', () => {
+describe('TestItemRegistry', () => {
     it('should store and retrieve definition and item by id', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const item = createTestItem('test1');
         const def = createTestDef(TestType.method);
 
@@ -24,7 +24,7 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should build group index for method items with group tags', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const item = createTestItem('test1', [{ id: 'group:integration' }]);
 
         index.set('file:///a.php', item, createTestDef(TestType.method));
@@ -34,7 +34,7 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should not index groups for non-method types', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         index.set(
             'file:///a.php',
             createTestItem('test1', [{ id: 'group:integration' }]),
@@ -45,7 +45,7 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should remove item and clean up empty groups', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const item = createTestItem('test1', [{ id: 'group:integration' }]);
 
         index.set('file:///a.php', item, createTestDef(TestType.method));
@@ -57,7 +57,7 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should not remove group when other items remain', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const item1 = createTestItem('t1', [{ id: 'group:unit' }]);
         const item2 = createTestItem('t2', [{ id: 'group:unit' }]);
 
@@ -70,7 +70,7 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should clear all entries', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         index.set(
             'file:///a.php',
             createTestItem('t1', [{ id: 'group:unit' }]),
@@ -86,12 +86,12 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should return empty array for unknown group', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         expect(index.getItemsByGroup('nonexistent')).toEqual([]);
     });
 
     it('should delete all items by URI', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const item1 = createTestItem('t1', [{ id: 'group:unit' }]);
         const item2 = createTestItem('t2');
         const item3 = createTestItem('t3');
@@ -109,7 +109,7 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should get definitions by URI', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const item1 = createTestItem('t1');
         const def1 = createTestDef(TestType.method);
         const item2 = createTestItem('t2');
@@ -127,12 +127,12 @@ describe('TestDefinitionIndex', () => {
     });
 
     it('should return empty array for unknown URI', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         expect(index.getDefinitionsByUri('file:///unknown.php')).toEqual([]);
     });
 
     it('should not delete shared items when deleteByUri removes only one URI', () => {
-        const index = new TestDefinitionIndex();
+        const index = new TestItemRegistry();
         const namespace = createTestItem('namespace:Tests');
         const nsDef = createTestDef(TestType.namespace);
         const classA = createTestItem('ClassA');

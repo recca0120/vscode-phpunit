@@ -11,12 +11,12 @@ import { generateXML, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type TestController, type TestRun, tests } from 'vscode';
 import { URI } from 'vscode-uri';
-import { TestCollection } from '../TestCollection';
+import { TestTree } from '../TestTree';
 import { TestQueueBuilder } from './TestQueueBuilder';
 
 describe('TestQueueBuilder', () => {
     let ctrl: TestController;
-    let collection: TestCollection;
+    let collection: TestTree;
     let builder: TestQueueBuilder;
     const phpUnitXML = new PHPUnitXML();
 
@@ -33,7 +33,7 @@ describe('TestQueueBuilder', () => {
         );
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        collection = new TestCollection(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
+        collection = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
         builder = new TestQueueBuilder(collection);
     });
 

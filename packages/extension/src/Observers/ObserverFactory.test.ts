@@ -2,7 +2,7 @@ import { PHPUnitXML, type TestDefinition } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { OutputChannel, TestItem, TestRun } from 'vscode';
 import type { Configuration } from '../Configuration';
-import type { TestCollection } from '../TestCollection/TestCollection';
+import type { TestTree } from '../TestTree/TestTree';
 import { DatasetObserver } from './DatasetObserver';
 import { ObserverFactory } from './ObserverFactory';
 import { PrinterObserver } from './PrinterObserver';
@@ -13,10 +13,10 @@ describe('ObserverFactory', () => {
     let outputChannel: OutputChannel;
 
     beforeEach(() => {
-        const testCollection = {
+        const testTree = {
             getTestDefinition: () => undefined,
             resolveDatasetChild: () => undefined,
-        } as unknown as TestCollection;
+        } as unknown as TestTree;
         outputChannel = {
             append: () => {},
             appendLine: () => {},
@@ -25,7 +25,7 @@ describe('ObserverFactory', () => {
         } as unknown as OutputChannel;
         const configuration = { get: () => undefined } as unknown as Configuration;
         const phpUnitXML = new PHPUnitXML();
-        factory = new ObserverFactory(testCollection, outputChannel, configuration, phpUnitXML);
+        factory = new ObserverFactory(testTree, outputChannel, configuration, phpUnitXML);
     });
 
     it('should create observers including DatasetObserver, TestResultObserver, and PrinterObserver', () => {

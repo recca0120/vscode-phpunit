@@ -18,12 +18,12 @@ import type {
 } from 'vscode';
 import type { URI } from 'vscode-uri';
 import { TYPES } from '../types';
-import { TestDefinitionIndex } from './TestDefinitionIndex';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
+import { TestItemRegistry } from './TestItemRegistry';
 
 @injectable()
-export class TestCollection {
-    private readonly index = new TestDefinitionIndex();
+export class TestTree {
+    private readonly index = new TestItemRegistry();
     private _rootItems: TestItemCollection | undefined;
 
     constructor(

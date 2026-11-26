@@ -14,14 +14,14 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, type TestItem, tests } from 'vscode';
 import { URI } from 'vscode-uri';
-import { TestCollection } from '../TestCollection/TestCollection';
+import { TestTree } from '../TestTree/TestTree';
 import { DatasetObserver } from './DatasetObserver';
 
 describe('DatasetObserver', () => {
     let ctrl: TestController;
     let observer: DatasetObserver;
     let parentItem: TestItem;
-    let testCollection: TestCollection;
+    let testTree: TestTree;
     let testItemById: Map<string, TestItem>;
 
     beforeEach(async () => {
@@ -40,13 +40,9 @@ describe('DatasetObserver', () => {
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(
-            ctrl,
-            phpUnitXML,
-            new TestIndex(phpUnitXML, testParser),
-        );
+        testTree = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
 
-        await testCollection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const ns = ctrl.items.get('namespace:Tests') as TestItem;
         const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
@@ -55,9 +51,9 @@ describe('DatasetObserver', () => {
         ) as TestItem;
 
         const queue = new Map<TestDefinition, TestItem>();
-        queue.set(testCollection.getTestDefinition(parentItem) as TestDefinition, parentItem);
+        queue.set(testTree.getTestDefinition(parentItem) as TestDefinition, parentItem);
         testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
-        observer = new DatasetObserver(testCollection, testItemById);
+        observer = new DatasetObserver(testTree, testItemById);
     });
 
     it('should create child TestItem on testStarted with data set', () => {
@@ -73,7 +69,7 @@ describe('DatasetObserver', () => {
         expect(child).toBeDefined();
         expect(child?.label).toContain('with data set #0');
 
-        const childDef = testCollection.getTestDefinition(child as TestItem);
+        const childDef = testTree.getTestDefinition(child as TestItem);
         expect(childDef).toBeDefined();
         expect(childDef?.type).toBe(TestType.dataset);
 
@@ -159,7 +155,7 @@ describe('DatasetObserver (Pest)', () => {
     let ctrl: TestController;
     let observer: DatasetObserver;
     let parentItem: TestItem;
-    let testCollection: TestCollection;
+    let testTree: TestTree;
     let testItemById: Map<string, TestItem>;
 
     beforeEach(async () => {
@@ -178,13 +174,9 @@ describe('DatasetObserver (Pest)', () => {
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(
-            ctrl,
-            phpUnitXML,
-            new TestIndex(phpUnitXML, testParser),
-        );
+        testTree = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
 
-        await testCollection.add(URI.file(pestProject('tests/Unit/ExampleTest.php')));
+        await testTree.add(URI.file(pestProject('tests/Unit/ExampleTest.php')));
 
         const ns = ctrl.items.get('namespace:Tests') as TestItem;
         const unitNs = ns.children.get('namespace:Unit (Tests\\Unit)') as TestItem;
@@ -194,9 +186,9 @@ describe('DatasetObserver (Pest)', () => {
         ) as TestItem;
 
         const queue = new Map<TestDefinition, TestItem>();
-        queue.set(testCollection.getTestDefinition(parentItem) as TestDefinition, parentItem);
+        queue.set(testTree.getTestDefinition(parentItem) as TestDefinition, parentItem);
         testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
-        observer = new DatasetObserver(testCollection, testItemById);
+        observer = new DatasetObserver(testTree, testItemById);
     });
 
     it('should create dataset child with correct id and label', () => {
@@ -215,7 +207,7 @@ describe('DatasetObserver (Pest)', () => {
         expect(child?.id).toBe(childId);
         expect(child?.label).toContain("with ('enunomaduro@gmail.com')");
 
-        const childDef = testCollection.getTestDefinition(child as TestItem);
+        const childDef = testTree.getTestDefinition(child as TestItem);
         expect(childDef).toBeDefined();
         expect(childDef?.type).toBe(TestType.dataset);
         expect(childDef?.id).toBe(childId);

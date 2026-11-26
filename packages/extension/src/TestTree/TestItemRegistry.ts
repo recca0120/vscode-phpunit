@@ -3,7 +3,7 @@ import type { TestItem } from 'vscode';
 
 type Entry = { item: TestItem; definition: TestDefinition };
 
-export class TestDefinitionIndex {
+export class TestItemRegistry {
     private entries = new Map<string, Entry>();
     private groups = new Map<string, Set<TestItem>>();
     private byUri = new Map<string, Set<string>>();

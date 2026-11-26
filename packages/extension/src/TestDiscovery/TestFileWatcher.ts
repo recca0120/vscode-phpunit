@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { type Disposable, type EventEmitter, RelativePattern, type Uri, workspace } from 'vscode';
-import { TestCollection } from '../TestCollection';
+import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
@@ -11,7 +11,7 @@ export class TestFileWatcher {
 
     constructor(
         @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
-        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestTree) private testTree: TestTree,
         @inject(TYPES.FileChangedEmitter) private fileChangedEmitter: EventEmitter<Uri>,
     ) {}
 
@@ -49,15 +49,15 @@ export class TestFileWatcher {
         const { pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
         const watcher = workspace.createFileSystemWatcher(pattern);
         watcher.onDidCreate((uri) => {
-            this.testCollection.add(uri);
+            this.testTree.add(uri);
             this.fileChangedEmitter.fire(uri);
         });
         watcher.onDidChange((uri) => {
-            this.testCollection.change(uri);
+            this.testTree.change(uri);
             this.fileChangedEmitter.fire(uri);
         });
         watcher.onDidDelete((uri) => {
-            this.testCollection.delete(uri);
+            this.testTree.delete(uri);
         });
 
         this.testWatcher = watcher;
