@@ -106,6 +106,37 @@ describe('TestResultObserver', () => {
         observer = new TestResultObserver(queue, testRun, testItemById);
     });
 
+    it('abort skips only tests that have not reported a result', () => {
+        const pendingItem = ctrl.createTestItem(
+            'Tests\\ExampleTest::test_pending',
+            'test_pending',
+            Uri.file('/project/tests/ExampleTest.php'),
+        );
+        const localQueue = new Map<TestDefinition, TestItem>([
+            [createTestDefinition(), testItem],
+            [createTestDefinition({ id: 'Tests\\ExampleTest::test_pending' }), pendingItem],
+        ]);
+        const obs = new TestResultObserver(
+            localQueue,
+            testRun,
+            buildTestItemById([testItem, pendingItem]),
+        );
+        obs.testFinished({
+            event: 'testFinished' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example',
+            flowId: 1,
+            name: 'test_example',
+            file: '/project/tests/ExampleTest.php',
+            locationHint: '',
+            duration: 1,
+        } as TestFinished);
+
+        obs.abort();
+
+        expect(testRun.skipped).toHaveBeenCalledWith(pendingItem);
+        expect(testRun.skipped).not.toHaveBeenCalledWith(testItem);
+    });
+
     it('should use TestMessage.diff when expected and actual are present', () => {
         const diffSpy = vi.spyOn(TestMessage, 'diff');
 

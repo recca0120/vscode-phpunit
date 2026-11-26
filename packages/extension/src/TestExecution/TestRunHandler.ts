@@ -7,7 +7,14 @@ import {
     type TestRunnerProcess,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
-import type { CancellationToken, TestController, TestItem, TestRun, TestRunRequest } from 'vscode';
+import type {
+    CancellationToken,
+    Disposable,
+    TestController,
+    TestItem,
+    TestRun,
+    TestRunRequest,
+} from 'vscode';
 import { FileCoverageAdapter } from '../FileCoverageAdapter';
 import { ObserverFactory } from '../Observers';
 import { TestCollection } from '../TestCollection';
@@ -73,17 +80,22 @@ export class TestRunHandler {
         }
         runner.emit(TestRunnerEvent.start, undefined);
 
+        let cancellationListener: Disposable | undefined;
         try {
             const processes = this.createProcesses(runner, builder, items);
-            cancellation?.onCancellationRequested(() => {
+            cancellationListener = cancellation?.onCancellationRequested(() => {
                 for (const process of processes) {
                     process.abort();
                 }
             });
 
             await this.runProcesses(processes, cancellation);
+            if (cancellation?.isCancellationRequested) {
+                runner.emit(TestRunnerEvent.abort, undefined);
+            }
             await this.collectCoverage(processes, testRun);
         } finally {
+            cancellationListener?.dispose();
             runner.emit(TestRunnerEvent.done, undefined);
         }
     }
