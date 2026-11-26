@@ -426,10 +426,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 76, started: 61, passed: 44, failed: 15, end: 1 }],
-                        ['10.0.0', { enqueued: 76, started: 75, passed: 61, failed: 12, end: 1 }],
+                        ['12.0.0', { enqueued: 77, started: 62, passed: 45, failed: 15, end: 1 }],
+                        ['10.0.0', { enqueued: 77, started: 76, passed: 62, failed: 12, end: 1 }],
                     ],
-                    { enqueued: 76, started: 53, passed: 32, failed: 19, end: 1 },
+                    { enqueued: 77, started: 54, passed: 33, failed: 19, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -441,10 +441,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 75, started: 60, passed: 44, failed: 14, end: 1 }],
-                        ['10.0.0', { enqueued: 75, started: 74, passed: 61, failed: 11, end: 1 }],
+                        ['12.0.0', { enqueued: 76, started: 61, passed: 45, failed: 14, end: 1 }],
+                        ['10.0.0', { enqueued: 76, started: 75, passed: 62, failed: 11, end: 1 }],
                     ],
-                    { enqueued: 75, started: 52, passed: 32, failed: 18, end: 1 },
+                    { enqueued: 76, started: 53, passed: 33, failed: 18, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -1394,13 +1394,28 @@ describe('Extension Test', () => {
                 ]);
             });
 
+            it('includes test methods inherited from a class outside the testsuite directories through composer autoload', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    childLabels(
+                        getTestController().items,
+                        'Inherits Support Base (Tests\\Unit\\InheritsSupportBase)',
+                    ),
+                ).toEqual([
+                    `${icon(TestType.method)} test_from_support_base`,
+                    `${icon(TestType.method)} test_own`,
+                ]);
+            });
+
             it('should run all tests', async () => {
                 const ctrl = await activateAndRun();
 
                 const expected = resolveExpected(
                     pestVersion,
-                    [['3.0.0', { enqueued: 90, started: 90, passed: 83, failed: 4, end: 1 }]],
-                    { enqueued: 90, started: 83, passed: 79, failed: 0, end: 1 },
+                    [['3.0.0', { enqueued: 93, started: 93, passed: 86, failed: 4, end: 1 }]],
+                    { enqueued: 93, started: 86, passed: 82, failed: 0, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);

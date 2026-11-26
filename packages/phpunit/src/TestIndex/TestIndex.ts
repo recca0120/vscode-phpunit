@@ -1,10 +1,13 @@
 import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
+import { ComposerAutoload } from '../Configuration/ComposerAutoload';
 import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
 import type { TestStarted } from '../TestOutput';
-import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { ClassHierarchy, type ClassInfo } from '../TestParser/ClassHierarchy';
 import { datasetExpander } from '../TestParser/DatasetExpander';
+import { PHPUNIT_TESTCASE_FQN } from '../types';
+import { checkFileExists } from '../utils';
 import { TestStore } from './TestStore';
 
 export interface File<T> {
@@ -24,6 +27,7 @@ export class TestIndex {
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
+    private autoload = new ComposerAutoload(() => this.phpUnitXML.root());
 
     constructor(
         protected phpUnitXML: PHPUnitXML,
@@ -111,6 +115,7 @@ export class TestIndex {
         this.store.clear();
         this.matcherCache.clear();
         this.classHierarchy.clear();
+        this.autoload.reset();
     }
 
     findFile(uri: URI): File<TestDefinition> | undefined {
@@ -127,9 +132,7 @@ export class TestIndex {
 
         const testsuite = this.parseTestsuite(uri);
         if (!testsuite) {
-            return this.parseTestsuite(uri, '.php')
-                ? this.indexSupportFile(uri)
-                : { parsed, deleted };
+            return this.isSupportFile(uri) ? this.indexSupportFile(uri) : { parsed, deleted };
         }
 
         this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
@@ -149,13 +152,52 @@ export class TestIndex {
         return { parsed, deleted };
     }
 
+    private isSupportFile(uri: URI): boolean {
+        return (
+            !!this.parseTestsuite(uri, '.php') ||
+            this.classHierarchy.getClassesByUri(uri.fsPath).length > 0
+        );
+    }
+
     private async indexSupportFile(uri: URI): Promise<ChangeResult> {
         const parseResult = await this.testParser.parseFile(uri.fsPath);
-        for (const cls of parseResult?.classes ?? []) {
-            this.classHierarchy.register(cls);
-        }
+        await this.registerClasses(parseResult?.classes ?? []);
 
         return { parsed: await this.reparseDependents(uri), deleted: [] };
+    }
+
+    private async registerClasses(classes: ClassInfo[]): Promise<void> {
+        for (const cls of classes) {
+            this.classHierarchy.register(cls);
+        }
+        for (const cls of classes) {
+            await this.indexAncestors(cls);
+        }
+    }
+
+    private async indexAncestors(cls: ClassInfo): Promise<void> {
+        for (const fqn of [cls.parentFQN, ...cls.traitFQNs]) {
+            if (!fqn || fqn === PHPUNIT_TESTCASE_FQN || this.classHierarchy.get(fqn)) {
+                continue;
+            }
+
+            const file = await this.findExistingFile(await this.autoload.locate(fqn));
+            if (!file) {
+                continue;
+            }
+
+            const parseResult = await this.testParser.parseFile(file);
+            await this.registerClasses(parseResult?.classes ?? []);
+        }
+    }
+
+    private async findExistingFile(candidates: string[]): Promise<string | undefined> {
+        for (const candidate of candidates) {
+            if (await checkFileExists(candidate)) {
+                return candidate;
+            }
+        }
+        return undefined;
     }
 
     private async reparseDependents(uri: URI): Promise<ChangeResult['parsed']> {
@@ -203,9 +245,7 @@ export class TestIndex {
             return [];
         }
 
-        for (const cls of parseResult.classes) {
-            this.classHierarchy.register(cls);
-        }
+        await this.registerClasses(parseResult.classes);
 
         return this.classHierarchy.enrichTests(parseResult.tests);
     }
