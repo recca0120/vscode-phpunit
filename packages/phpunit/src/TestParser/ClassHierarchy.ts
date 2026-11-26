@@ -52,6 +52,23 @@ export class ClassHierarchy {
         return false;
     }
 
+    mayExtendTestCase(classFQN: string): boolean {
+        const visited = new Set<string>();
+        let current = classFQN;
+        while (current !== PHPUNIT_TESTCASE_FQN) {
+            const info = this.registry.get(current);
+            if (!info) {
+                return true;
+            }
+            if (!info.parentFQN || visited.has(current)) {
+                return false;
+            }
+            visited.add(current);
+            current = info.parentFQN;
+        }
+        return true;
+    }
+
     resolveInheritedMethods(classFQN: string): TestDefinition[] {
         const methodMap = new Map<string, TestDefinition>();
         this.walkAncestors(classFQN, (_current, info) => {
@@ -107,15 +124,12 @@ export class ClassHierarchy {
     }
 
     private enrichClass(test: TestDefinition): TestDefinition | undefined {
-        const isTestCase = test.classFQN && this.extendsTestCase(test.classFQN);
-        const hasOwnTests = test.children && test.children.length > 0;
-
-        if (!isTestCase && !hasOwnTests) {
-            return undefined;
+        if (!test.classFQN) {
+            return test;
         }
 
-        if (!isTestCase || !test.classFQN) {
-            return test;
+        if (!this.mayExtendTestCase(test.classFQN)) {
+            return undefined;
         }
 
         const ownMethodNames = new Set(

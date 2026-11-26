@@ -1818,6 +1818,65 @@ class ChildTest extends BaseCase
         });
     });
 
+    describe('classes known not to extend TestCase', () => {
+        it('ignores classes whose resolved hierarchy does not reach TestCase', async () => {
+            const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            await mkdir(join(root, 'tests/Unit'), { recursive: true });
+            await writeFile(
+                join(root, 'tests/Unit/PlainHelperTest.php'),
+                `<?php
+
+namespace Tests\\Unit;
+
+class PlainHelperTest
+{
+    public function test_helper() {}
+}
+`,
+            );
+            await writeFile(
+                join(root, 'tests/Unit/PlainBase.php'),
+                `<?php
+
+namespace Tests\\Unit;
+
+class PlainBase
+{
+    public function test_base() {}
+}
+`,
+            );
+            await writeFile(
+                join(root, 'tests/Unit/ExtendsPlainBaseTest.php'),
+                `<?php
+
+namespace Tests\\Unit;
+
+class ExtendsPlainBaseTest extends PlainBase
+{
+    public function test_own() {}
+}
+`,
+            );
+            const collection = givenTestCollection(
+                `<testsuites>
+                    <testsuite name="Unit">
+                        <directory suffix="Test.php">tests/Unit</directory>
+                    </testsuite>
+                </testsuites>`,
+                join(root, 'phpunit.xml'),
+            );
+            await collection.add(URI.file(join(root, 'tests/Unit/PlainBase.php')));
+            await collection.add(URI.file(join(root, 'tests/Unit/PlainHelperTest.php')));
+            await collection.add(URI.file(join(root, 'tests/Unit/ExtendsPlainBaseTest.php')));
+
+            const allIds = (items: import('vscode').TestItemCollection): string[] =>
+                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
+            expect(allIds(ctrl.items).filter((id) => id.includes('Plain'))).toEqual([]);
+            await rm(root, { recursive: true, force: true });
+        });
+    });
+
     describe('index operations', () => {
         it('find groups and tests by group', async () => {
             const collection = givenTestCollection(`
@@ -2068,6 +2127,8 @@ class ChildTest extends BaseCase
                 '\\support\\RequiredTrait.php',
                 '/tests/WithoutSuffixCase.php',
                 '\\tests\\WithoutSuffixCase.php',
+                '/tests/VendorBaseTestCase.php',
+                '\\tests\\VendorBaseTestCase.php',
             ];
             const expectedFiles = files
                 .filter((file) => !skips.some((skip) => file.fsPath.includes(skip)))
