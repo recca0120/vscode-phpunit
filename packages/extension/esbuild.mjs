@@ -7,7 +7,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
-// Copy tree-sitter WASM files to dist/
 mkdirSync(join(__dirname, 'dist'), { recursive: true });
 const wasmDir = join(__dirname, 'node_modules', '@vscode', 'tree-sitter-wasm', 'wasm');
 copyFileSync(join(wasmDir, 'tree-sitter.wasm'), join(__dirname, 'dist', 'tree-sitter.wasm'));

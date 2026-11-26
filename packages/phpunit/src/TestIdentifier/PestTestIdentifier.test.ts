@@ -49,7 +49,6 @@ describe('PestTestIdentifier', () => {
     describe('fromLocationHint with namespaced describe block (::class)', () => {
         it.each([
             [
-                // describe(PlaylistService::class, ...) where PlaylistService is in Foo\\Services namespace
                 'pest_qn://tests/Unit/PlaylistServiceTests.php::`Foo\\Services\\PlaylistService` → it does something',
                 'it does something',
                 'tests/Unit/PlaylistServiceTests.php::`Foo\\Services\\PlaylistService` → it does something',
@@ -77,8 +76,6 @@ describe('PestTestIdentifier', () => {
                 'Users\\path\\to\\tests\\Unit\\DatasetTest::__pest_evaluable_it_business_closed',
                 'tests/Unit/DatasetTest.php::it business closed',
             ],
-            // describe('something', fn() => it('test', fn())->with([...]))
-            // v2 testSuiteStarted uses evaluable encoding with → separator
             [
                 'file:///path/to/tests/Unit/SampleTests.php',
                 'Users\\path\\to\\tests\\Unit\\SampleTests::__pest_evaluable__something__\u2192_it_should_detect_OK_but_does_not',

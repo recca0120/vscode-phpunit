@@ -46,8 +46,6 @@ function resolveTodoDescription(
     return parts.join(', ') || undefined;
 }
 
-// Order is priority: the first matching annotation wins when a test carries more than one
-// (e.g. an ->only() test is never also shown as a plain browser test).
 const ANNOTATION_ICONS: Array<[keyof NonNullable<TestDefinition['annotations']>, string]> = [
     ['only', '$(target)'],
     ['skipped', '$(circle-slash)'],
@@ -94,10 +92,6 @@ export class TestHierarchyBuilder extends BaseTestHierarchyBuilder<TestItem> {
         testItem.description = this.resolveDescription(testDefinition);
     }
 
-    // The winning annotation for a test with multiple modifiers — same priority order
-    // ANNOTATION_ICONS declares, shared by the icon and the description so they can
-    // never disagree (e.g. ->skip()->skipOnCi() must not show "skips on CI" next to
-    // an unconditional-skip icon).
     private resolveWinningAnnotation(
         testDefinition: TestDefinition,
     ): (typeof ANNOTATION_ICONS)[number] | undefined {

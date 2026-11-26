@@ -49,7 +49,6 @@ function formatSnippetLine(
         return `${prefix}${num} ▕ ${content}`;
     }
 
-    // Collision style: arrow red+bold, line number dark_gray or italic+bold, delimiter dark_gray
     const mark = isTarget ? style.failedMark(' ➜ ') : '   ';
     const lineNum = isTarget ? style.bold(num) : style.lineNumber(num);
     const delimiter = style.lineNumber(' ▕ ');
@@ -58,21 +57,11 @@ function formatSnippetLine(
     return `${mark}${lineNum}${delimiter}${coloredContent}`;
 }
 
-/**
- * Simple regex-based PHP syntax highlighting matching Collision's token colors:
- * - keywords: magenta+bold
- * - strings: light_gray (white)
- * - comments: dark_gray+italic
- * - variables: default+bold
- * - numbers: default+bold
- */
 function highlightPhp(line: string, style: AnsiStyle): string {
-    // Process from left to right, matching tokens greedily
     let result = '';
     let pos = 0;
 
     while (pos < line.length) {
-        // Single-line comment: // or #
         const commentMatch = line.slice(pos).match(/^(?:\/\/|#).*/);
         if (commentMatch) {
             result += style.comment(commentMatch[0]);
@@ -80,7 +69,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // Block comment start (may not close on same line)
         const blockCommentMatch = line.slice(pos).match(/^\/\*.*?(?:\*\/|$)/);
         if (blockCommentMatch) {
             result += style.comment(blockCommentMatch[0]);
@@ -88,7 +76,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // Doc comment continuation: lines starting with * (but not *=, */, etc.)
         if (pos === 0 || line.slice(0, pos).trim() === '') {
             const docContMatch = line.slice(pos).match(/^\s*\*(?!\s*\$)(?!\s*\d).*/);
             if (docContMatch) {
@@ -98,7 +85,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             }
         }
 
-        // Strings: single or double quoted
         const stringMatch = line.slice(pos).match(/^(?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/);
         if (stringMatch) {
             result += style.string(stringMatch[0]);
@@ -106,7 +92,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // PHP keywords
         const keywordMatch = line
             .slice(pos)
             .match(
@@ -118,7 +103,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // Variables: $name
         const varMatch = line.slice(pos).match(/^\$[a-zA-Z_]\w*/);
         if (varMatch) {
             result += style.variable(varMatch[0]);
@@ -126,7 +110,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // Numbers
         const numMatch = line.slice(pos).match(/^\d+(?:\.\d+)?/);
         if (numMatch) {
             result += style.variable(numMatch[0]);
@@ -134,7 +117,6 @@ function highlightPhp(line: string, style: AnsiStyle): string {
             continue;
         }
 
-        // Default: pass through character by character
         result += line[pos];
         pos++;
     }

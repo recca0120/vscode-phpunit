@@ -12,7 +12,6 @@ export class DebugSessionManager {
         const xdebug = builder.getXdebug();
 
         if (xdebug?.isDebugMode()) {
-            // TODO(#346): await debug session attachment before running tests
             await debug.startDebugging(
                 this.workspaceFolder,
                 xdebug.name ?? (await xdebug.getDebugConfiguration()),

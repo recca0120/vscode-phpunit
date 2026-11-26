@@ -857,7 +857,6 @@ describe('Pest TestOutputParser Text', () => {
                     event: TeamcityEvent.testSuiteStarted,
                     id: 'tests/Fixtures/CollisionTest.php',
                     name: 'Tests\\Fixtures\\CollisionTest',
-                    // file: 'tests/Fixtures/CollisionTest.php',
                     flowId: 12667,
                 },
             );
@@ -994,7 +993,6 @@ describe('Pest TestOutputParser Text', () => {
         const parse = (content: string) => matcher.parse(content);
 
         it('full lifecycle: testSuiteStarted → testStarted → testFailed → testFinished', () => {
-            // testSuiteStarted for testsuite name
             const suiteStarted = parse(
                 `##teamcity[testSuiteStarted name='Unit' locationHint='pest_qn://${pestProject('tests/Unit/ArchTest.php')}' flowId='36903']`,
             );
@@ -1006,12 +1004,10 @@ describe('Pest TestOutputParser Text', () => {
                 }),
             );
 
-            // testSuiteStarted for class
             parse(
                 `##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest' locationHint='pest_qn://${pestProject('tests/Unit/ExampleTest.php')}' flowId='36903']`,
             );
 
-            // testStarted
             const started = parse(
                 `##teamcity[testStarted name='test description' locationHint='pest_qn://${pestProject('tests/Unit/ExampleTest.php')}::test description' flowId='36903']`,
             );
@@ -1025,13 +1021,11 @@ describe('Pest TestOutputParser Text', () => {
                 }),
             );
 
-            // testFailed (merges with cached testStarted)
             const failed = parse(
                 `##teamcity[testFailed name='test description' message='Failed asserting that true is identical to false.' details='at ${pestProject('tests/Unit/ExampleTest.php')}:4' flowId='36903']`,
             );
             expect(failed).toBeUndefined();
 
-            // testFinished (resolves the cached result)
             const finished = parse(
                 `##teamcity[testFinished name='test description' duration='1' flowId='36903']`,
             );

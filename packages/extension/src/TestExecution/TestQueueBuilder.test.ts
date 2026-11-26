@@ -77,7 +77,6 @@ describe('TestQueueBuilder', () => {
     it('should enqueue dataset children when a method with datasets is queued', async () => {
         await collection.add(URI.file(phpUnitProject('tests/DataProviderAttributeTest.php')));
 
-        // Find a method TestItem that has dataset children
         let methodItem: import('vscode').TestItem | undefined;
         for (const [, ns] of ctrl.items) {
             for (const [, cls] of ns.children) {
@@ -99,7 +98,6 @@ describe('TestQueueBuilder', () => {
         const request = { include } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(include, request, undefined, testRun);
 
-        // Queue should contain both the method AND its dataset children
         const types = [...queue.keys()].map((def) => def.type);
         expect(types).toContain(TestType.dataset);
         expect(queue.size).toBeGreaterThan(1);
@@ -109,7 +107,6 @@ describe('TestQueueBuilder', () => {
         await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const allItems = [...toArray(ctrl.items)];
-        // Get first method item to exclude
         const methods: import('vscode').TestItem[] = [];
         for (const [, ns] of ctrl.items) {
             for (const [, cls] of ns.children) {

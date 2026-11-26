@@ -423,7 +423,6 @@ function adaptForeachStatement(node: SyntaxNode): AstNode {
     let valueVariable = '';
     let foundAs = false;
 
-    // foreach (EXPR as $v) { ... }
     for (const child of node.children) {
         if (!child) continue;
         if (!foundAs && isExpressionType(child.type)) {
@@ -536,7 +535,6 @@ function isExpressionType(type: string): boolean {
 function adaptYield(node: SyntaxNode): AstNode {
     const children = node.namedChildren.filter((c): c is NonNullable<typeof c> => !!c);
 
-    // yield 'key' => value — tree-sitter wraps as array_element_initializer
     if (children.length === 1 && children[0].type === 'array_element_initializer') {
         const entry = children[0];
         const keyNode = entry.namedChildren[0];
@@ -549,7 +547,6 @@ function adaptYield(node: SyntaxNode): AstNode {
         };
     }
 
-    // yield value (no key)
     return {
         kind: 'yield_expression',
         value: children.length > 0 ? adaptExpression(children[0]) : undefined,

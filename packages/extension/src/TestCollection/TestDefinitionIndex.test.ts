@@ -138,15 +138,12 @@ describe('TestDefinitionIndex', () => {
         const classA = createTestItem('ClassA');
         const classB = createTestItem('ClassB');
 
-        // File A indexes namespace + classA
         index.set('file:///a.php', namespace, nsDef);
         index.set('file:///a.php', classA, createTestDef(TestType.class));
 
-        // File B also indexes the same namespace + classB
         index.set('file:///b.php', namespace, nsDef);
         index.set('file:///b.php', classB, createTestDef(TestType.class));
 
-        // Deleting file A should NOT remove namespace (still referenced by file B)
         index.deleteByUri('file:///a.php');
 
         expect(index.getDefinition('namespace:Tests')).toBe(nsDef);

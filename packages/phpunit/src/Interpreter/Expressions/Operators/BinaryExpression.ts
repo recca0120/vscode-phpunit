@@ -21,8 +21,6 @@ class BinaryExpression implements Expression<unknown> {
     }
 }
 
-// --- Helpers ---
-
 function toNumber(value: unknown): number | undefined {
     const n = typeof value === 'number' ? value : Number(value);
     return Number.isNaN(n) ? undefined : n;
@@ -54,8 +52,6 @@ function looseCompare(
     };
 }
 
-// --- Instance ---
-
 const binaryExpr = new BinaryExpression({
     '.': (a, b) => String(a) + String(b),
     '%': numOp((a, b) => a % b),
@@ -72,15 +68,11 @@ const binaryExpr = new BinaryExpression({
     '!==': (a, b) => a !== b,
 });
 
-// --- Compare ---
-
 export function compare(node: AstNode, context: Context): boolean | undefined {
     if (!binaryExpr.supports(node)) {
         return undefined;
     }
     return binaryExpr.resolve(node, context) as boolean | undefined;
 }
-
-// --- Export ---
 
 export { binaryExpr };

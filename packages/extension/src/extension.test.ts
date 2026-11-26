@@ -363,13 +363,11 @@ describe('Extension Test', () => {
 
                 const spy = vi.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
 
-                // phpunit config change → should update
                 listener({ affectsConfiguration: (section: string) => section === 'phpunit' });
                 expect(spy).toHaveBeenCalledTimes(1);
 
                 spy.mockClear();
 
-                // non-phpunit config change → should NOT update
                 listener({ affectsConfiguration: (section: string) => section === 'editor' });
                 expect(spy).not.toHaveBeenCalled();
 
@@ -567,7 +565,6 @@ describe('Extension Test', () => {
                     }),
                 );
 
-                // Group tests are run by selecting specific test items, not --group flag
                 expectSpawnCalled([binary, '--colors=always', '--teamcity']);
             });
 
@@ -838,9 +835,6 @@ describe('Extension Test', () => {
                     const testRun = getTestRun(ctrl);
                     expect(testRun.addCoverage).toHaveBeenCalledTimes(2);
 
-                    // createTestRun must receive the ORIGINAL request object (same reference).
-                    // VS Code uses object identity to link the TestRun to the coverage profile —
-                    // if a new TestRunRequest is created instead, the Coverage Panel won't appear.
                     const createTestRunCalls = (ctrl.createTestRun as Mock).mock.calls;
                     expect(createTestRunCalls.length).toBeGreaterThan(0);
                     for (const [calledRequest] of createTestRunCalls) {
@@ -945,7 +939,6 @@ describe('Extension Test', () => {
 
             setWorkspaceFolders([phpUnitFolder, pestFolder]);
 
-            // Each folder gets its own scoped configuration
             const phpUnitConfig = workspace.getConfiguration('phpunit', phpUnitFolder.uri);
             await phpUnitConfig.update('php', phpBinary);
             await phpUnitConfig.update('phpunit', phpUnit.binary);
@@ -970,7 +963,6 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
 
-            // Multi-workspace should have folder root items at top level
             const phpUnitFolder = findTest(
                 ctrl.items,
                 `folder:${Uri.file(phpUnitStubs[0].root).toString()}`,
@@ -986,12 +978,10 @@ describe('Extension Test', () => {
 
             if (!phpUnitFolder || !pestFolder) return;
 
-            // PHPUnit items should be under phpunit folder
             const phpUnitItem = findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)');
             expect(phpUnitItem).toBeDefined();
             expect(phpUnitItem?.label).toContain('AssertionsTest');
 
-            // Pest items should be under pest folder, grouped by testsuite
             const pestUnitSuite = findTest(pestFolder.children, 'testsuite:Unit');
             expect(pestUnitSuite).toBeDefined();
             expect(pestUnitSuite?.label).toContain('Unit');
@@ -1245,7 +1235,6 @@ describe('Extension Test', () => {
             setWorkspaceFolders([phpUnitFolder]);
             await activate(context);
 
-            // Prepare pest folder config
             const pestFolder: WorkspaceFolder = {
                 index: 1,
                 name: 'pest-stub',
@@ -1256,7 +1245,6 @@ describe('Extension Test', () => {
             await pestConfig.update('phpunit', pest.binary);
             await pestConfig.update('args', pest.args);
 
-            // Get the onDidChangeWorkspaceFolders listener
             const onFolderChange = workspace.onDidChangeWorkspaceFolders as Mock;
             const listenerCall = onFolderChange.mock.calls.find(
                 (call: unknown[]) => typeof call[0] === 'function',
@@ -1264,7 +1252,6 @@ describe('Extension Test', () => {
             expect(listenerCall).toBeDefined();
             const listener = listenerCall?.[0];
 
-            // Reset concurrency tracking after activate
             (
                 workspace.findFiles as unknown as {
                     _maxConcurrent: number;
@@ -1278,20 +1265,14 @@ describe('Extension Test', () => {
                 }
             )._concurrentCount = 0;
 
-            // Event 1: add pest (1→2, crosses boundary, reloadAll for 2 folders → 2 concurrent findFiles)
             setWorkspaceFolders([phpUnitFolder, pestFolder]);
             listener({ added: [pestFolder], removed: [] });
 
-            // Event 2: remove pest (2→1, crosses boundary, reloadAll for 1 folder → 1 findFiles)
             setWorkspaceFolders([phpUnitFolder]);
             listener({ added: [], removed: [pestFolder] });
 
-            // reloadAll() chains onto pendingOperation, so awaiting it
-            // guarantees all prior folder-change handlers have completed.
             await commands.executeCommand('phpunit.reload');
 
-            // Within one reloadAll of 2 folders, Promise.all produces maxConcurrent=2.
-            // If NOT serialized, event 2's findFiles would overlap with event 1's → maxConcurrent=3.
             expect(
                 (workspace.findFiles as unknown as { _maxConcurrent: number })._maxConcurrent,
             ).toBeLessThanOrEqual(2);
@@ -1303,13 +1284,10 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
 
-            // Clear findFiles call count before resolveHandler
             (workspace.findFiles as Mock).mockClear();
 
             await ctrl.resolveHandler();
 
-            // findFiles is called by reloadAll (via discoverTestFiles), NOT by startWatching
-            // Verify watchers were created
             expect(workspace.createFileSystemWatcher).toHaveBeenCalled();
         });
 
@@ -1325,7 +1303,6 @@ describe('Extension Test', () => {
 
             await ctrl.refreshHandler();
 
-            // Items should be fully restored after reload
             expect(ctrl.items.size).toBe(itemsBefore);
         });
 
@@ -1335,20 +1312,16 @@ describe('Extension Test', () => {
             await activate(context);
             const ctrl = getTestController();
 
-            // Initial resolve to establish watchers
             await ctrl.resolveHandler();
 
-            // Two concurrent resolves
             const p1 = ctrl.resolveHandler();
             const p2 = ctrl.resolveHandler();
             await Promise.all([p1, p2]);
 
-            // Get all watchers created by createFileSystemWatcher
             const allWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
                 (r) => r.value as FakeFileSystemWatcher,
             );
 
-            // Only the last batch should be undisposed (1 folder = 2 watchers per resolve: test files + config files)
             const undisposed = allWatchers.filter((w) => !w.disposed);
             expect(undisposed.length).toBe(2);
         });

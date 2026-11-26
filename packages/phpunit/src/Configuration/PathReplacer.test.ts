@@ -284,7 +284,6 @@ describe('PathReplacer', () => {
             { [VAR_WORKSPACE_FOLDER]: `/app${VAR_PATH_SEPARATOR}sub` },
         );
 
-        // posixPath normalises backslashes for non-drive-letter paths on all platforms
         expect(pathReplacer.toRemote(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
             `/app/sub/tests/AssertionsTest.php`,
         );
@@ -296,7 +295,6 @@ describe('PathReplacer', () => {
             { [VAR_WORKSPACE_FOLDER]: `/app${VAR_PATH_SEPARATOR_SHORT}sub` },
         );
 
-        // posixPath normalises backslashes for non-drive-letter paths on all platforms
         expect(pathReplacer.toRemote(phpUnitProject('tests/AssertionsTest.php'))).toEqual(
             `/app/sub/tests/AssertionsTest.php`,
         );

@@ -29,12 +29,10 @@ export class PhpParserAstParser implements AstParser {
     }
 }
 
-/** Workaround for https://github.com/glayzzle/php-parser/issues/170 */
 function applyInlinePlaceholderWorkaround(text: string): string {
     return text.replace(/\?>\r?\n<\?/g, '?>\n___PSEUDO_INLINE_PLACEHOLDER___<?');
 }
 
-/** Workaround for https://github.com/glayzzle/php-parser/issues/155 */
 function normalizeCommentLineBreaks(comments: Comment[]): void {
     for (const comment of comments) {
         let trimmed = 0;

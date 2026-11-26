@@ -19,8 +19,6 @@ export class PHP {
     private readonly resolverMap = new Map<Constructor<Resolver>, Resolver>();
     private kindToVisitors = new Map<string, Visitor[]>();
 
-    // --- Plugin API ---
-
     useVisitor(visitor: Visitor): this {
         this.visitors.push(visitor);
         this.visitorMap.set(visitor.constructor as Constructor<Visitor>, visitor);
@@ -48,8 +46,6 @@ export class PHP {
     getResolver<T extends Resolver>(type: Constructor<T>): T {
         return this.resolverMap.get(type) as T;
     }
-
-    // --- Entry point ---
 
     interpret(ast: AstNode): FileInfo {
         for (const v of [...this.visitors, ...this.resolvers]) {
@@ -81,19 +77,15 @@ export class PHP {
         return result as FileInfo;
     }
 
-    // --- Factory ---
-
     static create(): PHP {
         const php = new PHP();
 
-        // Visitors
         php.useVisitor(new NamespaceVisitor());
         php.useVisitor(new ClassVisitor());
         php.useVisitor(new PhpDocVisitor());
         php.useVisitor(new AttributeVisitor());
         php.useVisitor(new CallVisitor());
 
-        // Resolvers
         php.useResolver(new TestTagResolver());
         php.useResolver(new FQNResolver());
         php.useResolver(new PhpUnitResolver());
@@ -101,8 +93,6 @@ export class PHP {
 
         return php;
     }
-
-    // --- Private ---
 
     private dispatch(node: AstNode): void {
         const visitors = this.kindToVisitors.get(node.kind);
@@ -114,8 +104,6 @@ export class PHP {
         }
     }
 }
-
-// --- Module export ---
 
 const _php = PHP.create();
 export const interpret = (ast: AstNode): FileInfo => _php.interpret(ast);

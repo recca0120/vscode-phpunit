@@ -74,7 +74,6 @@ describe('TestCollection', () => {
     });
 
     it('classHierarchy should be owned by TestCollection, not TestParser', () => {
-        // TestParser should not expose classHierarchy
         expect(testParser).not.toHaveProperty('classHierarchy');
     });
 
@@ -288,10 +287,8 @@ describe('TestCollection', () => {
                 </testsuite>
             </testsuites>`);
 
-        // AbstractTest.php is abstract, so it has 0 test definitions
         const abstractFile = URI.file(phpUnitProject('tests/AbstractTest.php'));
 
-        // change() should not leave an empty entry in the collection
         await collection.change(abstractFile);
         expect(collection.has(abstractFile)).toBeFalsy();
     });
@@ -313,16 +310,12 @@ describe('TestCollection', () => {
             'addition_provider with data set #0',
         );
 
-        // resolve once to populate index
         expect(collection.resolveDataset(started)).toBeDefined();
-        // second call returns undefined (already exists)
         expect(collection.resolveDataset(started)).toBeUndefined();
 
-        // delete clears index, re-parse restores parent definitions
         collection.delete(uri);
         await collection.change(uri);
 
-        // now resolveDataset should work again
         expect(collection.resolveDataset(started)).toBeDefined();
     });
 

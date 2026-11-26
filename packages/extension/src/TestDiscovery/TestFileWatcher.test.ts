@@ -152,7 +152,6 @@ describe('TestFileWatcher', () => {
             const oldTestWatcher = getTestWatcher();
             expect(oldTestWatcher.pattern.pattern).toBe('**/*.php');
 
-            // Config changes → testsuites now include a different directory
             const newPattern = new RelativePattern(
                 '/workspace/tests',
                 '{Unit/**/*.php,Feature/**/*.php}',
@@ -165,15 +164,12 @@ describe('TestFileWatcher', () => {
 
             getConfigWatcher().fireChange(Uri.file('/workspace/phpunit.xml'));
 
-            // Wait for async reload + watcher recreation to complete
             await vi.waitFor(() => {
                 expect(mockWorkspace.createdWatchers.length).toBeGreaterThan(2);
             });
 
-            // Old test watcher should be disposed
             expect(oldTestWatcher.disposed).toBe(true);
 
-            // New test watcher should be created with the new pattern
             const newTestWatcher = mockWorkspace.createdWatchers[2];
             expect(newTestWatcher).toBeDefined();
             expect(newTestWatcher.pattern.pattern).toBe('{Unit/**/*.php,Feature/**/*.php}');

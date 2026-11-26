@@ -72,7 +72,6 @@ describe('Printer output buffer', () => {
             id: 'Tests\\Output\\OutputTest::test_dump',
             file: phpUnitProject('tests/Output/OutputTest.php'),
         });
-        // Real ANSI output from dd(['test' => 'foo']) in issue #322
         const ansiInput =
             '\u001B[0;38;5;208m\u001B[38;5;38marray:1\u001B[0;38;5;208m [\u001B[m\n' +
             '  \u001B[0;38;5;208m"\u001B[38;5;113mtest\u001B[0;38;5;208m" => "\u001B[1;38;5;113mfoo\u001B[0;38;5;208m"\u001B[m\n' +

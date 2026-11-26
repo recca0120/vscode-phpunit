@@ -225,13 +225,6 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
     };
 }
 
-// --- Browser test detection (Pest 4) ---
-//
-// visit() is not a chained modifier like ->skip()/->todo(); it's a statement
-// written inside the test closure's body. This scan is fully independent of
-// walkAndCollect's chain-walking logic: it only looks at the closure argument
-// of the test's root call (it/test) and walks its body for a `visit(...)` call.
-
 function detectsBrowserTestCall(rootCall: CallNode): boolean {
     const closureArg = rootCall.arguments[rootCall.arguments.length - 1];
     if (!closureArg) {
@@ -302,7 +295,6 @@ function resolveDatasets(sources: AstNode[]): string[] {
         return cartesianProduct(datasets);
     }
 
-    // Cartesian failed (e.g. closure/generator can't be statically resolved); fall back to independent resolution
     return sources.flatMap((source) => resolvePestLabels(source));
 }
 
