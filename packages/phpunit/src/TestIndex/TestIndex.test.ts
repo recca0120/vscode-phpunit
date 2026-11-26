@@ -11,17 +11,17 @@ import { TestIndex } from './TestIndex';
 
 beforeAll(async () => initTreeSitter());
 
-describe('TestCollection', () => {
+describe('TestIndex', () => {
     const phpUnitXML = new PHPUnitXML();
     const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
     const testParser = new TestParser(phpUnitXML, astParser);
-    const testCollection = new TestIndex(phpUnitXML, testParser);
+    const testIndex = new TestIndex(phpUnitXML, testParser);
 
-    const givenTestCollection = (text: string) => {
+    const givenTestIndex = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
-        testCollection.reset();
+        testIndex.reset();
 
-        return testCollection;
+        return testIndex;
     };
 
     const shouldBe = async (
@@ -58,7 +58,7 @@ describe('TestCollection', () => {
     };
 
     it('should clear state on reset', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -73,156 +73,158 @@ describe('TestCollection', () => {
         expect(collection.has(uri)).toBe(false);
     });
 
-    it('classHierarchy should be owned by TestCollection, not TestParser', () => {
+    it('classHierarchy should be owned by TestIndex, not TestParser', () => {
         expect(testParser).not.toHaveProperty('classHierarchy');
     });
 
-    it('match testsuite directory', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                </testsuite>
-            </testsuites>`);
+    describe('testsuites from phpunit.xml', () => {
+        it('match testsuite directory', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                    </testsuite>
+                </testsuites>`);
 
-        const files = [
-            URI.file(phpUnitProject('tests/AssertionsTest.php')),
-            // URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-        ];
-        for (const file of files) {
-            await collection.change(file);
-        }
+            const files = [
+                URI.file(phpUnitProject('tests/AssertionsTest.php')),
+                // URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            ];
+            for (const file of files) {
+                await collection.change(file);
+            }
 
-        await shouldBe(collection, { default: files });
-    });
-
-    it('match testsuite file', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <file>tests/AssertionsTest.php</file>
-                </testsuite>
-            </testsuites>`);
-
-        const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
-        for (const file of files) {
-            await collection.change(file);
-        }
-
-        await shouldBe(collection, { default: files });
-    });
-
-    it('match testsuite exclude directory', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                    <exclude>tests/Unit</exclude>
-                </testsuite>
-            </testsuites>`);
-
-        const files = [
-            URI.file(phpUnitProject('tests/AssertionsTest.php')),
-            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-        ];
-        for (const file of files) {
-            await collection.change(file);
-        }
-
-        await shouldBe(collection, { default: [files[0]] });
-    });
-
-    it('match testsuite exclude file', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                    <exclude>tests/Unit/ExampleTest.php</exclude>
-                </testsuite>
-            </testsuites>`);
-
-        const files = [
-            URI.file(phpUnitProject('tests/AssertionsTest.php')),
-            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-        ];
-        for (const file of files) {
-            await collection.change(file);
-        }
-
-        await shouldBe(collection, { default: [files[0]] });
-    });
-
-    it('match three testsuites', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="Unit">
-                    <directory>tests/Unit</directory>
-                </testsuite>
-                <testsuite name="Feature">
-                    <directory>tests/Feature</directory>
-                </testsuite>
-                <testsuite name="default">
-                    <directory>tests</directory>
-                    <exclude>tests/Unit/ExampleTest.php</exclude>
-                    <exclude>tests/Feature/ExampleTest.php</exclude>
-                </testsuite> 
-            </testsuites>`);
-
-        const files = [
-            URI.file(phpUnitProject('tests/AssertionsTest.php')),
-            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-            URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
-        ];
-        for (const file of files) {
-            await collection.change(file);
-        }
-
-        await shouldBe(collection, {
-            default: [files[0]],
-            Unit: [files[1]],
-            Feature: [files[2]],
+            await shouldBe(collection, { default: files });
         });
-    });
 
-    it('match *', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests/*/SubFolder</directory>
-                </testsuite> 
-            </testsuites>`);
-        const files = [
-            URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
-            URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')),
-            URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
-        ];
-        for (const file of files) {
-            await collection.change(file);
-        }
+        it('match testsuite file', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="default">
+                        <file>tests/AssertionsTest.php</file>
+                    </testsuite>
+                </testsuites>`);
 
-        await shouldBe(collection, { default: [files[1], files[2]] });
-    });
+            const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
+            for (const file of files) {
+                await collection.change(file);
+            }
 
-    it('match no case', async () => {
-        const collection = givenTestCollection(`
-            <testsuites>
-                <testsuite name="default">
-                    <directory>tests/unit</directory>
-                </testsuite> 
-            </testsuites>`);
+            await shouldBe(collection, { default: files });
+        });
 
-        const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
-        for (const file of files) {
-            await collection.change(file);
-        }
+        it('match testsuite exclude directory', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                        <exclude>tests/Unit</exclude>
+                    </testsuite>
+                </testsuites>`);
 
-        await shouldBe(collection, {
-            default: [files[0]],
+            const files = [
+                URI.file(phpUnitProject('tests/AssertionsTest.php')),
+                URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            ];
+            for (const file of files) {
+                await collection.change(file);
+            }
+
+            await shouldBe(collection, { default: [files[0]] });
+        });
+
+        it('match testsuite exclude file', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                        <exclude>tests/Unit/ExampleTest.php</exclude>
+                    </testsuite>
+                </testsuites>`);
+
+            const files = [
+                URI.file(phpUnitProject('tests/AssertionsTest.php')),
+                URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+            ];
+            for (const file of files) {
+                await collection.change(file);
+            }
+
+            await shouldBe(collection, { default: [files[0]] });
+        });
+
+        it('match three testsuites', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="Unit">
+                        <directory>tests/Unit</directory>
+                    </testsuite>
+                    <testsuite name="Feature">
+                        <directory>tests/Feature</directory>
+                    </testsuite>
+                    <testsuite name="default">
+                        <directory>tests</directory>
+                        <exclude>tests/Unit/ExampleTest.php</exclude>
+                        <exclude>tests/Feature/ExampleTest.php</exclude>
+                    </testsuite> 
+                </testsuites>`);
+
+            const files = [
+                URI.file(phpUnitProject('tests/AssertionsTest.php')),
+                URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+                URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
+            ];
+            for (const file of files) {
+                await collection.change(file);
+            }
+
+            await shouldBe(collection, {
+                default: [files[0]],
+                Unit: [files[1]],
+                Feature: [files[2]],
+            });
+        });
+
+        it('match *', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests/*/SubFolder</directory>
+                    </testsuite> 
+                </testsuites>`);
+            const files = [
+                URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
+                URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')),
+                URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
+            ];
+            for (const file of files) {
+                await collection.change(file);
+            }
+
+            await shouldBe(collection, { default: [files[1], files[2]] });
+        });
+
+        it('match no case', async () => {
+            const collection = givenTestIndex(`
+                <testsuites>
+                    <testsuite name="default">
+                        <directory>tests/unit</directory>
+                    </testsuite> 
+                </testsuites>`);
+
+            const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
+            for (const file of files) {
+                await collection.change(file);
+            }
+
+            await shouldBe(collection, {
+                default: [files[0]],
+            });
         });
     });
 
     it('exclude abstract class', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -242,7 +244,7 @@ describe('TestCollection', () => {
     });
 
     it('unique file', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -261,7 +263,7 @@ describe('TestCollection', () => {
     });
 
     it('delete file', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -280,7 +282,7 @@ describe('TestCollection', () => {
     });
 
     it('change should remove file when it no longer contains tests', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -294,7 +296,7 @@ describe('TestCollection', () => {
     });
 
     it('delete should clear definitionIndex so resolveDataset works again', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -320,7 +322,7 @@ describe('TestCollection', () => {
     });
 
     it('reset should clear definitionIndex so resolveDataset works again', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -346,7 +348,7 @@ describe('TestCollection', () => {
     });
 
     it('reset', async () => {
-        const collection = givenTestCollection(`
+        const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
@@ -380,7 +382,7 @@ describe('TestCollection', () => {
 
     describe('resolveDataset', () => {
         it('should resolve missing dataset child', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -403,7 +405,7 @@ describe('TestCollection', () => {
         });
 
         it('should return undefined when already exists', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -429,7 +431,7 @@ describe('TestCollection', () => {
         });
 
         it('should return undefined when parent not found', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -445,7 +447,7 @@ describe('TestCollection', () => {
         });
 
         it('should return undefined for non-dataset test', async () => {
-            const collection = givenTestCollection(`
+            const collection = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
