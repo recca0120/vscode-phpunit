@@ -55,43 +55,41 @@ export class WorkspaceFolderManager {
         this.setupFileChangeListeners();
     }
 
-    async enqueue(fn: () => Promise<void>): Promise<void> {
-        this.pendingOperation = this.pendingOperation.then(fn);
-        await this.pendingOperation;
+    enqueue(fn: () => Promise<void>): Promise<void> {
+        return this.runExclusive(fn);
     }
 
     async reload(): Promise<void> {
-        await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
+        await this.reloadContainers();
         this._onDidReload.fire();
     }
 
-    async reloadAll(): Promise<void> {
-        this.pendingOperation = this.pendingOperation.then(() => this.reload());
-        await this.pendingOperation;
+    reloadAll(): Promise<void> {
+        return this.runExclusive(() => this.reload());
     }
 
     registerFolderChangeListener(): Disposable {
         return workspace.onDidChangeWorkspaceFolders((event) => {
-            this.pendingOperation = this.pendingOperation
-                .then(async () => {
-                    const { needsReload, addedContainers } = this.handleFolderChange(event);
+            this.runExclusive(async () => {
+                const { needsReload, addedContainers } = this.handleFolderChange(event);
 
-                    if (needsReload) {
-                        await this.reload();
-                        return;
-                    }
-
+                if (needsReload) {
+                    await this.reloadContainers();
+                } else {
                     for (const child of addedContainers) {
                         await child.get(TestFileDiscovery).loadWorkspaceConfiguration();
                         await child.get(TestFileDiscovery).reloadAll();
-                        await child.get(TestFileWatcher).startWatching();
                     }
-                    this._onDidReload.fire();
-                })
-                .catch((err) => {
-                    const message = err instanceof Error ? err.message : String(err);
-                    window.showErrorMessage(`PHPUnit: Failed to handle folder change: ${message}`);
-                });
+                }
+
+                for (const child of addedContainers) {
+                    await this.startWatchingFolder(child);
+                }
+                this._onDidReload.fire();
+            }).catch((err) => {
+                const message = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage(`PHPUnit: Failed to handle folder change: ${message}`);
+            });
         });
     }
 
@@ -118,6 +116,26 @@ export class WorkspaceFolderManager {
         const container = this.createChildContainer(folder);
         this.folders.set(key, container);
         return container;
+    }
+
+    /**
+     * Serializes `fn` after all previously queued operations. A rejection is
+     * returned to this caller only; the queue itself keeps running so later
+     * operations are not poisoned by an earlier failure.
+     */
+    private runExclusive(fn: () => Promise<void>): Promise<void> {
+        const operation = this.pendingOperation.then(fn);
+        this.pendingOperation = operation.catch(() => {});
+        return operation;
+    }
+
+    private async reloadContainers(): Promise<void> {
+        await Promise.all(this.getAll().map((c) => c.get(TestFileDiscovery).reloadAll()));
+    }
+
+    private async startWatchingFolder(child: Container): Promise<void> {
+        await child.get(TestFileWatcher).startWatching();
+        child.get(TestWatchManager).setupFileChangeListener();
     }
 
     private setupFileChangeListeners(): void {
@@ -170,20 +188,19 @@ export class WorkspaceFolderManager {
         const wasMulti = prevCount > 1;
         const isMulti = newCount > 1;
         const crossedBoundary = wasMulti !== isMulti;
+        const addedContainers = event.added.flatMap((folder) => {
+            const child = this.getByKey(folder.uri.toString());
+            return child ? [child] : [];
+        });
 
         if (crossedBoundary) {
             this.applyFolderRoots();
-            return { needsReload: true, addedContainers: [] };
+            return { needsReload: true, addedContainers };
         }
 
-        const addedContainers: Container[] = [];
-        for (const folder of event.added) {
-            const child = this.getByKey(folder.uri.toString());
-            if (child) {
-                if (newCount > 1) {
-                    this.createFolderRoot(child);
-                }
-                addedContainers.push(child);
+        if (isMulti) {
+            for (const child of addedContainers) {
+                this.createFolderRoot(child);
             }
         }
 
@@ -191,6 +208,7 @@ export class WorkspaceFolderManager {
     }
 
     private cleanupContainer(container: Container): void {
+        container.get(TestFileWatcher).dispose();
         container.get(TestCollection).reset();
         container.get<EventEmitter<Uri>>(TYPES.FileChangedEmitter).dispose();
     }
