@@ -32,15 +32,15 @@ export class TestFileDiscovery {
     async getWorkspaceTestPattern(): Promise<WorkspaceTestPattern> {
         await this.ensureConfigLoaded();
 
-        const { includes, excludes } = this.phpUnitXML.getIndexPatterns(
+        const { includes, excludes } = this.phpUnitXML.testFilePatterns(
             this.workspaceFolder.uri.fsPath,
         );
         for (const dir of await this.autoload.devDirectories()) {
-            includes.push({ tag: 'directory', name: 'autoload-dev', value: dir }, '.php');
+            includes.add({ tag: 'directory', name: 'autoload-dev', value: dir }, '.php');
         }
 
         const toRelativePattern = (pattern: TestGlobPattern) => {
-            const { uri, pattern: glob } = pattern.toGlobPattern();
+            const { uri, pattern: glob } = pattern.toRelativePattern();
             return new RelativePattern(uri, glob);
         };
 
@@ -53,7 +53,7 @@ export class TestFileDiscovery {
 
     getConfigFilePattern(): string {
         const configArg = this.configuration
-            .getArguments()
+            .arguments()
             .find((p) => p.startsWith('--configuration='));
         if (configArg) {
             const configFile = configArg.replace('--configuration=', '');
@@ -94,7 +94,7 @@ export class TestFileDiscovery {
 
     private invalidateCache(): void {
         this.loaded = false;
-        this.autoload.reset();
+        this.autoload.clear();
     }
 
     private async ensureConfigLoaded(): Promise<void> {
@@ -102,7 +102,7 @@ export class TestFileDiscovery {
             return;
         }
 
-        const configurationFile = await this.configuration.getConfigurationFile(
+        const configurationFile = await this.configuration.findConfigurationFile(
             this.workspaceFolder.uri.fsPath,
         );
         if (configurationFile) {

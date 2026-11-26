@@ -38,7 +38,7 @@ export class PathReplacer implements PathMapper {
         this.mapper = new PrefixPathMapper(mappings, cwd);
     }
 
-    replacePathVariables(path: string) {
+    resolveVariables(path: string) {
         return this.variables.resolve(path);
     }
 

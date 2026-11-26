@@ -47,16 +47,16 @@ export class PHPUnitXML {
         return this._root;
     }
 
-    path(file: string): string {
+    resolvePath(file: string): string {
         const configRoot = this._configRoot;
 
         return isAbsolute(file) || !configRoot ? file : join(configRoot, file);
     }
 
-    getTestSuiteNames(): string[] {
+    testSuiteNames(): string[] {
         const seen = new Set<string>();
         const names: string[] = [];
-        for (const suite of this.getTestSuites()) {
+        for (const suite of this.testSuites()) {
             if (suite.tag !== 'exclude' && !seen.has(suite.name)) {
                 seen.add(suite.name);
                 names.push(suite.name);
@@ -65,13 +65,13 @@ export class PHPUnitXML {
         return names;
     }
 
-    getTestSuiteDirectories(suiteName: string): string[] {
-        return this.getTestSuites()
+    testSuiteDirectories(suiteName: string): string[] {
+        return this.testSuites()
             .filter((s) => s.name === suiteName && s.tag === 'directory')
             .map((s) => s.value);
     }
 
-    getTestSuites(): TestSuite[] {
+    testSuites(): TestSuite[] {
         const root = this.root();
 
         const callback = (tag: string, node: XmlElement, parent: XmlElement) => {
@@ -119,34 +119,34 @@ export class PHPUnitXML {
               ];
     }
 
-    getIndexPatterns(root: string) {
+    testFilePatterns(root: string) {
         const includes = new TestGlobPattern(root, this.root());
         const excludes = new TestGlobPattern(root, this.root(), [
             '**/.git/**',
             '**/node_modules/**',
         ]);
 
-        for (const item of this.getTestSuites()) {
-            item.tag !== 'exclude' ? includes.push(item, '.php') : excludes.push(item);
+        for (const item of this.testSuites()) {
+            item.tag !== 'exclude' ? includes.add(item, '.php') : excludes.add(item);
         }
 
         return { includes, excludes };
     }
 
-    getIncludes(): Source[] {
+    includes(): Source[] {
         return this.getIncludesOrExcludes('phpunit source include');
     }
 
-    getExcludes(): Source[] {
+    excludes(): Source[] {
         return this.getIncludesOrExcludes('phpunit source exclude');
     }
 
-    getSources() {
+    sources() {
         const appendType = (type: string, objs: Source[]) => objs.map((obj) => ({ type, ...obj }));
 
         return [
-            ...appendType('include', this.getIncludes()),
-            ...appendType('exclude', this.getExcludes()),
+            ...appendType('include', this.includes()),
+            ...appendType('exclude', this.excludes()),
         ];
     }
 

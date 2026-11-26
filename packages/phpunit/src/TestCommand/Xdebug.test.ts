@@ -7,8 +7,8 @@ const stubConfig: IConfiguration = {
     get: () => undefined,
     has: () => false,
     update: async () => {},
-    getArguments: () => [],
-    getConfigurationFile: async () => undefined,
+    arguments: () => [],
+    findConfigurationFile: async () => undefined,
 };
 
 const givenXdebug = () => new Xdebug(stubConfig);

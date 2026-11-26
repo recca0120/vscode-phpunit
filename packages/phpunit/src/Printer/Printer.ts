@@ -498,7 +498,7 @@ export class Printer {
         const style = this.style.isEnabled ? this.style : undefined;
 
         return readSourceSnippet(
-            this.phpUnitXML.path(detail.file),
+            this.phpUnitXML.resolvePath(detail.file),
             detail.line,
             style,
             detail.file,

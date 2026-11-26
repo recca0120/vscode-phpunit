@@ -14,8 +14,8 @@ const workspaceFolder = { uri: { fsPath: root } } as WorkspaceFolder;
 
 function createMockConfiguration(args: string[] = []) {
     return {
-        getArguments: vi.fn().mockReturnValue(args),
-        getConfigurationFile: vi.fn().mockResolvedValue(undefined),
+        arguments: vi.fn().mockReturnValue(args),
+        findConfigurationFile: vi.fn().mockResolvedValue(undefined),
     } as unknown as Configuration;
 }
 
@@ -123,8 +123,8 @@ describe('TestFileDiscovery.getWorkspaceTestPattern', () => {
 </phpunit>`,
         );
         const configuration = {
-            getArguments: vi.fn().mockReturnValue([]),
-            getConfigurationFile: vi.fn().mockResolvedValue(configFile),
+            arguments: vi.fn().mockReturnValue([]),
+            findConfigurationFile: vi.fn().mockResolvedValue(configFile),
         } as unknown as Configuration;
         const discovery = new TestFileDiscovery(
             configuration,

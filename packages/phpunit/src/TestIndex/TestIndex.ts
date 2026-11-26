@@ -83,7 +83,7 @@ export class TestIndex {
         this.ownTests.clear();
         this.testSuiteMatcher.reset();
         this.classes.clear();
-        this.autoload.reset();
+        this.autoload.clear();
     }
 
     find(uri: URI): IndexedFile<TestDefinition> | undefined {
@@ -137,7 +137,7 @@ export class TestIndex {
 
         const previous = this.classes.unregisterFile(uri.fsPath);
 
-        this.store.defineTestsuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
+        this.store.defineTestsuites(this.phpUnitXML.testSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
         if (tests.length === 0) {
             const file = this.store.find(uri);

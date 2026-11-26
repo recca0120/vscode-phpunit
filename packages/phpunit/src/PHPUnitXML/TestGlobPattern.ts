@@ -17,7 +17,7 @@ export class TestGlobPattern {
         return normalize(paths.join('/')).replace(/\\|\/+/g, '/');
     }
 
-    push(item: TestSuite, extension: string = '') {
+    add(item: TestSuite, extension: string = '') {
         const args = [this.relativePath, item.value];
         if (item.tag !== 'file') {
             args.push(`**/*${extension}`);
@@ -26,7 +26,7 @@ export class TestGlobPattern {
         this.items.push(TestGlobPattern.normalizePath(...args));
     }
 
-    toGlobPattern() {
+    toRelativePattern() {
         const hasWildcard = this.items.some((item) => /^\*/.test(item));
         const dirs = Array.from(
             new Set(

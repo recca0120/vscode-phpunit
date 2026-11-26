@@ -70,7 +70,7 @@ export class TestCommand {
         return new CommandTemplateEnvironment(
             this.getConfigString('command'),
             this.pathReplacer,
-            (text) => this.pathReplacer.replacePathVariables(text),
+            (text) => this.pathReplacer.resolveVariables(text),
         );
     }
 
@@ -85,7 +85,7 @@ export class TestCommand {
     }
 
     private phpUnitArgs(): Arg[] {
-        const userArgs = this.configuration.getArguments(this.arguments);
+        const userArgs = this.configuration.arguments(this.arguments);
         const filters = userArgs.filter((arg) => /^--filter=/.test(arg));
         const lastFilter = filters[filters.length - 1]?.match(/^--filter=(.*)/)?.[1];
 

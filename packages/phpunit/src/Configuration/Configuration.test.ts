@@ -52,7 +52,7 @@ describe('Configuration Test', () => {
         const configuration = new Configuration({});
         const root = phpUnitProject('');
 
-        expect(await configuration.getConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
+        expect(await configuration.findConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
     });
 
     it('resolves workspace folder placeholder in --configuration for discovery', async () => {
@@ -61,12 +61,12 @@ describe('Configuration Test', () => {
             args: ['--configuration', `${VAR_WORKSPACE_FOLDER}/phpunit.xml`],
         });
 
-        expect(await configuration.getConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
+        expect(await configuration.findConfigurationFile(root)).toEqual(join(root, 'phpunit.xml'));
     });
 
     it('can not get phpunit.xml', async () => {
         const configuration = new Configuration({ args: ['-c', 'src/phpunit.xml'] });
 
-        expect(await configuration.getConfigurationFile()).toBeUndefined();
+        expect(await configuration.findConfigurationFile()).toBeUndefined();
     });
 });

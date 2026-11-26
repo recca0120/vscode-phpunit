@@ -330,7 +330,7 @@ describe('PathReplacer', () => {
         it(`replaces ${VAR_WORKSPACE_FOLDER_BASENAME} with basename of workspaceFolder, not cwd`, () => {
             const pathReplacer = new PathReplacer({ cwd }, undefined, workspace);
 
-            expect(pathReplacer.replacePathVariables(`${VAR_WORKSPACE_FOLDER_BASENAME}`)).toEqual(
+            expect(pathReplacer.resolveVariables(`${VAR_WORKSPACE_FOLDER_BASENAME}`)).toEqual(
                 'workspace',
             );
         });

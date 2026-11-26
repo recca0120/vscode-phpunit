@@ -30,7 +30,7 @@ export class ComposerAutoload {
         return Object.values(composer?.['autoload-dev']?.['psr-4'] ?? {}).flat();
     }
 
-    reset(): void {
+    clear(): void {
         this.composer = undefined;
     }
 
