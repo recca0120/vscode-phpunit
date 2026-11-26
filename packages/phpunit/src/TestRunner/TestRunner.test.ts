@@ -253,6 +253,46 @@ describe('TestRunner Test', () => {
         expect(events).toEqual(['line: late output', 'resolved']);
     });
 
+    it('delivers the output of a later process after an earlier process fails', async () => {
+        const failing = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(),
+            stderr: new EventEmitter(),
+        });
+        const passing = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(),
+            stderr: new EventEmitter(),
+        });
+        (spawn as Mock)
+            .mockImplementationOnce(() => {
+                setTimeout(() => {
+                    failing.emit('error', new Error('spawn php-missing ENOENT'));
+                    failing.emit('close', -2);
+                });
+                return failing;
+            })
+            .mockImplementationOnce(() => {
+                setTimeout(() => {
+                    passing.stdout.emit('data', "##teamcity[testCount count='1' flowId='1']\n");
+                    passing.emit('close', 0);
+                });
+                return passing;
+            });
+        const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
+        const options = { cwd: phpUnitProject('') };
+        const command = new TestCommand(configuration, options, new PathReplacer(options, {}));
+        const testRunner = new TestRunner();
+        const events: string[] = [];
+        testRunner.on(TestRunnerEvent.error, () => events.push('error'));
+        testRunner.on(TestRunnerEvent.output, () => events.push('output'));
+        testRunner.on(TestRunnerEvent.close, (code) => events.push(`close ${code}`));
+
+        for (const process of [testRunner.run(command), testRunner.run(command)]) {
+            await process.run();
+        }
+
+        expect(events).toEqual(['error', 'close 2', 'output', 'close 0']);
+    });
+
     it('run error command', async () => {
         const cwd = phpUnitProject('');
 
