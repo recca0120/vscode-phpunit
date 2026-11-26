@@ -709,6 +709,65 @@ class Php84SyntaxTest extends TestCase
         );
     });
 
+    describe('docblock annotations', () => {
+        const file = phpUnitProject('tests/AnnotationTest.php');
+        const givenMethod = (docblock: string) =>
+            givenTest(
+                file,
+                `<?php
+
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class AnnotationTest extends TestCase
+{
+    public function testProducer() {}
+
+    /**
+${docblock}
+     */
+    public function annotated($a = null, $b = null) {}
+}
+`,
+                'annotated',
+            );
+
+        it('keeps a tag on the line after a tag without a value', () => {
+            expect(givenMethod('     * @test\n     * @depends testProducer')?.annotations).toEqual({
+                depends: ['testProducer'],
+            });
+        });
+
+        it('depends drops the clone modifier', () => {
+            expect(
+                givenMethod(
+                    '     * @test\n     * @depends clone testProducer\n     * @depends !clone testProducer',
+                )?.annotations,
+            ).toEqual({ depends: ['testProducer', 'testProducer'] });
+        });
+
+        it('depends on another class is not taken as a method name', () => {
+            expect(
+                givenMethod('     * @depends OtherTest::testProducer\n     * @test')?.annotations,
+            ).toEqual({});
+        });
+
+        it('ticket and size annotations are groups', () => {
+            expect(
+                givenMethod('     * @test\n     * @ticket 123\n     * @small\n     * @group slow')
+                    ?.annotations,
+            ).toEqual({ group: ['123', 'small', 'slow'] });
+        });
+
+        it('testWith rows are data sets', () => {
+            expect(
+                givenMethod('     * @test\n     * @testWith [1, 2]\n     *           [3, 4]')
+                    ?.annotations,
+            ).toEqual({ dataset: ['data set #0', 'data set #1'] });
+        });
+    });
+
     describe('Inherited test methods with ClassHierarchy', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const phpUnitXML = new PHPUnitXML();

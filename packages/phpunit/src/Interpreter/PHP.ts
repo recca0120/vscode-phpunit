@@ -8,7 +8,6 @@ import { AttributeVisitor } from './Visitors/AttributeVisitor';
 import { CallVisitor } from './Visitors/CallVisitor';
 import { ClassVisitor } from './Visitors/ClassVisitor';
 import { NamespaceVisitor } from './Visitors/NamespaceVisitor';
-import { PhpDocVisitor } from './Visitors/PhpDocVisitor';
 
 type Constructor<T> = abstract new (...args: never[]) => T;
 
@@ -82,7 +81,6 @@ export class PHP {
 
         php.useVisitor(new NamespaceVisitor());
         php.useVisitor(new ClassVisitor());
-        php.useVisitor(new PhpDocVisitor());
         php.useVisitor(new AttributeVisitor());
         php.useVisitor(new CallVisitor());
 
