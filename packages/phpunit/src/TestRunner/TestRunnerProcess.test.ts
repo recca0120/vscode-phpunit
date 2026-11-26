@@ -12,19 +12,19 @@ vi.mock('node:fs/promises', async () => {
     return { ...actual, rm: vi.fn().mockResolvedValue(undefined) };
 });
 
-const givenBuilder = (opts?: { cwd?: string; paths?: Record<string, string>; mode?: Mode }) => {
+const givenCommand = (opts?: { cwd?: string; paths?: Record<string, string>; mode?: Mode }) => {
     const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
     const cwd = opts?.cwd ?? phpUnitProject('');
     const options = { cwd };
     const pathReplacer = new PathReplacer(options, opts?.paths ?? {});
     const xdebug = opts?.mode ? new Xdebug(config) : undefined;
-    return { builder: new TestCommand(config, options, pathReplacer, xdebug), xdebug };
+    return { command: new TestCommand(config, options, pathReplacer, xdebug), xdebug };
 };
 
 describe('TestRunnerProcess', () => {
     it('run() resolves after abort()', async () => {
-        const { builder } = givenBuilder();
-        const process = new TestRunnerProcess(builder);
+        const { command } = givenCommand();
+        const process = new TestRunnerProcess(command);
 
         // biome-ignore lint/suspicious/noExplicitAny: prevent real spawn
         vi.spyOn(process as any, 'execute').mockImplementation(() => {});
@@ -36,8 +36,8 @@ describe('TestRunnerProcess', () => {
     });
 
     it('readCoverage returns empty array when no cloverFile', async () => {
-        const { builder } = givenBuilder();
-        const process = new TestRunnerProcess(builder);
+        const { command } = givenCommand();
+        const process = new TestRunnerProcess(command);
 
         const result = await process.readCoverage();
 
@@ -47,7 +47,7 @@ describe('TestRunnerProcess', () => {
     it('readCoverage parses clover, applies toLocal, and removes file', async () => {
         const remoteCwd = 'C:\\local_disk\\zobo\\Projects\\vscode-php-debug\\vscode-phpunit';
         const localCwd = phpUnitProject('');
-        const { builder, xdebug } = givenBuilder({
+        const { command, xdebug } = givenCommand({
             cwd: localCwd,
             paths: { [VAR_WORKSPACE_FOLDER]: remoteCwd },
             mode: Mode.coverage,
@@ -56,7 +56,7 @@ describe('TestRunnerProcess', () => {
 
         const cloverFile = fixturePath('test1.clover.xml');
 
-        const process = new TestRunnerProcess(builder.withCoverageClover(cloverFile));
+        const process = new TestRunnerProcess(command.withCoverageClover(cloverFile));
         const result = await process.readCoverage();
 
         expect(rm).toHaveBeenCalledWith(cloverFile, { force: true });

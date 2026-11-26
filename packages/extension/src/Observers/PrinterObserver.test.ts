@@ -73,14 +73,14 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
 
                 const cwd = root;
                 const options = { cwd };
-                const builder = new TestCommand(
+                const command = new TestCommand(
                     configuration,
                     options,
                     new PathReplacer(options, configuration.get('paths') as Path),
                 );
-                builder.setArguments([file, filter].join(' '));
+                command.setArguments([file, filter].join(' '));
 
-                await testRunner.run(builder).run();
+                await testRunner.run(command).run();
             }
 
             it('should trigger testVersion', async () => {

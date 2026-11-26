@@ -16,7 +16,7 @@ import { DebugOutputObserver } from './DebugOutputObserver';
 
 const createTestItem = (id: string): TestItem => ({ id }) as TestItem;
 
-const createBuilder = (command = 'php') => {
+const createCommand = (command = 'php') => {
     const config = new Configuration({ php: command });
     const options = { cwd: '.' };
     return new TestCommand(config, options, new PathReplacer(options, config.get('paths') as Path));
@@ -82,7 +82,7 @@ describe('DebugOutputObserver', () => {
     describe('run()', () => {
         it('logs the command', () => {
             const observer = new DebugOutputObserver(outputChannel, configuration, new Map());
-            observer.run(createBuilder('php').toString());
+            observer.run(createCommand('php').toString());
 
             expect(outputChannel.appendLine).toHaveBeenCalledWith(expect.stringContaining('php'));
         });
@@ -90,7 +90,7 @@ describe('DebugOutputObserver', () => {
         it('logs queue keys when testItemById is not empty', () => {
             const testItemById = new Map([[ID, createTestItem(ID)]]);
             const observer = new DebugOutputObserver(outputChannel, configuration, testItemById);
-            observer.run(createBuilder('php').toString());
+            observer.run(createCommand('php').toString());
 
             expect(outputChannel.appendLine).toHaveBeenCalledWith(
                 expect.stringContaining('[Queue]'),
@@ -100,7 +100,7 @@ describe('DebugOutputObserver', () => {
 
         it('does not log queue section when testItemById is empty', () => {
             const observer = new DebugOutputObserver(outputChannel, configuration, new Map());
-            observer.run(createBuilder('php').toString());
+            observer.run(createCommand('php').toString());
 
             expect(outputChannel.appendLine).not.toHaveBeenCalledWith(
                 expect.stringContaining('[Queue]'),
@@ -109,8 +109,8 @@ describe('DebugOutputObserver', () => {
 
         it('clears output once per request when clearDebugOutputOnRun is true', () => {
             const observer = new DebugOutputObserver(outputChannel, configuration, new Map());
-            observer.run(createBuilder('cmd-1').toString());
-            observer.run(createBuilder('cmd-2').toString());
+            observer.run(createCommand('cmd-1').toString());
+            observer.run(createCommand('cmd-2').toString());
 
             expect(outputChannel.clear).toHaveBeenCalledTimes(1);
         });

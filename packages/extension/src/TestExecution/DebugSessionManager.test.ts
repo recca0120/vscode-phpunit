@@ -4,7 +4,7 @@ import type { WorkspaceFolder } from 'vscode';
 import { debug, Uri } from 'vscode';
 import { DebugSessionManager } from './DebugSessionManager';
 
-const givenBuilder = async (opts?: { mode?: Mode; debuggerConfig?: string }) => {
+const givenCommand = async (opts?: { mode?: Mode; debuggerConfig?: string }) => {
     const config = new Configuration({
         php: 'php',
         phpunit: 'vendor/bin/phpunit',
@@ -33,7 +33,7 @@ describe('DebugSessionManager', () => {
     });
 
     it('should stop debugging even if fn throws', async () => {
-        const builder = await givenBuilder({
+        const command = await givenCommand({
             mode: Mode.debug,
             debuggerConfig: 'Listen for Xdebug',
         });
@@ -44,7 +44,7 @@ describe('DebugSessionManager', () => {
 
         const error = new Error('test run failed');
         await expect(
-            manager.wrap(builder.getXdebug(), async () => {
+            manager.wrap(command.getXdebug(), async () => {
                 throw error;
             }),
         ).rejects.toThrow('test run failed');
@@ -53,18 +53,18 @@ describe('DebugSessionManager', () => {
     });
 
     it('should pass through when not in debug mode', async () => {
-        const builder = await givenBuilder({ mode: Mode.coverage });
+        const command = await givenCommand({ mode: Mode.coverage });
 
-        const result = await manager.wrap(builder.getXdebug(), async () => 'passthru');
+        const result = await manager.wrap(command.getXdebug(), async () => 'passthru');
 
         expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();
     });
 
     it('should pass through when no xdebug', async () => {
-        const builder = await givenBuilder();
+        const command = await givenCommand();
 
-        const result = await manager.wrap(builder.getXdebug(), async () => 'passthru');
+        const result = await manager.wrap(command.getXdebug(), async () => 'passthru');
 
         expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();
