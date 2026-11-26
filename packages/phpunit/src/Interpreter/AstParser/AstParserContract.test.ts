@@ -12,8 +12,6 @@ const fixtures = globSync('**/*.php', { cwd: fixturePath('') })
 const knownDifferences = new Set<string>([
     'pest-stub/src/Calculator.php',
     'pest-stub/src/Item.php',
-    'pest-stub/tests/Fixtures/Arch/ToHaveAttribute/Attributes/AsAttribute.php',
-    'pest-stub/tests/Fixtures/Arch/ToHaveAttribute/HaveAttribute/HaveAttributeClass.php',
     'pest-stub/tests/Fixtures/CollisionTest.php',
     'pest-stub/tests/Fixtures/DirectoryWithTests/ExampleTest.php',
     'pest-stub/tests/Fixtures/ExampleTest.php',
@@ -24,12 +22,8 @@ const knownDifferences = new Set<string>([
     'pest-stub/tests/Unit/SkipTodoTest.php',
     'phpunit-stub/src/Calculator.php',
     'phpunit-stub/src/Item.php',
-    'phpunit-stub/tests/AssertionsTest.php',
-    'phpunit-stub/tests/AttributeTest.php',
     'phpunit-stub/tests/CalculatorTest.php',
-    'phpunit-stub/tests/DataProviderAttributeTest.php',
     'phpunit-stub/tests/DataProviderLoopTest.php',
-    'phpunit-stub/tests/TestWithAttributeTest.php',
 ]);
 
 describe('php-parser produces the same AST as tree-sitter', () => {

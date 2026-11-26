@@ -1,4 +1,4 @@
-import type { AstNode, ClassNode, MethodNode } from '../AstParser/AstNode';
+import type { AstNode, AstNodeAttrGroup, ClassNode, MethodNode } from '../AstParser/AstNode';
 import type { PHP } from '../PHP';
 import type { Visitor } from '../types';
 
@@ -31,20 +31,25 @@ export class AttributeVisitor implements Visitor {
     }
 }
 
-function collectAttributes(node: {
-    attrGroups?: { attrs: { name: string; args: { value?: unknown }[] }[] }[];
-}): AttributeInfo[] {
-    if (!node.attrGroups) {
-        return [];
+function collectAttributes(node: { attrGroups?: AstNodeAttrGroup[] }): AttributeInfo[] {
+    return (node.attrGroups ?? []).flatMap((group) =>
+        group.attrs.map((attr) => ({
+            name: attr.name.split('\\').pop() ?? attr.name,
+            args: attr.args.map(argumentValue),
+        })),
+    );
+}
+
+function argumentValue(arg: AstNode): unknown {
+    const node = arg.kind === 'argument' ? arg.value : arg;
+    if (node.kind === 'string') {
+        return node.value;
     }
-    const result: AttributeInfo[] = [];
-    for (const group of node.attrGroups) {
-        for (const attr of group.attrs) {
-            result.push({
-                name: attr.name,
-                args: attr.args.map((arg) => arg.value),
-            });
-        }
+    if (node.kind === 'class_constant_access') {
+        return `${node.scope}::${node.name}`;
     }
-    return result;
+    if (node.kind === 'number') {
+        return String(node.value);
+    }
+    return undefined;
 }
