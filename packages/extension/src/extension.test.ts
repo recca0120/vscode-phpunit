@@ -495,6 +495,54 @@ describe('Extension Test', () => {
                 ]);
             });
 
+            it('should not let a continuous run replace the run to rerun', async () => {
+                type FakeWatcher = { fireChange: (uri: Uri) => void; pattern: { pattern: string } };
+                const watchers = (workspace as unknown as { createdWatchers: FakeWatcher[] })
+                    .createdWatchers;
+                await activate(context);
+                const ctrl = getTestController();
+                const before = watchers.length;
+                await ctrl.resolveHandler();
+                const testWatchers = watchers
+                    .slice(before)
+                    .filter(({ pattern }) => !pattern.pattern.includes('.xml'));
+                setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                    line: 17,
+                    character: 14,
+                });
+                await commands.executeCommand('phpunit.run-test-at-cursor');
+
+                const testRunProfile = getTestRunProfile(ctrl);
+                const calculator = findTest(ctrl.items, 'Calculator (Tests\\Calculator)');
+                const request = {
+                    include: [calculator],
+                    exclude: [],
+                    profile: testRunProfile,
+                    continuous: true,
+                };
+                await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+                vi.mocked(spawn).mockClear();
+                for (const watcher of testWatchers) {
+                    watcher.fireChange(Uri.file(phpUnitProject('tests/CalculatorTest.php')));
+                }
+                await vi.waitFor(() => {
+                    const testRuns = (ctrl.createTestRun as Mock).mock.results;
+                    expect(testRuns).toHaveLength(2);
+                    expect(testRuns[1].value.end).toHaveBeenCalled();
+                });
+
+                vi.mocked(spawn).mockClear();
+                await commands.executeCommand('phpunit.rerun');
+
+                expectSpawnCalled([
+                    binary,
+                    filterPattern('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ]);
+            });
+
             it('should run all tests with group arg', async () => {
                 const configuration = workspace.getConfiguration('phpunit', Uri.file(cwd));
                 await configuration.update('args', ['--group=integration']);
@@ -799,6 +847,35 @@ describe('Extension Test', () => {
                         expect(calledRequest).toBe(request);
                     }
                 });
+
+                it('rerun keeps the coverage profile of the previous run', async () => {
+                    vi.spyOn(CloverParser.prototype, 'parseClover').mockResolvedValue([]);
+
+                    await activate(context);
+                    const ctrl = getTestController();
+                    const testRunProfile = (ctrl.createRunProfile as Mock).mock.results
+                        .map(({ value }) => value)
+                        .find(({ kind }) => kind === TestRunProfileKind.Coverage);
+                    const include = [findTest(ctrl.items, 'Assertions (Tests\\Assertions)')];
+                    const request = { include, exclude: [], profile: testRunProfile };
+                    await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+
+                    vi.mocked(spawn).mockClear();
+                    await commands.executeCommand('phpunit.rerun');
+
+                    expectSpawnCalled(
+                        [
+                            '-dxdebug.mode=coverage',
+                            binary,
+                            /AssertionsTest\.php/,
+                            '--colors=always',
+                            '--teamcity',
+                            '--coverage-clover',
+                            /\.phpunit\.cache[/\\]coverage-.+-0\.xml/,
+                        ],
+                        { XDEBUG_MODE: 'coverage' },
+                    );
+                });
             });
         },
     );
@@ -980,6 +1057,34 @@ describe('Extension Test', () => {
             await testRunProfile.runHandler(request, new CancellationTokenSource().token);
 
             expectSpawnCalled([pest.binary, '--colors=always', '--teamcity']);
+        });
+
+        it('should rerun tests of every folder in the previous run', async () => {
+            if (skipIfMissing()) return;
+
+            const phpUnit = phpUnitStubs[0];
+            const pest = pestStubs[0];
+
+            await activate(context);
+            const ctrl = getTestController();
+            const testRunProfile = getTestRunProfile(ctrl);
+            const phpUnitFolder = findTest(
+                ctrl.items,
+                `folder:${Uri.file(phpUnit.root).toString()}`,
+            );
+            const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
+            if (!phpUnitFolder || !pestFolder) return;
+            const include = [
+                findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)'),
+                findTest(pestFolder.children, 'testsuite:Unit'),
+            ];
+            const request = { include, exclude: [], profile: testRunProfile };
+            await testRunProfile.runHandler(request, new CancellationTokenSource().token);
+
+            vi.mocked(spawn).mockClear();
+            await commands.executeCommand('phpunit.rerun');
+
+            expect(spawn).toHaveBeenCalledTimes(2);
         });
 
         it('should run pest testsuite with --testsuite flag', async () => {

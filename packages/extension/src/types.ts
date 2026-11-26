@@ -1,14 +1,11 @@
 import type { Container } from 'inversify';
-import type { Position, TestItem, TestRunRequest, Uri, WorkspaceFolder } from 'vscode';
+import type { Position, TestItem, Uri, WorkspaceFolder } from 'vscode';
 
 export type ChildContainerFactory = (folder: WorkspaceFolder) => Container;
 
 export interface FolderTestContext {
     findTestsByFile(uri: Uri): TestItem[];
     findTestsByPosition(uri: Uri, position: Position): TestItem[];
-    findTestsByRequest(request?: TestRunRequest): TestItem[] | undefined;
-    getPreviousRequest(): TestRunRequest | undefined;
-    getLastRunAt(): number;
 }
 
 export const TYPES = {

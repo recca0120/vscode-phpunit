@@ -58,6 +58,10 @@ export class TestRunHandler {
             await this.runTestQueue(builder, testRun, request, include, cancellation);
         });
 
+        if (request.continuous) {
+            return;
+        }
+
         this.previousRequest = request;
         this.lastRunAt = Date.now();
     }

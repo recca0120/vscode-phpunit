@@ -5,6 +5,7 @@ import {
     type Disposable,
     type TestItem,
     type TestRunProfile,
+    type TestRunRequest,
     TestRunRequest as TestRunRequestImpl,
     type Uri,
     window,
@@ -81,12 +82,12 @@ export class TestCommandRegistry {
 
     rerun(): Disposable {
         return commands.registerCommand('phpunit.rerun', async () => {
-            const ctx = this.findMostRecentRun();
-            if (!ctx) {
+            const request = this.findMostRecentRequest();
+            if (!request) {
                 return;
             }
 
-            await this.run(ctx.findTestsByRequest(ctx.getPreviousRequest()));
+            await this.run(this.findTestsByRequest(request), request.profile);
         });
     }
 
@@ -104,19 +105,28 @@ export class TestCommandRegistry {
             .flatMap((c) => c.get(TestCollection).findTestsByGroup(group));
     }
 
-    private findMostRecentRun(): FolderTestContext | undefined {
-        let mostRecent: FolderTestContext | undefined;
+    private findMostRecentRequest(): TestRunRequest | undefined {
+        let mostRecent: TestRunRequest | undefined;
         let mostRecentTime = -1;
 
         for (const child of this.folderManager.getAll()) {
             const runHandler = child.get(TestRunHandler);
-            if (runHandler.getPreviousRequest() && runHandler.getLastRunAt() > mostRecentTime) {
+            const request = runHandler.getPreviousRequest();
+            if (request && runHandler.getLastRunAt() > mostRecentTime) {
                 mostRecentTime = runHandler.getLastRunAt();
-                mostRecent = this.toContext(child);
+                mostRecent = request;
             }
         }
 
         return mostRecent;
+    }
+
+    private findTestsByRequest(request: TestRunRequest): TestItem[] | undefined {
+        const tests = this.folderManager
+            .getAll()
+            .flatMap((c) => c.get(TestCollection).findTestsByRequest(request) ?? []);
+
+        return tests.length > 0 ? tests : undefined;
     }
 
     private getContextForUri(uri: Uri): FolderTestContext | undefined {
@@ -134,9 +144,6 @@ export class TestCommandRegistry {
             findTestsByFile: (uri) => container.get(TestCollection).findTestsByFile(uri),
             findTestsByPosition: (uri, pos) =>
                 container.get(TestCollection).findTestsByPosition(uri, pos),
-            findTestsByRequest: (req) => container.get(TestCollection).findTestsByRequest(req),
-            getPreviousRequest: () => container.get(TestRunHandler).getPreviousRequest(),
-            getLastRunAt: () => container.get(TestRunHandler).getLastRunAt(),
         };
     }
 
@@ -161,11 +168,14 @@ export class TestCommandRegistry {
         await this.run(tests);
     }
 
-    private async run(include: readonly TestItem[] | undefined) {
+    private async run(
+        include: readonly TestItem[] | undefined,
+        profile: TestRunProfile = this.testRunProfile,
+    ) {
         const cts = new CancellationTokenSource();
         try {
-            await this.testRunProfile.runHandler(
-                new TestRunRequestImpl(include, undefined, this.testRunProfile),
+            await profile.runHandler(
+                new TestRunRequestImpl(include, undefined, profile),
                 cts.token,
             );
         } finally {
