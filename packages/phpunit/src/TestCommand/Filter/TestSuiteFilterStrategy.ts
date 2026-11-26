@@ -1,7 +1,7 @@
 import { FilterStrategy } from './FilterStrategy';
 
 export class TestSuiteFilterStrategy extends FilterStrategy {
-    getFilter() {
+    filter() {
         return `--testsuite=${this.testDefinition.testsuite}`;
     }
 }

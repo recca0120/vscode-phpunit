@@ -44,8 +44,8 @@ export class TestCommand {
         return String(this.options.cwd ?? '.');
     }
 
-    getCloverFile() {
-        return this.coverage()?.getCloverFile();
+    cloverFile() {
+        return this.coverage()?.cloverFile();
     }
 
     get paths(): PathMapper {

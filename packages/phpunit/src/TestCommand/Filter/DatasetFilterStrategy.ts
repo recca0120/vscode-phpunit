@@ -7,7 +7,7 @@ export class DatasetFilterStrategy extends DescribeFilterStrategy {
         return `--filter='/${filter}$/'`;
     }
 
-    protected getMethodNamePattern() {
+    protected methodNamePattern() {
         const methodName = (this.testDefinition.methodName ?? '').trim();
         const { dataset } = datasetExpander.parse(this.testDefinition.id ?? '');
 

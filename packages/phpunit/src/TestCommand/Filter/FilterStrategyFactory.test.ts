@@ -10,7 +10,7 @@ describe('FilterStrategyFactory', () => {
             label: 'my-workspace',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe('');
     });
@@ -23,7 +23,7 @@ describe('FilterStrategyFactory', () => {
             namespace: 'Recca0120\\VSCode',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toContain('--filter=');
         expect(filter).toContain('Recca0120\\\\VSCode');
@@ -37,7 +37,7 @@ describe('FilterStrategyFactory', () => {
             testsuite: 'Unit',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe('--testsuite=Unit');
     });
@@ -51,7 +51,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/ExampleTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toContain('/path/to/ExampleTest.php');
         expect(filter).not.toContain('--filter=');
@@ -67,7 +67,7 @@ describe('FilterStrategyFactory', () => {
             annotations: { group: ['command'] },
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe('--group=command /path/to/DbCommandTest.php');
     });
@@ -82,7 +82,7 @@ describe('FilterStrategyFactory', () => {
             annotations: { group: ['command', 'use-db'] },
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe('--group=command --group=use-db /path/to/DbCommandTest.php');
     });
@@ -97,7 +97,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/ExampleTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toContain('--filter=');
         expect(filter).toContain('test_passed');
@@ -113,7 +113,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/DataProviderAttributeTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter='/^.*::(testAttributeProvider with data set "two plus three")$/' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
@@ -130,7 +130,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/DataProviderAttributeTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter='/^.*::(testAttributeProvider with data set #0)$/' %2Fpath%2Fto%2FDataProviderAttributeTest.php`,
@@ -147,7 +147,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/tests/Unit/DatasetTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter='/^.*::(it adds numbers with data set "dataset "one plus one"")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
@@ -164,7 +164,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/tests/Unit/DatasetTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter='/^.*::(it business closed with data set "\\(\\'Office\\'\\) \\/ \\(\\'Saturday\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
@@ -181,7 +181,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/tests/Unit/DatasetTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter='/^.*::(it validates emails with data set "\\(\\'alice@example\\.com\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FDatasetTest.php`,
@@ -198,7 +198,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/tests/Unit/ExampleTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter="/^.*::(it has trailing space)(( with (data set )?.*)?)?$/" %2Fpath%2Fto%2Ftests%2FUnit%2FExampleTest.php`,
@@ -215,7 +215,7 @@ describe('FilterStrategyFactory', () => {
             file: '/path/to/tests/Unit/ExampleTest.php',
         };
 
-        const filter = FilterStrategyFactory.create(testDef).getFilter();
+        const filter = FilterStrategyFactory.create(testDef).filter();
 
         expect(filter).toBe(
             `--filter='/^.*::(it has user\\'s email with data set "\\(\\'enunomaduro@gmail\\.com\\'\\)")$/' %2Fpath%2Fto%2Ftests%2FUnit%2FExampleTest.php`,

@@ -4,6 +4,6 @@ import type { SpawnSpec } from '../TestCommand/Environment';
 export interface ProcessCommand {
     readonly paths: PathMapper;
     build(): SpawnSpec;
-    getCloverFile(): string | undefined;
+    cloverFile(): string | undefined;
     toString(): string;
 }

@@ -1,7 +1,7 @@
 import { FilterStrategy } from './FilterStrategy';
 
 export class WorkspaceFilterStrategy extends FilterStrategy {
-    getFilter() {
+    filter() {
         return '';
     }
 }

@@ -61,7 +61,7 @@ export class TestRunnerProcess {
     }
 
     async readCoverage(): Promise<FileCoverageData[]> {
-        const cloverFile = this.command.getCloverFile();
+        const cloverFile = this.command.cloverFile();
         if (!cloverFile) {
             return [];
         }

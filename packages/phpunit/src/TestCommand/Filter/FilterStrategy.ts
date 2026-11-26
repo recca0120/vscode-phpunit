@@ -3,9 +3,9 @@ import type { TestDefinition } from '../../types';
 export abstract class FilterStrategy {
     constructor(protected testDefinition: TestDefinition) {}
 
-    abstract getFilter(): string;
+    abstract filter(): string;
 
-    protected getGroupFilter(): string | undefined {
+    protected groupFilter(): string | undefined {
         const groups = (this.testDefinition.annotations?.group as string[]) ?? [];
         return groups.length > 0 ? groups.map((group) => `--group=${group}`).join(' ') : undefined;
     }

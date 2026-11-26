@@ -152,7 +152,7 @@ export class TestRunHandler {
     }
 
     private withFilter(command: TestCommand, testDefinition: TestDefinition): TestCommand {
-        const filter = FilterStrategyFactory.create(testDefinition).getFilter();
+        const filter = FilterStrategyFactory.create(testDefinition).filter();
         return command.withArguments(filter);
     }
 }

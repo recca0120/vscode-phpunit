@@ -714,7 +714,7 @@ describe('TestCommand', () => {
 
             const covered = command.withCoverageClover(new CoverageFiles(options.cwd).allocate(0));
 
-            expect(covered.getCloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
+            expect(covered.cloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
         });
 
         it('should return undefined when not in coverage mode', () => {
@@ -724,7 +724,7 @@ describe('TestCommand', () => {
             const xdebug = new Xdebug(config);
             const command = new TestCommand(config, options, remotePathMapper, xdebug.options());
 
-            expect(command.getCloverFile()).toBeUndefined();
+            expect(command.cloverFile()).toBeUndefined();
         });
 
         it('should return undefined when no xdebug', () => {
@@ -733,7 +733,7 @@ describe('TestCommand', () => {
             const remotePathMapper = new RemotePathMapper(options, {});
             const command = new TestCommand(config, options, remotePathMapper);
 
-            expect(command.getCloverFile()).toBeUndefined();
+            expect(command.cloverFile()).toBeUndefined();
         });
     });
 
@@ -754,8 +754,8 @@ describe('TestCommand', () => {
                 .withArguments('')
                 .withCoverageClover('/workspace/.phpunit.cache/coverage-abc-1.xml');
 
-            expect(command.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
-            expect(cloned.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
+            expect(command.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+            expect(cloned.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
         });
 
         it('should create the new command without options when none are set', () => {
