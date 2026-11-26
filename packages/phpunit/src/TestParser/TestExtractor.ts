@@ -59,7 +59,7 @@ function extractPhpUnitTests(fileInfo: FileInfo, file: string): ParseResult | un
             end: cls.range.end,
         });
 
-        addToNamespace(testDefinitions, classDef, ctx, fileInfo);
+        addToNamespace(testDefinitions, classDef, ctx, cls.namespaceRange);
     }
 
     if (testDefinitions.length === 0 && classes.length === 0) {
@@ -99,7 +99,7 @@ function addToNamespace(
     testDefinitions: TestDefinition[],
     classDef: TestDefinition,
     ctx: BuildContext,
-    fileInfo: FileInfo,
+    namespaceRange: Range | undefined,
 ) {
     const { namespace } = ctx;
     if (!namespace) {
@@ -119,9 +119,9 @@ function addToNamespace(
             children: [],
             annotations: {},
             file: ctx.file,
-            ...(fileInfo.namespaceRange && {
-                start: fileInfo.namespaceRange.start,
-                end: fileInfo.namespaceRange.end,
+            ...(namespaceRange && {
+                start: namespaceRange.start,
+                end: namespaceRange.end,
             }),
         });
         testDefinitions.push(nsDef);

@@ -41,6 +41,7 @@ export interface ConstantDescriptor {
 export interface ClassDescriptor {
     name: string;
     fqn: string;
+    namespaceRange?: Range;
     parentFQN?: string;
     isAbstract: boolean;
     isTrait: boolean;

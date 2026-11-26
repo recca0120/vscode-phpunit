@@ -23,6 +23,7 @@ import type {
     TraitUseDescriptor,
 } from '../types';
 import { ClassVisitor } from '../Visitors/ClassVisitor';
+import type { NamespaceScope } from '../Visitors/NamespaceVisitor';
 import { FQNResolver } from './FQNResolver';
 
 export class PhpUnitResolver implements Resolver {
@@ -40,24 +41,26 @@ export class PhpUnitResolver implements Resolver {
 
     resolve(php: PHP): void {
         this.ns = php.getResolver(FQNResolver);
-        this.metadata = new MetadataParserChain([
-            new AttributeParser((name) => this.ns.resolveFQN(name)),
-            new AnnotationParser(),
-        ]);
-
         const visitor = php.getVisitor(ClassVisitor);
-        this._classes = visitor.nodes.map((node) => this.buildClassDescriptor(node));
+        this._classes = visitor.nodes.map((node) =>
+            this.buildClassDescriptor(node, visitor.scopeOf(node)),
+        );
     }
 
     contribute(result: Partial<FileInfo>): void {
         result.classes = this._classes;
     }
 
-    private buildClassDescriptor(node: ClassNode): ClassDescriptor {
+    private buildClassDescriptor(node: ClassNode, scope?: NamespaceScope): ClassDescriptor {
+        const resolveFQN = (raw: string) => this.ns.resolveFQN(raw, scope);
+        this.metadata = new MetadataParserChain([
+            new AttributeParser(resolveFQN),
+            new AnnotationParser(),
+        ]);
         const name = node.name;
-        const namespace = this.ns.namespace;
+        const namespace = scope?.name;
         const fqn = namespace ? `${namespace}\\${name}` : name;
-        const parentFQN = node.extendsName ? this.ns.resolveFQN(node.extendsName) : undefined;
+        const parentFQN = node.extendsName ? resolveFQN(node.extendsName) : undefined;
         const classAnnotations = toAnnotations(this.metadata.forClass(node));
 
         const traitUseNodes: TraitUseNode[] = [];
@@ -74,7 +77,7 @@ export class PhpUnitResolver implements Resolver {
             }
         }
 
-        const traitUses = collectTraitAdaptations(traitUseNodes, (raw) => this.ns.resolveFQN(raw));
+        const traitUses = collectTraitAdaptations(traitUseNodes, resolveFQN);
         const methods = methodNodes.map((method) =>
             this.buildMethodDescriptor(method, methodNodes, node.body),
         );
@@ -82,6 +85,7 @@ export class PhpUnitResolver implements Resolver {
         return {
             name,
             fqn,
+            namespaceRange: scope?.range,
             parentFQN,
             isAbstract: node.isAbstract,
             isTrait: node.kind === 'trait_declaration',

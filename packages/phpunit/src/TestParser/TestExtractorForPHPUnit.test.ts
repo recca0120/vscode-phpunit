@@ -1155,6 +1155,44 @@ class OverrideTest extends AbstractTest {
             expect(overrideMethods[0].file).toBe(phpUnitProject('tests/OverrideTest.php'));
         });
     });
+
+    describe('file with several braced namespaces', () => {
+        const file = phpUnitProject('tests/MultipleNamespacesTest.php');
+        const content = `<?php
+namespace First {
+    use PHPUnit\\Framework\\TestCase;
+    class FooTest extends TestCase { public function test_first() {} }
+}
+namespace Second {
+    use PHPUnit\\Framework\\TestCase as Base;
+    class BarTest extends Base { public function test_second() {} }
+}
+`;
+
+        it('parses the test from the second namespace', () => {
+            expect(givenTest(file, content, 'test_second')).toEqual(
+                expect.objectContaining({
+                    type: TestType.method,
+                    id: 'Bar (Second\\Bar)::Second',
+                    classFQN: 'Second\\BarTest',
+                    namespace: 'Second',
+                    className: 'BarTest',
+                    methodName: 'test_second',
+                }),
+            );
+        });
+
+        it('second namespace range covers its own block', () => {
+            expect(givenTest(file, content, 'Second')).toEqual(
+                expect.objectContaining({
+                    type: TestType.namespace,
+                    id: 'namespace:Second',
+                    start: { line: 6, character: 0 },
+                    end: { line: 9, character: 1 },
+                }),
+            );
+        });
+    });
 });
 
 describe.each(parsers)('PHPUnit multiple @dataProvider (#13) (%s)', (_name, createParser) => {

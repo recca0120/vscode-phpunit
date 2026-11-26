@@ -7,6 +7,7 @@ import type {
     AstNodeComment,
     AstNodeLoc,
     CallNode,
+    NamespaceNode,
     TraitAdaptationNode,
     UseItemNode,
 } from '../AstNode';
@@ -966,7 +967,7 @@ function adaptTopLevelNode(node: SyntaxNode): AstNode | null {
     }
 }
 
-function adaptNamespace(node: SyntaxNode): AstNode {
+function adaptNamespace(node: SyntaxNode): NamespaceNode {
     const nameNode = node.childForFieldName('name');
     const name = nameNode ? nameNode.text : '';
     const bodyNode = node.childForFieldName('body');
@@ -992,49 +993,20 @@ function adaptNamespace(node: SyntaxNode): AstNode {
 }
 
 export function adapt(rootNode: SyntaxNode): AstNode {
-    const programChildren = rootNode.namedChildren;
     const children: AstNode[] = [];
+    let current = children;
 
-    const nsIndex = programChildren.findIndex((c) => c?.type === 'namespace_definition');
-
-    const nsNode = nsIndex >= 0 ? programChildren[nsIndex] : undefined;
-    if (nsNode) {
-        const hasBraces = nsNode.childForFieldName('body') !== null;
-
-        if (hasBraces) {
-            children.push(adaptNamespace(nsNode));
-        } else {
-            const nsChildren: AstNode[] = [];
-
-            for (let i = nsIndex + 1; i < programChildren.length; i++) {
-                const child = programChildren[i];
-                if (!child) continue;
-                const adapted = adaptTopLevelNode(child);
-                if (adapted) {
-                    nsChildren.push(adapted);
-                }
-            }
-
-            const nameNode = nsNode.childForFieldName('name');
-            const name = nameNode ? nameNode.text : '';
-
-            children.push({
-                kind: 'namespace_definition',
-                name,
-                children: nsChildren,
-                loc: locOf(nsNode),
-            });
+    for (const child of rootNode.namedChildren) {
+        if (!child) continue;
+        if (child.type === 'namespace_definition') {
+            const namespace = adaptNamespace(child);
+            children.push(namespace);
+            current = child.childForFieldName('body') ? children : namespace.children;
+            continue;
         }
-    } else {
-        for (const child of programChildren) {
-            if (!child) continue;
-            if (child.type === 'php_tag' || child.type === 'text') {
-                continue;
-            }
-            const adapted = adaptTopLevelNode(child);
-            if (adapted) {
-                children.push(adapted);
-            }
+        const adapted = adaptTopLevelNode(child);
+        if (adapted) {
+            current.push(adapted);
         }
     }
 

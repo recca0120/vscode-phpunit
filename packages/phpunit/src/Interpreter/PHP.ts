@@ -52,10 +52,12 @@ export class PHP {
             v.initialize?.(this);
         }
 
-        const source = this.getVisitor(NamespaceVisitor).resolveSource(ast);
-
-        for (const child of source) {
-            this.dispatch(child);
+        const namespaces = this.getVisitor(NamespaceVisitor);
+        for (const section of namespaces.resolveSections(ast)) {
+            namespaces.enter(section.scope);
+            for (const child of section.children) {
+                this.dispatch(child);
+            }
         }
 
         for (const r of this.resolvers) {
