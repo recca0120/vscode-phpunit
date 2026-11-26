@@ -26,6 +26,12 @@ export class TestCommand {
         return cloned;
     }
 
+    withArguments(args: string): TestCommand {
+        const cloned = this.clone();
+        cloned.arguments = args.trim();
+        return cloned;
+    }
+
     withCoverageClover(cloverFile: string): TestCommand {
         const cloned = this.clone();
         cloned.xdebug?.setCloverFile(cloverFile);

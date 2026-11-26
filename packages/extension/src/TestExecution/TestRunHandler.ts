@@ -153,6 +153,6 @@ export class TestRunHandler {
 
     private withFilter(command: TestCommand, testDefinition: TestDefinition): TestCommand {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        return command.clone().setArguments(filter);
+        return command.withArguments(filter);
     }
 }
