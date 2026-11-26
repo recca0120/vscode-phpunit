@@ -61,7 +61,7 @@ pnpm add @vscode-phpunit/phpunit
           ┌──────────┼──────────┐
           │                     │
    ┌──────▼───────┐     ┌──────▼───────┐
-   │ ProcessBuilder│     │ TestHierarchy│
+   │ TestCommand│     │ TestHierarchy│
    │ + FilterStrat.│     │ Builder<T>   │
    │ → command line│     │ → UI tree    │
    └──────┬───────┘     └──────────────┘
@@ -147,7 +147,7 @@ Build a command line from a `TestDefinition`, execute PHPUnit/Pest, and receive 
 
 ```typescript
 import {
-  ProcessBuilder,
+  TestCommand,
   FilterStrategyFactory,
   TestRunner,
   TestRunnerEvent,
@@ -155,7 +155,7 @@ import {
 } from '@vscode-phpunit/phpunit';
 
 // 1. Build command
-const builder = new ProcessBuilder(configuration, { cwd: projectRoot }, pathReplacer);
+const builder = new TestCommand(configuration, { cwd: projectRoot }, pathReplacer);
 const filter = FilterStrategyFactory.create(testDefinition);
 builder.setArguments(filter.getFilter());
 // → php vendor/bin/phpunit --filter="^ExampleTest::test_add" --teamcity --colors=never

@@ -6,7 +6,7 @@ import { CommandTemplateEnvironment, type Environment } from './Environment';
 import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
 import type { Xdebug } from './Xdebug';
 
-export class ProcessBuilder {
+export class TestCommand {
     private arguments = '';
     private cloverFile?: string;
 
@@ -17,11 +17,11 @@ export class ProcessBuilder {
         private xdebug?: Xdebug,
     ) {}
 
-    clone(): ProcessBuilder {
+    clone(): TestCommand {
         return cloneInstance(this);
     }
 
-    withCoverageClover(cloverFile: string): ProcessBuilder {
+    withCoverageClover(cloverFile: string): TestCommand {
         const cloned = this.clone();
         cloned.cloverFile = cloverFile;
         return cloned;

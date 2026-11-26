@@ -1,7 +1,7 @@
 export * from './Configuration';
 export * from './Printer';
-export * from './ProcessBuilder';
 export * from './TestCollection';
+export * from './TestCommand';
 export * from './TestCoverage';
 export { AliasMap } from './TestIdentifier/PestFixer';
 export * from './TestIndex';

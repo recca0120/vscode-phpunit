@@ -6,9 +6,9 @@ import {
     PHPUnitXML,
     PRESET_PROGRESS,
     Printer,
-    ProcessBuilder,
     semverLt,
     TeamcityEvent,
+    TestCommand,
     TestRunner,
 } from '@vscode-phpunit/phpunit';
 import { detectPhpUnitStubs, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
@@ -73,7 +73,7 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
 
                 const cwd = root;
                 const options = { cwd };
-                const builder = new ProcessBuilder(
+                const builder = new TestCommand(
                     configuration,
                     options,
                     new PathReplacer(options, configuration.get('paths') as Path),

@@ -3,7 +3,7 @@ import {
     type Path,
     PathReplacer,
     PHPUnitXML,
-    ProcessBuilder,
+    TestCommand,
     Xdebug,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
@@ -12,14 +12,14 @@ import { Configuration } from '../Configuration';
 import { TYPES } from '../types';
 
 @injectable()
-export class ProcessBuilderFactory {
+export class TestCommandFactory {
     constructor(
         @inject(Configuration) private config: Configuration,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
         @inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder,
     ) {}
 
-    async create(profileKind?: TestRunProfileKind): Promise<ProcessBuilder> {
+    async create(profileKind?: TestRunProfileKind): Promise<TestCommand> {
         const options = { cwd: this.phpUnitXML.root() };
         const pathReplacer = new PathReplacer(
             options,
@@ -27,7 +27,7 @@ export class ProcessBuilderFactory {
             this.workspaceFolder.uri.fsPath,
         );
         const xdebug = await new Xdebug(this.config).setMode(this.toMode(profileKind));
-        return new ProcessBuilder(this.config, options, pathReplacer, xdebug);
+        return new TestCommand(this.config, options, pathReplacer, xdebug);
     }
 
     private toMode(profileKind?: TestRunProfileKind): Mode | undefined {

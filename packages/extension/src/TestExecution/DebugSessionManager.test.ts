@@ -1,4 +1,4 @@
-import { Configuration, Mode, PathReplacer, ProcessBuilder, Xdebug } from '@vscode-phpunit/phpunit';
+import { Configuration, Mode, PathReplacer, TestCommand, Xdebug } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceFolder } from 'vscode';
 import { debug, Uri } from 'vscode';
@@ -16,7 +16,7 @@ const givenBuilder = async (opts?: { mode?: Mode; debuggerConfig?: string }) => 
     if (opts?.mode) {
         xdebug = await new Xdebug(config).setMode(opts.mode);
     }
-    return new ProcessBuilder(config, options, pathReplacer, xdebug);
+    return new TestCommand(config, options, pathReplacer, xdebug);
 };
 
 describe('DebugSessionManager', () => {

@@ -2,8 +2,8 @@ import {
     Configuration,
     type Path,
     PathReplacer,
-    ProcessBuilder,
     TeamcityEvent,
+    TestCommand,
     type TestFailed,
     type TestFinished,
     type TestIgnored,
@@ -19,11 +19,7 @@ const createTestItem = (id: string): TestItem => ({ id }) as TestItem;
 const createBuilder = (command = 'php') => {
     const config = new Configuration({ php: command });
     const options = { cwd: '.' };
-    return new ProcessBuilder(
-        config,
-        options,
-        new PathReplacer(options, config.get('paths') as Path),
-    );
+    return new TestCommand(config, options, new PathReplacer(options, config.get('paths') as Path));
 };
 
 const makeStarted = (id: string, locationHint: string, file: string): TestStarted => ({
