@@ -131,8 +131,6 @@ export class PathReplacer {
     }
 
     private normalizeToWindows(path: string) {
-        // A drive letter is a single letter (not part of a word such as `http:` or `pest_qn:`)
-        // followed by `:` and a path separator or the end of the string.
         return path.replace(/(?<![\w])[a-zA-Z]:(?=[\\/]|$)[^:]*/g, (path) =>
             path.replace(/\//g, '\\'),
         );

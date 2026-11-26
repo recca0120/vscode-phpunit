@@ -9,7 +9,6 @@ abstract class FilterStrategy {
 
     protected getGroupFilter(): string | undefined {
         const groups = (this.testDefinition.annotations?.group as string[]) ?? [];
-        // PHPUnit 10+ dropped comma-separated groups; repeat --group per group instead.
         return groups.length > 0 ? groups.map((group) => `--group=${group}`).join(' ') : undefined;
     }
 
