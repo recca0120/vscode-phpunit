@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { type GlobPattern, RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { Configuration } from '../Configuration';
-import { TestCollection } from '../TestCollection';
+import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 
 export type WorkspaceTestPattern = {
@@ -19,7 +19,7 @@ export class TestFileDiscovery {
     constructor(
         @inject(Configuration) private configuration: Configuration,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
-        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestTree) private testTree: TestTree,
         @inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder,
         @inject(ComposerAutoload)
         private autoload = new ComposerAutoload(() => phpUnitXML.root()),
@@ -65,7 +65,7 @@ export class TestFileDiscovery {
 
     async reloadAll(): Promise<void> {
         this.invalidateCache();
-        this.testCollection.reset();
+        this.testTree.reset();
         const { pattern, exclude } = await this.getWorkspaceTestPattern();
         await this.discoverTestFiles(pattern, exclude);
     }
@@ -77,13 +77,13 @@ export class TestFileDiscovery {
                 .filter((uri) => this.isInWorkspaceFolder(uri)),
         );
 
-        for (const file of this.testCollection.gatherFiles()) {
+        for (const file of this.testTree.gatherFiles()) {
             if (!newFiles.has(file.uri.toString())) {
-                this.testCollection.delete(file.uri);
+                this.testTree.delete(file.uri);
             }
         }
 
-        await Promise.all([...newFiles].map((f) => this.testCollection.add(URI.parse(f))));
+        await Promise.all([...newFiles].map((f) => this.testTree.add(URI.parse(f))));
     }
 
     private isInWorkspaceFolder(uri: string): boolean {

@@ -8,8 +8,8 @@ import {
     type Uri,
     window,
 } from 'vscode';
-import { TestCollection } from '../TestCollection';
 import { TestRunHandler } from '../TestExecution';
+import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 
 @injectable()
@@ -21,7 +21,7 @@ export class TestWatchManager {
 
     constructor(
         @inject(TestRunHandler) private handler: TestRunHandler,
-        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestTree) private testTree: TestTree,
         @inject(TYPES.FileChangedEmitter) private fileChangedEmitter: EventEmitter<Uri>,
     ) {}
 
@@ -72,7 +72,7 @@ export class TestWatchManager {
         let profile: TestRunProfile | undefined;
         for (const [testItem, thisProfile] of this.watchingTests) {
             if (testItem.uri?.toString() === uri.toString()) {
-                include.push(...this.testCollection.findTestsByFile(testItem.uri));
+                include.push(...this.testTree.findTestsByFile(testItem.uri));
                 profile = thisProfile;
             }
         }

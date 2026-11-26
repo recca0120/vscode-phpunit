@@ -46,7 +46,7 @@ pnpm add @vscode-phpunit/phpunit
                ┌───────────────┼───────────────┐
                │               │               │
         ┌──────▼───────┐         ┌──────▼───────┐
-        │ TestExtractor │         │ TestCollection│
+        │ TestExtractor │         │   TestIndex  │
         │ → TestDef[]   │         │ (檔案變更追蹤 │
         └──────┬───────┘         │  + 繼承解析)  │
                │                 └──────────────┘
@@ -87,7 +87,7 @@ pnpm add @vscode-phpunit/phpunit
 
 ### 1. 解析與追蹤測試檔案
 
-`TestCollection` 是主要進入點。它將 PHP 測試檔案解析為 `TestDefinition` 樹、內部處理類別繼承與 trait 解析，並維護依 testsuite 分組的持久化註冊表。
+`TestIndex` 是主要進入點。它將 PHP 測試檔案解析為 `TestDefinition` 樹、內部處理類別繼承與 trait 解析，並維護依 testsuite 分組的持久化註冊表。
 
 ```typescript
 import {
@@ -97,7 +97,7 @@ import {
   PhpParserAstParser,
   PHPUnitXML,
   TestParser,
-  TestCollection,
+  TestIndex,
 } from '@vscode-phpunit/phpunit';
 import { URI } from 'vscode-uri';
 
@@ -116,18 +116,18 @@ const astParser = new ChainAstParser([
 const testParser = new TestParser(phpUnitXML, astParser);
 
 // 4. 建立集合（內部處理繼承解析）
-const testCollection = new TestCollection(phpUnitXML, testParser);
+const testIndex = new TestIndex(phpUnitXML, testParser);
 
 // 5. 檔案變更時：
-const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
+const result = await testIndex.update(URI.file('/path/to/tests/ExampleTest.php'));
 // result.parsed — [{uri, tests: TestDefinition[]}]  (新增/更新)
-// result.deleted — [File]                             (已移除)
+// result.deleted — [IndexedFile]                             (已移除)
 
 // 查詢既有測試
-testCollection.has(uri);        // 檢查檔案是否被追蹤
-testCollection.get(uri);        // 取得檔案的測試
-testCollection.gatherFiles();   // 遍歷所有追蹤的檔案
-testCollection.reset();         // 清除全部
+testIndex.has(uri);        // 檢查檔案是否被追蹤
+testIndex.find(uri);       // 取得已索引的檔案（testsuite、tests）
+testIndex.files();          // 遍歷所有追蹤的檔案
+testIndex.clear();          // 清除全部
 ```
 
 **輸出結構：**

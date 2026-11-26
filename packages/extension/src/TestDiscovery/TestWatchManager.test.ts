@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CancellationTokenSource, EventEmitter, TestRunRequest, Uri, window } from 'vscode';
-import type { TestCollection } from '../TestCollection';
 import type { TestRunHandler } from '../TestExecution';
+import type { TestTree } from '../TestTree';
 import { TestWatchManager } from './TestWatchManager';
 
 function createMockHandler() {
@@ -9,12 +9,12 @@ function createMockHandler() {
 }
 
 function createMockCollection() {
-    return { findTestsByFile: vi.fn().mockReturnValue([]) } as unknown as TestCollection;
+    return { findTestsByFile: vi.fn().mockReturnValue([]) } as unknown as TestTree;
 }
 
 describe('TestWatchManager', () => {
     let handler: ReturnType<typeof createMockHandler>;
-    let collection: TestCollection;
+    let collection: TestTree;
     let emitter: EventEmitter<Uri>;
     let manager: TestWatchManager;
 

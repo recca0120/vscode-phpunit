@@ -1,11 +1,11 @@
 import { type TestDefinition, TestType } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
 import type { TestItem, TestItemCollection, TestRun, TestRunRequest } from 'vscode';
-import { TestCollection } from '../TestCollection';
+import { TestTree } from '../TestTree';
 
 @injectable()
 export class TestQueueBuilder {
-    constructor(@inject(TestCollection) private testCollection: TestCollection) {}
+    constructor(@inject(TestTree) private testTree: TestTree) {}
 
     async build(
         tests: Iterable<TestItem>,
@@ -18,7 +18,7 @@ export class TestQueueBuilder {
                 continue;
             }
 
-            const testDef = this.testCollection.getTestDefinition(testItem);
+            const testDef = this.testTree.getTestDefinition(testItem);
             if (testDef?.type !== TestType.method && testDef?.type !== TestType.dataset) {
                 await this.build(
                     [...testItem.children].map(([, item]) => item),

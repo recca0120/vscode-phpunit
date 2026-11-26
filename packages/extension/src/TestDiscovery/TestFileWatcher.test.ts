@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventEmitter, RelativePattern, Uri, type WorkspaceFolder, workspace } from 'vscode';
-import type { TestCollection } from '../TestCollection';
+import type { TestTree } from '../TestTree';
 import type { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
 
@@ -36,12 +36,12 @@ function createMockCollection() {
         add: vi.fn().mockResolvedValue(undefined),
         change: vi.fn().mockResolvedValue(undefined),
         delete: vi.fn(),
-    } as unknown as TestCollection;
+    } as unknown as TestTree;
 }
 
 describe('TestFileWatcher', () => {
     let discovery: TestFileDiscovery;
-    let collection: TestCollection;
+    let collection: TestTree;
     let emitter: EventEmitter<Uri>;
     let fileWatcher: TestFileWatcher;
 

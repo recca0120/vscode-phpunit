@@ -46,7 +46,7 @@ pnpm add @vscode-phpunit/phpunit
                ┌───────────────┼───────────────┐
                │               │               │
         ┌──────▼───────┐         ┌──────▼───────┐
-        │ TestExtractor │         │ TestCollection│
+        │ TestExtractor │         │   TestIndex  │
         │ → TestDef[]   │         │ (file change │
         └──────┬───────┘         │  tracking +  │
                │                 │  inheritance)│
@@ -88,7 +88,7 @@ pnpm add @vscode-phpunit/phpunit
 
 ### 1. Parse & track test files
 
-`TestCollection` is the main entry point. It parses PHP test files into `TestDefinition` trees, resolves class inheritance and traits internally, and maintains a persistent registry grouped by testsuite.
+`TestIndex` is the main entry point. It parses PHP test files into `TestDefinition` trees, resolves class inheritance and traits internally, and maintains a persistent registry grouped by testsuite.
 
 ```typescript
 import {
@@ -98,7 +98,7 @@ import {
   PhpParserAstParser,
   PHPUnitXML,
   TestParser,
-  TestCollection,
+  TestIndex,
 } from '@vscode-phpunit/phpunit';
 import { URI } from 'vscode-uri';
 
@@ -117,18 +117,18 @@ const astParser = new ChainAstParser([
 const testParser = new TestParser(phpUnitXML, astParser);
 
 // 4. Create collection (handles inheritance resolution internally)
-const testCollection = new TestCollection(phpUnitXML, testParser);
+const testIndex = new TestIndex(phpUnitXML, testParser);
 
 // 5. When a file changes:
-const result = await testCollection.change(URI.file('/path/to/tests/ExampleTest.php'));
+const result = await testIndex.update(URI.file('/path/to/tests/ExampleTest.php'));
 // result.parsed — [{uri, tests: TestDefinition[]}]  (new/updated)
-// result.deleted — [File]                             (removed)
+// result.deleted — [IndexedFile]                             (removed)
 
 // Query existing tests
-testCollection.has(uri);        // check if file is tracked
-testCollection.get(uri);        // get tests for a file
-testCollection.gatherFiles();   // iterate all tracked files
-testCollection.reset();         // clear everything
+testIndex.has(uri);        // check if file is tracked
+testIndex.find(uri);       // get the indexed file (testsuite, tests)
+testIndex.files();          // iterate all tracked files
+testIndex.clear();          // clear everything
 ```
 
 **Output structure:**

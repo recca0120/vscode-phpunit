@@ -10,8 +10,8 @@ import {
     window,
     workspace,
 } from 'vscode';
-import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
+import { TestTree } from './TestTree';
 import type { ChildContainerFactory } from './types';
 import { TYPES } from './types';
 
@@ -154,7 +154,7 @@ export class WorkspaceFolderManager {
         const isMulti = containers.length > 1;
 
         for (const child of containers) {
-            child.get(TestCollection).setRootItems(undefined);
+            child.get(TestTree).setRootItems(undefined);
         }
 
         this.ctrl.items.replace([]);
@@ -204,13 +204,13 @@ export class WorkspaceFolderManager {
 
     private cleanupContainer(container: Container): void {
         container.get(TestFileWatcher).dispose();
-        container.get(TestCollection).reset();
+        container.get(TestTree).reset();
         container.get<EventEmitter<Uri>>(TYPES.FileChangedEmitter).dispose();
     }
 
     private createFolderRoot(child: Container): void {
         const folder = child.get<WorkspaceFolder>(TYPES.WorkspaceFolder);
-        const folderItem = child.get(TestCollection).createFolderRoot(folder);
+        const folderItem = child.get(TestTree).createFolderRoot(folder);
         this.ctrl.items.add(folderItem);
     }
 }

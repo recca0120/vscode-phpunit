@@ -11,8 +11,8 @@ import {
     window,
     workspace,
 } from 'vscode';
-import { TestCollection } from '../TestCollection/TestCollection';
 import { TestRunHandler } from '../TestExecution/TestRunHandler';
+import { TestTree } from '../TestTree/TestTree';
 import type { FolderTestContext } from '../types';
 import type { WorkspaceFolderManager } from '../WorkspaceFolderManager';
 
@@ -93,16 +93,12 @@ export class TestCommandRegistry {
 
     private findAllGroups(): string[] {
         return [
-            ...new Set(
-                this.folderManager.getAll().flatMap((c) => c.get(TestCollection).findGroups()),
-            ),
+            ...new Set(this.folderManager.getAll().flatMap((c) => c.get(TestTree).findGroups())),
         ].sort();
     }
 
     private findTestsByGroup(group: string): TestItem[] {
-        return this.folderManager
-            .getAll()
-            .flatMap((c) => c.get(TestCollection).findTestsByGroup(group));
+        return this.folderManager.getAll().flatMap((c) => c.get(TestTree).findTestsByGroup(group));
     }
 
     private findMostRecentRequest(): TestRunRequest | undefined {
@@ -124,7 +120,7 @@ export class TestCommandRegistry {
     private findTestsByRequest(request: TestRunRequest): TestItem[] | undefined {
         const tests = this.folderManager
             .getAll()
-            .flatMap((c) => c.get(TestCollection).findTestsByRequest(request) ?? []);
+            .flatMap((c) => c.get(TestTree).findTestsByRequest(request) ?? []);
 
         return tests.length > 0 ? tests : undefined;
     }
@@ -141,9 +137,9 @@ export class TestCommandRegistry {
 
     private toContext(container: Container): FolderTestContext {
         return {
-            findTestsByFile: (uri) => container.get(TestCollection).findTestsByFile(uri),
+            findTestsByFile: (uri) => container.get(TestTree).findTestsByFile(uri),
             findTestsByPosition: (uri, pos) =>
-                container.get(TestCollection).findTestsByPosition(uri, pos),
+                container.get(TestTree).findTestsByPosition(uri, pos),
         };
     }
 

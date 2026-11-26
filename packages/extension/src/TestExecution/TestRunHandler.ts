@@ -16,11 +16,11 @@ import type {
     TestRun,
     TestRunRequest,
 } from 'vscode';
-import { FileCoverageAdapter } from '../FileCoverageAdapter';
 import { ObserverFactory } from '../Observers';
-import { TestCollection } from '../TestCollection';
+import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
+import { FileCoverageAdapter } from './FileCoverageAdapter';
 import { TestCommandFactory } from './TestCommandFactory';
 import { TestQueueBuilder } from './TestQueueBuilder';
 
@@ -32,7 +32,7 @@ export class TestRunHandler {
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
         @inject(TestCommandFactory) private testCommandFactory: TestCommandFactory,
-        @inject(TestCollection) private testCollection: TestCollection,
+        @inject(TestTree) private testTree: TestTree,
         @inject(ObserverFactory) private observerFactory: ObserverFactory,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
         @inject(DebugSessionManager) private debugSession: DebugSessionManager,
@@ -145,7 +145,7 @@ export class TestRunHandler {
         }
 
         return include
-            .map((testItem) => this.testCollection.getTestDefinition(testItem))
+            .map((testItem) => this.testTree.getTestDefinition(testItem))
             .filter((testDef): testDef is TestDefinition => testDef !== undefined)
             .map((testDef, index) => withCoverage(this.withFilter(command, testDef), index))
             .map((configured) => runner.run(configured));

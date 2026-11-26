@@ -16,8 +16,8 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { TestCollection } from './TestCollection';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
+import { TestTree } from './TestTree';
 
 type CODE = {
     testsuite: { name: string; path: string };
@@ -84,7 +84,7 @@ describe('TestCollection', () => {
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
 
-        return new TestCollection(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
+        return new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
     };
 
     const givenCodes = (codes: CODE[], configurationFile: string) => {

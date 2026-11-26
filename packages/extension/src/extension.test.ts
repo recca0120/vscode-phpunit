@@ -38,7 +38,7 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { activate } from './extension';
-import { icon } from './TestCollection/TestHierarchyBuilder';
+import { icon } from './TestTree/TestHierarchyBuilder';
 
 vi.mock('child_process', async () => {
     const actual = await vi.importActual<typeof import('child_process')>('child_process');

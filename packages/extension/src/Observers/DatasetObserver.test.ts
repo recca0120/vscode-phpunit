@@ -14,14 +14,14 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, type TestItem, tests } from 'vscode';
 import { URI } from 'vscode-uri';
-import { TestCollection } from '../TestCollection/TestCollection';
+import { TestTree } from '../TestTree/TestTree';
 import { DatasetObserver } from './DatasetObserver';
 
 describe('DatasetObserver', () => {
     let ctrl: TestController;
     let observer: DatasetObserver;
     let parentItem: TestItem;
-    let testCollection: TestCollection;
+    let testCollection: TestTree;
     let testItemById: Map<string, TestItem>;
 
     beforeEach(async () => {
@@ -40,11 +40,7 @@ describe('DatasetObserver', () => {
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(
-            ctrl,
-            phpUnitXML,
-            new TestIndex(phpUnitXML, testParser),
-        );
+        testCollection = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
 
         await testCollection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
@@ -159,7 +155,7 @@ describe('DatasetObserver (Pest)', () => {
     let ctrl: TestController;
     let observer: DatasetObserver;
     let parentItem: TestItem;
-    let testCollection: TestCollection;
+    let testCollection: TestTree;
     let testItemById: Map<string, TestItem>;
 
     beforeEach(async () => {
@@ -178,11 +174,7 @@ describe('DatasetObserver (Pest)', () => {
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(
-            ctrl,
-            phpUnitXML,
-            new TestIndex(phpUnitXML, testParser),
-        );
+        testCollection = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
 
         await testCollection.add(URI.file(pestProject('tests/Unit/ExampleTest.php')));
 

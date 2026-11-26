@@ -18,10 +18,10 @@ import {
 import { PHPUnitLinkProvider, TestCommandRegistry } from './Commands';
 import { Configuration } from './Configuration';
 import { createParentContainer } from './container';
-import { FileCoverageAdapter } from './FileCoverageAdapter';
-import { TestCollection } from './TestCollection';
 import { TestFileWatcher } from './TestDiscovery';
 import { TestRunDispatcher } from './TestExecution';
+import { FileCoverageAdapter } from './TestExecution/FileCoverageAdapter';
+import { TestTree } from './TestTree';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
@@ -90,7 +90,7 @@ function setupControllerHandlers(
         if (item.uri) {
             const container = folderManager.getByUri(item.uri);
             if (container) {
-                await container.get(TestCollection).add(item.uri);
+                await container.get(TestTree).add(item.uri);
             }
         }
     };
@@ -109,7 +109,7 @@ async function addOpenDocuments(folderManager: WorkspaceFolderManager): Promise<
     await Promise.all(
         workspace.textDocuments.flatMap((document) => {
             const container = folderManager.getByUri(document.uri);
-            return container ? [container.get(TestCollection).add(document.uri)] : [];
+            return container ? [container.get(TestTree).add(document.uri)] : [];
         }),
     );
 }
@@ -122,13 +122,13 @@ function registerDocumentListeners(
         workspace.onDidOpenTextDocument((document) => {
             const container = folderManager.getByUri(document.uri);
             if (container) {
-                container.get(TestCollection).add(document.uri);
+                container.get(TestTree).add(document.uri);
             }
         }),
         workspace.onDidChangeTextDocument((e) => {
             const container = folderManager.getByUri(e.document.uri);
             if (container) {
-                container.get(TestCollection).change(e.document.uri);
+                container.get(TestTree).change(e.document.uri);
             }
         }),
     );
