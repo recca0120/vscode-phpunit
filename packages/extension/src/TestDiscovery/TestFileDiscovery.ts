@@ -1,4 +1,4 @@
-import { PHPUnitXML, type TestGlobPattern } from '@vscode-phpunit/phpunit';
+import { ComposerAutoload, PHPUnitXML, type TestGlobPattern } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
 import { type GlobPattern, RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
@@ -15,6 +15,7 @@ export type WorkspaceTestPattern = {
 @injectable()
 export class TestFileDiscovery {
     private loaded = false;
+    private autoload = new ComposerAutoload(() => this.phpUnitXML.root());
 
     constructor(
         @inject(Configuration) private configuration: Configuration,
@@ -33,6 +34,9 @@ export class TestFileDiscovery {
         const { includes, excludes } = this.phpUnitXML.getIndexPatterns(
             this.workspaceFolder.uri.fsPath,
         );
+        for (const dir of await this.autoload.devDirectories()) {
+            includes.push({ tag: 'directory', name: 'autoload-dev', value: dir }, '.php');
+        }
 
         const toRelativePattern = (pattern: TestGlobPattern) => {
             const { uri, pattern: glob } = pattern.toGlobPattern();
@@ -89,6 +93,7 @@ export class TestFileDiscovery {
 
     private invalidateCache(): void {
         this.loaded = false;
+        this.autoload.reset();
     }
 
     private async ensureConfigLoaded(): Promise<void> {
