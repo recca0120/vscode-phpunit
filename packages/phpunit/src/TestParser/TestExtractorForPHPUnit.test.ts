@@ -1244,6 +1244,35 @@ class MultiAttrProviderTest extends TestCase
             }),
         );
     });
+
+    it('provider with an unresolvable key has no static labels', () => {
+        const file = phpUnitProject('tests/UnresolvableKeyTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class UnresolvableKeyTest extends TestCase
+{
+    /**
+     * @dataProvider provider
+     */
+    public function test_add(int $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): array
+    {
+        return [PHP_VERSION => [1]];
+    }
+}`;
+        expect(givenTest(file, content, 'test_add')).toEqual(
+            expect.objectContaining({
+                annotations: { dataProvider: ['provider'] },
+            }),
+        );
+    });
 });
 
 describe.each(parsers)('PHPUnit yield-based DataProvider (%s)', (_name, createParser) => {

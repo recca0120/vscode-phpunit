@@ -18,7 +18,10 @@ import { trimExpression } from './Functions/String/TrimExpression';
 import { ucfirstExpression } from './Functions/String/UcfirstExpression';
 import { arrayCreationExpression } from './Iterables/ArrayCreationExpression';
 import { classConstantAccessExpression } from './Iterables/ClassConstantAccessExpression';
+import { booleanLiteralExpression } from './Literals/BooleanLiteralExpression';
 import { encapsedStringExpression } from './Literals/EncapsedStringExpression';
+import { floatLiteralExpression } from './Literals/FloatLiteralExpression';
+import { nullLiteralExpression } from './Literals/NullLiteralExpression';
 import { numberLiteralExpression } from './Literals/NumberLiteralExpression';
 import { stringLiteralExpression } from './Literals/StringLiteralExpression';
 import { subscriptAccessExpression } from './Literals/SubscriptAccessExpression';
@@ -42,6 +45,9 @@ const allExpressions: Expression<unknown>[] = [
     variableExpression,
     stringLiteralExpression,
     numberLiteralExpression,
+    floatLiteralExpression,
+    booleanLiteralExpression,
+    nullLiteralExpression,
     subscriptAccessExpression,
     encapsedStringExpression,
     binaryExpr,

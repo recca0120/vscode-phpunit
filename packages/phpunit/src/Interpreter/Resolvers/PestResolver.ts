@@ -88,8 +88,11 @@ interface ChainWalkResult {
 }
 
 function extractSkipReason(args: AstNode[]): string | undefined {
-    const firstArg = unwrapArgument(args[0]);
-    return firstArg?.kind === 'string' ? firstArg.value : undefined;
+    const [conditionOrMessage, message] = args.map(unwrapArgument);
+    if (conditionOrMessage?.kind === 'string') {
+        return conditionOrMessage.value;
+    }
+    return message?.kind === 'string' ? message.value : undefined;
 }
 
 function extractStringArguments(args: AstNode[]): string[] {
@@ -284,15 +287,15 @@ function resolveDatasets(sources: AstNode[]): string[] {
         if (!resolved) {
             return [];
         }
-        return [...resolved.entries()].map(([key, value]) => {
-            if (/^\d+$/.test(key)) {
-                return String(value ?? '');
-            }
-            return String(key);
-        });
+        return [...resolved.entries()].map(([key, value]) =>
+            /^\d+$/.test(key) ? formatPestValue(value) : `('${key}')`,
+        );
     });
+    if (datasets.some((d) => d.includes(undefined))) {
+        return [];
+    }
     if (datasets.every((d) => d.length > 0)) {
-        return cartesianProduct(datasets);
+        return cartesianProduct(datasets as string[][]);
     }
 
     return sources.flatMap((source) => resolvePestLabels(source));
@@ -365,17 +368,28 @@ function formatPestValue(value: unknown): string | undefined {
         const items = value instanceof Map ? [...value.values()] : value;
         const truncated = items.length > MAX_DATASET_ITEMS;
         const visible = items.slice(0, MAX_DATASET_ITEMS);
-        const parts = visible.map((v) => (typeof v === 'string' ? `'${v}'` : String(v)));
+        const parts = visible.map(exportScalar);
+        if (parts.includes(undefined)) {
+            return undefined;
+        }
         if (truncated) {
             parts.push('…');
         }
         return `(${parts.join(', ')})`;
     }
+    const exported = exportScalar(value);
+    return exported === undefined ? undefined : `(${exported})`;
+}
+
+function exportScalar(value: unknown): string | undefined {
     if (typeof value === 'string') {
-        return `('${value}')`;
+        return `'${value}'`;
     }
-    if (typeof value === 'number') {
-        return `(${value})`;
+    if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+    }
+    if (value === null) {
+        return 'null';
     }
     return undefined;
 }
@@ -385,9 +399,7 @@ function cartesianProduct(datasets: string[][]): string[] {
     for (let i = 1; i < datasets.length; i++) {
         combinations = combinations.flatMap((combo) => datasets[i].map((v) => [...combo, v]));
     }
-    return combinations.map((combo) =>
-        datasetExpander.named(combo.map((v) => `('${v}')`).join(' / ')),
-    );
+    return combinations.map((combo) => datasetExpander.named(combo.join(' / ')));
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {

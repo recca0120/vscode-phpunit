@@ -236,6 +236,43 @@ describe('something', function () {
         );
     });
 
+    it('describe with a constant description keeps its children', async () => {
+        const content = `<?php
+
+describe(SOME_CONST, function () {
+    it('test example', function () {
+        expect(true)->toBeTrue();
+    });
+});
+        `;
+
+        expect(givenTest(file, content, '`describe` → it test example')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::`describe` → it test example',
+                label: 'it test example',
+            }),
+        );
+    });
+
+    it('captures ->skip(reason) after an unsupported condition', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip(! isset($_SERVER['CI']), 'not ready yet');
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({
+                    skipped: true,
+                    skipReason: 'not ready yet',
+                }),
+            }),
+        );
+    });
+
     it('it example 2', () => {
         const content = `<?php
 
@@ -279,6 +316,24 @@ it('does something', function () {
 it('does something', function () {
     expect(true)->toBeTrue();
 })->skip('not ready yet');
+        `;
+
+        expect(givenTest(file, content, 'it does something')).toEqual(
+            expect.objectContaining({
+                annotations: expect.objectContaining({
+                    skipped: true,
+                    skipReason: 'not ready yet',
+                }),
+            }),
+        );
+    });
+
+    it('captures ->skip(condition, reason) in annotations.skipReason', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip(true, 'not ready yet');
         `;
 
         expect(givenTest(file, content, 'it does something')).toEqual(
@@ -686,6 +741,149 @@ test('numbers', function (int $n) {
             'data set "(2)"',
             'data set "(3)"',
         ]);
+    });
+
+    it('boolean values dataset', () => {
+        const content = `<?php
+
+test('flags', function (bool $flag) {
+    expect($flag)->toBeBool();
+})->with([true, FALSE]);
+        `;
+
+        expect(givenTest(file, content, 'flags')?.annotations?.dataset).toEqual([
+            'data set "(true)"',
+            'data set "(false)"',
+        ]);
+    });
+
+    it('null value dataset', () => {
+        const content = `<?php
+
+test('nothing', function ($value) {
+    expect($value)->toBeNull();
+})->with([null]);
+        `;
+
+        expect(givenTest(file, content, 'nothing')?.annotations?.dataset).toEqual([
+            'data set "(null)"',
+        ]);
+    });
+
+    it('float values dataset', () => {
+        const content = `<?php
+
+test('ratios', function (float $ratio) {
+    expect($ratio)->toBeFloat();
+})->with([1.5, 0.25]);
+        `;
+
+        expect(givenTest(file, content, 'ratios')?.annotations?.dataset).toEqual([
+            'data set "(1.5)"',
+            'data set "(0.25)"',
+        ]);
+    });
+
+    it('integral float dataset has no static labels', () => {
+        const content = `<?php
+
+test('ratios', function (float $ratio) {
+    expect($ratio)->toBeFloat();
+})->with([2.0]);
+        `;
+
+        expect(givenTest(file, content, 'ratios')?.annotations).toEqual({});
+    });
+
+    it('small float dataset has no static labels', () => {
+        const content = `<?php
+
+test('ratios', function (float $ratio) {
+    expect($ratio)->toBeFloat();
+})->with([0.00001]);
+        `;
+
+        expect(givenTest(file, content, 'ratios')?.annotations).toEqual({});
+    });
+
+    it('large float dataset has no static labels', () => {
+        const content = `<?php
+
+test('ratios', function (float $ratio) {
+    expect($ratio)->toBeFloat();
+})->with([1000000000000000.5]);
+        `;
+
+        expect(givenTest(file, content, 'ratios')?.annotations).toEqual({});
+    });
+
+    it('object dataset has no static labels', () => {
+        const content = `<?php
+
+test('objects', function (Foo $foo) {
+    expect($foo)->toBeObject();
+})->with([new Foo()]);
+        `;
+
+        expect(givenTest(file, content, 'objects')?.annotations).toEqual({});
+    });
+
+    it('tuple dataset containing an object has no static labels', () => {
+        const content = `<?php
+
+test('objects', function (int $n, Foo $foo) {
+    expect($foo)->toBeObject();
+})->with([[1, new Foo()]]);
+        `;
+
+        expect(givenTest(file, content, 'objects')?.annotations).toEqual({});
+    });
+
+    it('concatenation with a constant has no static labels', () => {
+        const content = `<?php
+
+test('versions', function (string $version) {
+    expect($version)->toBeString();
+})->with(['php-' . PHP_VERSION]);
+        `;
+
+        expect(givenTest(file, content, 'versions')?.annotations).toEqual({});
+    });
+
+    it('ternary yielding a constant has no static labels', () => {
+        const content = `<?php
+
+test('versions', function (string $version) {
+    expect($version)->toBeString();
+})->with([1 > 2 ? 'none' : PHP_VERSION]);
+        `;
+
+        expect(givenTest(file, content, 'versions')?.annotations).toEqual({});
+    });
+
+    it('chained ->with() formats non-string values like Pest', () => {
+        const content = `<?php
+
+test('closed', function ($open, string $day) {
+    expect(true)->toBeTrue();
+})->with([true, 1])->with(['Saturday']);
+        `;
+
+        expect(givenTest(file, content, 'closed')?.annotations?.dataset).toEqual([
+            `data set "(true) / ('Saturday')"`,
+            `data set "(1) / ('Saturday')"`,
+        ]);
+    });
+
+    it('chained ->with() containing an object has no static labels', () => {
+        const content = `<?php
+
+test('closed', function (Foo $foo, string $day) {
+    expect(true)->toBeTrue();
+})->with([new Foo()])->with(['Saturday']);
+        `;
+
+        expect(givenTest(file, content, 'closed')?.annotations).toEqual({});
     });
 
     it('chained ->with()->with() produces cartesian product (#21)', () => {
