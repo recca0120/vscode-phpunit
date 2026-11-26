@@ -397,6 +397,24 @@ it('does something', function () {
         expect(givenTest(file, content, 'it does something')?.annotations?.browserTest).toBeFalsy();
     });
 
+    it('double-quoted test description', async () => {
+        const content = `<?php
+
+test("plain double", function () {
+    expect(true)->toBeTrue();
+});
+        `;
+
+        expect(givenTest(file, content, 'plain double')).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                id: 'tests/Fixtures/ExampleTest.php::plain double',
+                methodName: 'plain double',
+                label: 'plain double',
+            }),
+        );
+    });
+
     it('not it or test', async () => {
         const content = `<?php 
 
