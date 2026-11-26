@@ -1,15 +1,9 @@
-import {
-    Mode,
-    type Path,
-    PathReplacer,
-    PHPUnitXML,
-    TestCommand,
-    Xdebug,
-} from '@vscode-phpunit/phpunit';
+import { type Path, PathReplacer, PHPUnitXML, TestCommand } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
-import { TestRunProfileKind, type WorkspaceFolder, workspace } from 'vscode';
+import type { TestRunProfileKind, WorkspaceFolder } from 'vscode';
 import { Configuration } from '../Configuration';
 import { TYPES } from '../types';
+import { XdebugFactory } from './XdebugFactory';
 
 @injectable()
 export class TestCommandFactory {
@@ -17,6 +11,7 @@ export class TestCommandFactory {
         @inject(Configuration) private config: Configuration,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
         @inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder,
+        @inject(XdebugFactory) private xdebugFactory: XdebugFactory,
     ) {}
 
     async create(profileKind?: TestRunProfileKind): Promise<TestCommand> {
@@ -26,35 +21,7 @@ export class TestCommandFactory {
             this.config.get('paths') as Path,
             this.workspaceFolder.uri.fsPath,
         );
-        const xdebug = await new Xdebug(this.config).setMode(
-            this.toMode(profileKind),
-            this.launchPort(),
-        );
+        const xdebug = await this.xdebugFactory.create(profileKind);
         return new TestCommand(this.config, options, pathReplacer, xdebug);
-    }
-
-    private launchPort(): number | undefined {
-        const name = this.config.get('debuggerConfig') as string | undefined;
-        if (!name) {
-            return undefined;
-        }
-
-        const configurations =
-            workspace
-                .getConfiguration('launch', this.workspaceFolder.uri)
-                .get<{ name: string; port?: number }[]>('configurations') ?? [];
-
-        return configurations.find((configuration) => configuration.name === name)?.port;
-    }
-
-    private toMode(profileKind?: TestRunProfileKind): Mode | undefined {
-        switch (profileKind) {
-            case TestRunProfileKind.Debug:
-                return Mode.debug;
-            case TestRunProfileKind.Coverage:
-                return Mode.coverage;
-            default:
-                return undefined;
-        }
     }
 }
