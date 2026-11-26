@@ -15,13 +15,14 @@ export type WorkspaceTestPattern = {
 @injectable()
 export class TestFileDiscovery {
     private loaded = false;
-    private autoload = new ComposerAutoload(() => this.phpUnitXML.root());
 
     constructor(
         @inject(Configuration) private configuration: Configuration,
         @inject(PHPUnitXML) private phpUnitXML: PHPUnitXML,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder,
+        @inject(ComposerAutoload)
+        private autoload = new ComposerAutoload(() => phpUnitXML.root()),
     ) {}
 
     async loadWorkspaceConfiguration(): Promise<void> {

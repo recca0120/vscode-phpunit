@@ -1,8 +1,7 @@
-import { extname, join } from 'node:path';
-import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
 import { ComposerAutoload } from '../Configuration/ComposerAutoload';
-import type { PHPUnitXML, TestDefinition, TestParser, TestSuite } from '../index';
+import { TestSuiteMatcher } from '../Configuration/TestSuiteMatcher';
+import type { PHPUnitXML, TestDefinition, TestParser } from '../index';
 import type { TestStarted } from '../TestOutput';
 import { ClassHierarchy, type ClassInfo } from '../TestParser/ClassHierarchy';
 import { datasetExpander } from '../TestParser/DatasetExpander';
@@ -23,23 +22,21 @@ export interface ChangeResult {
 
 export class TestIndex {
     private store = new TestStore();
-    private matcherCache = new Map<string, Map<string, Minimatch>>();
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
-    private autoload = new ComposerAutoload(() => this.phpUnitXML.root());
+    private testSuiteMatcher: TestSuiteMatcher;
 
     constructor(
         protected phpUnitXML: PHPUnitXML,
         private testParser: TestParser,
-    ) {}
+        private autoload = new ComposerAutoload(() => phpUnitXML.root()),
+    ) {
+        this.testSuiteMatcher = new TestSuiteMatcher(phpUnitXML);
+    }
 
     get size() {
         return this.store.size;
-    }
-
-    private getRootUri() {
-        return URI.file(this.phpUnitXML.root());
     }
 
     async change(uri: URI) {
@@ -113,7 +110,7 @@ export class TestIndex {
 
     reset(): void {
         this.store.clear();
-        this.matcherCache.clear();
+        this.testSuiteMatcher.reset();
         this.classHierarchy.clear();
         this.autoload.reset();
     }
@@ -130,7 +127,7 @@ export class TestIndex {
         const parsed: ChangeResult['parsed'] = [];
         const deleted: ChangeResult['deleted'] = [];
 
-        const testsuite = this.parseTestsuite(uri);
+        const testsuite = this.testSuiteMatcher.testsuiteOf(uri);
         if (!testsuite) {
             return this.isSupportFile(uri) ? this.indexSupportFile(uri) : { parsed, deleted };
         }
@@ -154,7 +151,7 @@ export class TestIndex {
 
     private isSupportFile(uri: URI): boolean {
         return (
-            !!this.parseTestsuite(uri, '.php') ||
+            this.testSuiteMatcher.isInTestsuiteDirectory(uri) ||
             this.classHierarchy.getClassesByUri(uri.fsPath).length > 0
         );
     }
@@ -247,7 +244,7 @@ export class TestIndex {
     private async reparseFile(
         uri: URI,
     ): Promise<{ uri: URI; tests: TestDefinition[] } | undefined> {
-        const testsuite = this.parseTestsuite(uri);
+        const testsuite = this.testSuiteMatcher.testsuiteOf(uri);
         if (!testsuite) {
             return undefined;
         }
@@ -270,55 +267,5 @@ export class TestIndex {
         await this.registerClasses(parseResult.classes, parseResult.includes);
 
         return this.classHierarchy.enrichTests(parseResult.tests);
-    }
-
-    private parseTestsuite(uri: URI, suffix?: string) {
-        const testSuites = this.phpUnitXML.getTestSuites();
-        const testsuite = testSuites.find((item) => {
-            return ['directory', 'file'].includes(item.tag) && this.match(item, uri, suffix);
-        });
-
-        if (!testsuite) {
-            return;
-        }
-
-        const exclude = testSuites.find((item) => {
-            return item.name === testsuite.name && item.tag === 'exclude' && this.match(item, uri);
-        });
-
-        if (exclude) {
-            return;
-        }
-
-        return testsuite.name;
-    }
-
-    private match(testSuite: TestSuite, uri: URI, suffixOverride?: string) {
-        const workspace = this.getRootUri();
-        const isFile =
-            testSuite.tag === 'file' || (testSuite.tag === 'exclude' && extname(testSuite.value));
-
-        if (isFile) {
-            return join(workspace.fsPath, testSuite.value) === uri.fsPath;
-        }
-
-        const suffix = suffixOverride ?? testSuite.suffix ?? 'Test.php';
-
-        let suffixMap = this.matcherCache.get(testSuite.value);
-        if (!suffixMap) {
-            suffixMap = new Map();
-            this.matcherCache.set(testSuite.value, suffixMap);
-        }
-
-        let minimatch = suffixMap.get(suffix);
-        if (!minimatch) {
-            minimatch = new Minimatch(
-                URI.file(join(workspace.fsPath, testSuite.value, `/**/*${suffix}`)).toString(true),
-                { matchBase: true, nocase: true },
-            );
-            suffixMap.set(suffix, minimatch);
-        }
-
-        return minimatch.match(uri.toString(true));
     }
 }

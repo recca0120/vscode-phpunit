@@ -1,6 +1,7 @@
 import {
     BinaryDetector,
     ChainAstParser,
+    ComposerAutoload,
     PHPUnitXML,
     PhpParserAstParser,
     TestIndex,
@@ -88,9 +89,21 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
     child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
     child.bind(ObserverFactory).toSelf().inSingletonScope();
     child
+        .bind(ComposerAutoload)
+        .toDynamicValue((context) => {
+            const phpUnitXML = context.get(PHPUnitXML);
+            return new ComposerAutoload(() => phpUnitXML.root());
+        })
+        .inSingletonScope();
+    child
         .bind(TestIndex)
         .toDynamicValue(
-            (context) => new TestIndex(context.get(PHPUnitXML), context.get(TestParser)),
+            (context) =>
+                new TestIndex(
+                    context.get(PHPUnitXML),
+                    context.get(TestParser),
+                    context.get(ComposerAutoload),
+                ),
         )
         .inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();
