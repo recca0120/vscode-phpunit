@@ -1,11 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
-import type { TestItem, TestRun } from 'vscode';
+import { describe, expect, it, type Mock, vi } from 'vitest';
+import { type TestItem, TestRunRequest, tests } from 'vscode';
 import { TestRunWriter } from './TestRunWriter';
+
+const createTestRun = () =>
+    tests.createTestController('phpunit', 'PHPUnit').createTestRun(new TestRunRequest());
 
 describe('TestRunWriter', () => {
     it('append delegates to testRun.appendOutput', () => {
-        const spy = vi.fn();
-        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const testRun = createTestRun();
+        const spy: Mock = vi.mocked(testRun.appendOutput);
         const writer = new TestRunWriter(testRun, new Map());
 
         writer.append('hello');
@@ -14,8 +17,8 @@ describe('TestRunWriter', () => {
     });
 
     it('append converts LF to CRLF', () => {
-        const spy = vi.fn();
-        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const testRun = createTestRun();
+        const spy: Mock = vi.mocked(testRun.appendOutput);
         const writer = new TestRunWriter(testRun, new Map());
 
         writer.append('line1\nline2\nline3');
@@ -24,8 +27,8 @@ describe('TestRunWriter', () => {
     });
 
     it('append does not double-convert existing CRLF', () => {
-        const spy = vi.fn();
-        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const testRun = createTestRun();
+        const spy: Mock = vi.mocked(testRun.appendOutput);
         const writer = new TestRunWriter(testRun, new Map());
 
         writer.append('line1\r\nline2\nline3');
@@ -34,8 +37,8 @@ describe('TestRunWriter', () => {
     });
 
     it('append with location and testId', () => {
-        const spy = vi.fn();
-        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const testRun = createTestRun();
+        const spy: Mock = vi.mocked(testRun.appendOutput);
         const testItem = { id: 'MyTest::test_foo' } as TestItem;
         const testItemById = new Map([['MyTest::test_foo', testItem]]);
         const writer = new TestRunWriter(testRun, testItemById);
@@ -51,8 +54,8 @@ describe('TestRunWriter', () => {
     });
 
     it('appendLine converts LF to CRLF', () => {
-        const spy = vi.fn();
-        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const testRun = createTestRun();
+        const spy: Mock = vi.mocked(testRun.appendOutput);
         const writer = new TestRunWriter(testRun, new Map());
 
         writer.appendLine('hello');
@@ -61,8 +64,8 @@ describe('TestRunWriter', () => {
     });
 
     it('appendLine with location and testId', () => {
-        const spy = vi.fn();
-        const testRun = { appendOutput: spy } as unknown as TestRun;
+        const testRun = createTestRun();
+        const spy: Mock = vi.mocked(testRun.appendOutput);
         const testItem = { id: 'MyTest::test_bar' } as TestItem;
         const testItemById = new Map([['MyTest::test_bar', testItem]]);
         const writer = new TestRunWriter(testRun, testItemById);

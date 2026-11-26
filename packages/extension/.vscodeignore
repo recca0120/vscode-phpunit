@@ -23,6 +23,7 @@ vscode.d.ts
 # Dependencies
 node_modules/**
 fakes/**
+test-support/**
 
 # Docs & meta
 .gitignore
