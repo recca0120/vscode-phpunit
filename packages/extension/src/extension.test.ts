@@ -343,6 +343,21 @@ describe('Extension Test', () => {
                 ]);
             });
 
+            it('ignores test classes in files without the default Test.php suffix', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    findTest(
+                        getTestController().items,
+                        'Without Suffix Case (Tests\\WithoutSuffixCase)',
+                    ),
+                ).toBeUndefined();
+                expect(
+                    findTest(getTestController().items, 'Assertions (Tests\\Assertions)'),
+                ).toBeDefined();
+            });
+
             it('includes test methods of a trait loaded with require_once', async () => {
                 await activate(context);
                 await getTestController().resolveHandler?.(undefined);
@@ -774,7 +789,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(110);
+                expect(countItems(ctrl.items)).toEqual(112);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {
