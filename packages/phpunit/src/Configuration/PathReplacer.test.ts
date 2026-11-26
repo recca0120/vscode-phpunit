@@ -229,6 +229,30 @@ describe('PathReplacer', () => {
         expect(pathReplacer.toLocal(path)).toEqual(phpUnitProjectWin('tests/AssertionsTest.php'));
     });
 
+    describe('URI schemes are not treated as Windows drive letters', () => {
+        it('to local keeps relative pest_qn locationHint untouched', () => {
+            const path = 'pest_qn://tests/Unit/ExampleTest.php::it works';
+
+            expect(givenPathReplacer().toLocal(path)).toEqual(path);
+            expect(givenPathReplacerForWindows().toLocal(path)).toEqual(path);
+        });
+
+        it('to local replace /app/ to project root with pest_qn', () => {
+            const path = 'pest_qn:///app/tests/Unit/ExampleTest.php::it works';
+
+            expect(givenPathReplacer().toLocal(path)).toEqual(
+                `pest_qn://${phpUnitProject('tests/Unit/ExampleTest.php')}::it works`,
+            );
+        });
+
+        it('to remote keeps URL arguments untouched', () => {
+            const arg = '--log-junit=http://example.com/a/b';
+
+            expect(givenPathReplacer().toRemote(arg)).toEqual(arg);
+            expect(givenPathReplacerForWindows().toRemote(arg)).toEqual(arg);
+        });
+    });
+
     it(`replaces ${VAR_WORKSPACE_FOLDER_BASENAME} in paths value`, () => {
         const pathReplacer = new PathReplacer(
             { cwd: phpUnitProject('') },
