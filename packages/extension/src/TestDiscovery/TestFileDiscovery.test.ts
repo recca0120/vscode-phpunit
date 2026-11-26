@@ -43,7 +43,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
             workspaceFolder,
         );
 
-        expect(discovery.getConfigFilePattern()).toBe('{custom.xml,composer.lock}');
+        expect(discovery.getConfigFilePattern()).toBe('{custom.xml,composer.json,composer.lock}');
     });
 
     it('uses -c xxx.xml (normalized to --configuration=) when specified', () => {
@@ -55,7 +55,9 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
             workspaceFolder,
         );
 
-        expect(discovery.getConfigFilePattern()).toBe('{my-phpunit.xml,composer.lock}');
+        expect(discovery.getConfigFilePattern()).toBe(
+            '{my-phpunit.xml,composer.json,composer.lock}',
+        );
     });
 
     it('uses default pattern when no --configuration specified', () => {
@@ -68,7 +70,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
         );
 
         expect(discovery.getConfigFilePattern()).toBe(
-            '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}',
+            '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}',
         );
     });
 });

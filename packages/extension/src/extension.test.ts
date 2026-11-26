@@ -1482,6 +1482,27 @@ describe('Extension Test', () => {
                 expect(watched).toBe(true);
             });
 
+            it('watches composer.json to reload when the autoload mapping changes', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+                const composerJson = join(root, 'composer.json');
+
+                const watched = (workspace.createFileSystemWatcher as Mock).mock.results.some(
+                    ({ value }) => {
+                        const { base, pattern } = value.pattern as {
+                            base: string;
+                            pattern: string;
+                        };
+                        return minimatch(
+                            relative(base, composerJson).split(sep).join('/'),
+                            pattern,
+                        );
+                    },
+                );
+
+                expect(watched).toBe(true);
+            });
+
             it('should run all tests', async () => {
                 const ctrl = await activateAndRun();
 

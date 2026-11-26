@@ -57,10 +57,10 @@ export class TestFileDiscovery {
             .find((p) => p.startsWith('--configuration='));
         if (configArg) {
             const configFile = configArg.replace('--configuration=', '');
-            return `{${configFile},composer.lock}`;
+            return `{${configFile},composer.json,composer.lock}`;
         }
 
-        return '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}';
+        return '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}';
     }
 
     async reloadAll(): Promise<void> {
