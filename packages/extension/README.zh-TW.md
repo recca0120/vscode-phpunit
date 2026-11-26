@@ -49,7 +49,7 @@
   "phpunit.phpunit": "vendor/bin/phpunit",
 
   // 自訂命令範本
-  // 變數：${php}, ${phpargs}, ${phpunit}, ${phpunitargs}, ${phpunitxml}, ${cwd}
+  // 變數：${php}, ${phpargs}, ${phpunit}, ${phpunitargs}, ${cwd}
   //   ${workspaceFolder}         — 工作區資料夾的絕對路徑
   //   ${workspaceFolderBasename} — 僅資料夾名稱（例如 "myproject"）
   //   ${userHome}                — 使用者家目錄
