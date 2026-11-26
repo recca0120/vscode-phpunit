@@ -1,3 +1,6 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
     ChainAstParser,
     PHPUnitXML,
@@ -1745,6 +1748,73 @@ class NoDatasetTest extends TestCase
             expect(child2).toBeUndefined();
 
             expect(methodItem.children.get(child1?.id ?? '')).toBe(child1);
+        });
+    });
+
+    describe('parent class outside the testsuite directories', () => {
+        const writeProject = async (baseMethods: string[]) => {
+            const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            await mkdir(join(root, 'tests/Support'), { recursive: true });
+            await mkdir(join(root, 'tests/Unit'), { recursive: true });
+            await writeFile(
+                join(root, 'composer.json'),
+                JSON.stringify({ 'autoload-dev': { 'psr-4': { 'Tests\\': 'tests/' } } }),
+            );
+            const writeBase = (methods: string[]) =>
+                writeFile(
+                    join(root, 'tests/Support/BaseCase.php'),
+                    `<?php
+
+namespace Tests\\Support;
+
+use PHPUnit\\Framework\\TestCase;
+
+abstract class BaseCase extends TestCase
+{
+${methods.map((name) => `    public function ${name}() {}`).join('\n')}
+}
+`,
+                );
+            await writeBase(baseMethods);
+            await writeFile(
+                join(root, 'tests/Unit/ChildTest.php'),
+                `<?php
+
+namespace Tests\\Unit;
+
+use Tests\\Support\\BaseCase;
+
+class ChildTest extends BaseCase
+{
+}
+`,
+            );
+            return { root, writeBase };
+        };
+
+        it('updates the subclass tests when the parent class changes', async () => {
+            const { root, writeBase } = await writeProject(['test_a']);
+            const collection = givenTestCollection(
+                `<testsuites>
+                    <testsuite name="Unit">
+                        <directory suffix="Test.php">tests/Unit</directory>
+                    </testsuite>
+                </testsuites>`,
+                join(root, 'phpunit.xml'),
+            );
+            await collection.add(URI.file(join(root, 'tests/Unit/ChildTest.php')));
+
+            await writeBase(['test_a', 'test_b']);
+            await collection.change(URI.file(join(root, 'tests/Support/BaseCase.php')));
+
+            const allIds = (items: import('vscode').TestItemCollection): string[] =>
+                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
+            expect(
+                allIds(ctrl.items)
+                    .filter((id) => id.startsWith('Child (Tests\\Unit\\Child)::'))
+                    .sort(),
+            ).toEqual(['Child (Tests\\Unit\\Child)::A', 'Child (Tests\\Unit\\Child)::B']);
+            await rm(root, { recursive: true, force: true });
         });
     });
 

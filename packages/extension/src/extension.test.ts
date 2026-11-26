@@ -1,7 +1,8 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { type GlobOptions, glob } from 'glob';
+import { minimatch } from 'minimatch';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 type FakeFileSystemWatcher = { disposed: boolean };
@@ -1407,6 +1408,24 @@ describe('Extension Test', () => {
                     `${icon(TestType.method)} test_from_support_base`,
                     `${icon(TestType.method)} test_own`,
                 ]);
+            });
+
+            it('watches composer autoload-dev files outside the testsuite directories', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+                const supportFile = join(root, 'tests/Support/AbstractSharedTestCase.php');
+
+                const watched = (workspace.createFileSystemWatcher as Mock).mock.results.some(
+                    ({ value }) => {
+                        const { base, pattern } = value.pattern as {
+                            base: string;
+                            pattern: string;
+                        };
+                        return minimatch(relative(base, supportFile).split(sep).join('/'), pattern);
+                    },
+                );
+
+                expect(watched).toBe(true);
             });
 
             it('should run all tests', async () => {
