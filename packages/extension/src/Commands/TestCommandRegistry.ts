@@ -93,12 +93,12 @@ export class TestCommandRegistry {
 
     private findAllGroups(): string[] {
         return [
-            ...new Set(this.folderManager.getAll().flatMap((c) => c.get(TestTree).findGroups())),
+            ...new Set(this.folderManager.getAll().flatMap((c) => c.get(TestTree).groups())),
         ].sort();
     }
 
     private findTestsByGroup(group: string): TestItem[] {
-        return this.folderManager.getAll().flatMap((c) => c.get(TestTree).findTestsByGroup(group));
+        return this.folderManager.getAll().flatMap((c) => c.get(TestTree).itemsInGroup(group));
     }
 
     private findMostRecentRequest(): TestRunRequest | undefined {
@@ -120,7 +120,7 @@ export class TestCommandRegistry {
     private findTestsByRequest(request: TestRunRequest): TestItem[] | undefined {
         const tests = this.folderManager
             .getAll()
-            .flatMap((c) => c.get(TestTree).findTestsByRequest(request) ?? []);
+            .flatMap((c) => c.get(TestTree).itemsOf(request) ?? []);
 
         return tests.length > 0 ? tests : undefined;
     }
@@ -137,9 +137,8 @@ export class TestCommandRegistry {
 
     private toContext(container: Container): FolderTestContext {
         return {
-            findTestsByFile: (uri) => container.get(TestTree).findTestsByFile(uri),
-            findTestsByPosition: (uri, pos) =>
-                container.get(TestTree).findTestsByPosition(uri, pos),
+            findTestsByFile: (uri) => container.get(TestTree).itemsInFile(uri),
+            findTestsByPosition: (uri, pos) => container.get(TestTree).itemsAt(uri, pos),
         };
     }
 

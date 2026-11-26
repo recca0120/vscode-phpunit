@@ -145,7 +145,7 @@ export class TestRunHandler {
         }
 
         return include
-            .map((testItem) => this.testTree.getTestDefinition(testItem))
+            .map((testItem) => this.testTree.definitionOf(testItem))
             .filter((testDef): testDef is TestDefinition => testDef !== undefined)
             .map((testDef, index) => withCoverage(this.withFilter(command, testDef), index))
             .map((configured) => runner.run(configured));

@@ -128,7 +128,7 @@ function registerDocumentListeners(
         workspace.onDidChangeTextDocument((e) => {
             const container = folderManager.getByUri(e.document.uri);
             if (container) {
-                container.get(TestTree).change(e.document.uri);
+                container.get(TestTree).update(e.document.uri);
             }
         }),
     );

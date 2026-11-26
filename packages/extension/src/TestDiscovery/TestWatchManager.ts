@@ -72,7 +72,7 @@ export class TestWatchManager {
         let profile: TestRunProfile | undefined;
         for (const [testItem, thisProfile] of this.watchingTests) {
             if (testItem.uri?.toString() === uri.toString()) {
-                include.push(...this.testTree.findTestsByFile(testItem.uri));
+                include.push(...this.testTree.itemsInFile(testItem.uri));
                 profile = thisProfile;
             }
         }

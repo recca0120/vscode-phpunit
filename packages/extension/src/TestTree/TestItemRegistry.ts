@@ -5,11 +5,11 @@ type Entry = { item: TestItem; definition: TestDefinition };
 
 export class TestItemRegistry {
     private entries = new Map<string, Entry>();
-    private groups = new Map<string, Set<TestItem>>();
+    private itemsByGroup = new Map<string, Set<TestItem>>();
     private byUri = new Map<string, Set<string>>();
     private idToUris = new Map<string, Set<string>>();
 
-    set(uri: string, testItem: TestItem, testDefinition: TestDefinition): void {
+    register(uri: string, testItem: TestItem, testDefinition: TestDefinition): void {
         this.entries.set(testItem.id, { item: testItem, definition: testDefinition });
 
         const uriIds = this.byUri.get(uri) ?? new Set<string>();
@@ -25,15 +25,15 @@ export class TestItemRegistry {
             for (const tag of testItem.tags ?? []) {
                 if (tag.id.startsWith(groupPrefix)) {
                     const group = tag.id.slice(groupPrefix.length);
-                    const members = this.groups.get(group) ?? new Set<TestItem>();
-                    this.groups.set(group, members);
+                    const members = this.itemsByGroup.get(group) ?? new Set<TestItem>();
+                    this.itemsByGroup.set(group, members);
                     members.add(testItem);
                 }
             }
         }
     }
 
-    delete(testItem: TestItem): void {
+    unregister(testItem: TestItem): void {
         const uris = this.idToUris.get(testItem.id);
         if (uris) {
             for (const uri of uris) {
@@ -44,7 +44,7 @@ export class TestItemRegistry {
         this.deleteById(testItem.id);
     }
 
-    deleteByUri(uri: string): void {
+    unregisterFile(uri: string): void {
         const ids = this.byUri.get(uri);
         if (!ids) {
             return;
@@ -62,7 +62,7 @@ export class TestItemRegistry {
         }
     }
 
-    getDefinitionsByUri(uri: string): [TestItem, TestDefinition][] {
+    entriesIn(uri: string): [TestItem, TestDefinition][] {
         const ids = this.byUri.get(uri);
         if (!ids) {
             return [];
@@ -79,12 +79,12 @@ export class TestItemRegistry {
 
     clear(): void {
         this.entries.clear();
-        this.groups.clear();
+        this.itemsByGroup.clear();
         this.byUri.clear();
         this.idToUris.clear();
     }
 
-    getDefinitionsByType(type: TestType): [TestItem, TestDefinition][] {
+    entriesOfType(type: TestType): [TestItem, TestDefinition][] {
         const result: [TestItem, TestDefinition][] = [];
         for (const { item, definition } of this.entries.values()) {
             if (definition.type === type) {
@@ -94,20 +94,20 @@ export class TestItemRegistry {
         return result;
     }
 
-    getDefinition(id: string): TestDefinition | undefined {
+    definitionOf(id: string): TestDefinition | undefined {
         return this.entries.get(id)?.definition;
     }
 
-    getItem(id: string): TestItem | undefined {
+    itemOf(id: string): TestItem | undefined {
         return this.entries.get(id)?.item;
     }
 
-    getGroups(): string[] {
-        return [...this.groups.keys()].sort();
+    groups(): string[] {
+        return [...this.itemsByGroup.keys()].sort();
     }
 
-    getItemsByGroup(group: string): TestItem[] {
-        return [...(this.groups.get(group) ?? [])];
+    itemsInGroup(group: string): TestItem[] {
+        return [...(this.itemsByGroup.get(group) ?? [])];
     }
 
     private deleteById(id: string): void {
@@ -120,10 +120,10 @@ export class TestItemRegistry {
     }
 
     private removeFromGroups(testItem: TestItem): void {
-        for (const [key, members] of this.groups) {
+        for (const [key, members] of this.itemsByGroup) {
             members.delete(testItem);
             if (members.size === 0) {
-                this.groups.delete(key);
+                this.itemsByGroup.delete(key);
             }
         }
     }

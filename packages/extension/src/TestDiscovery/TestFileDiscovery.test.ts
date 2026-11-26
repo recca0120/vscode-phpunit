@@ -19,21 +19,21 @@ function createMockConfiguration(args: string[] = []) {
     } as unknown as Configuration;
 }
 
-function createMockCollection() {
+function createMockTestTree() {
     return {
-        reset: vi.fn(),
-        delete: vi.fn(),
+        clear: vi.fn(),
+        remove: vi.fn(),
         add: vi.fn().mockResolvedValue(undefined),
-        gatherFiles: vi.fn().mockReturnValue([]),
+        files: vi.fn().mockReturnValue([]),
     } as unknown as TestTree;
 }
 
 describe('TestFileDiscovery.getConfigFilePattern', () => {
-    let collection: TestTree;
+    let testTree: TestTree;
     let phpUnitXML: PHPUnitXML;
 
     beforeEach(() => {
-        collection = createMockCollection();
+        testTree = createMockTestTree();
         phpUnitXML = new PHPUnitXML();
     });
 
@@ -42,7 +42,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
         const discovery = new TestFileDiscovery(
             configuration,
             phpUnitXML,
-            collection,
+            testTree,
             workspaceFolder,
         );
 
@@ -54,7 +54,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
         const discovery = new TestFileDiscovery(
             configuration,
             phpUnitXML,
-            collection,
+            testTree,
             workspaceFolder,
         );
 
@@ -68,7 +68,7 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
         const discovery = new TestFileDiscovery(
             configuration,
             phpUnitXML,
-            collection,
+            testTree,
             workspaceFolder,
         );
 
@@ -80,12 +80,12 @@ describe('TestFileDiscovery.getConfigFilePattern', () => {
 
 describe('TestFileDiscovery.discoverTestFiles', () => {
     const discover = async (folderUri: URI, found: URI[]) => {
-        const collection = createMockCollection();
+        const testTree = createMockTestTree();
         vi.mocked(workspace.findFiles).mockResolvedValueOnce(found);
         const discovery = new TestFileDiscovery(
             createMockConfiguration(),
             new PHPUnitXML(),
-            collection,
+            testTree,
             { uri: folderUri, name: 'proj', index: 0 } as WorkspaceFolder,
         );
 
@@ -94,7 +94,7 @@ describe('TestFileDiscovery.discoverTestFiles', () => {
             new RelativePattern(folderUri.fsPath, 'vendor/**'),
         );
 
-        return vi.mocked(collection.add).mock.calls.map(([uri]) => uri.toString());
+        return vi.mocked(testTree.add).mock.calls.map(([uri]) => uri.toString());
     };
 
     it('ignores files of a sibling folder sharing the same prefix', async () => {
@@ -129,7 +129,7 @@ describe('TestFileDiscovery.getWorkspaceTestPattern', () => {
         const discovery = new TestFileDiscovery(
             configuration,
             new PHPUnitXML(),
-            createMockCollection(),
+            createMockTestTree(),
             { uri: URI.file(projectRoot), name: 'proj', index: 0 } as WorkspaceFolder,
         );
 

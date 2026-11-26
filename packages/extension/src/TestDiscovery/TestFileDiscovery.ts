@@ -65,7 +65,7 @@ export class TestFileDiscovery {
 
     async reloadAll(): Promise<void> {
         this.invalidateCache();
-        this.testTree.reset();
+        this.testTree.clear();
         const { pattern, exclude } = await this.getWorkspaceTestPattern();
         await this.discoverTestFiles(pattern, exclude);
     }
@@ -77,9 +77,9 @@ export class TestFileDiscovery {
                 .filter((uri) => this.isInWorkspaceFolder(uri)),
         );
 
-        for (const file of this.testTree.gatherFiles()) {
+        for (const file of this.testTree.files()) {
             if (!newFiles.has(file.uri.toString())) {
-                this.testTree.delete(file.uri);
+                this.testTree.remove(file.uri);
             }
         }
 

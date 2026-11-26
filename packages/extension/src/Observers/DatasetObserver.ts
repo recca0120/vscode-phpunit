@@ -9,7 +9,7 @@ export class DatasetObserver implements TestRunnerObserver {
     ) {}
 
     testStarted(result: TestStarted): void {
-        const child = this.testTree.resolveDatasetChild(result);
+        const child = this.testTree.addDatasetChild(result);
         if (child) {
             this.testItemById.set(child.id, child);
         }

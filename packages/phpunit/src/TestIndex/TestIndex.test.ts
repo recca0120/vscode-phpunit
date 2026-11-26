@@ -26,7 +26,7 @@ describe('TestIndex', () => {
     };
 
     const shouldBe = async (
-        collection: TestIndex,
+        testIndex: TestIndex,
         testsuites: Record<string, import('vscode-uri').URI[]>,
     ) => {
         const phpUnitXML = new PHPUnitXML();
@@ -50,7 +50,7 @@ describe('TestIndex', () => {
                 }
             }
             const actual: TestDefinition[] = [];
-            for (const file of collection.files()) {
+            for (const file of testIndex.files()) {
                 if (file.testsuite === testsuite) {
                     actual.push(...file.tests);
                 }
@@ -60,7 +60,7 @@ describe('TestIndex', () => {
     };
 
     it('should clear state on reset', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -68,11 +68,11 @@ describe('TestIndex', () => {
             </testsuites>`);
 
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.update(uri);
-        expect(collection.has(uri)).toBe(true);
+        await testIndex.update(uri);
+        expect(testIndex.has(uri)).toBe(true);
 
-        collection.clear();
-        expect(collection.has(uri)).toBe(false);
+        testIndex.clear();
+        expect(testIndex.has(uri)).toBe(false);
     });
 
     it('classHierarchy should be owned by TestIndex, not TestParser', () => {
@@ -81,7 +81,7 @@ describe('TestIndex', () => {
 
     describe('testsuites from phpunit.xml', () => {
         it('match testsuite directory', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -93,14 +93,14 @@ describe('TestIndex', () => {
                 // URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, { default: files });
+            await shouldBe(testIndex, { default: files });
         });
 
         it('match testsuite file', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <file>tests/AssertionsTest.php</file>
@@ -109,14 +109,14 @@ describe('TestIndex', () => {
 
             const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, { default: files });
+            await shouldBe(testIndex, { default: files });
         });
 
         it('match testsuite exclude directory', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -129,14 +129,14 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, { default: [files[0]] });
+            await shouldBe(testIndex, { default: [files[0]] });
         });
 
         it('match testsuite exclude file', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -149,14 +149,14 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, { default: [files[0]] });
+            await shouldBe(testIndex, { default: [files[0]] });
         });
 
         it('match three testsuites', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -177,10 +177,10 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, {
+            await shouldBe(testIndex, {
                 default: [files[0]],
                 Unit: [files[1]],
                 Feature: [files[2]],
@@ -188,7 +188,7 @@ describe('TestIndex', () => {
         });
 
         it('match *', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests/*/SubFolder</directory>
@@ -200,14 +200,14 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, { default: [files[1], files[2]] });
+            await shouldBe(testIndex, { default: [files[1], files[2]] });
         });
 
         it('match no case', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests/unit</directory>
@@ -216,17 +216,17 @@ describe('TestIndex', () => {
 
             const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
             for (const file of files) {
-                await collection.update(file);
+                await testIndex.update(file);
             }
 
-            await shouldBe(collection, {
+            await shouldBe(testIndex, {
                 default: [files[0]],
             });
         });
     });
 
     it('exclude abstract class', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -239,14 +239,14 @@ describe('TestIndex', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.update(file);
+            await testIndex.update(file);
         }
 
-        await shouldBe(collection, { default: [files[1], files[2]] });
+        await shouldBe(testIndex, { default: [files[1], files[2]] });
     });
 
     it('unique file', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -258,14 +258,14 @@ describe('TestIndex', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.update(file);
+            await testIndex.update(file);
         }
 
-        await shouldBe(collection, { default: [files[0]] });
+        await shouldBe(testIndex, { default: [files[0]] });
     });
 
     it('remove file', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -274,17 +274,17 @@ describe('TestIndex', () => {
 
         const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
         for (const file of files) {
-            await collection.update(file);
+            await testIndex.update(file);
         }
 
-        expect(collection.has(files[0])).toBeTruthy();
-        expect((await collection.remove(files[0])).deleted[0]).toBeDefined();
-        expect((await collection.remove(files[0])).deleted[0]).toBeUndefined();
-        await shouldBe(collection, { default: [] });
+        expect(testIndex.has(files[0])).toBeTruthy();
+        expect((await testIndex.remove(files[0])).deleted[0]).toBeDefined();
+        expect((await testIndex.remove(files[0])).deleted[0]).toBeUndefined();
+        await shouldBe(testIndex, { default: [] });
     });
 
     it('change should remove file when it no longer contains tests', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -293,12 +293,12 @@ describe('TestIndex', () => {
 
         const abstractFile = URI.file(phpUnitProject('tests/AbstractTest.php'));
 
-        await collection.update(abstractFile);
-        expect(collection.has(abstractFile)).toBeFalsy();
+        await testIndex.update(abstractFile);
+        expect(testIndex.has(abstractFile)).toBeFalsy();
     });
 
     it('remove should clear definitionIndex so addDatasetChild works again', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -306,7 +306,7 @@ describe('TestIndex', () => {
             </testsuites>`);
 
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.update(uri);
+        await testIndex.update(uri);
 
         const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
         const started = makeTestStarted(
@@ -314,17 +314,17 @@ describe('TestIndex', () => {
             'addition_provider with data set #0',
         );
 
-        expect(collection.addDatasetChild(started)).toBeDefined();
-        expect(collection.addDatasetChild(started)).toBeUndefined();
+        expect(testIndex.addDatasetChild(started)).toBeDefined();
+        expect(testIndex.addDatasetChild(started)).toBeUndefined();
 
-        await collection.remove(uri);
-        await collection.update(uri);
+        await testIndex.remove(uri);
+        await testIndex.update(uri);
 
-        expect(collection.addDatasetChild(started)).toBeDefined();
+        expect(testIndex.addDatasetChild(started)).toBeDefined();
     });
 
     it('clear should clear definitionIndex so addDatasetChild works again', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
                     <directory>tests</directory>
@@ -332,7 +332,7 @@ describe('TestIndex', () => {
             </testsuites>`);
 
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.update(uri);
+        await testIndex.update(uri);
 
         const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
         const started = makeTestStarted(
@@ -340,17 +340,17 @@ describe('TestIndex', () => {
             'addition_provider with data set #0',
         );
 
-        expect(collection.addDatasetChild(started)).toBeDefined();
-        expect(collection.addDatasetChild(started)).toBeUndefined();
+        expect(testIndex.addDatasetChild(started)).toBeDefined();
+        expect(testIndex.addDatasetChild(started)).toBeUndefined();
 
-        collection.clear();
-        await collection.update(uri);
+        testIndex.clear();
+        await testIndex.update(uri);
 
-        expect(collection.addDatasetChild(started)).toBeDefined();
+        expect(testIndex.addDatasetChild(started)).toBeDefined();
     });
 
     it('reset', async () => {
-        const collection = givenTestIndex(`
+        const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="Unit">
                     <directory>tests/Unit</directory>
@@ -365,12 +365,12 @@ describe('TestIndex', () => {
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.update(file);
+            await testIndex.update(file);
         }
-        expect(collection.size).toEqual(2);
+        expect(testIndex.size).toEqual(2);
 
-        collection.clear();
-        expect(collection.size).toEqual(0);
+        testIndex.clear();
+        expect(testIndex.size).toEqual(0);
     });
 
     const makeTestStarted = (id: string, name: string): TestStarted => ({
@@ -384,16 +384,16 @@ describe('TestIndex', () => {
 
     describe('resolveDataset', () => {
         it('should resolve missing dataset child', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testIndex.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
-            const result = collection.addDatasetChild(
+            const result = testIndex.addDatasetChild(
                 makeTestStarted(
                     `${parentId} with data set #0`,
                     'addition_provider with data set #0',
@@ -407,22 +407,22 @@ describe('TestIndex', () => {
         });
 
         it('should return undefined when already exists', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testIndex.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
-            collection.addDatasetChild(
+            testIndex.addDatasetChild(
                 makeTestStarted(
                     `${parentId} with data set #0`,
                     'addition_provider with data set #0',
                 ),
             );
-            const result = collection.addDatasetChild(
+            const result = testIndex.addDatasetChild(
                 makeTestStarted(
                     `${parentId} with data set #0`,
                     'addition_provider with data set #0',
@@ -433,15 +433,15 @@ describe('TestIndex', () => {
         });
 
         it('should return undefined when parent not found', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testIndex.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-            const result = collection.addDatasetChild(
+            const result = testIndex.addDatasetChild(
                 makeTestStarted('NonExistent::method with data set #0', 'method with data set #0'),
             );
 
@@ -449,16 +449,16 @@ describe('TestIndex', () => {
         });
 
         it('should return undefined for non-dataset test', async () => {
-            const collection = givenTestIndex(`
+            const testIndex = givenTestIndex(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testIndex.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
-            const result = collection.addDatasetChild(
+            const result = testIndex.addDatasetChild(
                 makeTestStarted(parentId, 'addition_provider'),
             );
 

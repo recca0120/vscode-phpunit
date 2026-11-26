@@ -53,11 +53,11 @@ export class TestFileWatcher {
             this.fileChangedEmitter.fire(uri);
         });
         watcher.onDidChange((uri) => {
-            this.testTree.change(uri);
+            this.testTree.update(uri);
             this.fileChangedEmitter.fire(uri);
         });
         watcher.onDidDelete((uri) => {
-            this.testTree.delete(uri);
+            this.testTree.remove(uri);
         });
 
         this.testWatcher = watcher;

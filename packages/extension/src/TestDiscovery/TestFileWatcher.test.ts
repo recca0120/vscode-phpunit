@@ -31,58 +31,58 @@ function createMockDiscovery(
     } as unknown as TestFileDiscovery;
 }
 
-function createMockCollection() {
+function createMockTestTree() {
     return {
         add: vi.fn().mockResolvedValue(undefined),
-        change: vi.fn().mockResolvedValue(undefined),
-        delete: vi.fn(),
+        update: vi.fn().mockResolvedValue(undefined),
+        remove: vi.fn(),
     } as unknown as TestTree;
 }
 
 describe('TestFileWatcher', () => {
     let discovery: TestFileDiscovery;
-    let collection: TestTree;
+    let testTree: TestTree;
     let emitter: EventEmitter<Uri>;
     let fileWatcher: TestFileWatcher;
 
     beforeEach(() => {
         mockWorkspace.createdWatchers.length = 0;
         discovery = createMockDiscovery();
-        collection = createMockCollection();
+        testTree = createMockTestTree();
         emitter = new EventEmitter<Uri>();
-        fileWatcher = new TestFileWatcher(discovery, collection, emitter);
+        fileWatcher = new TestFileWatcher(discovery, testTree, emitter);
     });
 
     const getTestWatcher = () => mockWorkspace.createdWatchers[0];
     const getConfigWatcher = () => mockWorkspace.createdWatchers[1];
 
     describe('test file watching', () => {
-        it('should add to collection and fire emitter on create', async () => {
+        it('should add to the test tree and fire emitter on create', async () => {
             await fileWatcher.startWatching();
             const uri = Uri.file('/workspace/tests/FooTest.php');
 
             getTestWatcher().fireCreate(uri);
 
-            expect(collection.add).toHaveBeenCalledWith(uri);
+            expect(testTree.add).toHaveBeenCalledWith(uri);
             expect(emitter.event).toBeDefined();
         });
 
-        it('should update collection and fire emitter on change', async () => {
+        it('should update the test tree and fire emitter on change', async () => {
             await fileWatcher.startWatching();
             const uri = Uri.file('/workspace/tests/FooTest.php');
 
             getTestWatcher().fireChange(uri);
 
-            expect(collection.change).toHaveBeenCalledWith(uri);
+            expect(testTree.update).toHaveBeenCalledWith(uri);
         });
 
-        it('should delete from collection on delete', async () => {
+        it('should remove from the test tree on delete', async () => {
             await fileWatcher.startWatching();
             const uri = Uri.file('/workspace/tests/FooTest.php');
 
             getTestWatcher().fireDelete(uri);
 
-            expect(collection.delete).toHaveBeenCalledWith(uri);
+            expect(testTree.remove).toHaveBeenCalledWith(uri);
         });
     });
 
@@ -131,7 +131,7 @@ describe('TestFileWatcher', () => {
 
         it('uses pattern from getConfigFilePattern for the config watcher', async () => {
             discovery = createMockDiscovery('{custom.xml,composer.json,composer.lock}');
-            fileWatcher = new TestFileWatcher(discovery, collection, emitter);
+            fileWatcher = new TestFileWatcher(discovery, testTree, emitter);
 
             await fileWatcher.startWatching();
 
