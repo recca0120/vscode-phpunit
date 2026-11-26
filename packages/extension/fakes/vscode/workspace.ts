@@ -55,7 +55,7 @@ export class Configuration {
     }
 }
 
-const configurations = new Map<string, Configuration>();
+export const configurations = new Map<string, Configuration>();
 
 const workspace = {
     createdWatchers: [] as FakeFileSystemWatcher[],
