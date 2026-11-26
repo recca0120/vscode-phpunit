@@ -6,8 +6,9 @@ import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
+import { ClassRegistry } from '../TestIndex/ClassRegistry';
+import { InheritanceResolver } from '../TestIndex/InheritanceResolver';
 import { type TestDefinition, TestType } from '../types';
-import { ClassHierarchy } from './ClassHierarchy';
 import { TestParser } from './TestParser';
 
 const parsers: [string, () => AstParser][] = [
@@ -882,12 +883,13 @@ ${metadata}
         });
     });
 
-    describe('Inherited test methods with ClassHierarchy', () => {
+    describe('Inherited test methods with InheritanceResolver', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const phpUnitXML = new PHPUnitXML();
             phpUnitXML.setRoot(root);
             const testParser = new TestParser(phpUnitXML, createParser());
-            const classHierarchy = new ClassHierarchy();
+            const classHierarchy = new ClassRegistry();
+            const inheritance = new InheritanceResolver(classHierarchy);
 
             const allResults: TestDefinition[] = [];
             for (const { file, content } of files) {
@@ -900,7 +902,7 @@ ${metadata}
                 }
             }
 
-            const enriched = classHierarchy.enrichTests(allResults);
+            const enriched = inheritance.resolve(allResults);
             const allTests: TestDefinition[] = [];
             const collect = (defs: TestDefinition[]) => {
                 for (const def of defs) {

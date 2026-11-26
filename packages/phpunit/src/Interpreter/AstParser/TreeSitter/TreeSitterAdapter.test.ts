@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, pestProject, phpUnitProject } from '../../../../tests/utils';
-import { ClassHierarchy } from '../../../TestParser/ClassHierarchy';
+import { ClassRegistry } from '../../../TestIndex/ClassRegistry';
+import { InheritanceResolver } from '../../../TestIndex/InheritanceResolver';
 import { extractTests } from '../../../TestParser/TestExtractor';
 import { type TestDefinition, TestType } from '../../../types';
 import { interpret } from '../../PHP';
@@ -509,9 +510,10 @@ class PropertyHooksTest extends TestCase
         );
     });
 
-    describe('Inherited test methods with ClassHierarchy', () => {
+    describe('Inherited test methods with InheritanceResolver', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
-            const hierarchy = new ClassHierarchy();
+            const hierarchy = new ClassRegistry();
+            const inheritance = new InheritanceResolver(hierarchy);
             let allTests: TestDefinition[] = [];
 
             for (const { file, content } of files) {
@@ -529,7 +531,7 @@ class PropertyHooksTest extends TestCase
                 }
             }
 
-            allTests = flattenTests(hierarchy.enrichTests(allTests));
+            allTests = flattenTests(inheritance.resolve(allTests));
 
             return allTests;
         };

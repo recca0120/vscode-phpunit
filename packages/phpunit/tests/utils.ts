@@ -5,7 +5,8 @@ import type { AstParser } from '../src/Interpreter/AstParser/AstParser';
 import { ChainAstParser } from '../src/Interpreter/AstParser/ChainAstParser';
 import { PhpParserAstParser } from '../src/Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../src/Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
-import { ClassHierarchy } from '../src/TestParser/ClassHierarchy';
+import { ClassRegistry } from '../src/TestIndex/ClassRegistry';
+import { InheritanceResolver } from '../src/TestIndex/InheritanceResolver';
 import { TestParser } from '../src/TestParser/TestParser';
 import { type TestDefinition, TestType } from '../src/types';
 
@@ -37,7 +38,8 @@ export const parseTestFile = (
         phpUnitXML,
         astParser ?? new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]),
     );
-    const classHierarchy = new ClassHierarchy();
+    const classHierarchy = new ClassRegistry();
+    const inheritance = new InheritanceResolver(classHierarchy);
 
     const result = testParser.parse(buffer, file);
     if (!result) {
@@ -48,7 +50,7 @@ export const parseTestFile = (
         classHierarchy.register(cls);
     }
 
-    const enriched = classHierarchy.enrichTests(result.tests);
+    const enriched = inheritance.resolve(result.tests);
     const tests: TestDefinition[] = [];
     const collect = (defs: TestDefinition[]) => {
         for (const def of defs) {

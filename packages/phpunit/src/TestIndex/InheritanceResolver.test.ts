@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { ClassInfo } from '../TestParser/ClassInfo';
 import { TestType } from '../types';
-import { ClassHierarchy } from './ClassHierarchy';
-import type { ClassInfo } from './ClassInfo';
+import { ClassRegistry } from './ClassRegistry';
+import { InheritanceResolver } from './InheritanceResolver';
 
 const classInfo = (
     overrides: Partial<ClassInfo> & Pick<ClassInfo, 'uri' | 'classFQN'>,
@@ -14,24 +15,10 @@ const classInfo = (
     ...overrides,
 });
 
-describe('ClassHierarchy', () => {
-    it('should register and retrieve class info', () => {
-        const registry = new ClassHierarchy();
-        registry.register(
-            classInfo({
-                uri: '/test.php',
-                classFQN: 'App\\MyClass',
-                parentFQN: 'App\\BaseClass',
-            }),
-        );
-
-        const info = registry.get('App\\MyClass');
-        expect(info).toBeDefined();
-        expect(info?.parentFQN).toBe('App\\BaseClass');
-    });
-
+describe('InheritanceResolver', () => {
     it('should detect TestCase inheritance', () => {
-        const registry = new ClassHierarchy();
+        const registry = new ClassRegistry();
+        const resolver = new InheritanceResolver(registry);
         registry.register(
             classInfo({
                 uri: '/abstract.php',
@@ -48,12 +35,13 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        expect(registry.mayExtendTestCase('App\\ConcreteTest')).toBe(true);
-        expect(registry.mayExtendTestCase('App\\AbstractTest')).toBe(true);
+        expect(resolver.mayExtendTestCase('App\\ConcreteTest')).toBe(true);
+        expect(resolver.mayExtendTestCase('App\\AbstractTest')).toBe(true);
     });
 
     it('should detect circular inheritance', () => {
-        const registry = new ClassHierarchy();
+        const registry = new ClassRegistry();
+        const resolver = new InheritanceResolver(registry);
         registry.register(
             classInfo({
                 uri: '/a.php',
@@ -69,11 +57,12 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        expect(registry.mayExtendTestCase('A')).toBe(false);
+        expect(resolver.mayExtendTestCase('A')).toBe(false);
     });
 
-    it('should not infinite loop on circular inheritance in resolveInheritedMethods', () => {
-        const registry = new ClassHierarchy();
+    it('should not infinite loop on circular inheritance in inheritedMethods', () => {
+        const registry = new ClassRegistry();
+        const resolver = new InheritanceResolver(registry);
         registry.register(
             classInfo({
                 uri: '/a.php',
@@ -91,14 +80,15 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        const methods = registry.resolveInheritedMethods('A');
+        const methods = resolver.inheritedMethods('A');
         expect(methods).toHaveLength(2);
         expect(methods.map((m) => m.methodName)).toContain('test_a');
         expect(methods.map((m) => m.methodName)).toContain('test_b');
     });
 
     it('should resolve inherited methods', () => {
-        const registry = new ClassHierarchy();
+        const registry = new ClassRegistry();
+        const resolver = new InheritanceResolver(registry);
         const parentMethod = {
             type: TestType.method,
             id: 'test',
@@ -130,14 +120,15 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        const methods = registry.resolveInheritedMethods('Child');
+        const methods = resolver.inheritedMethods('Child');
         expect(methods).toHaveLength(2);
         expect(methods.map((m) => m.methodName)).toContain('test_child');
         expect(methods.map((m) => m.methodName)).toContain('test_parent');
     });
 
-    it('child override should take precedence in resolveInheritedMethods', () => {
-        const registry = new ClassHierarchy();
+    it('child override should take precedence in inheritedMethods', () => {
+        const registry = new ClassRegistry();
+        const resolver = new InheritanceResolver(registry);
 
         registry.register(
             classInfo({
@@ -173,33 +164,9 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        const methods = registry.resolveInheritedMethods('Child');
+        const methods = resolver.inheritedMethods('Child');
         expect(methods).toHaveLength(1);
         expect(methods[0].file).toBe('/child.php');
-    });
-
-    it('should find child classes', () => {
-        const registry = new ClassHierarchy();
-        registry.register(classInfo({ uri: '/parent.php', classFQN: 'Parent', isAbstract: true }));
-        registry.register(
-            classInfo({ uri: '/child1.php', classFQN: 'Child1', parentFQN: 'Parent' }),
-        );
-        registry.register(
-            classInfo({ uri: '/child2.php', classFQN: 'Child2', parentFQN: 'Parent' }),
-        );
-
-        const children = registry.getChildClasses('Parent');
-        expect(children).toHaveLength(2);
-    });
-
-    it('should get classes by URI', () => {
-        const registry = new ClassHierarchy();
-        registry.register(classInfo({ uri: '/test.php', classFQN: 'ClassA' }));
-        registry.register(classInfo({ uri: '/test.php', classFQN: 'ClassB' }));
-        registry.register(classInfo({ uri: '/other.php', classFQN: 'ClassC' }));
-
-        const classes = registry.getClassesByUri('/test.php');
-        expect(classes).toHaveLength(2);
     });
 
     describe('trait method inheritance', () => {
@@ -212,7 +179,8 @@ describe('ClassHierarchy', () => {
         });
 
         it('should resolve basic trait methods', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/trait.php',
@@ -230,13 +198,14 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             expect(methods.map((x) => x.methodName)).toContain('test_from_trait');
             expect(methods.map((x) => x.methodName)).toContain('test_own');
         });
 
         it('should merge methods from multiple traits', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/t1.php',
@@ -261,14 +230,15 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             expect(methods.map((x) => x.methodName)).toEqual(
                 expect.arrayContaining(['test_t1', 'test_t2']),
             );
         });
 
         it('should handle insteadof conflict resolution', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/t1.php',
@@ -296,13 +266,14 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             const shared = methods.find((x) => x.methodName === 'test_shared');
             expect(shared?.file).toBe('/t1.php');
         });
 
         it('should handle as (alias) adaptation', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/t1.php',
@@ -336,14 +307,15 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             const names = methods.map((x) => x.methodName);
             expect(names).toContain('test_shared');
             expect(names).toContain('test_shared_alias');
         });
 
         it('should resolve nested trait use (trait uses trait)', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/inner.php',
@@ -369,14 +341,15 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             const names = methods.map((x) => x.methodName);
             expect(names).toContain('test_inner');
             expect(names).toContain('test_outer');
         });
 
         it('should not infinite loop on circular trait use', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/ta.php',
@@ -403,14 +376,15 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             const names = methods.map((x) => x.methodName);
             expect(names).toContain('test_a');
             expect(names).toContain('test_b');
         });
 
         it('own methods take precedence over trait methods', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/trait.php',
@@ -428,13 +402,14 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             expect(methods).toHaveLength(1);
             expect(methods[0].file).toBe('/class.php');
         });
 
         it('trait methods take precedence over parent methods', () => {
-            const registry = new ClassHierarchy();
+            const registry = new ClassRegistry();
+            const resolver = new InheritanceResolver(registry);
             registry.register(
                 classInfo({
                     uri: '/parent.php',
@@ -459,44 +434,9 @@ describe('ClassHierarchy', () => {
                 }),
             );
 
-            const methods = registry.resolveInheritedMethods('MyClass');
+            const methods = resolver.inheritedMethods('MyClass');
             const shared = methods.find((x) => x.methodName === 'test_shared');
             expect(shared?.file).toBe('/trait.php');
-        });
-
-        it('getTraitUsers returns classes that use a trait', () => {
-            const registry = new ClassHierarchy();
-            registry.register(
-                classInfo({
-                    uri: '/trait.php',
-                    classFQN: 'MyTrait',
-                    kind: 'trait',
-                }),
-            );
-            registry.register(
-                classInfo({
-                    uri: '/c1.php',
-                    classFQN: 'C1',
-                    traitFQNs: ['MyTrait'],
-                }),
-            );
-            registry.register(
-                classInfo({
-                    uri: '/c2.php',
-                    classFQN: 'C2',
-                    traitFQNs: ['MyTrait'],
-                }),
-            );
-            registry.register(
-                classInfo({
-                    uri: '/c3.php',
-                    classFQN: 'C3',
-                }),
-            );
-
-            const users = registry.getTraitUsers('MyTrait');
-            expect(users).toHaveLength(2);
-            expect(users.map((u) => u.classFQN)).toEqual(expect.arrayContaining(['C1', 'C2']));
         });
     });
 });

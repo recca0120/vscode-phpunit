@@ -34,7 +34,7 @@ export class TestIndex {
         return this.store.size;
     }
 
-    async change(uri: URI) {
+    async update(uri: URI) {
         return new Promise<IndexChange>((resolve, reject) => {
             this.parseQueue = this.parseQueue
                 .catch(() => {})
@@ -42,15 +42,11 @@ export class TestIndex {
         });
     }
 
-    get(uri: URI) {
-        return this.store.findFile(uri)?.tests;
-    }
-
     has(uri: URI) {
-        return !!this.store.findFile(uri);
+        return !!this.store.find(uri);
     }
 
-    resolveDataset(
+    addDatasetChild(
         result: TestStarted,
     ): { parentId: string; childDef: TestDefinition } | undefined {
         if (!result.id) {
@@ -76,7 +72,7 @@ export class TestIndex {
         if (this.has(uri)) {
             return;
         }
-        await this.change(uri);
+        await this.update(uri);
     }
 
     async deleteClasses(uri: URI): Promise<IndexChange> {
@@ -88,20 +84,20 @@ export class TestIndex {
     }
 
     delete(uri: URI): IndexedFile<TestDefinition> | undefined {
-        const file = this.store.findFile(uri);
+        const file = this.store.find(uri);
         this.deleteFiles(uri);
         return file;
     }
 
     deleteFiles(uri: URI): IndexedFile<TestDefinition>[] {
-        const file = this.store.findFile(uri);
+        const file = this.store.find(uri);
         if (file) {
             this.removeFile(file);
             return [file];
         }
 
         const folderPrefix = uri.toString();
-        const files = [...this.gatherFiles()].filter((tracked) =>
+        const files = [...this.files()].filter((tracked) =>
             tracked.uri.toString().startsWith(folderPrefix),
         );
         for (const tracked of files) {
@@ -111,7 +107,7 @@ export class TestIndex {
         return files;
     }
 
-    reset(): void {
+    clear(): void {
         this.store.clear();
         this.ownTests.clear();
         this.testSuiteMatcher.reset();
@@ -119,16 +115,16 @@ export class TestIndex {
         this.autoload.reset();
     }
 
-    findFile(uri: URI): IndexedFile<TestDefinition> | undefined {
-        return this.store.findFile(uri);
+    find(uri: URI): IndexedFile<TestDefinition> | undefined {
+        return this.store.find(uri);
     }
 
-    *gatherFiles() {
-        yield* this.store.gatherFiles();
+    *files() {
+        yield* this.store.files();
     }
 
     private async doDeleteClasses(uri: URI): Promise<IndexChange> {
-        const previous = this.classes.unregister(uri.fsPath);
+        const previous = this.classes.unregisterFile(uri.fsPath);
 
         return this.reparseDependents(uri, previous);
     }
@@ -142,9 +138,9 @@ export class TestIndex {
             return this.isSupportFile(uri) ? this.indexSupportFile(uri) : { parsed, deleted };
         }
 
-        const previous = this.classes.unregister(uri.fsPath);
+        const previous = this.classes.unregisterFile(uri.fsPath);
 
-        this.store.initSuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
+        this.store.defineTestsuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
         if (tests.length === 0) {
             const file = this.delete(uri);
@@ -167,12 +163,12 @@ export class TestIndex {
     private isSupportFile(uri: URI): boolean {
         return (
             this.testSuiteMatcher.isInTestsuiteDirectory(uri) ||
-            this.classes.getClassesByUri(uri.fsPath).length > 0
+            this.classes.declaredIn(uri.fsPath).length > 0
         );
     }
 
     private async indexSupportFile(uri: URI): Promise<IndexChange> {
-        const previous = this.classes.unregister(uri.fsPath);
+        const previous = this.classes.unregisterFile(uri.fsPath);
         const parseResult = await this.testParser.parseFile(uri.fsPath);
         await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
 
@@ -199,7 +195,7 @@ export class TestIndex {
 
     private async indexIncludedFiles(includes: string[]): Promise<void> {
         for (const file of includes) {
-            if (this.classes.getClassesByUri(file).length > 0 || !(await checkFileExists(file))) {
+            if (this.classes.declaredIn(file).length > 0 || !(await checkFileExists(file))) {
                 continue;
             }
             const parseResult = await this.testParser.parseFile(file);
@@ -245,22 +241,9 @@ export class TestIndex {
     }
 
     private getDependentClasses(fsPath: string, previous: ClassInfo[]) {
-        const dependents = new Map<string, ClassInfo>();
-        const pending = [...previous, ...this.classes.getClassesByUri(fsPath)];
-        for (let classInfo = pending.shift(); classInfo; classInfo = pending.shift()) {
-            for (const dependent of [
-                ...this.classes.getChildClasses(classInfo.classFQN),
-                ...this.classes.getTraitUsers(classInfo.classFQN),
-            ]) {
-                if (dependents.has(dependent.classFQN)) {
-                    continue;
-                }
-                dependents.set(dependent.classFQN, dependent);
-                pending.push(dependent);
-            }
-        }
-
-        return [...dependents.values()].filter((dependent) => dependent.uri !== fsPath);
+        return this.classes
+            .dependentsOf([...previous, ...this.classes.declaredIn(fsPath)])
+            .filter((dependent) => dependent.uri !== fsPath);
     }
 
     private async reparseFile(uri: URI, result: IndexChange): Promise<void> {
@@ -271,7 +254,7 @@ export class TestIndex {
         }
 
         const tests = own
-            ? this.inheritance.enrichTests(own.tests)
+            ? this.inheritance.resolve(own.tests)
             : await this.parseTests(uri, testsuite);
         if (tests.length > 0) {
             this.store.set(testsuite, uri, tests);
@@ -279,15 +262,15 @@ export class TestIndex {
             return;
         }
 
-        const file = this.store.findFile(uri);
+        const file = this.store.find(uri);
         if (file) {
-            this.store.remove(file.testsuite, file.uri);
+            this.store.remove(file.uri);
             result.deleted.push(file);
         }
     }
 
     private removeFile(file: IndexedFile<TestDefinition>): void {
-        this.store.remove(file.testsuite, file.uri);
+        this.store.remove(file.uri);
         this.ownTests.delete(file.uri.toString());
     }
 
@@ -300,6 +283,6 @@ export class TestIndex {
         this.ownTests.set(uri.toString(), { testsuite, tests: parseResult.tests });
         await this.registerClasses(parseResult.classes, parseResult.includes);
 
-        return this.inheritance.enrichTests(parseResult.tests);
+        return this.inheritance.resolve(parseResult.tests);
     }
 }
