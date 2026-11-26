@@ -397,7 +397,7 @@ function adaptForStatement(raw: RawNode): AstNode {
         const assign = raw.init[0];
         init = {
             variable: extractName(assign.left?.name ?? assign.left),
-            value: adaptNode(assign.right) ?? ZERO_NODE,
+            value: adaptExpression(assign.right),
         };
     }
 
@@ -406,11 +406,11 @@ function adaptForStatement(raw: RawNode): AstNode {
         condition = {
             variable: extractName(test.left?.name ?? test.left),
             operator: test.type ?? test.operator ?? '<',
-            value: adaptNode(test.right) ?? ZERO_NODE,
+            value: adaptExpression(test.right),
         };
     }
 
-    if (raw.increment?.[0]) {
+    if (raw.increment?.[0]?.kind === 'post' || raw.increment?.[0]?.kind === 'pre') {
         const inc = raw.increment[0];
         update = {
             variable: extractName(inc.what?.name ?? inc.what),
@@ -450,7 +450,7 @@ function adaptWhileStatement(raw: RawNode): AstNode {
         condition = {
             variable: extractName(test.left?.name ?? test.left),
             operator: test.type ?? test.operator ?? '<',
-            value: adaptNode(test.right) ?? ZERO_NODE,
+            value: adaptExpression(test.right),
         };
     }
     return {
@@ -480,7 +480,7 @@ function adaptAssignment(raw: RawNode): AstNode {
         kind: 'assignment_expression',
         operator: raw.operator !== '=' ? raw.operator : undefined,
         variable: extractName(raw.left?.name ?? raw.left),
-        value: adaptNode(raw.right) ?? ZERO_NODE,
+        value: adaptExpression(raw.right),
         loc: convertLoc(withoutTrailingSemicolon(raw.loc)),
     };
 }

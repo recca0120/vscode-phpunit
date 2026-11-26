@@ -1386,6 +1386,72 @@ class YieldNoKeyTest extends TestCase
             }),
         );
     });
+
+    const givenProviderTest = (providerBody: string) => {
+        const file = phpUnitProject('tests/LoopProviderTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class LoopProviderTest extends TestCase
+{
+    /**
+     * @dataProvider provider
+     */
+    public function test_loop(int $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): iterable
+    {
+        ${providerBody}
+    }
+}`;
+        return givenTest(file, content, 'test_loop');
+    };
+
+    it('for loop starting from a constant has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = START; $i < 2; $i++) { yield "case $i" => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('for loop bounded by a constant has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = 2; $i > LIMIT; $i--) { yield "case $i" => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('for loop with an unsupported update has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = 0; $i < 3; $i += 1) { yield "case $i" => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('while loop bounded by a constant has no static labels', () => {
+        expect(
+            givenProviderTest('$i = 2; while ($i > LIMIT) { yield "case $i" => [$i]; $i--; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('while loop counter assigned from a constant has no static labels', () => {
+        expect(
+            givenProviderTest('$i = START; while ($i < 2) { yield "case $i" => [$i]; $i++; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
+
+    it('foreach over a parenthesized array', () => {
+        expect(givenProviderTest("foreach ((['x', 'y']) as $v) { yield $v => [$v]; }")).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set "x"', 'data set "y"'],
+                },
+            }),
+        );
+    });
 });
 
 describe('PropertyHooksTest (PHP 8.4 — issue #336)', () => {

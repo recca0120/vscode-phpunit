@@ -401,7 +401,7 @@ function adaptForeachStatement(node: SyntaxNode): AstNode {
 
     for (const child of node.children) {
         if (!child) continue;
-        if (!foundAs && isExpressionType(child.type)) {
+        if (!foundAs && child.isNamed) {
             source = adaptExpression(child);
         } else if (child.type === 'as') {
             foundAs = true;
@@ -502,15 +502,6 @@ function adaptUpdateExpression(node: SyntaxNode): AstNode {
         operator: node.text.includes('++') ? '++' : '--',
         loc: locOf(node),
     };
-}
-
-function isExpressionType(type: string): boolean {
-    return (
-        type === 'array_creation_expression' ||
-        type === 'class_constant_access_expression' ||
-        type === 'variable_name' ||
-        type === 'function_call_expression'
-    );
 }
 
 function adaptYield(node: SyntaxNode): AstNode {
