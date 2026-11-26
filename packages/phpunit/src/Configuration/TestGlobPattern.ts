@@ -20,7 +20,7 @@ export class TestGlobPattern {
     push(item: TestSuite, extension: string = '') {
         const args = [this.relativePath, item.value];
         if (item.tag !== 'file') {
-            args.push(`**/*${item.suffix ?? extension}`);
+            args.push(`**/*${extension}`);
         }
 
         this.items.push(TestGlobPattern.normalizePath(...args));

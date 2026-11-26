@@ -127,9 +127,7 @@ export class PHPUnitXML {
         ]);
 
         for (const item of this.getTestSuites()) {
-            item.tag !== 'exclude'
-                ? includes.push({ ...item, suffix: undefined }, '.php')
-                : excludes.push(item);
+            item.tag !== 'exclude' ? includes.push(item, '.php') : excludes.push(item);
         }
 
         return { includes, excludes };
