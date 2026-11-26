@@ -520,12 +520,15 @@ function adaptTraitAdaptation(raw: RawNode): AstNode | undefined {
 }
 
 function adaptUseGroup(raw: RawNode): AstNode {
+    const prefix = raw.name ? extractName(raw.name) : undefined;
     const items: UseItemNode[] = [];
     for (const item of raw.items ?? []) {
         if (item.kind === 'useitem') {
+            const name = extractName(item.name);
             items.push({
                 kind: 'namespace_use_clause',
-                name: extractName(item.name),
+                name: prefix ? `${prefix}\\${name}` : name,
+                alias: item.alias ? extractName(item.alias) : undefined,
                 loc: convertLoc(item.loc),
             });
         }

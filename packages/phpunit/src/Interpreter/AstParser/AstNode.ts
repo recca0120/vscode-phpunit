@@ -98,6 +98,7 @@ export interface UseGroupNode {
 export interface UseItemNode {
     kind: 'namespace_use_clause';
     name: string;
+    alias?: string;
     loc?: AstNodeLoc;
 }
 

@@ -130,27 +130,33 @@ function getDeclarationLoc(node: SyntaxNode): AstNodeLoc {
 }
 
 function adaptNamespaceUse(node: SyntaxNode): AstNode {
-    const items: UseItemNode[] = [];
-
-    for (const child of node.namedChildren) {
-        if (!child) continue;
-        if (child.type === 'namespace_use_clause') {
-            const nameNode = child.namedChildren[0];
-            if (nameNode) {
-                items.push({
-                    kind: 'namespace_use_clause',
-                    name: nameNode.text,
-                    loc: locOf(child),
-                });
-            }
-        }
-    }
+    const prefix = node.namedChildren.find((child) => child?.type === 'namespace_name')?.text;
+    const group = node.namedChildren.find((child) => child?.type === 'namespace_use_group');
+    const clauses = (group ?? node).namedChildren.filter(
+        (child): child is SyntaxNode => child?.type === 'namespace_use_clause',
+    );
 
     return {
         kind: 'namespace_use_declaration',
-        items,
+        items: clauses.flatMap((clause) => adaptUseClause(clause, prefix)),
         loc: locOf(node),
     };
+}
+
+function adaptUseClause(clause: SyntaxNode, prefix: string | undefined): UseItemNode[] {
+    const nameNode = clause.namedChildren[0];
+    if (!nameNode) {
+        return [];
+    }
+
+    return [
+        {
+            kind: 'namespace_use_clause',
+            name: prefix ? `${prefix}\\${nameNode.text}` : nameNode.text,
+            alias: clause.childForFieldName('alias')?.text,
+            loc: locOf(clause),
+        },
+    ];
 }
 
 function adaptTraitUse(node: SyntaxNode): AstNode {

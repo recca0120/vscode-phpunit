@@ -42,10 +42,7 @@ export class NamespaceVisitor implements Visitor {
 
     visit(node: AstNode, _php: PHP): void {
         for (const item of (node as UseGroupNode).items) {
-            const fqn = item.name;
-            const parts = fqn.split('\\');
-            const alias = parts[parts.length - 1];
-            this._useMap.set(alias, fqn);
+            this._useMap.set(item.alias ?? item.name.split('\\').pop() ?? item.name, item.name);
         }
     }
 }
