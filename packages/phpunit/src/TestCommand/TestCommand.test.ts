@@ -326,6 +326,29 @@ describe('TestCommand', () => {
             });
         });
 
+        it('replaces the cwd variable in the command with the working directory', () => {
+            const command = givenCommand(
+                {
+                    command: 'docker run --rm -v $' + '{cwd}:/app -w /app image',
+                    phpunit: 'vendor/bin/phpunit',
+                    paths: { ['$' + '{PWD}']: '/app' },
+                },
+                '/proj',
+            );
+
+            const { runtime, args } = command.build();
+
+            expect([runtime, ...args].slice(0, 7)).toEqual([
+                'docker',
+                'run',
+                '--rm',
+                '-v',
+                '/proj:/app',
+                '-w',
+                '/app',
+            ]);
+        });
+
         it('run paratest with --functional', () => {
             const cwd = phpUnitProject('');
             const command = givenCommand({
