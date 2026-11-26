@@ -2066,6 +2066,8 @@ class ChildTest extends BaseCase
                 '\\Concerns\\SharedTests.php',
                 '/support/RequiredTrait.php',
                 '\\support\\RequiredTrait.php',
+                '/tests/WithoutSuffixCase.php',
+                '\\tests\\WithoutSuffixCase.php',
             ];
             const expectedFiles = files
                 .filter((file) => !skips.some((skip) => file.fsPath.includes(skip)))

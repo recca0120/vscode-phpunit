@@ -302,7 +302,7 @@ export class TestIndex {
             return join(workspace.fsPath, testSuite.value) === uri.fsPath;
         }
 
-        const suffix = suffixOverride ?? testSuite.suffix ?? '.php';
+        const suffix = suffixOverride ?? testSuite.suffix ?? 'Test.php';
 
         let suffixMap = this.matcherCache.get(testSuite.value);
         if (!suffixMap) {
