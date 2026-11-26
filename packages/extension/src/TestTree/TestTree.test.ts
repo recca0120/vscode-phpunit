@@ -5,7 +5,6 @@ import {
     ChainAstParser,
     PHPUnitXML,
     PhpParserAstParser,
-    TeamcityEvent,
     TestIndex,
     TestParser,
     type TestStarted,
@@ -16,6 +15,7 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
+import { testStarted } from '../../test-support/teamcity';
 import { allIds, collectIds, filesOf, toTree } from '../../test-support/testItems';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
 import { TestTree } from './TestTree';
@@ -1656,12 +1656,7 @@ class NoDatasetTest extends TestCase
 
     describe('addDatasetChild', () => {
         const makeTestStarted = (id: string, name: string): TestStarted =>
-            ({
-                event: TeamcityEvent.testStarted,
-                name,
-                id,
-                flowId: 1,
-            }) as unknown as TestStarted;
+            testStarted({ name, id });
 
         it('creates dataset child with correct TestDefinition in index', async () => {
             const testTree = givenTestTree(`
