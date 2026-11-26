@@ -2,6 +2,8 @@
 
 export const VAR_PWD = '${PWD}';
 
+export const VAR_CWD = '${cwd}';
+
 export const VAR_WORKSPACE_FOLDER = '${workspaceFolder}';
 
 export const VAR_WORKSPACE_FOLDER_BASENAME = '${workspaceFolderBasename}';

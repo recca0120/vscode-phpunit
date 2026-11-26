@@ -1,6 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import {
+    VAR_CWD,
     VAR_PATH_SEPARATOR,
     VAR_PATH_SEPARATOR_SHORT,
     VAR_PWD,
@@ -18,6 +19,7 @@ export class VariableResolver {
 
     constructor(cwd: string, workspaceFolder: string) {
         this.variables.set(VAR_PWD, cwd);
+        this.variables.set(VAR_CWD, cwd);
         this.variables.set(VAR_WORKSPACE_FOLDER, workspaceFolder);
         this.variables.set(
             VAR_WORKSPACE_FOLDER_BASENAME,
