@@ -838,6 +838,50 @@ class AttributeMetadataTest extends TestCase
         });
     });
 
+    describe('metadata kept beyond what PHPUnit reads', () => {
+        const file = phpUnitProject('tests/SupersetTest.php');
+        const givenMethod = (metadata: string, method = 'subject') =>
+            givenTest(
+                file,
+                `<?php
+
+namespace Tests;
+
+use PHPUnit\\Framework\\Attributes\\Group;
+use PHPUnit\\Framework\\TestCase;
+
+class SupersetTest extends TestCase
+{
+    public function testProducer() {}
+
+${metadata}
+    public function ${method}() {}
+}
+`,
+                method,
+            );
+
+        it('a line comment @test marks a test', () => {
+            expect(givenMethod('    // @test')).toBeDefined();
+        });
+
+        it('an attribute overrides a docblock annotation of the same kind', () => {
+            expect(
+                givenMethod("    /**\n     * @group b\n     */\n    #[Group('a')]", 'testSubject')
+                    ?.annotations,
+            ).toEqual({ group: ['a'] });
+        });
+
+        it('attributes and docblock annotations of different kinds are combined', () => {
+            expect(
+                givenMethod(
+                    "    /**\n     * @depends testProducer\n     */\n    #[Group('a')]",
+                    'testSubject',
+                )?.annotations,
+            ).toEqual({ group: ['a'], depends: ['testProducer'] });
+        });
+    });
+
     describe('Inherited test methods with ClassHierarchy', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
             const phpUnitXML = new PHPUnitXML();
