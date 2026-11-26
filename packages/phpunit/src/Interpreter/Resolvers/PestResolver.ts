@@ -372,21 +372,34 @@ function deduplicateLabels(labels: string[]): string[] {
 const MAX_DATASET_ITEMS = 3;
 
 function formatPestValue(value: unknown): string | undefined {
-    if (value instanceof Map || Array.isArray(value)) {
-        const items = value instanceof Map ? [...value.values()] : value;
-        const truncated = items.length > MAX_DATASET_ITEMS;
-        const visible = items.slice(0, MAX_DATASET_ITEMS);
-        const parts = visible.map(exportScalar);
-        if (parts.includes(undefined)) {
-            return undefined;
-        }
-        if (truncated) {
-            parts.push('…');
-        }
-        return `(${parts.join(', ')})`;
-    }
-    const exported = exportScalar(value);
+    const exported = isPhpArray(value) ? exportItems(value) : exportScalar(value);
     return exported === undefined ? undefined : `(${exported})`;
+}
+
+function isPhpArray(value: unknown): value is Map<string, unknown> | unknown[] {
+    return value instanceof Map || Array.isArray(value);
+}
+
+function exportItems(value: Map<string, unknown> | unknown[]): string | undefined {
+    const items = value instanceof Map ? [...value.values()] : value;
+    const truncated = items.length > MAX_DATASET_ITEMS;
+    const visible = items.slice(0, MAX_DATASET_ITEMS);
+    const parts = visible.map(exportItem);
+    if (parts.includes(undefined)) {
+        return undefined;
+    }
+    if (truncated) {
+        parts.push('…');
+    }
+    return parts.join(', ');
+}
+
+function exportItem(value: unknown): string | undefined {
+    if (!isPhpArray(value)) {
+        return exportScalar(value);
+    }
+    const exported = exportItems(value);
+    return exported === undefined ? undefined : `[${exported}]`;
 }
 
 function exportScalar(value: unknown): string | undefined {

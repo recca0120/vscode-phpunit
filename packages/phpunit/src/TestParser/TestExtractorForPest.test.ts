@@ -952,6 +952,20 @@ test('casts', function (string $value) {
             'data set "dataset """',
         ]);
     });
+
+    it('nested arrays in a tuple dataset are exported like Pest', () => {
+        const content = `<?php
+
+test('nested', function (int $n, array $items) {
+    expect($items)->toBeArray();
+})->with([[1, [2, 3, 4, 5]]]);
+        `;
+
+        expect(givenTest(file, content, 'nested')?.annotations?.dataset).toEqual([
+            'data set "(1, [2, 3, 4, …])"',
+        ]);
+    });
+
     it('generator closure dataset with named keys', () => {
         const content = `<?php
 it('adds numbers', function (int $a, int $b, int $expected) {
