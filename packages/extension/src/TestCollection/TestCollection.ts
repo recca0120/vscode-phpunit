@@ -155,12 +155,9 @@ export class TestCollection {
     }
 
     async delete(uri: URI) {
-        const files = this.testIndex.deleteFiles(uri);
-        for (const file of files) {
-            this.handleFileDeleted(file);
-        }
-        this.applyIndexChange(await this.testIndex.deleteClasses(uri));
-        return files.find((file) => file.uri.toString() === uri.toString());
+        const change = await this.testIndex.remove(uri);
+        this.applyIndexChange(change);
+        return change.deleted.find((file) => file.uri.toString() === uri.toString());
     }
 
     reset() {

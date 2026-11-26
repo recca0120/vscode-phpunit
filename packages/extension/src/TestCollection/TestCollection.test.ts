@@ -442,7 +442,7 @@ class NoNamespaceTest extends TestCase
                 await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
                 await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
-                collection.delete(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+                await collection.delete(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature']);
 
                 expect(
@@ -489,10 +489,10 @@ class NoNamespaceTest extends TestCase
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
                 expect(ctrl.items.get('testsuite:Feature')?.children.size).toBe(2);
 
-                collection.delete(featureExample);
+                await collection.delete(featureExample);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
-                collection.delete(featureSubFolder);
+                await collection.delete(featureSubFolder);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Unit']);
             });
         });
@@ -514,7 +514,7 @@ class NoNamespaceTest extends TestCase
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
-            collection.delete(URI.file(phpUnitProject('tests/Unit')));
+            await collection.delete(URI.file(phpUnitProject('tests/Unit')));
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature']);
         });
@@ -2252,7 +2252,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(itemsBefore.length).toBeGreaterThan(0);
             expect(collection.getTestDefinition(itemsBefore[0])).toBeDefined();
 
-            collection.delete(file);
+            await collection.delete(file);
 
             expect(collection.findTestsByFile(file)).toEqual([]);
             expect(collection.has(file)).toBeFalsy();
