@@ -1,4 +1,4 @@
-import type { PHPUnitXML } from '../Configuration/PHPUnitXML';
+import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { datasetExpander } from '../TestParser/DatasetExpander';
 import { type TestDefinition, TestType } from '../types';

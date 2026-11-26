@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { XmlElement } from './XmlElement';
 
-describe('Element Test', () => {
+describe('XmlElement Test', () => {
     it('querySelectorAll should traverse arrays', () => {
         const data = {
             coverage: {

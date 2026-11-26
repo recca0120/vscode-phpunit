@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PathReplacer } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
+import { PathReplacer } from '../Path';
 import { XdebugCoverage } from './XdebugCoverage';
 
 describe('XdebugCoverage', () => {

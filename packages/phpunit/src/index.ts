@@ -1,4 +1,7 @@
+export * from './Composer';
 export * from './Configuration';
+export * from './Path';
+export * from './PHPUnitXML';
 export * from './Printer';
 export * from './TestCommand';
 export * from './TestCoverage';

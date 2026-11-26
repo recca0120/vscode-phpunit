@@ -1,8 +1,9 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
 import { fixturePath, phpUnitProject } from '../../tests/utils';
-import { Configuration, PathReplacer } from '../Configuration';
+import { Configuration } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
+import { PathReplacer } from '../Path';
 import { TestCommand } from '../TestCommand/TestCommand';
 import { Mode, Xdebug } from '../TestCommand/Xdebug';
 import { TestRunnerProcess } from './TestRunnerProcess';

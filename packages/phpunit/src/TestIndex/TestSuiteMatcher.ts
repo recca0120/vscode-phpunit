@@ -1,7 +1,7 @@
 import { extname, join } from 'node:path';
 import { Minimatch } from 'minimatch';
 import { URI } from 'vscode-uri';
-import type { PHPUnitXML, TestSuite } from '../Configuration/PHPUnitXML';
+import type { PHPUnitXML, TestSuite } from '../PHPUnitXML/PHPUnitXML';
 
 export class TestSuiteMatcher {
     private matcherCache = new Map<string, Map<string, Minimatch>>();

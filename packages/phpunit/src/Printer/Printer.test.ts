@@ -1,7 +1,7 @@
 import styles from 'ansi-styles';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/utils';
-import { PHPUnitXML } from '../Configuration/PHPUnitXML';
+import { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import {
     TeamcityEvent,
     type TestConfiguration,

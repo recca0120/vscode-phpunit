@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { PHPUnitXML } from '../Configuration/PHPUnitXML';
+import { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import { type TestDefinition, TestType } from '../types';
 import {
     type ItemCollection,

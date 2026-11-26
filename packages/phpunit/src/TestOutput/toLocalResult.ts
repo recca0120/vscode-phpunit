@@ -1,4 +1,4 @@
-import type { PathMapper } from '../Configuration/PathMapper';
+import type { PathMapper } from '../Path/PathMapper';
 import type { TestResult } from './types';
 
 export function toLocalResult(result: TestResult, paths: PathMapper): TestResult {

@@ -1,8 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
-import { Configuration, PathReplacer } from '../Configuration';
+import { Configuration } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
+import { PathReplacer } from '../Path';
 import { CoverageFiles } from '../TestCoverage';
 import { TeamcityEvent, type TestFailed, toLocalResult } from '../TestOutput';
 import { TestCommand } from './TestCommand';
