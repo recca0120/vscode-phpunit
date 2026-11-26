@@ -2,7 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
-import type { ProcessBuilder } from '../ProcessBuilder';
+import type { TestCommand } from '../TestCommand';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
 import { TestOutputParser, type TestResult } from '../TestOutput';
 import { type TestRunnerEmitter, TestRunnerEvent } from './TestRunnerObserver';
@@ -20,7 +20,7 @@ export class TestRunnerProcess {
     private closed = false;
 
     constructor(
-        private builder: ProcessBuilder,
+        private builder: TestCommand,
         events?: TestRunnerEmitter,
         private testOutputParser = new TestOutputParser(),
     ) {

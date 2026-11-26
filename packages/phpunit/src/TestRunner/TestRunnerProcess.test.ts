@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { fixturePath, phpUnitProject } from '../../tests/utils';
 import { Configuration, PathReplacer } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
-import { ProcessBuilder } from '../ProcessBuilder/ProcessBuilder';
-import { Mode, Xdebug } from '../ProcessBuilder/Xdebug';
+import { TestCommand } from '../TestCommand/TestCommand';
+import { Mode, Xdebug } from '../TestCommand/Xdebug';
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 vi.mock('node:fs/promises', async () => {
@@ -18,7 +18,7 @@ const givenBuilder = (opts?: { cwd?: string; paths?: Record<string, string>; mod
     const options = { cwd };
     const pathReplacer = new PathReplacer(options, opts?.paths ?? {});
     const xdebug = opts?.mode ? new Xdebug(config) : undefined;
-    return { builder: new ProcessBuilder(config, options, pathReplacer, xdebug), xdebug };
+    return { builder: new TestCommand(config, options, pathReplacer, xdebug), xdebug };
 };
 
 describe('TestRunnerProcess', () => {

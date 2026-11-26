@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
 import { Configuration, PathReplacer } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
-import { ProcessBuilder } from './ProcessBuilder';
+import { TestCommand } from './TestCommand';
 import { Mode, Xdebug } from './Xdebug';
 
 describe('ProcessBuilder Test', () => {
@@ -15,7 +15,7 @@ describe('ProcessBuilder Test', () => {
                 options,
                 config.get('paths') as Record<string, string>,
             );
-            return new ProcessBuilder(config, options, pathReplacer);
+            return new TestCommand(config, options, pathReplacer);
         };
 
         it('getPathReplacer returns PathReplacer instance', () => {
@@ -272,7 +272,7 @@ describe('ProcessBuilder Test', () => {
                 options,
                 config.get('paths') as Record<string, string>,
             );
-            return new ProcessBuilder(config, options, pathReplacer);
+            return new TestCommand(config, options, pathReplacer);
         };
 
         it('run paratest with --functional', () => {
@@ -497,7 +497,7 @@ describe('ProcessBuilder Test', () => {
                 options,
                 config.get('paths') as Record<string, string>,
             );
-            return new ProcessBuilder(config, options, pathReplacer);
+            return new TestCommand(config, options, pathReplacer);
         };
 
         it(`command is ${CMD_TEMPLATE}`, () => {
@@ -614,7 +614,7 @@ describe('ProcessBuilder Test', () => {
             const options = { cwd: '/local/workspace' };
             const pathReplacer = new PathReplacer(options, paths);
             const xdebug = mode ? await new Xdebug(config).setMode(mode) : undefined;
-            return new ProcessBuilder(config, options, pathReplacer, xdebug);
+            return new TestCommand(config, options, pathReplacer, xdebug);
         };
 
         it('setCloverFile / getCloverFile', async () => {
@@ -689,7 +689,7 @@ describe('ProcessBuilder Test', () => {
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
             const xdebug = new Xdebug(config);
-            const builder = new ProcessBuilder(config, options, pathReplacer, xdebug);
+            const builder = new TestCommand(config, options, pathReplacer, xdebug);
 
             expect(builder.getCloverFile()).toBeUndefined();
         });
@@ -698,7 +698,7 @@ describe('ProcessBuilder Test', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
-            const builder = new ProcessBuilder(config, options, pathReplacer);
+            const builder = new TestCommand(config, options, pathReplacer);
 
             expect(builder.getCloverFile()).toBeUndefined();
         });
@@ -709,7 +709,7 @@ describe('ProcessBuilder Test', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
-            const builder = new ProcessBuilder(config, options, pathReplacer);
+            const builder = new TestCommand(config, options, pathReplacer);
 
             const cloned = builder.clone();
 

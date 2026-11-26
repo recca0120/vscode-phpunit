@@ -5,7 +5,7 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from '../../test
 import type { Path } from '../Configuration';
 import { Configuration, PathReplacer } from '../Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
-import { ProcessBuilder } from '../ProcessBuilder';
+import { TestCommand } from '../TestCommand';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { TeamcityEvent } from '../TestOutput';
 import { TestType } from '../types';
@@ -198,7 +198,7 @@ const generateTestResult = (
     }
 };
 
-const expectedCommand = async (builder: ProcessBuilder, expected: string[]) => {
+const expectedCommand = async (builder: TestCommand, expected: string[]) => {
     const testRunner = new TestRunner();
     for (const [eventName, fn] of onTestResultEvents) {
         testRunner.on(eventName, (test: unknown) => fn(test));
@@ -239,7 +239,7 @@ describe('TestRunner Test', () => {
         );
         const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
         const options = { cwd: phpUnitProject('') };
-        const builder = new ProcessBuilder(configuration, options, new PathReplacer(options, {}));
+        const builder = new TestCommand(configuration, options, new PathReplacer(options, {}));
         const testRunner = new TestRunner();
         const events: string[] = [];
         testRunner.on(TestRunnerEvent.error, () => events.push('error'));
@@ -263,7 +263,7 @@ describe('TestRunner Test', () => {
         });
 
         const options = { cwd };
-        const builder = new ProcessBuilder(
+        const builder = new TestCommand(
             configuration,
             options,
             new PathReplacer(options, configuration.get('paths') as Path),
@@ -316,7 +316,7 @@ describe('TestRunner Test', () => {
 
         describe(name, () => {
             const spawnOptions = { cwd: projectPath('') };
-            const builder = new ProcessBuilder(
+            const builder = new TestCommand(
                 configuration,
                 spawnOptions,
                 new PathReplacer(spawnOptions, configuration.get('paths') as Path),

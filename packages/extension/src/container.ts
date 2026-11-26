@@ -23,7 +23,7 @@ import { TestCollection } from './TestCollection';
 import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
 import {
     DebugSessionManager,
-    ProcessBuilderFactory,
+    TestCommandFactory,
     TestQueueBuilder,
     TestRunDispatcher,
     TestRunHandler,
@@ -86,7 +86,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         })
         .inSingletonScope();
 
-    child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
+    child.bind(TestCommandFactory).toSelf().inSingletonScope();
     child.bind(ObserverFactory).toSelf().inSingletonScope();
     child
         .bind(ComposerAutoload)

@@ -1,7 +1,7 @@
 import {
     CoverageFiles,
     FilterStrategyFactory,
-    type ProcessBuilder,
+    type TestCommand,
     type TestDefinition,
     TestRunner,
     TestRunnerEvent,
@@ -21,7 +21,7 @@ import { ObserverFactory } from '../Observers';
 import { TestCollection } from '../TestCollection';
 import { TYPES } from '../types';
 import { DebugSessionManager } from './DebugSessionManager';
-import { ProcessBuilderFactory } from './ProcessBuilderFactory';
+import { TestCommandFactory } from './TestCommandFactory';
 import { TestQueueBuilder } from './TestQueueBuilder';
 
 @injectable()
@@ -31,7 +31,7 @@ export class TestRunHandler {
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
-        @inject(ProcessBuilderFactory) private processBuilderFactory: ProcessBuilderFactory,
+        @inject(TestCommandFactory) private testCommandFactory: TestCommandFactory,
         @inject(TestCollection) private testCollection: TestCollection,
         @inject(ObserverFactory) private observerFactory: ObserverFactory,
         @inject(TestQueueBuilder) private testQueueBuilder: TestQueueBuilder,
@@ -51,7 +51,7 @@ export class TestRunHandler {
         include?: readonly TestItem[],
         cancellation?: CancellationToken,
     ) {
-        const builder = await this.processBuilderFactory.create(request.profile?.kind);
+        const builder = await this.testCommandFactory.create(request.profile?.kind);
         const coverage = builder.getXdebug()?.isCoverageMode()
             ? new CoverageFiles(builder.getCwd())
             : undefined;
@@ -71,7 +71,7 @@ export class TestRunHandler {
     }
 
     private async runTestQueue(
-        builder: ProcessBuilder,
+        builder: TestCommand,
         testRun: TestRun,
         request: TestRunRequest,
         include?: readonly TestItem[],
@@ -133,11 +133,11 @@ export class TestRunHandler {
 
     private createProcesses(
         runner: TestRunner,
-        builder: ProcessBuilder,
+        builder: TestCommand,
         include: readonly TestItem[] | undefined,
         coverage: CoverageFiles | undefined,
     ) {
-        const withCoverage = (configured: ProcessBuilder, index: number) =>
+        const withCoverage = (configured: TestCommand, index: number) =>
             coverage ? configured.withCoverageClover(coverage.allocate(index)) : configured;
 
         if (!include) {
@@ -151,7 +151,7 @@ export class TestRunHandler {
             .map((configured) => runner.run(configured));
     }
 
-    private withFilter(builder: ProcessBuilder, testDefinition: TestDefinition): ProcessBuilder {
+    private withFilter(builder: TestCommand, testDefinition: TestDefinition): TestCommand {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
         return builder.clone().setArguments(filter);
     }

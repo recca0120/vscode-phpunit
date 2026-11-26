@@ -1,4 +1,4 @@
-import type { ProcessBuilder } from '../ProcessBuilder';
+import type { TestCommand } from '../TestCommand';
 import { TestOutputParser } from '../TestOutput';
 import {
     createTestRunnerEventProxy,
@@ -32,7 +32,7 @@ export class TestRunner implements TestRunnerEmitter {
         return this;
     }
 
-    run(builder: ProcessBuilder) {
+    run(builder: TestCommand) {
         return new TestRunnerProcess(builder, this, this.testOutputParser);
     }
 
