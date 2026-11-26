@@ -88,6 +88,9 @@ const getTestRunProfile = (ctrl: TestController, kind = TestRunProfileKind.Run) 
     return testRunProfile;
 };
 
+const childIds = (items: TestItemCollection, id: string) =>
+    [...(findTest(items, id)?.children ?? [])].map(([childId]) => childId).sort();
+
 const childLabels = (items: TestItemCollection, id: string) =>
     [...(findTest(items, id)?.children ?? [])].map(([, item]) => item.label).sort();
 
@@ -314,6 +317,31 @@ describe('Extension Test', () => {
                 ]);
             });
 
+            it('gives inherited and trait test methods the id of the class PHPUnit runs them on', async () => {
+                await activate(context);
+                const ctrl = getTestController();
+                await ctrl.resolveHandler?.(undefined);
+
+                expect(
+                    childIds(ctrl.items, 'Concrete From Abstract (Tests\\ConcreteFromAbstract)'),
+                ).toEqual(['Concrete From Abstract (Tests\\ConcreteFromAbstract)::Abstract']);
+                expect(childIds(ctrl.items, 'Concrete With Own (Tests\\ConcreteWithOwn)')).toEqual([
+                    'Concrete With Own (Tests\\ConcreteWithOwn)::Abstract',
+                    'Concrete With Own (Tests\\ConcreteWithOwn)::Own method',
+                ]);
+                expect(childIds(ctrl.items, 'Shared Trait User (Tests\\SharedTraitUser)')).toEqual([
+                    'Shared Trait User (Tests\\SharedTraitUser)::From shared trait',
+                    'Shared Trait User (Tests\\SharedTraitUser)::Own',
+                ]);
+                expect(childIds(ctrl.items, 'Use Trait (Tests\\SubFolder\\UseTrait)')).toEqual([
+                    'Use Trait (Tests\\SubFolder\\UseTrait)::From another',
+                    'Use Trait (Tests\\SubFolder\\UseTrait)::From trait',
+                    'Use Trait (Tests\\SubFolder\\UseTrait)::Shared',
+                    'Use Trait (Tests\\SubFolder\\UseTrait)::Shared alias',
+                    'Use Trait (Tests\\SubFolder\\UseTrait)::Use trait',
+                ]);
+            });
+
             it('should load tests', async () => {
                 await activate(context);
                 const ctrl = getTestController();
@@ -398,10 +426,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 76, started: 55, passed: 40, failed: 13, end: 1 }],
-                        ['10.0.0', { enqueued: 76, started: 69, passed: 57, failed: 10, end: 1 }],
+                        ['12.0.0', { enqueued: 76, started: 61, passed: 44, failed: 15, end: 1 }],
+                        ['10.0.0', { enqueued: 76, started: 75, passed: 61, failed: 12, end: 1 }],
                     ],
-                    { enqueued: 76, started: 47, passed: 28, failed: 17, end: 1 },
+                    { enqueued: 76, started: 53, passed: 32, failed: 19, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -413,10 +441,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 75, started: 54, passed: 40, failed: 12, end: 1 }],
-                        ['10.0.0', { enqueued: 75, started: 68, passed: 57, failed: 9, end: 1 }],
+                        ['12.0.0', { enqueued: 75, started: 60, passed: 44, failed: 14, end: 1 }],
+                        ['10.0.0', { enqueued: 75, started: 74, passed: 61, failed: 11, end: 1 }],
                     ],
-                    { enqueued: 75, started: 46, passed: 28, failed: 16, end: 1 },
+                    { enqueued: 75, started: 52, passed: 32, failed: 18, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
