@@ -17,6 +17,7 @@ import {
     TestMessage,
     TestMessageStackFrame,
     type TestRun,
+    Uri,
 } from 'vscode';
 import { URI } from 'vscode-uri';
 
@@ -100,7 +101,7 @@ export class TestResultObserver implements TestRunnerObserver {
         const line = matchingDetail ? matchingDetail.line - 1 : (test.range?.start.line ?? 0);
 
         message.location = new Location(
-            test.uri,
+            matchingDetail ? Uri.file(matchingDetail.file) : test.uri,
             new Range(new Position(line, 0), new Position(line, 0)),
         );
 

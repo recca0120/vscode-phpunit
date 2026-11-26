@@ -237,6 +237,22 @@ describe('TestResultObserver', () => {
         expect(message.location.range.start.line).toBe(9);
     });
 
+    it('points the message location to the file declaring an inherited test method', () => {
+        observer.testFailed(
+            createTestFailed({
+                file: '/project/tests/TestCase.php',
+                locationHint:
+                    'php_qn:///project/tests/TestCase.php::\\Tests\\ExampleTest::test_example',
+                details: [{ file: '/project/tests/TestCase.php', line: 7 }],
+            }),
+        );
+
+        const message = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0][1];
+
+        expect(message.location.uri.fsPath).toBe('/project/tests/TestCase.php');
+        expect(message.location.range.start.line).toBe(6);
+    });
+
     it('should use 0-based line in stackTrace position', () => {
         observer.testFailed(
             createTestFailed({
