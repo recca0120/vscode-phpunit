@@ -4,6 +4,10 @@ import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
 import type { ProcessBuilder } from '../ProcessBuilder';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
+import { TestOutputParser, type TestResult } from '../TestOutput';
+import { type TestRunnerEmitter, TestRunnerEvent } from './TestRunnerObserver';
+
+const TEAMCITY_PATTERN = /##teamcity\[/i;
 
 export class TestRunnerProcess {
     private child?: ChildProcess;
@@ -13,9 +17,17 @@ export class TestRunnerProcess {
     private stderrBuffer = '';
     private abortController: AbortController;
     private aborted = false;
+    private closed = false;
 
-    constructor(private builder: ProcessBuilder) {
+    constructor(
+        private builder: ProcessBuilder,
+        events?: TestRunnerEmitter,
+        private testOutputParser = new TestOutputParser(),
+    ) {
         this.abortController = new AbortController();
+        if (events) {
+            this.forwardTo(events);
+        }
     }
 
     // biome-ignore lint/suspicious/noExplicitAny: EventEmitter callback signature requires any[]
@@ -109,5 +121,56 @@ export class TestRunnerProcess {
         }
 
         return lines;
+    }
+
+    private forwardTo(events: TestRunnerEmitter) {
+        this.on('start', () => events.emit(TestRunnerEvent.run, this.builder.toString()));
+        this.on('line', (line: string) => this.forwardLine(events, line));
+        this.on('error', (err: Error) => this.forwardError(events, err));
+        this.on('close', (code: number | null, output: string) =>
+            this.forwardClose(events, code, output),
+        );
+    }
+
+    private forwardLine(events: TestRunnerEmitter, line: string) {
+        this.forwardResult(events, this.testOutputParser.parse(line));
+        events.emit(TestRunnerEvent.line, line);
+    }
+
+    private forwardResult(events: TestRunnerEmitter, result: TestResult | undefined) {
+        if (!result) {
+            return;
+        }
+
+        const replaced = this.builder.replacePath(result);
+        if ('event' in replaced) {
+            events.emit(replaced.event, replaced);
+        }
+        events.emit(TestRunnerEvent.result, replaced);
+    }
+
+    private forwardError(events: TestRunnerEmitter, err: Error) {
+        if (this.aborted) {
+            return;
+        }
+
+        this.closed = true;
+        events.emit(TestRunnerEvent.error, err.stack ?? err.message);
+        events.emit(TestRunnerEvent.close, 2);
+    }
+
+    private forwardClose(events: TestRunnerEmitter, code: number | null, output: string) {
+        if (this.closed) {
+            return;
+        }
+        if (this.aborted) {
+            events.emit(TestRunnerEvent.close, code);
+            return;
+        }
+        events.emit(
+            TEAMCITY_PATTERN.test(output) ? TestRunnerEvent.output : TestRunnerEvent.error,
+            output,
+        );
+        events.emit(TestRunnerEvent.close, code);
     }
 }

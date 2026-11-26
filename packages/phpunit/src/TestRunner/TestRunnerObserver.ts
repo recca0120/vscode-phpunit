@@ -1,4 +1,3 @@
-import type { ProcessBuilder } from '../ProcessBuilder';
 import type {
     TestConfiguration,
     TestCount,
@@ -30,7 +29,7 @@ export enum TestRunnerEvent {
 
 export type EventResultMap = {
     [TestRunnerEvent.start]: undefined;
-    [TestRunnerEvent.run]: ProcessBuilder;
+    [TestRunnerEvent.run]: string;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;
@@ -52,6 +51,10 @@ export type EventResultMap = {
     [TeamcityEvent.testDuration]: TestDuration;
     [TeamcityEvent.testResultSummary]: TestResultSummary;
 };
+
+export interface TestRunnerEmitter {
+    emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]): void;
+}
 
 export type TestRunnerObserver = Partial<{
     [K in keyof EventResultMap]: (result: EventResultMap[K]) => void;
