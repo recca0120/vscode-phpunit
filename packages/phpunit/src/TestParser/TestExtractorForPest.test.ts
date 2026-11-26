@@ -762,6 +762,57 @@ it('multiplies numbers', function (int $a, int $b, int $expected) {
         );
     });
 
+    it('generator closure dataset with yields inside a for loop', () => {
+        const content = `<?php
+it('handles cases', function (int $i) {
+    expect($i)->toBeInt();
+})->with(function () {
+    for ($i = 0; $i < 3; $i++) {
+        yield "case $i" => [$i];
+    }
+});
+    `;
+        expect(givenTest(file, content, 'it handles cases')?.annotations?.dataset).toEqual([
+            'data set "dataset "case 0""',
+            'data set "dataset "case 1""',
+            'data set "dataset "case 2""',
+        ]);
+    });
+
+    it('generator closure dataset with yields inside a while loop after an assignment', () => {
+        const content = `<?php
+it('handles items', function (int $i) {
+    expect($i)->toBeInt();
+})->with(function () {
+    $i = 0;
+    while ($i < 2) {
+        yield "item $i" => [$i];
+        $i++;
+    }
+});
+    `;
+        expect(givenTest(file, content, 'it handles items')?.annotations?.dataset).toEqual([
+            'data set "dataset "item 0""',
+            'data set "dataset "item 1""',
+        ]);
+    });
+
+    it('generator closure dataset with foreach keys', () => {
+        const content = `<?php
+it('handles pairs', function (int $v) {
+    expect($v)->toBeInt();
+})->with(function () {
+    foreach (['a' => 1, 'b' => 2] as $k => $v) {
+        yield $k => [$v];
+    }
+});
+    `;
+        expect(givenTest(file, content, 'it handles pairs')?.annotations?.dataset).toEqual([
+            'data set "dataset "a""',
+            'data set "dataset "b""',
+        ]);
+    });
+
     it('bound dataset with closure array', () => {
         const content = `<?php
 it('generates name', function (object $user) {
