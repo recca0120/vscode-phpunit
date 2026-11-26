@@ -1,3 +1,4 @@
+import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { PHPUNIT_TESTCASE_FQN, type TestDefinition, TestType } from '../types';
 
 export interface TraitAdaptation {
@@ -121,18 +122,22 @@ export class ClassHierarchy {
             (test.children ?? []).map((m) => m.methodName).filter(Boolean),
         );
 
+        const transformer = TestIdentifierFactory.create(test.classFQN);
         const allMethods = this.resolveInheritedMethods(test.classFQN);
         const inheritedMethods = allMethods
             .filter((m) => m.methodName && !ownMethodNames.has(m.methodName))
-            .map((m) => ({
-                ...m,
-                file: test.file,
-                classFQN: test.classFQN,
-                namespace: test.namespace,
-                className: test.className,
-                start: test.start,
-                end: test.end,
-            }));
+            .map((m) => {
+                const method = {
+                    ...m,
+                    file: test.file,
+                    classFQN: test.classFQN,
+                    namespace: test.namespace,
+                    className: test.className,
+                    start: test.start,
+                    end: test.end,
+                };
+                return { ...method, id: transformer.uniqueId(method) };
+            });
 
         return {
             ...test,
