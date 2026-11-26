@@ -112,7 +112,7 @@ export class PathReplacer {
         pathPart: string;
         suffix: string;
     } {
-        const match = path.match(/^(php_qn:\/\/)?(.*?)(?=::|$)(::.*)?$/);
+        const match = path.match(/^((?:php_qn|pest_qn|file):\/\/)?(.*?)(?=::|$)(::.*)?$/);
         if (!match) {
             return { prefix: '', pathPart: path, suffix: '' };
         }
@@ -131,9 +131,11 @@ export class PathReplacer {
     }
 
     private normalizeToWindows(path: string) {
-        return /[a-zA-Z]:/.test(path)
-            ? path.replace(/[a-zA-Z]:[^:]+/g, (path) => path.replace(/\//g, '\\'))
-            : path;
+        // A drive letter is a single letter (not part of a word such as `http:` or `pest_qn:`)
+        // followed by `:` and a path separator or the end of the string.
+        return path.replace(/(?<![\w])[a-zA-Z]:(?=[\\/]|$)[^:]*/g, (path) =>
+            path.replace(/\//g, '\\'),
+        );
     }
 
     private expandRelative(path: string) {
