@@ -118,11 +118,6 @@ export class WorkspaceFolderManager {
         return container;
     }
 
-    /**
-     * Serializes `fn` after all previously queued operations. A rejection is
-     * returned to this caller only; the queue itself keeps running so later
-     * operations are not poisoned by an earlier failure.
-     */
     private runExclusive(fn: () => Promise<void>): Promise<void> {
         const operation = this.pendingOperation.then(fn);
         this.pendingOperation = operation.catch(() => {});

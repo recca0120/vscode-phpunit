@@ -752,7 +752,6 @@ function adaptString(node: SyntaxNode): AstNode {
 const LITERAL_STRING_PARTS = new Set(['string_content', 'escape_sequence']);
 
 function adaptEncapsedString(node: SyntaxNode): AstNode {
-    // A double-quoted string without interpolation is just a literal string.
     if (node.namedChildren.every((child) => !child || LITERAL_STRING_PARTS.has(child.type))) {
         return adaptString(node);
     }

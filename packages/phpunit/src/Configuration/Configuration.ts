@@ -42,8 +42,6 @@ export abstract class BaseConfiguration implements IConfiguration {
     abstract update(key: string, value: unknown): Promise<void>;
 
     getArguments(input: string = ''): string[] {
-        // Parse user args and generated input separately so a trailing flag in args
-        // (e.g. --stop-on-failure) can't take the generated test file as its value.
         const args = (this.get('args', []) as string[]).map(quoteInlineOptionValue);
 
         return parseArgumentGroups([args, [input]], ['teamcity', 'colors', 'testdox', 'c']);

@@ -243,8 +243,6 @@ export class ProcessBuilder {
         placeholders: Map<string, string>;
     } {
         let filterArg: string | undefined;
-        // Arguments that must survive re-tokenizing the command as a single argument;
-        // they are restored (and shell-quoted for remote commands) after parseArgv.
         const placeholders = new Map<string, string>();
 
         const args = this.configuration

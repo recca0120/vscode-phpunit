@@ -32,11 +32,6 @@ export function parseArguments(parameters: string[], excludes: string[]): string
     return [...options, ...positionals];
 }
 
-/**
- * Parse each group on its own so an option at the end of one group can't take
- * the first positional of the next group as its value, then keep the usual
- * ordering: every option (in group order) first, then every positional.
- */
 export function parseArgumentGroups(groups: string[][], excludes: string[]): string[] {
     const parsed = groups.map((parameters) => splitArguments(parameters, excludes));
 
@@ -46,11 +41,6 @@ export function parseArgumentGroups(groups: string[][], excludes: string[]): str
     ];
 }
 
-/**
- * A single `phpunit.args` entry written as `--key=value with spaces` is one
- * argument; quote the value so tokenizing doesn't split it. Entries that are
- * already quoted or hold several options are left as they are.
- */
 export function quoteInlineOptionValue(parameter: string): string {
     const match = parameter.match(/^(--[^=\s]+)=(.*\s.*)$/);
     if (!match) {
