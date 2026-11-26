@@ -4,7 +4,7 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../support/RequiredTrait.php';
+require_once __DIR__.'/../support/RequiredTrait.php';
 
 class RequireTraitTest extends TestCase
 {
