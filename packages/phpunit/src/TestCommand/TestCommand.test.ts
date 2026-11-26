@@ -505,6 +505,23 @@ describe('TestCommand', () => {
             ]);
         });
 
+        it('ssh keeps a test file path with spaces as one remote argument', () => {
+            const command = givenCommand(
+                {
+                    command: 'ssh user@host cd /app;',
+                    phpunit: 'vendor/bin/phpunit',
+                    paths: { '/proj': '/app' },
+                },
+                '/proj',
+            ).setArguments('"/proj/tests/My Test.php"');
+
+            const { args } = command.build();
+
+            expect(args[args.length - 1]).toEqual(
+                "php vendor/bin/phpunit '/app/tests/My Test.php' --colors=always --teamcity",
+            );
+        });
+
         it('ssh', () => {
             const command = givenCommand({
                 command:
