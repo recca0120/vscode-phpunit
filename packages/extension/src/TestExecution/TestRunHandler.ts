@@ -51,15 +51,15 @@ export class TestRunHandler {
         include?: readonly TestItem[],
         cancellation?: CancellationToken,
     ) {
-        const builder = await this.testCommandFactory.create(request.profile?.kind);
-        const coverage = builder.getXdebug()?.isCoverageMode()
-            ? new CoverageFiles(builder.getCwd())
+        const command = await this.testCommandFactory.create(request.profile?.kind);
+        const coverage = command.getXdebug()?.isCoverageMode()
+            ? new CoverageFiles(command.getCwd())
             : undefined;
         await coverage?.prepare();
 
-        await this.debugSession.wrap(builder, async () => {
+        await this.debugSession.wrap(command, async () => {
             const testRun = this.ctrl.createTestRun(request);
-            await this.runTestQueue(builder, testRun, request, include, cancellation, coverage);
+            await this.runTestQueue(command, testRun, request, include, cancellation, coverage);
         });
 
         if (request.continuous) {
@@ -71,7 +71,7 @@ export class TestRunHandler {
     }
 
     private async runTestQueue(
-        builder: TestCommand,
+        command: TestCommand,
         testRun: TestRun,
         request: TestRunRequest,
         include?: readonly TestItem[],
@@ -91,7 +91,7 @@ export class TestRunHandler {
 
         let cancellationListener: Disposable | undefined;
         try {
-            const processes = this.createProcesses(runner, builder, items, coverage);
+            const processes = this.createProcesses(runner, command, items, coverage);
             cancellationListener = cancellation?.onCancellationRequested(() => {
                 for (const process of processes) {
                     process.abort();
@@ -133,7 +133,7 @@ export class TestRunHandler {
 
     private createProcesses(
         runner: TestRunner,
-        builder: TestCommand,
+        command: TestCommand,
         include: readonly TestItem[] | undefined,
         coverage: CoverageFiles | undefined,
     ) {
@@ -141,18 +141,18 @@ export class TestRunHandler {
             coverage ? configured.withCoverageClover(coverage.allocate(index)) : configured;
 
         if (!include) {
-            return [runner.run(withCoverage(builder, 0))];
+            return [runner.run(withCoverage(command, 0))];
         }
 
         return include
             .map((testItem) => this.testCollection.getTestDefinition(testItem))
             .filter((testDef): testDef is TestDefinition => testDef !== undefined)
-            .map((testDef, index) => withCoverage(this.withFilter(builder, testDef), index))
+            .map((testDef, index) => withCoverage(this.withFilter(command, testDef), index))
             .map((configured) => runner.run(configured));
     }
 
-    private withFilter(builder: TestCommand, testDefinition: TestDefinition): TestCommand {
+    private withFilter(command: TestCommand, testDefinition: TestDefinition): TestCommand {
         const filter = FilterStrategyFactory.create(testDefinition).getFilter();
-        return builder.clone().setArguments(filter);
+        return command.clone().setArguments(filter);
     }
 }
