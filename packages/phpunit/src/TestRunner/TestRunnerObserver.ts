@@ -1,3 +1,4 @@
+import type { TestCommand } from '../TestCommand';
 import type {
     TestConfiguration,
     TestCount,
@@ -29,7 +30,7 @@ export enum TestRunnerEvent {
 
 export type EventResultMap = {
     [TestRunnerEvent.start]: undefined;
-    [TestRunnerEvent.run]: string;
+    [TestRunnerEvent.run]: TestCommand;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;

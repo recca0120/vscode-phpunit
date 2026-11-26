@@ -57,7 +57,7 @@ export class TestRunHandler {
             : undefined;
         await coverage?.prepare();
 
-        await this.debugSession.wrap(builder.getXdebug(), async () => {
+        await this.debugSession.wrap(builder, async () => {
             const testRun = this.ctrl.createTestRun(request);
             await this.runTestQueue(builder, testRun, request, include, cancellation, coverage);
         });

@@ -124,7 +124,7 @@ export class TestRunnerProcess {
     }
 
     private forwardTo(events: TestRunnerEmitter) {
-        this.on('start', () => events.emit(TestRunnerEvent.run, this.builder.toString()));
+        this.on('start', () => events.emit(TestRunnerEvent.run, this.builder));
         this.on('line', (line: string) => this.forwardLine(events, line));
         this.on('error', (err: Error) => this.forwardError(events, err));
         this.on('close', (code: number | null, output: string) =>
