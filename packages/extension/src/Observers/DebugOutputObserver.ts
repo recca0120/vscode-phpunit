@@ -1,6 +1,5 @@
 import type {
     IConfiguration,
-    ProcessBuilder,
     TestFailed,
     TestFinished,
     TestIgnored,
@@ -19,9 +18,9 @@ export class DebugOutputObserver implements TestRunnerObserver {
         private testItemById: Map<string, TestItem>,
     ) {}
 
-    run(builder: ProcessBuilder): void {
+    run(command: string): void {
         this.clearOutputOnRun();
-        this.writer.appendLine(stripAnsi(builder.toString()));
+        this.writer.appendLine(stripAnsi(command));
 
         if (this.testItemById.size > 0) {
             this.writer.appendLine('[Queue]');
