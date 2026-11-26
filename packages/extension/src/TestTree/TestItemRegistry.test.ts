@@ -90,7 +90,7 @@ describe('TestItemRegistry', () => {
         expect(registry.itemsInGroup('nonexistent')).toEqual([]);
     });
 
-    it('should delete all items by URI', () => {
+    it('should unregister all items of a file', () => {
         const registry = new TestItemRegistry();
         const item1 = createTestItem('t1', [{ id: 'group:unit' }]);
         const item2 = createTestItem('t2');
@@ -131,7 +131,7 @@ describe('TestItemRegistry', () => {
         expect(registry.entriesIn('file:///unknown.php')).toEqual([]);
     });
 
-    it('should not delete shared items when deleteByUri removes only one URI', () => {
+    it('should keep shared items when unregisterFile removes only one file', () => {
         const registry = new TestItemRegistry();
         const namespace = createTestItem('namespace:Tests');
         const nsDef = createTestDef(TestType.namespace);
