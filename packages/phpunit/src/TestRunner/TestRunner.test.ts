@@ -12,7 +12,7 @@ import { TeamcityEvent, type TestFailed } from '../TestOutput';
 import { TestType } from '../types';
 import { semverLt } from '../utils';
 import { TestRunner } from './TestRunner';
-import { TestRunnerEvent } from './TestRunnerObserver';
+import { TestRunnerEvent } from './TestRunnerEvent';
 
 const PHPUNIT_VERSION: string = getPhpUnitVersion();
 

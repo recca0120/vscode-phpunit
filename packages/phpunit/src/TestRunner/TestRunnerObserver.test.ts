@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TeamcityEvent, type TestFailed } from '../TestOutput';
-import {
-    createTestRunnerEventProxy,
-    TestRunnerEvent,
-    type TestRunnerObserver,
-} from './TestRunnerObserver';
+import { TestRunnerEvent } from './TestRunnerEvent';
+import { createTestRunnerEventProxy } from './TestRunnerEventProxy';
+import type { TestRunnerObserver } from './TestRunnerObserver';
 
 describe('TestRunnerObserver', () => {
     describe('TestRunnerObserver type covers all events', () => {
