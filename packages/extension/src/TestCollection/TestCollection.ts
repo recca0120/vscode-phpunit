@@ -117,7 +117,7 @@ export class TestCollection extends BaseTestCollection {
     }
 
     findTestsByRequest(request?: TestRunRequest) {
-        if (!request || !request.include) {
+        if (!request?.include) {
             return undefined;
         }
 
