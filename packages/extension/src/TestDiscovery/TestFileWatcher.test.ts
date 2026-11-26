@@ -28,7 +28,7 @@ function createMockDiscovery(
         }),
         getConfigFilePattern: vi.fn().mockReturnValue(configFilePattern),
         reloadAll: vi.fn().mockResolvedValue(undefined),
-    } as unknown as TestFileDiscovery;
+    } satisfies Partial<TestFileDiscovery> as unknown as TestFileDiscovery;
 }
 
 function createMockTestTree() {
@@ -36,7 +36,7 @@ function createMockTestTree() {
         add: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(undefined),
         remove: vi.fn(),
-    } as unknown as TestTree;
+    } satisfies Partial<TestTree> as unknown as TestTree;
 }
 
 describe('TestFileWatcher', () => {

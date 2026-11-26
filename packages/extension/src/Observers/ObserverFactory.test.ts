@@ -14,16 +14,18 @@ describe('ObserverFactory', () => {
 
     beforeEach(() => {
         const testTree = {
-            getTestDefinition: () => undefined,
-            resolveDatasetChild: () => undefined,
-        } as unknown as TestTree;
+            definitionOf: () => undefined,
+            addDatasetChild: () => undefined,
+        } satisfies Partial<TestTree> as unknown as TestTree;
         outputChannel = {
             append: () => {},
             appendLine: () => {},
             clear: () => {},
             show: () => {},
         } as unknown as OutputChannel;
-        const configuration = { get: () => undefined } as unknown as Configuration;
+        const configuration = {
+            get: () => undefined,
+        } satisfies Partial<Configuration> as unknown as Configuration;
         const phpUnitXML = new PHPUnitXML();
         factory = new ObserverFactory(testTree, outputChannel, configuration, phpUnitXML);
     });
