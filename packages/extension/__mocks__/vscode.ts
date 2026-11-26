@@ -343,8 +343,8 @@ const workspace = {
     }),
     onDidChangeWorkspaceFolders: vi.fn().mockReturnValue(new Disposable()),
     saveAll: vi.fn().mockResolvedValue(true),
-    onDidOpenTextDocument: (_listener: any) => new Disposable(),
-    onDidChangeTextDocument: (_listener: any) => new Disposable(),
+    onDidOpenTextDocument: vi.fn().mockImplementation(() => new Disposable()),
+    onDidChangeTextDocument: vi.fn().mockImplementation(() => new Disposable()),
     fs: {
         readFile: (uri: URI) => readFile(uri.fsPath),
     },
