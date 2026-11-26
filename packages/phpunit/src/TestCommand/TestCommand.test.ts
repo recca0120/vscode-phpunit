@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
 import { Configuration, PathReplacer } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
+import { TeamcityEvent, type TestFailed } from '../TestOutput';
 import { TestCommand } from './TestCommand';
 import { Mode, Xdebug } from './Xdebug';
 
@@ -274,6 +275,56 @@ describe('TestCommand', () => {
             );
             return new TestCommand(config, options, pathReplacer);
         };
+
+        it('maps only whole path segments to the remote path', () => {
+            const command = givenCommand(
+                {
+                    command: 'docker exec app',
+                    phpunit: 'vendor/bin/phpunit',
+                    paths: { '/Users/me/app': '/var/www' },
+                },
+                '/Users/me/app',
+            ).setArguments(
+                '/Users/me/app/tests/FooTest.php /Users/me/application/tests/BarTest.php',
+            );
+
+            expect(command.build().args).toEqual(
+                expect.arrayContaining([
+                    '/var/www/tests/FooTest.php',
+                    '/Users/me/application/tests/BarTest.php',
+                ]),
+            );
+        });
+
+        it('maps only whole path segments back to the local path', () => {
+            const command = givenCommand(
+                { command: 'docker exec app', paths: { '/Users/me/app': '/var/www' } },
+                '/Users/me/app',
+            );
+
+            const result = command.replacePath({
+                event: TeamcityEvent.testFailed,
+                name: 'test_a',
+                flowId: 1,
+                id: 'Tests\\FooTest::test_a',
+                file: '/var/www/tests/FooTest.php',
+                locationHint: 'php_qn:///var/www/tests/FooTest.php::\\Tests\\FooTest::test_a',
+                message: '',
+                details: [
+                    { file: '/var/www/tests/FooTest.php', line: 7 },
+                    { file: '/var/www-shared/src/Helper.php', line: 3 },
+                ],
+                duration: 0,
+            } as TestFailed);
+
+            expect(result).toMatchObject({
+                file: '/Users/me/app/tests/FooTest.php',
+                details: [
+                    { file: '/Users/me/app/tests/FooTest.php', line: 7 },
+                    { file: '/var/www-shared/src/Helper.php', line: 3 },
+                ],
+            });
+        });
 
         it('run paratest with --functional', () => {
             const cwd = phpUnitProject('');

@@ -4,6 +4,11 @@ function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function pathPrefix(prefix: string) {
+    const boundary = /[\\/]$/.test(prefix) ? '' : '(?![\\w.-])';
+    return new RegExp(`${escapeRegExp(prefix)}${boundary}`, 'g');
+}
+
 export interface PathMapping {
     local: string;
     remote: string;
@@ -26,7 +31,7 @@ export class PrefixPathMapper implements PathMapper {
                 continue;
             }
 
-            result = result.replace(new RegExp(escapeRegExp(remote), 'g'), local);
+            result = result.replace(pathPrefix(remote), local);
         }
 
         result = this.expandRelative(result);
@@ -42,7 +47,7 @@ export class PrefixPathMapper implements PathMapper {
             if (!this.isSafePath(local)) {
                 continue;
             }
-            path = path.replace(new RegExp(escapeRegExp(local), 'g'), remote);
+            path = path.replace(pathPrefix(local), remote);
         }
 
         path = this.normalizeToPosix(path);
