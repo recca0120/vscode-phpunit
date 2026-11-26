@@ -4,7 +4,8 @@ import { cloneInstance } from '../utils';
 import type { CommandOption } from './CommandOption';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
 import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
-import type { Xdebug } from './Xdebug';
+import { XdebugCoverage } from './XdebugCoverage';
+import { XdebugDebug } from './XdebugDebug';
 
 export class TestCommand {
     private arguments = '';
@@ -13,7 +14,7 @@ export class TestCommand {
         private configuration: IConfiguration,
         private options: SpawnOptions,
         private readonly pathReplacer: PathReplacer,
-        private xdebug?: Xdebug,
+        private commandOptions: CommandOption[] = [],
     ) {}
 
     withArguments(args: string): TestCommand {
@@ -24,12 +25,18 @@ export class TestCommand {
 
     withCoverageClover(cloverFile: string): TestCommand {
         const cloned = this.clone();
-        cloned.xdebug?.setCloverFile(cloverFile);
+        cloned.commandOptions = this.commandOptions.map((option) =>
+            option instanceof XdebugCoverage ? option.withCloverFile(cloverFile) : option,
+        );
         return cloned;
     }
 
-    getXdebug() {
-        return this.xdebug;
+    debug(): XdebugDebug | undefined {
+        return this.commandOptions.find((option) => option instanceof XdebugDebug);
+    }
+
+    coverage(): XdebugCoverage | undefined {
+        return this.commandOptions.find((option) => option instanceof XdebugCoverage);
     }
 
     getCwd() {
@@ -37,7 +44,7 @@ export class TestCommand {
     }
 
     getCloverFile() {
-        return this.xdebug?.getCloverFile();
+        return this.coverage()?.getCloverFile();
     }
 
     get paths(): PathMapper {
@@ -55,11 +62,7 @@ export class TestCommand {
     }
 
     private clone(): TestCommand {
-        const cloned = cloneInstance(this);
-        if (this.xdebug) {
-            cloned.xdebug = this.xdebug.clone();
-        }
-        return cloned;
+        return cloneInstance(this);
     }
 
     private environment(): Environment {
@@ -108,7 +111,7 @@ export class TestCommand {
     }
 
     private enabledOptions(): CommandOption[] {
-        return (this.xdebug?.options() ?? []).filter((option) => option.isEnabled());
+        return this.commandOptions.filter((option) => option.isEnabled());
     }
 
     private getConfigString(key: string) {

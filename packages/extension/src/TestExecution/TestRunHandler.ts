@@ -52,12 +52,12 @@ export class TestRunHandler {
         cancellation?: CancellationToken,
     ) {
         const command = await this.testCommandFactory.create(request.profile?.kind);
-        const coverage = command.getXdebug()?.isCoverageMode()
+        const coverage = command.coverage()?.isEnabled()
             ? new CoverageFiles(command.getCwd())
             : undefined;
         await coverage?.prepare();
 
-        await this.debugSession.wrap(command, async () => {
+        await this.debugSession.wrap(command.debug(), async () => {
             const testRun = this.ctrl.createTestRun(request);
             await this.runTestQueue(command, testRun, request, include, cancellation, coverage);
         });

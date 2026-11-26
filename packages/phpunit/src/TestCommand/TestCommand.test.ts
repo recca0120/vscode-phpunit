@@ -709,7 +709,7 @@ describe('TestCommand', () => {
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
             const xdebug = await new Xdebug(config).setMode(Mode.coverage);
-            const command = new TestCommand(config, options, pathReplacer, xdebug);
+            const command = new TestCommand(config, options, pathReplacer, xdebug.options());
 
             const covered = command.withCoverageClover(new CoverageFiles(options.cwd).allocate(0));
 
@@ -721,7 +721,7 @@ describe('TestCommand', () => {
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
             const xdebug = new Xdebug(config);
-            const command = new TestCommand(config, options, pathReplacer, xdebug);
+            const command = new TestCommand(config, options, pathReplacer, xdebug.options());
 
             expect(command.getCloverFile()).toBeUndefined();
         });
@@ -737,19 +737,27 @@ describe('TestCommand', () => {
     });
 
     describe('withArguments', () => {
-        it('should deep-copy Xdebug so the new command has independent Xdebug', () => {
+        it('should give the new command independent options', async () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
-            const xdebug = new Xdebug(config);
-            const command = new TestCommand(config, options, pathReplacer, xdebug);
+            const xdebug = await new Xdebug(config).setMode(Mode.coverage);
+            const command = new TestCommand(
+                config,
+                options,
+                pathReplacer,
+                xdebug.options(),
+            ).withCoverageClover('/workspace/.phpunit.cache/coverage-abc-0.xml');
 
-            const cloned = command.withArguments('');
+            const cloned = command
+                .withArguments('')
+                .withCoverageClover('/workspace/.phpunit.cache/coverage-abc-1.xml');
 
-            expect(cloned.getXdebug()).not.toBe(command.getXdebug());
+            expect(command.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+            expect(cloned.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
         });
 
-        it('should create the new command without Xdebug when none is set', () => {
+        it('should create the new command without options when none are set', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
@@ -757,7 +765,8 @@ describe('TestCommand', () => {
 
             const cloned = command.withArguments('');
 
-            expect(cloned.getXdebug()).toBeUndefined();
+            expect(cloned.debug()).toBeUndefined();
+            expect(cloned.coverage()).toBeUndefined();
         });
     });
 });
