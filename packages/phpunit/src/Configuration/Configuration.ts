@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
-import { checkFileExists, findAsyncSequential, parseArguments } from '../utils';
+import { checkFileExists, findAsyncSequential, parseArgumentGroups } from '../utils';
 import { BinaryDetector } from './BinaryDetector';
 
 interface ConfigurationItem {
@@ -37,9 +37,12 @@ export abstract class BaseConfiguration implements IConfiguration {
     abstract update(key: string, value: unknown): Promise<void>;
 
     getArguments(input: string = ''): string[] {
-        const parameters = [...(this.get('args', []) as string[]), input];
-
-        return parseArguments(parameters, ['teamcity', 'colors', 'testdox', 'c']);
+        // Parse user args and generated input separately so a trailing flag in args
+        // (e.g. --stop-on-failure) can't take the generated test file as its value.
+        return parseArgumentGroups(
+            [this.get('args', []) as string[], [input]],
+            ['teamcity', 'colors', 'testdox', 'c'],
+        );
     }
 
     async getConfigurationFile(root: string = ''): Promise<string | undefined> {

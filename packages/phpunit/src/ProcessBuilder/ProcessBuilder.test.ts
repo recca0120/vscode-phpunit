@@ -77,6 +77,22 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
+        it('should not let a flag from args swallow the test file', () => {
+            const builder = givenBuilder({
+                phpunit: 'vendor/bin/phpunit',
+                args: ['--stop-on-failure'],
+            }).setArguments('/a/FooTest.php');
+
+            const { args } = builder.build();
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                '--stop-on-failure',
+                '/a/FooTest.php',
+                '--colors=always',
+                '--teamcity',
+            ]);
+        });
+
         it('should remove caml case parameters', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/phpunit',
