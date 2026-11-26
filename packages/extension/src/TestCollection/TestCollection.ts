@@ -1,6 +1,6 @@
 import {
-    type ChangeResult,
-    type File,
+    type IndexChange,
+    type IndexedFile,
     PHPUnitXML,
     type TestDefinition,
     TestIndex,
@@ -150,7 +150,7 @@ export class TestCollection {
 
     async change(uri: URI) {
         const result = await this.testIndex.change(uri);
-        this.applyChangeResult(result);
+        this.applyIndexChange(result);
         return result;
     }
 
@@ -159,7 +159,7 @@ export class TestCollection {
         for (const file of files) {
             this.handleFileDeleted(file);
         }
-        this.applyChangeResult(await this.testIndex.deleteClasses(uri));
+        this.applyIndexChange(await this.testIndex.deleteClasses(uri));
         return files.find((file) => file.uri.toString() === uri.toString());
     }
 
@@ -168,7 +168,7 @@ export class TestCollection {
         this.testIndex.reset();
     }
 
-    private applyChangeResult(result: ChangeResult) {
+    private applyIndexChange(result: IndexChange) {
         for (const { uri, tests } of result.parsed) {
             this.handleTestsParsed(uri, tests);
         }
@@ -194,7 +194,7 @@ export class TestCollection {
         }
     }
 
-    private handleFileDeleted(file: File<TestDefinition>) {
+    private handleFileDeleted(file: IndexedFile<TestDefinition>) {
         for (const testItem of this.findTestsByFile(file.uri)) {
             if (!testItem.parent) {
                 this.rootItems.delete(testItem.id);

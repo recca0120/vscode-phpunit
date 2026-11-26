@@ -1,8 +1,8 @@
 import { URI } from 'vscode-uri';
 import type { TestDefinition } from '../types';
-import type { File } from './TestIndex';
+import type { IndexedFile } from './IndexedFile';
 
-export class TestStore {
+export class IndexStore {
     private suites = new Map<string, Map<string, TestDefinition[]>>();
     private fileIndex = new Map<string, string>();
     private definitionIndex = new Map<string, TestDefinition>();
@@ -45,7 +45,7 @@ export class TestStore {
         this.suites.get(testsuite)?.delete(uriStr);
     }
 
-    findFile(uri: URI): File<TestDefinition> | undefined {
+    findFile(uri: URI): IndexedFile<TestDefinition> | undefined {
         const uriStr = uri.toString();
         const testsuite = this.fileIndex.get(uriStr);
         if (!testsuite) {
