@@ -1,6 +1,6 @@
 import type {
     IConfiguration,
-    TestCommand,
+    ProcessCommand,
     TestFailed,
     TestFinished,
     TestIgnored,
@@ -19,7 +19,7 @@ export class DebugOutputObserver implements TestRunnerObserver {
         private testItemById: Map<string, TestItem>,
     ) {}
 
-    run(command: TestCommand): void {
+    run(command: ProcessCommand): void {
         this.clearOutputOnRun();
         this.writer.appendLine(stripAnsi(command.toString()));
 

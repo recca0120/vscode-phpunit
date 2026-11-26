@@ -1,4 +1,3 @@
-import type { TestCommand } from '../TestCommand';
 import type {
     TestConfiguration,
     TestCount,
@@ -15,6 +14,7 @@ import type {
     TestVersion,
 } from '../TestOutput';
 import { TeamcityEvent, type TestResult } from '../TestOutput';
+import type { ProcessCommand } from './ProcessCommand';
 
 export enum TestRunnerEvent {
     start = 'start',
@@ -30,7 +30,7 @@ export enum TestRunnerEvent {
 
 export type EventResultMap = {
     [TestRunnerEvent.start]: undefined;
-    [TestRunnerEvent.run]: TestCommand;
+    [TestRunnerEvent.run]: ProcessCommand;
     [TestRunnerEvent.line]: string;
     [TestRunnerEvent.result]: TestResult;
     [TestRunnerEvent.output]: string;
