@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { PHPUnitXML } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
@@ -101,5 +104,41 @@ describe('TestFileDiscovery.discoverTestFiles', () => {
         ]);
 
         expect(added).toEqual([URI.file('/a/proj/tests/ATest.php').toString()]);
+    });
+});
+
+describe('TestFileDiscovery.getWorkspaceTestPattern', () => {
+    it('covers every php file of a testsuite directory regardless of its suffix', async () => {
+        const projectRoot = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+        const configFile = join(projectRoot, 'phpunit.xml');
+        await writeFile(
+            configFile,
+            `<?xml version="1.0"?>
+<phpunit>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>`,
+        );
+        const configuration = {
+            getArguments: vi.fn().mockReturnValue([]),
+            getConfigurationFile: vi.fn().mockResolvedValue(configFile),
+        } as unknown as Configuration;
+        const discovery = new TestFileDiscovery(
+            configuration,
+            new PHPUnitXML(),
+            createMockCollection(),
+            { uri: URI.file(projectRoot), name: 'proj', index: 0 } as WorkspaceFolder,
+        );
+
+        const { pattern } = await discovery.getWorkspaceTestPattern();
+
+        expect({ base: pattern.base, pattern: pattern.pattern }).toEqual({
+            base: join(projectRoot, 'tests'),
+            pattern: '{**/*.php}',
+        });
+        await rm(projectRoot, { recursive: true, force: true });
     });
 });
