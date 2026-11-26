@@ -1,4 +1,3 @@
-import { TestOutputParser } from '../TestOutput';
 import type { ProcessCommand } from './ProcessCommand';
 import {
     createTestRunnerEventProxy,
@@ -11,7 +10,6 @@ import { TestRunnerProcess } from './TestRunnerProcess';
 
 export class TestRunner implements TestRunnerEmitter {
     private readonly defaultObserver: TestRunnerEventProxy;
-    private readonly testOutputParser = new TestOutputParser();
     private observers: TestRunnerObserver[] = [];
 
     constructor() {
@@ -33,7 +31,7 @@ export class TestRunner implements TestRunnerEmitter {
     }
 
     run(command: ProcessCommand) {
-        return new TestRunnerProcess(command, this, this.testOutputParser);
+        return new TestRunnerProcess(command, this);
     }
 
     emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]) {

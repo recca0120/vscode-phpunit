@@ -7,7 +7,7 @@ import { Configuration, PathReplacer } from '../Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { TestCommand } from '../TestCommand';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
-import { TeamcityEvent } from '../TestOutput';
+import { TeamcityEvent, type TestFailed } from '../TestOutput';
 import { TestType } from '../types';
 import { semverLt } from '../utils';
 import { TestRunner } from './TestRunner';
@@ -291,6 +291,61 @@ describe('TestRunner Test', () => {
         }
 
         expect(events).toEqual(['error', 'close 2', 'output', 'close 0']);
+    });
+
+    it('does not attribute a later process failure to the test an earlier process crashed in', async () => {
+        const crashing = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(),
+            stderr: new EventEmitter(),
+        });
+        const failing = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(),
+            stderr: new EventEmitter(),
+        });
+        (spawn as Mock)
+            .mockImplementationOnce(() => {
+                setTimeout(() => {
+                    crashing.stdout.emit(
+                        'data',
+                        [
+                            "##teamcity[testCount count='1' flowId='100']",
+                            "##teamcity[testSuiteStarted name='Tests\\\\BarTest' locationHint='php_qn:///proj/tests/BarTest.php::\\\\Tests\\\\BarTest' flowId='100']",
+                            "##teamcity[testStarted name='test_bar' locationHint='php_qn:///proj/tests/BarTest.php::\\\\Tests\\\\BarTest::test_bar' flowId='100']",
+                            '',
+                        ].join('\n'),
+                    );
+                    crashing.emit('close', 255);
+                });
+                return crashing;
+            })
+            .mockImplementationOnce(() => {
+                setTimeout(() => {
+                    failing.stdout.emit(
+                        'data',
+                        [
+                            "##teamcity[testCount count='1' flowId='200']",
+                            "##teamcity[testFailed name='test_foo' message='setUpBeforeClass failed' details='' duration='0' flowId='200']",
+                            '',
+                        ].join('\n'),
+                    );
+                    failing.emit('close', 2);
+                });
+                return failing;
+            });
+        const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
+        const options = { cwd: phpUnitProject('') };
+        const command = new TestCommand(configuration, options, new PathReplacer(options, {}));
+        const testRunner = new TestRunner();
+        const failures: TestFailed[] = [];
+        testRunner.on(TeamcityEvent.testFailed, (result) => failures.push(result));
+
+        for (const process of [testRunner.run(command), testRunner.run(command)]) {
+            await process.run();
+        }
+
+        expect(failures).toHaveLength(1);
+        expect(failures[0].name).toEqual('test_foo');
+        expect(failures[0].locationHint ?? '').not.toContain('BarTest');
     });
 
     it('run error command', async () => {
