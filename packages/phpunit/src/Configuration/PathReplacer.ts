@@ -9,6 +9,7 @@ import {
     VAR_WORKSPACE_FOLDER,
     VAR_WORKSPACE_FOLDER_BASENAME,
 } from '../constants';
+import type { PathMapper } from './PathMapper';
 
 function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -21,7 +22,7 @@ interface PathMapping {
     remote: string;
 }
 
-export class PathReplacer {
+export class PathReplacer implements PathMapper {
     private readonly cwd: string;
     private readonly pathVariables: Map<string, string>;
     private readonly pathMappings: PathMapping[] = [];
