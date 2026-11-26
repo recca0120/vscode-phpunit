@@ -48,9 +48,8 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        expect(registry.extendsTestCase('App\\ConcreteTest')).toBe(true);
-        expect(registry.extendsTestCase('App\\AbstractTest')).toBe(true);
-        expect(registry.extendsTestCase('App\\UnknownClass')).toBe(false);
+        expect(registry.mayExtendTestCase('App\\ConcreteTest')).toBe(true);
+        expect(registry.mayExtendTestCase('App\\AbstractTest')).toBe(true);
     });
 
     it('should detect circular inheritance', () => {
@@ -70,7 +69,7 @@ describe('ClassHierarchy', () => {
             }),
         );
 
-        expect(registry.extendsTestCase('A')).toBe(false);
+        expect(registry.mayExtendTestCase('A')).toBe(false);
     });
 
     it('should not infinite loop on circular inheritance in resolveInheritedMethods', () => {

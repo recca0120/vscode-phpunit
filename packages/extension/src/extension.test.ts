@@ -343,6 +343,33 @@ describe('Extension Test', () => {
                 ]);
             });
 
+            it('includes test methods inherited through a parent class from vendor', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    childLabels(
+                        getTestController().items,
+                        'Extends Vendor Base (Tests\\ExtendsVendorBase)',
+                    ),
+                ).toEqual([
+                    `${icon(TestType.method)} test_from_vendor_base`,
+                    `${icon(TestType.method)} test_own`,
+                ]);
+            });
+
+            it('includes a class whose only tests come from a parent class from vendor', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    childLabels(
+                        getTestController().items,
+                        'Only Inherits Vendor Base (Tests\\OnlyInheritsVendorBase)',
+                    ),
+                ).toEqual([`${icon(TestType.method)} test_from_vendor_base`]);
+            });
+
             it('ignores test classes in files without the default Test.php suffix', async () => {
                 await activate(context);
                 await getTestController().resolveHandler?.(undefined);
@@ -454,10 +481,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 79, started: 64, passed: 47, failed: 15, end: 1 }],
-                        ['10.0.0', { enqueued: 79, started: 78, passed: 64, failed: 12, end: 1 }],
+                        ['12.0.0', { enqueued: 82, started: 67, passed: 50, failed: 15, end: 1 }],
+                        ['10.0.0', { enqueued: 82, started: 81, passed: 67, failed: 12, end: 1 }],
                     ],
-                    { enqueued: 79, started: 56, passed: 35, failed: 19, end: 1 },
+                    { enqueued: 82, started: 59, passed: 38, failed: 19, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -469,10 +496,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 78, started: 63, passed: 47, failed: 14, end: 1 }],
-                        ['10.0.0', { enqueued: 78, started: 77, passed: 64, failed: 11, end: 1 }],
+                        ['12.0.0', { enqueued: 81, started: 66, passed: 50, failed: 14, end: 1 }],
+                        ['10.0.0', { enqueued: 81, started: 80, passed: 67, failed: 11, end: 1 }],
                     ],
-                    { enqueued: 78, started: 55, passed: 35, failed: 18, end: 1 },
+                    { enqueued: 81, started: 58, passed: 38, failed: 18, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -699,7 +726,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(105);
+                expect(countItems(ctrl.items)).toEqual(110);
 
                 const annotationMulti = findTest(
                     ctrl.items,
@@ -789,7 +816,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(112);
+                expect(countItems(ctrl.items)).toEqual(117);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {
