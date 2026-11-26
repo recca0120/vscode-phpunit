@@ -59,9 +59,11 @@ export class CommandTemplateEnvironment implements Environment {
         }
 
         const remote = this.paths.toRemote(arg.path);
-        return /^-.*\s/.test(remote)
-            ? this.keepIntact(remote, intactArgs)
-            : this.quoteIfNeeded(remote);
+        if (/^-.*\s/.test(remote) || (this.runsInShell && /\s/.test(remote))) {
+            return this.keepIntact(remote, intactArgs);
+        }
+
+        return this.quoteIfNeeded(remote);
     }
 
     private keepIntact(value: string, intactArgs: Map<string, string>) {
