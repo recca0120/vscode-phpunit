@@ -1452,6 +1452,34 @@ class LoopProviderTest extends TestCase
             }),
         );
     });
+
+    it('loop yielding integer keys is renumbered like PHPUnit', () => {
+        expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set #0', 'data set #1'],
+                },
+            }),
+        );
+    });
+
+    it('returned array with explicit integer keys is renumbered like PHPUnit', () => {
+        expect(givenProviderTest("return [5 => [1], 'named' => [2], 7 => [3]];")).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set #0', 'data set "named"', 'data set #1'],
+                },
+            }),
+        );
+    });
+
+    it('loop yield with an unresolvable key has no static labels', () => {
+        expect(
+            givenProviderTest('for ($i = 0; $i < 2; $i++) { yield PHP_VERSION => [$i]; }'),
+        ).toEqual(expect.objectContaining({ annotations: { dataProvider: ['provider'] } }));
+    });
 });
 
 describe('PropertyHooksTest (PHP 8.4 — issue #336)', () => {

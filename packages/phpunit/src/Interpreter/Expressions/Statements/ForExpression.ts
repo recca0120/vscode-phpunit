@@ -3,20 +3,21 @@ import type { Bindings, Context, Expression } from '../Expression';
 import { compare } from '../Operators/BinaryExpression';
 import {
     buildConditionNode,
+    createLoopContext,
     executeBodyStatements,
-    type LoopContext,
+    loopResult,
     MAX_ITERATIONS,
 } from './LoopBodyExecutor';
 
-class ForExpression implements Expression<string[]> {
+class ForExpression implements Expression<Map<string, unknown>> {
     supports(node: AstNode): boolean {
         return node.kind === 'for_statement';
     }
 
-    resolve(node: AstNode, context: Context): string[] | undefined {
+    resolve(node: AstNode, context: Context): Map<string, unknown> | undefined {
         const loop = node as ForStatementNode;
         if (!loop.init || !loop.condition || !loop.update) {
-            return [];
+            return undefined;
         }
 
         const varName = loop.init.variable;
@@ -25,7 +26,7 @@ class ForExpression implements Expression<string[]> {
 
         const startValue = loopContext.resolve(loop.init.value);
         if (typeof startValue !== 'number') {
-            return [];
+            return undefined;
         }
         loopBindings[varName] = startValue;
 
@@ -41,7 +42,7 @@ class ForExpression implements Expression<string[]> {
             operator: loop.update.operator,
         } as AstNode;
 
-        const ctx: LoopContext = { context: loopContext, labels: [], numericIndex: 0 };
+        const ctx = createLoopContext(loopContext);
         let iterCount = 0;
 
         while (compare(conditionNode, loopContext)) {
@@ -55,7 +56,7 @@ class ForExpression implements Expression<string[]> {
             if (++iterCount > MAX_ITERATIONS) break;
         }
 
-        return ctx.labels;
+        return loopResult(ctx);
     }
 }
 

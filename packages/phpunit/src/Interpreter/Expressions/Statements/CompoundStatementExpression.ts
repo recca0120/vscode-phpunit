@@ -67,7 +67,7 @@ function evaluateYields(body: AstNode[], context: Context): Map<string, unknown>
     return map;
 }
 
-function evaluateLoopStmt(body: AstNode[], context: Context): string[] | undefined {
+function evaluateLoopStmt(body: AstNode[], context: Context): Map<string, unknown> | undefined {
     const ctx = context.fork({}, context.classBody);
     for (const stmt of body) {
         if (!loopKinds.has(stmt.kind)) {
@@ -75,8 +75,8 @@ function evaluateLoopStmt(body: AstNode[], context: Context): string[] | undefin
             continue;
         }
         const result = ctx.resolve(stmt);
-        if (Array.isArray(result) && result.length > 0) {
-            return result as string[];
+        if (result instanceof Map && result.size > 0) {
+            return result;
         }
     }
     return undefined;

@@ -1,22 +1,22 @@
 import type { AstNode, ForeachStatementNode } from '../../AstParser/AstNode';
 import type { Bindings, Context, Expression } from '../Expression';
-import { executeBodyStatements, type LoopContext } from './LoopBodyExecutor';
+import { createLoopContext, executeBodyStatements, loopResult } from './LoopBodyExecutor';
 
-class ForeachExpression implements Expression<string[]> {
+class ForeachExpression implements Expression<Map<string, unknown>> {
     supports(node: AstNode): boolean {
         return node.kind === 'foreach_statement';
     }
 
-    resolve(node: AstNode, context: Context): string[] | undefined {
+    resolve(node: AstNode, context: Context): Map<string, unknown> | undefined {
         const loop = node as ForeachStatementNode;
         const loopBindings: Bindings = { ...context.bindings };
         const loopContext = context.fork(loopBindings);
         const resolved = context.resolve(loop.source);
         if (!(resolved instanceof Map)) {
-            return [];
+            return undefined;
         }
 
-        const ctx: LoopContext = { context: loopContext, labels: [], numericIndex: 0 };
+        const ctx = createLoopContext(loopContext);
 
         for (const [key, item] of resolved.entries()) {
             loopBindings[loop.valueVariable] = item;
@@ -29,7 +29,7 @@ class ForeachExpression implements Expression<string[]> {
             }
         }
 
-        return ctx.labels;
+        return loopResult(ctx);
     }
 }
 

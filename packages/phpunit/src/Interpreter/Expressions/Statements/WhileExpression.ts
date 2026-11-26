@@ -3,27 +3,28 @@ import type { Bindings, Context, Expression } from '../Expression';
 import { compare } from '../Operators/BinaryExpression';
 import {
     buildConditionNode,
+    createLoopContext,
     executeBodyStatements,
-    type LoopContext,
+    loopResult,
     MAX_ITERATIONS,
 } from './LoopBodyExecutor';
 
-class WhileExpression implements Expression<string[]> {
+class WhileExpression implements Expression<Map<string, unknown>> {
     supports(node: AstNode): boolean {
         return node.kind === 'while_statement';
     }
 
-    resolve(node: AstNode, context: Context): string[] | undefined {
+    resolve(node: AstNode, context: Context): Map<string, unknown> | undefined {
         const loop = node as WhileStatementNode;
         const { variable, operator, value: limitNode } = loop.condition;
         const loopBindings: Bindings = { ...context.bindings };
         const loopContext = context.fork(loopBindings);
         const limitRaw = loopContext.resolve(limitNode);
         if (typeof limitRaw !== 'number' || !variable) {
-            return [];
+            return undefined;
         }
 
-        const ctx: LoopContext = { context: loopContext, labels: [], numericIndex: 0 };
+        const ctx = createLoopContext(loopContext);
         let iterCount = 0;
 
         const conditionNode = buildConditionNode(variable, operator, limitNode);
@@ -35,7 +36,7 @@ class WhileExpression implements Expression<string[]> {
             if (++iterCount > MAX_ITERATIONS) break;
         }
 
-        return ctx.labels;
+        return loopResult(ctx);
     }
 }
 

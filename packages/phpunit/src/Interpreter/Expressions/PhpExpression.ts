@@ -111,8 +111,9 @@ export function extractLabels(resolved: unknown): string[] | undefined {
     if (!(resolved instanceof Map)) {
         return undefined;
     }
+    let index = 0;
     return [...resolved.keys()].map((key: string) =>
-        /^\d+$/.test(key) ? datasetExpander.indexed(key) : datasetExpander.named(key),
+        /^\d+$/.test(key) ? datasetExpander.indexed(index++) : datasetExpander.named(key),
     );
 }
 

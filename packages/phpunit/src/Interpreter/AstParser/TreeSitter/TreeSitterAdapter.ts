@@ -507,21 +507,16 @@ function adaptUpdateExpression(node: SyntaxNode): AstNode {
 function adaptYield(node: SyntaxNode): AstNode {
     const children = node.namedChildren.filter((c): c is NonNullable<typeof c> => !!c);
 
-    if (children.length === 1 && children[0].type === 'array_element_initializer') {
-        const entry = children[0];
-        const keyNode = entry.namedChildren[0];
-        const valueNode = entry.namedChildren[1];
-        return {
-            kind: 'yield_expression',
-            key: keyNode ? adaptExpression(keyNode) : undefined,
-            value: valueNode ? adaptExpression(valueNode) : undefined,
-            loc: locOf(node),
-        };
-    }
+    const entry =
+        children.length === 1 && children[0].type === 'array_element_initializer'
+            ? children[0].namedChildren.filter((c): c is NonNullable<typeof c> => !!c)
+            : children;
+    const [keyNode, valueNode] = entry.length === 2 ? entry : [undefined, entry[0]];
 
     return {
         kind: 'yield_expression',
-        value: children.length > 0 ? adaptExpression(children[0]) : undefined,
+        key: keyNode ? adaptExpression(keyNode) : undefined,
+        value: valueNode ? adaptExpression(valueNode) : undefined,
         loc: locOf(node),
     };
 }

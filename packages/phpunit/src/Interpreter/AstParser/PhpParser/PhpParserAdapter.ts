@@ -497,8 +497,8 @@ function adaptUpdateExpression(raw: RawNode): AstNode {
 function adaptYieldExpression(raw: RawNode): AstNode {
     return {
         kind: 'yield_expression',
-        key: raw.key ? adaptNode(raw.key) : undefined,
-        value: raw.value ? adaptNode(raw.value) : undefined,
+        key: raw.key ? adaptExpression(raw.key) : undefined,
+        value: raw.value ? adaptExpression(raw.value) : undefined,
         loc: convertLoc(withoutTrailingSemicolon(raw.loc)),
     } as AstNode;
 }

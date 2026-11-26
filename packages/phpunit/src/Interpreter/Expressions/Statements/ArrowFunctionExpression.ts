@@ -1,6 +1,5 @@
 import type { AstNode, BlockNode } from '../../AstParser/AstNode';
 import type { Context, Expression } from '../Expression';
-import { extractLabels } from '../PhpExpression';
 import { resolveCompoundBody } from './CompoundStatementExpression';
 
 class ArrowFunctionExpression implements Expression<unknown> {
@@ -18,7 +17,8 @@ class ArrowFunctionExpression implements Expression<unknown> {
             return resolveCompoundBody((body as BlockNode).children, context);
         }
 
-        return extractLabels(context.resolve(body));
+        const resolved = context.resolve(body);
+        return resolved instanceof Map ? resolved : undefined;
     }
 }
 
