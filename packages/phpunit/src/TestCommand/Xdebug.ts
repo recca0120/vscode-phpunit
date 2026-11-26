@@ -1,6 +1,9 @@
 import * as net from 'node:net';
 import type { IConfiguration, PathReplacer } from '../Configuration';
 import { cloneInstance } from '../utils';
+import type { CommandOption } from './CommandOption';
+import { XdebugCoverage } from './XdebugCoverage';
+import { XdebugDebug } from './XdebugDebug';
 
 async function getFreePort(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
@@ -24,18 +27,17 @@ export enum Mode {
 }
 
 export class Xdebug {
-    private mode?: Mode;
-    private port?: number;
-    private cloverFile?: string;
+    private debug = new XdebugDebug(false);
+    private coverage = new XdebugCoverage(false);
 
     constructor(private configuration: IConfiguration) {}
 
     isDebugMode() {
-        return this.mode === Mode.debug;
+        return this.debug.isEnabled();
     }
 
     isCoverageMode() {
-        return this.mode === Mode.coverage;
+        return this.coverage.isEnabled();
     }
 
     get name() {
@@ -43,69 +45,46 @@ export class Xdebug {
     }
 
     getCloverFile() {
-        if (this.mode !== Mode.coverage) {
-            return undefined;
-        }
-
-        return this.cloverFile;
+        return this.coverage.getCloverFile();
     }
 
     setCloverFile(cloverFile: string) {
-        this.cloverFile = cloverFile;
+        this.coverage = this.coverage.withCloverFile(cloverFile);
 
         return this;
     }
 
     async setMode(mode?: Mode, launchPort?: number) {
-        this.mode = mode;
-
-        if (mode === Mode.debug) {
-            this.port =
-                (this.configuration.get('xdebugPort', 0) as number) ||
-                launchPort ||
-                (this.name ? undefined : await getFreePort());
-        }
+        const port =
+            mode === Mode.debug
+                ? (this.configuration.get('xdebugPort', 0) as number) ||
+                  launchPort ||
+                  (this.name ? undefined : await getFreePort())
+                : this.debug.port;
+        this.debug = new XdebugDebug(mode === Mode.debug, port);
+        this.coverage = this.coverage.withEnabled(mode === Mode.coverage);
 
         return this;
     }
 
+    options(): CommandOption[] {
+        return [this.debug, this.coverage];
+    }
+
     getDebugConfiguration() {
-        return { type: 'php', request: 'launch', name: 'PHPUnit', port: this.port };
+        return this.debug.debugConfiguration();
     }
 
     getEnvironment() {
-        if (!this.mode) {
-            return {};
-        }
-
-        return {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            XDEBUG_MODE: this.mode,
-        };
+        return { ...this.debug.environment(), ...this.coverage.environment() };
     }
 
     getPhpArgs() {
-        if (this.mode === Mode.debug) {
-            return [
-                `-dxdebug.mode=${this.mode}`,
-                '-dxdebug.start_with_request=1',
-                ...(this.port ? [`-dxdebug.client_port=${this.port}`] : []),
-            ];
-        }
-
-        if (this.mode === Mode.coverage) {
-            return [`-dxdebug.mode=${this.mode}`];
-        }
-
-        return [];
+        return [...this.debug.phpArgs(), ...this.coverage.phpArgs()];
     }
 
     getPhpUnitArgs(pathReplacer: PathReplacer): string[] {
-        if (this.mode !== Mode.coverage || !this.cloverFile) {
-            return [];
-        }
-
-        return ['--coverage-clover', pathReplacer.toRemote(this.cloverFile)];
+        return [...this.debug.phpUnitArgs(), ...this.coverage.phpUnitArgs(pathReplacer)];
     }
 
     clone() {
