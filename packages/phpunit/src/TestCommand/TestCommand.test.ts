@@ -6,8 +6,8 @@ import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { RemotePathMapper } from '../Path';
 import { CoverageFiles } from '../TestCoverage';
 import { TeamcityEvent, type TestFailed, toLocalResult } from '../TestOutput';
+import { Mode, Xdebug } from './Option/Xdebug';
 import { TestCommand } from './TestCommand';
-import { Mode, Xdebug } from './Xdebug';
 
 describe('TestCommand', () => {
     describe('LocalCommand', () => {

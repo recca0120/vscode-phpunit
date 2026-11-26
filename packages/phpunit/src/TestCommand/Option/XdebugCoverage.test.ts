@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { VAR_WORKSPACE_FOLDER } from '../constants';
-import { RemotePathMapper } from '../Path';
+import { VAR_WORKSPACE_FOLDER } from '../../constants';
+import { RemotePathMapper } from '../../Path';
 import { XdebugCoverage } from './XdebugCoverage';
 
 describe('XdebugCoverage', () => {

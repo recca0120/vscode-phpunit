@@ -2,11 +2,11 @@ import type { SpawnOptions } from 'node:child_process';
 import type { IConfiguration } from '../Configuration';
 import type { PathMapper, PathResolver } from '../Path';
 import { cloneInstance } from '../utils';
-import type { CommandOption } from './CommandOption';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
 import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
-import { XdebugCoverage } from './XdebugCoverage';
-import { XdebugDebug } from './XdebugDebug';
+import type { CommandOption } from './Option/CommandOption';
+import { XdebugCoverage } from './Option/XdebugCoverage';
+import { XdebugDebug } from './Option/XdebugDebug';
 
 export class TestCommand {
     private arguments = '';
