@@ -84,3 +84,49 @@ export async function waitUntil(
     }
     throw new Error(`Timed out waiting until ${message}`);
 }
+
+export interface RecordedTestRun {
+    passed: number;
+    failed: number;
+    skipped: number;
+    ended: boolean;
+}
+
+export function recordTestRuns(ctrl: vscode.TestController) {
+    const runs: RecordedTestRun[] = [];
+    const createTestRun = ctrl.createTestRun;
+    ctrl.createTestRun = (...args: Parameters<vscode.TestController['createTestRun']>) => {
+        const run = createTestRun.apply(ctrl, args);
+        const recorded: RecordedTestRun = { passed: 0, failed: 0, skipped: 0, ended: false };
+        runs.push(recorded);
+        const { passed, failed, errored, skipped, end } = run;
+        run.passed = (...a) => {
+            recorded.passed++;
+            passed.apply(run, a);
+        };
+        run.failed = (...a) => {
+            recorded.failed++;
+            failed.apply(run, a);
+        };
+        run.errored = (...a) => {
+            recorded.failed++;
+            errored.apply(run, a);
+        };
+        run.skipped = (...a) => {
+            recorded.skipped++;
+            skipped.apply(run, a);
+        };
+        run.end = () => {
+            recorded.ended = true;
+            end.apply(run);
+        };
+        return run;
+    };
+
+    return {
+        runs,
+        restore: () => {
+            ctrl.createTestRun = createTestRun;
+        },
+    };
+}

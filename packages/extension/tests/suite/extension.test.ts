@@ -6,6 +6,7 @@ import {
     countTestItems,
     type ExtensionApi,
     findTestItem,
+    recordTestRuns,
     waitForTestItems,
     waitUntil,
 } from '../helper';
@@ -177,7 +178,17 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
     });
 
     test('should run all tests without error', async () => {
-        await vscode.commands.executeCommand('phpunit.run-all');
+        const recorder = recordTestRuns(ctrl);
+        try {
+            await vscode.commands.executeCommand('phpunit.run-all');
+        } finally {
+            recorder.restore();
+        }
+
+        assert.strictEqual(recorder.runs.length, 1, 'Should create one test run');
+        const [run] = recorder.runs;
+        assert.ok(run.ended, 'The test run should end');
+        assert.ok(run.passed > 0, `Some tests should pass (passed ${run.passed})`);
     });
 
     test('should save dirty files before run when saveBeforeTest is enabled', async () => {
@@ -227,9 +238,19 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         cts.cancel();
 
         const request = new vscode.TestRunRequest();
-        await api.testRunProfile.runHandler(request, cts.token);
+        const recorder = recordTestRuns(ctrl);
+        try {
+            await api.testRunProfile.runHandler(request, cts.token);
+        } finally {
+            recorder.restore();
+        }
 
         assert.ok(cts.token.isCancellationRequested);
+        assert.strictEqual(recorder.runs.length, 1, 'Should create one test run');
+        const [run] = recorder.runs;
+        assert.strictEqual(run.passed + run.failed, 0, 'No test should report a result');
+        assert.ok(run.skipped > 0, `Queued tests should be skipped (skipped ${run.skipped})`);
+        assert.ok(run.ended, 'The test run should end');
     });
 
     suite('a trait used by a test class', () => {
