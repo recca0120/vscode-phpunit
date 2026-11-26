@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
 import type { Path } from '../Configuration';
@@ -215,6 +216,42 @@ const TEST_CLASS = 'Tests\\AssertionsTest';
 
 describe('TestRunner Test', () => {
     beforeEach(() => vi.restoreAllMocks());
+
+    it('abort is not reported as an error and keeps output that arrives before close', async () => {
+        const child = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(),
+            stderr: new EventEmitter(),
+        });
+        (spawn as Mock).mockImplementationOnce(
+            (_runtime: string, _args: string[], options: { signal: AbortSignal }) => {
+                options.signal.addEventListener('abort', () => {
+                    child.emit(
+                        'error',
+                        Object.assign(new Error('aborted'), { name: 'AbortError' }),
+                    );
+                    setTimeout(() => {
+                        child.stdout.emit('data', 'late output\n');
+                        child.emit('close', null);
+                    }, 10);
+                });
+                return child;
+            },
+        );
+        const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
+        const options = { cwd: phpUnitProject('') };
+        const builder = new ProcessBuilder(configuration, options, new PathReplacer(options, {}));
+        const testRunner = new TestRunner();
+        const events: string[] = [];
+        testRunner.on(TestRunnerEvent.error, () => events.push('error'));
+        testRunner.on(TestRunnerEvent.line, (line) => events.push(`line: ${line}`));
+
+        const process = testRunner.run(builder);
+        const running = process.run().then(() => events.push('resolved'));
+        process.abort();
+        await running;
+
+        expect(events).toEqual(['line: late output', 'resolved']);
+    });
 
     it('run error command', async () => {
         const cwd = phpUnitProject('');

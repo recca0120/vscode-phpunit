@@ -255,6 +255,39 @@ describe('Extension Test', () => {
                 spawnMock.mockImplementation(realSpawn);
             }
         });
+
+        it('should mark tests that did not run as skipped without an error dialog when cancelled', async () => {
+            const cts = new CancellationTokenSource();
+            const spawnMock = vi.mocked(spawn);
+            const realSpawn = spawnMock.getMockImplementation();
+            if (!realSpawn) {
+                throw new Error('Mock implementation not found');
+            }
+
+            spawnMock.mockImplementation((...args: Parameters<typeof spawn>) => {
+                cts.cancel();
+                return realSpawn(...args) as ChildProcess;
+            });
+            window.showErrorMessage = vi.fn();
+
+            try {
+                await activate(context);
+                const ctrl = getTestController();
+                const testRunProfile = getTestRunProfile(ctrl);
+                const item = findTest(ctrl.items, 'Assertions (Tests\\Assertions)');
+                if (!item) {
+                    throw new Error('Test item not found');
+                }
+
+                const request = { include: [item], exclude: [], profile: testRunProfile };
+                await testRunProfile.runHandler(request, cts.token);
+
+                expect(getTestRun(ctrl).skipped).toHaveBeenCalled();
+                expect(window.showErrorMessage).not.toHaveBeenCalled();
+            } finally {
+                spawnMock.mockImplementation(realSpawn);
+            }
+        });
     });
 
     describe.each(detectPhpUnitStubs())(

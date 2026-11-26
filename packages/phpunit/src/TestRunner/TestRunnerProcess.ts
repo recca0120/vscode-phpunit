@@ -12,6 +12,7 @@ export class TestRunnerProcess {
     private stdoutBuffer = '';
     private stderrBuffer = '';
     private abortController: AbortController;
+    private aborted = false;
 
     constructor(private builder: ProcessBuilder) {
         this.abortController = new AbortController();
@@ -32,9 +33,17 @@ export class TestRunnerProcess {
     run() {
         return new Promise((resolve) => {
             this.execute();
-            this.emitter.once('abort', () => resolve(true));
-            this.child?.on('error', () => resolve(true));
-            this.child?.on('close', () => resolve(true));
+            if (!this.child) {
+                this.emitter.once('abort', () => resolve(true));
+                return;
+            }
+
+            this.child.on('error', () => {
+                if (!this.aborted) {
+                    resolve(true);
+                }
+            });
+            this.child.on('close', () => resolve(true));
         });
     }
 
@@ -54,8 +63,9 @@ export class TestRunnerProcess {
     }
 
     abort() {
-        this.abortController.abort();
+        this.aborted = true;
         this.emitter.emit('abort');
+        this.abortController.abort();
     }
 
     private execute() {

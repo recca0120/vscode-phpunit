@@ -31,6 +31,9 @@ export class TestResultObserver implements TestRunnerObserver {
 
     abort(): void {
         for (const testItem of this.queue.values()) {
+            if (this.reportedIds.has(testItem.id)) {
+                continue;
+            }
             this.testRun.skipped(testItem);
         }
     }
