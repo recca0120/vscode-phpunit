@@ -49,7 +49,7 @@ Add to `.vscode/settings.json`. All settings use the `phpunit.*` prefix.
   "phpunit.phpunit": "vendor/bin/phpunit",
 
   // Custom command template
-  // Variables: ${php}, ${phpargs}, ${phpunit}, ${phpunitargs}, ${phpunitxml}, ${cwd}
+  // Variables: ${php}, ${phpargs}, ${phpunit}, ${phpunitargs}, ${cwd}
   //   ${workspaceFolder}         — absolute path to the workspace folder
   //   ${workspaceFolderBasename} — folder name only (e.g. "myproject")
   //   ${userHome}                — user home directory

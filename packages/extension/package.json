@@ -103,7 +103,7 @@
                     "scope": "resource"
                 },
                 "phpunit.command": {
-                    "markdownDescription": "Custom command to for running and debugging tests. Use variables `${phpunit}`, `${phpunitxml}`, `${phpunitargs}`, `${php}`, `${phpargs}`, `${cwd}`.\n\nExample:\n\n`ddev exec phpunit -c ${phpunitxml} ${phpunitargs}`",
+                    "markdownDescription": "Custom command to for running and debugging tests. Use variables `${phpunit}`, `${phpunitargs}`, `${php}`, `${phpargs}`, `${cwd}`.\n\nExample:\n\n`ddev exec phpunit ${phpunitargs}`",
                     "type": "string",
                     "default": "\"${php}\" ${phpargs} \"${phpunit}\" ${phpunitargs}",
                     "scope": "resource",
