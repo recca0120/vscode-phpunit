@@ -16,6 +16,7 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
+import { allIds, collectIds, filesOf, toTree } from '../../test-support/testItems';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
 import { TestTree } from './TestTree';
 
@@ -45,34 +46,6 @@ describe('TestTree', () => {
     const root = phpUnitProject('');
     const workspaceFolder = { index: 0, name: 'phpunit', uri: Uri.file(root) };
     let ctrl: TestController;
-
-    const toTree = (items: import('vscode').TestItemCollection) => {
-        const results: { id: string; label: string; children: ReturnType<typeof toTree> }[] = [];
-        for (const [, item] of items) {
-            results.push({ id: item.id, label: item.label, children: toTree(item.children) });
-        }
-
-        return results;
-    };
-
-    const collectIds = (items: import('vscode').TestItemCollection) => {
-        const ids: string[] = [];
-        for (const [, item] of items) {
-            ids.push(item.id);
-        }
-        return ids;
-    };
-
-    const collectTestItemFiles = (items: import('vscode').TestItemCollection): string[] => {
-        const files: string[] = [];
-        items.forEach((item: import('vscode').TestItem) => {
-            if (item.uri) {
-                files.push(item.uri.fsPath);
-            }
-            files.push(...collectTestItemFiles(item.children));
-        });
-        return [...new Set(files)];
-    };
 
     const givenTestTree = (text: string, configurationFile = phpUnitProject('phpunit.xml')) => {
         const phpUnitXML = new PHPUnitXML();
@@ -1804,9 +1777,6 @@ class ChildTest extends BaseCase
 
             await writeBase(['test_a', 'test_b']);
             await testTree.update(URI.file(join(root, 'tests/Support/BaseCase.php')));
-
-            const allIds = (items: import('vscode').TestItemCollection): string[] =>
-                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
             expect(
                 allIds(ctrl.items)
                     .filter((id) => id.startsWith('Child (Tests\\Unit\\Child)::'))
@@ -1834,9 +1804,6 @@ class ChildTest extends BaseCase
             for (const file of order) {
                 await testTree.add(URI.file(join(root, 'tests', file)));
             }
-
-            const allIds = (items: import('vscode').TestItemCollection): string[] =>
-                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
             return allIds(ctrl.items)
                 .filter((id) => id.startsWith('Foo (Tests\\Foo)::'))
                 .sort();
@@ -1938,8 +1905,6 @@ trait Inner
         };
 
         const fooIds = () => {
-            const allIds = (items: import('vscode').TestItemCollection): string[] =>
-                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
             return allIds(ctrl.items)
                 .filter((id) => id.startsWith('Foo (Tests\\Foo)::'))
                 .sort();
@@ -2096,9 +2061,6 @@ class ExtendsPlainBaseTest extends PlainBase
             await testTree.add(URI.file(join(root, 'tests/Unit/PlainBase.php')));
             await testTree.add(URI.file(join(root, 'tests/Unit/PlainHelperTest.php')));
             await testTree.add(URI.file(join(root, 'tests/Unit/ExtendsPlainBaseTest.php')));
-
-            const allIds = (items: import('vscode').TestItemCollection): string[] =>
-                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
             expect(allIds(ctrl.items).filter((id) => id.includes('Plain'))).toEqual([]);
         });
     });
@@ -2361,7 +2323,7 @@ class ExtendsPlainBaseTest extends PlainBase
                 .map((file) => file.fsPath)
                 .sort();
 
-            const actualFiles = collectTestItemFiles(ctrl.items).sort();
+            const actualFiles = filesOf(ctrl.items).sort();
 
             expect(actualFiles).toEqual(expectedFiles);
         });

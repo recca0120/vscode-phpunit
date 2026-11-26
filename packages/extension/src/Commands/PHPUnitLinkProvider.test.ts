@@ -2,45 +2,9 @@ import { relative } from 'node:path';
 import { PHPUnitXML } from '@vscode-phpunit/phpunit';
 import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-    type CancellationToken,
-    type DocumentLink,
-    Position,
-    Range,
-    type TextDocument as VscodeTextDocument,
-} from 'vscode';
+import type { CancellationToken, DocumentLink } from 'vscode';
+import { createTextDocument } from '../../fakes/textDocument';
 import { PHPUnitLinkProvider } from './PHPUnitLinkProvider';
-
-class TextLine {
-    constructor(
-        public text: string,
-        public range: Range,
-    ) {}
-}
-
-class TextDocument {
-    private readonly lines: TextLine[];
-
-    constructor(text: string) {
-        this.lines = text
-            .split('\n')
-            .map(
-                (line, index) =>
-                    new TextLine(
-                        line,
-                        new Range(new Position(index, 0), new Position(index, text.length)),
-                    ),
-            );
-    }
-
-    get lineCount() {
-        return this.lines.length;
-    }
-
-    lineAt(line: number): TextLine {
-        return this.lines[line];
-    }
-}
 
 describe('PHPUnitLinkProvider', () => {
     const root = phpUnitProject('');
@@ -54,7 +18,7 @@ describe('PHPUnitLinkProvider', () => {
 
     it('get PHPUnit links', () => {
         const document =
-            new TextDocument(`❌ FAILED  Calculator (TestsCalculator) > Sum item method not call
+            createTextDocument(`❌ FAILED  Calculator (TestsCalculator) > Sum item method not call
 MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery_0_App_Item_App_Item should be called
  exactly 1 times but called 0 times.
 
@@ -70,7 +34,7 @@ MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery
 
         const links = (
             provider.provideDocumentLinks(
-                document as unknown as VscodeTextDocument,
+                document,
                 {} as unknown as CancellationToken,
             ) as DocumentLink[]
         ).map((link) => [normalizePath(link.target?.fsPath ?? ''), link.target?.fragment]);
@@ -98,7 +62,7 @@ MockeryExceptionInvalidCountException: Method test(<Any Arguments>) from Mockery
     });
 
     it('get PEST links', () => {
-        const document = new TextDocument(`❌ FAILED  tests/Unit/ArchTest.php > preset  → strict
+        const document = createTextDocument(`❌ FAILED  tests/Unit/ArchTest.php > preset  → strict
 Expecting 'src/Calculator.php' to be final.
 
 at src/Calculator.php:7
@@ -128,7 +92,7 @@ at src/Calculator.php:7
 
         const links = (
             provider.provideDocumentLinks(
-                document as unknown as VscodeTextDocument,
+                document,
                 {} as unknown as CancellationToken,
             ) as DocumentLink[]
         ).map((link) => [normalizePath(link.target?.fsPath ?? ''), link.target?.fragment]);
@@ -155,9 +119,9 @@ at src/Calculator.php:7
         const xml2 = new PHPUnitXML().setRoot('/project-b');
         const multiProvider = new PHPUnitLinkProvider(() => [xml1, xml2]);
 
-        const document = new TextDocument('1. src/Foo.php:10');
+        const document = createTextDocument('1. src/Foo.php:10');
         const links = multiProvider.provideDocumentLinks(
-            document as unknown as import('vscode').TextDocument,
+            document,
             {} as unknown as import('vscode').CancellationToken,
         ) as DocumentLink[];
 

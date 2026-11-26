@@ -1,5 +1,5 @@
 import type { Container } from 'inversify';
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     type CancellationToken,
     type EventEmitter,
@@ -7,8 +7,10 @@ import {
     TestRunRequest,
     tests,
     Uri,
+    window,
     workspace,
 } from 'vscode';
+import { changeWorkspaceFolders } from '../fakes/vscodeEvents';
 import { createParentContainer } from './container';
 import { TestWatchManager } from './TestDiscovery';
 import { TestRunHandler } from './TestExecution';
@@ -24,18 +26,6 @@ const makeFolder = (name: string, path: string) => ({
 const setWorkspaceFolders = (...folders: ReturnType<typeof makeFolder>[]) => {
     Object.defineProperty(workspace, 'workspaceFolders', { value: folders });
     Object.defineProperty(workspace, 'textDocuments', { value: [] });
-};
-
-type FolderChangeListener = (event: {
-    added: ReturnType<typeof makeFolder>[];
-    removed: ReturnType<typeof makeFolder>[];
-}) => void;
-
-const registerFolderChangeListener = (manager: WorkspaceFolderManager) => {
-    const onDidChange = workspace.onDidChangeWorkspaceFolders as Mock;
-    onDidChange.mockClear();
-    manager.registerFolderChangeListener();
-    return onDidChange.mock.calls[0][0] as FolderChangeListener;
 };
 
 type FakeWatcher = { disposed: boolean };
@@ -66,12 +56,7 @@ describe('WorkspaceFolderManager', () => {
 
     beforeEach(() => {
         ctrl = tests.createTestController('phpunit', 'PHPUnit');
-        const outputChannel = {
-            append: vi.fn(),
-            appendLine: vi.fn(),
-            clear: vi.fn(),
-            show: vi.fn(),
-        } as unknown as import('vscode').OutputChannel;
+        const outputChannel = window.createOutputChannel('PHPUnit');
         const parentContainer = createParentContainer(ctrl, outputChannel);
         manager = parentContainer.get(WorkspaceFolderManager);
     });
@@ -114,10 +99,8 @@ describe('WorkspaceFolderManager', () => {
         const b = makeFolder('b', '/b');
         const c = makeFolder('c', '/c');
 
-        const addFolder = async (listener: FolderChangeListener, ...folders: (typeof a)[]) => {
-            const added = folders[folders.length - 1];
-            setWorkspaceFolders(...folders);
-            listener({ added: [added], removed: [] });
+        const addFolder = async (added: typeof a) => {
+            await changeWorkspaceFolders({ added: [added] });
             await manager.enqueue(async () => {});
             return manager.getByKey(added.uri.toString()) as Container;
         };
@@ -125,9 +108,9 @@ describe('WorkspaceFolderManager', () => {
         it('triggers continuous run for a folder added to a multi-root workspace', async () => {
             setWorkspaceFolders(a, b);
             await manager.initialize();
-            const listener = registerFolderChangeListener(manager);
+            manager.registerFolderChangeListener();
 
-            const child = await addFolder(listener, a, b, c);
+            const child = await addFolder(c);
 
             await expectContinuousRunOnFileChange(child);
         });
@@ -135,10 +118,10 @@ describe('WorkspaceFolderManager', () => {
         it('starts watching a folder added to a single-root workspace', async () => {
             setWorkspaceFolders(a);
             await manager.initialize();
-            const listener = registerFolderChangeListener(manager);
+            manager.registerFolderChangeListener();
 
             const watchers = await watchersCreatedDuring(async () => {
-                await addFolder(listener, a, b);
+                await addFolder(b);
             });
 
             expect(watchers.length).toBeGreaterThan(0);
@@ -147,14 +130,13 @@ describe('WorkspaceFolderManager', () => {
         it('disposes watchers of an added folder when it is removed', async () => {
             setWorkspaceFolders(a, b);
             await manager.initialize();
-            const listener = registerFolderChangeListener(manager);
+            manager.registerFolderChangeListener();
             const watchers = await watchersCreatedDuring(async () => {
-                await addFolder(listener, a, b, c);
+                await addFolder(c);
             });
             expect(watchers.length).toBeGreaterThan(0);
 
-            setWorkspaceFolders(a, b);
-            listener({ added: [], removed: [c] });
+            await changeWorkspaceFolders({ removed: [c] });
             await manager.enqueue(async () => {});
 
             expect(watchers.every((w) => w.disposed)).toBe(true);

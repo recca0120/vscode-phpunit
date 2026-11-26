@@ -1,6 +1,6 @@
 import { PHPUnitXML, type TestDefinition } from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { OutputChannel, TestItem, TestRun } from 'vscode';
+import { type OutputChannel, type TestItem, TestRunRequest, tests, window } from 'vscode';
 import type { Configuration } from '../Configuration';
 import type { TestTree } from '../TestTree/TestTree';
 import { DatasetObserver } from './DatasetObserver';
@@ -17,12 +17,7 @@ describe('ObserverFactory', () => {
             definitionOf: () => undefined,
             addDatasetChild: () => undefined,
         } satisfies Partial<TestTree> as unknown as TestTree;
-        outputChannel = {
-            append: () => {},
-            appendLine: () => {},
-            clear: () => {},
-            show: () => {},
-        } as unknown as OutputChannel;
+        outputChannel = window.createOutputChannel('PHPUnit');
         const configuration = {
             get: () => undefined,
         } satisfies Partial<Configuration> as unknown as Configuration;
@@ -32,7 +27,9 @@ describe('ObserverFactory', () => {
 
     it('should create observers including DatasetObserver, TestResultObserver, and PrinterObserver', () => {
         const queue = new Map<TestDefinition, TestItem>();
-        const testRun = { enqueued: () => {} } as unknown as TestRun;
+        const testRun = tests
+            .createTestController('phpunit', 'PHPUnit')
+            .createTestRun(new TestRunRequest());
         const observers = factory.create(queue, testRun);
 
         expect(observers.length).toBe(5);
@@ -43,7 +40,9 @@ describe('ObserverFactory', () => {
 
     it('should create new instances for each call', () => {
         const queue = new Map<TestDefinition, TestItem>();
-        const testRun = { enqueued: () => {} } as unknown as TestRun;
+        const testRun = tests
+            .createTestController('phpunit', 'PHPUnit')
+            .createTestRun(new TestRunRequest());
         const observers1 = factory.create(queue, testRun);
         const observers2 = factory.create(queue, testRun);
 

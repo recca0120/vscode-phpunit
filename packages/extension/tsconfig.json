@@ -21,6 +21,12 @@
             "vscode": ["./vscode.d.ts"]
         }
     },
-    "include": ["src/**/*.ts", "fakes/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],
+    "include": [
+        "src/**/*.ts",
+        "fakes/*.ts",
+        "test-support/**/*.ts",
+        "vscode.d.ts",
+        "vscode.proposed.*.d.ts"
+    ],
     "exclude": [".vscode-test", "node_modules", "fakes/vscode/**", "tests/**/*"]
 }

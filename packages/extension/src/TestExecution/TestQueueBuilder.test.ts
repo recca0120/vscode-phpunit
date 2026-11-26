@@ -8,9 +8,10 @@ import {
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
 import { generateXML, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { type TestController, type TestRun, tests } from 'vscode';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { type TestController, TestRunRequest, tests } from 'vscode';
 import { URI } from 'vscode-uri';
+import { childrenOf } from '../../test-support/testItems';
 import { TestTree } from '../TestTree';
 import { TestQueueBuilder } from './TestQueueBuilder';
 
@@ -40,9 +41,9 @@ describe('TestQueueBuilder', () => {
     it('should enqueue test items during build when testRun is provided', async () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const testRun = ctrl.createTestRun(new TestRunRequest());
         const request = {
-            include: [...toArray(ctrl.items)],
+            include: childrenOf(ctrl.items),
         } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(request.include ?? [], request, undefined, testRun);
 
@@ -57,7 +58,7 @@ describe('TestQueueBuilder', () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const request = {
-            include: [...toArray(ctrl.items)],
+            include: childrenOf(ctrl.items),
         } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(request.include ?? [], request);
 
@@ -67,7 +68,7 @@ describe('TestQueueBuilder', () => {
     it('should enqueue via buildFromCollection', async () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const testRun = ctrl.createTestRun(new TestRunRequest());
         const request = {} as unknown as import('vscode').TestRunRequest;
         const queue = await builder.buildFromCollection(ctrl.items, request, testRun);
 
@@ -94,7 +95,7 @@ describe('TestQueueBuilder', () => {
         }
         expect(methodItem.children.size).toBeGreaterThan(0);
 
-        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const testRun = ctrl.createTestRun(new TestRunRequest());
         const include = [methodItem];
         const request = { include } as unknown as import('vscode').TestRunRequest;
         const queue = await builder.build(include, request, undefined, testRun);
@@ -107,7 +108,7 @@ describe('TestQueueBuilder', () => {
     it('should exclude items in request.exclude', async () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const allItems = [...toArray(ctrl.items)];
+        const allItems = childrenOf(ctrl.items);
         const methods: import('vscode').TestItem[] = [];
         for (const [, ns] of ctrl.items) {
             for (const [, cls] of ns.children) {
@@ -118,7 +119,7 @@ describe('TestQueueBuilder', () => {
         }
         const excluded = methods[0];
 
-        const testRun = { enqueued: vi.fn() } as unknown as TestRun;
+        const testRun = ctrl.createTestRun(new TestRunRequest());
         const request = {
             include: allItems,
             exclude: [excluded],
@@ -129,11 +130,3 @@ describe('TestQueueBuilder', () => {
         expect(queueIds).not.toContain(excluded.id);
     });
 });
-
-function toArray(testTree: import('vscode').TestItemCollection): import('vscode').TestItem[] {
-    const items: import('vscode').TestItem[] = [];
-    for (const [, item] of testTree) {
-        items.push(item);
-    }
-    return items;
-}
