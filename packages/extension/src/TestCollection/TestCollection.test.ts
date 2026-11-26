@@ -3,6 +3,7 @@ import {
     PHPUnitXML,
     PhpParserAstParser,
     TeamcityEvent,
+    TestIndex,
     TestParser,
     type TestStarted,
     TestType,
@@ -80,7 +81,7 @@ describe('TestCollection', () => {
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
 
-        return new TestCollection(ctrl, phpUnitXML, testParser);
+        return new TestCollection(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
     };
 
     const givenCodes = (codes: CODE[], configurationFile: string) => {

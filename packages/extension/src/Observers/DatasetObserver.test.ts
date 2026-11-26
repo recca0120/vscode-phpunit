@@ -4,6 +4,7 @@ import {
     PhpParserAstParser,
     type TeamcityEvent,
     type TestDefinition,
+    TestIndex,
     TestParser,
     type TestStarted,
     TestType,
@@ -39,7 +40,11 @@ describe('DatasetObserver', () => {
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(ctrl, phpUnitXML, testParser);
+        testCollection = new TestCollection(
+            ctrl,
+            phpUnitXML,
+            new TestIndex(phpUnitXML, testParser),
+        );
 
         await testCollection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
@@ -173,7 +178,11 @@ describe('DatasetObserver (Pest)', () => {
 
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        testCollection = new TestCollection(ctrl, phpUnitXML, testParser);
+        testCollection = new TestCollection(
+            ctrl,
+            phpUnitXML,
+            new TestIndex(phpUnitXML, testParser),
+        );
 
         await testCollection.add(URI.file(pestProject('tests/Unit/ExampleTest.php')));
 

@@ -18,7 +18,7 @@ export interface ChangeResult {
     deleted: File<TestDefinition>[];
 }
 
-export class TestCollection {
+export class TestIndex {
     private store = new TestStore();
     private matcherCache = new Map<string, Map<string, Minimatch>>();
     private parseQueue: Promise<void> = Promise.resolve();
@@ -85,23 +85,26 @@ export class TestCollection {
 
     delete(uri: URI): File<TestDefinition> | undefined {
         const file = this.store.findFile(uri);
+        this.deleteFiles(uri);
+        return file;
+    }
+
+    deleteFiles(uri: URI): File<TestDefinition>[] {
+        const file = this.store.findFile(uri);
         if (file) {
             this.store.remove(file.testsuite, file.uri);
-            return file;
+            return [file];
         }
 
         const folderPrefix = uri.toString();
-        const filesToDelete: URI[] = [];
-        for (const tracked of this.gatherFiles()) {
-            if (tracked.uri.toString().startsWith(folderPrefix)) {
-                filesToDelete.push(tracked.uri);
-            }
-        }
-        for (const fileUri of filesToDelete) {
-            this.delete(fileUri);
+        const files = [...this.gatherFiles()].filter((tracked) =>
+            tracked.uri.toString().startsWith(folderPrefix),
+        );
+        for (const tracked of files) {
+            this.store.remove(tracked.testsuite, tracked.uri);
         }
 
-        return undefined;
+        return files;
     }
 
     reset(): void {
