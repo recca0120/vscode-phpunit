@@ -13,7 +13,7 @@ import {
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
 import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { icon, TestHierarchyBuilder } from './TestHierarchyBuilder';
@@ -401,7 +401,7 @@ class NoNamespaceTest extends TestCase
                 expect(featureSuite.children.get('namespace:Tests')).toBeUndefined();
             });
 
-            it('change updates tree without corrupting other testsuite', async () => {
+            it('update keeps the tree of the other testsuite intact', async () => {
                 const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
@@ -425,7 +425,7 @@ class NoNamespaceTest extends TestCase
                 ).toBeDefined();
             });
 
-            it('delete cleans up empty parents', async () => {
+            it('remove cleans up empty parents', async () => {
                 const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
@@ -449,7 +449,7 @@ class NoNamespaceTest extends TestCase
                 ).toBeDefined();
             });
 
-            it('full lifecycle: scrambled add → change → delete', async () => {
+            it('full lifecycle: scrambled add → update → remove', async () => {
                 const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
@@ -494,7 +494,7 @@ class NoNamespaceTest extends TestCase
             });
         });
 
-        it('delete folder removes all tests under that folder', async () => {
+        it('remove of a folder removes all tests under that folder', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
@@ -1681,7 +1681,7 @@ class NoDatasetTest extends TestCase
         });
     });
 
-    describe('resolveDatasetChild', () => {
+    describe('addDatasetChild', () => {
         const makeTestStarted = (id: string, name: string): TestStarted =>
             ({
                 event: TeamcityEvent.testStarted,
@@ -1751,6 +1751,7 @@ class NoDatasetTest extends TestCase
     describe('parent class outside the testsuite directories', () => {
         const writeProject = async (baseMethods: string[]) => {
             const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            onTestFinished(() => rm(root, { recursive: true, force: true }));
             await mkdir(join(root, 'tests/Support'), { recursive: true });
             await mkdir(join(root, 'tests/Unit'), { recursive: true });
             await writeFile(
@@ -1811,13 +1812,13 @@ class ChildTest extends BaseCase
                     .filter((id) => id.startsWith('Child (Tests\\Unit\\Child)::'))
                     .sort(),
             ).toEqual(['Child (Tests\\Unit\\Child)::A', 'Child (Tests\\Unit\\Child)::B']);
-            await rm(root, { recursive: true, force: true });
         });
     });
 
     describe('ancestors indexed after the class', () => {
         const indexInOrder = async (files: Record<string, string>, order: string[]) => {
             const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            onTestFinished(() => rm(root, { recursive: true, force: true }));
             await mkdir(join(root, 'tests'), { recursive: true });
             for (const [file, code] of Object.entries(files)) {
                 await writeFile(join(root, 'tests', file), code);
@@ -1833,7 +1834,6 @@ class ChildTest extends BaseCase
             for (const file of order) {
                 await testTree.add(URI.file(join(root, 'tests', file)));
             }
-            await rm(root, { recursive: true, force: true });
 
             const allIds = (items: import('vscode').TestItemCollection): string[] =>
                 [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
@@ -1920,6 +1920,7 @@ trait Inner
     describe('ancestors renamed or removed', () => {
         const writeProject = async (files: Record<string, string>) => {
             const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            onTestFinished(() => rm(root, { recursive: true, force: true }));
             await mkdir(join(root, 'tests'), { recursive: true });
             for (const [file, code] of Object.entries(files)) {
                 await writeFile(join(root, 'tests', file), code);
@@ -1979,7 +1980,6 @@ trait Renamed
             await testTree.update(uriOf('Shared.php'));
 
             expect(fooIds()).toEqual(['Foo (Tests\\Foo)::Own']);
-            await rm(root, { recursive: true, force: true });
         });
 
         it('drops the methods of a parent class whose file was deleted', async () => {
@@ -2006,7 +2006,6 @@ abstract class Base extends \\PHPUnit\\Framework\\TestCase
             await testTree.remove(uriOf('Base.php'));
 
             expect(fooIds()).toEqual(['Foo (Tests\\Foo)::Own']);
-            await rm(root, { recursive: true, force: true });
         });
 
         it('drops a class once its parent stops extending TestCase', async () => {
@@ -2042,13 +2041,13 @@ abstract class Base
             await testTree.update(uriOf('Base.php'));
 
             expect(fooIds()).toEqual([]);
-            await rm(root, { recursive: true, force: true });
         });
     });
 
     describe('classes known not to extend TestCase', () => {
         it('ignores classes whose resolved hierarchy does not reach TestCase', async () => {
             const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            onTestFinished(() => rm(root, { recursive: true, force: true }));
             await mkdir(join(root, 'tests/Unit'), { recursive: true });
             await writeFile(
                 join(root, 'tests/Unit/PlainHelperTest.php'),
@@ -2101,7 +2100,6 @@ class ExtendsPlainBaseTest extends PlainBase
             const allIds = (items: import('vscode').TestItemCollection): string[] =>
                 [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
             expect(allIds(ctrl.items).filter((id) => id.includes('Plain'))).toEqual([]);
-            await rm(root, { recursive: true, force: true });
         });
     });
 
@@ -2130,7 +2128,7 @@ class ExtendsPlainBaseTest extends PlainBase
             );
         });
 
-        it('findTestsByRequest should return matching items by id lookup', async () => {
+        it('itemsOf should return matching items by id lookup', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
@@ -2150,7 +2148,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(result?.[0].id).toBe('Assertions (Tests\\Assertions)::Passed');
         });
 
-        it('findTestsByRequest should return undefined for no match', async () => {
+        it('itemsOf should return undefined for no match', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
@@ -2166,7 +2164,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(testTree.itemsOf(request)).toBeUndefined();
         });
 
-        it('findTestsByRequest should return undefined when no request', () => {
+        it('itemsOf should return undefined when no request', () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
@@ -2197,7 +2195,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(testTree.groups()).toEqual(['integration']);
         });
 
-        it('group index should be empty after reset', async () => {
+        it('group index should be empty after clear', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
@@ -2212,7 +2210,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(testTree.groups()).toEqual([]);
         });
 
-        it('workspace folder definition should survive reset', async () => {
+        it('workspace folder definition should survive clear', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
@@ -2234,7 +2232,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(testTree.definitionOf(folderItem)?.type).toBe(TestType.workspace);
         });
 
-        it('delete should clean up index', async () => {
+        it('remove should clean up index', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
@@ -2255,7 +2253,7 @@ class ExtendsPlainBaseTest extends PlainBase
             expect(testTree.has(file)).toBeFalsy();
         });
 
-        it('change in multi-testsuite keeps index for both suites', async () => {
+        it('update in multi-testsuite keeps index for both suites', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
@@ -2305,7 +2303,7 @@ class ExtendsPlainBaseTest extends PlainBase
             }
         });
 
-        it('reset should clear testsuite and namespace nodes from tree (#390)', async () => {
+        it('clear should remove testsuite and namespace nodes from tree (#390)', async () => {
             const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">

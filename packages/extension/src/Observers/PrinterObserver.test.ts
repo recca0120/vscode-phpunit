@@ -88,27 +88,27 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
                 expect(spy).toHaveBeenCalledWith(expect.stringMatching(/PHPUnit\s[\d.]+/));
             });
 
-            it('should trigger testRuntime', async () => {
-                if (semverLt(phpUnitVersion, '10.0.0')) {
-                    return;
-                }
+            it.skipIf(semverLt(phpUnitVersion, '10.0.0'))(
+                'should trigger testRuntime',
+                async () => {
+                    const testFile = phpUnitProject('tests/AssertionsTest.php');
+                    await run(testFile);
 
-                const testFile = phpUnitProject('tests/AssertionsTest.php');
-                await run(testFile);
+                    expect(spy).toHaveBeenCalledWith(
+                        expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/),
+                    );
+                },
+            );
 
-                expect(spy).toHaveBeenCalledWith(expect.stringMatching(/Runtime:\s+PHP\s[\d.]+/));
-            });
+            it.skipIf(semverLt(phpUnitVersion, '10.0.0'))(
+                'should trigger testConfiguration',
+                async () => {
+                    const testFile = phpUnitProject('tests/AssertionsTest.php');
+                    await run(testFile);
 
-            it('should trigger testConfiguration', async () => {
-                if (semverLt(phpUnitVersion, '10.0.0')) {
-                    return;
-                }
-
-                const testFile = phpUnitProject('tests/AssertionsTest.php');
-                await run(testFile);
-
-                expect(spy).toHaveBeenCalledWith(expect.stringMatching(/Configuration:.+/));
-            });
+                    expect(spy).toHaveBeenCalledWith(expect.stringMatching(/Configuration:.+/));
+                },
+            );
 
             it('should trigger testFinished', async () => {
                 const testFile = phpUnitProject('tests/AssertionsTest.php');
@@ -149,31 +149,29 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
                 expect(spy).toHaveBeenCalledWith(expect.stringContaining('S'));
             });
 
-            it('should trigger testResultSummary', async () => {
-                if (semverLt(phpUnitVersion, '10.0.0')) {
-                    return;
-                }
+            it.skipIf(semverLt(phpUnitVersion, '10.0.0'))(
+                'should trigger testResultSummary',
+                async () => {
+                    const testFile = phpUnitProject('tests/AssertionsTest.php');
+                    await run(testFile);
 
-                const testFile = phpUnitProject('tests/AssertionsTest.php');
-                await run(testFile);
+                    expect(spy).toHaveBeenCalledWith(
+                        expect.stringMatching(/Tests: \d+, Assertions: \d+/),
+                    );
+                },
+            );
 
-                expect(spy).toHaveBeenCalledWith(
-                    expect.stringMatching(/Tests: \d+, Assertions: \d+/),
-                );
-            });
+            it.skipIf(semverLt(phpUnitVersion, '10.0.0'))(
+                'should trigger testDuration',
+                async () => {
+                    const testFile = phpUnitProject('tests/AssertionsTest.php');
+                    await run(testFile);
 
-            it('should trigger testDuration', async () => {
-                if (semverLt(phpUnitVersion, '10.0.0')) {
-                    return;
-                }
-
-                const testFile = phpUnitProject('tests/AssertionsTest.php');
-                await run(testFile);
-
-                expect(spy).toHaveBeenCalledWith(
-                    expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/),
-                );
-            });
+                    expect(spy).toHaveBeenCalledWith(
+                        expect.stringMatching(/Time: [\d:.]+(\s\w+)?, Memory: [\d.]+\s\w+/),
+                    );
+                },
+            );
 
             it('should trigger error', async () => {
                 const testFile = phpUnitProject('tests/NotFound.php');

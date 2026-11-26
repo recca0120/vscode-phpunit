@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PHPUnitXML } from '@vscode-phpunit/phpunit';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import type { Configuration } from '../Configuration';
@@ -110,6 +110,7 @@ describe('TestFileDiscovery.discoverTestFiles', () => {
 describe('TestFileDiscovery.getWorkspaceTestPattern', () => {
     it('covers every php file of a testsuite directory regardless of its suffix', async () => {
         const projectRoot = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+        onTestFinished(() => rm(projectRoot, { recursive: true, force: true }));
         const configFile = join(projectRoot, 'phpunit.xml');
         await writeFile(
             configFile,
@@ -139,6 +140,5 @@ describe('TestFileDiscovery.getWorkspaceTestPattern', () => {
             base: join(projectRoot, 'tests'),
             pattern: '{**/*.php}',
         });
-        await rm(projectRoot, { recursive: true, force: true });
     });
 });

@@ -1079,20 +1079,15 @@ describe('Extension Test', () => {
         });
     });
 
-    describe('Multi-Workspace (PHPUnit + Pest)', () => {
-        const phpUnitStubs = detectPhpUnitStubs();
-        const pestStubs = detectPestStubs();
+    const multiWorkspaceStubs = { phpUnit: detectPhpUnitStubs(), pest: detectPestStubs() };
 
-        const skipIfMissing = () => {
-            if (phpUnitStubs.length === 0 || pestStubs.length === 0) {
-                return true;
-            }
-            return false;
-        };
+    describe('Multi-Workspace (PHPUnit + Pest)', {
+        skip: multiWorkspaceStubs.phpUnit.length === 0 || multiWorkspaceStubs.pest.length === 0,
+    }, () => {
+        const phpUnitStubs = multiWorkspaceStubs.phpUnit;
+        const pestStubs = multiWorkspaceStubs.pest;
 
         beforeEach(async () => {
-            if (skipIfMissing()) return;
-
             const phpUnit = phpUnitStubs[0];
             const pest = pestStubs[0];
 
@@ -1128,8 +1123,6 @@ describe('Extension Test', () => {
         afterEach(() => vi.clearAllMocks());
 
         it('should load test items from both workspaces', async () => {
-            if (skipIfMissing()) return;
-
             await activate(context);
             const ctrl = getTestController();
 
@@ -1146,7 +1139,7 @@ describe('Extension Test', () => {
             expect(pestFolder).toBeDefined();
             expect(pestFolder?.label).toBe(`${icon(TestType.workspace)} pest-stub`);
 
-            if (!phpUnitFolder || !pestFolder) return;
+            if (!phpUnitFolder || !pestFolder) throw new Error('folder item not found');
 
             const phpUnitItem = findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)');
             expect(phpUnitItem).toBeDefined();
@@ -1164,8 +1157,6 @@ describe('Extension Test', () => {
         });
 
         it('should run phpunit test with phpunit-stub cwd', async () => {
-            if (skipIfMissing()) return;
-
             const phpUnit = phpUnitStubs[0];
 
             await activate(context);
@@ -1175,7 +1166,7 @@ describe('Extension Test', () => {
                 ctrl.items,
                 `folder:${Uri.file(phpUnit.root).toString()}`,
             );
-            if (!phpUnitFolder) return;
+            if (!phpUnitFolder) throw new Error('phpUnitFolder item not found');
             const testItem = findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)');
             expect(testItem).toBeDefined();
 
@@ -1191,17 +1182,15 @@ describe('Extension Test', () => {
         });
 
         it('should run pest test with pest-stub cwd', async () => {
-            if (skipIfMissing()) return;
-
             const pest = pestStubs[0];
 
             await activate(context);
             const ctrl = getTestController();
             const testRunProfile = getTestRunProfile(ctrl);
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
-            if (!pestFolder) return;
+            if (!pestFolder) throw new Error('pestFolder item not found');
             const pestUnitSuite = findTest(pestFolder.children, 'testsuite:Unit');
-            if (!pestUnitSuite) return;
+            if (!pestUnitSuite) throw new Error('pestUnitSuite item not found');
             const testItem = findTest(
                 pestUnitSuite.children,
                 'tests/Unit/ExampleTest.php::test_description',
@@ -1220,8 +1209,6 @@ describe('Extension Test', () => {
         });
 
         it('should rerun tests of every folder in the previous run', async () => {
-            if (skipIfMissing()) return;
-
             const phpUnit = phpUnitStubs[0];
             const pest = pestStubs[0];
 
@@ -1233,7 +1220,7 @@ describe('Extension Test', () => {
                 `folder:${Uri.file(phpUnit.root).toString()}`,
             );
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
-            if (!phpUnitFolder || !pestFolder) return;
+            if (!phpUnitFolder || !pestFolder) throw new Error('folder item not found');
             const include = [
                 findTest(phpUnitFolder.children, 'Assertions (Tests\\Assertions)'),
                 findTest(pestFolder.children, 'testsuite:Unit'),
@@ -1248,15 +1235,13 @@ describe('Extension Test', () => {
         });
 
         it('should run pest testsuite with --testsuite flag', async () => {
-            if (skipIfMissing()) return;
-
             const pest = pestStubs[0];
 
             await activate(context);
             const ctrl = getTestController();
             const testRunProfile = getTestRunProfile(ctrl);
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
-            if (!pestFolder) return;
+            if (!pestFolder) throw new Error('pestFolder item not found');
             const testItem = findTest(pestFolder.children, 'testsuite:Unit');
             expect(testItem).toBeDefined();
 
@@ -1272,8 +1257,6 @@ describe('Extension Test', () => {
         });
 
         it('should run all tests when clicking phpunit folder item', async () => {
-            if (skipIfMissing()) return;
-
             const phpUnit = phpUnitStubs[0];
 
             await activate(context);
@@ -1284,7 +1267,7 @@ describe('Extension Test', () => {
                 `folder:${Uri.file(phpUnit.root).toString()}`,
             );
             expect(phpUnitFolder).toBeDefined();
-            if (!phpUnitFolder) return;
+            if (!phpUnitFolder) throw new Error('phpUnitFolder item not found');
 
             cwd = phpUnit.root;
             const request = {
@@ -1299,8 +1282,6 @@ describe('Extension Test', () => {
         });
 
         it('should run all tests when clicking pest folder item', async () => {
-            if (skipIfMissing()) return;
-
             const pest = pestStubs[0];
 
             await activate(context);
@@ -1308,7 +1289,7 @@ describe('Extension Test', () => {
             const testRunProfile = getTestRunProfile(ctrl);
             const pestFolder = findTest(ctrl.items, `folder:${Uri.file(pest.root).toString()}`);
             expect(pestFolder).toBeDefined();
-            if (!pestFolder) return;
+            if (!pestFolder) throw new Error('pestFolder item not found');
 
             cwd = pest.root;
             const request = {
@@ -1323,13 +1304,16 @@ describe('Extension Test', () => {
         });
     });
 
-    describe('WorkspaceFolderManager lifecycle', () => {
-        const phpUnitStubs = detectPhpUnitStubs();
+    const lifecycleStubs = { phpUnit: detectPhpUnitStubs(), pest: detectPestStubs() };
+
+    describe('WorkspaceFolderManager lifecycle', {
+        skip: lifecycleStubs.phpUnit.length === 0,
+    }, () => {
+        const phpUnitStubs = lifecycleStubs.phpUnit;
 
         const getStub = () => phpUnitStubs[0];
 
         beforeEach(async () => {
-            if (phpUnitStubs.length === 0) return;
             const { root, binary, args } = getStub();
             await setupEnvironment(root, binary, args);
         });
@@ -1353,8 +1337,6 @@ describe('Extension Test', () => {
         };
 
         it('dispose() should clear ctrl.items', async () => {
-            if (phpUnitStubs.length === 0) return;
-
             await activate(context);
             const ctrl = getTestController();
             await ctrl.resolveHandler();
@@ -1369,8 +1351,6 @@ describe('Extension Test', () => {
         });
 
         it('resolveHandler called twice should dispose first watchers', async () => {
-            if (phpUnitStubs.length === 0) return;
-
             await activate(context);
             const ctrl = getTestController();
 
@@ -1387,70 +1367,68 @@ describe('Extension Test', () => {
             }
         });
 
-        it('folder change events should be serialized', async () => {
-            if (phpUnitStubs.length === 0) return;
+        it.skipIf(lifecycleStubs.pest.length === 0)(
+            'folder change events should be serialized',
+            async () => {
+                const pestStubs = lifecycleStubs.pest;
 
-            const pestStubs = detectPestStubs();
-            if (pestStubs.length === 0) return;
+                const phpUnit = getStub();
+                const pest = pestStubs[0];
 
-            const phpUnit = getStub();
-            const pest = pestStubs[0];
+                const phpUnitFolder: WorkspaceFolder = {
+                    index: 0,
+                    name: 'phpunit-stub',
+                    uri: Uri.file(phpUnit.root),
+                };
 
-            const phpUnitFolder: WorkspaceFolder = {
-                index: 0,
-                name: 'phpunit-stub',
-                uri: Uri.file(phpUnit.root),
-            };
+                setWorkspaceFolders([phpUnitFolder]);
+                await activate(context);
 
-            setWorkspaceFolders([phpUnitFolder]);
-            await activate(context);
+                const pestFolder: WorkspaceFolder = {
+                    index: 1,
+                    name: 'pest-stub',
+                    uri: Uri.file(pest.root),
+                };
+                const pestConfig = workspace.getConfiguration('phpunit', pestFolder.uri);
+                await pestConfig.update('php', 'php');
+                await pestConfig.update('phpunit', pest.binary);
+                await pestConfig.update('args', pest.args);
 
-            const pestFolder: WorkspaceFolder = {
-                index: 1,
-                name: 'pest-stub',
-                uri: Uri.file(pest.root),
-            };
-            const pestConfig = workspace.getConfiguration('phpunit', pestFolder.uri);
-            await pestConfig.update('php', 'php');
-            await pestConfig.update('phpunit', pest.binary);
-            await pestConfig.update('args', pest.args);
+                const onFolderChange = workspace.onDidChangeWorkspaceFolders as Mock;
+                const listenerCall = onFolderChange.mock.calls.find(
+                    (call: unknown[]) => typeof call[0] === 'function',
+                );
+                expect(listenerCall).toBeDefined();
+                const listener = listenerCall?.[0];
 
-            const onFolderChange = workspace.onDidChangeWorkspaceFolders as Mock;
-            const listenerCall = onFolderChange.mock.calls.find(
-                (call: unknown[]) => typeof call[0] === 'function',
-            );
-            expect(listenerCall).toBeDefined();
-            const listener = listenerCall?.[0];
+                (
+                    workspace.findFiles as unknown as {
+                        _maxConcurrent: number;
+                        _concurrentCount: number;
+                    }
+                )._maxConcurrent = 0;
+                (
+                    workspace.findFiles as unknown as {
+                        _maxConcurrent: number;
+                        _concurrentCount: number;
+                    }
+                )._concurrentCount = 0;
 
-            (
-                workspace.findFiles as unknown as {
-                    _maxConcurrent: number;
-                    _concurrentCount: number;
-                }
-            )._maxConcurrent = 0;
-            (
-                workspace.findFiles as unknown as {
-                    _maxConcurrent: number;
-                    _concurrentCount: number;
-                }
-            )._concurrentCount = 0;
+                setWorkspaceFolders([phpUnitFolder, pestFolder]);
+                listener({ added: [pestFolder], removed: [] });
 
-            setWorkspaceFolders([phpUnitFolder, pestFolder]);
-            listener({ added: [pestFolder], removed: [] });
+                setWorkspaceFolders([phpUnitFolder]);
+                listener({ added: [], removed: [pestFolder] });
 
-            setWorkspaceFolders([phpUnitFolder]);
-            listener({ added: [], removed: [pestFolder] });
+                await commands.executeCommand('phpunit.reload');
 
-            await commands.executeCommand('phpunit.reload');
+                expect(
+                    (workspace.findFiles as unknown as { _maxConcurrent: number })._maxConcurrent,
+                ).toBeLessThanOrEqual(2);
+            },
+        );
 
-            expect(
-                (workspace.findFiles as unknown as { _maxConcurrent: number })._maxConcurrent,
-            ).toBeLessThanOrEqual(2);
-        });
-
-        it('startWatching should not call discoverTestFiles', async () => {
-            if (phpUnitStubs.length === 0) return;
-
+        it('resolve creates file system watchers', async () => {
             await activate(context);
             const ctrl = getTestController();
 
@@ -1462,8 +1440,6 @@ describe('Extension Test', () => {
         });
 
         it('refresh (reload) should restore all items after completion', async () => {
-            if (phpUnitStubs.length === 0) return;
-
             await activate(context);
             const ctrl = getTestController();
             await ctrl.resolveHandler();
@@ -1477,8 +1453,6 @@ describe('Extension Test', () => {
         });
 
         it('concurrent resolveHandler calls should not leak watchers', async () => {
-            if (phpUnitStubs.length === 0) return;
-
             await activate(context);
             const ctrl = getTestController();
 
