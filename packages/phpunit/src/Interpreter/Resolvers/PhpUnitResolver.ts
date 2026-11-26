@@ -110,10 +110,12 @@ export class PhpUnitResolver implements Resolver {
             isTestMethod: isTest(method, metadata),
             dataProviderLabels:
                 (methodAnnotations.dataset as string[]) ??
-                ((methodAnnotations.dataProvider as string[]) ?? []).flatMap((name) => {
-                    const provider = allMethodNodes.find((m) => m.name === name);
-                    return provider ? resolveLabels(provider, classBody) : [];
-                }),
+                resolveLabels(
+                    ((methodAnnotations.dataProvider as string[]) ?? []).flatMap(
+                        (name) => allMethodNodes.find((m) => m.name === name) ?? [],
+                    ),
+                    classBody,
+                ),
         };
     }
 }

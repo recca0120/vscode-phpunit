@@ -1245,6 +1245,44 @@ class MultiAttrProviderTest extends TestCase
         );
     });
 
+    it('continues integer data set numbering across multiple providers', () => {
+        const file = phpUnitProject('tests/MultiProviderTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class MultiProviderTest extends TestCase
+{
+    /**
+     * @dataProvider providerA
+     * @dataProvider providerB
+     */
+    public function test_add(int $a, int $b, int $expected): void
+    {
+        $this->assertSame($expected, $a + $b);
+    }
+
+    public static function providerA(): array
+    {
+        return [[1, 1, 2]];
+    }
+
+    public static function providerB(): array
+    {
+        return [[2, 3, 5]];
+    }
+}`;
+        expect(givenTest(file, content, 'test_add')).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['providerA', 'providerB'],
+                    dataset: ['data set #0', 'data set #1'],
+                },
+            }),
+        );
+    });
+
     it('provider with an unresolvable key has no static labels', () => {
         const file = phpUnitProject('tests/UnresolvableKeyTest.php');
         const content = `<?php
