@@ -275,61 +275,60 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
 
     for (const child of bodyNode.namedChildren) {
         if (!child) continue;
-        if (child.type === 'return_statement') {
-            const valNode = child.namedChildren[0];
-            statements.push({
-                kind: 'return_statement',
-                value: valNode ? adaptExpression(valNode) : undefined,
-                loc: locOf(child),
-            });
-            continue;
-        }
-        if (child.type === 'for_statement') {
-            statements.push(adaptForStatement(child));
-            continue;
-        }
-        if (child.type === 'foreach_statement') {
-            statements.push(adaptForeachStatement(child));
-            continue;
-        }
-        if (child.type === 'while_statement') {
-            statements.push(adaptWhileStatement(child));
-            continue;
-        }
-        if (child.type === 'if_statement') {
-            statements.push(adaptIfStatement(child));
-            continue;
-        }
-        if (child.type === 'break_statement') {
-            statements.push({ kind: 'break_statement', loc: locOf(child) });
-            continue;
-        }
-        if (child.type === 'continue_statement') {
-            statements.push({ kind: 'continue_statement', loc: locOf(child) });
-            continue;
-        }
-        if (child.type === 'expression_statement') {
-            const expr = child.namedChildren[0];
-            if (expr?.type === 'assignment_expression') {
-                statements.push(adaptAssignment(expr));
-                continue;
-            }
-            if (expr?.type === 'augmented_assignment_expression') {
-                statements.push(adaptAugmentedAssignment(expr));
-                continue;
-            }
-            if (expr?.type === 'update_expression') {
-                statements.push(adaptUpdateExpression(expr));
-                continue;
-            }
-        }
-        const yieldNode = tryAdaptYieldFromStatement(child);
-        if (yieldNode) {
-            statements.push(yieldNode);
+        const statement =
+            child.type === 'return_statement'
+                ? adaptReturnStatement(child)
+                : adaptBodyStatement(child);
+        if (statement) {
+            statements.push(statement);
         }
     }
 
     return statements;
+}
+
+function adaptReturnStatement(node: SyntaxNode): AstNode {
+    const valNode = node.namedChildren[0];
+    return {
+        kind: 'return_statement',
+        value: valNode ? adaptExpression(valNode) : undefined,
+        loc: locOf(node),
+    };
+}
+
+function adaptBodyStatement(node: SyntaxNode): AstNode | null {
+    switch (node.type) {
+        case 'for_statement':
+            return adaptForStatement(node);
+        case 'foreach_statement':
+            return adaptForeachStatement(node);
+        case 'while_statement':
+            return adaptWhileStatement(node);
+        case 'if_statement':
+            return adaptIfStatement(node);
+        case 'break_statement':
+            return { kind: 'break_statement', loc: locOf(node) };
+        case 'continue_statement':
+            return { kind: 'continue_statement', loc: locOf(node) };
+        case 'expression_statement':
+            return adaptBodyExpressionStatement(node);
+        default:
+            return null;
+    }
+}
+
+function adaptBodyExpressionStatement(node: SyntaxNode): AstNode | null {
+    const expr = node.namedChildren[0];
+    if (expr?.type === 'assignment_expression') {
+        return adaptAssignment(expr);
+    }
+    if (expr?.type === 'augmented_assignment_expression') {
+        return adaptAugmentedAssignment(expr);
+    }
+    if (expr?.type === 'update_expression') {
+        return adaptUpdateExpression(expr);
+    }
+    return tryAdaptYieldFromStatement(node);
 }
 
 function adaptForStatement(node: SyntaxNode): AstNode {
@@ -397,6 +396,7 @@ function parseForUpdate(node: SyntaxNode): { variable: string; operator: string 
 function adaptForeachStatement(node: SyntaxNode): AstNode {
     let source: AstNode = EMPTY_STRING_NODE;
     let valueVariable = '';
+    let keyVariable: string | undefined;
     let foundAs = false;
 
     for (const child of node.children) {
@@ -407,6 +407,10 @@ function adaptForeachStatement(node: SyntaxNode): AstNode {
             foundAs = true;
         } else if (foundAs && child.type === 'variable_name') {
             valueVariable = child.text.replace(/^\$/, '');
+        } else if (foundAs && child.type === 'pair') {
+            const [keyNode, valueNode] = child.namedChildren;
+            keyVariable = keyNode?.text.replace(/^\$/, '');
+            valueVariable = valueNode?.text.replace(/^\$/, '') ?? '';
         }
     }
 
@@ -416,6 +420,7 @@ function adaptForeachStatement(node: SyntaxNode): AstNode {
         kind: 'foreach_statement',
         source,
         valueVariable,
+        keyVariable,
         body: bodyNode ? adaptMethodBody(bodyNode) : [],
         loc: locOf(node),
     };
@@ -896,12 +901,7 @@ function adaptBlock(node: SyntaxNode): AstNode {
 
     for (const child of node.namedChildren) {
         if (!child) continue;
-        const yieldNode = tryAdaptYieldFromStatement(child);
-        if (yieldNode) {
-            children.push(yieldNode);
-            continue;
-        }
-        const adapted = adaptTopLevelNode(child);
+        const adapted = adaptBodyStatement(child) ?? adaptTopLevelNode(child);
         if (adapted) {
             children.push(adapted);
         }

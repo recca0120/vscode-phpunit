@@ -314,57 +314,55 @@ function adaptMethodBody(body: RawNode): AstNode[] {
 
     for (const child of body.children ?? []) {
         if (!child) continue;
-        if (child.kind === 'return') {
-            const value = child.expr ? adaptNode(child.expr) : undefined;
-            statements.push({
-                kind: 'return_statement',
-                value,
-                loc: convertLoc(child.loc),
-            } as AstNode);
-            continue;
-        }
-        if (child.kind === 'for') {
-            statements.push(adaptForStatement(child));
-            continue;
-        }
-        if (child.kind === 'foreach') {
-            statements.push(adaptForeachStatement(child));
-            continue;
-        }
-        if (child.kind === 'while') {
-            statements.push(adaptWhileStatement(child));
-            continue;
-        }
-        if (child.kind === 'if') {
-            statements.push(adaptIfStatement(child));
-            continue;
-        }
-        if (child.kind === 'break') {
-            statements.push({ kind: 'break_statement', loc: convertLoc(child.loc) } as AstNode);
-            continue;
-        }
-        if (child.kind === 'continue') {
-            statements.push({ kind: 'continue_statement', loc: convertLoc(child.loc) } as AstNode);
-            continue;
-        }
-        if (child.kind === 'expressionstatement' && child.expression?.kind === 'assign') {
-            statements.push(adaptAssignment(child.expression));
-            continue;
-        }
-        if (
-            child.kind === 'expressionstatement' &&
-            (child.expression?.kind === 'post' || child.expression?.kind === 'pre')
-        ) {
-            statements.push(adaptUpdateExpression(child.expression));
-            continue;
-        }
-        const yieldNode = tryAdaptYieldFromExpressionStatement(child);
-        if (yieldNode) {
-            statements.push(yieldNode);
+        const statement =
+            child.kind === 'return' ? adaptReturnStatement(child) : adaptBodyStatement(child);
+        if (statement) {
+            statements.push(statement);
         }
     }
 
     return statements;
+}
+
+function adaptReturnStatement(raw: RawNode): AstNode {
+    const value = raw.expr ? adaptNode(raw.expr) : undefined;
+    return {
+        kind: 'return_statement',
+        value,
+        loc: convertLoc(raw.loc),
+    } as AstNode;
+}
+
+function adaptBodyStatement(raw: RawNode): AstNode | null {
+    switch (raw.kind) {
+        case 'for':
+            return adaptForStatement(raw);
+        case 'foreach':
+            return adaptForeachStatement(raw);
+        case 'while':
+            return adaptWhileStatement(raw);
+        case 'if':
+            return adaptIfStatement(raw);
+        case 'break':
+            return { kind: 'break_statement', loc: convertLoc(raw.loc) } as AstNode;
+        case 'continue':
+            return { kind: 'continue_statement', loc: convertLoc(raw.loc) } as AstNode;
+        case 'expressionstatement':
+            return adaptBodyExpressionStatement(raw);
+        default:
+            return null;
+    }
+}
+
+function adaptBodyExpressionStatement(raw: RawNode): AstNode | null {
+    const kind = raw.expression?.kind;
+    if (kind === 'assign') {
+        return adaptAssignment(raw.expression);
+    }
+    if (kind === 'post' || kind === 'pre') {
+        return adaptUpdateExpression(raw.expression);
+    }
+    return tryAdaptYieldFromExpressionStatement(raw);
 }
 
 function adaptStatementBody(raw: RawNode): AstNode[] {
@@ -421,6 +419,7 @@ function adaptForeachStatement(raw: RawNode): AstNode {
         kind: 'foreach_statement',
         source: adaptNode(raw.source) ?? EMPTY_STRING_NODE,
         valueVariable: extractName(raw.value?.name ?? raw.value),
+        keyVariable: raw.key ? extractName(raw.key.name ?? raw.key) : undefined,
         body: adaptStatementBody(raw),
         loc: convertLoc(raw.loc),
     };
@@ -634,16 +633,26 @@ function adaptNamedArgument(raw: RawNode): AstNode {
 
 function adaptClosure(raw: RawNode): AstNode {
     const body = raw.body;
-    const fallback: AstNode = {
-        kind: 'compound_statement',
-        children: [],
-        loc: convertLoc(raw.loc),
-    };
     return {
         kind: 'anonymous_function',
-        body: body ? (adaptNode(body) ?? fallback) : fallback,
+        body: {
+            kind: 'compound_statement',
+            children: body ? adaptClosureBody(body) : [],
+            loc: convertLoc(body?.loc ?? raw.loc),
+        },
         loc: convertLoc(raw.loc),
     };
+}
+
+function adaptClosureBody(body: RawNode): AstNode[] {
+    const statements: AstNode[] = [];
+    for (const child of body.children ?? []) {
+        const statement = adaptBodyStatement(child) ?? adaptNode(child);
+        if (statement) {
+            statements.push(statement);
+        }
+    }
+    return statements;
 }
 
 function adaptArrowFunc(raw: RawNode): AstNode {

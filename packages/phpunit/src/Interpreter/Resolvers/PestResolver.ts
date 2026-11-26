@@ -244,8 +244,8 @@ function detectsBrowserTest(closureBody: AstNode): boolean {
         return expressionHasVisitCall(closureBody);
     }
 
-    return closureBody.children.some(
-        (stmt) => stmt.kind === 'expression_statement' && expressionHasVisitCall(stmt.expression),
+    return closureBody.children.some((stmt) =>
+        expressionHasVisitCall(stmt.kind === 'expression_statement' ? stmt.expression : stmt),
     );
 }
 
@@ -300,7 +300,25 @@ function resolveDatasets(sources: AstNode[]): string[] {
 
 function evaluateAsMap(node: AstNode): Map<string, unknown> | undefined {
     const resolved = evaluate(node);
-    return resolved instanceof Map ? resolved : undefined;
+    if (resolved instanceof Map) {
+        return resolved;
+    }
+    if (!Array.isArray(resolved)) {
+        return undefined;
+    }
+    return labelsToMap(resolved);
+}
+
+function labelsToMap(labels: unknown[]): Map<string, unknown> | undefined {
+    const map = new Map<string, unknown>();
+    for (const label of labels) {
+        const key = typeof label === 'string' ? datasetExpander.keyOf(label) : undefined;
+        if (key === undefined) {
+            return undefined;
+        }
+        map.set(key, undefined);
+    }
+    return map;
 }
 
 function resolvePestLabels(node: AstNode): string[] {

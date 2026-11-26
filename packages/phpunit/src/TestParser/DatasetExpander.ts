@@ -12,6 +12,11 @@ class DatasetExpander {
         return `data set #${index}`;
     }
 
+    keyOf(label: string): string | undefined {
+        const match = label.match(/^data set (?:"(?<named>.*)"|#(?<index>\d+))$/);
+        return match?.groups?.named ?? match?.groups?.index;
+    }
+
     fromAnnotations(parent: TestDefinition, labels: string[]): TestDefinition[] {
         return labels.map((label) => this.create(parent, label));
     }
