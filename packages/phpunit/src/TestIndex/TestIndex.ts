@@ -221,8 +221,9 @@ export class TestIndex {
 
     private async reparseDependents(uri: URI): Promise<ChangeResult['parsed']> {
         const parsed: ChangeResult['parsed'] = [];
-        for (const child of this.getDependentClasses(uri.fsPath)) {
-            const entry = await this.reparseFile(URI.file(child.uri));
+        const files = new Set(this.getDependentClasses(uri.fsPath).map((child) => child.uri));
+        for (const file of files) {
+            const entry = await this.reparseFile(URI.file(file));
             if (entry) {
                 parsed.push(entry);
             }
@@ -232,13 +233,22 @@ export class TestIndex {
     }
 
     private getDependentClasses(fsPath: string) {
-        return this.classHierarchy
-            .getClassesByUri(fsPath)
-            .flatMap((classInfo) => [
+        const dependents = new Map<string, ClassInfo>();
+        const pending = this.classHierarchy.getClassesByUri(fsPath);
+        for (let classInfo = pending.shift(); classInfo; classInfo = pending.shift()) {
+            for (const dependent of [
                 ...this.classHierarchy.getChildClasses(classInfo.classFQN),
                 ...this.classHierarchy.getTraitUsers(classInfo.classFQN),
-            ])
-            .filter((child) => child.uri !== fsPath);
+            ]) {
+                if (dependents.has(dependent.classFQN)) {
+                    continue;
+                }
+                dependents.set(dependent.classFQN, dependent);
+                pending.push(dependent);
+            }
+        }
+
+        return [...dependents.values()].filter((dependent) => dependent.uri !== fsPath);
     }
 
     private async reparseFile(
