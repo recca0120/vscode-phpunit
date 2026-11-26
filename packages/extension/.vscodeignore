@@ -22,7 +22,7 @@ vscode.d.ts
 
 # Dependencies
 node_modules/**
-__mocks__/**
+fakes/**
 
 # Docs & meta
 .gitignore

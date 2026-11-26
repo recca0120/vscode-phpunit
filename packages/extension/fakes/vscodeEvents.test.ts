@@ -78,6 +78,17 @@ describe('vscode events', () => {
         expect(finished).toBe(true);
     });
 
+    it('notifies onDidChangeConfiguration listeners when a setting is updated', async () => {
+        const affected: boolean[] = [];
+        workspace.onDidChangeConfiguration((event) => {
+            affected.push(event.affectsConfiguration('phpunit'), event.affectsConfiguration('php'));
+        });
+
+        await workspace.getConfiguration('phpunit', Uri.file('/project')).update('args', ['-v']);
+
+        expect(affected).toEqual([true, false]);
+    });
+
     it('does not notify listeners registered before mocks were cleared', async () => {
         const stale = vi.fn();
         workspace.onDidOpenTextDocument(stale);

@@ -7,5 +7,5 @@
         "types": ["node", "mocha"]
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "vscode.d.ts", "vscode.proposed.*.d.ts"],
-    "exclude": ["**/__mocks__/*", "src/**/*.test.ts", "src/testing/**"]
+    "exclude": ["src/**/*.test.ts"]
 }
