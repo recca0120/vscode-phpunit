@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
 import { Configuration, PathReplacer } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
-import { TeamcityEvent, type TestFailed } from '../TestOutput';
+import { CoverageFiles } from '../TestCoverage';
+import { TeamcityEvent, type TestFailed, toLocalResult } from '../TestOutput';
 import { TestCommand } from './TestCommand';
 import { Mode, Xdebug } from './Xdebug';
 
@@ -19,16 +20,16 @@ describe('TestCommand', () => {
             return new TestCommand(config, options, pathReplacer);
         };
 
-        it('getPathReplacer returns PathReplacer instance', () => {
+        it('paths returns PathReplacer instance', () => {
             const command = givenCommand({ phpunit: 'vendor/bin/phpunit' });
 
-            expect(command.getPathReplacer()).toBeInstanceOf(PathReplacer);
+            expect(command.paths).toBeInstanceOf(PathReplacer);
         });
 
         it('run paratest with --functional and --filter', () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
@@ -49,7 +50,7 @@ describe('TestCommand', () => {
                     phpunit: phpUnitProjectWin('vendor/bin/phpunit'),
                 },
                 cwd,
-            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            ).withArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
@@ -65,7 +66,7 @@ describe('TestCommand', () => {
         it('should keep repeated --group arguments (#432)', () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
-            }).setArguments('--group=command --group=use-db tests/DbCommandTest.php');
+            }).withArguments('--group=command --group=use-db tests/DbCommandTest.php');
 
             const { args } = command.build();
             expect(args).toEqual([
@@ -82,7 +83,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--stop-on-failure'],
-            }).setArguments('/a/FooTest.php');
+            }).withArguments('/a/FooTest.php');
 
             const { args } = command.build();
             expect(args).toEqual([
@@ -98,7 +99,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/phpunit',
                 args: ['--group=my group'],
-            }).setArguments('/a/FooTest.php');
+            }).withArguments('/a/FooTest.php');
 
             const { args } = command.build();
             expect(args).toEqual([
@@ -182,7 +183,7 @@ describe('TestCommand', () => {
                     phpunit: 'vendor/bin/pest',
                 },
                 cwd,
-            ).setArguments(`${testFile} --filter="${filter}"`);
+            ).withArguments(`${testFile} --filter="${filter}"`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
@@ -231,7 +232,7 @@ describe('TestCommand', () => {
                     phpunit: 'vendor/bin/phpunit',
                 },
                 cwd,
-            ).setArguments(`"${testFile}"`);
+            ).withArguments(`"${testFile}"`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
@@ -251,7 +252,7 @@ describe('TestCommand', () => {
                     phpunit: 'vendor/bin/phpunit',
                 },
                 cwd,
-            ).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$' "${testFile}"`);
+            ).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$' "${testFile}"`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
@@ -284,7 +285,7 @@ describe('TestCommand', () => {
                     paths: { '/Users/me/app': '/var/www' },
                 },
                 '/Users/me/app',
-            ).setArguments(
+            ).withArguments(
                 '/Users/me/app/tests/FooTest.php /Users/me/application/tests/BarTest.php',
             );
 
@@ -302,20 +303,23 @@ describe('TestCommand', () => {
                 '/Users/me/app',
             );
 
-            const result = command.replacePath({
-                event: TeamcityEvent.testFailed,
-                name: 'test_a',
-                flowId: 1,
-                id: 'Tests\\FooTest::test_a',
-                file: '/var/www/tests/FooTest.php',
-                locationHint: 'php_qn:///var/www/tests/FooTest.php::\\Tests\\FooTest::test_a',
-                message: '',
-                details: [
-                    { file: '/var/www/tests/FooTest.php', line: 7 },
-                    { file: '/var/www-shared/src/Helper.php', line: 3 },
-                ],
-                duration: 0,
-            } as TestFailed);
+            const result = toLocalResult(
+                {
+                    event: TeamcityEvent.testFailed,
+                    name: 'test_a',
+                    flowId: 1,
+                    id: 'Tests\\FooTest::test_a',
+                    file: '/var/www/tests/FooTest.php',
+                    locationHint: 'php_qn:///var/www/tests/FooTest.php::\\Tests\\FooTest::test_a',
+                    message: '',
+                    details: [
+                        { file: '/var/www/tests/FooTest.php', line: 7 },
+                        { file: '/var/www-shared/src/Helper.php', line: 3 },
+                    ],
+                    duration: 0,
+                } as TestFailed,
+                command.paths,
+            );
 
             expect(result).toMatchObject({
                 file: '/Users/me/app/tests/FooTest.php',
@@ -354,7 +358,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 command: `docker run -i --rm -v ${VAR_PWD}:/app -w /app phpunit-stub`,
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -380,7 +384,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -434,7 +438,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 command: 'docker exec -t vscode-phpunit /bin/sh -c',
                 phpunit: 'vendor/bin/pest',
-            }).setArguments(`${filter} ${testFile}`);
+            }).withArguments(`${filter} ${testFile}`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -457,7 +461,7 @@ describe('TestCommand', () => {
                 paths: {
                     [VAR_WORKSPACE_FOLDER]: '/var/www',
                 },
-            }).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -486,7 +490,7 @@ describe('TestCommand', () => {
                     },
                 },
                 cwd,
-            ).setArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
+            ).withArguments(`${testFile} --filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -507,7 +511,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
                 phpunit: 'artisan test',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -536,7 +540,7 @@ describe('TestCommand', () => {
                     paths: { '/proj': '/app' },
                 },
                 '/proj',
-            ).setArguments('"/proj/tests/My Test.php"');
+            ).withArguments('"/proj/tests/My Test.php"');
 
             const { args } = command.build();
 
@@ -550,7 +554,7 @@ describe('TestCommand', () => {
                 command:
                     'ssh -i dockerfiles/vscode-phpunit/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no cd /app;',
                 phpunit: 'artisan test',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('ssh');
@@ -604,7 +608,7 @@ describe('TestCommand', () => {
         it(`command is ${CMD_TEMPLATE} --functional`, () => {
             const command = givenCommand({
                 phpunit: 'vendor/bin/paratest',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('php');
@@ -649,7 +653,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 command: `ssh -i dockerfiles/vscode-phpunit/id_rsa -p 2222 root@localhost -o StrictHostKeyChecking=no "cd /app; ${CMD_TEMPLATE}"`,
                 phpunit: 'artisan test',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('ssh');
@@ -678,7 +682,7 @@ describe('TestCommand', () => {
             const command = givenCommand({
                 command: `docker exec -t container_name /bin/sh -c '${CMD_TEMPLATE}'`,
                 phpunit: 'vendor/bin/phpunit',
-            }).setArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
 
             const { runtime, args } = command.build();
             expect(runtime).toEqual('docker');
@@ -699,7 +703,7 @@ describe('TestCommand', () => {
         });
     });
 
-    describe('assignCloverFile', () => {
+    describe('coverage clover', () => {
         it('should set clover file on xdebug when in coverage mode', async () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
@@ -707,9 +711,9 @@ describe('TestCommand', () => {
             const xdebug = await new Xdebug(config).setMode(Mode.coverage);
             const command = new TestCommand(config, options, pathReplacer, xdebug);
 
-            command.assignCloverFile(0);
+            const covered = command.withCoverageClover(new CoverageFiles(options.cwd).allocate(0));
 
-            expect(command.getCloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
+            expect(covered.getCloverFile()).toMatch(/\.phpunit\.cache[/\\]coverage-.*-0\.xml$/);
         });
 
         it('should return undefined when not in coverage mode', () => {
@@ -732,26 +736,26 @@ describe('TestCommand', () => {
         });
     });
 
-    describe('clone', () => {
-        it('should deep-copy Xdebug so cloned command has independent Xdebug', () => {
+    describe('withArguments', () => {
+        it('should deep-copy Xdebug so the new command has independent Xdebug', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
             const xdebug = new Xdebug(config);
             const command = new TestCommand(config, options, pathReplacer, xdebug);
 
-            const cloned = command.clone();
+            const cloned = command.withArguments('');
 
             expect(cloned.getXdebug()).not.toBe(command.getXdebug());
         });
 
-        it('should clone without Xdebug when none is set', () => {
+        it('should create the new command without Xdebug when none is set', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
             const pathReplacer = new PathReplacer(options, {});
             const command = new TestCommand(config, options, pathReplacer);
 
-            const cloned = command.clone();
+            const cloned = command.withArguments('');
 
             expect(cloned.getXdebug()).toBeUndefined();
         });
