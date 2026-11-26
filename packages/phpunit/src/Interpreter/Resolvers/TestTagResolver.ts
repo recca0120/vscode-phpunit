@@ -1,27 +1,20 @@
 import { datasetExpander } from '../../TestParser/DatasetExpander';
 import type { Annotations } from '../../types';
-import type { AstNode, MethodNode } from '../AstParser/AstNode';
+import type { MethodNode } from '../AstParser/AstNode';
+import { AnnotationParser } from '../Metadata/AnnotationParser';
+import type { Metadata } from '../Metadata/Metadata';
 import type { PHP } from '../PHP';
 import type { Annotatable, Resolver } from '../types';
 import { AttributeVisitor } from '../Visitors/AttributeVisitor';
-import { PhpDocVisitor } from '../Visitors/PhpDocVisitor';
 
-interface AnnotationTag {
-    name: string;
-    value: string;
-}
-
-const tagPattern = /@(\w+)(?:\s+([^\n]+))?/g;
 const tagNames = ['depends', 'dataProvider', 'testdox', 'group'];
-const tagLookup = new Map(tagNames.map((name) => [name.toLowerCase(), name]));
 const attrLookup = tagNames.map((name) => [name, name.toLowerCase()] as const);
 
 export class TestTagResolver implements Resolver {
-    private phpDoc!: PhpDocVisitor;
+    private readonly annotationParser = new AnnotationParser();
     private attribute!: AttributeVisitor;
 
     resolve(php: PHP): void {
-        this.phpDoc = php.getVisitor(PhpDocVisitor);
         this.attribute = php.getVisitor(AttributeVisitor);
     }
 
@@ -43,33 +36,32 @@ export class TestTagResolver implements Resolver {
         return this.isAnnotationTagTest(method) || this.isAttributeTest(method);
     }
 
-    private getTags(node: AstNode): AnnotationTag[] {
-        const tags: AnnotationTag[] = [];
-        for (const comment of this.phpDoc.getComments(node)) {
-            for (const match of comment.matchAll(tagPattern)) {
-                tags.push({
-                    name: match[1],
-                    value: (match[2] ?? '').replace(/\s*\*\/\s*$/, '').trim(),
-                });
-            }
-        }
-        return tags;
+    private annotationMetadata(node: Annotatable): Metadata[] {
+        return node.kind === 'method_declaration'
+            ? this.annotationParser.forMethod(node)
+            : this.annotationParser.forClass(node);
     }
 
     private parseTagAnnotations(node: Annotatable): Annotations {
         const annotations = {} as Annotations;
-        for (const tag of this.getTags(node)) {
-            const matched = tagLookup.get(tag.name.toLowerCase());
-            if (!matched) {
-                continue;
-            }
-            if (tag.value) {
-                annotations[matched] = [
-                    ...((annotations[matched] as unknown[] | undefined) ?? []),
-                    tag.value,
-                ];
+        const append = (key: string, value: string) => {
+            annotations[key] = [...((annotations[key] as string[] | undefined) ?? []), value];
+        };
+
+        for (const metadata of this.annotationMetadata(node)) {
+            if (metadata.kind === 'group') {
+                append('group', metadata.name);
+            } else if (metadata.kind === 'testDox') {
+                append('testdox', metadata.text);
+            } else if (metadata.kind === 'dataProvider' && !metadata.className) {
+                append('dataProvider', metadata.methodName);
+            } else if (metadata.kind === 'dependsOnMethod' && !metadata.className) {
+                append('depends', metadata.methodName);
+            } else if (metadata.kind === 'testWith') {
+                append('dataset', datasetExpander.indexed((annotations.dataset ?? []).length));
             }
         }
+
         return annotations;
     }
 
@@ -116,7 +108,7 @@ export class TestTagResolver implements Resolver {
     }
 
     private isAnnotationTagTest(method: MethodNode): boolean {
-        return this.getTags(method).some((tag) => tag.name === 'test');
+        return this.annotationParser.forMethod(method).some((metadata) => metadata.kind === 'test');
     }
 
     private isAttributeTest(method: MethodNode): boolean {
