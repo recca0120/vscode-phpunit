@@ -74,7 +74,6 @@ export class TestResultObserver implements TestRunnerObserver {
             result,
             (test) => {
                 if (result.failed > 0) {
-                    // No message of its own; failures already surfaced on the child tests.
                     this.testRun.failed(test, []);
                     return;
                 }
@@ -105,9 +104,6 @@ export class TestResultObserver implements TestRunnerObserver {
             new Range(new Position(line, 0), new Position(line, 0)),
         );
 
-        // Cross-file frames are kept (e.g. Pest arch() violations point at the
-        // offending source file, not the test file) — only the frame duplicating
-        // the primary location above is dropped.
         message.stackTrace = details
             .filter(
                 ({ file, line }) =>
@@ -150,13 +146,6 @@ export class TestResultObserver implements TestRunnerObserver {
         return this.testItemById.get(result.id);
     }
 
-    /**
-     * Pest runs only the ->only()-flagged tests in a file when the file is executed
-     * without a --filter; sibling tests in the same file never appear in the teamcity
-     * output and would otherwise stay "enqueued" forever, misleading the user into
-     * thinking they are still pending or were skipped by their own doing. Mark them
-     * skipped explicitly once the run finishes, with a message explaining why.
-     */
     private skipPestTestsShadowedByOnly(): void {
         const filesWithOnly = new Set(
             [...this.queue.keys()]

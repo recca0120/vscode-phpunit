@@ -533,7 +533,6 @@ describe('Printer error grouping', () => {
     afterEach(() => printer.close());
 
     it('groups errors and failures with headers and separator', () => {
-        // error (exception)
         printer.testFinished({
             event: TeamcityEvent.testFailed,
             name: 'test_throw',
@@ -545,7 +544,6 @@ describe('Printer error grouping', () => {
             details: [],
             duration: 0,
         });
-        // failure (assertion)
         printer.testFinished({
             event: TeamcityEvent.testFailed,
             name: 'test_fail',
@@ -656,8 +654,6 @@ describe('Printer error grouping', () => {
         });
 
         const output = printer.end() ?? '';
-        // error group: 1) App\Test::test_err
-        // failure group: 1) App\Test::test_fail  (index resets)
         const matches = output.match(/1\) App\\Test::/g);
         expect(matches).toHaveLength(2);
     });
@@ -813,8 +809,8 @@ describe('Printer PRESET_PROGRESS dot colors', () => {
             duration: 0,
         });
 
-        expect(output).toContain('\x1b[41m'); // bgRed
-        expect(output).toContain('\x1b[37m'); // white (fg)
+        expect(output).toContain('\x1b[41m');
+        expect(output).toContain('\x1b[37m');
         expect(output).toContain('F');
     });
 
@@ -831,8 +827,8 @@ describe('Printer PRESET_PROGRESS dot colors', () => {
             duration: 0,
         });
 
-        expect(output).toContain('\x1b[36m'); // cyan
-        expect(output).toContain('\x1b[1m'); // bold
+        expect(output).toContain('\x1b[36m');
+        expect(output).toContain('\x1b[1m');
         expect(output).toContain('S');
     });
 
@@ -849,8 +845,8 @@ describe('Printer PRESET_PROGRESS dot colors', () => {
             duration: 0,
         });
 
-        expect(output).toContain('\x1b[31m'); // red
-        expect(output).toContain('\x1b[1m'); // bold
+        expect(output).toContain('\x1b[31m');
+        expect(output).toContain('\x1b[1m');
         expect(output).toContain('E');
     });
 });

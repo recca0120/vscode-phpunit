@@ -26,8 +26,6 @@ import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
 
 export async function activate(context: ExtensionContext) {
-    // Initialize tree-sitter WASM (non-blocking, fallback to php-parser if it fails)
-    // At runtime, __dirname is the dist/ folder where WASM files are copied by esbuild
     initTreeSitter().catch(() => {
         // tree-sitter init failed; TestParser will use php-parser fallback
     });
@@ -37,28 +35,21 @@ export async function activate(context: ExtensionContext) {
     const parentContainer = createParentContainer(ctrl, outputChannel);
     const folderManager = parentContainer.get(WorkspaceFolderManager);
 
-    // Initialize folders, load config, apply roots, setup file change listeners
     await folderManager.initialize();
 
-    // Test controller handlers
     setupControllerHandlers(ctrl, folderManager, context);
 
-    // Add open documents and register document listeners
     await addOpenDocuments(folderManager);
     registerDocumentListeners(context, folderManager);
 
-    // Folder change listener
     context.subscriptions.push(folderManager.registerFolderChangeListener());
 
-    // Run profiles with multi-folder dispatch
     const dispatcher = parentContainer.get(TestRunDispatcher);
     const testRunProfile = createRunProfiles(ctrl, dispatcher);
 
-    // Commands
     const testCommandRegistry = new TestCommandRegistry(folderManager, testRunProfile);
     registerCommands(context, testCommandRegistry);
 
-    // Disposables
     registerDisposables(context, ctrl, outputChannel, folderManager);
 
     return {

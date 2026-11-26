@@ -70,14 +70,12 @@ export class TestFileDiscovery {
                 .filter((uri) => this.isInWorkspaceFolder(uri)),
         );
 
-        // Remove files that no longer exist
         for (const file of this.testCollection.gatherFiles()) {
             if (!newFiles.has(file.uri.toString())) {
                 this.testCollection.delete(file.uri);
             }
         }
 
-        // Add new files (already existing ones are skipped by add())
         await Promise.all([...newFiles].map((f) => this.testCollection.add(URI.parse(f))));
     }
 

@@ -17,16 +17,8 @@ function convertLoc(loc: RawNode): AstNodeLoc | undefined {
     };
 }
 
-// Whitespace, /* */ comments, and // comments, but not a #[ attribute group.
 const TRIVIA = /^(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n]*|#(?!\[)[^\n]*)*/;
 
-/**
- * php-parser (as of 3.7) includes leading #[Attr] groups — and any doc
- * comment between the attribute and the declaration — inside a
- * declaration's own loc, but tree-sitter starts at the declaration keyword.
- * Skip past the last attribute group and any trailing trivia (whitespace,
- * doc comments) so both parsers agree on where a class/method "starts".
- */
 function declarationLoc(raw: RawNode): RawNode {
     const groups = raw.attrGroups;
     const lastEnd = groups?.[groups.length - 1]?.loc?.end;
@@ -200,7 +192,6 @@ function adaptNamespace(raw: RawNode): AstNode {
 function adaptClass(raw: RawNode): AstNode {
     const body = adaptChildren(raw.body ?? []);
 
-    // Include const declarations
     for (const child of raw.body ?? []) {
         if (child?.kind === 'classconstant') {
             for (const constant of child.constants ?? []) {
@@ -321,7 +312,6 @@ function adaptForStatement(raw: RawNode): AstNode {
     let condition: { variable: string; operator: string; value: AstNode } | undefined;
     let update: { variable: string; operator: string } | undefined;
 
-    // init: [{ kind: 'assign', left: { kind: 'variable', name: 'i' }, right: { kind: 'number', value: 0 } }]
     if (raw.init?.[0]?.kind === 'assign') {
         const assign = raw.init[0];
         init = {
@@ -330,7 +320,6 @@ function adaptForStatement(raw: RawNode): AstNode {
         };
     }
 
-    // test: [{ kind: 'bin', type: '<', left: variable, right: number }]
     if (raw.test?.[0]) {
         const test = raw.test[0];
         condition = {
@@ -340,7 +329,6 @@ function adaptForStatement(raw: RawNode): AstNode {
         };
     }
 
-    // increment: [{ kind: 'post', type: '+', what: variable }]
     if (raw.increment?.[0]) {
         const inc = raw.increment[0];
         update = {
@@ -534,7 +522,6 @@ function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
         return { name: extractName(what) };
     }
 
-    // propertylookup: arch()->preset()->php()
     if (what.kind === 'propertylookup') {
         const methodName = what.offset ? extractName(what.offset) : '';
         const inner = what.what;
@@ -552,8 +539,6 @@ function resolveCallChain(what: RawNode): { name: string; chain?: CallNode } {
 }
 
 function adaptExpressionStatement(raw: RawNode): AstNode {
-    // Yield inside closure body must be promoted to top-level yield_expression,
-    // not wrapped in expression_statement (same as adaptMethodBody).
     const yieldNode = tryAdaptYieldFromExpressionStatement(raw);
     if (yieldNode) {
         return yieldNode;

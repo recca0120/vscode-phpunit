@@ -8,8 +8,6 @@ import {
     type TestTreeItem,
 } from './TestHierarchyBuilder';
 
-// --- Simple in-memory implementation for testing ---
-
 class SimpleItem implements TestTreeItem<SimpleItem> {
     id: string;
     label: string;
@@ -72,8 +70,6 @@ class SimpleBuilder extends TestHierarchyBuilder<SimpleItem> {
     }
 }
 
-// --- Helpers ---
-
 function collectIds(root: SimpleCollection): string[] {
     const ids: string[] = [];
     const walk = (col: SimpleCollection) => {
@@ -85,8 +81,6 @@ function collectIds(root: SimpleCollection): string[] {
     walk(root);
     return ids;
 }
-
-// --- Tests ---
 
 describe('TestHierarchyBuilder', () => {
     let rootItems: SimpleCollection;
@@ -124,7 +118,6 @@ describe('TestHierarchyBuilder', () => {
 
         build(tests);
 
-        // Should have 3 nested namespace items: App > Tests > Unit
         const app = rootItems.toArray()[0];
         expect(app).toBeDefined();
         expect(app.label).toContain('App');
@@ -137,7 +130,6 @@ describe('TestHierarchyBuilder', () => {
         expect(unit).toBeDefined();
         expect(unit.label).toContain('Unit');
 
-        // Class under Unit namespace
         const cls = (unit.children as SimpleCollection).toArray()[0];
         expect(cls).toBeDefined();
         expect(cls.label).toContain('ExampleTest');
@@ -185,11 +177,9 @@ describe('TestHierarchyBuilder', () => {
 
         build(tests);
 
-        // Only 1 "App" namespace item at root
         expect(rootItems.size).toBe(1);
         const app = rootItems.toArray()[0];
         const testsNs = (app.children as SimpleCollection).toArray()[0];
-        // 2 classes under "Tests"
         expect((testsNs.children as SimpleCollection).size).toBe(2);
     });
 
@@ -280,7 +270,6 @@ describe('TestHierarchyBuilder', () => {
 
         build(tests, phpUnitXML);
 
-        // Should have testsuite:Unit at root
         const suiteItem = rootItems.get('testsuite:Unit');
         expect(suiteItem).toBeDefined();
         expect(suiteItem?.label).toContain('Unit');
@@ -325,9 +314,7 @@ describe('TestHierarchyBuilder', () => {
 
         build(tests, phpUnitXML);
 
-        // No testsuite wrapper at root
         expect(rootItems.get('testsuite:Unit')).toBeUndefined();
-        // Namespace items directly at root
         expect(rootItems.size).toBeGreaterThan(0);
     });
 

@@ -34,7 +34,6 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
             expect(givenTest(file, content, 'Tests')).toEqual(
                 expect.objectContaining({
                     type: TestType.namespace,
-                    // file,
                     id: 'namespace:Tests',
                     classFQN: 'Tests',
                     namespace: 'Tests',
@@ -970,7 +969,6 @@ class OverrideTest extends AbstractTest {
             const overrideMethods = tests.filter(
                 (t) => t.className === 'OverrideTest' && t.methodName === 'test_override',
             );
-            // Should only appear once (own method, not duplicated from parent)
             expect(overrideMethods).toHaveLength(1);
             expect(overrideMethods[0].file).toBe(phpUnitProject('tests/OverrideTest.php'));
         });

@@ -6,13 +6,6 @@ import { defineConfig } from '@vscode/test-cli';
 const fixturesPath = resolve(import.meta.dirname, '../phpunit/tests/fixtures');
 const mochaOpts = { ui: 'tdd', timeout: 30_000 };
 
-// macOS caps AF_UNIX socket paths at 104 bytes; the default user-data-dir
-// (nested under the checkout path, e.g. .../vscode-phpunit/vscode-phpunit/
-// packages/extension/.vscode-test/user-data) can exceed that on CI runners
-// and crash VS Code with "listen EINVAL". Force a short, fixed path instead.
-// os.tmpdir() itself is too long on macOS (a per-process /var/folders/...
-// path), so prefer RUNNER_TEMP (short and job-scoped on GitHub Actions) or,
-// failing that, the short, stable /tmp.
 function userDataDirArgs(label) {
     const base = platform() === 'darwin' ? (process.env.RUNNER_TEMP ?? '/tmp') : tmpdir();
 
@@ -73,7 +66,6 @@ const pestStubs = detectPestStubs();
 
 const configs = [];
 
-// PHPUnit single-folder (newest available stub)
 if (phpUnitStubs.length > 0) {
     const stub = phpUnitStubs.at(-1);
     configs.push({
@@ -94,7 +86,6 @@ if (phpUnitStubs.length > 0) {
     });
 }
 
-// Pest single-folder (newest available stub)
 if (pestStubs.length > 0) {
     const stub = pestStubs.at(-1);
     configs.push({
@@ -115,7 +106,6 @@ if (pestStubs.length > 0) {
     });
 }
 
-// Multi-workspace test
 if (phpUnitStubs.length > 0 && pestStubs.length > 0) {
     const phpUnit = phpUnitStubs.at(-1);
     const pest = pestStubs.at(-1);
@@ -125,11 +115,7 @@ if (phpUnitStubs.length > 0 && pestStubs.length > 0) {
         label: 'multi-workspace',
         files: 'out/tests/suite-multi/**/*.test.js',
         mocha: mochaOpts,
-        launchArgs: [
-            workspacePath,
-            '--disable-extensions',
-            ...userDataDirArgs('multi-workspace'),
-        ],
+        launchArgs: [workspacePath, '--disable-extensions', ...userDataDirArgs('multi-workspace')],
         env: {
             PHPUNIT_STUB_VERSION: phpUnit.name,
             PHPUNIT_STUB_BINARY: phpUnit.binary,
@@ -141,7 +127,6 @@ if (phpUnitStubs.length > 0 && pestStubs.length > 0) {
     });
 }
 
-// Issue #381 test
 const issue381Root = join(fixturesPath, 'issue-381/php-project');
 const issue381Binary = 'vendor/bin/phpunit';
 try {

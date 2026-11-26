@@ -190,7 +190,6 @@ describe('TestResultObserver', () => {
         const testItemById = buildTestItemById([testItem]);
         const dynamicObserver = new TestResultObserver(queue, testRun, testItemById);
 
-        // Simulate DatasetObserver adding a child to the shared map
         const datasetItem = ctrl.createTestItem(
             'Tests\\ExampleTest::test_example with data set #0',
             'with data set #0',
@@ -286,10 +285,6 @@ describe('TestResultObserver', () => {
         expect(message.stackTrace).toBeUndefined();
     });
 
-    // Pest v3 bug: Str::beforeLast uses mb_strrpos (char offset) with substr (byte offset).
-    // The → character (U+2192) is 3 UTF-8 bytes but 1 char, so testSuiteStarted/Finished names
-    // are truncated by 2 bytes per → character.
-    // AliasMap automatically registers truncated aliases on set().
     it('should find parent item via truncated alias when Pest v3 truncates testSuiteStarted name', () => {
         const parentItem = ctrl.createTestItem(
             'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
@@ -346,8 +341,6 @@ describe('TestResultObserver', () => {
             buildTestItemById([testItem, parentItem]),
         );
 
-        // truncated alias = 'tests/Unit/ArchTest.php::preset  → p'
-        // runtime id = 'tests/Unit/ArchTest.php::preset  → php' — different, should not match
         obs.testStarted({
             event: 'testStarted' as unknown as TeamcityEvent,
             id: 'tests/Unit/ArchTest.php::preset  \u2192 php',

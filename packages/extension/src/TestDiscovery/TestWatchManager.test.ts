@@ -38,7 +38,6 @@ describe('TestWatchManager', () => {
 
         emitter.fire(Uri.file('/test.php'));
 
-        // Wait for async error handling
         await vi.waitFor(() => {
             expect(window.showErrorMessage).toHaveBeenCalledWith(
                 'PHPUnit: Failed to run continuous tests: PHPUnit crashed',
@@ -60,15 +59,12 @@ describe('TestWatchManager', () => {
         const uri = Uri.file('/test.php');
         emitter.fire(uri);
 
-        // Wait for first call to be dispatched
         await vi.waitFor(() => {
             expect(handler.startTestRun).toHaveBeenCalledTimes(1);
         });
 
-        // Fire second while first is still pending
         emitter.fire(uri);
 
-        // Still only 1 call because first hasn't resolved
         expect(handler.startTestRun).toHaveBeenCalledTimes(1);
 
         resolveFirst();

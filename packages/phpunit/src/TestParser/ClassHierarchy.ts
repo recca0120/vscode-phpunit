@@ -57,13 +57,11 @@ export class ClassHierarchy {
             if (!info) {
                 return false;
             }
-            // Own methods first
             for (const method of info.methods) {
                 if (method.methodName && !methodMap.has(method.methodName)) {
                     methodMap.set(method.methodName, method);
                 }
             }
-            // Trait methods (priority: own > trait > parent)
             for (const method of this.resolveTraitMethods(info)) {
                 if (method.methodName && !methodMap.has(method.methodName)) {
                     methodMap.set(method.methodName, method);
@@ -167,7 +165,6 @@ export class ClassHierarchy {
                 continue;
             }
 
-            // Recursively resolve nested trait methods
             const nestedMethods = this.resolveTraitMethods(traitInfo, seen);
             for (const m of nestedMethods) {
                 if (m.methodName && !collected.has(m.methodName)) {
@@ -175,7 +172,6 @@ export class ClassHierarchy {
                 }
             }
 
-            // Own methods of this trait
             for (const m of traitInfo.methods) {
                 if (m.methodName) {
                     collected.set(m.methodName, { trait: traitFQN, method: m });

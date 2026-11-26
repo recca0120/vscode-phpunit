@@ -75,59 +75,48 @@ export class AnsiStyle {
         return this.apply('bold', text);
     }
 
-    /** Horizontal rule: disable autowrap + red dashes (overflow truncated), or fixed-width */
     horizontalRule(columns = 80): string {
         if (this.enabled) {
             const dashes = '─'.repeat(300);
 
-            // CSI?7l = disable DECAWM (no wrap), CSI?7h = re-enable
             return `\x1b[?7l${this.apply('red', dashes)}\x1b[?7h`;
         }
 
         return `  ${'─'.repeat(Math.max(1, columns - 4))}`;
     }
 
-    /** Badge: green bg + bold for PASS */
     passedBadge(text: string): string {
         return this.apply('bgGreen.bold', ` ${text} `);
     }
 
-    /** Badge: red bg + white + bold for FAIL */
     failedBadge(text: string): string {
         return this.apply('bgRed.white.bold', ` ${text} `);
     }
 
-    /** Badge: yellow bg + bold for WARN */
     warnBadge(text: string): string {
         return this.apply('bgYellow.bold', ` ${text} `);
     }
 
-    /** PHP syntax: keyword = magenta + bold */
     keyword(text: string): string {
         return this.apply('magenta.bold', text);
     }
 
-    /** PHP syntax: string = light_gray (white) */
     string(text: string): string {
         return this.apply('white', text);
     }
 
-    /** PHP syntax: comment = gray + italic */
     comment(text: string): string {
         return this.apply('gray.italic', text);
     }
 
-    /** PHP syntax: variable/number = default + bold */
     variable(text: string): string {
         return this.apply('bold', text);
     }
 
-    /** Snippet: arrow mark = red + bold */
     failedMark(text: string): string {
         return this.apply('red.bold', text);
     }
 
-    /** Snippet: line number = gray */
     lineNumber(text: string): string {
         return this.apply('gray', text);
     }

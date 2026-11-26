@@ -35,16 +35,13 @@ export function createParentContainer(
 ): Container {
     const container = new Container();
 
-    // VS Code external objects (shared)
     container.bind(TYPES.TestController).toConstantValue(ctrl);
     container.bind(TYPES.OutputChannel).toConstantValue(outputChannel);
 
-    // Child container factory
     container
         .bind(TYPES.ChildContainerFactory)
         .toConstantValue((folder: WorkspaceFolder) => createChildContainer(container, folder));
 
-    // Cross-folder orchestration
     container.bind(WorkspaceFolderManager).toSelf().inSingletonScope();
     container.bind(TestRunDispatcher).toSelf().inSingletonScope();
     return container;
@@ -53,7 +50,6 @@ export function createParentContainer(
 function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolder): Container {
     const child = new Container({ parent });
 
-    // Per-folder bindings
     child.bind(TYPES.WorkspaceFolder).toConstantValue(workspaceFolder);
     child.bind(TYPES.FileChangedEmitter).toConstantValue(new EventEmitter<Uri>());
 
@@ -88,7 +84,6 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         })
         .inSingletonScope();
 
-    // Per-folder services
     child.bind(ProcessBuilderFactory).toSelf().inSingletonScope();
     child.bind(ObserverFactory).toSelf().inSingletonScope();
     child.bind(TestCollection).toSelf().inSingletonScope();

@@ -24,12 +24,9 @@ describe('readSourceSnippet highlightPhp', () => {
         const lines = readSourceSnippet(file, 3, style);
 
         expect(lines).toBeDefined();
-        // Line 3 is "    * $b;" — the * should NOT be styled as a comment
         const line3 = lines?.find((l) => l.includes('$b'));
         expect(line3).toBeDefined();
-        // $b should be styled as a variable (bold)
         expect(line3).toContain(`${styles.bold.open}$b${styles.bold.close}`);
-        // The content after delimiter should NOT start with italic (comment style)
         const content = line3?.split('▕')[1] ?? '';
         expect(content).not.toContain(styles.italic.open);
     });

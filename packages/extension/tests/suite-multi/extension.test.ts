@@ -84,7 +84,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await vscode.commands.executeCommand('phpunit.reload');
         await waitForTestItems(ctrl, 2, 30_000);
 
-        // Capture baseline counts for later assertions
         const phpunitRoot = findTestItem(ctrl.items, `folder:${phpunitFolder?.uri.toString()}`);
         const pestRoot = findTestItem(ctrl.items, `folder:${pestFolder?.uri.toString()}`);
         if (!phpunitRoot || !pestRoot) throw new Error('Missing test roots');
@@ -147,8 +146,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         }
     }
 
-    // --- Basic multi-workspace assertions ---
-
     test('should create folder root items in workspace folder order', () => {
         const folders = vscode.workspace.workspaceFolders ?? [];
         assert.strictEqual(folders.length, 2);
@@ -185,15 +182,12 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
     test('should run all tests and append dataset children to test controller', async () => {
         await vscode.commands.executeCommand('phpunit.run-all');
 
-        // After run, DatasetObserver dynamically adds dataset children
-        // for data providers that cannot be resolved statically (e.g. array_map).
         const countAfterFirstRun = countTestItems(ctrl.items);
         assert.ok(
             countAfterFirstRun >= staticTotalCount,
             `Item count should not decrease after run-all (was ${staticTotalCount}, now ${countAfterFirstRun})`,
         );
 
-        // Second run should not create duplicate dataset children
         await vscode.commands.executeCommand('phpunit.run-all');
         const countAfterSecondRun = countTestItems(ctrl.items);
         assert.strictEqual(
@@ -202,11 +196,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'Item count should remain stable after second run-all (no duplicate dataset children)',
         );
 
-        // Update run baseline to include dynamically added dataset children
         initialTotalCount = countAfterFirstRun;
     });
-
-    // --- Run workspace folder item ---
 
     test('should run all tests when clicking phpunit workspace folder item', async () => {
         const phpunitFolder = (vscode.workspace.workspaceFolders ?? []).find(
@@ -283,8 +274,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         );
     });
 
-    // --- Run commands (run-file, run-test-at-cursor, rerun) ---
-
     test('should run file for a specific test file', async () => {
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
@@ -305,7 +294,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);
 
-        // Position cursor on test_passed method (line 16, 0-indexed: 15)
         const position = new vscode.Position(15, 0);
         editor.selection = new vscode.Selection(position, position);
 
@@ -320,7 +308,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
     });
 
     test('should rerun previous test', async () => {
-        // rerun relies on a previous run-test-at-cursor having been executed
         await vscode.commands.executeCommand('phpunit.rerun');
 
         const countAfter = countTestItems(ctrl.items);
@@ -331,12 +318,9 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         );
     });
 
-    // --- Group filtering ---
-
     test('should have group tags on test items and correct filtered count', () => {
         const groupTagId = 'group:integration';
 
-        // Verify specific items have the tag
         const passedItem = findTestItem(ctrl.items, 'Assertions (Tests\\Assertions)::Passed');
         assert.ok(passedItem, 'Should find Assertions::Passed test item');
         assert.ok(
@@ -351,7 +335,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'Attribute::Hi should have group:integration tag',
         );
 
-        // Count all items with group:integration tag
         const groupItems: vscode.TestItem[] = [];
         const collectGroupItems = (items: vscode.TestItemCollection) => {
             items.forEach((item) => {
@@ -365,11 +348,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
 
         assert.ok(groupItems.length > 0, 'Should have items with group:integration tag');
 
-        // Store for later verification
         initialGroupCount = groupItems.length;
     });
-
-    // --- Workspace change (config) ---
 
     test('workspace change: should reload and preserve item count after config change', async () => {
         const folders = vscode.workspace.workspaceFolders ?? [];
@@ -389,14 +369,12 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'Total item count should match static baseline after config change + reload',
         );
 
-        // Verify group count preserved after config change
         assert.strictEqual(
             countItemsByGroupTag(ctrl.items, 'group:integration'),
             initialGroupCount,
             'Group item count should be preserved after config change',
         );
 
-        // Verify run-at-cursor still works after config change
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);
@@ -409,15 +387,11 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         await config.update('args', phpunitArgs, vscode.ConfigurationTarget.WorkspaceFolder);
     });
 
-    // --- File lifecycle (add, change, remove) ---
-    // Uses a single test to avoid cross-test timing issues with file watchers
-
     test('file lifecycle: add, change, and remove a test file', async () => {
         const testFilePath = join(getPhpunitTestsDir(), 'E2eLifecycleTest.php');
         const classId = 'E2e Lifecycle (Tests\\E2eLifecycle)';
         tempFiles.push(testFilePath);
 
-        // --- File add ---
         writeFileSync(testFilePath, phpTestFile('E2eLifecycle', ['first_method']));
 
         await vscode.commands.executeCommand('phpunit.reload');
@@ -430,24 +404,20 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'file add: should have First method',
         );
 
-        // Verify item count increased (compare against static baseline since reload drops runtime dataset children)
         const countAfterAdd = countTestItems(ctrl.items);
         assert.ok(
             countAfterAdd > staticTotalCount,
             `file add: total count should increase (was ${staticTotalCount}, now ${countAfterAdd})`,
         );
 
-        // Verify run-at-cursor works with new file
         const doc = await vscode.workspace.openTextDocument(testFilePath);
         const editor = await vscode.window.showTextDocument(doc);
-        // Position cursor on test_first_method (line 9, 0-indexed: 8)
         editor.selection = new vscode.Selection(
             new vscode.Position(8, 0),
             new vscode.Position(8, 0),
         );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
 
-        // --- File change ---
         writeFileSync(testFilePath, phpTestFile('E2eLifecycle', ['first_method', 'second_method']));
 
         await vscode.commands.executeCommand('phpunit.reload');
@@ -474,7 +444,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             `file change: total count should increase (was ${countAfterAdd}, now ${countAfterChange})`,
         );
 
-        // Verify run-at-cursor works after file change (second method at line 14, 0-indexed: 13)
         const doc2 = await vscode.workspace.openTextDocument(testFilePath);
         const editor2 = await vscode.window.showTextDocument(doc2);
         editor2.selection = new vscode.Selection(
@@ -483,7 +452,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         );
         await vscode.commands.executeCommand('phpunit.run-test-at-cursor');
 
-        // --- File remove ---
         unlinkSync(testFilePath);
 
         await vscode.commands.executeCommand('phpunit.reload');
@@ -499,11 +467,8 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'file remove: total count should return to static baseline',
         );
 
-        // Verify run-all still works after file removal
         await vscode.commands.executeCommand('phpunit.run-all');
     });
-
-    // --- Workspace remove & add (destructive — run last, in order) ---
 
     let removedFolderUri: vscode.Uri;
 
@@ -522,7 +487,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         vscode.workspace.updateWorkspaceFolders(1, 1);
         await reloaded;
 
-        // Should have phpunit items in flat structure (no folder roots)
         let hasFolderRoot = false;
         ctrl.items.forEach((item) => {
             if (item.id.startsWith('folder:')) hasFolderRoot = true;
@@ -532,7 +496,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const remainingCount = countTestItems(ctrl.items);
         assert.ok(remainingCount > 0, 'Should still have test items from remaining folder');
 
-        // Verify reload preserves item count
         await vscode.commands.executeCommand('phpunit.reload');
         const countAfterReload = countTestItems(ctrl.items);
         assert.strictEqual(
@@ -541,7 +504,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'Reload should preserve item count in single-folder mode',
         );
 
-        // Verify run-at-cursor works with single folder
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);
@@ -561,14 +523,12 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
         const currentFolders = vscode.workspace.workspaceFolders ?? [];
         assert.strictEqual(currentFolders.length, 2, 'Should have 2 workspace folders');
 
-        // Verify folder roots exist
         let folderRootCount = 0;
         ctrl.items.forEach((item) => {
             if (item.id.startsWith('folder:')) folderRootCount++;
         });
         assert.strictEqual(folderRootCount, 2, 'Should have 2 folder roots');
 
-        // Verify each folder has test items
         for (const folder of currentFolders) {
             const folderRoot = findTestItem(ctrl.items, `folder:${folder.uri.toString()}`);
             assert.ok(folderRoot, `Should have folder root for ${folder.name}`);
@@ -578,7 +538,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             );
         }
 
-        // Verify total count matches static baseline (workspace restore triggers reload)
         const totalAfterRestore = countTestItems(ctrl.items);
         assert.strictEqual(
             totalAfterRestore,
@@ -586,14 +545,12 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             `Total item count should match static baseline (expected ${staticTotalCount}, got ${totalAfterRestore})`,
         );
 
-        // Verify group count restored
         assert.strictEqual(
             countItemsByGroupTag(ctrl.items, 'group:integration'),
             initialGroupCount,
             'Group item count should be restored after workspace add',
         );
 
-        // Verify reload works after workspace restore
         await vscode.commands.executeCommand('phpunit.reload');
         await waitForTestItems(ctrl, 2, 30_000);
         assert.strictEqual(
@@ -602,7 +559,6 @@ suite(`Multi-Workspace (PHPUnit ${phpunitVersion} + Pest ${pestVersion}) — E2E
             'Reload should preserve total item count after workspace restore',
         );
 
-        // Verify run-at-cursor works after workspace restore
         const testFile = join(getPhpunitTestsDir(), 'AssertionsTest.php');
         const doc = await vscode.workspace.openTextDocument(testFile);
         const editor = await vscode.window.showTextDocument(doc);

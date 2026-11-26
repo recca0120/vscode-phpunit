@@ -22,7 +22,6 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
         assert.ok(phpFolder, 'php-project folder should exist');
         assert.ok(tsFolder, 'ts-project folder should exist');
 
-        // Configure phpunit binary for php-project
         const phpConfig = vscode.workspace.getConfiguration('phpunit', phpFolder.uri);
         await phpConfig.update(
             'phpunit',
@@ -30,8 +29,6 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
 
-        // Simulate the bug: set --configuration with absolute path at WORKSPACE level
-        // This causes BOTH folders to load the same phpunit.xml
         const phpunitXmlPath = join(phpFolder.uri.fsPath, 'phpunit.xml');
         const wsConfig = vscode.workspace.getConfiguration('phpunit');
         await wsConfig.update(
@@ -59,12 +56,10 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
         const phpRoot = findTestItem(ctrl.items, `folder:${phpFolder.uri.toString()}`);
         const tsRoot = findTestItem(ctrl.items, `folder:${tsFolder.uri.toString()}`);
 
-        // php-project should have tests
         assert.ok(phpRoot, 'php-project folder root should exist');
         const phpCount = countTestItems(phpRoot.children);
         assert.ok(phpCount > 0, `php-project should have test items (got ${phpCount})`);
 
-        // ts-project should NOT have tests
         if (tsRoot) {
             const tsCount = countTestItems(tsRoot.children);
             assert.strictEqual(
@@ -82,7 +77,6 @@ suite('Issue #381 — duplicate tests in multi-root workspace with shared config
         const phpCount = countTestItems(phpRoot.children);
         const totalCount = countTestItems(ctrl.items);
 
-        // Total should be: 2 folder roots + php-project's test items
         const expectedTotal = 2 + phpCount;
         assert.strictEqual(
             totalCount,

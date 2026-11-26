@@ -56,7 +56,7 @@ export type TestFailed = BaseResult &
         message: string;
         details: { file: string; line: number }[];
         duration: number;
-        type?: string; // comparisonFailure
+        type?: string;
         actual?: string;
         expected?: string;
     };

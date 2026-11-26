@@ -68,12 +68,10 @@ describe('DatasetObserver', () => {
         expect(child).toBeDefined();
         expect(child?.label).toContain('with data set #0');
 
-        // dataset child should have a TestDefinition
         const childDef = testCollection.getTestDefinition(child as TestItem);
         expect(childDef).toBeDefined();
         expect(childDef?.type).toBe(TestType.dataset);
 
-        // child should be added to shared testItemById map
         expect(testItemById.has(childId)).toBe(true);
         expect(testItemById.get(childId)).toBe(child);
     });
@@ -135,7 +133,6 @@ describe('DatasetObserver', () => {
             flowId: 1,
         } as unknown as TestStarted);
 
-        // Should not create duplicate
         expect(testItemById.size).toBe(sizeBefore);
     });
 

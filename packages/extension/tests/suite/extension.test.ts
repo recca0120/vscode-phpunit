@@ -22,7 +22,6 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         api = await activateExtension();
         ctrl = api.testController;
 
-        // Configure the extension for this stub version
         const folders = vscode.workspace.workspaceFolders;
         if (folders && folders.length > 0) {
             const config = vscode.workspace.getConfiguration('phpunit', folders[0].uri);
@@ -30,10 +29,8 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
             await config.update('args', stubArgs, vscode.ConfigurationTarget.WorkspaceFolder);
         }
 
-        // Trigger reload so extension picks up the new settings
         await vscode.commands.executeCommand('phpunit.reload');
 
-        // Wait for test items to appear
         await waitForTestItems(ctrl, 1, 30_000);
     });
 
@@ -67,7 +64,6 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
     });
 
     test('should discover test items after resolve', async () => {
-        // resolveHandler(undefined) triggers file watcher start
         await ctrl.resolveHandler?.(undefined);
         await waitForTestItems(ctrl, 2, 30_000);
 
@@ -79,14 +75,12 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         const ids = collectTestItemIds(ctrl.items);
 
         if (stubType === 'phpunit') {
-            // PHPUnit should have namespace → class → method
             const hasNamespace = ids.some((id) => id.startsWith('namespace:'));
             const hasClass = ids.some((id) => id.includes('(Tests\\'));
             const hasMethod = ids.some((id) => id.includes('::'));
             assert.ok(hasNamespace || hasClass, 'Should have namespace or class items');
             assert.ok(hasMethod, 'Should have method items');
         } else {
-            // Pest should have file-based items
             const hasFile = ids.some((id) => id.includes('Test.php'));
             assert.ok(hasFile, 'Should have file-based test items');
         }
@@ -182,7 +176,6 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
     });
 
     test('should run all tests without error', async () => {
-        // phpunit.run-all is async — awaits spawn, parse, testRun.end()
         await vscode.commands.executeCommand('phpunit.run-all');
     });
 
@@ -190,7 +183,6 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         const config = vscode.workspace.getConfiguration('phpunit');
         await config.update('saveBeforeTest', true, vscode.ConfigurationTarget.Workspace);
 
-        // Open a PHP file and make it dirty by inserting a space
         const folders = vscode.workspace.workspaceFolders;
         assert.ok(folders, 'Should have workspace folders');
         const files = await vscode.workspace.findFiles(
@@ -204,14 +196,12 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         const editor = await vscode.window.showTextDocument(doc);
         const originalText = doc.getText();
 
-        // Insert a trailing comment to make the file dirty
         await editor.edit((edit) => {
             edit.insert(doc.positionAt(doc.getText().length), ' ');
         });
         assert.ok(doc.isDirty, 'Document should be dirty after edit');
 
         try {
-            // Run tests — saveAll should save the dirty file first
             const request = new vscode.TestRunRequest();
             await api.testRunProfile.runHandler(
                 request,
@@ -220,7 +210,6 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
 
             assert.ok(!doc.isDirty, 'Document should no longer be dirty after run');
         } finally {
-            // Restore original content and clean up setting
             const fullRange = new vscode.Range(
                 doc.positionAt(0),
                 doc.positionAt(doc.getText().length),
@@ -233,15 +222,12 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
     });
 
     test('should skip remaining processes when cancelled before run', async () => {
-        // Pre-cancel the token so runProcesses loop breaks immediately
         const cts = new vscode.CancellationTokenSource();
         cts.cancel();
 
-        // Run all tests with a pre-cancelled token — no processes should start
         const request = new vscode.TestRunRequest();
         await api.testRunProfile.runHandler(request, cts.token);
 
-        // If we reach here without hanging, cancellation worked
         assert.ok(cts.token.isCancellationRequested);
     });
 });

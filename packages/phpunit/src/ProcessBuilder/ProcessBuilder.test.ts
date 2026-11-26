@@ -366,7 +366,6 @@ describe('ProcessBuilder Test', () => {
             expect(runtime).toEqual('docker');
 
             const shCmd = args[args.length - 1];
-            // filter with ' in value should use " wrapper with escaped inner "
             expect(shCmd).toContain(
                 `"--filter=/^.*::(it has user\\'s email` +
                     ` with data set \\"\\(\\'other@example\\.com\\'\\)\\")$/"`,

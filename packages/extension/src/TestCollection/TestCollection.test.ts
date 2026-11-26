@@ -468,7 +468,6 @@ class NoNamespaceTest extends TestCase
                     phpUnitProject('tests/Feature/SubFolder/ExampleTest.php'),
                 );
 
-                // Phase 1: scrambled add
                 await collection.add(featureSubFolder);
                 await collection.add(unitExample);
                 await collection.add(featureExample);
@@ -482,16 +481,13 @@ class NoNamespaceTest extends TestCase
                     ctrl.items.get('testsuite:Feature')?.children.get('namespace:Tests'),
                 ).toBeUndefined();
 
-                // Phase 2: change
                 await collection.change(unitExample);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
                 expect(ctrl.items.get('testsuite:Feature')?.children.size).toBe(2);
 
-                // Phase 3: delete one Feature file
                 collection.delete(featureExample);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
-                // Phase 4: delete last Feature file — suite removed
                 collection.delete(featureSubFolder);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Unit']);
             });
@@ -514,7 +510,6 @@ class NoNamespaceTest extends TestCase
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
-            // Delete entire Unit folder
             collection.delete(URI.file(phpUnitProject('tests/Unit')));
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature']);
@@ -533,10 +528,8 @@ class NoNamespaceTest extends TestCase
 
             await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
             await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
-            // AssertionsTest.php is in tests/ root, not in tests/Unit or tests/Feature
             await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-            // Should only have testsuite nodes, no root-level namespace:Tests
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
             expect(ctrl.items.get('namespace:Tests')).toBeUndefined();
         });
@@ -587,13 +580,11 @@ class NoNamespaceTest extends TestCase
                 phpUnitProject('phpunit.xml'),
             );
 
-            // Unit suite: tests/Unit matches Tests\Unit, tests/Unit2 matches Tests\Unit2
             const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
             expect(unitSuite.children.get('namespace:Tests')).toBeUndefined();
             expect(unitSuite.children.get('User (Tests\\Unit\\User)')).toBeDefined();
             expect(unitSuite.children.get('Order (Tests\\Unit2\\Order)')).toBeDefined();
 
-            // Feature suite unchanged
             const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
             expect(featureSuite.children.get('namespace:Tests')).toBeUndefined();
             expect(featureSuite.children.get('Login (Tests\\Feature\\Login)')).toBeDefined();
@@ -618,12 +609,10 @@ class NoNamespaceTest extends TestCase
                 phpUnitProject('phpunit.xml'),
             );
 
-            // tests/unit/models matches Tests\Unit\Models (3 segments) → all stripped
             const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
             expect(unitSuite.children.get('namespace:Tests')).toBeUndefined();
             expect(unitSuite.children.get('User (Tests\\Unit\\Models\\User)')).toBeDefined();
 
-            // tests/feature matches Tests\Feature (2 segments) → all stripped
             const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
             expect(featureSuite.children.get('namespace:Tests')).toBeUndefined();
             expect(featureSuite.children.get('Login (Tests\\Feature\\Login)')).toBeDefined();
@@ -646,11 +635,9 @@ class NoNamespaceTest extends TestCase
                 phpUnitProject('phpunit.xml'),
             );
 
-            // tests/abc/def vs Tests\Def — only first segment matches, not all 3 → no stripping
             const unitSuite = ctrl.items.get('testsuite:Unit') as TestItem;
             expect(unitSuite.children.get('namespace:Tests')).toBeDefined();
 
-            // integration/sub vs App\Feature — first segment doesn't match → no stripping
             const featureSuite = ctrl.items.get('testsuite:Feature') as TestItem;
             expect(featureSuite.children.get('namespace:App')).toBeDefined();
         });
@@ -677,9 +664,6 @@ class NoNamespaceTest extends TestCase
                 phpUnitProject('phpunit.xml'),
             );
 
-            // App: directory tests/Unit matches namespace Tests\Unit (2 segments) → stripped
-            // App: directory tests/Feature matches namespace Tests\Feature (2 segments) → stripped
-            // Integration: directory tests/Integration matches namespace Tests\Integration (2 segments) → stripped
             expect(toTree(ctrl.items)).toEqual([
                 {
                     id: 'testsuite:App',
@@ -1727,15 +1711,12 @@ class NoDatasetTest extends TestCase
             );
             expect(childItem).toBeDefined();
 
-            // child is in parent.children
             expect(methodItem.children.get(childItem?.id ?? '')).toBe(childItem);
 
-            // child has a TestDefinition
             const storedDef = collection.getTestDefinition(childItem as TestItem);
             expect(storedDef).toBeDefined();
             expect(storedDef?.type).toBe(TestType.dataset);
 
-            // child id matches convention
             expect(childItem?.id).toContain('with data set #0');
         });
 
@@ -1762,7 +1743,6 @@ class NoDatasetTest extends TestCase
             const child2 = collection.resolveDatasetChild(result);
             expect(child2).toBeUndefined();
 
-            // child still exists in parent
             expect(methodItem.children.get(child1?.id ?? '')).toBe(child1);
         });
     });
@@ -1962,7 +1942,6 @@ class NoDatasetTest extends TestCase
                 await collection.add(file);
             }
 
-            // root should only contain testsuite nodes, no stray namespace nodes
             for (const [, item] of ctrl.items) {
                 expect(item.id).toMatch(/^testsuite:/);
             }
@@ -1986,7 +1965,6 @@ class NoDatasetTest extends TestCase
 
             collection.reset();
 
-            // After reset, the VS Code tree should be completely empty
             expect(ctrl.items.size).toBe(0);
         });
 
