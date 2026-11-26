@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
 import { Configuration } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
-import { PathReplacer } from '../Path';
+import { RemotePathMapper } from '../Path';
 import { CoverageFiles } from '../TestCoverage';
 import { TeamcityEvent, type TestFailed, toLocalResult } from '../TestOutput';
 import { TestCommand } from './TestCommand';
@@ -14,17 +14,17 @@ describe('TestCommand', () => {
         const givenCommand = (configuration: Record<string, unknown>, cwd?: string) => {
             const config = new Configuration({ php: 'php', ...configuration });
             const options = { cwd: cwd ?? phpUnitProject('') };
-            const pathReplacer = new PathReplacer(
+            const remotePathMapper = new RemotePathMapper(
                 options,
                 config.get('paths') as Record<string, string>,
             );
-            return new TestCommand(config, options, pathReplacer);
+            return new TestCommand(config, options, remotePathMapper);
         };
 
-        it('paths returns PathReplacer instance', () => {
+        it('paths returns RemotePathMapper instance', () => {
             const command = givenCommand({ phpunit: 'vendor/bin/phpunit' });
 
-            expect(command.paths).toBeInstanceOf(PathReplacer);
+            expect(command.paths).toBeInstanceOf(RemotePathMapper);
         });
 
         it('run paratest with --functional and --filter', () => {
@@ -271,11 +271,11 @@ describe('TestCommand', () => {
         const givenCommand = (configuration: Record<string, unknown>, cwd?: string) => {
             const config = new Configuration({ php: 'php', ...configuration });
             const options = { cwd: cwd ?? phpUnitProject('') };
-            const pathReplacer = new PathReplacer(
+            const remotePathMapper = new RemotePathMapper(
                 options,
                 config.get('paths') as Record<string, string>,
             );
-            return new TestCommand(config, options, pathReplacer);
+            return new TestCommand(config, options, remotePathMapper);
         };
 
         it('maps only whole path segments to the remote path', () => {
@@ -589,11 +589,11 @@ describe('TestCommand', () => {
                 ...configuration,
             });
             const options = { cwd: cwd ?? phpUnitProject('') };
-            const pathReplacer = new PathReplacer(
+            const remotePathMapper = new RemotePathMapper(
                 options,
                 config.get('paths') as Record<string, string>,
             );
-            return new TestCommand(config, options, pathReplacer);
+            return new TestCommand(config, options, remotePathMapper);
         };
 
         it(`command is ${CMD_TEMPLATE}`, () => {
@@ -708,9 +708,9 @@ describe('TestCommand', () => {
         it('should set clover file on xdebug when in coverage mode', async () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
+            const remotePathMapper = new RemotePathMapper(options, {});
             const xdebug = await new Xdebug(config).setMode(Mode.coverage);
-            const command = new TestCommand(config, options, pathReplacer, xdebug.options());
+            const command = new TestCommand(config, options, remotePathMapper, xdebug.options());
 
             const covered = command.withCoverageClover(new CoverageFiles(options.cwd).allocate(0));
 
@@ -720,9 +720,9 @@ describe('TestCommand', () => {
         it('should return undefined when not in coverage mode', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
+            const remotePathMapper = new RemotePathMapper(options, {});
             const xdebug = new Xdebug(config);
-            const command = new TestCommand(config, options, pathReplacer, xdebug.options());
+            const command = new TestCommand(config, options, remotePathMapper, xdebug.options());
 
             expect(command.getCloverFile()).toBeUndefined();
         });
@@ -730,8 +730,8 @@ describe('TestCommand', () => {
         it('should return undefined when no xdebug', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
-            const command = new TestCommand(config, options, pathReplacer);
+            const remotePathMapper = new RemotePathMapper(options, {});
+            const command = new TestCommand(config, options, remotePathMapper);
 
             expect(command.getCloverFile()).toBeUndefined();
         });
@@ -741,12 +741,12 @@ describe('TestCommand', () => {
         it('should give the new command independent options', async () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
+            const remotePathMapper = new RemotePathMapper(options, {});
             const xdebug = await new Xdebug(config).setMode(Mode.coverage);
             const command = new TestCommand(
                 config,
                 options,
-                pathReplacer,
+                remotePathMapper,
                 xdebug.options(),
             ).withCoverageClover('/workspace/.phpunit.cache/coverage-abc-0.xml');
 
@@ -761,8 +761,8 @@ describe('TestCommand', () => {
         it('should create the new command without options when none are set', () => {
             const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
             const options = { cwd: phpUnitProject('') };
-            const pathReplacer = new PathReplacer(options, {});
-            const command = new TestCommand(config, options, pathReplacer);
+            const remotePathMapper = new RemotePathMapper(options, {});
+            const command = new TestCommand(config, options, remotePathMapper);
 
             const cloned = command.withArguments('');
 

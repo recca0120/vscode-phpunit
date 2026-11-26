@@ -1,4 +1,10 @@
-import { Configuration, Mode, PathReplacer, TestCommand, Xdebug } from '@vscode-phpunit/phpunit';
+import {
+    Configuration,
+    Mode,
+    RemotePathMapper,
+    TestCommand,
+    Xdebug,
+} from '@vscode-phpunit/phpunit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceFolder } from 'vscode';
 import { debug, Uri } from 'vscode';
@@ -11,12 +17,12 @@ const givenCommand = async (opts?: { mode?: Mode; debuggerConfig?: string }) => 
         ...(opts?.debuggerConfig ? { debuggerConfig: opts.debuggerConfig } : {}),
     });
     const options = { cwd: '.' };
-    const pathReplacer = new PathReplacer(options, {});
+    const remotePathMapper = new RemotePathMapper(options, {});
     let xdebug: Xdebug | undefined;
     if (opts?.mode) {
         xdebug = await new Xdebug(config).setMode(opts.mode);
     }
-    return new TestCommand(config, options, pathReplacer, xdebug?.options());
+    return new TestCommand(config, options, remotePathMapper, xdebug?.options());
 };
 
 describe('DebugSessionManager', () => {

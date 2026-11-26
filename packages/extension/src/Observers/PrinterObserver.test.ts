@@ -2,10 +2,10 @@ import {
     Configuration,
     type OutputWriter,
     type Path,
-    PathReplacer,
     PHPUnitXML,
     PRESET_PROGRESS,
     Printer,
+    RemotePathMapper,
     semverLt,
     TeamcityEvent,
     TestCommand,
@@ -76,7 +76,7 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
                 const command = new TestCommand(
                     configuration,
                     options,
-                    new PathReplacer(options, configuration.get('paths') as Path),
+                    new RemotePathMapper(options, configuration.get('paths') as Path),
                 );
                 await testRunner.run(command.withArguments([file, filter].join(' '))).run();
             }

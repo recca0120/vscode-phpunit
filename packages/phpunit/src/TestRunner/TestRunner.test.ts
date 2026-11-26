@@ -5,7 +5,7 @@ import { getPhpUnitVersion, phpUnitProject, phpUnitProjectWin } from '../../test
 import { Configuration } from '../Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import type { Path } from '../Path';
-import { PathReplacer } from '../Path';
+import { RemotePathMapper } from '../Path';
 import { TestCommand } from '../TestCommand';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { TeamcityEvent, type TestFailed } from '../TestOutput';
@@ -240,7 +240,7 @@ describe('TestRunner Test', () => {
         );
         const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
         const options = { cwd: phpUnitProject('') };
-        const command = new TestCommand(configuration, options, new PathReplacer(options, {}));
+        const command = new TestCommand(configuration, options, new RemotePathMapper(options, {}));
         const testRunner = new TestRunner();
         const events: string[] = [];
         testRunner.on(TestRunnerEvent.error, () => events.push('error'));
@@ -280,7 +280,7 @@ describe('TestRunner Test', () => {
             });
         const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
         const options = { cwd: phpUnitProject('') };
-        const command = new TestCommand(configuration, options, new PathReplacer(options, {}));
+        const command = new TestCommand(configuration, options, new RemotePathMapper(options, {}));
         const testRunner = new TestRunner();
         const events: string[] = [];
         testRunner.on(TestRunnerEvent.error, () => events.push('error'));
@@ -335,7 +335,7 @@ describe('TestRunner Test', () => {
             });
         const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
         const options = { cwd: phpUnitProject('') };
-        const command = new TestCommand(configuration, options, new PathReplacer(options, {}));
+        const command = new TestCommand(configuration, options, new RemotePathMapper(options, {}));
         const testRunner = new TestRunner();
         const failures: TestFailed[] = [];
         testRunner.on(TeamcityEvent.testFailed, (result) => failures.push(result));
@@ -362,7 +362,7 @@ describe('TestRunner Test', () => {
         const command = new TestCommand(
             configuration,
             options,
-            new PathReplacer(options, configuration.get('paths') as Path),
+            new RemotePathMapper(options, configuration.get('paths') as Path),
         );
         const expected = [
             'foo',
@@ -415,7 +415,7 @@ describe('TestRunner Test', () => {
             let command = new TestCommand(
                 configuration,
                 spawnOptions,
-                new PathReplacer(spawnOptions, configuration.get('paths') as Path),
+                new RemotePathMapper(spawnOptions, configuration.get('paths') as Path),
             );
 
             const runTest = async (

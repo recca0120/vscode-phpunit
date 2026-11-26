@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fixturePath, phpUnitProject } from '../../tests/utils';
 import { Configuration } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
-import { PathReplacer } from '../Path';
+import { RemotePathMapper } from '../Path';
 import { TestCommand } from '../TestCommand/TestCommand';
 import { Mode, Xdebug } from '../TestCommand/Xdebug';
 import { TestRunnerProcess } from './TestRunnerProcess';
@@ -21,9 +21,9 @@ const givenCommand = async (opts?: {
     const config = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
     const cwd = opts?.cwd ?? phpUnitProject('');
     const options = { cwd };
-    const pathReplacer = new PathReplacer(options, opts?.paths ?? {});
+    const remotePathMapper = new RemotePathMapper(options, opts?.paths ?? {});
     const xdebug = opts?.mode ? await new Xdebug(config).setMode(opts.mode) : undefined;
-    return { command: new TestCommand(config, options, pathReplacer, xdebug?.options()) };
+    return { command: new TestCommand(config, options, remotePathMapper, xdebug?.options()) };
 };
 
 describe('TestRunnerProcess', () => {
