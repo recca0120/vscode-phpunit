@@ -1,5 +1,5 @@
-import type { TestCommand } from '../TestCommand';
 import { TestOutputParser } from '../TestOutput';
+import type { ProcessCommand } from './ProcessCommand';
 import {
     createTestRunnerEventProxy,
     type EventResultMap,
@@ -32,7 +32,7 @@ export class TestRunner implements TestRunnerEmitter {
         return this;
     }
 
-    run(command: TestCommand) {
+    run(command: ProcessCommand) {
         return new TestRunnerProcess(command, this, this.testOutputParser);
     }
 

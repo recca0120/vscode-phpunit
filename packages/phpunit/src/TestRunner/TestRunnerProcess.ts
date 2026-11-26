@@ -2,9 +2,9 @@ import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
-import type { TestCommand } from '../TestCommand';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
-import { TestOutputParser, type TestResult } from '../TestOutput';
+import { TestOutputParser, type TestResult, toLocalResult } from '../TestOutput';
+import type { ProcessCommand } from './ProcessCommand';
 import { type TestRunnerEmitter, TestRunnerEvent } from './TestRunnerObserver';
 
 const TEAMCITY_PATTERN = /##teamcity\[/i;
@@ -20,7 +20,7 @@ export class TestRunnerProcess {
     private closed = false;
 
     constructor(
-        private command: TestCommand,
+        private command: ProcessCommand,
         events?: TestRunnerEmitter,
         private testOutputParser = new TestOutputParser(),
     ) {
@@ -70,7 +70,7 @@ export class TestRunnerProcess {
 
         return data.map((d) => ({
             ...d,
-            filePath: this.command.getPathReplacer().toLocal(d.filePath),
+            filePath: this.command.paths.toLocal(d.filePath),
         }));
     }
 
@@ -142,7 +142,7 @@ export class TestRunnerProcess {
             return;
         }
 
-        const replaced = this.command.replacePath(result);
+        const replaced = toLocalResult(result, this.command.paths);
         if ('event' in replaced) {
             events.emit(replaced.event, replaced);
         }
