@@ -1920,6 +1920,135 @@ trait Inner
         });
     });
 
+    describe('ancestors renamed or removed', () => {
+        const writeProject = async (files: Record<string, string>) => {
+            const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            await mkdir(join(root, 'tests'), { recursive: true });
+            for (const [file, code] of Object.entries(files)) {
+                await writeFile(join(root, 'tests', file), code);
+            }
+            const collection = givenTestCollection(
+                `<testsuites>
+                    <testsuite name="Unit">
+                        <directory suffix="Test.php">tests</directory>
+                    </testsuite>
+                </testsuites>`,
+                join(root, 'phpunit.xml'),
+            );
+            const uriOf = (file: string) => URI.file(join(root, 'tests', file));
+            return { root, collection, uriOf };
+        };
+
+        const fooIds = () => {
+            const allIds = (items: import('vscode').TestItemCollection): string[] =>
+                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
+            return allIds(ctrl.items)
+                .filter((id) => id.startsWith('Foo (Tests\\Foo)::'))
+                .sort();
+        };
+
+        it('drops the methods of a trait that was renamed', async () => {
+            const { root, collection, uriOf } = await writeProject({
+                'FooTest.php': `<?php
+namespace Tests;
+class FooTest extends \\PHPUnit\\Framework\\TestCase
+{
+    use Shared;
+
+    public function test_own() {}
+}
+`,
+                'Shared.php': `<?php
+namespace Tests;
+trait Shared
+{
+    public function test_shared() {}
+}
+`,
+            });
+            await collection.add(uriOf('FooTest.php'));
+            await collection.add(uriOf('Shared.php'));
+
+            await writeFile(
+                join(root, 'tests/Shared.php'),
+                `<?php
+namespace Tests;
+trait Renamed
+{
+    public function test_shared() {}
+}
+`,
+            );
+            await collection.change(uriOf('Shared.php'));
+
+            expect(fooIds()).toEqual(['Foo (Tests\\Foo)::Own']);
+            await rm(root, { recursive: true, force: true });
+        });
+
+        it('drops the methods of a parent class whose file was deleted', async () => {
+            const { root, collection, uriOf } = await writeProject({
+                'FooTest.php': `<?php
+namespace Tests;
+class FooTest extends Base
+{
+    public function test_own() {}
+}
+`,
+                'Base.php': `<?php
+namespace Tests;
+abstract class Base extends \\PHPUnit\\Framework\\TestCase
+{
+    public function test_base() {}
+}
+`,
+            });
+            await collection.add(uriOf('FooTest.php'));
+            await collection.add(uriOf('Base.php'));
+
+            await rm(join(root, 'tests/Base.php'));
+            await collection.delete(uriOf('Base.php'));
+
+            expect(fooIds()).toEqual(['Foo (Tests\\Foo)::Own']);
+            await rm(root, { recursive: true, force: true });
+        });
+
+        it('drops a class once its parent stops extending TestCase', async () => {
+            const { root, collection, uriOf } = await writeProject({
+                'FooTest.php': `<?php
+namespace Tests;
+class FooTest extends Base
+{
+    public function test_own() {}
+}
+`,
+                'Base.php': `<?php
+namespace Tests;
+abstract class Base extends \\PHPUnit\\Framework\\TestCase
+{
+    public function test_base() {}
+}
+`,
+            });
+            await collection.add(uriOf('Base.php'));
+            await collection.add(uriOf('FooTest.php'));
+
+            await writeFile(
+                join(root, 'tests/Base.php'),
+                `<?php
+namespace Tests;
+abstract class Base
+{
+    public function test_base() {}
+}
+`,
+            );
+            await collection.change(uriOf('Base.php'));
+
+            expect(fooIds()).toEqual([]);
+            await rm(root, { recursive: true, force: true });
+        });
+    });
+
     describe('classes known not to extend TestCase', () => {
         it('ignores classes whose resolved hierarchy does not reach TestCase', async () => {
             const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
