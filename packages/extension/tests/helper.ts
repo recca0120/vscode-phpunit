@@ -73,7 +73,7 @@ export function collectTestItemIds(items: vscode.TestItemCollection): string[] {
 export async function waitUntil(
     condition: () => boolean,
     message: string,
-    timeout = 30_000,
+    timeout = 10_000,
 ): Promise<void> {
     const start = Date.now();
     while (Date.now() - start < timeout) {

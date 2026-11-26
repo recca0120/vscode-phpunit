@@ -262,12 +262,9 @@ suite(`${stubType === 'pest' ? 'Pest' : 'PHPUnit'} ${stubVersion} — E2E`, () =
         });
 
         test('updates the test class when the trait is edited', async () => {
-            const edited = new TextDecoder()
-                .decode(original)
-                .replace(
-                    'trait SharedTests\n{',
-                    'trait SharedTests\n{\n    public function test_added_in_e2e(): void\n    {\n        $this->assertTrue(true);\n    }\n',
-                );
+            const source = new TextDecoder().decode(original);
+            const end = source.lastIndexOf('}');
+            const edited = `${source.slice(0, end)}    public function test_added_in_e2e(): void\n    {\n        $this->assertTrue(true);\n    }\n${source.slice(end)}`;
             try {
                 await vscode.workspace.fs.writeFile(traitUri(), new TextEncoder().encode(edited));
                 await waitUntil(
