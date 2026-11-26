@@ -16,7 +16,7 @@ const givenCommand = async (opts?: { mode?: Mode; debuggerConfig?: string }) => 
     if (opts?.mode) {
         xdebug = await new Xdebug(config).setMode(opts.mode);
     }
-    return new TestCommand(config, options, pathReplacer, xdebug);
+    return new TestCommand(config, options, pathReplacer, xdebug?.options());
 };
 
 describe('DebugSessionManager', () => {
@@ -44,7 +44,7 @@ describe('DebugSessionManager', () => {
 
         const error = new Error('test run failed');
         await expect(
-            manager.wrap(command, async () => {
+            manager.wrap(command.debug(), async () => {
                 throw error;
             }),
         ).rejects.toThrow('test run failed');
@@ -55,7 +55,7 @@ describe('DebugSessionManager', () => {
     it('should pass through when not in debug mode', async () => {
         const command = await givenCommand({ mode: Mode.coverage });
 
-        const result = await manager.wrap(command, async () => 'passthru');
+        const result = await manager.wrap(command.debug(), async () => 'passthru');
 
         expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe('DebugSessionManager', () => {
     it('should pass through when no xdebug', async () => {
         const command = await givenCommand();
 
-        const result = await manager.wrap(command, async () => 'passthru');
+        const result = await manager.wrap(command.debug(), async () => 'passthru');
 
         expect(result).toBe('passthru');
         expect(debug.startDebugging).not.toHaveBeenCalled();

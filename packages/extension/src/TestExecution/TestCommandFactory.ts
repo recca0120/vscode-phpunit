@@ -22,6 +22,6 @@ export class TestCommandFactory {
             this.workspaceFolder.uri.fsPath,
         );
         const xdebug = await this.xdebugFactory.create(profileKind);
-        return new TestCommand(this.config, options, pathReplacer, xdebug);
+        return new TestCommand(this.config, options, pathReplacer, xdebug.options());
     }
 }

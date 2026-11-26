@@ -1,6 +1,5 @@
 import * as net from 'node:net';
-import type { IConfiguration, PathReplacer } from '../Configuration';
-import { cloneInstance } from '../utils';
+import type { IConfiguration } from '../Configuration';
 import type { CommandOption } from './CommandOption';
 import { XdebugCoverage } from './XdebugCoverage';
 import { XdebugDebug } from './XdebugDebug';
@@ -40,20 +39,6 @@ export class Xdebug {
         return this.coverage.isEnabled();
     }
 
-    get name() {
-        return this.configuration.get('debuggerConfig') as string | undefined;
-    }
-
-    getCloverFile() {
-        return this.coverage.getCloverFile();
-    }
-
-    setCloverFile(cloverFile: string) {
-        this.coverage = this.coverage.withCloverFile(cloverFile);
-
-        return this;
-    }
-
     async setMode(mode?: Mode, launchPort?: number) {
         const port =
             mode === Mode.debug
@@ -61,7 +46,7 @@ export class Xdebug {
                   launchPort ||
                   (this.name ? undefined : await getFreePort())
                 : this.debug.port;
-        this.debug = new XdebugDebug(mode === Mode.debug, port);
+        this.debug = new XdebugDebug(mode === Mode.debug, port, this.name);
         this.coverage = this.coverage.withEnabled(mode === Mode.coverage);
 
         return this;
@@ -71,23 +56,7 @@ export class Xdebug {
         return [this.debug, this.coverage];
     }
 
-    getDebugConfiguration() {
-        return this.debug.debugConfiguration();
-    }
-
-    getEnvironment() {
-        return { ...this.debug.environment(), ...this.coverage.environment() };
-    }
-
-    getPhpArgs() {
-        return [...this.debug.phpArgs(), ...this.coverage.phpArgs()];
-    }
-
-    getPhpUnitArgs(pathReplacer: PathReplacer): string[] {
-        return [...this.debug.phpUnitArgs(), ...this.coverage.phpUnitArgs(pathReplacer)];
-    }
-
-    clone() {
-        return cloneInstance(this);
+    private get name() {
+        return this.configuration.get('debuggerConfig') as string | undefined;
     }
 }

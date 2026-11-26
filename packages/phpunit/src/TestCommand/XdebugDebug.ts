@@ -4,6 +4,7 @@ export class XdebugDebug implements CommandOption {
     constructor(
         private readonly enabled: boolean,
         readonly port?: number,
+        readonly launchConfiguration?: string,
     ) {}
 
     isEnabled() {
@@ -32,5 +33,9 @@ export class XdebugDebug implements CommandOption {
 
     debugConfiguration() {
         return { type: 'php', request: 'launch', name: 'PHPUnit', port: this.port };
+    }
+
+    debugTarget() {
+        return this.launchConfiguration ?? this.debugConfiguration();
     }
 }
