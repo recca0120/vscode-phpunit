@@ -34,7 +34,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         private rootItems: ItemCollection<T>,
         private phpUnitXML?: PHPUnitXML,
     ) {
-        this.multiSuite = (phpUnitXML?.getTestSuiteNames() ?? []).length > 1;
+        this.multiSuite = (phpUnitXML?.testSuiteNames() ?? []).length > 1;
     }
 
     build(tests: TestDefinition[]): Map<T, TestDefinition> {
@@ -278,7 +278,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         }
 
         const namespaceParts = (test.label?.split('\\') ?? []).filter(Boolean);
-        const directories = this.phpUnitXML.getTestSuiteDirectories(suiteName);
+        const directories = this.phpUnitXML.testSuiteDirectories(suiteName);
 
         let best = 0;
         for (const dir of directories) {

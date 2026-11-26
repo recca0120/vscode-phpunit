@@ -1,6 +1,6 @@
 import type { SpawnOptions } from 'node:child_process';
 import type { IConfiguration } from '../Configuration';
-import type { PathMapper, PathReplacer } from '../Path';
+import type { PathMapper, PathResolver } from '../Path';
 import { cloneInstance } from '../utils';
 import type { CommandOption } from './CommandOption';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
@@ -14,7 +14,7 @@ export class TestCommand {
     constructor(
         private configuration: IConfiguration,
         private options: SpawnOptions,
-        private readonly pathReplacer: PathReplacer,
+        private readonly pathResolver: PathResolver,
         private commandOptions: CommandOption[] = [],
     ) {}
 
@@ -49,7 +49,7 @@ export class TestCommand {
     }
 
     get paths(): PathMapper {
-        return this.pathReplacer;
+        return this.pathResolver;
     }
 
     build() {
@@ -69,8 +69,8 @@ export class TestCommand {
     private environment(): Environment {
         return new CommandTemplateEnvironment(
             this.getConfigString('command'),
-            this.pathReplacer,
-            (text) => this.pathReplacer.replacePathVariables(text),
+            this.pathResolver,
+            (text) => this.pathResolver.resolveVariables(text),
         );
     }
 
@@ -85,7 +85,7 @@ export class TestCommand {
     }
 
     private phpUnitArgs(): Arg[] {
-        const userArgs = this.configuration.getArguments(this.arguments);
+        const userArgs = this.configuration.arguments(this.arguments);
         const filters = userArgs.filter((arg) => /^--filter=/.test(arg));
         const lastFilter = filters[filters.length - 1]?.match(/^--filter=(.*)/)?.[1];
 
@@ -99,7 +99,7 @@ export class TestCommand {
 
         return [
             ...args,
-            ...this.enabledOptions().flatMap((option) => option.phpUnitArgs(this.pathReplacer)),
+            ...this.enabledOptions().flatMap((option) => option.phpUnitArgs(this.pathResolver)),
         ];
     }
 

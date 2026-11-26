@@ -1,4 +1,4 @@
-import { type Path, PathReplacer, PHPUnitXML, TestCommand } from '@vscode-phpunit/phpunit';
+import { type Path, PHPUnitXML, RemotePathMapper, TestCommand } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
 import type { TestRunProfileKind, WorkspaceFolder } from 'vscode';
 import { Configuration } from '../Configuration';
@@ -16,12 +16,12 @@ export class TestCommandFactory {
 
     async create(profileKind?: TestRunProfileKind): Promise<TestCommand> {
         const options = { cwd: this.phpUnitXML.root() };
-        const pathReplacer = new PathReplacer(
+        const remotePathMapper = new RemotePathMapper(
             options,
             this.config.get('paths') as Path,
             this.workspaceFolder.uri.fsPath,
         );
         const xdebug = await this.xdebugFactory.create(profileKind);
-        return new TestCommand(this.config, options, pathReplacer, xdebug.options());
+        return new TestCommand(this.config, options, remotePathMapper, xdebug.options());
     }
 }

@@ -1,7 +1,7 @@
 import {
     Configuration,
     type Path,
-    PathReplacer,
+    RemotePathMapper,
     TeamcityEvent,
     TestCommand,
     type TestFailed,
@@ -19,7 +19,11 @@ const createTestItem = (id: string): TestItem => ({ id }) as TestItem;
 const createCommand = (command = 'php') => {
     const config = new Configuration({ php: command });
     const options = { cwd: '.' };
-    return new TestCommand(config, options, new PathReplacer(options, config.get('paths') as Path));
+    return new TestCommand(
+        config,
+        options,
+        new RemotePathMapper(options, config.get('paths') as Path),
+    );
 };
 
 const makeStarted = (id: string, locationHint: string, file: string): TestStarted => ({

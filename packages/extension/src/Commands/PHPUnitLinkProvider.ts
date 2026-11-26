@@ -45,7 +45,7 @@ export class PHPUnitLinkProvider implements DocumentLinkProvider {
 
     private resolvePath(filePath: string, phpUnitXMLs: PHPUnitXML[]): string {
         for (const xml of phpUnitXMLs) {
-            const resolved = xml.path(filePath);
+            const resolved = xml.resolvePath(filePath);
             if (resolved !== filePath) {
                 return resolved;
             }

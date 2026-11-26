@@ -19,12 +19,12 @@ describe('PHPUnit XML Test', () => {
 
     it('without tags', () => {
         const phpUnitXml = parse(generateXML(``));
-        expect(phpUnitXml.getTestSuites()).toEqual([
+        expect(phpUnitXml.testSuites()).toEqual([
             { tag: 'directory', name: 'default', value: '', suffix: '.php' },
             { tag: 'exclude', name: 'default', value: 'vendor' },
         ]);
-        expect(phpUnitXml.getIncludes()).toEqual([]);
-        expect(phpUnitXml.getExcludes()).toEqual([]);
+        expect(phpUnitXml.includes()).toEqual([]);
+        expect(phpUnitXml.excludes()).toEqual([]);
     });
 
     it('one testsuites one directory', () => {
@@ -36,7 +36,7 @@ describe('PHPUnit XML Test', () => {
             </testsuites>
         `);
 
-        expect(parse(xml).getTestSuites()).toEqual([
+        expect(parse(xml).testSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
         ]);
     });
@@ -53,17 +53,17 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
         ]);
 
-        const { includes, excludes } = parsed.getIndexPatterns(root);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = parsed.testFilePatterns(root);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php,Unit2/**/*.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**}',
         });
@@ -83,17 +83,17 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
         ]);
 
-        const { includes, excludes } = parsed.getIndexPatterns(root);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = parsed.testFilePatterns(root);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php,Feature/**/*.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**}',
         });
@@ -115,19 +115,19 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
             { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
             { tag: 'directory', name: 'Feature', value: 'tests/Feature2' },
         ]);
 
-        const { includes, excludes } = parsed.getIndexPatterns(root);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = parsed.testFilePatterns(root);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php,Unit2/**/*.php,Feature/**/*.php,Feature2/**/*.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**}',
         });
@@ -147,20 +147,20 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
             { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest.php' },
             { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
         ]);
 
-        const { includes, excludes } = parsed.getIndexPatterns(root);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = parsed.testFilePatterns(root);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern:
                 '{tests/Unit/**/*.php,tests/Unit2/**/*.php,vendor/someone/tests/MyClassTest.php,vendor/someone/tests/MyClassTest2.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**}',
         });
@@ -178,17 +178,17 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             { tag: 'directory', name: 'Unit', value: 'tests/Unit' },
             { tag: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
         ]);
 
-        const { includes, excludes } = parsed.getIndexPatterns(root);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = parsed.testFilePatterns(root);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**,tests/Integration/OldTests/**/*}',
         });
@@ -208,13 +208,13 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             { tag: 'directory', name: 'Application Test Suite', value: '.', suffix: 'Test.php' },
             { tag: 'exclude', name: 'Application Test Suite', value: 'utils' },
         ]);
 
-        const { excludes } = parsed.getIndexPatterns(root);
-        expect(excludes.toGlobPattern()).toEqual({
+        const { excludes } = parsed.testFilePatterns(root);
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**,utils/**/*}',
         });
@@ -231,7 +231,7 @@ describe('PHPUnit XML Test', () => {
 
         const parsed = parse(xml);
 
-        expect(parsed.getTestSuites()).toEqual([
+        expect(parsed.testSuites()).toEqual([
             {
                 tag: 'directory',
                 name: 'Unit',
@@ -241,8 +241,8 @@ describe('PHPUnit XML Test', () => {
             },
         ]);
 
-        const { excludes } = parsed.getIndexPatterns(root);
-        expect(excludes.toGlobPattern()).toEqual({
+        const { excludes } = parsed.testFilePatterns(root);
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**}',
         });
@@ -257,7 +257,7 @@ describe('PHPUnit XML Test', () => {
             </source>
         `);
 
-        expect(parse(xml).getIncludes()).toEqual([
+        expect(parse(xml).includes()).toEqual([
             { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
         ]);
     });
@@ -272,7 +272,7 @@ describe('PHPUnit XML Test', () => {
             </source>
         `);
 
-        expect(parse(xml).getIncludes()).toEqual([
+        expect(parse(xml).includes()).toEqual([
             { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { tag: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
         ]);
@@ -288,7 +288,7 @@ describe('PHPUnit XML Test', () => {
             </source>
         `);
 
-        expect(parse(xml).getIncludes()).toEqual([
+        expect(parse(xml).includes()).toEqual([
             { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { tag: 'file', value: 'src/autoload.php' },
         ]);
@@ -306,7 +306,7 @@ describe('PHPUnit XML Test', () => {
             </source>
         `);
 
-        expect(parse(xml).getIncludes()).toEqual([
+        expect(parse(xml).includes()).toEqual([
             { tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             { tag: 'directory', prefix: 'hello', suffix: undefined, value: 'app2' },
             { tag: 'file', value: 'src/autoload.php' },
@@ -324,7 +324,7 @@ describe('PHPUnit XML Test', () => {
             </source>
         `);
 
-        expect(parse(xml).getExcludes()).toEqual([
+        expect(parse(xml).excludes()).toEqual([
             { tag: 'directory', prefix: undefined, suffix: '.php', value: 'src/generated' },
             { tag: 'file', value: 'src/autoload.php' },
         ]);
@@ -347,7 +347,7 @@ describe('PHPUnit XML Test', () => {
             </source>
         `);
 
-        expect(parse(xml).getSources()).toEqual([
+        expect(parse(xml).sources()).toEqual([
             { type: 'include', tag: 'directory', prefix: undefined, suffix: '.php', value: 'app' },
             {
                 type: 'include',
@@ -372,11 +372,11 @@ describe('PHPUnit XML Test', () => {
     it('load file', async () => {
         await phpUnitXML.loadFile(phpUnitProject('phpunit.xml'));
 
-        expect(phpUnitXML.getTestSuites().length).not.toEqual(0);
+        expect(phpUnitXML.testSuites().length).not.toEqual(0);
     });
 });
 
-describe('getTestSuiteNames', () => {
+describe('testSuiteNames', () => {
     const phpUnitXML = new PHPUnitXML();
 
     it('should return unique testsuite names', () => {
@@ -392,7 +392,7 @@ describe('getTestSuiteNames', () => {
         `);
         phpUnitXML.load(xml, phpUnitProject('phpunit.xml'));
 
-        expect(phpUnitXML.getTestSuiteNames()).toEqual(['Unit', 'Feature']);
+        expect(phpUnitXML.testSuiteNames()).toEqual(['Unit', 'Feature']);
     });
 
     it('should return single name for one testsuite', () => {
@@ -405,7 +405,7 @@ describe('getTestSuiteNames', () => {
         `);
         phpUnitXML.load(xml, phpUnitProject('phpunit.xml'));
 
-        expect(phpUnitXML.getTestSuiteNames()).toEqual(['Unit']);
+        expect(phpUnitXML.testSuiteNames()).toEqual(['Unit']);
     });
 
     it('should deduplicate names from multiple directories', () => {
@@ -422,7 +422,7 @@ describe('getTestSuiteNames', () => {
         `);
         phpUnitXML.load(xml, phpUnitProject('phpunit.xml'));
 
-        expect(phpUnitXML.getTestSuiteNames()).toEqual(['App', 'Integration']);
+        expect(phpUnitXML.testSuiteNames()).toEqual(['App', 'Integration']);
     });
 });
 
@@ -463,12 +463,12 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
 
         phpUnitXML.load(xml, phpUnitProject('v9/phpunit.xml'));
 
-        const { includes, excludes } = phpUnitXML.getIndexPatterns(parentRoot);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = phpUnitXML.testFilePatterns(parentRoot);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(join(parentRoot, 'tests')),
             pattern: '{**/*.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(parentRoot),
             pattern: '{**/.git/**,**/node_modules/**,tests/Output/**/*}',
         });
@@ -491,12 +491,12 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
 
         expect(phpUnitXML.root()).toEqual(parentRoot);
 
-        const { includes, excludes } = phpUnitXML.getIndexPatterns(parentRoot);
-        expect(includes.toGlobPattern()).toEqual({
+        const { includes, excludes } = phpUnitXML.testFilePatterns(parentRoot);
+        expect(includes.toRelativePattern()).toEqual({
             uri: URI.file(join(parentRoot, 'tests')),
             pattern: '{**/*.php}',
         });
-        expect(excludes.toGlobPattern()).toEqual({
+        expect(excludes.toRelativePattern()).toEqual({
             uri: URI.file(parentRoot),
             pattern: '{**/.git/**,**/node_modules/**,tests/Output/**/*}',
         });
@@ -516,7 +516,7 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
 
         phpUnitXML.load(xml, phpUnitProject('v9/phpunit.xml'));
 
-        expect(phpUnitXML.path('vendor/autoload.php')).toEqual(
+        expect(phpUnitXML.resolvePath('vendor/autoload.php')).toEqual(
             phpUnitProject('v9/vendor/autoload.php'),
         );
     });

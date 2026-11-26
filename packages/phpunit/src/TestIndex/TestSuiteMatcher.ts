@@ -9,7 +9,7 @@ export class TestSuiteMatcher {
     constructor(private phpUnitXML: PHPUnitXML) {}
 
     testsuiteOf(uri: URI, suffix?: string) {
-        const testSuites = this.phpUnitXML.getTestSuites();
+        const testSuites = this.phpUnitXML.testSuites();
         const testsuite = testSuites.find((item) => {
             return ['directory', 'file'].includes(item.tag) && this.match(item, uri, suffix);
         });

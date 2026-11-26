@@ -1,11 +1,10 @@
 import type { SpawnOptions } from 'node:child_process';
-import type { PathMapper } from './PathMapper';
+import type { Path } from './Path';
+import type { PathResolver } from './PathResolver';
 import { type PathMapping, PrefixPathMapper } from './PrefixPathMapper';
 import { VariableResolver } from './VariableResolver';
 
-export type Path = { [p: string]: string };
-
-export class PathReplacer implements PathMapper {
+export class RemotePathMapper implements PathResolver {
     private readonly variables: VariableResolver;
     private readonly mapper: PrefixPathMapper;
 
@@ -38,7 +37,7 @@ export class PathReplacer implements PathMapper {
         this.mapper = new PrefixPathMapper(mappings, cwd);
     }
 
-    replacePathVariables(path: string) {
+    resolveVariables(path: string) {
         return this.variables.resolve(path);
     }
 

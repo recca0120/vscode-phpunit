@@ -19,9 +19,9 @@ export interface IConfiguration {
 
     update(key: string, value: unknown): Promise<void>;
 
-    getArguments(input: string): string[];
+    arguments(input: string): string[];
 
-    getConfigurationFile(root?: string): Promise<string | undefined>;
+    findConfigurationFile(root?: string): Promise<string | undefined>;
 }
 
 export abstract class BaseConfiguration implements IConfiguration {
@@ -41,18 +41,18 @@ export abstract class BaseConfiguration implements IConfiguration {
 
     abstract update(key: string, value: unknown): Promise<void>;
 
-    getArguments(input: string = ''): string[] {
+    arguments(input: string = ''): string[] {
         const args = (this.get('args', []) as string[]).map(quoteInlineOptionValue);
 
         return parseArgumentGroups([args, [input]], ['teamcity', 'colors', 'testdox', 'c']);
     }
 
-    async getConfigurationFile(root: string = ''): Promise<string | undefined> {
+    async findConfigurationFile(root: string = ''): Promise<string | undefined> {
         let files = ['phpunit.xml', 'phpunit.xml.dist', 'phpunit.dist.xml'].map((file) =>
             join(root, file),
         );
 
-        const configuration = this.getArguments().find((parameter: string) =>
+        const configuration = this.arguments().find((parameter: string) =>
             parameter.startsWith('--configuration'),
         );
         if (configuration) {
