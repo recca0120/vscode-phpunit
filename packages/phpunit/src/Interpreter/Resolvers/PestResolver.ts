@@ -95,6 +95,11 @@ function extractSkipReason(args: AstNode[]): string | undefined {
     return message?.kind === 'string' ? message.value : undefined;
 }
 
+function isFalseCondition(args: AstNode[]): boolean {
+    const conditionOrMessage = unwrapArgument(args[0]);
+    return conditionOrMessage?.kind === 'boolean' && conditionOrMessage.value === false;
+}
+
 function extractStringArguments(args: AstNode[]): string[] {
     return args
         .map(unwrapArgument)
@@ -139,6 +144,9 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
         } else if (modifierNames.has(cur.name)) {
             switch (cur.name) {
                 case 'skip':
+                    if (isFalseCondition(cur.arguments)) {
+                        break;
+                    }
                     skipped = true;
                     skipReason = extractSkipReason(cur.arguments) ?? skipReason;
                     break;

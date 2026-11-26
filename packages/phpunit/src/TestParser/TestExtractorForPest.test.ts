@@ -346,6 +346,17 @@ it('does something', function () {
         );
     });
 
+    it('does not mark ->skip(false, reason) tests as skipped', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip(false, 'not ready yet');
+        `;
+
+        expect(givenTest(file, content, 'it does something')?.annotations).toEqual({});
+    });
+
     it('marks ->todo() tests with annotations.todo', async () => {
         const content = `<?php
 
