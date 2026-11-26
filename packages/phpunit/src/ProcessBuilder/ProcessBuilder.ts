@@ -3,17 +3,11 @@ import { randomBytes } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { IConfiguration, PathReplacer } from '../Configuration';
-import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from '../constants';
 import type { TestResult } from '../TestOutput';
-import { cloneInstance, parseArgv } from '../utils';
+import { cloneInstance } from '../utils';
+import { CommandTemplateEnvironment, type Environment } from './Environment';
+import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
 import type { Xdebug } from './Xdebug';
-
-const isSSH = (command: string) => /^ssh/.test(command);
-const isShellCommand = (command: string) => /sh\s+-c/.test(command);
-const keyVariable = (key: string) => `\${${key}}`;
-
-const FILTER_PLACEHOLDER = '__FILTER_PLACEHOLDER__';
-const argPlaceholder = (index: number) => `__ARG_PLACEHOLDER_${index}__`;
 
 export class ProcessBuilder {
     private arguments = '';
@@ -82,11 +76,7 @@ export class ProcessBuilder {
     }
 
     build() {
-        const [runtime, ...args] = this.create()
-            .filter((input: string) => !!input)
-            .map((input: string) => this.pathReplacer.replacePathVariables(input).trim());
-
-        return { runtime, args, options: { ...this.options, env: this.getEnvironment() } };
+        return this.environment().launch(this.invocation());
     }
 
     replacePath(result: TestResult): TestResult {
@@ -116,98 +106,38 @@ export class ProcessBuilder {
         return `${runtime} ${args.join(' ')}`;
     }
 
-    private create() {
-        let command = this.getConfigString('command');
-        const isRemoteCommand = isSSH(command) || isShellCommand(command);
-        const args = this.getArguments();
-
-        command = this.ensureVariablePlaceholders(command, args, isRemoteCommand);
-        command = this.convertSingleToDoubleQuotes(command);
-        command = this.removeEmptyPhpArgs(command, args);
-        command = this.substituteVariables(command, args.variables);
-
-        const tokens = parseArgv(command);
-
-        return this.replacePlaceholders(tokens, args.placeholders, isRemoteCommand);
-    }
-
-    private replacePlaceholders(
-        tokens: string[],
-        placeholders: Map<string, string>,
-        needsQuote: boolean,
-    ) {
-        if (placeholders.size === 0) {
-            return tokens;
-        }
-
-        return tokens.map((token) => {
-            for (const [placeholder, arg] of placeholders) {
-                if (!token.includes(placeholder)) {
-                    continue;
-                }
-
-                const quoted = this.quoteArgument(arg, needsQuote);
-                token = token.replace(placeholder, () => quoted);
-            }
-
-            return token;
-        });
-    }
-
-    private quoteArgument(arg: string, needsQuote: boolean) {
-        if (!needsQuote) {
-            return arg;
-        }
-
-        if (!arg.includes("'")) {
-            return `'${arg}'`;
-        }
-
-        return `"${arg.replace(/"/g, '\\"')}"`;
-    }
-
-    private ensureVariablePlaceholders(
-        command: string,
-        args: { variables: { [p: string]: string } },
-        isRemoteCommand: boolean,
-    ) {
-        if (this.hasVariable(args.variables, command)) {
-            return command;
-        }
-
-        return command + (isRemoteCommand ? ` ${CMD_TEMPLATE_QUOTED}` : ` ${CMD_TEMPLATE}`);
-    }
-
-    private convertSingleToDoubleQuotes(command: string) {
-        return command.replace(/('\${(php|phpargs|phpunit|phpunitargs)}.*?')/g, (_m, ...matched) =>
-            matched[0].replace(/^['"]|['"]$/g, '"'),
+    private environment(): Environment {
+        return new CommandTemplateEnvironment(
+            this.getConfigString('command'),
+            this.pathReplacer,
+            (text) => this.pathReplacer.replacePathVariables(text),
         );
     }
 
-    private removeEmptyPhpArgs(command: string, args: { variables: { [p: string]: string } }) {
-        return args.variables.phpargs ? command : command.replace(/\s+\$\{phpargs\}/, '');
-    }
-
-    private substituteVariables(command: string, variableMap: { [p: string]: string }) {
-        return Object.entries(variableMap).reduce(
-            (cmd, [key, value]) => cmd.replace(keyVariable(key), value.trim()),
-            command.trim(),
-        );
-    }
-
-    private getArguments() {
-        const { phpunitargs, placeholders } = this.getPhpUnitArgs();
+    private invocation(): Invocation {
         return {
-            variables: {
-                php: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getConfigString('php'))),
-                phpargs: this.getPhpArgs(),
-                phpunit: this.quoteIfNeeded(
-                    this.pathReplacer.toRemote(this.getConfigString('phpunit')),
-                ),
-                phpunitargs,
-            },
-            placeholders,
+            php: this.getConfigString('php'),
+            phpArgs: this.xdebug?.getPhpArgs() ?? [],
+            binary: this.getConfigString('phpunit'),
+            args: this.phpUnitArgs(),
+            options: { ...this.options, env: this.getEnvironment() },
         };
+    }
+
+    private phpUnitArgs(): Arg[] {
+        const userArgs = this.configuration.getArguments(this.arguments);
+        const filters = userArgs.filter((arg) => /^--filter=/.test(arg));
+        const lastFilter = filters[filters.length - 1]?.match(/^--filter=(.*)/)?.[1];
+
+        const args: Arg[] = userArgs.map((arg) =>
+            /^--filter=/.test(arg) ? intactArg(`--filter=${lastFilter}`) : pathArg(arg),
+        );
+        args.push('--colors=always', '--teamcity');
+        if (filters.length > 0 && this.isParaTest()) {
+            args.push('--functional');
+        }
+
+        return [...args, ...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? [])];
     }
 
     private getEnvironment() {
@@ -218,66 +148,8 @@ export class ProcessBuilder {
         };
     }
 
-    private getPhpArgs() {
-        return this.xdebug?.getPhpArgs().join(' ') ?? '';
-    }
-
     private getConfigString(key: string) {
         return String(this.configuration.get(key) ?? '');
-    }
-
-    private quoteIfNeeded(value: string) {
-        const hasSpaces = value?.includes(' ');
-        const isUnquoted = !/^["']/.test(value);
-        const isPath = /[/\\]/.test(value);
-
-        if (hasSpaces && isUnquoted && isPath) {
-            return `"${value}"`;
-        }
-        return value;
-    }
-
-    private getPhpUnitArgs(): {
-        phpunitargs: string;
-        filterArg?: string;
-        placeholders: Map<string, string>;
-    } {
-        let filterArg: string | undefined;
-        const placeholders = new Map<string, string>();
-
-        const args = this.configuration
-            .getArguments(this.arguments)
-            .map((arg: string) => {
-                const filterMatch = arg.match(/^--filter=(.*)/);
-                if (filterMatch) {
-                    filterArg = `--filter=${filterMatch[1]}`;
-                    placeholders.set(FILTER_PLACEHOLDER, filterArg);
-                    return FILTER_PLACEHOLDER;
-                }
-
-                const remoteArg = this.pathReplacer.toRemote(arg);
-                if (!/^-.*\s/.test(remoteArg)) {
-                    return this.quoteIfNeeded(remoteArg);
-                }
-
-                const placeholder = argPlaceholder(placeholders.size);
-                placeholders.set(placeholder, remoteArg);
-                return placeholder;
-            })
-            .concat('--colors=always', '--teamcity');
-
-        const allArgs = this.addParaTestFunctional(args, !!filterArg)
-            .concat(...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? []))
-            .join(' ');
-
-        return { phpunitargs: allArgs, filterArg, placeholders };
-    }
-
-    private addParaTestFunctional(args: string[], hasFilter: boolean) {
-        if (this.isParaTest() && hasFilter) {
-            return args.concat('--functional');
-        }
-        return args;
     }
 
     private isParaTest() {
@@ -285,16 +157,5 @@ export class ProcessBuilder {
             /paratest/.test(this.getConfigString('command')) ||
             /paratest/.test(this.getConfigString('phpunit'))
         );
-    }
-
-    private hasVariable(variables: { [p: string]: string }, command: string) {
-        return new RegExp(this.hasVariablePattern(variables)).test(command);
-    }
-
-    private hasVariablePattern(variables: { [p: string]: string }) {
-        return Object.keys(variables)
-            .map((key) => keyVariable(key))
-            .join('|')
-            .replace(/[${}]/g, (m) => `\\${m}`);
     }
 }
