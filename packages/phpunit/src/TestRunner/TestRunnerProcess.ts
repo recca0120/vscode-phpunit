@@ -20,7 +20,7 @@ export class TestRunnerProcess {
     private closed = false;
 
     constructor(
-        private builder: TestCommand,
+        private command: TestCommand,
         events?: TestRunnerEmitter,
         private testOutputParser = new TestOutputParser(),
     ) {
@@ -60,7 +60,7 @@ export class TestRunnerProcess {
     }
 
     async readCoverage(): Promise<FileCoverageData[]> {
-        const cloverFile = this.builder.getCloverFile();
+        const cloverFile = this.command.getCloverFile();
         if (!cloverFile) {
             return [];
         }
@@ -70,7 +70,7 @@ export class TestRunnerProcess {
 
         return data.map((d) => ({
             ...d,
-            filePath: this.builder.getPathReplacer().toLocal(d.filePath),
+            filePath: this.command.getPathReplacer().toLocal(d.filePath),
         }));
     }
 
@@ -85,8 +85,8 @@ export class TestRunnerProcess {
         this.stdoutBuffer = '';
         this.stderrBuffer = '';
 
-        this.emitter.emit('start', this.builder);
-        const { runtime, args, options } = this.builder.build();
+        this.emitter.emit('start', this.command);
+        const { runtime, args, options } = this.command.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
         this.child.stdout?.on('data', (data) => this.processStream(data, 'stdout'));
         this.child.stderr?.on('data', (data) => this.processStream(data, 'stderr'));
@@ -124,7 +124,7 @@ export class TestRunnerProcess {
     }
 
     private forwardTo(events: TestRunnerEmitter) {
-        this.on('start', () => events.emit(TestRunnerEvent.run, this.builder));
+        this.on('start', () => events.emit(TestRunnerEvent.run, this.command));
         this.on('line', (line: string) => this.forwardLine(events, line));
         this.on('error', (err: Error) => this.forwardError(events, err));
         this.on('close', (code: number | null, output: string) =>
@@ -142,7 +142,7 @@ export class TestRunnerProcess {
             return;
         }
 
-        const replaced = this.builder.replacePath(result);
+        const replaced = this.command.replacePath(result);
         if ('event' in replaced) {
             events.emit(replaced.event, replaced);
         }

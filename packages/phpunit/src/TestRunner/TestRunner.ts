@@ -32,8 +32,8 @@ export class TestRunner implements TestRunnerEmitter {
         return this;
     }
 
-    run(builder: TestCommand) {
-        return new TestRunnerProcess(builder, this, this.testOutputParser);
+    run(command: TestCommand) {
+        return new TestRunnerProcess(command, this, this.testOutputParser);
     }
 
     emit<K extends keyof EventResultMap>(eventName: K, result: EventResultMap[K]) {
