@@ -4,5 +4,7 @@ export * from './Configuration';
 export * from './PathMapper';
 export * from './PathReplacer';
 export * from './PHPUnitXML';
+export * from './PrefixPathMapper';
 export * from './TestGlobPattern';
 export * from './TestSuiteMatcher';
+export * from './VariableResolver';
