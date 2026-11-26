@@ -27,6 +27,7 @@ import {
     TestQueueBuilder,
     TestRunDispatcher,
     TestRunHandler,
+    XdebugFactory,
 } from './TestExecution';
 import { TYPES } from './types';
 import { WorkspaceFolderManager } from './WorkspaceFolderManager';
@@ -86,6 +87,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
         })
         .inSingletonScope();
 
+    child.bind(XdebugFactory).toSelf().inSingletonScope();
     child.bind(TestCommandFactory).toSelf().inSingletonScope();
     child.bind(ObserverFactory).toSelf().inSingletonScope();
     child
