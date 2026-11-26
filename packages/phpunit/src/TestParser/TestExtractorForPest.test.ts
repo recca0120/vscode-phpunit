@@ -42,6 +42,21 @@ test('example', function () {
         );
     });
 
+    it('test range ends at the closing parenthesis of the call', async () => {
+        const content = `<?php
+
+test('example', function () {
+    expect(true)->toBeTrue();
+});
+`;
+        expect(givenTest(file, content, 'example')).toEqual(
+            expect.objectContaining({
+                start: { line: 3, character: 0 },
+                end: { line: 5, character: 2 },
+            }),
+        );
+    });
+
     it('ExampleTest', async () => {
         const content = `<?php 
 
