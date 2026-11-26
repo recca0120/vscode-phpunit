@@ -27,6 +27,29 @@ interface ParsedOption {
 }
 
 export function parseArguments(parameters: string[], excludes: string[]): string[] {
+    const { options, positionals } = splitArguments(parameters, excludes);
+
+    return [...options, ...positionals];
+}
+
+/**
+ * Parse each group on its own so an option at the end of one group can't take
+ * the first positional of the next group as its value, then keep the usual
+ * ordering: every option (in group order) first, then every positional.
+ */
+export function parseArgumentGroups(groups: string[][], excludes: string[]): string[] {
+    const parsed = groups.map((parameters) => splitArguments(parameters, excludes));
+
+    return [
+        ...parsed.flatMap(({ options }) => options),
+        ...parsed.flatMap(({ positionals }) => positionals),
+    ];
+}
+
+function splitArguments(
+    parameters: string[],
+    excludes: string[],
+): { options: string[]; positionals: string[] } {
     const tokens = tokenize(parameters.join(' ').trim());
     const nextValue = (i: number) =>
         i + 1 < tokens.length && !stripQuotes(tokens[i + 1]).startsWith('-')
@@ -54,7 +77,7 @@ export function parseArguments(parameters: string[], excludes: string[]): string
         }
     }
 
-    return [...options, ...positionals];
+    return { options, positionals };
 }
 
 function parseLongOption(
