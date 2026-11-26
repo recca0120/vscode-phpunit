@@ -3,6 +3,7 @@ import type { IConfiguration, PathReplacer } from '../Configuration';
 import { CoverageFiles } from '../TestCoverage';
 import type { TestResult } from '../TestOutput';
 import { cloneInstance } from '../utils';
+import type { CommandOption } from './CommandOption';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
 import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
 import type { Xdebug } from './Xdebug';
@@ -102,7 +103,7 @@ export class TestCommand {
     private invocation(): Invocation {
         return {
             php: this.getConfigString('php'),
-            phpArgs: this.xdebug?.getPhpArgs() ?? [],
+            phpArgs: this.enabledOptions().flatMap((option) => option.phpArgs()),
             binary: this.getConfigString('phpunit'),
             args: this.phpUnitArgs(),
             options: { ...this.options, env: this.getEnvironment() },
@@ -122,15 +123,22 @@ export class TestCommand {
             args.push('--functional');
         }
 
-        return [...args, ...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? [])];
+        return [
+            ...args,
+            ...this.enabledOptions().flatMap((option) => option.phpUnitArgs(this.pathReplacer)),
+        ];
     }
 
     private getEnvironment() {
         return {
             ...process.env,
-            ...this.xdebug?.getEnvironment(),
+            ...Object.assign({}, ...this.enabledOptions().map((option) => option.environment())),
             ...(this.configuration.get('environment') ?? {}),
         };
+    }
+
+    private enabledOptions(): CommandOption[] {
+        return (this.xdebug?.options() ?? []).filter((option) => option.isEnabled());
     }
 
     private getConfigString(key: string) {
