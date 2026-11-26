@@ -36,22 +36,6 @@ export class ClassHierarchy {
         return this.registry.get(classFQN);
     }
 
-    extendsTestCase(classFQN: string): boolean {
-        const visited = new Set<string>();
-        let current: string | undefined = classFQN;
-        while (current) {
-            if (current === PHPUNIT_TESTCASE_FQN) {
-                return true;
-            }
-            if (visited.has(current)) {
-                return false;
-            }
-            visited.add(current);
-            current = this.registry.get(current)?.parentFQN;
-        }
-        return false;
-    }
-
     mayExtendTestCase(classFQN: string): boolean {
         const visited = new Set<string>();
         let current = classFQN;
