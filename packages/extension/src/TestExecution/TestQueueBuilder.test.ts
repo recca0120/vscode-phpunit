@@ -16,7 +16,7 @@ import { TestQueueBuilder } from './TestQueueBuilder';
 
 describe('TestQueueBuilder', () => {
     let ctrl: TestController;
-    let collection: TestTree;
+    let testTree: TestTree;
     let builder: TestQueueBuilder;
     const phpUnitXML = new PHPUnitXML();
 
@@ -33,12 +33,12 @@ describe('TestQueueBuilder', () => {
         );
         const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
         const testParser = new TestParser(phpUnitXML, astParser);
-        collection = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
-        builder = new TestQueueBuilder(collection);
+        testTree = new TestTree(ctrl, phpUnitXML, new TestIndex(phpUnitXML, testParser));
+        builder = new TestQueueBuilder(testTree);
     });
 
     it('should enqueue test items during build when testRun is provided', async () => {
-        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const request = {
@@ -54,7 +54,7 @@ describe('TestQueueBuilder', () => {
     });
 
     it('should work without testRun (backward compatible)', async () => {
-        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const request = {
             include: [...toArray(ctrl.items)],
@@ -65,7 +65,7 @@ describe('TestQueueBuilder', () => {
     });
 
     it('should enqueue via buildFromCollection', async () => {
-        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const testRun = { enqueued: vi.fn() } as unknown as TestRun;
         const request = {} as unknown as import('vscode').TestRunRequest;
@@ -76,7 +76,7 @@ describe('TestQueueBuilder', () => {
     });
 
     it('should enqueue dataset children when a method with datasets is queued', async () => {
-        await collection.add(URI.file(phpUnitProject('tests/DataProviderAttributeTest.php')));
+        await testTree.add(URI.file(phpUnitProject('tests/DataProviderAttributeTest.php')));
 
         let methodItem: import('vscode').TestItem | undefined;
         for (const [, ns] of ctrl.items) {
@@ -105,7 +105,7 @@ describe('TestQueueBuilder', () => {
     });
 
     it('should exclude items in request.exclude', async () => {
-        await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+        await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const allItems = [...toArray(ctrl.items)];
         const methods: import('vscode').TestItem[] = [];
@@ -130,9 +130,9 @@ describe('TestQueueBuilder', () => {
     });
 });
 
-function toArray(collection: import('vscode').TestItemCollection): import('vscode').TestItem[] {
+function toArray(testTree: import('vscode').TestItemCollection): import('vscode').TestItem[] {
     const items: import('vscode').TestItem[] = [];
-    for (const [, item] of collection) {
+    for (const [, item] of testTree) {
         items.push(item);
     }
     return items;

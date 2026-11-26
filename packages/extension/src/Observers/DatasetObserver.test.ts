@@ -51,7 +51,7 @@ describe('DatasetObserver', () => {
         ) as TestItem;
 
         const queue = new Map<TestDefinition, TestItem>();
-        queue.set(testTree.getTestDefinition(parentItem) as TestDefinition, parentItem);
+        queue.set(testTree.definitionOf(parentItem) as TestDefinition, parentItem);
         testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
         observer = new DatasetObserver(testTree, testItemById);
     });
@@ -69,7 +69,7 @@ describe('DatasetObserver', () => {
         expect(child).toBeDefined();
         expect(child?.label).toContain('with data set #0');
 
-        const childDef = testTree.getTestDefinition(child as TestItem);
+        const childDef = testTree.definitionOf(child as TestItem);
         expect(childDef).toBeDefined();
         expect(childDef?.type).toBe(TestType.dataset);
 
@@ -186,7 +186,7 @@ describe('DatasetObserver (Pest)', () => {
         ) as TestItem;
 
         const queue = new Map<TestDefinition, TestItem>();
-        queue.set(testTree.getTestDefinition(parentItem) as TestDefinition, parentItem);
+        queue.set(testTree.definitionOf(parentItem) as TestDefinition, parentItem);
         testItemById = new Map([...queue.values()].map((item) => [item.id, item]));
         observer = new DatasetObserver(testTree, testItemById);
     });
@@ -207,7 +207,7 @@ describe('DatasetObserver (Pest)', () => {
         expect(child?.id).toBe(childId);
         expect(child?.label).toContain("with ('enunomaduro@gmail.com')");
 
-        const childDef = testTree.getTestDefinition(child as TestItem);
+        const childDef = testTree.definitionOf(child as TestItem);
         expect(childDef).toBeDefined();
         expect(childDef?.type).toBe(TestType.dataset);
         expect(childDef?.id).toBe(childId);

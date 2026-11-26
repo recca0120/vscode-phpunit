@@ -204,7 +204,7 @@ export class WorkspaceFolderManager {
 
     private cleanupContainer(container: Container): void {
         container.get(TestFileWatcher).dispose();
-        container.get(TestTree).reset();
+        container.get(TestTree).clear();
         container.get<EventEmitter<Uri>>(TYPES.FileChangedEmitter).dispose();
     }
 

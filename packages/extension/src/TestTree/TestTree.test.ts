@@ -223,15 +223,15 @@ class NoNamespaceTest extends TestCase
             });
 
             it('re-parse replaces children, not accumulates', async () => {
-                const collection = givenTestTree(`
+                const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="default">
                             <directory>tests</directory>
                         </testsuite>
                     </testsuites>`);
 
-                await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
-                await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+                await testTree.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
                 const ns = ctrl.items.get('namespace:Tests') as TestItem;
                 expect(ns).toBeDefined();
@@ -242,17 +242,17 @@ class NoNamespaceTest extends TestCase
             });
 
             it('with folder root (multi-workspace)', async () => {
-                const collection = givenTestTree(`
+                const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="default">
                             <directory>tests</directory>
                         </testsuite>
                     </testsuites>`);
 
-                const folderItem = collection.createFolderRoot(workspaceFolder);
+                const folderItem = testTree.createFolderRoot(workspaceFolder);
                 ctrl.items.add(folderItem);
 
-                await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
                 expect(toTree(ctrl.items)).toEqual([
                     {
@@ -373,7 +373,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('scrambled add order preserves testsuite order and namespace stripping', async () => {
-                const collection = givenTestTree(`
+                const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -383,12 +383,12 @@ class NoNamespaceTest extends TestCase
                         </testsuite>
                     </testsuites>`);
 
-                await collection.add(
+                await testTree.add(
                     URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
                 );
-                await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
-                await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
-                await collection.add(
+                await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+                await testTree.add(
                     URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')),
                 );
 
@@ -402,7 +402,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('change updates tree without corrupting other testsuite', async () => {
-                const collection = givenTestTree(`
+                const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -412,10 +412,10 @@ class NoNamespaceTest extends TestCase
                         </testsuite>
                     </testsuites>`);
 
-                await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
-                await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
-                await collection.change(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+                await testTree.update(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
@@ -426,7 +426,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('delete cleans up empty parents', async () => {
-                const collection = givenTestTree(`
+                const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -436,10 +436,10 @@ class NoNamespaceTest extends TestCase
                         </testsuite>
                     </testsuites>`);
 
-                await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
-                await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+                await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
-                await collection.delete(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+                await testTree.remove(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature']);
 
                 expect(
@@ -450,7 +450,7 @@ class NoNamespaceTest extends TestCase
             });
 
             it('full lifecycle: scrambled add → change → delete', async () => {
-                const collection = givenTestTree(`
+                const testTree = givenTestTree(`
                     <testsuites>
                         <testsuite name="Unit">
                             <directory>tests/Unit</directory>
@@ -469,10 +469,10 @@ class NoNamespaceTest extends TestCase
                     phpUnitProject('tests/Feature/SubFolder/ExampleTest.php'),
                 );
 
-                await collection.add(featureSubFolder);
-                await collection.add(unitExample);
-                await collection.add(featureExample);
-                await collection.add(unitSubFolder);
+                await testTree.add(featureSubFolder);
+                await testTree.add(unitExample);
+                await testTree.add(featureExample);
+                await testTree.add(unitSubFolder);
 
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
                 expect(
@@ -482,20 +482,20 @@ class NoNamespaceTest extends TestCase
                     ctrl.items.get('testsuite:Feature')?.children.get('namespace:Tests'),
                 ).toBeUndefined();
 
-                await collection.change(unitExample);
+                await testTree.update(unitExample);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
                 expect(ctrl.items.get('testsuite:Feature')?.children.size).toBe(2);
 
-                await collection.delete(featureExample);
+                await testTree.remove(featureExample);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
-                await collection.delete(featureSubFolder);
+                await testTree.remove(featureSubFolder);
                 expect(collectIds(ctrl.items)).toEqual(['testsuite:Unit']);
             });
         });
 
         it('delete folder removes all tests under that folder', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -505,19 +505,19 @@ class NoNamespaceTest extends TestCase
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Unit/SubFolder/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
 
-            await collection.delete(URI.file(phpUnitProject('tests/Unit')));
+            await testTree.remove(URI.file(phpUnitProject('tests/Unit')));
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature']);
         });
 
         it('file outside all testsuite directories should not appear in tree', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -527,9 +527,9 @@ class NoNamespaceTest extends TestCase
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             expect(collectIds(ctrl.items)).toEqual(['testsuite:Feature', 'testsuite:Unit']);
             expect(ctrl.items.get('namespace:Tests')).toBeUndefined();
@@ -1691,14 +1691,14 @@ class NoDatasetTest extends TestCase
             }) as unknown as TestStarted;
 
         it('creates dataset child with correct TestDefinition in index', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const ns = ctrl.items.get('namespace:Tests') as TestItem;
             const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
@@ -1707,14 +1707,14 @@ class NoDatasetTest extends TestCase
             ) as TestItem;
             expect(methodItem).toBeDefined();
 
-            const childItem = collection.resolveDatasetChild(
+            const childItem = testTree.addDatasetChild(
                 makeTestStarted(methodItem.id, 'addition_provider with data set #0'),
             );
             expect(childItem).toBeDefined();
 
             expect(methodItem.children.get(childItem?.id ?? '')).toBe(childItem);
 
-            const storedDef = collection.getTestDefinition(childItem as TestItem);
+            const storedDef = testTree.definitionOf(childItem as TestItem);
             expect(storedDef).toBeDefined();
             expect(storedDef?.type).toBe(TestType.dataset);
 
@@ -1722,14 +1722,14 @@ class NoDatasetTest extends TestCase
         });
 
         it('skips on repeated calls when child already exists', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const ns = ctrl.items.get('namespace:Tests') as TestItem;
             const classItem = ns.children.get('Assertions (Tests\\Assertions)') as TestItem;
@@ -1738,10 +1738,10 @@ class NoDatasetTest extends TestCase
             ) as TestItem;
 
             const result = makeTestStarted(methodItem.id, 'addition_provider with data set #0');
-            const child1 = collection.resolveDatasetChild(result);
+            const child1 = testTree.addDatasetChild(result);
             expect(child1).toBeDefined();
 
-            const child2 = collection.resolveDatasetChild(result);
+            const child2 = testTree.addDatasetChild(result);
             expect(child2).toBeUndefined();
 
             expect(methodItem.children.get(child1?.id ?? '')).toBe(child1);
@@ -1791,7 +1791,7 @@ class ChildTest extends BaseCase
 
         it('updates the subclass tests when the parent class changes', async () => {
             const { root, writeBase } = await writeProject(['test_a']);
-            const collection = givenTestTree(
+            const testTree = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests/Unit</directory>
@@ -1799,10 +1799,10 @@ class ChildTest extends BaseCase
                 </testsuites>`,
                 join(root, 'phpunit.xml'),
             );
-            await collection.add(URI.file(join(root, 'tests/Unit/ChildTest.php')));
+            await testTree.add(URI.file(join(root, 'tests/Unit/ChildTest.php')));
 
             await writeBase(['test_a', 'test_b']);
-            await collection.change(URI.file(join(root, 'tests/Support/BaseCase.php')));
+            await testTree.update(URI.file(join(root, 'tests/Support/BaseCase.php')));
 
             const allIds = (items: import('vscode').TestItemCollection): string[] =>
                 [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
@@ -1822,7 +1822,7 @@ class ChildTest extends BaseCase
             for (const [file, code] of Object.entries(files)) {
                 await writeFile(join(root, 'tests', file), code);
             }
-            const collection = givenTestTree(
+            const testTree = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests</directory>
@@ -1831,7 +1831,7 @@ class ChildTest extends BaseCase
                 join(root, 'phpunit.xml'),
             );
             for (const file of order) {
-                await collection.add(URI.file(join(root, 'tests', file)));
+                await testTree.add(URI.file(join(root, 'tests', file)));
             }
             await rm(root, { recursive: true, force: true });
 
@@ -1924,7 +1924,7 @@ trait Inner
             for (const [file, code] of Object.entries(files)) {
                 await writeFile(join(root, 'tests', file), code);
             }
-            const collection = givenTestTree(
+            const testTree = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests</directory>
@@ -1933,7 +1933,7 @@ trait Inner
                 join(root, 'phpunit.xml'),
             );
             const uriOf = (file: string) => URI.file(join(root, 'tests', file));
-            return { root, collection, uriOf };
+            return { root, testTree, uriOf };
         };
 
         const fooIds = () => {
@@ -1945,7 +1945,7 @@ trait Inner
         };
 
         it('drops the methods of a trait that was renamed', async () => {
-            const { root, collection, uriOf } = await writeProject({
+            const { root, testTree, uriOf } = await writeProject({
                 'FooTest.php': `<?php
 namespace Tests;
 class FooTest extends \\PHPUnit\\Framework\\TestCase
@@ -1963,8 +1963,8 @@ trait Shared
 }
 `,
             });
-            await collection.add(uriOf('FooTest.php'));
-            await collection.add(uriOf('Shared.php'));
+            await testTree.add(uriOf('FooTest.php'));
+            await testTree.add(uriOf('Shared.php'));
 
             await writeFile(
                 join(root, 'tests/Shared.php'),
@@ -1976,14 +1976,14 @@ trait Renamed
 }
 `,
             );
-            await collection.change(uriOf('Shared.php'));
+            await testTree.update(uriOf('Shared.php'));
 
             expect(fooIds()).toEqual(['Foo (Tests\\Foo)::Own']);
             await rm(root, { recursive: true, force: true });
         });
 
         it('drops the methods of a parent class whose file was deleted', async () => {
-            const { root, collection, uriOf } = await writeProject({
+            const { root, testTree, uriOf } = await writeProject({
                 'FooTest.php': `<?php
 namespace Tests;
 class FooTest extends Base
@@ -1999,18 +1999,18 @@ abstract class Base extends \\PHPUnit\\Framework\\TestCase
 }
 `,
             });
-            await collection.add(uriOf('FooTest.php'));
-            await collection.add(uriOf('Base.php'));
+            await testTree.add(uriOf('FooTest.php'));
+            await testTree.add(uriOf('Base.php'));
 
             await rm(join(root, 'tests/Base.php'));
-            await collection.delete(uriOf('Base.php'));
+            await testTree.remove(uriOf('Base.php'));
 
             expect(fooIds()).toEqual(['Foo (Tests\\Foo)::Own']);
             await rm(root, { recursive: true, force: true });
         });
 
         it('drops a class once its parent stops extending TestCase', async () => {
-            const { root, collection, uriOf } = await writeProject({
+            const { root, testTree, uriOf } = await writeProject({
                 'FooTest.php': `<?php
 namespace Tests;
 class FooTest extends Base
@@ -2026,8 +2026,8 @@ abstract class Base extends \\PHPUnit\\Framework\\TestCase
 }
 `,
             });
-            await collection.add(uriOf('Base.php'));
-            await collection.add(uriOf('FooTest.php'));
+            await testTree.add(uriOf('Base.php'));
+            await testTree.add(uriOf('FooTest.php'));
 
             await writeFile(
                 join(root, 'tests/Base.php'),
@@ -2039,7 +2039,7 @@ abstract class Base
 }
 `,
             );
-            await collection.change(uriOf('Base.php'));
+            await testTree.update(uriOf('Base.php'));
 
             expect(fooIds()).toEqual([]);
             await rm(root, { recursive: true, force: true });
@@ -2086,7 +2086,7 @@ class ExtendsPlainBaseTest extends PlainBase
 }
 `,
             );
-            const collection = givenTestTree(
+            const testTree = givenTestTree(
                 `<testsuites>
                     <testsuite name="Unit">
                         <directory suffix="Test.php">tests/Unit</directory>
@@ -2094,9 +2094,9 @@ class ExtendsPlainBaseTest extends PlainBase
                 </testsuites>`,
                 join(root, 'phpunit.xml'),
             );
-            await collection.add(URI.file(join(root, 'tests/Unit/PlainBase.php')));
-            await collection.add(URI.file(join(root, 'tests/Unit/PlainHelperTest.php')));
-            await collection.add(URI.file(join(root, 'tests/Unit/ExtendsPlainBaseTest.php')));
+            await testTree.add(URI.file(join(root, 'tests/Unit/PlainBase.php')));
+            await testTree.add(URI.file(join(root, 'tests/Unit/PlainHelperTest.php')));
+            await testTree.add(URI.file(join(root, 'tests/Unit/ExtendsPlainBaseTest.php')));
 
             const allIds = (items: import('vscode').TestItemCollection): string[] =>
                 [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
@@ -2107,18 +2107,18 @@ class ExtendsPlainBaseTest extends PlainBase
 
     describe('index operations', () => {
         it('find groups and tests by group', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
 
-            expect(collection.findGroups()).toEqual(['integration']);
-            expect(collection.findTestsByGroup('integration')).toEqual(
+            expect(testTree.groups()).toEqual(['integration']);
+            expect(testTree.itemsInGroup('integration')).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
                         id: 'Assertions (Tests\\Assertions)::Passed',
@@ -2131,111 +2131,111 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('findTestsByRequest should return matching items by id lookup', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const testItem = {
                 id: 'Assertions (Tests\\Assertions)::Passed',
             } as import('vscode').TestItem;
             const request = { include: [testItem] } as unknown as import('vscode').TestRunRequest;
-            const result = collection.findTestsByRequest(request);
+            const result = testTree.itemsOf(request);
 
             expect(result).toHaveLength(1);
             expect(result?.[0].id).toBe('Assertions (Tests\\Assertions)::Passed');
         });
 
         it('findTestsByRequest should return undefined for no match', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const request = {
                 include: [{ id: 'nonexistent' } as import('vscode').TestItem],
             } as unknown as import('vscode').TestRunRequest;
-            expect(collection.findTestsByRequest(request)).toBeUndefined();
+            expect(testTree.itemsOf(request)).toBeUndefined();
         });
 
         it('findTestsByRequest should return undefined when no request', () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            expect(collection.findTestsByRequest(undefined)).toBeUndefined();
+            expect(testTree.itemsOf(undefined)).toBeUndefined();
             expect(
-                collection.findTestsByRequest({
+                testTree.itemsOf({
                     include: undefined,
                 } as unknown as import('vscode').TestRunRequest),
             ).toBeUndefined();
         });
 
         it('group index should update when tests are re-parsed', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
-            expect(collection.findGroups()).toEqual(['integration']);
+            await testTree.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+            expect(testTree.groups()).toEqual(['integration']);
 
-            await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
-            expect(collection.findGroups()).toEqual(['integration']);
+            await testTree.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+            expect(testTree.groups()).toEqual(['integration']);
         });
 
         it('group index should be empty after reset', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
-            expect(collection.findGroups()).toEqual(['integration']);
+            await testTree.add(URI.file(phpUnitProject('tests/AttributeTest.php')));
+            expect(testTree.groups()).toEqual(['integration']);
 
-            collection.reset();
-            expect(collection.findGroups()).toEqual([]);
+            testTree.clear();
+            expect(testTree.groups()).toEqual([]);
         });
 
         it('workspace folder definition should survive reset', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
 
-            const folderItem = collection.createFolderRoot(workspaceFolder);
+            const folderItem = testTree.createFolderRoot(workspaceFolder);
             ctrl.items.add(folderItem);
 
-            await collection.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-            expect(collection.getTestDefinition(folderItem)).toBeDefined();
-            expect(collection.getTestDefinition(folderItem)?.type).toBe(TestType.workspace);
+            expect(testTree.definitionOf(folderItem)).toBeDefined();
+            expect(testTree.definitionOf(folderItem)?.type).toBe(TestType.workspace);
 
-            collection.reset();
+            testTree.clear();
 
-            expect(collection.getTestDefinition(folderItem)).toBeDefined();
-            expect(collection.getTestDefinition(folderItem)?.type).toBe(TestType.workspace);
+            expect(testTree.definitionOf(folderItem)).toBeDefined();
+            expect(testTree.definitionOf(folderItem)?.type).toBe(TestType.workspace);
         });
 
         it('delete should clean up index', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2243,20 +2243,20 @@ class ExtendsPlainBaseTest extends PlainBase
                 </testsuites>`);
 
             const file = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-            await collection.add(file);
+            await testTree.add(file);
 
-            const itemsBefore = collection.findTestsByFile(file);
+            const itemsBefore = testTree.itemsInFile(file);
             expect(itemsBefore.length).toBeGreaterThan(0);
-            expect(collection.getTestDefinition(itemsBefore[0])).toBeDefined();
+            expect(testTree.definitionOf(itemsBefore[0])).toBeDefined();
 
-            await collection.delete(file);
+            await testTree.remove(file);
 
-            expect(collection.findTestsByFile(file)).toEqual([]);
-            expect(collection.has(file)).toBeFalsy();
+            expect(testTree.itemsInFile(file)).toEqual([]);
+            expect(testTree.has(file)).toBeFalsy();
         });
 
         it('change in multi-testsuite keeps index for both suites', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -2266,21 +2266,21 @@ class ExtendsPlainBaseTest extends PlainBase
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
-            await collection.change(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await testTree.update(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
 
             expect(
-                collection.getTestDefinition(ctrl.items.get('testsuite:Unit') as TestItem),
+                testTree.definitionOf(ctrl.items.get('testsuite:Unit') as TestItem),
             ).toBeDefined();
             expect(
-                collection.getTestDefinition(ctrl.items.get('testsuite:Feature') as TestItem),
+                testTree.definitionOf(ctrl.items.get('testsuite:Feature') as TestItem),
             ).toBeDefined();
         });
 
         it('multi-testsuite — all fixture files discovered', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Feature">
                         <directory>tests/Feature</directory>
@@ -2297,7 +2297,7 @@ class ExtendsPlainBaseTest extends PlainBase
             const files = await workspace.findFiles(includePattern, excludePattern);
 
             for (const file of files) {
-                await collection.add(file);
+                await testTree.add(file);
             }
 
             for (const [, item] of ctrl.items) {
@@ -2306,7 +2306,7 @@ class ExtendsPlainBaseTest extends PlainBase
         });
 
         it('reset should clear testsuite and namespace nodes from tree (#390)', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="Unit">
                         <directory>tests/Unit</directory>
@@ -2316,18 +2316,18 @@ class ExtendsPlainBaseTest extends PlainBase
                     </testsuite>
                 </testsuites>`);
 
-            await collection.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
-            await collection.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Unit/ExampleTest.php')));
+            await testTree.add(URI.file(phpUnitProject('tests/Feature/ExampleTest.php')));
 
             expect(ctrl.items.size).toBeGreaterThan(0);
 
-            collection.reset();
+            testTree.clear();
 
             expect(ctrl.items.size).toBe(0);
         });
 
         it('add test — all fixture files discovered', async () => {
-            const collection = givenTestTree(`
+            const testTree = givenTestTree(`
                 <testsuites>
                     <testsuite name="default">
                         <directory>tests</directory>
@@ -2341,7 +2341,7 @@ class ExtendsPlainBaseTest extends PlainBase
             const files = await workspace.findFiles(includePattern, excludePattern);
 
             for (const file of files) {
-                await collection.add(file);
+                await testTree.add(file);
             }
 
             const skips = [

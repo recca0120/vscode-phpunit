@@ -8,21 +8,21 @@ function createMockHandler() {
     return { startTestRun: vi.fn().mockResolvedValue(undefined) };
 }
 
-function createMockCollection() {
+function createMockTestTree() {
     return { findTestsByFile: vi.fn().mockReturnValue([]) } as unknown as TestTree;
 }
 
 describe('TestWatchManager', () => {
     let handler: ReturnType<typeof createMockHandler>;
-    let collection: TestTree;
+    let testTree: TestTree;
     let emitter: EventEmitter<Uri>;
     let manager: TestWatchManager;
 
     beforeEach(() => {
         handler = createMockHandler();
-        collection = createMockCollection();
+        testTree = createMockTestTree();
         emitter = new EventEmitter<Uri>();
-        manager = new TestWatchManager(handler as unknown as TestRunHandler, collection, emitter);
+        manager = new TestWatchManager(handler as unknown as TestRunHandler, testTree, emitter);
         manager.setupFileChangeListener();
     });
 

@@ -18,7 +18,7 @@ export class TestQueueBuilder {
                 continue;
             }
 
-            const testDef = this.testTree.getTestDefinition(testItem);
+            const testDef = this.testTree.definitionOf(testItem);
             if (testDef?.type !== TestType.method && testDef?.type !== TestType.dataset) {
                 await this.build(
                     [...testItem.children].map(([, item]) => item),
