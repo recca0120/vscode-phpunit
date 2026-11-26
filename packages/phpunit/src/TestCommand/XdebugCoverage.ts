@@ -1,4 +1,4 @@
-import type { PathMapper } from '../Configuration/PathMapper';
+import type { PathMapper } from '../Path/PathMapper';
 import type { CommandOption } from './CommandOption';
 
 export class XdebugCoverage implements CommandOption {

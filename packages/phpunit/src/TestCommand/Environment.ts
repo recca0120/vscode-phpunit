@@ -1,6 +1,6 @@
 import type { SpawnOptions } from 'node:child_process';
-import type { PathMapper } from '../Configuration/PathMapper';
 import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from '../constants';
+import type { PathMapper } from '../Path/PathMapper';
 import { parseArgv } from '../utils';
 import type { Arg, Invocation } from './Invocation';
 

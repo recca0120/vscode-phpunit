@@ -1,4 +1,4 @@
-import type { PHPUnitXML } from '../Configuration/PHPUnitXML';
+import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import {
     TeamcityEvent,
     type TestConfiguration,

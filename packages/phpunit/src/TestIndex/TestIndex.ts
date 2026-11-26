@@ -1,5 +1,5 @@
 import { URI } from 'vscode-uri';
-import { ComposerAutoload } from '../Configuration/ComposerAutoload';
+import { ComposerAutoload } from '../Composer/ComposerAutoload';
 import type { PHPUnitXML, TestDefinition, TestParser } from '../index';
 import type { TestStarted } from '../TestOutput';
 import type { ClassInfo } from '../TestParser/ClassInfo';

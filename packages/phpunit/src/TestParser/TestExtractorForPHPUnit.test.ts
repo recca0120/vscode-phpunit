@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { findTest, parseTestFile, phpUnitProject } from '../../tests/utils';
-import { PHPUnitXML } from '../Configuration';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
+import { PHPUnitXML } from '../PHPUnitXML';
 import { ClassRegistry } from '../TestIndex/ClassRegistry';
 import { InheritanceResolver } from '../TestIndex/InheritanceResolver';
 import { type TestDefinition, TestType } from '../types';

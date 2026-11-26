@@ -1,5 +1,6 @@
 import type { SpawnOptions } from 'node:child_process';
-import type { IConfiguration, PathMapper, PathReplacer } from '../Configuration';
+import type { IConfiguration } from '../Configuration';
+import type { PathMapper, PathReplacer } from '../Path';
 import { cloneInstance } from '../utils';
 import type { CommandOption } from './CommandOption';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
