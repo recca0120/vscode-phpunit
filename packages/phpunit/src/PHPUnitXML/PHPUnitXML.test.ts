@@ -376,7 +376,7 @@ describe('PHPUnit XML Test', () => {
     });
 });
 
-describe('getTestSuiteNames', () => {
+describe('testSuiteNames', () => {
     const phpUnitXML = new PHPUnitXML();
 
     it('should return unique testsuite names', () => {
