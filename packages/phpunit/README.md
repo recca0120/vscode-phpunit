@@ -9,7 +9,7 @@ Used by the [PHPUnit & Pest Test Explorer](https://marketplace.visualstudio.com/
 - **Test parsing** — static analysis of PHPUnit/Pest test files via tree-sitter (WASM) and php-parser
 - **Data provider resolution** — extract dataset names from `#[DataProvider]`, `#[TestWith]`, `->with()`, etc. ([details](docs/data-provider-guide.md)); datasets that cannot be resolved statically are discovered at runtime from `testStarted` events
 - **PHPUnit XML** — parse `phpunit.xml` / `phpunit.xml.dist` for testsuites, coverage, and configuration
-- **Process builder** — construct PHPUnit/Pest command lines with filter encoding, Xdebug support, and path mapping
+- **Test command** — construct PHPUnit/Pest command lines with filter encoding, Xdebug support, and path mapping
 - **Test output parsing** — parse Teamcity-formatted output into structured test results
 - **Formatted output** — configurable Printer with format-string presets (`progress`, `collision`, `pretty`) and ANSI color support
 - **Test collection** — manage test hierarchies (suite / file / class / method / dataset)
@@ -155,9 +155,10 @@ import {
 } from '@vscode-phpunit/phpunit';
 
 // 1. Build command
-const builder = new TestCommand(configuration, { cwd: projectRoot }, pathReplacer);
 const filter = FilterStrategyFactory.create(testDefinition);
-builder.setArguments(filter.getFilter());
+const command = new TestCommand(configuration, { cwd: projectRoot }, pathReplacer).withArguments(
+  filter.getFilter(),
+);
 // → php vendor/bin/phpunit --filter="^ExampleTest::test_add" --teamcity --colors=never
 
 // 2. Create runner and listen to events
@@ -180,15 +181,15 @@ runner.on(TeamcityEvent.testResultSummary, (result) => {
 });
 
 // Runner lifecycle events
-runner.on(TestRunnerEvent.run, (builder) => {
-  console.log('Command:', builder.toString());
+runner.on(TestRunnerEvent.run, (command) => {
+  console.log('Command:', command.toString());
 });
 runner.on(TestRunnerEvent.close, (code) => {
   console.log('Exit code:', code);
 });
 
 // 3. Execute
-const process = runner.run(builder);
+const process = runner.run(command);
 await process.run();
 ```
 

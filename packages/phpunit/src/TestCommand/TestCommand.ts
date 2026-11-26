@@ -1,7 +1,5 @@
 import type { SpawnOptions } from 'node:child_process';
 import type { IConfiguration, PathMapper, PathReplacer } from '../Configuration';
-import { CoverageFiles } from '../TestCoverage';
-import { type TestResult, toLocalResult } from '../TestOutput';
 import { cloneInstance } from '../utils';
 import type { CommandOption } from './CommandOption';
 import { CommandTemplateEnvironment, type Environment } from './Environment';
@@ -18,14 +16,6 @@ export class TestCommand {
         private xdebug?: Xdebug,
     ) {}
 
-    clone(): TestCommand {
-        const cloned = cloneInstance(this);
-        if (this.xdebug) {
-            cloned.xdebug = this.xdebug.clone();
-        }
-        return cloned;
-    }
-
     withArguments(args: string): TestCommand {
         const cloned = this.clone();
         cloned.arguments = args.trim();
@@ -36,19 +26,6 @@ export class TestCommand {
         const cloned = this.clone();
         cloned.xdebug?.setCloverFile(cloverFile);
         return cloned;
-    }
-
-    assignCloverFile(index: number) {
-        if (!this.xdebug?.isCoverageMode()) {
-            return;
-        }
-        this.xdebug.setCloverFile(new CoverageFiles(this.getCwd()).allocate(index));
-    }
-
-    setArguments(args: string) {
-        this.arguments = args.trim();
-
-        return this;
     }
 
     getXdebug() {
@@ -63,10 +40,6 @@ export class TestCommand {
         return this.xdebug?.getCloverFile();
     }
 
-    getPathReplacer() {
-        return this.pathReplacer;
-    }
-
     get paths(): PathMapper {
         return this.pathReplacer;
     }
@@ -75,14 +48,18 @@ export class TestCommand {
         return this.environment().launch(this.invocation());
     }
 
-    replacePath(result: TestResult): TestResult {
-        return toLocalResult(result, this.pathReplacer);
-    }
-
     toString() {
         const { runtime, args } = this.build();
 
         return `${runtime} ${args.join(' ')}`;
+    }
+
+    private clone(): TestCommand {
+        const cloned = cloneInstance(this);
+        if (this.xdebug) {
+            cloned.xdebug = this.xdebug.clone();
+        }
+        return cloned;
     }
 
     private environment(): Environment {

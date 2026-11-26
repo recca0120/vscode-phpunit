@@ -411,7 +411,7 @@ describe('TestRunner Test', () => {
 
         describe(name, () => {
             const spawnOptions = { cwd: projectPath('') };
-            const command = new TestCommand(
+            let command = new TestCommand(
                 configuration,
                 spawnOptions,
                 new PathReplacer(spawnOptions, configuration.get('paths') as Path),
@@ -445,7 +445,7 @@ describe('TestRunner Test', () => {
             });
 
             it('should run test suite', async () => {
-                command.setArguments(localFile);
+                command = command.withArguments(localFile);
                 await runTest(
                     buildCommand(testFile),
                     startEvent(TeamcityEvent.testSuiteStarted),
@@ -454,7 +454,7 @@ describe('TestRunner Test', () => {
             });
 
             it('should run test passed', async () => {
-                command.setArguments(`${localFile} --filter "${passedPattern}"`);
+                command = command.withArguments(`${localFile} --filter "${passedPattern}"`);
                 await runTest(
                     buildCommand(filterPassed, testFile),
                     startEvent(TeamcityEvent.testStarted, { name: 'test_passed' }),
@@ -463,7 +463,7 @@ describe('TestRunner Test', () => {
             });
 
             it('should run test failed', async () => {
-                command.setArguments(`${localFile} --filter "${failedPattern}"`);
+                command = command.withArguments(`${localFile} --filter "${failedPattern}"`);
                 await runTest(
                     buildCommand(filterFailed, testFile),
                     startEvent(TeamcityEvent.testFailed, { name: 'test_failed' }),
@@ -476,7 +476,7 @@ describe('TestRunner Test', () => {
 
             if (!options?.skipPhpVfsComposer) {
                 it('should run test failed with phpvfscomposer', async () => {
-                    command.setArguments(`${localFile} --filter "${failedPattern}"`);
+                    command = command.withArguments(`${localFile} --filter "${failedPattern}"`);
                     await runTest(
                         buildCommand(filterFailed, testFile),
                         startEvent(TeamcityEvent.testFailed, {

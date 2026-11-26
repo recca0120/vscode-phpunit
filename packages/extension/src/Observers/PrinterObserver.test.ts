@@ -78,9 +78,7 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
                     options,
                     new PathReplacer(options, configuration.get('paths') as Path),
                 );
-                command.setArguments([file, filter].join(' '));
-
-                await testRunner.run(command).run();
+                await testRunner.run(command.withArguments([file, filter].join(' '))).run();
             }
 
             it('should trigger testVersion', async () => {

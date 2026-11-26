@@ -154,9 +154,10 @@ import {
 } from '@vscode-phpunit/phpunit';
 
 // 1. 建構命令
-const builder = new TestCommand(configuration, { cwd: projectRoot }, pathReplacer);
 const filter = FilterStrategyFactory.create(testDefinition);
-builder.setArguments(filter.getFilter());
+const command = new TestCommand(configuration, { cwd: projectRoot }, pathReplacer).withArguments(
+  filter.getFilter(),
+);
 // → php vendor/bin/phpunit --filter="^ExampleTest::test_add" --teamcity --colors=never
 
 // 2. 建立 runner 並監聽事件
@@ -179,15 +180,15 @@ runner.on(TeamcityEvent.testResultSummary, (result) => {
 });
 
 // Runner 生命週期事件
-runner.on(TestRunnerEvent.run, (builder) => {
-  console.log('命令:', builder.toString());
+runner.on(TestRunnerEvent.run, (command) => {
+  console.log('命令:', command.toString());
 });
 runner.on(TestRunnerEvent.close, (code) => {
   console.log('結束代碼:', code);
 });
 
 // 3. 執行
-const process = runner.run(builder);
+const process = runner.run(command);
 await process.run();
 ```
 
