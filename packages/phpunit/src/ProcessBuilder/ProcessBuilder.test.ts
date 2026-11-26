@@ -93,6 +93,22 @@ describe('ProcessBuilder Test', () => {
             ]);
         });
 
+        it('should keep an args option value containing spaces as one argument', () => {
+            const builder = givenBuilder({
+                phpunit: 'vendor/bin/phpunit',
+                args: ['--group=my group'],
+            }).setArguments('/a/FooTest.php');
+
+            const { args } = builder.build();
+            expect(args).toEqual([
+                'vendor/bin/phpunit',
+                '--group=my group',
+                '/a/FooTest.php',
+                '--colors=always',
+                '--teamcity',
+            ]);
+        });
+
         it('should remove caml case parameters', () => {
             const builder = givenBuilder({
                 phpunit: 'vendor/bin/phpunit',
@@ -307,6 +323,31 @@ describe('ProcessBuilder Test', () => {
                     `--colors=always`,
                     `--teamcity`,
                     `--functional`,
+                ].join(' '),
+            ]);
+        });
+
+        it('docker sh -c quotes an args option value containing spaces', () => {
+            const builder = givenBuilder({
+                command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
+                phpunit: 'vendor/bin/phpunit',
+                args: ['--group=my group'],
+            });
+
+            const { runtime, args } = builder.build();
+            expect(runtime).toEqual('docker');
+            expect(args).toEqual([
+                'exec',
+                '--workdir=/var/www/',
+                'container_name',
+                '/bin/sh',
+                '-c',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--group=my group'`,
+                    '--colors=always',
+                    '--teamcity',
                 ].join(' '),
             ]);
         });

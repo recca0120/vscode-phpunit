@@ -46,6 +46,25 @@ export function parseArgumentGroups(groups: string[][], excludes: string[]): str
     ];
 }
 
+/**
+ * A single `phpunit.args` entry written as `--key=value with spaces` is one
+ * argument; quote the value so tokenizing doesn't split it. Entries that are
+ * already quoted or hold several options are left as they are.
+ */
+export function quoteInlineOptionValue(parameter: string): string {
+    const match = parameter.match(/^(--[^=\s]+)=(.*\s.*)$/);
+    if (!match) {
+        return parameter;
+    }
+
+    const [, key, value] = match;
+    if (/["']/.test(value) || /\s-/.test(value)) {
+        return parameter;
+    }
+
+    return `${key}="${value}"`;
+}
+
 function splitArguments(
     parameters: string[],
     excludes: string[],
