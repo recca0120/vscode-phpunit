@@ -64,11 +64,10 @@ export class TestFileDiscovery {
     }
 
     async discoverTestFiles(pattern: GlobPattern, exclude: GlobPattern): Promise<void> {
-        const folderUri = this.workspaceFolder.uri.toString();
         const newFiles = new Set(
             (await workspace.findFiles(pattern, exclude))
                 .map((f) => f.toString())
-                .filter((uri) => uri.startsWith(folderUri)),
+                .filter((uri) => this.isInWorkspaceFolder(uri)),
         );
 
         // Remove files that no longer exist
@@ -80,6 +79,12 @@ export class TestFileDiscovery {
 
         // Add new files (already existing ones are skipped by add())
         await Promise.all([...newFiles].map((f) => this.testCollection.add(URI.parse(f))));
+    }
+
+    private isInWorkspaceFolder(uri: string): boolean {
+        const folderUri = this.workspaceFolder.uri.toString().replace(/\/+$/, '');
+
+        return uri === folderUri || uri.startsWith(`${folderUri}/`);
     }
 
     private invalidateCache(): void {
