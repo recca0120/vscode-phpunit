@@ -15,12 +15,22 @@ class ArrayCreationExpression implements Expression<Map<string, unknown>> {
             if (entry.key && key === undefined) {
                 return undefined;
             }
-            const keyStr = key !== undefined ? String(key) : String(numericIndex++);
+            const keyStr = key !== undefined ? castKey(key) : String(numericIndex++);
             const value = entry.value ? context.resolve(entry.value) : undefined;
             result.set(keyStr, value);
         }
         return result;
     }
+}
+
+function castKey(key: unknown): string {
+    if (key === null) {
+        return '';
+    }
+    if (typeof key === 'boolean') {
+        return key ? '1' : '0';
+    }
+    return String(key);
 }
 
 export const arrayCreationExpression = new ArrayCreationExpression();

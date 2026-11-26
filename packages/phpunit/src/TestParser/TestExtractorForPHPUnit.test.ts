@@ -1273,6 +1273,38 @@ class UnresolvableKeyTest extends TestCase
             }),
         );
     });
+
+    it('provider with null and false keys casts them like PHP array keys', () => {
+        const file = phpUnitProject('tests/CastKeyTest.php');
+        const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class CastKeyTest extends TestCase
+{
+    /**
+     * @dataProvider provider
+     */
+    public function test_add(int $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): array
+    {
+        return [null => [1], false => [2]];
+    }
+}`;
+        expect(givenTest(file, content, 'test_add')).toEqual(
+            expect.objectContaining({
+                annotations: {
+                    dataProvider: ['provider'],
+                    dataset: ['data set ""', 'data set #0'],
+                },
+            }),
+        );
+    });
 });
 
 describe.each(parsers)('PHPUnit yield-based DataProvider (%s)', (_name, createParser) => {

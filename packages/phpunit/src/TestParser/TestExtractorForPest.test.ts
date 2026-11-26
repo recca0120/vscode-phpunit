@@ -346,6 +346,17 @@ it('does something', function () {
         );
     });
 
+    it('does not mark ->skip(false, reason) tests as skipped', async () => {
+        const content = `<?php
+
+it('does something', function () {
+    expect(true)->toBeTrue();
+})->skip(false, 'not ready yet');
+        `;
+
+        expect(givenTest(file, content, 'it does something')?.annotations).toEqual({});
+    });
+
     it('marks ->todo() tests with annotations.todo', async () => {
         const content = `<?php
 
@@ -911,6 +922,48 @@ it('business closed', function (string $business, string $day) {
                 },
             }),
         );
+    });
+
+    it('chained ->with() with named keys uses the dataset label like Pest', () => {
+        const content = `<?php
+
+it('business closed', function (string $business, string $day) {
+    expect(true)->toBeTrue();
+})->with(['office' => 'Office', 'bank' => 'Bank'])->with(['Saturday']);
+        `;
+
+        expect(givenTest(file, content, 'it business closed')?.annotations?.dataset).toEqual([
+            `data set "dataset "office" / ('Saturday')"`,
+            `data set "dataset "bank" / ('Saturday')"`,
+        ]);
+    });
+
+    it('bool and null dataset keys are cast like PHP array keys', () => {
+        const content = `<?php
+
+test('casts', function (string $value) {
+    expect($value)->toBeString();
+})->with([true => 'yes', false => 'no', null => 'none']);
+        `;
+
+        expect(givenTest(file, content, 'casts')?.annotations?.dataset).toEqual([
+            `data set "('yes')"`,
+            `data set "('no')"`,
+            'data set "dataset """',
+        ]);
+    });
+
+    it('nested arrays in a tuple dataset are exported like Pest', () => {
+        const content = `<?php
+
+test('nested', function (int $n, array $items) {
+    expect($items)->toBeArray();
+})->with([[1, [2, 3, 4, 5]]]);
+        `;
+
+        expect(givenTest(file, content, 'nested')?.annotations?.dataset).toEqual([
+            'data set "(1, [2, 3, 4, …])"',
+        ]);
     });
 
     it('generator closure dataset with named keys', () => {
