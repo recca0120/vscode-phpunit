@@ -18,7 +18,7 @@ const mockWorkspace = workspace as unknown as MockWorkspace;
 const workspaceFolder = { uri: { fsPath: '/workspace' } } as WorkspaceFolder;
 
 function createMockDiscovery(
-    configFilePattern = '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}',
+    configFilePattern = '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}',
 ) {
     return {
         getWorkspaceTestPattern: vi.fn().mockResolvedValue({
@@ -130,19 +130,21 @@ describe('TestFileWatcher', () => {
         });
 
         it('uses pattern from getConfigFilePattern for the config watcher', async () => {
-            discovery = createMockDiscovery('{custom.xml,composer.lock}');
+            discovery = createMockDiscovery('{custom.xml,composer.json,composer.lock}');
             fileWatcher = new TestFileWatcher(discovery, collection, emitter);
 
             await fileWatcher.startWatching();
 
-            expect(getConfigWatcher().pattern.pattern).toBe('{custom.xml,composer.lock}');
+            expect(getConfigWatcher().pattern.pattern).toBe(
+                '{custom.xml,composer.json,composer.lock}',
+            );
         });
 
         it('uses fallback pattern when getConfigFilePattern returns default', async () => {
             await fileWatcher.startWatching();
 
             expect(getConfigWatcher().pattern.pattern).toBe(
-                '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.lock}',
+                '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}',
             );
         });
 
