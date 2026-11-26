@@ -35,11 +35,14 @@ export class TestIndex {
     }
 
     async update(uri: URI) {
-        return new Promise<IndexChange>((resolve, reject) => {
-            this.parseQueue = this.parseQueue
-                .catch(() => {})
-                .then(() => this.doChange(uri).then(resolve, reject));
-        });
+        return this.enqueue(() => this.doChange(uri));
+    }
+
+    async remove(uri: URI): Promise<IndexChange> {
+        const deleted = this.removeFiles(uri);
+        const change = await this.enqueue(() => this.doDeleteClasses(uri));
+
+        return { parsed: change.parsed, deleted: [...deleted, ...change.deleted] };
     }
 
     has(uri: URI) {
@@ -75,21 +78,31 @@ export class TestIndex {
         await this.update(uri);
     }
 
-    async deleteClasses(uri: URI): Promise<IndexChange> {
+    clear(): void {
+        this.store.clear();
+        this.ownTests.clear();
+        this.testSuiteMatcher.reset();
+        this.classes.clear();
+        this.autoload.reset();
+    }
+
+    find(uri: URI): IndexedFile<TestDefinition> | undefined {
+        return this.store.find(uri);
+    }
+
+    *files() {
+        yield* this.store.files();
+    }
+
+    private enqueue(task: () => Promise<IndexChange>): Promise<IndexChange> {
         return new Promise<IndexChange>((resolve, reject) => {
             this.parseQueue = this.parseQueue
                 .catch(() => {})
-                .then(() => this.doDeleteClasses(uri).then(resolve, reject));
+                .then(() => task().then(resolve, reject));
         });
     }
 
-    delete(uri: URI): IndexedFile<TestDefinition> | undefined {
-        const file = this.store.find(uri);
-        this.deleteFiles(uri);
-        return file;
-    }
-
-    deleteFiles(uri: URI): IndexedFile<TestDefinition>[] {
+    private removeFiles(uri: URI): IndexedFile<TestDefinition>[] {
         const file = this.store.find(uri);
         if (file) {
             this.removeFile(file);
@@ -105,22 +118,6 @@ export class TestIndex {
         }
 
         return files;
-    }
-
-    clear(): void {
-        this.store.clear();
-        this.ownTests.clear();
-        this.testSuiteMatcher.reset();
-        this.classes.clear();
-        this.autoload.reset();
-    }
-
-    find(uri: URI): IndexedFile<TestDefinition> | undefined {
-        return this.store.find(uri);
-    }
-
-    *files() {
-        yield* this.store.files();
     }
 
     private async doDeleteClasses(uri: URI): Promise<IndexChange> {
@@ -143,7 +140,8 @@ export class TestIndex {
         this.store.defineTestsuites(this.phpUnitXML.getTestSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
         if (tests.length === 0) {
-            const file = this.delete(uri);
+            const file = this.store.find(uri);
+            this.removeFiles(uri);
             if (file) {
                 deleted.push(file);
             }

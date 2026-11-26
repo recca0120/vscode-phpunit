@@ -264,7 +264,7 @@ describe('TestIndex', () => {
         await shouldBe(collection, { default: [files[0]] });
     });
 
-    it('delete file', async () => {
+    it('remove file', async () => {
         const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
@@ -278,8 +278,8 @@ describe('TestIndex', () => {
         }
 
         expect(collection.has(files[0])).toBeTruthy();
-        expect(collection.delete(files[0])).toBeDefined();
-        expect(collection.delete(files[0])).toBeUndefined();
+        expect((await collection.remove(files[0])).deleted[0]).toBeDefined();
+        expect((await collection.remove(files[0])).deleted[0]).toBeUndefined();
         await shouldBe(collection, { default: [] });
     });
 
@@ -297,7 +297,7 @@ describe('TestIndex', () => {
         expect(collection.has(abstractFile)).toBeFalsy();
     });
 
-    it('delete should clear definitionIndex so resolveDataset works again', async () => {
+    it('remove should clear definitionIndex so addDatasetChild works again', async () => {
         const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
@@ -317,13 +317,13 @@ describe('TestIndex', () => {
         expect(collection.addDatasetChild(started)).toBeDefined();
         expect(collection.addDatasetChild(started)).toBeUndefined();
 
-        collection.delete(uri);
+        await collection.remove(uri);
         await collection.update(uri);
 
         expect(collection.addDatasetChild(started)).toBeDefined();
     });
 
-    it('reset should clear definitionIndex so resolveDataset works again', async () => {
+    it('clear should clear definitionIndex so addDatasetChild works again', async () => {
         const collection = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
