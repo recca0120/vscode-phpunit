@@ -25,6 +25,7 @@ export class TestIndex {
     private parseQueue: Promise<void> = Promise.resolve();
 
     private classHierarchy = new ClassHierarchy();
+    private ownTests = new Map<string, { testsuite: string; tests: TestDefinition[] }>();
     private testSuiteMatcher: TestSuiteMatcher;
 
     constructor(
@@ -93,7 +94,7 @@ export class TestIndex {
     deleteFiles(uri: URI): File<TestDefinition>[] {
         const file = this.store.findFile(uri);
         if (file) {
-            this.store.remove(file.testsuite, file.uri);
+            this.removeFile(file);
             return [file];
         }
 
@@ -102,7 +103,7 @@ export class TestIndex {
             tracked.uri.toString().startsWith(folderPrefix),
         );
         for (const tracked of files) {
-            this.store.remove(tracked.testsuite, tracked.uri);
+            this.removeFile(tracked);
         }
 
         return files;
@@ -110,6 +111,7 @@ export class TestIndex {
 
     reset(): void {
         this.store.clear();
+        this.ownTests.clear();
         this.testSuiteMatcher.reset();
         this.classHierarchy.clear();
         this.autoload.reset();
@@ -254,12 +256,15 @@ export class TestIndex {
     private async reparseFile(
         uri: URI,
     ): Promise<{ uri: URI; tests: TestDefinition[] } | undefined> {
-        const testsuite = this.testSuiteMatcher.testsuiteOf(uri);
+        const own = this.ownTests.get(uri.toString());
+        const testsuite = own?.testsuite ?? this.testSuiteMatcher.testsuiteOf(uri);
         if (!testsuite) {
             return undefined;
         }
 
-        const tests = await this.parseTests(uri, testsuite);
+        const tests = own
+            ? this.classHierarchy.enrichTests(own.tests)
+            : await this.parseTests(uri, testsuite);
         if (tests.length === 0) {
             return undefined;
         }
@@ -268,12 +273,18 @@ export class TestIndex {
         return { uri, tests };
     }
 
+    private removeFile(file: File<TestDefinition>): void {
+        this.store.remove(file.testsuite, file.uri);
+        this.ownTests.delete(file.uri.toString());
+    }
+
     private async parseTests(uri: URI, testsuite: string) {
         const parseResult = await this.testParser.parseFile(uri.fsPath, testsuite);
         if (!parseResult) {
             return [];
         }
 
+        this.ownTests.set(uri.toString(), { testsuite, tests: parseResult.tests });
         await this.registerClasses(parseResult.classes, parseResult.includes);
 
         return this.classHierarchy.enrichTests(parseResult.tests);
