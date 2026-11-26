@@ -2,7 +2,6 @@ import {
     Configuration,
     type Path,
     RemotePathMapper,
-    TeamcityEvent,
     TestCommand,
     type TestFailed,
     type TestFinished,
@@ -12,6 +11,7 @@ import {
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { TestItem } from 'vscode';
 import * as vscode from 'vscode';
+import { testFailed, testFinished, testIgnored, testStarted } from '../../test-support/teamcity';
 import { DebugOutputObserver } from './DebugOutputObserver';
 
 const createTestItem = (id: string): TestItem => ({ id }) as TestItem;
@@ -26,48 +26,44 @@ const createCommand = (command = 'php') => {
     );
 };
 
-const makeStarted = (id: string, locationHint: string, file: string): TestStarted => ({
-    event: TeamcityEvent.testStarted,
-    name: id.split('::').pop() ?? id,
-    flowId: 1,
-    id,
-    file,
-    locationHint,
-});
+const makeStarted = (id: string, locationHint: string, file: string): TestStarted =>
+    testStarted({
+        name: id.split('::').pop() ?? id,
+        id,
+        file,
+        locationHint,
+    });
 
-const makeFinished = (id: string, locationHint: string, file: string): TestFinished => ({
-    event: TeamcityEvent.testFinished,
-    name: id.split('::').pop() ?? id,
-    flowId: 1,
-    id,
-    file,
-    locationHint,
-    duration: 10,
-});
+const makeFinished = (id: string, locationHint: string, file: string): TestFinished =>
+    testFinished({
+        name: id.split('::').pop() ?? id,
+        id,
+        file,
+        locationHint,
+        duration: 10,
+    });
 
-const makeFailed = (id: string, locationHint: string, file: string): TestFailed => ({
-    event: TeamcityEvent.testFailed,
-    name: id.split('::').pop() ?? id,
-    flowId: 1,
-    id,
-    file,
-    locationHint,
-    message: 'assertion failed',
-    details: [],
-    duration: 10,
-});
+const makeFailed = (id: string, locationHint: string, file: string): TestFailed =>
+    testFailed({
+        name: id.split('::').pop() ?? id,
+        id,
+        file,
+        locationHint,
+        message: 'assertion failed',
+        details: [],
+        duration: 10,
+    });
 
-const makeIgnored = (id: string, locationHint: string, file: string): TestIgnored => ({
-    event: TeamcityEvent.testIgnored,
-    name: id.split('::').pop() ?? id,
-    flowId: 1,
-    id,
-    file,
-    locationHint,
-    message: 'skipped',
-    details: [],
-    duration: 0,
-});
+const makeIgnored = (id: string, locationHint: string, file: string): TestIgnored =>
+    testIgnored({
+        name: id.split('::').pop() ?? id,
+        id,
+        file,
+        locationHint,
+        message: 'skipped',
+        details: [],
+        duration: 0,
+    });
 
 describe('DebugOutputObserver', () => {
     const ID = 'Tests\\Feature\\ExampleTest::test_foo';
