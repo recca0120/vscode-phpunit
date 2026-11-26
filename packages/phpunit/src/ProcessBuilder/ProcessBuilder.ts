@@ -13,6 +13,7 @@ const isShellCommand = (command: string) => /sh\s+-c/.test(command);
 const keyVariable = (key: string) => `\${${key}}`;
 
 const FILTER_PLACEHOLDER = '__FILTER_PLACEHOLDER__';
+const argPlaceholder = (index: number) => `__ARG_PLACEHOLDER_${index}__`;
 
 export class ProcessBuilder {
     private arguments = '';
@@ -127,43 +128,47 @@ export class ProcessBuilder {
 
         const tokens = parseArgv(command);
 
-        return this.replaceFilterPlaceholder(tokens, args.filterArg, isRemoteCommand);
+        return this.replacePlaceholders(tokens, args.placeholders, isRemoteCommand);
     }
 
-    private replaceFilterPlaceholder(
+    private replacePlaceholders(
         tokens: string[],
-        filterArg: string | undefined,
+        placeholders: Map<string, string>,
         needsQuote: boolean,
     ) {
-        if (!filterArg) {
+        if (placeholders.size === 0) {
             return tokens;
         }
 
         return tokens.map((token) => {
-            if (!token.includes(FILTER_PLACEHOLDER)) {
-                return token;
+            for (const [placeholder, arg] of placeholders) {
+                if (!token.includes(placeholder)) {
+                    continue;
+                }
+
+                const quoted = this.quoteArgument(arg, needsQuote);
+                token = token.replace(placeholder, () => quoted);
             }
 
-            const quoted = this.quoteFilter(filterArg, needsQuote);
-            return token.replace(FILTER_PLACEHOLDER, () => quoted);
+            return token;
         });
     }
 
-    private quoteFilter(filter: string, needsQuote: boolean) {
+    private quoteArgument(arg: string, needsQuote: boolean) {
         if (!needsQuote) {
-            return filter;
+            return arg;
         }
 
-        if (!filter.includes("'")) {
-            return `'${filter}'`;
+        if (!arg.includes("'")) {
+            return `'${arg}'`;
         }
 
-        return `"${filter.replace(/"/g, '\\"')}"`;
+        return `"${arg.replace(/"/g, '\\"')}"`;
     }
 
     private ensureVariablePlaceholders(
         command: string,
-        args: { variables: { [p: string]: string }; filterArg?: string },
+        args: { variables: { [p: string]: string } },
         isRemoteCommand: boolean,
     ) {
         if (this.hasVariable(args.variables, command)) {
@@ -191,7 +196,7 @@ export class ProcessBuilder {
     }
 
     private getArguments() {
-        const { phpunitargs, filterArg } = this.getPhpUnitArgs();
+        const { phpunitargs, placeholders } = this.getPhpUnitArgs();
         return {
             variables: {
                 php: this.quoteIfNeeded(this.pathReplacer.toRemote(this.getConfigString('php'))),
@@ -201,7 +206,7 @@ export class ProcessBuilder {
                 ),
                 phpunitargs,
             },
-            filterArg,
+            placeholders,
         };
     }
 
@@ -232,8 +237,15 @@ export class ProcessBuilder {
         return value;
     }
 
-    private getPhpUnitArgs(): { phpunitargs: string; filterArg?: string } {
+    private getPhpUnitArgs(): {
+        phpunitargs: string;
+        filterArg?: string;
+        placeholders: Map<string, string>;
+    } {
         let filterArg: string | undefined;
+        // Arguments that must survive re-tokenizing the command as a single argument;
+        // they are restored (and shell-quoted for remote commands) after parseArgv.
+        const placeholders = new Map<string, string>();
 
         const args = this.configuration
             .getArguments(this.arguments)
@@ -241,9 +253,18 @@ export class ProcessBuilder {
                 const filterMatch = arg.match(/^--filter=(.*)/);
                 if (filterMatch) {
                     filterArg = `--filter=${filterMatch[1]}`;
+                    placeholders.set(FILTER_PLACEHOLDER, filterArg);
                     return FILTER_PLACEHOLDER;
                 }
-                return this.quoteIfNeeded(this.pathReplacer.toRemote(arg));
+
+                const remoteArg = this.pathReplacer.toRemote(arg);
+                if (!/^-.*\s/.test(remoteArg)) {
+                    return this.quoteIfNeeded(remoteArg);
+                }
+
+                const placeholder = argPlaceholder(placeholders.size);
+                placeholders.set(placeholder, remoteArg);
+                return placeholder;
             })
             .concat('--colors=always', '--teamcity');
 
@@ -251,7 +272,7 @@ export class ProcessBuilder {
             .concat(...(this.xdebug?.getPhpUnitArgs(this.pathReplacer) ?? []))
             .join(' ');
 
-        return { phpunitargs: allArgs, filterArg };
+        return { phpunitargs: allArgs, filterArg, placeholders };
     }
 
     private addParaTestFunctional(args: string[], hasFilter: boolean) {
