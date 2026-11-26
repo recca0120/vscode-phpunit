@@ -7,7 +7,7 @@ import {
     Xdebug,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
-import { TestRunProfileKind, type WorkspaceFolder } from 'vscode';
+import { TestRunProfileKind, type WorkspaceFolder, workspace } from 'vscode';
 import { Configuration } from '../Configuration';
 import { TYPES } from '../types';
 
@@ -26,8 +26,25 @@ export class TestCommandFactory {
             this.config.get('paths') as Path,
             this.workspaceFolder.uri.fsPath,
         );
-        const xdebug = await new Xdebug(this.config).setMode(this.toMode(profileKind));
+        const xdebug = await new Xdebug(this.config).setMode(
+            this.toMode(profileKind),
+            this.launchPort(),
+        );
         return new TestCommand(this.config, options, pathReplacer, xdebug);
+    }
+
+    private launchPort(): number | undefined {
+        const name = this.config.get('debuggerConfig') as string | undefined;
+        if (!name) {
+            return undefined;
+        }
+
+        const configurations =
+            workspace
+                .getConfiguration('launch', this.workspaceFolder.uri)
+                .get<{ name: string; port?: number }[]>('configurations') ?? [];
+
+        return configurations.find((configuration) => configuration.name === name)?.port;
     }
 
     private toMode(profileKind?: TestRunProfileKind): Mode | undefined {

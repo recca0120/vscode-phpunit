@@ -40,12 +40,14 @@ export class Xdebug {
         return this.configuration.get('debuggerConfig') as string | undefined;
     }
 
-    async setMode(mode?: Mode) {
+    async setMode(mode?: Mode, launchPort?: number) {
         this.mode = mode;
 
         if (mode === Mode.debug) {
             this.port =
-                (this.configuration.get('xdebugPort', 0) as number) || (await getFreePort());
+                (this.configuration.get('xdebugPort', 0) as number) ||
+                launchPort ||
+                (this.name ? undefined : await getFreePort());
         }
 
         return this;
@@ -71,7 +73,7 @@ export class Xdebug {
             return [
                 `-dxdebug.mode=${this.mode}`,
                 '-dxdebug.start_with_request=1',
-                `-dxdebug.client_port=${this.port}`,
+                ...(this.port ? [`-dxdebug.client_port=${this.port}`] : []),
             ];
         }
 
