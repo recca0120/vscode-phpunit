@@ -1239,4 +1239,19 @@ it('adds numbers', function (int $a, int $b) {
             'data set "(2, 3)"',
         ]);
     });
+
+    it('signed number values dataset', () => {
+        const content = `<?php
+
+test('signed', function (int|float $n) {
+    expect($n)->toBeNumeric();
+})->with([-1, -1.5, +2]);
+        `;
+
+        expect(givenTest(file, content, 'signed')?.annotations?.dataset).toEqual([
+            'data set "(-1)"',
+            'data set "(-1.5)"',
+            'data set "(2)"',
+        ]);
+    });
 });

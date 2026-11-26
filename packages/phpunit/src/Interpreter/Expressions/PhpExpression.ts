@@ -28,6 +28,7 @@ import { subscriptAccessExpression } from './Literals/SubscriptAccessExpression'
 import { variableExpression } from './Literals/VariableExpression';
 import { binaryExpr } from './Operators/BinaryExpression';
 import { conditionalExpression } from './Operators/ConditionalExpression';
+import { unaryExpression } from './Operators/UnaryExpression';
 import { anonymousFunctionExpression } from './Statements/AnonymousFunctionExpression';
 import { arrowFunctionExpression } from './Statements/ArrowFunctionExpression';
 import { assignmentExpression } from './Statements/AssignmentExpression';
@@ -51,6 +52,7 @@ const allExpressions: Expression<unknown>[] = [
     subscriptAccessExpression,
     encapsedStringExpression,
     binaryExpr,
+    unaryExpression,
     conditionalExpression,
     strtoupperExpression,
     strtolowerExpression,

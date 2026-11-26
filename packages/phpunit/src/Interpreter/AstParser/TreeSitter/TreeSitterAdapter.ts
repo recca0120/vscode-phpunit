@@ -786,6 +786,7 @@ const expressionAdapters: Record<string, (node: SyntaxNode) => AstNode> = {
     member_call_expression: adaptMemberCallAsCall,
     array_creation_expression: adaptArray,
     binary_expression: adaptBinaryExpression,
+    unary_op_expression: adaptUnaryExpression,
     conditional_expression: adaptConditionalExpression,
     parenthesized_expression: adaptParenthesizedExpression,
     assignment_expression: adaptAssignment,
@@ -800,6 +801,19 @@ function adaptBinaryExpression(node: SyntaxNode): AstNode {
         operator,
         left: left ? adaptExpression(left) : EMPTY_STRING_NODE,
         right: right ? adaptExpression(right) : EMPTY_STRING_NODE,
+        loc: locOf(node),
+    };
+}
+
+function adaptUnaryExpression(node: SyntaxNode): AstNode {
+    const operand = node.childForFieldName('argument');
+    if (!operand) {
+        return { kind: 'unsupported_expression', loc: locOf(node) };
+    }
+    return {
+        kind: 'unary_expression',
+        operator: node.childForFieldName('operator')?.text ?? '',
+        operand: adaptExpression(operand),
         loc: locOf(node),
     };
 }

@@ -199,6 +199,13 @@ function adaptNode(raw: RawNode): AstNode | undefined {
                 right: adaptExpression(raw.right),
                 loc: convertLoc(raw.loc),
             };
+        case 'unary':
+            return {
+                kind: 'unary_expression',
+                operator: raw.type,
+                operand: adaptExpression(raw.what),
+                loc: convertLoc(raw.loc),
+            };
         case 'retif':
             return {
                 kind: 'conditional_expression',

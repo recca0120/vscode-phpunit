@@ -261,6 +261,13 @@ export interface NullNode {
     loc?: AstNodeLoc;
 }
 
+export interface UnaryExpressionNode {
+    kind: 'unary_expression';
+    operator: string;
+    operand: AstNode;
+    loc?: AstNodeLoc;
+}
+
 export interface UnsupportedExpressionNode {
     kind: 'unsupported_expression';
     loc?: AstNodeLoc;
@@ -349,6 +356,7 @@ export type AstNode =
     | FloatNode
     | BooleanNode
     | NullNode
+    | UnaryExpressionNode
     | UnsupportedExpressionNode
     | ClassConstantAccessNode
     | ConstDeclarationNode
