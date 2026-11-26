@@ -11,7 +11,7 @@ function createTestDef(type: TestType): TestDefinition {
     return { type, id: 'test', label: 'test' };
 }
 
-describe('TestDefinitionIndex', () => {
+describe('TestItemRegistry', () => {
     it('should store and retrieve definition and item by id', () => {
         const index = new TestItemRegistry();
         const item = createTestItem('test1');

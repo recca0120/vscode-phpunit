@@ -13,7 +13,7 @@ describe('ObserverFactory', () => {
     let outputChannel: OutputChannel;
 
     beforeEach(() => {
-        const testCollection = {
+        const testTree = {
             getTestDefinition: () => undefined,
             resolveDatasetChild: () => undefined,
         } as unknown as TestTree;
@@ -25,7 +25,7 @@ describe('ObserverFactory', () => {
         } as unknown as OutputChannel;
         const configuration = { get: () => undefined } as unknown as Configuration;
         const phpUnitXML = new PHPUnitXML();
-        factory = new ObserverFactory(testCollection, outputChannel, configuration, phpUnitXML);
+        factory = new ObserverFactory(testTree, outputChannel, configuration, phpUnitXML);
     });
 
     it('should create observers including DatasetObserver, TestResultObserver, and PrinterObserver', () => {
