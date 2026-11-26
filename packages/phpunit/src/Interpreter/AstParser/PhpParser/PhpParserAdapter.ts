@@ -3,6 +3,7 @@ import type {
     AstNode,
     AstNodeAttrGroup,
     AstNodeAttribute,
+    AstNodeComment,
     AstNodeLoc,
     CallNode,
     UseItemNode,
@@ -56,7 +57,7 @@ function declarationLoc(raw: RawNode): RawNode {
     };
 }
 
-function convertComments(comments: RawNode[] | undefined): RawNode[] {
+function convertComments(comments: RawNode[] | undefined): AstNodeComment[] {
     return (comments ?? []).map((c: RawNode) => ({
         kind: 'comment',
         value: c.value,
@@ -259,10 +260,17 @@ function adaptClass(raw: RawNode): AstNode {
         isAbstract: raw.isAbstract === true,
         extendsName: raw.extends ? extractName(raw.extends) : undefined,
         body,
-        leadingComments: convertComments(raw.leadingComments),
+        leadingComments: declarationComments(raw),
         attrGroups: adaptAttrGroups(raw.attrGroups),
         loc: convertLoc(declarationLoc(raw)) ?? zeroLoc,
     };
+}
+
+function declarationComments(raw: RawNode): AstNodeComment[] {
+    const attributeComments = (raw.attrGroups ?? []).flatMap(
+        (group: RawNode) => group.leadingComments ?? [],
+    );
+    return convertComments([...attributeComments, ...(raw.leadingComments ?? [])]);
 }
 
 function adaptAttrGroups(groups: RawNode[] | undefined): AstNodeAttrGroup[] {
@@ -285,7 +293,7 @@ function adaptMethod(raw: RawNode): AstNode {
         visibility: raw.visibility ?? '',
         isAbstract: raw.isAbstract === true,
         body: raw.body ? adaptMethodBody(raw.body) : undefined,
-        leadingComments: convertComments(raw.leadingComments),
+        leadingComments: declarationComments(raw),
         attrGroups: adaptAttrGroups(raw.attrGroups),
         loc: convertLoc(declarationLoc(raw)) ?? zeroLoc,
     };
