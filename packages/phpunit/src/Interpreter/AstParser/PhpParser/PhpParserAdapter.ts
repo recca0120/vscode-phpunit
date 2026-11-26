@@ -1,4 +1,12 @@
-import type { ArrayEntryNode, AstNode, AstNodeLoc, CallNode, UseItemNode } from '../AstNode';
+import type {
+    ArrayEntryNode,
+    AstNode,
+    AstNodeAttrGroup,
+    AstNodeAttribute,
+    AstNodeLoc,
+    CallNode,
+    UseItemNode,
+} from '../AstNode';
 
 // biome-ignore lint/suspicious/noExplicitAny: Raw php-parser AST nodes are untyped
 type RawNode = any;
@@ -252,9 +260,22 @@ function adaptClass(raw: RawNode): AstNode {
         extendsName: raw.extends ? extractName(raw.extends) : undefined,
         body,
         leadingComments: convertComments(raw.leadingComments),
-        attrGroups: raw.attrGroups,
+        attrGroups: adaptAttrGroups(raw.attrGroups),
         loc: convertLoc(declarationLoc(raw)) ?? zeroLoc,
     };
+}
+
+function adaptAttrGroups(groups: RawNode[] | undefined): AstNodeAttrGroup[] {
+    return (groups ?? [])
+        .map((group: RawNode) => ({
+            attrs: (group.attrs ?? []).map(
+                (attr: RawNode): AstNodeAttribute => ({
+                    name: extractName(attr.name),
+                    args: adaptChildren(attr.args ?? []),
+                }),
+            ),
+        }))
+        .filter((group: AstNodeAttrGroup) => group.attrs.length > 0);
 }
 
 function adaptMethod(raw: RawNode): AstNode {
@@ -265,7 +286,7 @@ function adaptMethod(raw: RawNode): AstNode {
         isAbstract: raw.isAbstract === true,
         body: raw.body ? adaptMethodBody(raw.body) : undefined,
         leadingComments: convertComments(raw.leadingComments),
-        attrGroups: raw.attrGroups,
+        attrGroups: adaptAttrGroups(raw.attrGroups),
         loc: convertLoc(declarationLoc(raw)) ?? zeroLoc,
     };
 }

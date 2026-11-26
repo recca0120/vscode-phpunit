@@ -41,6 +41,15 @@ describe.each(parsers)('PHPUnitParser Test (%s)', (_name, createParser) => {
             );
         });
 
+        it('namespace range covers only the namespace statement', () => {
+            expect(givenTest(file, content, 'Tests')).toEqual(
+                expect.objectContaining({
+                    start: { line: 3, character: 0 },
+                    end: { line: 3, character: 16 },
+                }),
+            );
+        });
+
         it('parse class', () => {
             expect(givenTest(file, content, 'AssertionsTest')).toEqual(
                 expect.objectContaining({

@@ -12,7 +12,7 @@ export interface AstNodeAttrGroup {
 }
 export interface AstNodeAttribute {
     name: string;
-    args: { value?: unknown }[];
+    args: AstNode[];
 }
 
 export interface ProgramNode {

@@ -3,6 +3,7 @@ import type {
     ArrayEntryNode,
     AstNode,
     AstNodeAttrGroup,
+    AstNodeAttribute,
     AstNodeComment,
     AstNodeLoc,
     CallNode,
@@ -84,46 +85,15 @@ function collectAttrGroups(node: SyntaxNode): AstNodeAttrGroup[] {
     return attrGroups;
 }
 
-function parseAttribute(attr: SyntaxNode): { name: string; args: { value?: unknown }[] } {
+function parseAttribute(attr: SyntaxNode): AstNodeAttribute {
     const nameNode = attr.childForFieldName('name') ?? attr.namedChildren[0];
-    const name = nameNode ? nameNode.text : '';
-    const shortName = name.includes('\\') ? (name.split('\\').pop() ?? name) : name;
-
     const argList =
         attr.childForFieldName('parameters') ?? attr.children.find((c) => c?.type === 'arguments');
 
-    const args = argList
-        ? argList.namedChildren
-              .filter((arg): arg is NonNullable<typeof arg> => !!arg)
-              .map((arg) => {
-                  const valNode =
-                      arg.type === 'argument'
-                          ? (arg.childForFieldName('value') ?? arg.namedChildren[0] ?? null)
-                          : arg;
-                  return { value: extractStringValue(valNode) };
-              })
-        : [];
-
-    return { name: shortName, args };
-}
-
-function extractStringValue(node: SyntaxNode | null): string | undefined {
-    if (!node) {
-        return undefined;
-    }
-
-    if (node.type === 'string' || node.type === 'encapsed_string') {
-        const text = node.text;
-        if (
-            (text.startsWith("'") && text.endsWith("'")) ||
-            (text.startsWith('"') && text.endsWith('"'))
-        ) {
-            return text.slice(1, -1);
-        }
-        return text;
-    }
-
-    return node.text;
+    return {
+        name: nameNode ? nameNode.text : '',
+        args: argList ? adaptArguments(argList) : [],
+    };
 }
 
 function adaptVisibility(node: SyntaxNode): string {
