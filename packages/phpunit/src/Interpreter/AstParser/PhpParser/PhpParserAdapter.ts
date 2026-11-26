@@ -328,8 +328,7 @@ function adaptMethodBody(body: RawNode): AstNode[] {
 
     for (const child of body.children ?? []) {
         if (!child) continue;
-        const statement =
-            child.kind === 'return' ? adaptReturnStatement(child) : adaptBodyStatement(child);
+        const statement = adaptBodyStatement(child);
         if (statement) {
             statements.push(statement);
         }
@@ -349,6 +348,8 @@ function adaptReturnStatement(raw: RawNode): AstNode {
 
 function adaptBodyStatement(raw: RawNode): AstNode | null {
     switch (raw.kind) {
+        case 'return':
+            return adaptReturnStatement(raw);
         case 'for':
             return adaptForStatement(raw);
         case 'foreach':

@@ -275,10 +275,7 @@ function adaptMethodBody(bodyNode: SyntaxNode): AstNode[] {
 
     for (const child of bodyNode.namedChildren) {
         if (!child) continue;
-        const statement =
-            child.type === 'return_statement'
-                ? adaptReturnStatement(child)
-                : adaptBodyStatement(child);
+        const statement = adaptBodyStatement(child);
         if (statement) {
             statements.push(statement);
         }
@@ -298,6 +295,8 @@ function adaptReturnStatement(node: SyntaxNode): AstNode {
 
 function adaptBodyStatement(node: SyntaxNode): AstNode | null {
     switch (node.type) {
+        case 'return_statement':
+            return adaptReturnStatement(node);
         case 'for_statement':
             return adaptForStatement(node);
         case 'foreach_statement':

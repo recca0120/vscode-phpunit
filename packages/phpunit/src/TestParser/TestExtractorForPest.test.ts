@@ -1222,4 +1222,21 @@ test('numbers', function (int $n) {
             'data set "(2)"',
         ]);
     });
+
+    it('closure dataset returning an array', () => {
+        const content = `<?php
+it('adds numbers', function (int $a, int $b) {
+    expect($a + $b)->toBeInt();
+})->with(function () {
+    return [
+        'one plus one' => [1, 1],
+        [2, 3],
+    ];
+});
+    `;
+        expect(givenTest(file, content, 'it adds numbers')?.annotations?.dataset).toEqual([
+            'data set "dataset "one plus one""',
+            'data set "(2, 3)"',
+        ]);
+    });
 });
