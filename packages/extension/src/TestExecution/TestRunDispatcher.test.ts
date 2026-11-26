@@ -63,7 +63,9 @@ describe('TestRunDispatcher', () => {
                 if (key === folderBUri.toString()) return containerB;
                 return undefined;
             },
-        } as unknown as WorkspaceFolderManager;
+        } satisfies Partial<
+            Record<keyof WorkspaceFolderManager, unknown>
+        > as unknown as WorkspaceFolderManager;
 
         dispatcher = new TestRunDispatcher(folderManager);
     });

@@ -5,11 +5,13 @@ import type { TestTree } from '../TestTree';
 import { TestWatchManager } from './TestWatchManager';
 
 function createMockHandler() {
-    return { startTestRun: vi.fn().mockResolvedValue(undefined) };
+    return { startTestRun: vi.fn().mockResolvedValue(undefined) } satisfies Partial<TestRunHandler>;
 }
 
 function createMockTestTree() {
-    return { findTestsByFile: vi.fn().mockReturnValue([]) } as unknown as TestTree;
+    return {
+        itemsInFile: vi.fn().mockReturnValue([]),
+    } satisfies Partial<TestTree> as unknown as TestTree;
 }
 
 describe('TestWatchManager', () => {

@@ -16,7 +16,7 @@ function createMockConfiguration(args: string[] = []) {
     return {
         arguments: vi.fn().mockReturnValue(args),
         findConfigurationFile: vi.fn().mockResolvedValue(undefined),
-    } as unknown as Configuration;
+    } satisfies Partial<Configuration> as unknown as Configuration;
 }
 
 function createMockTestTree() {
@@ -25,7 +25,7 @@ function createMockTestTree() {
         remove: vi.fn(),
         add: vi.fn().mockResolvedValue(undefined),
         files: vi.fn().mockReturnValue([]),
-    } as unknown as TestTree;
+    } satisfies Partial<TestTree> as unknown as TestTree;
 }
 
 describe('TestFileDiscovery.getConfigFilePattern', () => {
@@ -125,7 +125,7 @@ describe('TestFileDiscovery.getWorkspaceTestPattern', () => {
         const configuration = {
             arguments: vi.fn().mockReturnValue([]),
             findConfigurationFile: vi.fn().mockResolvedValue(configFile),
-        } as unknown as Configuration;
+        } satisfies Partial<Configuration> as unknown as Configuration;
         const discovery = new TestFileDiscovery(
             configuration,
             new PHPUnitXML(),
