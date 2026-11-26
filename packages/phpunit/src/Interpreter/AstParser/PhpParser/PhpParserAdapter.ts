@@ -165,7 +165,13 @@ function adaptNode(raw: RawNode): AstNode | undefined {
         case 'yield':
             return adaptYieldExpression(raw);
         case 'include':
-            return { kind: 'include_expression', loc: convertLoc(raw.loc) };
+            return {
+                kind: 'include_expression',
+                path: adaptExpression(raw.target),
+                loc: convertLoc(raw.loc),
+            };
+        case 'magic':
+            return { kind: 'magic_constant', name: raw.value, loc: convertLoc(raw.loc) };
         case 'array':
             return adaptArrayCreation(raw);
         case 'entry':
@@ -637,7 +643,7 @@ function adaptExpressionStatement(raw: RawNode): AstNode {
     const adapted = adaptNode(raw.expression);
     return {
         kind: 'expression_statement',
-        expression: adapted ?? { kind: 'include_expression', loc: convertLoc(raw.loc) },
+        expression: adapted ?? { kind: 'unsupported_expression', loc: convertLoc(raw.loc) },
         loc: convertLoc(raw.loc),
     };
 }

@@ -161,17 +161,39 @@ export class TestIndex {
 
     private async indexSupportFile(uri: URI): Promise<ChangeResult> {
         const parseResult = await this.testParser.parseFile(uri.fsPath);
-        await this.registerClasses(parseResult?.classes ?? []);
+        await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
 
         return { parsed: await this.reparseDependents(uri), deleted: [] };
     }
 
-    private async registerClasses(classes: ClassInfo[]): Promise<void> {
+    private async registerClasses(classes: ClassInfo[], includes: string[] = []): Promise<void> {
         for (const cls of classes) {
             this.classHierarchy.register(cls);
         }
         for (const cls of classes) {
             await this.indexAncestors(cls);
+        }
+        if (classes.some((cls) => this.hasUnresolvedAncestors(cls))) {
+            await this.indexIncludedFiles(includes);
+        }
+    }
+
+    private hasUnresolvedAncestors(cls: ClassInfo): boolean {
+        return [cls.parentFQN, ...cls.traitFQNs].some(
+            (fqn) => !!fqn && fqn !== PHPUNIT_TESTCASE_FQN && !this.classHierarchy.get(fqn),
+        );
+    }
+
+    private async indexIncludedFiles(includes: string[]): Promise<void> {
+        for (const file of includes) {
+            if (
+                this.classHierarchy.getClassesByUri(file).length > 0 ||
+                !(await checkFileExists(file))
+            ) {
+                continue;
+            }
+            const parseResult = await this.testParser.parseFile(file);
+            await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
         }
     }
 
@@ -187,7 +209,7 @@ export class TestIndex {
             }
 
             const parseResult = await this.testParser.parseFile(file);
-            await this.registerClasses(parseResult?.classes ?? []);
+            await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
         }
     }
 
@@ -245,7 +267,7 @@ export class TestIndex {
             return [];
         }
 
-        await this.registerClasses(parseResult.classes);
+        await this.registerClasses(parseResult.classes, parseResult.includes);
 
         return this.classHierarchy.enrichTests(parseResult.tests);
     }

@@ -343,6 +343,18 @@ describe('Extension Test', () => {
                 ]);
             });
 
+            it('includes test methods of a trait loaded with require_once', async () => {
+                await activate(context);
+                await getTestController().resolveHandler?.(undefined);
+
+                expect(
+                    childLabels(getTestController().items, 'Require Trait (Tests\\RequireTrait)'),
+                ).toEqual([
+                    `${icon(TestType.method)} test_from_required_trait`,
+                    `${icon(TestType.method)} test_own`,
+                ]);
+            });
+
             it('should load tests', async () => {
                 await activate(context);
                 const ctrl = getTestController();
@@ -427,10 +439,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 77, started: 62, passed: 45, failed: 15, end: 1 }],
-                        ['10.0.0', { enqueued: 77, started: 76, passed: 62, failed: 12, end: 1 }],
+                        ['12.0.0', { enqueued: 79, started: 64, passed: 47, failed: 15, end: 1 }],
+                        ['10.0.0', { enqueued: 79, started: 78, passed: 64, failed: 12, end: 1 }],
                     ],
-                    { enqueued: 77, started: 54, passed: 33, failed: 19, end: 1 },
+                    { enqueued: 79, started: 56, passed: 35, failed: 19, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -442,10 +454,10 @@ describe('Extension Test', () => {
                 const expected = resolveExpected(
                     phpUnitVersion,
                     [
-                        ['12.0.0', { enqueued: 76, started: 61, passed: 45, failed: 14, end: 1 }],
-                        ['10.0.0', { enqueued: 76, started: 75, passed: 62, failed: 11, end: 1 }],
+                        ['12.0.0', { enqueued: 78, started: 63, passed: 47, failed: 14, end: 1 }],
+                        ['10.0.0', { enqueued: 78, started: 77, passed: 64, failed: 11, end: 1 }],
                     ],
-                    { enqueued: 76, started: 53, passed: 33, failed: 18, end: 1 },
+                    { enqueued: 78, started: 55, passed: 35, failed: 18, end: 1 },
                 );
 
                 expectTestResultCalled(ctrl, expected);
@@ -672,7 +684,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(102);
+                expect(countItems(ctrl.items)).toEqual(105);
 
                 const annotationMulti = findTest(
                     ctrl.items,
@@ -762,7 +774,7 @@ describe('Extension Test', () => {
 
                 await ctrl.resolveHandler();
 
-                expect(countItems(ctrl.items)).toEqual(107);
+                expect(countItems(ctrl.items)).toEqual(110);
             });
 
             it('should resolve tests with phpunit.xml.dist', async () => {

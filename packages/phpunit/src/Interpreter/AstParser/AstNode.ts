@@ -149,6 +149,13 @@ export interface BlockNode {
 
 export interface IncludeNode {
     kind: 'include_expression';
+    path: AstNode;
+    loc?: AstNodeLoc;
+}
+
+export interface MagicConstantNode {
+    kind: 'magic_constant';
+    name: string;
     loc?: AstNodeLoc;
 }
 
@@ -336,6 +343,7 @@ export type AstNode =
     | ArrowFuncNode
     | BlockNode
     | IncludeNode
+    | MagicConstantNode
     | ArrayCreationNode
     | ArrayEntryNode
     | ReturnStatementNode

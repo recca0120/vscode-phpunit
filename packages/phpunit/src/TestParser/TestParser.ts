@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import type { PHPUnitXML } from '../Configuration';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { interpret } from '../Interpreter/PHP';
+import { resolveIncludes } from './IncludeResolver';
 import type { ParseResult } from './TestExtractor';
 import { extractTests } from './TestExtractor';
 
@@ -36,6 +37,6 @@ export class TestParser {
             testDefinition.testsuite = testsuite;
         }
 
-        return result;
+        return { ...result, includes: resolveIncludes(ast, file) };
     }
 }
