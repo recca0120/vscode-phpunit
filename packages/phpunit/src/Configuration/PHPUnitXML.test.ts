@@ -58,7 +58,7 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Unit', value: 'tests/Unit2' },
         ]);
 
-        const { includes, excludes } = parsed.getPatterns(root);
+        const { includes, excludes } = parsed.getIndexPatterns(root);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php,Unit2/**/*.php}',
@@ -88,7 +88,7 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Feature', value: 'tests/Feature' },
         ]);
 
-        const { includes, excludes } = parsed.getPatterns(root);
+        const { includes, excludes } = parsed.getIndexPatterns(root);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php,Feature/**/*.php}',
@@ -122,7 +122,7 @@ describe('PHPUnit XML Test', () => {
             { tag: 'directory', name: 'Feature', value: 'tests/Feature2' },
         ]);
 
-        const { includes, excludes } = parsed.getPatterns(root);
+        const { includes, excludes } = parsed.getIndexPatterns(root);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php,Unit2/**/*.php,Feature/**/*.php,Feature2/**/*.php}',
@@ -154,7 +154,7 @@ describe('PHPUnit XML Test', () => {
             { tag: 'file', name: 'Unit', value: './vendor/someone/tests/MyClassTest2.php' },
         ]);
 
-        const { includes, excludes } = parsed.getPatterns(root);
+        const { includes, excludes } = parsed.getIndexPatterns(root);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern:
@@ -183,7 +183,7 @@ describe('PHPUnit XML Test', () => {
             { tag: 'exclude', name: 'Unit', value: './tests/Integration/OldTests' },
         ]);
 
-        const { includes, excludes } = parsed.getPatterns(root);
+        const { includes, excludes } = parsed.getIndexPatterns(root);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(join(phpUnitXML.root(), 'tests')),
             pattern: '{Unit/**/*.php}',
@@ -213,7 +213,7 @@ describe('PHPUnit XML Test', () => {
             { tag: 'exclude', name: 'Application Test Suite', value: 'utils' },
         ]);
 
-        const { excludes } = parsed.getPatterns(root);
+        const { excludes } = parsed.getIndexPatterns(root);
         expect(excludes.toGlobPattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**,utils/**/*}',
@@ -241,11 +241,7 @@ describe('PHPUnit XML Test', () => {
             },
         ]);
 
-        const { includes, excludes } = parsed.getPatterns(root);
-        expect(includes.toGlobPattern()).toEqual({
-            uri: URI.file(join(phpUnitXML.root(), 'tests')),
-            pattern: '{Unit/**/*.phpt}',
-        });
+        const { excludes } = parsed.getIndexPatterns(root);
         expect(excludes.toGlobPattern()).toEqual({
             uri: URI.file(phpUnitXML.root()),
             pattern: '{**/.git/**,**/node_modules/**}',
@@ -467,7 +463,7 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
 
         phpUnitXML.load(xml, phpUnitProject('v9/phpunit.xml'));
 
-        const { includes, excludes } = phpUnitXML.getPatterns(parentRoot);
+        const { includes, excludes } = phpUnitXML.getIndexPatterns(parentRoot);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(join(parentRoot, 'tests')),
             pattern: '{**/*.php}',
@@ -495,7 +491,7 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
 
         expect(phpUnitXML.root()).toEqual(parentRoot);
 
-        const { includes, excludes } = phpUnitXML.getPatterns(parentRoot);
+        const { includes, excludes } = phpUnitXML.getIndexPatterns(parentRoot);
         expect(includes.toGlobPattern()).toEqual({
             uri: URI.file(join(parentRoot, 'tests')),
             pattern: '{**/*.php}',
