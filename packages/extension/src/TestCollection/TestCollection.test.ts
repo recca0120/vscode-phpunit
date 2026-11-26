@@ -1818,6 +1818,108 @@ class ChildTest extends BaseCase
         });
     });
 
+    describe('ancestors indexed after the class', () => {
+        const indexInOrder = async (files: Record<string, string>, order: string[]) => {
+            const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
+            await mkdir(join(root, 'tests'), { recursive: true });
+            for (const [file, code] of Object.entries(files)) {
+                await writeFile(join(root, 'tests', file), code);
+            }
+            const collection = givenTestCollection(
+                `<testsuites>
+                    <testsuite name="Unit">
+                        <directory suffix="Test.php">tests</directory>
+                    </testsuite>
+                </testsuites>`,
+                join(root, 'phpunit.xml'),
+            );
+            for (const file of order) {
+                await collection.add(URI.file(join(root, 'tests', file)));
+            }
+            await rm(root, { recursive: true, force: true });
+
+            const allIds = (items: import('vscode').TestItemCollection): string[] =>
+                [...items].flatMap(([id, item]) => [id, ...allIds(item.children)]);
+            return allIds(ctrl.items)
+                .filter((id) => id.startsWith('Foo (Tests\\Foo)::'))
+                .sort();
+        };
+
+        it('includes test methods of a grandparent class indexed last', async () => {
+            const ids = await indexInOrder(
+                {
+                    'FooTest.php': `<?php
+namespace Tests;
+class FooTest extends Middle
+{
+    public function test_own() {}
+}
+`,
+                    'Middle.php': `<?php
+namespace Tests;
+abstract class Middle extends Top
+{
+    public function test_middle() {}
+}
+`,
+                    'Top.php': `<?php
+namespace Tests;
+abstract class Top extends \\PHPUnit\\Framework\\TestCase
+{
+    public function test_top() {}
+}
+`,
+                },
+                ['FooTest.php', 'Middle.php', 'Top.php'],
+            );
+
+            expect(ids).toEqual([
+                'Foo (Tests\\Foo)::Middle',
+                'Foo (Tests\\Foo)::Own',
+                'Foo (Tests\\Foo)::Top',
+            ]);
+        });
+
+        it('includes test methods of a nested trait indexed last', async () => {
+            const ids = await indexInOrder(
+                {
+                    'FooTest.php': `<?php
+namespace Tests;
+class FooTest extends \\PHPUnit\\Framework\\TestCase
+{
+    use Outer;
+
+    public function test_own() {}
+}
+`,
+                    'Outer.php': `<?php
+namespace Tests;
+trait Outer
+{
+    use Inner;
+
+    public function test_outer() {}
+}
+`,
+                    'Inner.php': `<?php
+namespace Tests;
+trait Inner
+{
+    public function test_inner() {}
+}
+`,
+                },
+                ['FooTest.php', 'Outer.php', 'Inner.php'],
+            );
+
+            expect(ids).toEqual([
+                'Foo (Tests\\Foo)::Inner',
+                'Foo (Tests\\Foo)::Outer',
+                'Foo (Tests\\Foo)::Own',
+            ]);
+        });
+    });
+
     describe('classes known not to extend TestCase', () => {
         it('ignores classes whose resolved hierarchy does not reach TestCase', async () => {
             const root = await mkdtemp(join(tmpdir(), 'vscode-phpunit-'));
