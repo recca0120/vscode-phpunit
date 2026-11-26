@@ -890,6 +890,70 @@ describe('Extension Test', () => {
                     expect(debug.stopDebugging).toHaveBeenCalledWith({ type: 'php' });
                 });
 
+                it('uses the port of the launch configuration named by debuggerConfig', async () => {
+                    const folderUri = Uri.file(root);
+                    await workspace.getConfiguration('launch', folderUri).update('configurations', [
+                        {
+                            name: 'Listen for Xdebug',
+                            type: 'php',
+                            request: 'launch',
+                            port: 9003,
+                        },
+                    ]);
+                    const configuration = workspace.getConfiguration('phpunit', folderUri);
+                    await configuration.update('debuggerConfig', 'Listen for Xdebug');
+
+                    try {
+                        await activateAndRun({ kind: TestRunProfileKind.Debug });
+
+                        expectSpawnCalled(
+                            [
+                                '-dxdebug.mode=debug',
+                                '-dxdebug.start_with_request=1',
+                                '-dxdebug.client_port=9003',
+                                binary,
+                                '--colors=always',
+                                '--teamcity',
+                            ],
+                            { XDEBUG_MODE: 'debug' },
+                        );
+                        expect(debug.startDebugging).toHaveBeenCalledWith(
+                            expect.anything(),
+                            'Listen for Xdebug',
+                        );
+                    } finally {
+                        await configuration.update('debuggerConfig', undefined);
+                    }
+                });
+
+                it('leaves the client port to Xdebug when the named launch configuration has none', async () => {
+                    const folderUri = Uri.file(root);
+                    await workspace
+                        .getConfiguration('launch', folderUri)
+                        .update('configurations', [
+                            { name: 'Listen for Xdebug', type: 'php', request: 'launch' },
+                        ]);
+                    const configuration = workspace.getConfiguration('phpunit', folderUri);
+                    await configuration.update('debuggerConfig', 'Listen for Xdebug');
+
+                    try {
+                        await activateAndRun({ kind: TestRunProfileKind.Debug });
+
+                        const [, args] = (spawn as Mock).mock.calls[0];
+                        expect(args).toEqual(
+                            expect.arrayContaining([
+                                '-dxdebug.mode=debug',
+                                '-dxdebug.start_with_request=1',
+                            ]),
+                        );
+                        expect(
+                            args.filter((arg: string) => arg.startsWith('-dxdebug.client_port')),
+                        ).toEqual([]);
+                    } finally {
+                        await configuration.update('debuggerConfig', undefined);
+                    }
+                });
+
                 it('Coverage', async () => {
                     const fakeData: FileCoverageData[] = [
                         { filePath: join(root, 'src/Foo.php'), covered: 1, total: 2, lines: [] },
