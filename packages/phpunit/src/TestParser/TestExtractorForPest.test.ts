@@ -658,6 +658,21 @@ it('validates emails', function (string $email) {
         );
     });
 
+    it('integer values dataset', () => {
+        const content = `<?php
+
+test('numbers', function (int $n) {
+    expect($n)->toBeInt();
+})->with([1, 2, 3]);
+        `;
+
+        expect(givenTest(file, content, 'numbers')?.annotations?.dataset).toEqual([
+            'data set "(1)"',
+            'data set "(2)"',
+            'data set "(3)"',
+        ]);
+    });
+
     it('chained ->with()->with() produces cartesian product (#21)', () => {
         const content = `<?php
 
