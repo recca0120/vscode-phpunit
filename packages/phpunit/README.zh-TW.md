@@ -156,7 +156,7 @@ import {
 // 1. 建構命令
 const filter = FilterStrategyFactory.create(testDefinition);
 const command = new TestCommand(configuration, { cwd: projectRoot }, pathReplacer).withArguments(
-  filter.getFilter(),
+  filter.filter(),
 );
 // → php vendor/bin/phpunit --filter="^ExampleTest::test_add" --teamcity --colors=never
 

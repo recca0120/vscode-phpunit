@@ -4,7 +4,7 @@ import type { CommandOption } from './CommandOption';
 export class XdebugCoverage implements CommandOption {
     constructor(
         private readonly enabled: boolean,
-        private readonly cloverFile?: string,
+        private readonly cloverPath?: string,
     ) {}
 
     isEnabled() {
@@ -20,19 +20,19 @@ export class XdebugCoverage implements CommandOption {
     }
 
     phpUnitArgs(paths: PathMapper) {
-        if (!this.enabled || !this.cloverFile) {
+        if (!this.enabled || !this.cloverPath) {
             return [];
         }
 
-        return ['--coverage-clover', paths.toRemote(this.cloverFile)];
+        return ['--coverage-clover', paths.toRemote(this.cloverPath)];
     }
 
-    getCloverFile() {
-        return this.enabled ? this.cloverFile : undefined;
+    cloverFile() {
+        return this.enabled ? this.cloverPath : undefined;
     }
 
     withEnabled(enabled: boolean) {
-        return new XdebugCoverage(enabled, this.cloverFile);
+        return new XdebugCoverage(enabled, this.cloverPath);
     }
 
     withCloverFile(cloverFile: string) {

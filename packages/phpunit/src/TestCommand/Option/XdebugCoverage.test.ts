@@ -9,7 +9,7 @@ describe('XdebugCoverage', () => {
             '/workspace/.phpunit.cache/coverage-abc-0.xml',
         );
 
-        expect(coverage.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+        expect(coverage.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
     });
 
     it('getCloverFile returns undefined when not in coverage mode', () => {
@@ -17,7 +17,7 @@ describe('XdebugCoverage', () => {
             '/workspace/.phpunit.cache/coverage-abc-0.xml',
         );
 
-        expect(coverage.getCloverFile()).toBeUndefined();
+        expect(coverage.cloverFile()).toBeUndefined();
     });
 
     it('phpUnitArgs returns empty when no clover file set', () => {
@@ -59,7 +59,7 @@ describe('XdebugCoverage', () => {
         );
 
         const copy = coverage.withEnabled(true);
-        expect(copy.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+        expect(copy.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
     });
 
     it('withCloverFile returns an independent copy', () => {
@@ -69,7 +69,7 @@ describe('XdebugCoverage', () => {
 
         const copy = coverage.withCloverFile('/workspace/.phpunit.cache/coverage-abc-1.xml');
 
-        expect(coverage.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
-        expect(copy.getCloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
+        expect(coverage.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-0.xml');
+        expect(copy.cloverFile()).toBe('/workspace/.phpunit.cache/coverage-abc-1.xml');
     });
 });

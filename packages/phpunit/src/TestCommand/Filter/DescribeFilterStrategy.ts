@@ -2,22 +2,22 @@ import { TestIdentifier } from '../../TestIdentifier/TestIdentifier';
 import { FilterStrategy } from './FilterStrategy';
 
 export class DescribeFilterStrategy extends FilterStrategy {
-    getFilter() {
+    filter() {
         return this.joinFilters(
-            this.getDependsFilter(),
+            this.dependsFilter(),
             this.testDefinition.file ? encodeURIComponent(this.testDefinition.file) : undefined,
         );
     }
 
-    protected getDependsFilter() {
-        const methodName = this.getMethodNamePattern();
+    protected dependsFilter() {
+        const methodName = this.methodNamePattern();
         const deps = this.testDefinition.annotations?.depends ?? [];
         const filter = [methodName, ...deps].filter((value) => !!value).join('|');
 
         return this.parseFilter(`^.*::(${filter})`);
     }
 
-    protected getMethodNamePattern() {
+    protected methodNamePattern() {
         const methodName = (this.testDefinition.methodName ?? '').trim();
         return `${TestIdentifier.generateSearchText(methodName)}.*`;
     }

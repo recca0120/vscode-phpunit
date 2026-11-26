@@ -24,7 +24,7 @@ describe('Xdebug', () => {
 
             expect(xdebug.isCoverageMode()).toBe(true);
             expect(xdebug.isDebugMode()).toBe(false);
-            expect(coverageOf(xdebug)?.getCloverFile()).toBeUndefined();
+            expect(coverageOf(xdebug)?.cloverFile()).toBeUndefined();
         });
     });
 
