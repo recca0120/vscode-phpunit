@@ -924,6 +924,19 @@ it('business closed', function (string $business, string $day) {
         );
     });
 
+    it('chained ->with() with named keys uses the dataset label like Pest', () => {
+        const content = `<?php
+
+it('business closed', function (string $business, string $day) {
+    expect(true)->toBeTrue();
+})->with(['office' => 'Office', 'bank' => 'Bank'])->with(['Saturday']);
+        `;
+
+        expect(givenTest(file, content, 'it business closed')?.annotations?.dataset).toEqual([
+            `data set "dataset "office" / ('Saturday')"`,
+            `data set "dataset "bank" / ('Saturday')"`,
+        ]);
+    });
     it('generator closure dataset with named keys', () => {
         const content = `<?php
 it('adds numbers', function (int $a, int $b, int $expected) {

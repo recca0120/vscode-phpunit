@@ -296,7 +296,7 @@ function resolveDatasets(sources: AstNode[]): string[] {
             return [];
         }
         return [...resolved.entries()].map(([key, value]) =>
-            /^\d+$/.test(key) ? formatPestValue(value) : `('${key}')`,
+            /^\d+$/.test(key) ? formatPestValue(value) : `dataset "${key}"`,
         );
     });
     if (datasets.some((d) => d.includes(undefined))) {
