@@ -1,6 +1,6 @@
 export * from './CommandOption';
 export * from './Environment';
-export * from './FilterStrategy';
+export * from './Filter';
 export * from './Invocation';
 export * from './TestCommand';
 export * from './Xdebug';
