@@ -23,7 +23,7 @@ export class InheritanceResolver {
         return true;
     }
 
-    resolveInheritedMethods(classFQN: string): TestDefinition[] {
+    inheritedMethods(classFQN: string): TestDefinition[] {
         const methodMap = new Map<string, TestDefinition>();
         this.walkAncestors(classFQN, (_current, info) => {
             if (!info) {
@@ -44,7 +44,7 @@ export class InheritanceResolver {
         return [...methodMap.values()];
     }
 
-    enrichTests(tests: TestDefinition[]): TestDefinition[] {
+    resolve(tests: TestDefinition[]): TestDefinition[] {
         return tests
             .map((test) =>
                 test.type === TestType.class ? this.enrichClass(test) : this.enrichNonClass(test),
@@ -57,7 +57,7 @@ export class InheritanceResolver {
             return test;
         }
 
-        const enrichedChildren = this.enrichTests(test.children);
+        const enrichedChildren = this.resolve(test.children);
         if (enrichedChildren.length === 0) {
             return undefined;
         }
@@ -79,7 +79,7 @@ export class InheritanceResolver {
         );
 
         const transformer = TestIdentifierFactory.create(test.classFQN);
-        const allMethods = this.resolveInheritedMethods(test.classFQN);
+        const allMethods = this.inheritedMethods(test.classFQN);
         const inheritedMethods = allMethods
             .filter((m) => m.methodName && !ownMethodNames.has(m.methodName))
             .map((m) => {

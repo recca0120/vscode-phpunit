@@ -12,7 +12,7 @@ export class ClassRegistry {
         this.registry.set(info.classFQN, info);
     }
 
-    unregister(uri: string): ClassInfo[] {
+    unregisterFile(uri: string): ClassInfo[] {
         const removed = this.filterValues(
             (info) => info.uri === uri || info.uri.startsWith(`${uri}${sep}`),
         );
@@ -26,16 +26,35 @@ export class ClassRegistry {
         return this.registry.get(classFQN);
     }
 
-    getClassesByUri(uri: string): ClassInfo[] {
+    declaredIn(uri: string): ClassInfo[] {
         return this.filterValues((info) => info.uri === uri);
     }
 
-    getChildClasses(classFQN: string): ClassInfo[] {
+    childrenOf(classFQN: string): ClassInfo[] {
         return this.filterValues((info) => info.parentFQN === classFQN);
     }
 
-    getTraitUsers(traitFQN: string): ClassInfo[] {
+    usersOf(traitFQN: string): ClassInfo[] {
         return this.filterValues((info) => info.traitFQNs.includes(traitFQN));
+    }
+
+    dependentsOf(classes: ClassInfo[]): ClassInfo[] {
+        const dependents = new Map<string, ClassInfo>();
+        const pending = [...classes];
+        for (let classInfo = pending.shift(); classInfo; classInfo = pending.shift()) {
+            for (const dependent of [
+                ...this.childrenOf(classInfo.classFQN),
+                ...this.usersOf(classInfo.classFQN),
+            ]) {
+                if (dependents.has(dependent.classFQN)) {
+                    continue;
+                }
+                dependents.set(dependent.classFQN, dependent);
+                pending.push(dependent);
+            }
+        }
+
+        return [...dependents.values()];
     }
 
     private filterValues(predicate: (info: ClassInfo) => boolean): ClassInfo[] {

@@ -64,7 +64,7 @@ export class TestCollection {
     }
 
     resolveDatasetChild(result: TestStarted): TestItem | undefined {
-        const resolved = this.testIndex.resolveDataset(result);
+        const resolved = this.testIndex.addDatasetChild(result);
         if (!resolved) {
             return undefined;
         }
@@ -138,7 +138,7 @@ export class TestCollection {
     }
 
     gatherFiles() {
-        return this.testIndex.gatherFiles();
+        return this.testIndex.files();
     }
 
     async add(uri: URI) {
@@ -149,7 +149,7 @@ export class TestCollection {
     }
 
     async change(uri: URI) {
-        const result = await this.testIndex.change(uri);
+        const result = await this.testIndex.update(uri);
         this.applyIndexChange(result);
         return result;
     }
@@ -165,7 +165,7 @@ export class TestCollection {
 
     reset() {
         this.handleReset();
-        this.testIndex.reset();
+        this.testIndex.clear();
     }
 
     private applyIndexChange(result: IndexChange) {

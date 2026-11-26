@@ -6,7 +6,8 @@ import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSit
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
 import { ChainAstParser, PHPUnitXML, type TestDefinition, TestParser, TestType } from '../index';
 import { TeamcityEvent, type TestStarted } from '../TestOutput';
-import { ClassHierarchy } from '../TestParser/ClassHierarchy';
+import { ClassRegistry } from './ClassRegistry';
+import { InheritanceResolver } from './InheritanceResolver';
 import { TestIndex } from './TestIndex';
 
 beforeAll(async () => initTreeSitter());
@@ -19,7 +20,7 @@ describe('TestIndex', () => {
 
     const givenTestIndex = (text: string) => {
         phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
-        testIndex.reset();
+        testIndex.clear();
 
         return testIndex;
     };
@@ -30,7 +31,8 @@ describe('TestIndex', () => {
     ) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
-        const hierarchy = new ClassHierarchy();
+        const hierarchy = new ClassRegistry();
+        const inheritance = new InheritanceResolver(hierarchy);
         for (const [testsuite, files] of Object.entries(testsuites)) {
             const expected: TestDefinition[] = [];
             for (const uri of files as URI[]) {
@@ -44,11 +46,11 @@ describe('TestIndex', () => {
                     for (const cls of result.classes) {
                         hierarchy.register(cls);
                     }
-                    expected.push(...hierarchy.enrichTests(result.tests));
+                    expected.push(...inheritance.resolve(result.tests));
                 }
             }
             const actual: TestDefinition[] = [];
-            for (const file of collection.gatherFiles()) {
+            for (const file of collection.files()) {
                 if (file.testsuite === testsuite) {
                     actual.push(...file.tests);
                 }
@@ -66,10 +68,10 @@ describe('TestIndex', () => {
             </testsuites>`);
 
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
+        await collection.update(uri);
         expect(collection.has(uri)).toBe(true);
 
-        collection.reset();
+        collection.clear();
         expect(collection.has(uri)).toBe(false);
     });
 
@@ -91,7 +93,7 @@ describe('TestIndex', () => {
                 // URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, { default: files });
@@ -107,7 +109,7 @@ describe('TestIndex', () => {
 
             const files = [URI.file(phpUnitProject('tests/AssertionsTest.php'))];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, { default: files });
@@ -127,7 +129,7 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, { default: [files[0]] });
@@ -147,7 +149,7 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, { default: [files[0]] });
@@ -175,7 +177,7 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, {
@@ -198,7 +200,7 @@ describe('TestIndex', () => {
                 URI.file(phpUnitProject('tests/Feature/SubFolder/ExampleTest.php')),
             ];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, { default: [files[1], files[2]] });
@@ -214,7 +216,7 @@ describe('TestIndex', () => {
 
             const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
             for (const file of files) {
-                await collection.change(file);
+                await collection.update(file);
             }
 
             await shouldBe(collection, {
@@ -237,7 +239,7 @@ describe('TestIndex', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.change(file);
+            await collection.update(file);
         }
 
         await shouldBe(collection, { default: [files[1], files[2]] });
@@ -256,7 +258,7 @@ describe('TestIndex', () => {
             URI.file(phpUnitProject('tests/Unit/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.change(file);
+            await collection.update(file);
         }
 
         await shouldBe(collection, { default: [files[0]] });
@@ -272,7 +274,7 @@ describe('TestIndex', () => {
 
         const files = [URI.file(phpUnitProject('tests/Unit/ExampleTest.php'))];
         for (const file of files) {
-            await collection.change(file);
+            await collection.update(file);
         }
 
         expect(collection.has(files[0])).toBeTruthy();
@@ -291,7 +293,7 @@ describe('TestIndex', () => {
 
         const abstractFile = URI.file(phpUnitProject('tests/AbstractTest.php'));
 
-        await collection.change(abstractFile);
+        await collection.update(abstractFile);
         expect(collection.has(abstractFile)).toBeFalsy();
     });
 
@@ -304,7 +306,7 @@ describe('TestIndex', () => {
             </testsuites>`);
 
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
+        await collection.update(uri);
 
         const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
         const started = makeTestStarted(
@@ -312,13 +314,13 @@ describe('TestIndex', () => {
             'addition_provider with data set #0',
         );
 
-        expect(collection.resolveDataset(started)).toBeDefined();
-        expect(collection.resolveDataset(started)).toBeUndefined();
+        expect(collection.addDatasetChild(started)).toBeDefined();
+        expect(collection.addDatasetChild(started)).toBeUndefined();
 
         collection.delete(uri);
-        await collection.change(uri);
+        await collection.update(uri);
 
-        expect(collection.resolveDataset(started)).toBeDefined();
+        expect(collection.addDatasetChild(started)).toBeDefined();
     });
 
     it('reset should clear definitionIndex so resolveDataset works again', async () => {
@@ -330,7 +332,7 @@ describe('TestIndex', () => {
             </testsuites>`);
 
         const uri = URI.file(phpUnitProject('tests/AssertionsTest.php'));
-        await collection.change(uri);
+        await collection.update(uri);
 
         const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
         const started = makeTestStarted(
@@ -338,13 +340,13 @@ describe('TestIndex', () => {
             'addition_provider with data set #0',
         );
 
-        expect(collection.resolveDataset(started)).toBeDefined();
-        expect(collection.resolveDataset(started)).toBeUndefined();
+        expect(collection.addDatasetChild(started)).toBeDefined();
+        expect(collection.addDatasetChild(started)).toBeUndefined();
 
-        collection.reset();
-        await collection.change(uri);
+        collection.clear();
+        await collection.update(uri);
 
-        expect(collection.resolveDataset(started)).toBeDefined();
+        expect(collection.addDatasetChild(started)).toBeDefined();
     });
 
     it('reset', async () => {
@@ -363,11 +365,11 @@ describe('TestIndex', () => {
             URI.file(phpUnitProject('tests/Feature/ExampleTest.php')),
         ];
         for (const file of files) {
-            await collection.change(file);
+            await collection.update(file);
         }
         expect(collection.size).toEqual(2);
 
-        collection.reset();
+        collection.clear();
         expect(collection.size).toEqual(0);
     });
 
@@ -388,10 +390,10 @@ describe('TestIndex', () => {
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
-            const result = collection.resolveDataset(
+            const result = collection.addDatasetChild(
                 makeTestStarted(
                     `${parentId} with data set #0`,
                     'addition_provider with data set #0',
@@ -411,16 +413,16 @@ describe('TestIndex', () => {
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
-            collection.resolveDataset(
+            collection.addDatasetChild(
                 makeTestStarted(
                     `${parentId} with data set #0`,
                     'addition_provider with data set #0',
                 ),
             );
-            const result = collection.resolveDataset(
+            const result = collection.addDatasetChild(
                 makeTestStarted(
                     `${parentId} with data set #0`,
                     'addition_provider with data set #0',
@@ -437,9 +439,9 @@ describe('TestIndex', () => {
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-            const result = collection.resolveDataset(
+            const result = collection.addDatasetChild(
                 makeTestStarted('NonExistent::method with data set #0', 'method with data set #0'),
             );
 
@@ -453,10 +455,10 @@ describe('TestIndex', () => {
                         <directory>tests</directory>
                     </testsuite>
                 </testsuites>`);
-            await collection.change(URI.file(phpUnitProject('tests/AssertionsTest.php')));
+            await collection.update(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
             const parentId = 'Assertions (Tests\\Assertions)::Addition provider';
-            const result = collection.resolveDataset(
+            const result = collection.addDatasetChild(
                 makeTestStarted(parentId, 'addition_provider'),
             );
 

@@ -11,7 +11,7 @@ export class IndexStore {
         return this.suites.size;
     }
 
-    initSuites(names: string[]): void {
+    defineTestsuites(names: string[]): void {
         for (const name of names) {
             if (!this.suites.has(name)) {
                 this.suites.set(name, new Map<string, TestDefinition[]>());
@@ -21,8 +21,7 @@ export class IndexStore {
 
     set(testsuite: string, uri: URI, tests: TestDefinition[]): void {
         const uriStr = uri.toString();
-        const oldSuite = this.fileIndex.get(uriStr);
-        this.remove(oldSuite ?? testsuite, uri);
+        this.remove(uri);
 
         let suiteFiles = this.suites.get(testsuite);
         if (!suiteFiles) {
@@ -35,8 +34,12 @@ export class IndexStore {
         this.fileIndex.set(uriStr, testsuite);
     }
 
-    remove(testsuite: string, uri: URI): void {
+    remove(uri: URI): void {
         const uriStr = uri.toString();
+        const testsuite = this.fileIndex.get(uriStr);
+        if (!testsuite) {
+            return;
+        }
         const oldTests = this.suites.get(testsuite)?.get(uriStr);
         if (oldTests) {
             this.removeFromIndex(oldTests);
@@ -45,7 +48,7 @@ export class IndexStore {
         this.suites.get(testsuite)?.delete(uriStr);
     }
 
-    findFile(uri: URI): IndexedFile<TestDefinition> | undefined {
+    find(uri: URI): IndexedFile<TestDefinition> | undefined {
         const uriStr = uri.toString();
         const testsuite = this.fileIndex.get(uriStr);
         if (!testsuite) {
@@ -74,7 +77,7 @@ export class IndexStore {
         }
 
         const uri = URI.file(def.file);
-        const file = this.findFile(uri);
+        const file = this.find(uri);
         if (!file) {
             return;
         }
@@ -83,7 +86,7 @@ export class IndexStore {
         this.definitionIndex.set(id, def);
     }
 
-    *gatherFiles() {
+    *files() {
         for (const [testsuite, files] of this.suites) {
             for (const [uriStr, tests] of files) {
                 yield { testsuite, uri: URI.parse(uriStr), tests };

@@ -15,7 +15,7 @@ describe('TestStore', () => {
 
         store.set('default', uri, tests);
 
-        const file = store.findFile(uri);
+        const file = store.find(uri);
         expect(file).toBeDefined();
         expect(file?.testsuite).toBe('default');
         expect(file?.tests).toBe(tests);
@@ -23,7 +23,7 @@ describe('TestStore', () => {
 
     it('findFile returns undefined for unknown uri', () => {
         const store = new IndexStore();
-        expect(store.findFile(URI.file('/unknown.php'))).toBeUndefined();
+        expect(store.find(URI.file('/unknown.php'))).toBeUndefined();
     });
 
     it('remove clears file and indexes', () => {
@@ -32,9 +32,9 @@ describe('TestStore', () => {
         const tests = makeTests(['t1', 't2'], uri.fsPath);
 
         store.set('default', uri, tests);
-        store.remove('default', uri);
+        store.remove(uri);
 
-        expect(store.findFile(uri)).toBeUndefined();
+        expect(store.find(uri)).toBeUndefined();
         expect(store.getDefinition('t1')).toBeUndefined();
         expect(store.getDefinition('t2')).toBeUndefined();
     });
@@ -49,7 +49,7 @@ describe('TestStore', () => {
         expect(store.getDefinition('old1')).toBeUndefined();
         expect(store.getDefinition('old2')).toBeUndefined();
         expect(store.getDefinition('new1')).toBeDefined();
-        expect(store.findFile(uri)?.tests).toHaveLength(1);
+        expect(store.find(uri)?.tests).toHaveLength(1);
     });
 
     it('getDefinition and hasDefinition', () => {
@@ -106,7 +106,7 @@ describe('TestStore', () => {
         };
 
         store.set('default', uri, [parent]);
-        store.remove('default', uri);
+        store.remove(uri);
 
         expect(store.getDefinition('parent1')).toBeUndefined();
         expect(store.getDefinition('child1')).toBeUndefined();
@@ -127,7 +127,7 @@ describe('TestStore', () => {
         store.addDefinition('ds1', newDef);
 
         expect(store.getDefinition('ds1')).toBe(newDef);
-        expect(store.findFile(uri)?.tests).toContain(newDef);
+        expect(store.find(uri)?.tests).toContain(newDef);
     });
 
     it('addDefinition ignores definition without file', () => {
@@ -164,7 +164,7 @@ describe('TestStore', () => {
         store.set('unit', uri1, makeTests(['a1'], uri1.fsPath));
         store.set('feature', uri2, makeTests(['b1'], uri2.fsPath));
 
-        const files = [...store.gatherFiles()];
+        const files = [...store.files()];
         expect(files).toHaveLength(2);
         expect(files.map((f) => f.testsuite).sort()).toEqual(['feature', 'unit']);
     });
@@ -186,13 +186,13 @@ describe('TestStore', () => {
         store.clear();
 
         expect(store.size).toBe(0);
-        expect(store.findFile(uri)).toBeUndefined();
+        expect(store.find(uri)).toBeUndefined();
         expect(store.getDefinition('t1')).toBeUndefined();
     });
 
     it('initSuites creates empty suite entries', () => {
         const store = new IndexStore();
-        store.initSuites(['unit', 'feature']);
+        store.defineTestsuites(['unit', 'feature']);
 
         expect(store.size).toBe(2);
     });
@@ -204,7 +204,7 @@ describe('TestStore', () => {
         store.set('suiteA', uri, makeTests(['t1'], uri.fsPath));
         store.set('suiteB', uri, makeTests(['t2'], uri.fsPath));
 
-        const files = [...store.gatherFiles()];
+        const files = [...store.files()];
         const matchingFiles = files.filter((f) => f.uri.toString() === uri.toString());
         expect(matchingFiles).toHaveLength(1);
         expect(matchingFiles[0].testsuite).toBe('suiteB');
@@ -217,9 +217,9 @@ describe('TestStore', () => {
         const uri = URI.file('/project/tests/FooTest.php');
         store.set('unit', uri, makeTests(['t1'], uri.fsPath));
 
-        store.initSuites(['unit', 'feature']);
+        store.defineTestsuites(['unit', 'feature']);
 
         expect(store.size).toBe(2);
-        expect(store.findFile(uri)).toBeDefined();
+        expect(store.find(uri)).toBeDefined();
     });
 });
