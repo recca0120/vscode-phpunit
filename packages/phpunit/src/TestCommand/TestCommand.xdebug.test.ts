@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
+import { phpUnitProject } from '../../test-support/fixtures';
 import { Configuration } from '../Configuration';
 import { RemotePathMapper } from '../Path';
 import { CoverageFiles } from '../TestCoverage';

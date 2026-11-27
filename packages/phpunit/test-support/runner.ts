@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { TestOutputParser } from '../../src/TestOutput/TestOutputParser';
-import { TeamcityEvent } from '../../src/TestOutput/types';
+import { TestOutputParser } from '../src/TestOutput/TestOutputParser';
+import { TeamcityEvent } from '../src/TestOutput/types';
 
 export const runnerStartedTestIds = (args: string[], cwd: string): string[] => {
     const { stdout } = spawnSync('php', args, { cwd, encoding: 'utf8' });

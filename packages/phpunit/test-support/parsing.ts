@@ -1,12 +1,12 @@
-import type { AstParser } from '../../src/Interpreter/AstParser/AstParser';
-import { ChainAstParser } from '../../src/Interpreter/AstParser/ChainAstParser';
-import { PhpParserAstParser } from '../../src/Interpreter/AstParser/PhpParser/PhpParserAstParser';
-import { TreeSitterAstParser } from '../../src/Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
-import { PHPUnitXML } from '../../src/PHPUnitXML/PHPUnitXML';
-import { ClassRegistry } from '../../src/TestIndex/ClassRegistry';
-import { InheritanceResolver } from '../../src/TestIndex/InheritanceResolver';
-import { TestParser } from '../../src/TestParser/TestParser';
-import type { TestDefinition } from '../../src/types';
+import type { AstParser } from '../src/Interpreter/AstParser/AstParser';
+import { ChainAstParser } from '../src/Interpreter/AstParser/ChainAstParser';
+import { PhpParserAstParser } from '../src/Interpreter/AstParser/PhpParser/PhpParserAstParser';
+import { TreeSitterAstParser } from '../src/Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
+import { PHPUnitXML } from '../src/PHPUnitXML/PHPUnitXML';
+import { ClassRegistry } from '../src/TestIndex/ClassRegistry';
+import { InheritanceResolver } from '../src/TestIndex/InheritanceResolver';
+import { TestParser } from '../src/TestParser/TestParser';
+import type { TestDefinition } from '../src/types';
 
 const flatten = (tests: TestDefinition[]): TestDefinition[] =>
     tests.flatMap((test) => [test, ...flatten(test.children ?? [])]);

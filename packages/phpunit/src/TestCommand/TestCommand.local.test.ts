@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { givenCommand } from '../../tests/support/testCommand';
-import { phpUnitProjectWin } from '../../tests/support/windowsPath';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { givenCommand } from '../../test-support/testCommand';
+import { phpUnitProjectWin } from '../../test-support/windowsPath';
 import { RemotePathMapper } from '../Path';
 
 describe('TestCommand', () => {

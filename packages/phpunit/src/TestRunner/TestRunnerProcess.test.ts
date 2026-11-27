@@ -1,6 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
-import { fixturePath, phpUnitProject } from '../../tests/support/fixtures';
+import { fixturePath, phpUnitProject } from '../../test-support/fixtures';
 import { Configuration } from '../Configuration';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { RemotePathMapper } from '../Path';

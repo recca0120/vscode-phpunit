@@ -17,6 +17,6 @@
         "types": ["node"],
         "ignoreDeprecations": "6.0"
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "test-support/**/*.ts"],
     "exclude": ["tests/fixtures/**/*"]
 }

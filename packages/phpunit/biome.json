@@ -16,7 +16,7 @@
     },
     "overrides": [
         {
-            "includes": ["**/*.test.ts", "**/tests/**"],
+            "includes": ["**/*.test.ts", "**/tests/**", "**/test-support/**"],
             "linter": {
                 "rules": {
                     "suspicious": { "noConsole": "off", "noExportsInTest": "off" },

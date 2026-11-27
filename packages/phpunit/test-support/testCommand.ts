@@ -1,6 +1,6 @@
-import { Configuration } from '../../src/Configuration';
-import { RemotePathMapper } from '../../src/Path';
-import { TestCommand } from '../../src/TestCommand/TestCommand';
+import { Configuration } from '../src/Configuration';
+import { RemotePathMapper } from '../src/Path';
+import { TestCommand } from '../src/TestCommand/TestCommand';
 import { phpUnitProject } from './fixtures';
 
 export const givenCommand = (configuration: Record<string, unknown>, cwd?: string) => {

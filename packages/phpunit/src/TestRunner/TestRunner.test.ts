@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { getPhpUnitVersion } from '../../tests/support/stubs';
-import { phpUnitProjectWin } from '../../tests/support/windowsPath';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { getPhpUnitVersion } from '../../test-support/stubs';
+import { phpUnitProjectWin } from '../../test-support/windowsPath';
 import { Configuration } from '../Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import type { PathMappings } from '../Path';

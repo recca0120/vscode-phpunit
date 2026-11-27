@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
+import { phpUnitProject } from '../../test-support/fixtures';
 import { EOL } from '../constants';
 import { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import {

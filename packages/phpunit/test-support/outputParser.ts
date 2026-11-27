@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import type { TestOutputParser } from '../../src/TestOutput/TestOutputParser';
+import type { TestOutputParser } from '../src/TestOutput/TestOutputParser';
 
 export const expectParsedBy =
     (parser: TestOutputParser) =>

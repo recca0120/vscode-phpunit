@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { expectParsedBy } from '../../tests/support/outputParser';
-import { phpUnitProjectWin } from '../../tests/support/windowsPath';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { expectParsedBy } from '../../test-support/outputParser';
+import { phpUnitProjectWin } from '../../test-support/windowsPath';
 import { TeamcityEvent } from '.';
 import { TestOutputParser } from './TestOutputParser';
 

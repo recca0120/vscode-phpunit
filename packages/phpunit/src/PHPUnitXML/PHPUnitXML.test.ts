@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { generateXML } from '../../tests/support/phpUnitXml';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { generateXML } from '../../test-support/phpUnitXml';
 import { PHPUnitXML } from './PHPUnitXML';
 
 describe('PHPUnit XML Test', () => {
