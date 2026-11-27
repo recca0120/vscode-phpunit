@@ -153,7 +153,7 @@ function collectTraitAdaptations(
 
         for (const adapt of traitUse.adaptations) {
             const traitFQN = adapt.trait ? resolveFQN(adapt.trait) : undefined;
-            const target = traitFQN ? traitMap.get(traitFQN) : undefined;
+            const target = traitMap.get(traitFQN ?? resolveFQN(traitUse.traits[0]));
 
             if (adapt.kind === 'use_instead_of_clause') {
                 target?.push({
