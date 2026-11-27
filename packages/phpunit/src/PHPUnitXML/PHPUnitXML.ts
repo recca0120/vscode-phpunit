@@ -9,6 +9,11 @@ type Source = { tag: string; value: string; prefix?: string; suffix?: string };
 
 export type TestSuite = Source & { name: string };
 
+const isInsideDirectory = (directory: string, path: string) => {
+    const fromDirectory = relative(directory, path);
+    return !fromDirectory.startsWith('..') && !isAbsolute(fromDirectory);
+};
+
 export class PHPUnitXML {
     private element?: XmlElement;
     private _file: string = '';
@@ -171,7 +176,7 @@ export class PHPUnitXML {
                     const resolvedAbs = resolve(configRoot, dir);
                     const configRootAbs = resolve(configRoot);
 
-                    if (!resolvedAbs.startsWith(configRootAbs)) {
+                    if (!isInsideDirectory(configRootAbs, resolvedAbs)) {
                         const dotDotSegments = dir.split(/[/\\]/).filter((s) => s === '..');
                         return normalize(resolve(configRoot, ...dotDotSegments));
                     }
