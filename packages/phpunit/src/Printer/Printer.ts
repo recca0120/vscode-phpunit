@@ -18,7 +18,7 @@ import {
 } from '../TestOutput/types';
 import { AnsiStyle, DEFAULT_THEME } from './AnsiStyle';
 import { PrintedOutputStore } from './PrintedOutputStore';
-import type { ErrorCategory, IconSet, PrinterFormat } from './PrinterConfig';
+import type { ErrorCategory, IconSet, PrinterFormat } from './PrinterFormat';
 import { fileFormat, readSourceSnippet } from './SourceFileReader';
 
 const PRINTED_OUTPUT_PATTERN =

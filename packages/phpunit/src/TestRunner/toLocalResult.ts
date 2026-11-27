@@ -1,5 +1,5 @@
 import type { PathMapper } from '../Path/PathMapper';
-import type { TestResult } from './types';
+import type { TestResult } from '../TestOutput/types';
 
 export function toLocalResult(result: TestResult, paths: PathMapper): TestResult {
     const replaced: Record<string, unknown> = {};

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { givenCommand } from '../../tests/support/testCommand';
+import { TeamcityEvent, type TestFailed } from '../TestOutput/types';
 import { toLocalResult } from './toLocalResult';
-import { TeamcityEvent, type TestFailed } from './types';
 
 describe('toLocalResult', () => {
     it('maps only whole path segments back to the local path', () => {

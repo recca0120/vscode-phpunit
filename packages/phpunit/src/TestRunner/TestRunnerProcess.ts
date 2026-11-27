@@ -3,10 +3,11 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
-import { TestOutputParser, type TestResult, toLocalResult } from '../TestOutput';
+import { TestOutputParser, type TestResult } from '../TestOutput';
 import type { ProcessCommand } from './ProcessCommand';
 import { TestRunnerEvent } from './TestRunnerEvent';
 import type { TestRunnerEmitter } from './TestRunnerObserver';
+import { toLocalResult } from './toLocalResult';
 
 const TEAMCITY_PATTERN = /##teamcity\[/i;
 
