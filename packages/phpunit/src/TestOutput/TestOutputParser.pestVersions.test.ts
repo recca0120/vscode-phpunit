@@ -13,7 +13,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
         expectParsedBy(parser)(content, expected);
 
     describe('Pest v2', () => {
-        it('testSuiteStarted phpunit.xml and locationHint prefix is file://', () => {
+        it('uses file:// location hints; the phpunit.xml suite keeps its path as id', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='${pestProject('phpunit.xml')}' locationHint='file://Example (Tests\\Feature\\Example)' flowId='57317']`,
                 {
@@ -25,7 +25,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('testSuiteStarted Test Suite and locationHint prefix is file://', () => {
+        it('uses file:// location hints; the Test Suite suite keeps its name as id', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Test Suite' locationHint='file://Example (Tests\\Feature\\Example)' flowId='57317']`,
                 {
@@ -37,7 +37,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('pest-v2 tests/Fixtures/CollisionTest.php', () => {
+        it('reports a test file suite by its relative file:// path', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='file://tests/Fixtures/CollisionTest.php' flowId='57317']`,
                 {
@@ -80,7 +80,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('pest-v2 data set', () => {
+        it('encodes the test name as __pest_evaluable_; the decoded name becomes the id', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Tests\\Unit\\ExampleTest::__pest_evaluable_it_has_emails' locationHint='file://tests/Unit/ExampleTest.php' flowId='57317']`,
                 {
@@ -149,8 +149,8 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
         });
     });
 
-    describe('Pest locationHint without parentheses (file path only)', () => {
-        it('testSuiteStarted phpunit.xml with file-path locationHint', () => {
+    describe('Pest location hints holding only a file path', () => {
+        it('keeps the phpunit.xml path as id', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='${pestProject('phpunit.xml')}' locationHint='pest_qn://tests/Unit/ArchTest.php' flowId='86988']`,
                 {
@@ -162,7 +162,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('testSuiteStarted Unit with file-path locationHint', () => {
+        it('keeps a testsuite name as id', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Unit' locationHint='pest_qn://tests/Unit/ArchTest.php' flowId='86988']`,
                 {
@@ -174,7 +174,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('testSuiteStarted Tests\\Unit\\ArchTest with file-path locationHint', () => {
+        it('resolves a class suite to its file', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Tests\\Unit\\ArchTest' locationHint='pest_qn://tests/Unit/ArchTest.php' flowId='86988']`,
                 {
@@ -189,7 +189,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
     });
 
     describe('Pest v1', () => {
-        it('Pest v1 TestDuration', () => {
+        it('prints the duration as Time: <seconds>s', () => {
             expectParsed('Time:  0.013558585s', {
                 event: TeamcityEvent.testDuration,
                 text: 'Time:  0.013558585s',
@@ -197,7 +197,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             });
         });
 
-        it('testStarted without flowId', () => {
+        it('omits flowId on testStarted; it is restored from the running suite', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Tests\\Feature\\ExampleTest' locationHint='pest_qn://Tests\\Feature\\ExampleTest' flowId='58024']`,
                 {
@@ -239,7 +239,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('pest-v1 tests/Fixtures/CollisionTest.php', () => {
+        it('reports absolute paths and a testIgnored without flowId', () => {
             expectParsed(
                 `##teamcity[testSuiteStarted name='Tests\\Fixtures\\CollisionTest' locationHint='pest_qn://${pestProject('tests/Fixtures/CollisionTest.php')}' flowId='12667']`,
                 {
@@ -305,7 +305,7 @@ describe('TestOutputParser on Pest v1 and v2 output', () => {
             );
         });
 
-        it('pest v1 data set', () => {
+        it('writes data sets as with (...); they become data set labels', () => {
             expectParsed(
                 `##teamcity[testStarted name='it has emails with (|'enunomaduro@gmail.com|')' locationHint='pest_qn://${pestProject('tests/Unit/ExampleTest.php')}::it has emails with (|'enunomaduro@gmail.com|')' flowId='12667']`,
                 {
