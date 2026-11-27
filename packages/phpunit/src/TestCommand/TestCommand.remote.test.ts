@@ -101,6 +101,31 @@ describe('TestCommand', () => {
             ]);
         });
 
+        it('renders every --filter for docker sh -c when phpunit.args already has one', () => {
+            const command = givenCommand({
+                command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
+                phpunit: 'vendor/bin/phpunit',
+                args: ['--filter=test_failed'],
+            }).withArguments(`--filter='^.*::(test_passed)( with data set .*)?$'`);
+
+            const { args } = command.build();
+            expect(args).toEqual([
+                'exec',
+                '--workdir=/var/www/',
+                'container_name',
+                '/bin/sh',
+                '-c',
+                [
+                    'php',
+                    'vendor/bin/phpunit',
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `'--filter=^.*::(test_passed)( with data set .*)?$'`,
+                    `--colors=always`,
+                    `--teamcity`,
+                ].join(' '),
+            ]);
+        });
+
         it('quotes an args option value containing spaces for docker sh -c', () => {
             const command = givenCommand({
                 command: 'docker exec --workdir=/var/www/ container_name /bin/sh -c',
