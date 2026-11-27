@@ -6,8 +6,8 @@ describe('CloverParser', () => {
     const givenParser = () => new CloverParser();
     const fixturePath = (name: string) => join(__dirname, '../..', 'tests', 'fixtures', name);
 
-    it('parseClover from fixture file', async () => {
-        const result = await givenParser().parseClover(fixturePath('test1.clover.xml'));
+    it('parseFile from fixture file', async () => {
+        const result = await givenParser().parseFile(fixturePath('test1.clover.xml'));
         expect(result).toHaveLength(3);
         expect(result[1].lines).toHaveLength(6);
         expect(result[1].lines[0].line).toBe(9);
@@ -15,12 +15,12 @@ describe('CloverParser', () => {
     });
 
     it('returns empty array when file not found', async () => {
-        const result = await givenParser().parseClover('/nonexistent/file.xml');
+        const result = await givenParser().parseFile('/nonexistent/file.xml');
         expect(result).toEqual([]);
     });
 
     it('parses single package with multiple files', () => {
-        const result = givenParser().parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
+        const result = givenParser().parseXml(`<?xml version="1.0" encoding="UTF-8"?>
 <coverage generated="1">
   <project timestamp="1">
     <package name="App\\Models">
@@ -44,7 +44,7 @@ describe('CloverParser', () => {
     });
 
     it('parses covered and total from metrics', () => {
-        const result = givenParser().parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
+        const result = givenParser().parseXml(`<?xml version="1.0" encoding="UTF-8"?>
 <coverage generated="1">
   <project timestamp="1">
     <file name="/app/Foo.php">
@@ -58,7 +58,7 @@ describe('CloverParser', () => {
     });
 
     it('parses multiple packages', () => {
-        const result = givenParser().parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
+        const result = givenParser().parseXml(`<?xml version="1.0" encoding="UTF-8"?>
 <coverage generated="1">
   <project timestamp="1">
     <package name="App\\Models">
@@ -82,7 +82,7 @@ describe('CloverParser', () => {
     });
 
     it('parses global files without package', () => {
-        const result = givenParser().parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
+        const result = givenParser().parseXml(`<?xml version="1.0" encoding="UTF-8"?>
 <coverage generated="1">
   <project timestamp="1">
     <file name="/app/helpers.php">
@@ -96,7 +96,7 @@ describe('CloverParser', () => {
     });
 
     it('parses mixed global files and packages', () => {
-        const result = givenParser().parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
+        const result = givenParser().parseXml(`<?xml version="1.0" encoding="UTF-8"?>
 <coverage generated="1">
   <project timestamp="1">
     <package name="App\\Models">
@@ -124,7 +124,7 @@ describe('CloverParser', () => {
     });
 
     it('parses line coverage entries', () => {
-        const result = givenParser().parseCloverXml(`<?xml version="1.0" encoding="UTF-8"?>
+        const result = givenParser().parseXml(`<?xml version="1.0" encoding="UTF-8"?>
 <coverage generated="1">
   <project timestamp="1">
     <file name="/app/Foo.php">

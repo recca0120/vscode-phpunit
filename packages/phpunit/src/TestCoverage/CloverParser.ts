@@ -13,7 +13,7 @@ export interface FileCoverageData {
 }
 
 export class CloverParser {
-    async parseClover(file: string): Promise<FileCoverageData[]> {
+    async parseFile(file: string): Promise<FileCoverageData[]> {
         try {
             return this.parseElement(await XmlElement.loadFile(file));
         } catch (_ex) {
@@ -21,7 +21,7 @@ export class CloverParser {
         }
     }
 
-    parseCloverXml(xml: string): FileCoverageData[] {
+    parseXml(xml: string): FileCoverageData[] {
         return this.parseElement(XmlElement.load(xml));
     }
 
