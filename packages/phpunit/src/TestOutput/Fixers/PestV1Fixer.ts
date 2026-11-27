@@ -2,7 +2,7 @@ import { datasetNaming } from '../../Dataset/DatasetNaming';
 import type { TestResultCache } from '../TestResultCache';
 import { TeamcityEvent, type TestResult } from '../types';
 
-function fixDataSet(locationHint: string) {
+function toDataSetLabel(locationHint: string) {
     const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
 
     return matched?.groups?.description
@@ -23,15 +23,15 @@ function matchFlowIdCandidate(tr: TestResultExt, candidate: TestResult): boolean
 }
 
 export const PestV1Fixer = {
-    fixLocationHint(locationHint: string) {
-        return fixDataSet(
+    normalizeLocationHint(locationHint: string) {
+        return toDataSetLabel(
             /^tests\//.test(locationHint)
                 ? locationHint
                 : locationHint.substring(locationHint.lastIndexOf('tests/')),
         );
     },
 
-    fixFlowId(cache: TestResultCache, testResult?: TestResult) {
+    restoreMissingFlowId(cache: TestResultCache, testResult?: TestResult) {
         if (!testResult) {
             return testResult;
         }

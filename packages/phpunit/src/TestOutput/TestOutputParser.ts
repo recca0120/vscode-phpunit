@@ -24,7 +24,7 @@ export class TestOutputParser {
 
     parse(input: string | Buffer): TestResult | undefined {
         let result = this.lineParser.parse(stripAnsi(input.toString()));
-        result = PestV1Fixer.fixFlowId(this.cache, result);
+        result = PestV1Fixer.restoreMissingFlowId(this.cache, result);
 
         if (!this.isDispatchable(result)) {
             return result;
@@ -67,9 +67,9 @@ export class TestOutputParser {
         const prevTestResult = this.cache.get(testResult);
 
         if (!prevTestResult) {
-            const fixed = PestFixer.fixNoTestStarted(
+            const fixed = PestFixer.assignIdWithoutTestStarted(
                 this.cache,
-                PHPUnitFixer.fixNoTestStarted(this.cache, testResult),
+                PHPUnitFixer.assignIdWithoutTestStarted(this.cache, testResult),
             );
             this.suites.record(fixed.flowId, fixed.event);
 

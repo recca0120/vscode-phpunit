@@ -3,7 +3,7 @@ import type { TestResultCache } from '../TestResultCache';
 import type { TestFailed, TestIgnored } from '../types';
 
 export const PHPUnitFixer = {
-    fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {
+    assignIdWithoutTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {
         if (testResult.id) {
             return testResult;
         }
