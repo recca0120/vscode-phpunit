@@ -377,10 +377,8 @@ describe('TestRunner Test', () => {
 
         const errorEvent = onTestRunnerEvents.get(TestRunnerEvent.error);
         const closeEvent = onTestRunnerEvents.get(TestRunnerEvent.close);
-        if (errorEvent && closeEvent) {
-            expect(errorEvent).toHaveBeenCalledTimes(1);
-            expect(closeEvent).toHaveBeenCalledTimes(1);
-        }
+        expect(errorEvent).toHaveBeenCalledTimes(1);
+        expect(closeEvent).toHaveBeenCalledTimes(1);
     });
 
     const testEnvironment = (

@@ -211,7 +211,7 @@ describe('utils', () => {
         });
 
         it('noNamespace -> No Namespace', () => {
-            expect(titleCase('NoNamespace')).toEqual('No Namespace');
+            expect(titleCase('noNamespace')).toEqual('No Namespace');
         });
 
         it('VSCode -> VSCode', () => {
@@ -246,7 +246,7 @@ describe('utils', () => {
             expect(titleCase('PascalCase')).toEqual('Pascal Case');
         });
 
-        it('kebab-case -> Kebab-Case', () => {
+        it('kebab-case -> Kebab Case', () => {
             expect(titleCase('kebab-case')).toEqual('Kebab Case');
         });
 
