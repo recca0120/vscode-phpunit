@@ -2,7 +2,7 @@ import type { TestResultCache } from '../TestResultCache';
 import type { TestFailed, TestIgnored } from '../types';
 
 export const PestFixer = {
-    fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {
+    assignIdWithoutTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {
         if (testResult.id) {
             return testResult;
         }
@@ -11,11 +11,13 @@ export const PestFixer = {
             testResult.duration = 0;
         }
 
-        return fixFromDetails(testResult) ?? fixFromCache(cache, testResult) ?? testResult;
+        return (
+            idFromFirstDetail(testResult) ?? idFromPreviousResult(cache, testResult) ?? testResult
+        );
     },
 };
 
-function fixFromDetails(
+function idFromFirstDetail(
     testResult: TestFailed | TestIgnored,
 ): (TestFailed | TestIgnored) | undefined {
     if (!('details' in testResult) || testResult.details.length === 0) {
@@ -29,7 +31,7 @@ function fixFromDetails(
     return testResult;
 }
 
-function fixFromCache(
+function idFromPreviousResult(
     cache: TestResultCache,
     testResult: TestFailed | TestIgnored,
 ): (TestFailed | TestIgnored) | undefined {

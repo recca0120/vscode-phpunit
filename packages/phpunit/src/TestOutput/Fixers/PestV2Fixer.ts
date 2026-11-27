@@ -44,7 +44,7 @@ function decodeEvaluable(encoded: string): string {
 }
 
 export const PestV2Fixer = {
-    fixId(location: string, name: string) {
+    decodeEvaluableId(location: string, name: string) {
         if (!hasPrefix(name)) {
             return location;
         }

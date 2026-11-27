@@ -42,8 +42,8 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
                 sepIdx === -1
                     ? raw.replace(/\\/g, '/')
                     : raw.slice(0, sepIdx).replace(/\\/g, '/') + raw.slice(sepIdx);
-            const location = PestV1Fixer.fixLocationHint(normalized);
-            const id = this.normalizeMethodName(PestV2Fixer.fixId(location, name));
+            const location = PestV1Fixer.normalizeLocationHint(normalized);
+            const id = this.normalizeMethodName(PestV2Fixer.decodeEvaluableId(location, name));
             const file = location.split('::')[0];
 
             if (id === file && !name.includes('\\')) {
