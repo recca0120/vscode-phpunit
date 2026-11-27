@@ -256,6 +256,32 @@ describe('TestRunner Test', () => {
         expect(events).toEqual(['line: late output', 'resolved']);
     });
 
+    it('keeps a UTF-8 character that arrives split across two output chunks', async () => {
+        const child = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(),
+            stderr: new EventEmitter(),
+        });
+        (spawn as Mock).mockImplementationOnce(() => {
+            setTimeout(() => {
+                const bytes = Buffer.from('✓ passed\n');
+                child.stdout.emit('data', bytes.subarray(0, 1));
+                child.stdout.emit('data', bytes.subarray(1));
+                child.emit('close', 0);
+            }, 0);
+            return child;
+        });
+        const configuration = new Configuration({ php: 'php', phpunit: 'vendor/bin/phpunit' });
+        const options = { cwd: phpUnitProject('') };
+        const command = new TestCommand(configuration, options, new RemotePathMapper(options, {}));
+        const testRunner = new TestRunner();
+        const lines: string[] = [];
+        testRunner.on(TestRunnerEvent.line, (line) => lines.push(line));
+
+        await testRunner.run(command).run();
+
+        expect(lines).toEqual(['✓ passed']);
+    });
+
     it('delivers the output of a later process after an earlier process fails', async () => {
         const failing = Object.assign(new EventEmitter(), {
             stdout: new EventEmitter(),
