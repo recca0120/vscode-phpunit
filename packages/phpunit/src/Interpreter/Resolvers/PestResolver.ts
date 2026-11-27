@@ -6,7 +6,7 @@ import type {
     ExpressionStatementNode,
 } from '../AstParser/AstNode';
 import { evaluate } from '../Expressions/evaluate';
-import type { PHP } from '../PHP';
+import type { Interpreter } from '../Interpreter';
 import type { FileInfo, PestCallDescriptor, Resolver } from '../types';
 import { CallVisitor } from '../Visitors/CallVisitor';
 import { FQNResolver } from './FQNResolver';
@@ -33,11 +33,11 @@ export class PestResolver implements Resolver {
         this._pestCalls = [];
     }
 
-    resolve(php: PHP): void {
+    resolve(interpreter: Interpreter): void {
         this.reset();
-        const visitor = php.getVisitor(CallVisitor);
+        const visitor = interpreter.getVisitor(CallVisitor);
         for (const call of visitor.calls) {
-            const pest = buildPestCallDescriptor(call, php);
+            const pest = buildPestCallDescriptor(call, interpreter);
             if (pest) {
                 this._pestCalls.push(pest);
             }
@@ -53,7 +53,7 @@ function unwrapArgument(node: AstNode | undefined): AstNode | undefined {
     return node?.kind === 'argument' ? node.value : node;
 }
 
-function extractDescription(args: AstNode[], php: PHP): string | undefined {
+function extractDescription(args: AstNode[], interpreter: Interpreter): string | undefined {
     const firstArg = unwrapArgument(args[0]);
     if (firstArg?.kind === 'string') {
         return firstArg.value;
@@ -61,7 +61,7 @@ function extractDescription(args: AstNode[], php: PHP): string | undefined {
     if (firstArg?.kind === 'class_constant_access') {
         const node = firstArg as ClassConstantAccessNode;
         if (node.name === 'class') {
-            return php.getResolver(FQNResolver).resolveFQN(node.scope);
+            return interpreter.getResolver(FQNResolver).resolveFQN(node.scope);
         }
     }
     return undefined;
@@ -195,7 +195,10 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
     };
 }
 
-function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor | undefined {
+function buildPestCallDescriptor(
+    call: CallNode,
+    interpreter: Interpreter,
+): PestCallDescriptor | undefined {
     const result = walkAndCollect(call);
     if (!result) {
         return undefined;
@@ -219,10 +222,11 @@ function buildPestCallDescriptor(call: CallNode, php: PHP): PestCallDescriptor |
 
     return {
         fnName: rootCall.name,
-        description: extractDescription(rootCall.arguments, php),
+        description: extractDescription(rootCall.arguments, interpreter),
         range: rootCall.loc,
         datasets: resolveDatasets(withSources),
-        children: rootCall.name === 'describe' ? collectDescribeChildren(rootCall, php) : [],
+        children:
+            rootCall.name === 'describe' ? collectDescribeChildren(rootCall, interpreter) : [],
         chainCalls,
         skipped: skipped || undefined,
         skipReason,
@@ -431,7 +435,10 @@ function unwrapClosureBody(node: AstNode): AstNode | undefined {
     return undefined;
 }
 
-function collectDescribeChildren(describeCall: CallNode, php: PHP): PestCallDescriptor[] {
+function collectDescribeChildren(
+    describeCall: CallNode,
+    interpreter: Interpreter,
+): PestCallDescriptor[] {
     const closureArg = describeCall.arguments[1];
     if (!closureArg) {
         return [];
@@ -443,15 +450,18 @@ function collectDescribeChildren(describeCall: CallNode, php: PHP): PestCallDesc
     }
 
     if (bodyNode.kind === 'function_call_expression') {
-        const pest = buildPestCallDescriptor(bodyNode as CallNode, php);
+        const pest = buildPestCallDescriptor(bodyNode as CallNode, interpreter);
         return pest ? [pest] : [];
     }
 
     const stmts = bodyNode.kind === 'compound_statement' ? bodyNode.children : [];
-    return collectPestCallsFromStatements(stmts, php);
+    return collectPestCallsFromStatements(stmts, interpreter);
 }
 
-function collectPestCallsFromStatements(stmts: AstNode[], php: PHP): PestCallDescriptor[] {
+function collectPestCallsFromStatements(
+    stmts: AstNode[],
+    interpreter: Interpreter,
+): PestCallDescriptor[] {
     const result: PestCallDescriptor[] = [];
     for (const node of stmts) {
         if (node.kind !== 'expression_statement') {
@@ -461,7 +471,7 @@ function collectPestCallsFromStatements(stmts: AstNode[], php: PHP): PestCallDes
         if (expr.kind !== 'function_call_expression') {
             continue;
         }
-        const pest = buildPestCallDescriptor(expr as CallNode, php);
+        const pest = buildPestCallDescriptor(expr as CallNode, interpreter);
         if (pest) {
             result.push(pest);
         }

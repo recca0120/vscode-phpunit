@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
-import { interpret } from '../Interpreter/PHP';
+import { interpret } from '../Interpreter/Interpreter';
 import type { PHPUnitXML } from '../PHPUnitXML';
 import { resolveIncludes } from './IncludeResolver';
 import type { ParseResult } from './ParseResult';
