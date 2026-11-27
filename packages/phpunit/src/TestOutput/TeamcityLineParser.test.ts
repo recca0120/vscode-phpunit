@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
+import { phpUnitProject } from '../../tests/support/fixtures';
+import { phpUnitProjectWin } from '../../tests/support/windowsPath';
 import { TeamcityLineParser } from './TeamcityLineParser';
 import { TeamcityEvent } from './types';
 

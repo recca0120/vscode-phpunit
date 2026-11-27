@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { findTest, parseTestFile, pestProject } from '../../tests/utils';
+import { pestProject } from '../../tests/support/fixtures';
+import { findTest, parseTestFile } from '../../tests/support/parsing';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';

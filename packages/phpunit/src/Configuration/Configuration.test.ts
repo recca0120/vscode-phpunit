@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/utils';
+import { phpUnitProject } from '../../tests/support/fixtures';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { Configuration } from './Configuration';
 

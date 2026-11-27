@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { findTest, pestProject, phpUnitProject } from '../../../../tests/utils';
+import { pestProject, phpUnitProject } from '../../../../tests/support/fixtures';
+import { findTest } from '../../../../tests/support/parsing';
 import { ClassRegistry } from '../../../TestIndex/ClassRegistry';
 import { InheritanceResolver } from '../../../TestIndex/InheritanceResolver';
 import { extractTests } from '../../../TestParser/TestExtractor';
@@ -512,8 +513,8 @@ class PropertyHooksTest extends TestCase
 
     describe('Inherited test methods with InheritanceResolver', () => {
         const parseWithRegistry = (files: { file: string; content: string }[], root: string) => {
-            const hierarchy = new ClassRegistry();
-            const inheritance = new InheritanceResolver(hierarchy);
+            const registry = new ClassRegistry();
+            const inheritance = new InheritanceResolver(registry);
             let allTests: TestDefinition[] = [];
 
             for (const { file, content } of files) {
@@ -525,7 +526,7 @@ class PropertyHooksTest extends TestCase
                 const result = extractTests(fileInfo, file, root);
                 if (result) {
                     for (const cls of result.classes) {
-                        hierarchy.register(cls);
+                        registry.register(cls);
                     }
                     allTests.push(...flattenTests(result.tests));
                 }

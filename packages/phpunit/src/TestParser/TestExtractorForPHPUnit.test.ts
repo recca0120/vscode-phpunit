@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { findTest, parseTestFile, phpUnitProject } from '../../tests/utils';
+import { phpUnitProject } from '../../tests/support/fixtures';
+import { findTest, parseTestFile } from '../../tests/support/parsing';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
@@ -888,15 +889,15 @@ ${metadata}
             const phpUnitXML = new PHPUnitXML();
             phpUnitXML.setRoot(root);
             const testParser = new TestParser(phpUnitXML, createParser());
-            const classHierarchy = new ClassRegistry();
-            const inheritance = new InheritanceResolver(classHierarchy);
+            const registry = new ClassRegistry();
+            const inheritance = new InheritanceResolver(registry);
 
             const allResults: TestDefinition[] = [];
             for (const { file, content } of files) {
                 const result = testParser.parse(content, file);
                 if (result) {
                     for (const cls of result.classes) {
-                        classHierarchy.register(cls);
+                        registry.register(cls);
                     }
                     allResults.push(...result.tests);
                 }

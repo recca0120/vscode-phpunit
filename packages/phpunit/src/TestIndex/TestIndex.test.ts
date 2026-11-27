@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
-import { generateXML, phpUnitProject } from '../../tests/utils';
+import { phpUnitProject } from '../../tests/support/fixtures';
+import { generateXML } from '../../tests/support/phpUnitXml';
 import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
 import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
@@ -31,8 +32,8 @@ describe('TestIndex', () => {
     ) => {
         const phpUnitXML = new PHPUnitXML();
         phpUnitXML.setRoot(phpUnitProject(''));
-        const hierarchy = new ClassRegistry();
-        const inheritance = new InheritanceResolver(hierarchy);
+        const registry = new ClassRegistry();
+        const inheritance = new InheritanceResolver(registry);
         for (const [testsuite, files] of Object.entries(testsuites)) {
             const expected: TestDefinition[] = [];
             for (const uri of files as URI[]) {
@@ -44,7 +45,7 @@ describe('TestIndex', () => {
                 const result = await testParser.parseFile(uri.fsPath, testsuite);
                 if (result) {
                     for (const cls of result.classes) {
-                        hierarchy.register(cls);
+                        registry.register(cls);
                     }
                     expected.push(...inheritance.resolve(result.tests));
                 }
