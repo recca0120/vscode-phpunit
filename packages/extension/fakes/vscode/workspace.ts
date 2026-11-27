@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
+import { isAbsolute, relative } from 'node:path';
 import { glob } from 'glob';
+import { minimatch } from 'minimatch';
 import { vi } from 'vitest';
 import type { WorkspaceFolder } from 'vscode';
 import { URI } from 'vscode-uri';
@@ -57,6 +59,13 @@ export class Configuration {
 
 export const configurations = new Map<string, Configuration>();
 
+const splitPattern = (pattern: string) => {
+    return pattern
+        .replace(/^{|}$/g, '')
+        .split(',')
+        .map((v) => v.trim());
+};
+
 const workspace = {
     createdWatchers: [] as FakeFileSystemWatcher[],
     workspaceFolders: [],
@@ -81,12 +90,6 @@ const workspace = {
                 workspace.findFiles._concurrentCount,
             );
             try {
-                const splitPattern = (pattern: string) => {
-                    return pattern
-                        .replace(/^{|}$/g, '')
-                        .split(',')
-                        .map((v) => v.trim());
-                };
                 return (
                     await glob(splitPattern(pattern.pattern), {
                         absolute: true,
@@ -106,6 +109,13 @@ const workspace = {
         workspace.createdWatchers.push(watcher);
         return watcher;
     }),
+    fireFileEvent(event: 'create' | 'change' | 'delete', uri: URI) {
+        for (const watcher of workspace.createdWatchers) {
+            if (!watcher.disposed && watcher.matches(uri)) {
+                watcher.fire(event, uri);
+            }
+        }
+    },
     onDidChangeConfiguration: vi.fn().mockImplementation(() => {
         return new Disposable();
     }),
@@ -133,6 +143,22 @@ class FakeFileSystemWatcher {
 
     disposed = false;
     pattern: unknown;
+
+    matches(uri: URI) {
+        const { base, pattern } = this.pattern as { base: string; pattern: string };
+        const path = relative(base, uri.fsPath).replace(/\\/g, '/');
+        if (path.startsWith('..') || isAbsolute(path)) {
+            return false;
+        }
+
+        return splitPattern(pattern).some((glob) => minimatch(path, glob, { dot: true }));
+    }
+
+    fire(event: 'create' | 'change' | 'delete', uri: URI) {
+        ({ create: this.createEmitter, change: this.changeEmitter, delete: this.deleteEmitter })[
+            event
+        ].fire(uri);
+    }
 
     fireCreate(uri: URI) {
         this.createEmitter.fire(uri);
