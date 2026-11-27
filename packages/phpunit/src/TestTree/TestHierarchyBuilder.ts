@@ -1,6 +1,6 @@
+import { datasetExpander } from '../Dataset/DatasetExpander';
 import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
-import { datasetExpander } from '../TestParser/DatasetExpander';
 import { type TestDefinition, TestType } from '../types';
 
 const GROUP_TAG_PREFIX = 'group';

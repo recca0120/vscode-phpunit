@@ -1,6 +1,7 @@
 import { PHPUNIT_TESTCASE_FQN } from '../constants';
+import type { TraitAdaptation } from '../Interpreter/types';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
-import type { ClassInfo, TraitAdaptation } from '../TestParser/ClassInfo';
+import type { ClassInfo } from '../TestParser/ClassInfo';
 import { type TestDefinition, TestType } from '../types';
 import type { ClassRegistry } from './ClassRegistry';
 

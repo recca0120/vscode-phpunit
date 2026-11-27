@@ -1,4 +1,4 @@
-import { datasetExpander } from '../../TestParser/DatasetExpander';
+import { datasetExpander } from '../../Dataset/DatasetExpander';
 import type { TestResultCache } from '../TestResultCache';
 import { TeamcityEvent, type TestResult } from '../types';
 
