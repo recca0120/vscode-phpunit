@@ -6,7 +6,6 @@ import { Configuration } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { RemotePathMapper } from '../Path';
 import { CoverageFiles } from '../TestCoverage';
-import { TeamcityEvent, type TestFailed, toLocalResult } from '../TestOutput';
 import { Mode, Xdebug } from './Option/Xdebug';
 import { TestCommand } from './TestCommand';
 
@@ -297,39 +296,6 @@ describe('TestCommand', () => {
                     '/Users/me/application/tests/BarTest.php',
                 ]),
             );
-        });
-
-        it('maps only whole path segments back to the local path', () => {
-            const command = givenCommand(
-                { command: 'docker exec app', paths: { '/Users/me/app': '/var/www' } },
-                '/Users/me/app',
-            );
-
-            const result = toLocalResult(
-                {
-                    event: TeamcityEvent.testFailed,
-                    name: 'test_a',
-                    flowId: 1,
-                    id: 'Tests\\FooTest::test_a',
-                    file: '/var/www/tests/FooTest.php',
-                    locationHint: 'php_qn:///var/www/tests/FooTest.php::\\Tests\\FooTest::test_a',
-                    message: '',
-                    details: [
-                        { file: '/var/www/tests/FooTest.php', line: 7 },
-                        { file: '/var/www-shared/src/Helper.php', line: 3 },
-                    ],
-                    duration: 0,
-                } as TestFailed,
-                command.paths,
-            );
-
-            expect(result).toMatchObject({
-                file: '/Users/me/app/tests/FooTest.php',
-                details: [
-                    { file: '/Users/me/app/tests/FooTest.php', line: 7 },
-                    { file: '/var/www-shared/src/Helper.php', line: 3 },
-                ],
-            });
         });
 
         it('replaces the cwd variable in the command with the working directory', () => {

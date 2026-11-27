@@ -6,7 +6,7 @@ import { EOL } from '../utils';
 import { Printer } from './Printer';
 import { PRESET_PROGRESS } from './PrinterConfig';
 
-describe('Printer output buffer', () => {
+describe('Printer printed output', () => {
     const phpUnitXML = new PHPUnitXML();
     const printer = new Printer(phpUnitXML, PRESET_PROGRESS);
 
