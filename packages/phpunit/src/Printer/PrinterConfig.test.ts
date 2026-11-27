@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-    PRESET_COLLISION,
-    PRESET_PRETTY,
-    PRESET_PROGRESS,
-    type PrinterFormat,
-    resolveFormat,
-} from './PrinterConfig';
+import { PRESET_COLLISION, PRESET_PRETTY, PRESET_PROGRESS, resolveFormat } from './PrinterConfig';
+import type { PrinterFormat } from './PrinterFormat';
 
 describe('resolveFormat', () => {
     it('returns base preset without overrides', () => {

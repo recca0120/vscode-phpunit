@@ -4,7 +4,8 @@ import { EOL } from '../constants';
 import { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import { TeamcityEvent } from '../TestOutput/types';
 import { Printer } from './Printer';
-import { PRESET_COLLISION, type PrinterFormat, resolveFormat } from './PrinterConfig';
+import { PRESET_COLLISION, resolveFormat } from './PrinterConfig';
+import type { PrinterFormat } from './PrinterFormat';
 import { fileFormat } from './SourceFileReader';
 
 describe('Printer error edge cases', () => {
