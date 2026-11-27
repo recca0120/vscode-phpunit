@@ -1,25 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/support/fixtures';
+import { expectParsedBy } from '../../tests/support/outputParser';
 import { phpUnitProjectWin } from '../../tests/support/windowsPath';
 import { TeamcityEvent } from '.';
 import { TestOutputParser } from './TestOutputParser';
 
-const problemMatcher = new TestOutputParser();
-
 describe('PHPUnit TestOutputParser Text', () => {
-    const resultShouldBe = (content: string, expected: Record<string, unknown> | undefined) => {
-        const actual = problemMatcher.parse(content);
-
-        if (expected === undefined) {
-            expect(actual).toBeUndefined();
-        } else {
-            expect(actual).toEqual(expect.objectContaining(expected));
-        }
-    };
+    let parser: TestOutputParser;
+    beforeEach(() => {
+        parser = new TestOutputParser();
+    });
 
     describe('Teamcity Life Cycle', () => {
+        const expectParsed = expectParsedBy(new TestOutputParser());
+
         it('PHPUnit version', () => {
-            resultShouldBe('PHPUnit 9.5.25 #StandWithUkraine', {
+            expectParsed('PHPUnit 9.5.25 #StandWithUkraine', {
                 event: TeamcityEvent.testVersion,
                 phpunit: '9.5.25',
                 text: `PHPUnit 9.5.25 #StandWithUkraine`,
@@ -27,7 +23,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('Runtime', () => {
-            resultShouldBe('Runtime:       PHP 8.1.12', {
+            expectParsed('Runtime:       PHP 8.1.12', {
                 event: TeamcityEvent.testRuntime,
                 runtime: 'PHP 8.1.12',
                 text: 'Runtime:       PHP 8.1.12',
@@ -35,7 +31,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('Configuration', () => {
-            resultShouldBe(`Configuration: ${phpUnitProject('phpunit.xml')}`, {
+            expectParsed(`Configuration: ${phpUnitProject('phpunit.xml')}`, {
                 event: TeamcityEvent.testConfiguration,
                 configuration: phpUnitProject('phpunit.xml'),
                 text: `Configuration: ${phpUnitProject('phpunit.xml')}`,
@@ -43,7 +39,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testSuiteStarted default', () => {
-            resultShouldBe(`##teamcity[testSuiteStarted name='default' flowId='8024']`, {
+            expectParsed(`##teamcity[testSuiteStarted name='default' flowId='8024']`, {
                 event: TeamcityEvent.testSuiteStarted,
                 name: 'default',
                 flowId: 8024,
@@ -51,7 +47,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testCount', () => {
-            resultShouldBe(`##teamcity[testCount count='19' flowId='8024']`, {
+            expectParsed(`##teamcity[testCount count='19' flowId='8024']`, {
                 event: TeamcityEvent.testCount,
                 count: 19,
                 flowId: 8024,
@@ -59,7 +55,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testSuiteStarted Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testSuiteStarted name='Recca0120\\VSCode\\Tests\\AssertionsTest' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`,
                 {
                     event: TeamcityEvent.testSuiteStarted,
@@ -70,7 +66,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testStarted passed', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testStarted name='test_passed' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_passed' flowId='8024']`,
                 {
                     event: TeamcityEvent.testStarted,
@@ -81,18 +77,15 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testFinished', () => {
-            resultShouldBe(
-                `##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`,
-                {
-                    event: TeamcityEvent.testFinished,
-                    id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
-                    flowId: 8024,
-                },
-            );
+            expectParsed(`##teamcity[testFinished name='test_passed' duration='0' flowId='8024']`, {
+                event: TeamcityEvent.testFinished,
+                id: 'Assertions (Recca0120\\VSCode\\Tests\\Assertions)::Passed',
+                flowId: 8024,
+            });
         });
 
         it('testStarted failed', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testStarted name='test_is_not_same' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::test_is_not_same' flowId='8024']`,
                 {
                     event: TeamcityEvent.testStarted,
@@ -103,14 +96,14 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testFailed', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testFailed name='test_is_not_same' message='Failed asserting that two arrays are identical.' details=' ${phpUnitProjectWin('tests\\AssertionsTest.php')}:32|n ' duration='0' type='comparisonFailure' actual='Array &0 (|n    |'e|' => |'f|'|n    0 => |'g|'|n    1 => |'h|'|n)' expected='Array &0 (|n    |'a|' => |'b|'|n    |'c|' => |'d|'|n)' flowId='8024']`,
                 undefined,
             );
         });
 
         it('testFinished failed', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testFinished name='test_is_not_same' duration='0' flowId='8024']`,
                 {
                     event: TeamcityEvent.testFailed,
@@ -132,7 +125,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testSuiteStarted addition_provider', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testSuiteStarted name='addition_provider' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider' flowId='8024']`,
                 {
                     event: TeamcityEvent.testSuiteStarted,
@@ -145,7 +138,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testStarted addition_provider', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testStarted name='addition_provider with data set #2' locationHint='php_qn://${phpUnitProjectWin('tests/AssertionsTest.php')}::\\Recca0120\\VSCode\\Tests\\AssertionsTest::addition_provider with data set #2' flowId='8024']`,
                 {
                     event: TeamcityEvent.testStarted,
@@ -158,12 +151,12 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testFailed addition_provider with failed', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testFailed name='addition_provider with data set #2' message='Failed asserting that 1 matches expected 2.' details=' ${phpUnitProjectWin('tests/AssertionsTest.php')}:66|n ' duration='0' type='comparisonFailure' actual='1' expected='2' flowId='8024']`,
                 undefined,
             );
 
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testFinished name='addition_provider with data set #2' duration='0' flowId='8024']`,
                 {
                     event: TeamcityEvent.testFailed,
@@ -187,7 +180,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testSuiteFinished Recca0120\\VSCode\\Tests\\AssertionsTest', () => {
-            resultShouldBe(
+            expectParsed(
                 `##teamcity[testSuiteFinished name='Recca0120\\VSCode\\Tests\\AssertionsTest' flowId='8024']`,
                 {
                     event: TeamcityEvent.testSuiteFinished,
@@ -198,7 +191,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('testSuiteFinished default', () => {
-            resultShouldBe(`##teamcity[testSuiteFinished name='default' flowId='8024']`, {
+            expectParsed(`##teamcity[testSuiteFinished name='default' flowId='8024']`, {
                 event: TeamcityEvent.testSuiteFinished,
                 name: 'default',
                 flowId: 8024,
@@ -206,7 +199,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('TestCount', () => {
-            resultShouldBe(`##teamcity[testCount count='19' flowId='8024']`, {
+            expectParsed(`##teamcity[testCount count='19' flowId='8024']`, {
                 event: TeamcityEvent.testCount,
                 count: 19,
                 flowId: 8024,
@@ -214,7 +207,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('TestSummary', () => {
-            resultShouldBe(
+            expectParsed(
                 'Tests: 19, Assertions: 15, Errors: 2, Failures: 4, Skipped: 1, Incomplete: 1, Risky: 2.',
                 {
                     event: TeamcityEvent.testResultSummary,
@@ -233,7 +226,7 @@ describe('PHPUnit TestOutputParser Text', () => {
         });
 
         it('empty line', () => {
-            resultShouldBe('', undefined);
+            expectParsed('', undefined);
         });
     });
 
@@ -245,9 +238,9 @@ describe('PHPUnit TestOutputParser Text', () => {
             `##teamcity[testFinished name='test_throw_exception' duration='15' flowId='28756']`,
         ];
 
-        let result: ReturnType<typeof problemMatcher.parse>;
+        let result: ReturnType<typeof parser.parse>;
         for (const content of contents) {
-            result = problemMatcher.parse(content);
+            result = parser.parse(content);
         }
 
         expect(result).toEqual(
@@ -281,8 +274,8 @@ describe('PHPUnit TestOutputParser Text', () => {
             `##teamcity[testSuiteFinished name='App\\Tests\\Ecommerce\\Offer\\Synchronizer\\PriceSynchronizerTest' flowId='5161']`,
         ];
 
-        problemMatcher.parse(contents[0]);
-        expect(problemMatcher.parse(contents[1])).toEqual(
+        parser.parse(contents[0]);
+        expect(parser.parse(contents[1])).toEqual(
             expect.objectContaining({
                 event: TeamcityEvent.testFailed,
                 name: 'testProductNeedUpdateReturnsFalseWhenPriceSyncNotEnabled',
@@ -314,8 +307,8 @@ describe('PHPUnit TestOutputParser Text', () => {
             `##teamcity[testSuiteFinished name='Tests\\Feature\\ChatControllerTest' flowId='22946']`,
         ];
 
-        problemMatcher.parse(contents[0]);
-        expect(problemMatcher.parse(contents[1])).toEqual(
+        parser.parse(contents[0]);
+        expect(parser.parse(contents[1])).toEqual(
             expect.objectContaining({
                 event: TeamcityEvent.testIgnored,
                 name: 'test_permission',
@@ -329,7 +322,7 @@ describe('PHPUnit TestOutputParser Text', () => {
             }),
         );
 
-        expect(problemMatcher.parse(contents[2])).toEqual(
+        expect(parser.parse(contents[2])).toEqual(
             expect.objectContaining({
                 event: TeamcityEvent.testIgnored,
                 name: 'test_grant_chat_token',
