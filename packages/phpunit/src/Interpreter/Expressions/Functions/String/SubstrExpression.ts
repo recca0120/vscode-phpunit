@@ -13,14 +13,16 @@ class SubstrExpression implements Expression<string> {
         if (typeof s !== 'string' || start === undefined) {
             return undefined;
         }
-        const st = Number(start);
-        if (args.length >= 3) {
-            const len = context.resolve(args[2]);
-            if (len !== undefined) {
-                return s.slice(st, st + Number(len));
-            }
+        const offset = Number(start);
+        const begin = offset < 0 ? Math.max(s.length + offset, 0) : Math.min(offset, s.length);
+        const length = args.length >= 3 ? context.resolve(args[2]) : undefined;
+        if (length === undefined || length === null) {
+            return s.slice(begin);
         }
-        return s.slice(st);
+
+        const count = Number(length);
+        const end = count < 0 ? s.length + count : begin + count;
+        return end <= begin ? '' : s.slice(begin, end);
     }
 }
 
