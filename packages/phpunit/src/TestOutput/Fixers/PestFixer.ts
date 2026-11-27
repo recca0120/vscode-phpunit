@@ -1,9 +1,5 @@
-import type { TestFailed, TestIgnored } from '../TestOutput';
-import type { TestResultCache } from '../TestOutput/TestResultCache';
-
-export { PestV1Fixer } from './PestV1Fixer';
-export { PestV2Fixer } from './PestV2Fixer';
-export { AliasMap } from './PestV3Fixer';
+import type { TestResultCache } from '../TestResultCache';
+import type { TestFailed, TestIgnored } from '../types';
 
 export const PestFixer = {
     fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { TestType } from '../types';
-import './PestFixer';
 import { PestTestIdentifier } from './PestTestIdentifier';
 import { TestIdentifier } from './TestIdentifier';
 

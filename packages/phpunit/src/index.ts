@@ -6,7 +6,7 @@ export * from './PHPUnitXML';
 export * from './Printer';
 export * from './TestCommand';
 export * from './TestCoverage';
-export { AliasMap } from './TestIdentifier/PestFixer';
+export { AliasMap } from './TestIdentifier/AliasMap';
 export * from './TestIndex';
 export * from './TestOutput';
 export * from './TestParser';

@@ -1,15 +1,16 @@
+import { PestV1Fixer } from '../TestOutput/Fixers/PestV1Fixer';
+import { PestV2Fixer } from '../TestOutput/Fixers/PestV2Fixer';
 import { type TestDefinition, TestType } from '../types';
 import { uncapitalize } from '../utils';
-import { PestV1Fixer, PestV2Fixer } from './PestFixer';
+import { isPest } from './isPest';
 import { PHPUnitTestIdentifier } from './PHPUnitTestIdentifier';
-import { TestIdentifierFactory } from './TestIdentifierFactory';
 
 export class PestTestIdentifier extends PHPUnitTestIdentifier {
     uniqueId(
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
     ): string {
         const initialClassFQN = testDefinition.classFQN ?? '';
-        if (!TestIdentifierFactory.isPest(initialClassFQN)) {
+        if (!isPest(initialClassFQN)) {
             return super.uniqueId(testDefinition);
         }
 

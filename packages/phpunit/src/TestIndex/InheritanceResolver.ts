@@ -1,6 +1,7 @@
+import { PHPUNIT_TESTCASE_FQN } from '../constants';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import type { ClassInfo, TraitAdaptation } from '../TestParser/ClassInfo';
-import { PHPUNIT_TESTCASE_FQN, type TestDefinition, TestType } from '../types';
+import { type TestDefinition, TestType } from '../types';
 import type { ClassRegistry } from './ClassRegistry';
 
 export class InheritanceResolver {

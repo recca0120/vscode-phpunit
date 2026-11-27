@@ -1,6 +1,4 @@
 import stripAnsi from 'strip-ansi';
-import { PestFixer, PestV1Fixer } from '../TestIdentifier/PestFixer';
-import { PHPUnitFixer } from '../TestIdentifier/PHPUnitFixer';
 import {
     TeamcityEvent,
     type TestFailed,
@@ -11,6 +9,9 @@ import {
     type TestSuiteFinished,
     type TestSuiteStarted,
 } from '.';
+import { PestFixer } from './Fixers/PestFixer';
+import { PestV1Fixer } from './Fixers/PestV1Fixer';
+import { PHPUnitFixer } from './Fixers/PHPUnitFixer';
 import { classifyEvent, SuiteAggregator } from './SuiteAggregator';
 import { TeamcityLineParser } from './TeamcityLineParser';
 import { TestResultCache } from './TestResultCache';
