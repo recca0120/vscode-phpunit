@@ -13,9 +13,7 @@ export class RemotePathMapper implements PathResolver {
         paths?: PathMappings,
         workspaceFolder?: string,
     ) {
-        const cwd = this.fixWindowsDriveLetter(
-            (this.options?.cwd as string) ?? (process.env.cwd as string),
-        );
+        const cwd = this.fixWindowsDriveLetter((this.options?.cwd as string) ?? process.cwd());
         this.variables = new VariableResolver(
             cwd,
             workspaceFolder ? this.fixWindowsDriveLetter(workspaceFolder) : cwd,
