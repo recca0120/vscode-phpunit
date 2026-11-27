@@ -3,7 +3,7 @@ import { type TestDefinition, TestType } from '../types';
 const DATASET_PATTERN =
     /^(?<base>.*?)(?<dataset>\swith\s(?<label>data\sset\s[#"(].+|dataset\s".+|\(.+))$/;
 
-class DatasetExpander {
+class DatasetNaming {
     named(key: string): string {
         return `data set "${key}"`;
     }
@@ -71,4 +71,4 @@ class DatasetExpander {
     }
 }
 
-export const datasetExpander = new DatasetExpander();
+export const datasetNaming = new DatasetNaming();

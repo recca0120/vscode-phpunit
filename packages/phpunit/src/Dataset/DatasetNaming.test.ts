@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type TestDefinition, TestType } from '../types';
-import { datasetExpander as DatasetExpander } from './DatasetExpander';
+import { datasetNaming } from './DatasetNaming';
 
 const parent: TestDefinition = {
     type: TestType.method,
@@ -15,9 +15,9 @@ const parent: TestDefinition = {
     end: { line: 20, character: 0 },
 };
 
-describe('DatasetExpander.fromTestOutput', () => {
+describe('datasetNaming.fromTestOutput', () => {
     it('should return TestDefinition for dataset name', () => {
-        const result = DatasetExpander.fromTestOutput(parent, 'addition_provider with data set #0');
+        const result = datasetNaming.fromTestOutput(parent, 'addition_provider with data set #0');
 
         expect(result).toBeDefined();
         expect(result?.type).toBe(TestType.dataset);
@@ -27,13 +27,13 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should return undefined for non-dataset name', () => {
-        const result = DatasetExpander.fromTestOutput(parent, 'addition_provider');
+        const result = datasetNaming.fromTestOutput(parent, 'addition_provider');
 
         expect(result).toBeUndefined();
     });
 
     it('should handle named data set', () => {
-        const result = DatasetExpander.fromTestOutput(
+        const result = datasetNaming.fromTestOutput(
             parent,
             'addition_provider with data set "adding zeros"',
         );
@@ -43,7 +43,7 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should preserve teamcity id for pest named dataset', () => {
-        const result = DatasetExpander.fromTestOutput(
+        const result = datasetNaming.fromTestOutput(
             parent,
             'it adds numbers with data set "dataset "one plus one""',
         );
@@ -54,7 +54,7 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should preserve teamcity id for pest scalar', () => {
-        const result = DatasetExpander.fromTestOutput(
+        const result = datasetNaming.fromTestOutput(
             parent,
             'it validates emails with data set "(\'alice@example.com\')"',
         );
@@ -65,7 +65,7 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should preserve teamcity id for pest tuple', () => {
-        const result = DatasetExpander.fromTestOutput(
+        const result = datasetNaming.fromTestOutput(
             parent,
             'it multiplies numbers with data set "(2, 3, 6)"',
         );
@@ -76,7 +76,7 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should preserve teamcity id for pest cartesian', () => {
-        const result = DatasetExpander.fromTestOutput(
+        const result = datasetNaming.fromTestOutput(
             parent,
             `it business closed with data set "('Office') / ('Saturday')"`,
         );
@@ -87,7 +87,7 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should handle truncated tuple with ellipsis from teamcity', () => {
-        const result = DatasetExpander.fromTestOutput(
+        const result = datasetNaming.fromTestOutput(
             parent,
             'it has many args with data set "(1, 2, 3, …)"',
         );
@@ -98,11 +98,11 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('should handle deduplicated truncated tuple from teamcity', () => {
-        const result1 = DatasetExpander.fromTestOutput(
+        const result1 = datasetNaming.fromTestOutput(
             parent,
             'it same prefix with data set "(1, 2, 3, …) #1"',
         );
-        const result2 = DatasetExpander.fromTestOutput(
+        const result2 = datasetNaming.fromTestOutput(
             parent,
             'it same prefix with data set "(1, 2, 3, …) #2"',
         );
@@ -115,9 +115,9 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 
     it('teamcity truncated id matches statically analyzed id', () => {
-        const [staticDef] = DatasetExpander.fromAnnotations(parent, ['data set "(1, 2, 3, …)"']);
+        const [staticDef] = datasetNaming.fromAnnotations(parent, ['data set "(1, 2, 3, …)"']);
 
-        const teamcityDef = DatasetExpander.fromTestOutput(
+        const teamcityDef = datasetNaming.fromTestOutput(
             parent,
             `addition_provider with data set "(1, 2, 3, …)"`,
         );
@@ -126,27 +126,27 @@ describe('DatasetExpander.fromTestOutput', () => {
     });
 });
 
-describe('DatasetExpander.fromAnnotations', () => {
+describe('datasetNaming.fromAnnotations', () => {
     it('should create dataset definition with correct type', () => {
-        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
+        const [result] = datasetNaming.fromAnnotations(parent, ['data set #0']);
 
         expect(result.type).toBe(TestType.dataset);
     });
 
     it('should create id with "with" prefix', () => {
-        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
+        const [result] = datasetNaming.fromAnnotations(parent, ['data set #0']);
 
         expect(result.id).toBe(`${parent.id} with data set #0`);
     });
 
     it('should create label with "with" prefix', () => {
-        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
+        const [result] = datasetNaming.fromAnnotations(parent, ['data set #0']);
 
         expect(result.label).toBe('with data set #0');
     });
 
     it('should inherit parent classFQN, namespace, className, methodName', () => {
-        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
+        const [result] = datasetNaming.fromAnnotations(parent, ['data set #0']);
 
         expect(result.classFQN).toBe(parent.classFQN);
         expect(result.namespace).toBe(parent.namespace);
@@ -155,7 +155,7 @@ describe('DatasetExpander.fromAnnotations', () => {
     });
 
     it('should inherit parent file and position', () => {
-        const [result] = DatasetExpander.fromAnnotations(parent, ['data set #0']);
+        const [result] = datasetNaming.fromAnnotations(parent, ['data set #0']);
 
         expect(result.file).toBe(parent.file);
         expect(result.start).toEqual(parent.start);

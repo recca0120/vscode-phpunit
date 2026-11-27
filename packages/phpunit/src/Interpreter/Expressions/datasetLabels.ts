@@ -1,4 +1,4 @@
-import { datasetExpander } from '../../Dataset/DatasetExpander';
+import { datasetNaming } from '../../Dataset/DatasetNaming';
 
 export function extractLabels(resolved: unknown): string[] | undefined {
     if (!(resolved instanceof Map)) {
@@ -9,6 +9,6 @@ export function extractLabels(resolved: unknown): string[] | undefined {
 
 export function toLabels(resolved: Map<string, unknown>, counter: { index: number }): string[] {
     return [...resolved.keys()].map((key: string) =>
-        /^\d+$/.test(key) ? datasetExpander.indexed(counter.index++) : datasetExpander.named(key),
+        /^\d+$/.test(key) ? datasetNaming.indexed(counter.index++) : datasetNaming.named(key),
     );
 }

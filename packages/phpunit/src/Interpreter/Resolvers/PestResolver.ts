@@ -1,4 +1,4 @@
-import { datasetExpander } from '../../Dataset/DatasetExpander';
+import { datasetNaming } from '../../Dataset/DatasetNaming';
 import type {
     AstNode,
     CallNode,
@@ -323,7 +323,7 @@ function evaluateAsMap(node: AstNode): Map<string, unknown> | undefined {
 function labelsToMap(labels: unknown[]): Map<string, unknown> | undefined {
     const map = new Map<string, unknown>();
     for (const label of labels) {
-        const key = typeof label === 'string' ? datasetExpander.keyOf(label) : undefined;
+        const key = typeof label === 'string' ? datasetNaming.keyOf(label) : undefined;
         if (key === undefined) {
             return undefined;
         }
@@ -344,9 +344,9 @@ function resolvePestLabels(node: AstNode): string[] {
             if (!formatted) {
                 return [];
             }
-            labels.push(datasetExpander.named(formatted));
+            labels.push(datasetNaming.named(formatted));
         } else {
-            labels.push(datasetExpander.named(`dataset "${key}"`));
+            labels.push(datasetNaming.named(`dataset "${key}"`));
         }
     }
     return deduplicateLabels(labels);
@@ -420,7 +420,7 @@ function cartesianProduct(datasets: string[][]): string[] {
     for (let i = 1; i < datasets.length; i++) {
         combinations = combinations.flatMap((combo) => datasets[i].map((v) => [...combo, v]));
     }
-    return combinations.map((combo) => datasetExpander.named(combo.join(' / ')));
+    return combinations.map((combo) => datasetNaming.named(combo.join(' / ')));
 }
 
 function unwrapClosureBody(node: AstNode): AstNode | undefined {

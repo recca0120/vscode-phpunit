@@ -1,7 +1,7 @@
 import { URI } from 'vscode-uri';
 import { ComposerAutoload } from '../Composer/ComposerAutoload';
 import { PHPUNIT_TESTCASE_FQN } from '../constants';
-import { datasetExpander } from '../Dataset/DatasetExpander';
+import { datasetNaming } from '../Dataset/DatasetNaming';
 import type { PHPUnitXML, TestDefinition, TestParser } from '../index';
 import type { TestStarted } from '../TestOutput';
 import type { ClassInfo } from '../TestParser/ClassInfo';
@@ -56,13 +56,13 @@ export class TestIndex {
             return undefined;
         }
 
-        const { parentId } = datasetExpander.parse(result.id);
+        const { parentId } = datasetNaming.parse(result.id);
         const parentDef = this.store.getDefinition(parentId);
         if (!parentDef) {
             return undefined;
         }
 
-        const childDef = datasetExpander.fromTestOutput(parentDef, result.name);
+        const childDef = datasetNaming.fromTestOutput(parentDef, result.name);
         if (!childDef || this.store.hasDefinition(childDef.id)) {
             return undefined;
         }
